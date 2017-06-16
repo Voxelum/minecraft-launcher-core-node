@@ -1,0 +1,25 @@
+{
+  "name": "ts-ping-mc",
+  "version": "1.0.0",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^6.0.40",
+    "@types/long": "^3.0.31",
+    "typescript": "^2.3.4",
+    "@types/node": "^7.0.29",
+    "@types/bytebuffer": "^5.0.33",
+    "@types/uuid": "^3.0.0",
+    "@types/adm-zip": "^0.4.31"
+  },
+  "scripts": {
+    "test": "tsc && node build/test.js"
+  },
+  "author": "CI010",
+  "license": "GPL",
+  "dependencies": {
+    "uuid": "^3.0.1",
+    "bytebuffer": "^5.0.1",
+    "long": "^3.2.0",
+    "adm-zip": "^0.4.7"
+  }
+}
