@@ -7,7 +7,7 @@ import { Version } from './version'
 import { MinecraftLocation, ResourceLocation } from './file_struct'
 
 //these two not done yet
-import * as nbt from './nbt'
+import { NBT } from './nbt'
 import { Launcher } from './launch'
 
 export {
@@ -17,5 +17,6 @@ export {
     Version,
     TextComponent, TextFormatting, Style,
     GameType, WorldInfo, Language, ServerInfo, ServerStatus, ResourceMode, ResourcePack, ModContainer, ModIndentity, ForModMetaData, LitModeMetaData,
-    MinecraftLocation, ResourceLocation
+    MinecraftLocation, ResourceLocation,
+    NBT
 }
