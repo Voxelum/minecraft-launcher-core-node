@@ -1,2 +1,2 @@
 # ts-minecraft
-all you need for minecraft in typescript
+All you need for minecraft in typescript.
