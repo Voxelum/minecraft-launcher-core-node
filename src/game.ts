@@ -4,6 +4,40 @@ import { NBT } from './nbt'
 import * as net from 'net'
 import * as buf from 'bytebuffer'
 
+export interface GameSetting {
+    useVBO: boolean,
+    enableFBO: boolean,
+    enableVsync: boolean,
+    fancyGraphic: boolean,
+    renderCloud: boolean,
+    forceUnicode: boolean,
+    autoJump: boolean,
+    entityShadows: boolean,
+    ao: number,
+    fov: number,
+    mipmap: number,
+    maxFps: number,
+    particles: number,
+    renderDistance: number,
+    resourcePacks: ResourcePack[]
+}
+
+export namespace GameSetting {
+    const pattern = /(.*:.*)/g
+    // const tuple =/()/g
+    export function readFromString(str: string): GameSetting | undefined {
+        let arr = pattern.exec(str)
+        if (arr) {
+            let pairs = arr.map(pair => pair.split(':'))
+            let obj: any = {}
+            for (let pair of pairs)
+                obj[pair[0]] = obj[pair[1]]
+            return <GameSetting>obj
+        }
+        return undefined
+    }
+}
+
 export enum GameType {
     NON = -1,
     SURVIVAL = 1,

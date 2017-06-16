@@ -19,14 +19,30 @@ import * as mc from './file_struct'
 //     })
 // }
 
-import {ServerInfo} from './game' 
-let s = 'C:/Users/cijhn/AppData/Roaming/.minecraft/servers.dat'
-import * as fs from 'fs'
-let buf = fs.readFileSync(s)
-let read = nbt.NBT.read(buf)
-if (read) {
-    let arr: ServerInfo[] = read.root.servers
-    console.log(arr)
+// import {ServerInfo} from './game' 
+// let s = 'C:/Users/cijhn/AppData/Roaming/.minecraft/servers.dat'
+// import * as fs from 'fs'
+// let buf = fs.readFileSync(s)
+// let read = nbt.NBT.read(buf)
+// if (read) {
+//     let arr: ServerInfo[] = read.root.servers
+//     console.log(arr)
+// }
+
+const pattern = /(.*):(.*)/g
+const tuple = /(^\\n)*:(^\\n)*/g
+
+let s = 'version:1139\ninvertYMouse:false\nmouseSensitivity:0.5\n'
+
+let match = s.match(pattern)
+if (match) {
+    for (let a of match) {
+        let another = tuple.exec(a)
+        if (another) {
+            console.log(another)
+            // console.log(another[2])
+        }
+    }
 }
 // const NBT = nbt.NBT
 // let obj = {
