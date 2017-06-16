@@ -38,14 +38,3 @@ if (read) {
 //     },
 //     type: 'ServerInfo'
 // }
-
-// let abuf = new ArrayBuffer(3)
-// import * as ByteBuffer from 'bytebuffer'
-// let bb = ByteBuffer.allocate(2)
-// bb.writeByte(1)
-// console.log(bb)
-// bb.writeByte(2)
-// bb.writeByte(3)
-// bb.writeByte(4)
-// bb.writeByte(5)
-// console.log(bb)

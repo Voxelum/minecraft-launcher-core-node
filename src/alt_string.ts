@@ -62,9 +62,6 @@ export function readString(buff: ByteBuffer) {
     for (let i = 0; i < utflen; i++)
         bytearr[i] = (buff.readByte())
 
-    // buff.readByte
-    //     in.readFully(bytearr, 0, utflen);
-
     while (count < utflen) {
         c = bytearr[count] & 0xff;
         if (c > 127) break;
@@ -116,5 +113,4 @@ export function readString(buff: ByteBuffer) {
     }
     // The number of chars produced may be less than utflen
     return chararr.map(i => String.fromCharCode(i)).join('')
-    // return new string(chararr, 0, chararr_count);
 }

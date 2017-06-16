@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "devDependencies": {
-    "@types/node": "^6.0.40",
     "@types/long": "^3.0.31",
     "typescript": "^2.3.4",
     "@types/node": "^7.0.29",
