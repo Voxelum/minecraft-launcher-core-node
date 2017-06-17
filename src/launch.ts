@@ -100,7 +100,7 @@ export namespace Launcher {
             cmd.push('-Dfml.ignorePatchDiscrepancies=true');
 
         //add extra jvm args
-        // if (options.extraJVMArgs) cmd.push(options.extraJVMArgs);
+        if (options.extraJVMArgs) cmd = cmd.concat(options.extraJVMArgs);
 
         cmd.push('-Djava.library.path=' + mc.getNativesRoot(version.root));
 
@@ -137,8 +137,8 @@ export namespace Launcher {
 
         cmd.push(args);
         //extra mc args
-        // if (options.extraMCArgs)
-        //     cmd.push(options.extraMCArgs);
+        if (options.extraMCArgs)
+            cmd = cmd.concat(options.extraMCArgs);
 
         if (options.server) {
             cmd.push(`--server ${options.server.ip}`)
