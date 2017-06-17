@@ -175,6 +175,7 @@ export namespace Language {
         else callback([], new Error('The version indexes json does not exist. Maybe the game assets are incompleted!'))
     }
 }
+
 export interface ServerInfo {
     name?: string;
     host: string;

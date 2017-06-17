@@ -156,4 +156,65 @@ export namespace NBT {
         ByteBuffer.wrap(arr)
         return Buffer.from('')
     }
+
+    export abstract class Base {
+        protected constructor(readonly type: NBT.Type) { }
+
+        protected abstract _value: any
+        get numberValue(): number {
+            if (this.isNumber) return this._value
+            else throw ''
+        }
+        get stringValue(): string {
+            if (this.isString) return this._value
+            else throw ''
+        }
+        get longValue(): Long {
+            if (this.isLong) return this._value
+            else throw ''
+        }
+        get compoundValue(): Compound {
+            if (this.isCompound) return <Compound><any>this
+            else throw ''
+        }
+        get listValue(): List {
+            if (this.isList) return <List><any>this
+            else throw ''
+        }
+        get numberArrayValue(): number[] {
+            if (this.isNumberArray) return this._value
+            else throw ''
+        }
+        get isNumber(): boolean {
+            return this.type == NBT.Type.Int ||
+                this.type == NBT.Type.Byte ||
+                this.type == NBT.Type.Short ||
+                this.type == NBT.Type.Float ||
+                this.type == NBT.Type.Double
+        }
+        get isString(): boolean { return this.type == Type.String }
+        get isNumberArray(): boolean {
+            return this.type == Type.IntArray ||
+                this.type == Type.ByteArray
+        }
+        get isList(): boolean {
+            return this.type == Type.List
+        }
+        get isLong(): boolean { return this.type == Type.Long }
+        get isCompound(): boolean { return this.type == Type.Compound }
+    }
+
+    export class List extends Base {
+        constructor(type: Type) { super(type) }
+        protected _value: any
+    }
+    export class Compound extends Base {
+        constructor(type: Type) { super(type) }
+        protected _value: any
+
+        // [key: string]: Base
+    }
+    export class Primitive extends Base {
+        private constructor(type: NBT.Type, protected _value: any) { super(type) }
+    }
 }
