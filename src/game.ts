@@ -3,6 +3,13 @@ import { GameProfile } from './auth'
 import { NBT } from './nbt'
 import * as net from 'net'
 import * as buf from 'bytebuffer'
+export interface Pos2 {
+    x: number, z: number
+}
+
+export interface Pos3 extends Pos2 {
+    y: number
+}
 
 export interface GameSetting {
     useVBO: boolean,
@@ -24,7 +31,6 @@ export interface GameSetting {
 
 export namespace GameSetting {
     const pattern = /(.*:.*)/g
-    // const tuple =/()/g
     export function readFromString(str: string): GameSetting | undefined {
         let arr = pattern.exec(str)
         if (arr) {
@@ -59,23 +65,116 @@ export namespace GameType {
     }
 }
 
+export interface GameRule {
+    doTileDrops: boolean,
+    doFireTick: boolean,
+    reducedDebugInfo: boolean,
+    naturalRegeneration: boolean,
+    disableElytraMovementCheck: boolean,
+    doMobLoot: boolean,
+    keepInventory: boolean,
+    doEntityDrops: boolean,
+    mobGriefing: boolean,
+    randomTickSpeed: number,
+    commandBlockOutput: boolean,
+    spawnRadius: number,
+    doMobSpawning: boolean,
+    logAdminCommands: boolean,
+    spectatorsGenerateChunks: boolean,
+    sendCommandFeedback: boolean,
+    doDaylightCycle: boolean,
+    showDeathMessages: boolean
+}
+
 export class WorldInfo {
     constructor(
-        readonly filename: string,
+        // readonly filename: string,
         public displayName: string,
-        readonly size: number,
-        readonly lastPlayed: number,
+        readonly sizeOnDisk: Long,
+        readonly lastPlayed: Long,
+        readonly gameRule: GameRule,
+        readonly dataVersion: number,
+        readonly version: { snapshot?: number, id: number, name: string },
+        readonly generatorName: string,
+
+        public difficulty: number,
         public gameType: GameType,
         public isHardCore: boolean,
         public enabledCheat: boolean,
-        public spawnPoint: [number, number, number]
+        public spawnPoint: Pos3,
+
+        public borderCenter: Pos2,
+        public borderDamagePerBlock: number,
+        public borderWarningBlocks: number,
+        public BorderSizeLerpTarget: number
     ) { }
+}
+
+export namespace WorldInfo {
+    export function read(buf: Buffer): WorldInfo {
+        let nbt = NBT.read(buf, true)
+        let root = nbt.root.Data
+        return new WorldInfo(root.LevelName, root.SizeOnDisk, root.LastPlayed, root.GameRules,
+            root.DataVersion, root.Version, root.generatorName,
+            root.Difficulty, root.GameType, root.hardcore == 1, root.allowCommands == 1,
+            { x: root.SpawnX, y: root.SpawnY, z: root.SpawnZ },
+            { x: root.BorderCenterX, z: root.BorderCenterZ },
+            root.BorderDamagePerBlock, root.BorderWarningBlocks, root.BorderSizeLerpTarget)
+    }
 }
 
 export class Language {
     constructor(readonly id: string, readonly name: string, readonly region: string, readonly bidirectional: boolean) { }
 }
 
+import { Version } from './version'
+import { MinecraftLocation } from './file_struct'
+import * as path from 'path'
+import * as fs from 'fs'
+export namespace Language {
+    export function exportLanguages(location: MinecraftLocation, version: string, callback: (languages: Language[], error?: Error) => void): void {
+        let json = path.join(location.assets, 'indexes', version + '.json')
+        if (fs.existsSync(json))
+            fs.readFile(json, (e, d) => {
+                if (e) callback([], e)
+                else {
+                    let obj
+                    try {
+                        obj = JSON.parse(d.toString())
+                    }
+                    catch (e) {
+                        callback([], e)
+                        return
+                    }
+                    let meta = obj.objects['pack.mcmeta']
+                    let hash = meta.hash
+                    let head = hash.substring(0, 2)
+
+                    let loc = path.join(location.assets, 'objects', head, hash)
+                    if (fs.existsSync(loc)) {
+                        try {
+                            let langs = JSON.parse(fs.readFileSync(loc).toString())
+                            if (langs.language) {
+                                let arr = []
+                                for (let langKey in langs.language) {
+                                    let langObj = langs.language[langKey]
+                                    arr.push(new Language(langKey, langObj.name, langObj.region, langObj.bidirectional))
+                                }
+                                callback(arr)
+                            }
+                            else { callback([], new Error('Illegal pack.mcmeta structure!')) }
+
+                        }
+                        catch (e) {
+                            callback([], e)
+                        }
+                    }
+                    else callback([], new Error('The pack.mcmeta object file does not exist!' + hash))
+                }
+            })
+        else callback([], new Error('The version indexes json does not exist. Maybe the game assets are incompleted!'))
+    }
+}
 export interface ServerInfo {
     name?: string;
     host: string;
@@ -84,7 +183,6 @@ export interface ServerInfo {
     isLanServer?: boolean;
     resourceMode?: ResourceMode;
 }
-
 
 export class ServerStatus {
     pingToServer: number;
