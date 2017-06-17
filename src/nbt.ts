@@ -132,7 +132,7 @@ export namespace NBT {
     export function read(fileData: Buffer, compressed: boolean = false): { root: any, schema: any } {
         if (compressed) {
             let zip = gzip.gunzipSync(fileData);
-            let bytebuffer = ByteBuffer.wrap(fileData);
+            let bytebuffer = ByteBuffer.wrap(zip);
             return readRootTag(bytebuffer)
         }
         else {
