@@ -19,38 +19,18 @@ import * as mc from './file_struct'
 //     })
 // }
 
-// import {ServerInfo} from './game' 
-// let s = 'C:/Users/cijhn/AppData/Roaming/.minecraft/servers.dat'
 // import * as fs from 'fs'
-// let buf = fs.readFileSync(s)
-// let read = nbt.NBT.read(buf)
-// if (read) {
-//     let arr: ServerInfo[] = read.root.servers
-//     console.log(arr)
-// }
+// import * as path from 'path'
+// let map = 'C:/Users/CIJhn/Workspace/Output/Standard/.minecraft/saves/We_Are_The_Ranger_Map_MC1.9V2'
+// let level = path.join(map, 'level.dat')
+// fs.readFile(level, (e, d) => {
+//     let info = game.WorldInfo.read(d)
+//     console.log(info)
+// })
 
-const pattern = /(.*):(.*)/g
-const tuple = /(^\\n)*:(^\\n)*/g
+game.Language.exportLanguages(new mc.MinecraftLocation('C:/Users/CIJhn/Workspace/Output/Standard/.minecraft'),
+    '1.8', (lang, e) => {
+        console.log(e)
+        console.log(lang)
+    })
 
-let s = 'version:1139\ninvertYMouse:false\nmouseSensitivity:0.5\n'
-
-let match = s.match(pattern)
-if (match) {
-    for (let a of match) {
-        let another = tuple.exec(a)
-        if (another) {
-            console.log(another)
-            // console.log(another[2])
-        }
-    }
-}
-// const NBT = nbt.NBT
-// let obj = {
-//     test: NBT.Type.String,
-//     int: NBT.Type.Int,
-//     intArray: NBT.Type.IntArray,
-//     constomType: {
-//         propA: NBT.Type.Int
-//     },
-//     type: 'ServerInfo'
-// }
