@@ -24,12 +24,12 @@ export interface MinecraftRepository {
 }
 
 export namespace MinecraftRepository {
-    export function defaultVersionList(): Promise<VersionMetaList> {
-        return new Promise((resolve, reject) => {
-            https.request({
-                host: ""
-            })
-        });
-    }
+    // export function defaultVersionList(): Promise<VersionMetaList> {
+    //     return new Promise((resolve, reject) => {
+    //         https.request({
+    //             host: ""
+    //         })
+    //     });
+    // }
 }
 

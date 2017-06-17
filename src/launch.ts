@@ -6,6 +6,8 @@ import * as Zip from 'adm-zip'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
+
+import { startWith } from './string_utils'
 /**
  * this module migrates from JMCCC https://github.com/to2mbn/JMCCC/tree/master/jmccc/src/main/java/org/to2mbn/jmccc/launch
  */
@@ -70,7 +72,7 @@ export namespace Launcher {
                 let entries = zip.getEntries()
                 for (let e of entries) {
                     for (let ex of (lib as Native).extractExcludes) {
-                        if (!e.entryName.startsWith(ex)) {
+                        if (!startWith(e.entryName, ex)) {
                             zip.extractEntryTo(e, native, false, true)
                         }
                     }

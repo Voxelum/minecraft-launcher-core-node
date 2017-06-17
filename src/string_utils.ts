@@ -114,3 +114,11 @@ export function readString(buff: ByteBuffer) {
     // The number of chars produced may be less than utflen
     return chararr.map(i => String.fromCharCode(i)).join('')
 }
+
+export function startWith(string: string, prefix: string) {
+    return string.match(new RegExp('^' + prefix))
+}
+
+export function endWith(string: string, postfix: string) {
+    return string.match(new RegExp(postfix + '$'))
+}

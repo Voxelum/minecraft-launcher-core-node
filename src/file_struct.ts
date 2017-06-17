@@ -1,4 +1,5 @@
 import { Artifact, Library } from './version'
+import { endWith } from './string_utils'
 
 import * as paths from 'path'
 
@@ -6,7 +7,7 @@ function getArtifactBasePath(groupId: string, artifactId: string, version: strin
     return groupId.replace('.', '/') + "/" + artifactId + "/" + version + "/";
 }
 
-function isSnapshot(artifact: Artifact) { return artifact.version.endsWith("-SNAPSHOT"); }
+function isSnapshot(artifact: Artifact) { return endWith(artifact.version, "-SNAPSHOT"); }
 
 function getPath(artfact: Artifact, snapshotPostfix = undefined) {
     var version: string;

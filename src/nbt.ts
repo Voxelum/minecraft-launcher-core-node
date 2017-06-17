@@ -1,7 +1,7 @@
 import * as gzip from 'zlib'
 import * as ByteBuffer from 'bytebuffer'
 
-import { readString, writeString } from './alt_string'
+import { readString, writeString } from './string_utils'
 
 //not finished yet...
 export namespace NBT {
