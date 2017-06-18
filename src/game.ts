@@ -1,8 +1,17 @@
 import { TextComponent } from './text';
 import { GameProfile } from './auth'
 import { NBT } from './nbt'
+import { Version } from './version'
+import { MinecraftLocation } from './file_struct'
+
 import * as net from 'net'
 import * as buf from 'bytebuffer'
+import * as os from 'os'
+import * as path from 'path'
+import * as fs from 'fs'
+import * as Zip from 'adm-zip'
+
+
 export interface Pos2 {
     x: number, z: number
 }
@@ -30,17 +39,24 @@ export interface GameSetting {
 }
 
 export namespace GameSetting {
-    const pattern = /(.*:.*)/g
-    export function readFromString(str: string): GameSetting | undefined {
-        let arr = pattern.exec(str)
+    export function readFromStringRaw(str: string): object | undefined {
+        let arr = str.split(os.EOL)
         if (arr) {
-            let pairs = arr.map(pair => pair.split(':'))
             let obj: any = {}
-            for (let pair of pairs)
-                obj[pair[0]] = obj[pair[1]]
-            return <GameSetting>obj
+            let pairs = arr.map(pair => pair.split(':')).forEach(pair => {
+                if (pair[0] == 'lastServer' || pair[0] == 'lang' || pair[0] == 'mainHand') {
+                    obj[pair[0]] = pair[1]
+                }
+                else {
+                    if (pair[0].length != 0) obj[pair[0]] = JSON.parse(pair[1])
+                }
+            })
+            return obj
         }
         return undefined
+    }
+    export function readFromString(str: string): GameSetting | undefined {
+        return readFromStringRaw(str) as GameSetting
     }
 }
 
@@ -127,10 +143,6 @@ export class Language {
     constructor(readonly id: string, readonly name: string, readonly region: string, readonly bidirectional: boolean) { }
 }
 
-import { Version } from './version'
-import { MinecraftLocation } from './file_struct'
-import * as path from 'path'
-import * as fs from 'fs'
 export namespace Language {
     export function exportLanguages(location: MinecraftLocation, version: string, callback: (languages: Language[], error?: Error) => void): void {
         let json = path.join(location.assets, 'indexes', version + '.json')
@@ -209,6 +221,28 @@ export enum ResourceMode {
 
 export class ResourcePack {
     constructor(readonly packName: string, readonly description: TextComponent, readonly format: number) { }
+}
+
+export namespace ResourcePack {
+    export function exportIcon(fileName: string, location: string, callback: () => void): void {
+    }
+
+    export function readFromFile(fileName: string, callback: (resourcePack?: ResourcePack, error?: Error) => void): void {
+        let zipFile = new Zip(fileName)
+        zipFile.readFileAsync('pack.mcmeta', (data, err) => {
+            if (err)
+                callback(undefined, new Error(err))
+            else {
+                try {
+                    let obj = JSON.parse(data.toString()).pack
+                    return new ResourcePack(fileName, TextComponent.fromFormattedString(obj.description), obj.pack_format)
+                }
+                catch (e) {
+                    callback(e)
+                }
+            }
+        })
+    }
 }
 
 export interface ModIndentity {

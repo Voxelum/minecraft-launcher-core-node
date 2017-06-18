@@ -1,9 +1,6 @@
-import { } from './minecraft'
+import { GameSetting } from './minecraft'
 
-let a: string[] = []
-a.push('1')
-
-let b = ['b']
-
-a = a.concat(b)
-console.log(a)
+import * as fs from 'fs'
+let s = fs.readFileSync('C:/Users/CIJhn/Workspace/Output/Standard/.minecraft/options.txt')
+let setting = GameSetting.readFromString(s.toString())
+console.log(setting)
