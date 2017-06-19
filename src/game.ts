@@ -3,6 +3,7 @@ import { GameProfile } from './auth'
 import { NBT } from './nbt'
 import { Version } from './version'
 import { MinecraftLocation } from './file_struct'
+import { endWith } from './string_utils'
 
 import * as net from 'net'
 import * as buf from 'bytebuffer'
@@ -10,7 +11,6 @@ import * as os from 'os'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as Zip from 'adm-zip'
-
 
 export interface Pos2 {
     x: number, z: number
@@ -252,6 +252,44 @@ export interface ModIndentity {
 
 export class ModContainer<Meta> {
     constructor(readonly type: string, readonly meta: Meta) { }
+}
+
+export namespace ModContainer {
+    export function tryParse(fileName: string, callback: (mod?: ModContainer<object>[], err?: Error) => void) {
+        if (endWith(fileName, '.litemod'))
+            parseLiteLoader(fileName, (m, e) => {
+                if (m) callback([m])
+                else callback(undefined, e)
+            })
+        else { parseForge(fileName, callback) }
+    }
+    export function parseForge(filePath: string, callback: (mod?: ModContainer<ForModMetaData>[], err?: Error) => void) {
+        let zip = new Zip(filePath)
+        zip.readFileAsync('mcmod.info', (data, err) => {
+            if (err) callback(undefined, new Error(err))
+            else {
+                try {
+                    let meta = JSON.parse(data.toString())
+                    let mods: any[]
+                    if (meta instanceof Array) mods = meta
+                    else if (meta.modListVersion) mods = meta.modList
+                    else mods = [meta]
+                    callback(mods.map(m => { return new ModContainer<ForModMetaData>('forge', new ForModMetaData(m.modid, m)) }))
+                }
+                catch (e) {
+                    callback(undefined, e)
+                }
+            }
+
+        })
+    }
+
+    export function parseLiteLoader(filePath: string, callback: (mod?: ModContainer<LitModeMetaData>, err?: Error) => void) {
+        let zip = new Zip(filePath)
+        zip.readFileAsync('mcmod.info', (DATA, err) => {
+            let meta = JSON.parse(data.toString())
+        })
+    }
 }
 
 export class ForModMetaData implements ModIndentity {
