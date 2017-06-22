@@ -1,7 +1,7 @@
 {
-  "name": "ts-ping-mc",
+  "name": "ts-minecraft",
   "version": "1.0.0",
-  "description": "",
+  "description": "Propabaliy all the things I want for a minecraft launcher.",
   "devDependencies": {
     "@types/long": "^3.0.31",
     "typescript": "^2.3.4",
