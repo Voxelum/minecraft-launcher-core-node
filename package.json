@@ -13,6 +13,10 @@
   "scripts": {
     "test": "tsc && node build/test.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InfinityStudio/ts-minecraft.git"
+  },
   "author": "CI010",
   "license": "GPL",
   "dependencies": {
@@ -20,5 +24,9 @@
     "bytebuffer": "^5.0.1",
     "long": "^3.2.0",
     "adm-zip": "^0.4.7"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/InfinityStudio/ts-minecraft/issues"
+  },
+  "homepage": "https://github.com/InfinityStudio/ts-minecraft#readme"
 }
