@@ -1,6 +1,8 @@
 {
   "name": "ts-minecraft",
-  "version": "0.1.0-beta",
+  "version": "0.1.1-beta",
+  "main": "./build/index.js",
+  "typings": "./build/index",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
   "devDependencies": {
     "@types/long": "^3.0.31",

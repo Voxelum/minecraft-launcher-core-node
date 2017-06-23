@@ -2,7 +2,7 @@
 All you need for minecraft in typescript.
 
 # Usage
-`import {NBT, ServerInfo, ...so on...} from 'minecraft'`
+`import {NBT, ServerInfo, ...so on...} from 'ts-minecraft'`
 
 Notice that this package is still WIP, no much tested yet.
 Used with the risk....
