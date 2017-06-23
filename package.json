@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "1.0.0",
+  "version": "0.1.0-beta",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
   "devDependencies": {
     "@types/long": "^3.0.31",
