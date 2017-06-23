@@ -286,7 +286,7 @@ export namespace ModContainer {
 
     export function parseLiteLoader(filePath: string, callback: (mod?: ModContainer<LitModeMetaData>, err?: Error) => void) {
         let zip = new Zip(filePath)
-        zip.readFileAsync('mcmod.info', (DATA, err) => {
+        zip.readFileAsync('mcmod.info', (data, err) => {
             let meta = JSON.parse(data.toString())
         })
     }

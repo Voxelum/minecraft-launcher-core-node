@@ -1,9 +1,11 @@
 # ts-minecraft(WIP)
 All you need for minecraft in typescript.
 
-
 # Usage
 `import {NBT, ServerInfo, ...so on...} from 'minecraft'`
+
+Notice that this package is still WIP, no much tested yet.
+Used with the risk....
 
 Supporting:
 - NBT IO by `NBT` (not done)
