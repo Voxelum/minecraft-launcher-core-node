@@ -14,10 +14,11 @@ Supporting:
 - TextComponent handling
 - Ping server and fetch the ServerStatus including numbers of player, server icon.
 - Other game concept model, like ForgeMod, Litloader Mod, WorldInfo.
+- Mod parsing.
+- Minecraft config model
+- WorldInfo modify
+
 
 Will support in future:
 - Minecraft client download
 - TextComponent to html (render TextComponent)
-- Mod parsing.
-- Minecraft config model
-- WorldInfo modify
