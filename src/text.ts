@@ -84,7 +84,6 @@ export class Style {
         return new Style(construct.parent, construct.color, construct.bold, construct.italic, construct.underline, construct.strikethrough, construct.obfuscated,
             construct.clickEvent, construct.hoverEvent, construct.insertion)
     }
-    static readonly ROOT = new Style(null, undefined, false, false, false, false, false, undefined, undefined, undefined);
 
     constructor(public _parent: Style | null = Style.ROOT,
         private _color?: TextFormatting,
@@ -98,22 +97,24 @@ export class Style {
         private _insertion?: string) {
     }
     set parent(style: Style) { this._parent = style; }
-    get parent(): Style { return this._parent == null ? Style.ROOT : this._parent; }
-    get color(): TextFormatting | undefined { return this._color ? this.parent.color : this._color; }
-    get bold(): boolean | undefined { return this._bold ? this.parent.bold : this._bold; }
-    get italic(): boolean | undefined { return this._italic ? this.parent.italic : this._italic; }
-    get underlined(): boolean | undefined { return this._underlined ? this.parent.underlined : this._underlined; }
-    get strikethrough(): boolean | undefined { return this._strikethrough ? this.parent.strikethrough : this._strikethrough; }
-    get obfuscated(): boolean | undefined { return this._obfuscated ? this.parent.obfuscated : this._obfuscated; }
-    get clickEvent(): Style.Event<string> | undefined { return this._clickEvent ? this.parent.clickEvent : this._clickEvent; }
-    get hoverEvent(): Style.Event<TextComponent> | undefined { return this._hoverEvent ? this.parent.hoverEvent : this._hoverEvent; }
-    get insertion(): string | undefined { return this._insertion ? this.parent.insertion : this._insertion; }
+    get parent(): Style {
+        return this._parent == null ? Style.ROOT : this._parent;
+    }
+    get color(): TextFormatting | undefined { return this._color ? this._color : this.parent.color; }
+    get bold(): boolean { return this._bold ? this._bold : this.parent.bold; }
+    get italic(): boolean { return this._italic ? this._italic : this.parent.italic; }
+    get underlined(): boolean { return this._underlined ? this._underlined : this.parent.underlined; }
+    get strikethrough(): boolean { return this._strikethrough ? this._strikethrough : this.parent.strikethrough; }
+    get obfuscated(): boolean { return this._obfuscated ? this._obfuscated : this.parent.obfuscated; }
+    get clickEvent(): Style.Event<string> | undefined { return this._clickEvent ? this._clickEvent : this.parent.clickEvent; }
+    get hoverEvent(): Style.Event<TextComponent> | undefined { return this._hoverEvent ? this._hoverEvent : this.parent.hoverEvent; }
+    get insertion(): string | undefined { return this._insertion ? this._insertion : this.parent.insertion; }
     get code(): string {
         if (this.isEmpty())
             return this.parent != null ? this.parent.code : "";
         else {
             let code = ''
-            if (this.color != null)
+            if (this.color)
                 code += this.color;
             if (this.bold)
                 code += (TextFormatting.BOLD);
@@ -135,7 +136,23 @@ export class Style {
             this.clickEvent == null && this.hoverEvent == null && this.insertion == null;
     }
 }
+
+class RootStyle extends Style {
+    constructor() { super() }
+    set parent(style: Style) { this._parent = style; }
+    get parent(): Style { return this; }
+    get color(): TextFormatting | undefined { return TextFormatting.BLACK; }
+    get bold(): boolean { return false; }
+    get italic(): boolean { return false; }
+    get underlined(): boolean { return false; }
+    get strikethrough(): boolean { return false; }
+    get obfuscated(): boolean { return false; }
+    get clickEvent(): Style.Event<string> | undefined { return undefined; }
+    get hoverEvent(): Style.Event<TextComponent> | undefined { return undefined; }
+    get insertion(): string | undefined { return undefined }
+}
 export namespace Style {
+    export const ROOT: Style = new RootStyle();
     export interface Action {
         readonly canonicalName: string;
         readonly allowInChat: boolean;
@@ -173,7 +190,7 @@ export interface TextComponent {
     readonly unformatted: string;
     readonly formatted: string;
     readonly siblings: TextComponent[];
-
+    readonly iterator: TextComponent[];
 
 	/**
 	 * Adds a new component to the end of the sibling list, setting that component's style's parent style to this
@@ -188,11 +205,25 @@ export namespace TextComponent {
         return new TextComponentString(s);
     }
 
+    export function fromObject(obj: any): TextComponent {
+        let component: TextComponent | undefined = undefined
+        if (obj.text) component = TextComponent.str(obj.text)
+        if (!component) component = TextComponent.str('')
+        if (obj.extra && obj.extra instanceof Array)
+            for (let element of obj.extra)
+                component.append(fromObject(element))
+        return component
+    }
+
     export function fromFormattedString(formatted: string): TextComponent {
-        let string: TextComponentString = new TextComponentString()
+        let firstCode = formatted.indexOf('§')
+        if (firstCode == -1) return new TextComponentString(formatted)
+
         let builder: string = ''
         let colorIdx: number = 0
         let boldStyle = false, strikethroughStyle = false, underlineStyle = false, italicStyle = false
+
+        let string: TextComponentString = new TextComponentString()
         for (let i = 0; i < formatted.length; i++) {
             let c = formatted.charCodeAt(i);
             if (c == 167 && i + 1 < formatted.length)// 167 is §
@@ -204,7 +235,7 @@ export namespace TextComponent {
                             strikethrough: strikethroughStyle,
                             underline: underlineStyle,
                             italic: italicStyle,
-                            color: TextFormatting.getValueByChar(String.fromCharCode(colorIdx))
+                            color: TextFormatting.getValueByChar(colorIdx.toString())
                         }
                     )))
                     builder = ''
@@ -230,7 +261,7 @@ export namespace TextComponent {
 
                 ++i;//ignore the next char
             }
-            else builder += c;
+            else builder += String.fromCharCode(c);
         }
         if (builder.length != 0) {
             string.append(new TextComponentString(builder.toString(),
@@ -239,7 +270,7 @@ export namespace TextComponent {
                     strikethrough: strikethroughStyle,
                     underline: underlineStyle,
                     italic: italicStyle,
-                    color: TextFormatting.getValueByChar(String.fromCharCode(colorIdx))
+                    color: TextFormatting.getValueByChar(colorIdx.toString())
                 })))
         }
         return string;
@@ -254,7 +285,11 @@ class TextComponentString implements TextComponent {
             this._style = style;
     }
 
-    get unformatted(): string { return this.text; }
+    toString(): string { return this.formatted }
+
+    get unformatted(): string {
+        return this.text;
+    }
 
     get style() {
         if (this._style)
@@ -264,15 +299,17 @@ class TextComponentString implements TextComponent {
         return this._style;
     }
 
-    get iterable() {
+    get iterator() {
         let arr: TextComponent[] = [this]
-        arr.concat(this._siblings);
+        if (this.siblings.length != 0)
+            for (let s of this.siblings)
+                arr = arr.concat(s.iterator);
         return arr;
     }
 
     get formatted(): string {
         let v = '';
-        for (let component of this.iterable) {
+        for (let component of this.iterator) {
             let s = component.unformatted;
             if (s.length != 0) {
                 v += component.style.code;

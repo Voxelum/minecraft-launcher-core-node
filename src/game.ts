@@ -200,6 +200,7 @@ export interface ServerInfo {
 export class ServerStatus {
     pingToServer: number;
     static pinging() { return new ServerStatus(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
+    static error() { return new ServerStatus(TextComponent.str('Error'), TextComponent.str("Error"), -1, -1, -1) }
     constructor(
         readonly gameVersion: TextComponent,
         readonly serverMOTD: TextComponent,
@@ -211,6 +212,14 @@ export class ServerStatus {
             type: string,
             modList: Array<ModIndentity>
         }) { }
+
+    toString(): string {
+        return JSON.stringify(this, (k, v) => {
+            if (k == 'gameVersion') return v + ''
+            if (k == 'serverMOTD') return v + ''
+            return v
+        })
+    }
 }
 
 export enum ResourceMode {
@@ -337,16 +346,6 @@ function writeString(buff: ByteBuffer, string: string) {
     buff.writeUTF8String(string)
 }
 
-function parseText(obj: any): TextComponent {
-    let component: TextComponent | undefined = undefined
-    if (obj.text) component = TextComponent.str(obj.text)
-    if (!component) component = TextComponent.str('')
-    if (obj.extra && obj.extra instanceof Array)
-        for (let element of obj.extra)
-            component.append(parseText(element))
-    return component
-}
-
 export namespace ServerInfo {
     export function readFromNBT(buf: Buffer): ServerInfo[] {
         let data = NBT.read(buf)
@@ -355,7 +354,7 @@ export namespace ServerInfo {
         return []
     }
 
-    export function fetchServerStatus(server: ServerInfo, callback: (status: ServerStatus) => void, ping: boolean = true) {
+    export function fetchServerStatus(server: ServerInfo, callback: (status: ServerStatus, error?: Error) => void, ping: boolean = true) {
         let port = server.port ? server.port : 25565
         let connection = net.createConnection(port, server.host, () => {
             let buffer = buf.allocate(256)
@@ -379,6 +378,9 @@ export namespace ServerInfo {
             connection.end()
         })
         let recived = ''
+        connection.on('error', (error) => {
+            callback(ServerStatus.error(), error)
+        })
         connection.on('data', (data) => {
             recived += data.toString('utf-8')
         })
@@ -389,7 +391,7 @@ export namespace ServerInfo {
             let motd: TextComponent = TextComponent.str('')
             if (obj.description) {
                 if (typeof (obj.description) === 'object')
-                    motd = parseText(obj.description)
+                    motd = TextComponent.fromObject(obj.description)
                 else if (typeof (obj.description) === 'string')
                     motd = TextComponent.str(obj.description)
             }
@@ -402,7 +404,7 @@ export namespace ServerInfo {
             let max = -1
             if (version) {
                 if (version.name)
-                    versionText = TextComponent.fromFormattedString(obj.version.name as string)
+                    versionText = TextComponent.fromFormattedString(version.name as string)
                 if (version.protocol)
                     protocol = version.protocol
             }

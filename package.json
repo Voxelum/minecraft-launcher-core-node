@@ -1,25 +1,32 @@
 {
   "name": "ts-minecraft",
-  "version": "0.1.1-beta",
-  "main": "./build/index.js",
-  "typings": "./build/index",
+  "version": "0.1.2-beta",
+  "main": "./dist/index.js",
+  "typings": "./dist/index",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
   "devDependencies": {
-    "@types/long": "^3.0.31",
     "typescript": "^2.3.4",
+    "mocha": "^3.4.2",
+    
+    "@types/long": "^3.0.31",
     "@types/node": "^7.0.29",
     "@types/bytebuffer": "^5.0.33",
     "@types/uuid": "^3.0.0",
+    "@types/mocha": "^2.2.41",
     "@types/adm-zip": "^0.4.31"
   },
   "scripts": {
-    "test": "tsc && node build/test.js"
+    "test": "tsc && node ./node_modules/mocha/bin/mocha dist/tests"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/InfinityStudio/ts-minecraft.git"
   },
-  "author": "CI010",
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript"
+  ],
   "license": "GPL",
   "dependencies": {
     "uuid": "^3.0.1",
