@@ -1,4 +1,6 @@
 import { GameProfile, UserType, AuthInfo } from './auth'
+import * as https from 'https';
+import * as http from 'http';
 
 //this module migrates from jmccc: https://github.com/to2mbn/JMCCC/tree/master/jmccc-yggdrasil-authenticator
 //@author huangyuhui
@@ -25,16 +27,34 @@ export namespace AuthResponse {
 }
 
 export interface AuthService {
-    login(username: string, password: string, clientToken?: string, callback?: (response: AuthResponse) => void): void;
-    refresh(clientToken: string, accessToken: string, profile: string, callback?: (response: AuthResponse) => void): void;
+    login(username: string, password: string, clientToken?: string, callback?: (response: AuthResponse | Error) => void): void;
+    refresh(clientToken: string, accessToken: string, profile: string, callback?: (response: AuthResponse | Error) => void): void;
     validate(accessToken: string, clientToken?: string, callback?: (valid: boolean) => void): void;
     invalide(accessToken: string, clientToken: string): void;
     signout(username: string, password: string): void;
 }
 
 export namespace AuthService {
+    export interface API {
+        hostName: string;
+        //paths
+        authenticate: string;
+        refresh: string;
+        validate: string;
+        invalidate: string;
+        signout: string;
+    }
+
+    export const MojangAPI: API = {
+        hostName: 'authserver.mojang.com',
+        authenticate: '/authenticate',
+        refresh: '/refresh',
+        validate: "/validate",
+        invalidate: '/invalidate',
+        signout: '/signout',
+    }
     class Yggdrasil implements AuthService {
-        private api: API;
+        constructor(private api: API) { }
         private request(payload: any, path: string, callback?: (string: string) => void, error?: (e: Error) => void) {
             let responseHandler = callback ? (response: http.IncomingMessage) => {
                 let buffer = ''
@@ -83,7 +103,7 @@ export namespace AuthService {
             this.request(payload, path, call, error)
         }
 
-        login(username: string, password: string, clientToken?: string | undefined, callback?: (response: AuthResponse) => void | undefined): void {
+        login(username: string, password: string, clientToken?: string | undefined, callback?: (response: AuthResponse | Error) => void | undefined): void {
             let payload = {
                 agent: 'Minecraft',
                 username: username,
@@ -91,10 +111,10 @@ export namespace AuthService {
                 clientToken: clientToken,
                 requestUser: true
             };
-            this.requestAndHandleResponse(payload, this.api.authenticate, callback)
+            this.requestAndHandleResponse(payload, this.api.authenticate, callback, callback)
         }
 
-        refresh(clientToken: string, accessToken: string, profile?: string, callback?: (response: AuthResponse) => void): void {
+        refresh(clientToken: string, accessToken: string, profile?: string, callback?: (response: AuthResponse | Error) => void): void {
             let payloadObj: any = {
                 // agent: 'Minecraft',
                 clientToken: clientToken,
@@ -105,7 +125,7 @@ export namespace AuthService {
                 payloadObj.selectedProfile = {
                     id: profile
                 }
-            this.requestAndHandleResponse(payloadObj, this.api.refresh, callback)
+            this.requestAndHandleResponse(payloadObj, this.api.refresh, callback, callback)
         }
         validate(accessToken: string, clientToken?: string, callback?: (valid: boolean) => void): void {
             let obj = {
@@ -123,29 +143,9 @@ export namespace AuthService {
             this.request({ username: username, password: password }, this.api.signout)
         }
     }
-    export function newYggdrasilAuthService(): AuthService {
-        return new Yggdrasil();
+    export function newYggdrasilAuthService(api?: API): AuthService {
+        if (api)
+            return new Yggdrasil(api)
+        return new Yggdrasil(MojangAPI)
     }
 }
-
-export interface API {
-    hostName: string;
-    //paths
-    authenticate: string;
-    refresh: string;
-    validate: string;
-    invalidate: string;
-    signout: string;
-}
-
-export const MojangAPI: API = {
-    hostName: 'authserver.mojang.com',
-    authenticate: '/authenticate',
-    refresh: '/refresh',
-    validate: "/validate",
-    invalidate: '/invalidate',
-    signout: '/signout',
-}
-
-import * as https from 'https';
-import * as http from 'http';
