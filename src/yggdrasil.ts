@@ -45,17 +45,20 @@ export namespace AuthService {
         signout: string;
     }
 
-    export const MojangAPI: API = {
-        hostName: 'authserver.mojang.com',
-        authenticate: '/authenticate',
-        refresh: '/refresh',
-        validate: "/validate",
-        invalidate: '/invalidate',
-        signout: '/signout',
+    export function mojangAPI(): API {
+        return {
+            hostName: 'authserver.mojang.com',
+            authenticate: '/authenticate',
+            refresh: '/refresh',
+            validate: "/validate",
+            invalidate: '/invalidate',
+            signout: '/signout',
+        }
     }
     class Yggdrasil implements AuthService {
         constructor(private api: API) { }
         private request(payload: any, path: string, callback?: (string: string) => void, error?: (e: Error) => void) {
+            payload = JSON.stringify(payload)
             let responseHandler = callback ? (response: http.IncomingMessage) => {
                 let buffer = ''
                 response.setEncoding('utf8');
@@ -65,7 +68,7 @@ export namespace AuthService {
                 response.on('end', () => { callback(buffer) });
             } : undefined
             let req = https.request({
-                hostname: MojangAPI.hostName,
+                hostname: this.api.hostName,
                 path: path,
                 method: 'POST',
                 headers: {
@@ -81,9 +84,14 @@ export namespace AuthService {
             req.end();
         }
 
-        private requestAndHandleResponse(payload: any, path: string, callback?: (string: AuthResponse) => void, error?: (e: Error) => void) {
+        private requestAndHandleResponse(payload: any, path: string, callback?: (respon: AuthResponse) => void, error?: (e: Error) => void) {
             let call = callback ? (s: string) => {
                 let obj = JSON.parse(s)
+                if (obj.error) {
+                    if (error) error(new Error(obj.errorMessage))
+                    return
+                }
+
                 let userId = obj.user ? obj.user.id ? obj.user.id : '' : ''
                 let prop = obj.user ? obj.user.properties ? obj.user.properties : {} : {}
                 if (callback)
@@ -146,6 +154,6 @@ export namespace AuthService {
     export function newYggdrasilAuthService(api?: API): AuthService {
         if (api)
             return new Yggdrasil(api)
-        return new Yggdrasil(MojangAPI)
+        return new Yggdrasil(mojangAPI())
     }
 }
