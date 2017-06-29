@@ -11,12 +11,12 @@ export namespace NBT {
 
     let visitors: Visitor[] = [
         { read(buf) { }, write(buf, v) { } },
-        { read(buf) { return buf.readByte(); }, write(buf, v) { buf.writeByte(v) } },
-        { read(buf) { return buf.readShort(); }, write(buf, v) { buf.writeShort(v) } },
-        { read(buf) { return buf.readInt(); }, write(buf, v) { buf.writeInt(v) } },
-        { read(buf) { return buf.readLong(); }, write(buf, v) { buf.writeInt64(v) } },
-        { read(buf) { return buf.readFloat(); }, write(buf, v) { buf.writeFloat(v) } },
-        { read(buf) { return buf.readDouble(); }, write(buf, v) { buf.writeDouble(v) } },
+        { read: (buf) => buf.readByte(), write(buf, v) { buf.writeByte(v) } },
+        { read: (buf) => buf.readShort(), write(buf, v) { buf.writeShort(v) } },
+        { read: (buf) => buf.readInt(), write(buf, v) { buf.writeInt(v) } },
+        { read: (buf) => buf.readLong(), write(buf, v) { buf.writeInt64(v) } },
+        { read: (buf) => buf.readFloat(), write(buf, v) { buf.writeFloat(v) } },
+        { read: (buf) => buf.readDouble(), write(buf, v) { buf.writeDouble(v) } },
         {
             read(buf) {
                 let len = buf.readInt();
@@ -158,32 +158,31 @@ export namespace NBT {
     }
 
     export abstract class Base {
-        protected constructor(readonly type: NBT.Type) { }
+        protected constructor(readonly type: NBT.Type, protected _value: any) { }
 
-        protected abstract _value: any
         get numberValue(): number {
             if (this.isNumber) return this._value
-            else throw ''
+            else throw 'Wrong Type'
         }
         get stringValue(): string {
             if (this.isString) return this._value
-            else throw ''
+            else throw 'Wrong Type'
         }
         get longValue(): Long {
             if (this.isLong) return this._value
-            else throw ''
+            else throw 'Wrong Type'
         }
         get compoundValue(): Compound {
             if (this.isCompound) return <Compound><any>this
-            else throw ''
+            else throw 'Wrong Type'
         }
         get listValue(): List {
             if (this.isList) return <List><any>this
-            else throw ''
+            else throw 'Wrong Type'
         }
         get numberArrayValue(): number[] {
             if (this.isNumberArray) return this._value
-            else throw ''
+            else throw 'Wrong Type'
         }
         get isNumber(): boolean {
             return this.type == NBT.Type.Int ||
@@ -202,19 +201,27 @@ export namespace NBT {
         }
         get isLong(): boolean { return this.type == Type.Long }
         get isCompound(): boolean { return this.type == Type.Compound }
+
+        abstract toJSON(): object;
     }
 
     export class List extends Base {
-        constructor(type: Type) { super(type) }
-        protected _value: any
+        constructor(type: Type) { super(type, []) }
+
+        toJSON() {
+            return {}
+        }
     }
     export class Compound extends Base {
-        constructor(type: Type) { super(type) }
-        protected _value: any
-
-        // [key: string]: Base
+        constructor(type: Type) { super(type, {}) }
+        toJSON() {
+            return {}
+        }
     }
     export class Primitive extends Base {
-        private constructor(type: NBT.Type, protected _value: any) { super(type) }
+        constructor(type: NBT.Type, _value: string | number | boolean | number[] | Long) { super(type, _value) }
+        toJSON() {
+            return {}
+        }
     }
 }

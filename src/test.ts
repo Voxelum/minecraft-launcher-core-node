@@ -1,6 +1,6 @@
-import { GameSetting } from './minecraft'
+import { MojangRepository } from './download'
 
-import * as fs from 'fs'
-let s = fs.readFileSync('C:/Users/CIJhn/Workspace/Output/Standard/.minecraft/options.txt')
-let setting = GameSetting.readFromString(s.toString())
-console.log(setting)
+let r = new MojangRepository()
+r.fetchVersionList((re) => {
+    console.log(re)
+})

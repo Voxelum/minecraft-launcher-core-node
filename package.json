@@ -15,7 +15,8 @@
     "@types/adm-zip": "^0.4.31"
   },
   "scripts": {
-    "test": "tsc && node ./node_modules/mocha/bin/mocha dist/tests"
+    "test": "tsc && node ./node_modules/mocha/bin/mocha dist/tests",
+    "test-": "tsc && node ./dist/src/test.js"
   },
   "repository": {
     "type": "git",

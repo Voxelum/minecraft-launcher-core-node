@@ -122,3 +122,22 @@ export function startWith(string: string, prefix: string) {
 export function endWith(string: string, postfix: string) {
     return string.match(new RegExp(postfix + '$'))
 }
+
+import * as http from 'http'
+import * as https from 'https'
+import * as urls from 'url'
+
+export function getString(url: string, callback: (result: string | Error) => void) {
+    let u = urls.parse(url)
+    let buf = ''
+    let call = (res: http.IncomingMessage) => {
+        res.setEncoding('utf-8')
+        res.on('data', (data) => buf += data)
+        res.on('end', () => callback(buf))
+    }
+    let req
+    if (u.protocol == 'https') req = https.get(url, call)
+    else req = http.get(url, call)
+    req.on('error', (e) => callback(e))
+    req.end()
+}

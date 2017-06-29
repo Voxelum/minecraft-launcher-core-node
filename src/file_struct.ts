@@ -24,8 +24,6 @@ function getPath0(artfact: Artifact) {
     return getArtifactBasePath(artfact.groupId, artfact.id, artfact.version) +
         artfact.id + "-" + artfact.version + (artfact.classifier ? "-" + artfact.classifier : "") + "." + artfact.type;
 }
-
-
 export class MinecraftLocation {
     constructor(readonly root: string) { }
 
@@ -43,6 +41,10 @@ export class MinecraftLocation {
     getVersionRoot(version: string) { return paths.join(this.versions, version) }
     getVersionJson(version: string) { return paths.join(this.getVersionRoot(version), version + '.json') }
     getVersionJar(version: string) { return paths.join(this.getVersionRoot(version), version + '.jar') }
+    getVersionAll(version: string) {
+        return [paths.join(this.versions, version), paths.join(this.versions, version, version + '.json'),
+        paths.join(this.versions, version, version + '.jar')]
+    }
     getResourcePack(fileName: string) { return paths.join(this.resourcepacks, fileName) }
     getMod(fileName: string) { return paths.join(this.mods, fileName) }
     getLog(fileName: string) { return paths.join(this.logs, fileName) }
