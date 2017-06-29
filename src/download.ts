@@ -23,7 +23,8 @@ export interface VersionMeta {
 
 export interface VersionDownloader {
     fetchVersionList(callback: (response: VersionMetaList | Error) => void): void
-    downloadVersion(version: VersionMeta, minecraft: MinecraftLocation, callback: () => void): void
+    downloadClient(version: VersionMeta, minecraft: MinecraftLocation, callback: () => void): void
+    downloadServer(version: VersionMeta, minecraft: MinecraftLocation, callback: () => void): void
 }
 export interface AssetsDownloader {
     downloadLibrary(Library: Library, minecraft: MinecraftLocation, callback: () => void): void
@@ -32,7 +33,6 @@ export interface AssetsDownloader {
 
 export class MojangRepository implements VersionDownloader {
     fetchVersionList(callback: (response: VersionMetaList | Error) => void): void {
-        //https://launchermeta.mojang.com/mc/game/version_manifest.json
         getString('https://launchermeta.mojang.com/mc/game/version_manifest.json', (r) => {
             if (typeof r === 'string')
                 try {
@@ -42,28 +42,12 @@ export class MojangRepository implements VersionDownloader {
                 }
             else callback(r)
         })
-        let req = https.request({
-            hostname: 'launchermeta.mojang.com',
-            path: '/mc/game/version_manifest.json',
-            method: 'GET'
-        }, (res) => {
-            let buf = ''
-            res.setEncoding('utf-8')
-            res.on('data', (s) => buf += s)
-            res.on('end', () => {
-                try {
-                    callback(JSON.parse(buf))
-                } catch (e) {
-                    callback(e)
-                }
-            })
-        })
-        req.on('error', (err) => {
-            callback(err)
-        })
-        req.end()
     }
-    downloadVersion(version: VersionMeta, minecraft: MinecraftLocation, callback: (result: Version | Error) => void): void {
+
+    private download(version: VersionMeta, minecraft: MinecraftLocation, callback: (result: Version | Error) => void){
+    
+    }
+    downloadClient(version: VersionMeta, minecraft: MinecraftLocation, callback: (result: Version | Error) => void): void {
         let [root, json, jar] = minecraft.getVersionAll(version.id)
         url.parse(json)
         fs.mkdirSync(root)
@@ -71,7 +55,14 @@ export class MojangRepository implements VersionDownloader {
         https.get(version.url, (res) => res.pipe(jsonStream))
         jsonStream.on('finish', () => {
             jsonStream.close()
+            let v = Version.parse(minecraft.root, version.id)
+            if (v) {
+                v.downloads['client']
+            }
         })
+    }
+    downloadServer(version: VersionMeta, minecraft: MinecraftLocation, callback: () => void): void {
+
     }
 }
 

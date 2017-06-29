@@ -127,7 +127,7 @@ import * as http from 'http'
 import * as https from 'https'
 import * as urls from 'url'
 
-export function getString(url: string, callback: (result: string | Error) => void) {
+export function getString(url: string, callback: (result: string, error?: Error) => void) {
     let u = urls.parse(url)
     let buf = ''
     let call = (res: http.IncomingMessage) => {
@@ -136,8 +136,8 @@ export function getString(url: string, callback: (result: string | Error) => voi
         res.on('end', () => callback(buf))
     }
     let req
-    if (u.protocol == 'https') req = https.get(url, call)
+    if (u.protocol == 'https:') req = https.get(url, call)
     else req = http.get(url, call)
-    req.on('error', (e) => callback(e))
+    req.on('error', (e) => callback('', e))
     req.end()
 }
