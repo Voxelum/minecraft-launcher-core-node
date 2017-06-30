@@ -4,7 +4,7 @@ import * as https from 'https'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as url from 'url'
-import { GET } from './string_utils'
+import { GET, DOWN, DIR, READ } from './string_utils'
 export interface VersionMetaList {
     latest: {
         snapshot: string,
@@ -22,22 +22,39 @@ export interface VersionMeta {
 }
 
 export interface VersionDownloader {
+
     fetchVersionList(): Promise<VersionMetaList>
 
     downloadVersion(versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>
+
     downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation): Promise<Version>
     downloadVersionJar(type: string, version: Version, minecraft: MinecraftLocation): Promise<Version>
     downloadVersionJar(type: 'client', version: Version, minecraft: MinecraftLocation): Promise<Version>
     downloadVersionJar(type: 'server', version: Version, minecraft: MinecraftLocation): Promise<Version>
-}
-export interface AssetsDownloader {
-    downloadLibrary(Library: Library, minecraft: MinecraftLocation, callback: () => void): void
-    downloadAsset(asset: Asset, minecraft: MinecraftLocation, callback: () => void): void
+
+    checkDependencies(version: Version, minecraft: MinecraftLocation): Promise<Version>
+    downloadLibraries(version: Version, minecraft: MinecraftLocation): Promise<Version>
+    downloadAssets(version: Version, minecraft: MinecraftLocation): Promise<Version>
 }
 
+export namespace VersionDownloader {
+    export interface API {
+        readonly versions: string
+        readonly library: string
+        readonly assets: string
+    }
+    export function mojang(): API {
+        return {
+            versions: 'https://launchermeta.mojang.com/mc/game/version_manifest.json',
+            library: 'https://libraries.minecraft.net',
+            assets: 'https://resources.download.minecraft.net'
+        }
+    }
+}
 export class MojangRepository implements VersionDownloader {
+    constructor(private api: VersionDownloader.API = VersionDownloader.mojang()) { }
     fetchVersionList() {
-        return GET('https://launchermeta.mojang.com/mc/game/version_manifest.json').then(r => JSON.parse(r))
+        return GET(this.api.versions).then(r => JSON.parse(r))
     }
 
     downloadVersion(versionMeta: VersionMeta, minecraft: MinecraftLocation) {
@@ -45,15 +62,9 @@ export class MojangRepository implements VersionDownloader {
             .then((version) => this.downloadVersionJar('client', version, minecraft))
     }
 
-    private checkDir(version: string, minecraft: MinecraftLocation) {
-        let v = minecraft.versions
-        if (!fs.existsSync(v)) fs.mkdirSync(v)
-        let vR = minecraft.getVersionRoot(version)
-        if (!fs.existsSync(vR)) fs.mkdirSync(vR)
-    }
     async downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation) {
         let json = minecraft.getVersionJson(version.id)
-        this.checkDir(version.id, minecraft)
+        await DIR(minecraft.getVersionRoot(version.id))
         if (!fs.existsSync(json)) await new Promise<void>((res, rej) => {
             let jsonStream = fs.createWriteStream(json)
             let u = url.parse(version.url)
@@ -69,31 +80,68 @@ export class MojangRepository implements VersionDownloader {
     }
 
     async downloadVersionJar(type: string, version: Version, minecraft: MinecraftLocation) {
-        this.checkDir(version.version, minecraft)
+        await DIR(minecraft.getVersionRoot(version.version))
         let filename = type == 'client' ? version.version + '.jar' : version.version + '-' + type + '.jar'
         let jar = path.join(minecraft.getVersionRoot(version.version), filename)
         if (fs.existsSync(jar))
             return version
         await new Promise<void>((acc, den) => {
-            let jsonStream = fs.createWriteStream(jar)
+            let jarStream = fs.createWriteStream(jar)
             let u = url.parse(version.downloads[type].url)
-            https.get({ host: u.host, path: u.path }, (res) => res.pipe(jsonStream)).on('error', (e) => den(e))
-            jsonStream.on('finish', () => {
-                jsonStream.close();
+            https.get({ host: u.host, path: u.path }, (res) => res.pipe(jarStream)).on('error', (e) => den(e))
+            jarStream.on('finish', () => {
+                jarStream.close();
                 acc()
             })
         })
         return version
     }
-}
 
-export namespace MinecraftRepository {
-    // export function defaultVersionList(): Promise<VersionMetaList> {
-    //     return new Promise((resolve, reject) => {
-    //         https.request({
-    //             host: ""
-    //         })
-    //     });
-    // }
+    async downloadLibraries(version: Version, minecraft: MinecraftLocation): Promise<Version> {
+        let list = []
+        for (let lib of version.libraries) {
+            if (lib.downloadInfo) {
+                const rawPath = lib.downloadInfo.path
+                let filePath = path.join(minecraft.libraries, rawPath)
+                let dirPath = path.dirname(filePath)
+
+                if (!fs.existsSync(filePath)) {
+                    if (!fs.existsSync(dirPath))
+                        await DIR(dirPath)
+                    list.push(DOWN(this.api.library + "/" + rawPath, filePath))
+                }
+            }
+        }
+        return Promise.all(list).then(v => version)
+    }
+    checkDependencies(version: Version, minecraft: MinecraftLocation): Promise<Version> {
+        return Promise.all([this.downloadAssets(version, minecraft), this.downloadLibraries(version, minecraft)]).then(v => version)
+    }
+
+    async downloadAssets(version: Version, minecraft: MinecraftLocation): Promise<Version> {
+        let jsonPath = minecraft.getPath('assets', 'indexes', version.assets + '.json')
+        if (!fs.existsSync(jsonPath)) {
+            await DIR(path.join(minecraft.assets, 'indexes'))
+            await DOWN(version.assetIndexDownloadInfo.url, jsonPath)
+        }
+        let content: any = JSON.parse(await READ(jsonPath)).objects
+
+        await DIR(minecraft.getPath('assets', 'objects'))
+        let list = []
+        for (var key in content) {
+            if (content.hasOwnProperty(key)) {
+                var element = content[key];
+                let hash: string = element.hash
+                let head = hash.substring(0, 2)
+                let dir = minecraft.getPath('assets', 'objects', head)
+                let file = path.join(dir, hash)
+                if (!fs.existsSync(file)) {
+                    await DIR(dir)
+                    list.push(DOWN(this.api.library + '/' + key, file))
+                }
+            }
+        }
+        return Promise.all(list).then(r => version)
+    }
 }
 

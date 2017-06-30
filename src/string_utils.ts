@@ -127,6 +127,37 @@ import * as http from 'http'
 import * as https from 'https'
 import * as urls from 'url'
 import * as fs from 'fs'
+import * as path from 'path';
+import * as dir from 'mkdirp'
+
+export async function DIR(path: string): Promise<string> {
+    return new Promise<string>((acc, den) => {
+        dir(path, (e, m) => {
+            if (e) den()
+            else acc(m)
+        })
+    })
+}
+export function DOWN(url: string, file: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        let stream = fs.createWriteStream(file)
+        let u = urls.parse(url)
+        let req
+        if (u.protocol == 'https:')
+            req = https.get({
+                host: u.host,
+                path: u.path
+            }, res => res.pipe(stream)).on('error', e => { reject(e); fs.unlink(file) })
+        else
+            req = http.get({
+                host: u.host,
+                path: u.path
+            }, res => res.pipe(stream)).on('error', e => { reject(e); fs.unlink(file) })
+        stream.on('finish', () => { stream.close(); resolve() })
+        req.end()
+    });
+
+}
 
 export async function READ(path: string): Promise<string> {
     return new Promise<string>((res, rej) => {

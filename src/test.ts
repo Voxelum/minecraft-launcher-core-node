@@ -5,7 +5,7 @@ import { MojangRepository, VersionMetaList } from './download'
 
 import { resolveDependencyAsync, Version } from './version';
 
-import { Language } from './game'
+import { Language } from './game';
 
 // Language.exportLanguagesS('', '')
 //TODO test this
@@ -15,7 +15,13 @@ import { GET } from './string_utils'
 import { MinecraftLocation } from './file_struct';
 
 let re = new MojangRepository()
-let loc = new MinecraftLocation('D:/t-hox/Desktop/test')
-let v = Version.parse(loc.root, '1.12')
-if (v)
-    re.downloadVersionJar('server', v, loc)
+let loc = new MinecraftLocation(__dirname + '/' + '.minecraft')
+
+async function down() {
+    let ls: VersionMetaList = await re.fetchVersionList()
+    let v = ls.versions.filter(v => v.id == ls.latest.release)[0]
+    let inst = await re.downloadVersion(v, loc)
+    await re.downloadLibraries(inst, loc)
+    await re.downloadAssets(inst, loc)
+}
+down()
