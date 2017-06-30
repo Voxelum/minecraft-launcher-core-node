@@ -5,6 +5,7 @@
 import * as fs from 'fs'
 import * as os from 'os'
 import * as paths from 'path'
+import { READ } from './string_utils'
 
 /**
  * Virtual representation of artifact in memory. May not be the same with the file structure.
@@ -112,17 +113,35 @@ function parseAssetIndex(json: any): Asset[] {
     return assets;
 }
 
+export function resolveDependencyAsync(path: string, version: string): Promise<any[]> {
+    return new Promise<any[]>((res, rej) => {
+        let stack: any[] = []
+        let fullPath = paths.join(path, 'versions', version, version + '.json')
+        if (!fs.existsSync(fullPath)) rej(new Error('No version file for ' + version));
+        function interal(fullPath: string): Promise<any[]> {
+            return READ(fullPath).then((value) => {
+                let obj = JSON.parse(value)
+                stack.push(obj)
+                if (obj.inheritsFrom)
+                    return interal(paths.join(path, 'versions', obj.inheritsFrom, obj.inheritsFrom + '.json'))
+                else
+                    return stack
+            })
+        }
+        interal(fullPath).then(r => res(r), e => rej(e))
+    })
+}
+
 function resolveDependency(path: string, version: string): any[] {
     let stack = []
-    let fullPath = paths.join(path, 'versions', version, version + '.json')
-    if (fs.existsSync(fullPath)) {
-        let obj
-        do {
-            obj = JSON.parse(fs.readFileSync(fullPath).toString('utf-8'))
-            stack.push(obj)
-            obj = obj.inheritsFrom
-        } while (obj);
-    }
+    do {
+        let fullPath = paths.join(path, 'versions', version, version + '.json')
+        if (!fs.existsSync(fullPath)) break;
+        let obj = JSON.parse(fs.readFileSync(fullPath).toString('utf-8'))
+        stack.push(obj)
+        version = obj.inheritsFrom
+    } while (version);
+
     return stack
 }
 

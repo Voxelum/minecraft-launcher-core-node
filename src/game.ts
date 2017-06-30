@@ -3,7 +3,7 @@ import { GameProfile } from './auth'
 import { NBT } from './nbt'
 import { Version } from './version'
 import { MinecraftLocation } from './file_struct'
-import { endWith } from './string_utils'
+import { endWith, READ } from './string_utils'
 
 import * as net from 'net'
 import * as buf from 'bytebuffer'
@@ -144,6 +144,42 @@ export class Language {
 }
 
 export namespace Language {
+    export function exportLanguagesS(location: MinecraftLocation | string, version: string): Promise<Language[]> {
+        const loca: MinecraftLocation = typeof location === 'string' ? new MinecraftLocation(location) : location
+        return new Promise<Language[]>((res, rej) => {
+            let json = path.join(loca.assets, 'indexes', version + '.json')
+            if (fs.existsSync(json))
+                READ(json)
+                    .then(r => {
+                        let obj = JSON.parse(r)
+                        let meta = obj.objects['pack.mcmeta']
+                        let hash = meta.hash
+                        let head = hash.substring(0, 2)
+                        let loc = path.join(loca.assets, 'objects', head, hash)
+                        if (fs.existsSync(loc))
+                            return READ(loc)
+                        throw 'The pack.mcmeta object file does not exist!' + hash
+                    }, (reason) => rej(reason))
+                    .then(r => {
+                        if (!r) {
+                            rej()
+                            return
+                        }
+                        let langs = JSON.parse(r)
+                        if (langs.language) {
+                            let arr = []
+                            for (let langKey in langs.language) {
+                                let langObj = langs.language[langKey]
+                                arr.push(new Language(langKey, langObj.name, langObj.region, langObj.bidirectional))
+                            }
+                            res(arr)
+                        }
+                        else { rej(new Error('Illegal pack.mcmeta structure!')) }
+                    }, (e) => rej(e))
+            else rej(new Error('The version indexes json does not exist. Maybe the game assets are incompleted!'))
+        })
+    }
+
     export function exportLanguages(location: MinecraftLocation, version: string, callback: (languages: Language[], error?: Error) => void): void {
         let json = path.join(location.assets, 'indexes', version + '.json')
         if (fs.existsSync(json))

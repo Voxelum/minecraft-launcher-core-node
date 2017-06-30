@@ -4,7 +4,7 @@ import * as https from 'https'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as url from 'url'
-import { getString } from './string_utils'
+import { GET } from './string_utils'
 export interface VersionMetaList {
     latest: {
         snapshot: string,
@@ -22,9 +22,13 @@ export interface VersionMeta {
 }
 
 export interface VersionDownloader {
-    fetchVersionList(callback: (response: VersionMetaList | Error) => void): void
-    downloadClient(version: VersionMeta, minecraft: MinecraftLocation, callback: () => void): void
-    downloadServer(version: VersionMeta, minecraft: MinecraftLocation, callback: () => void): void
+    fetchVersionList(): Promise<VersionMetaList>
+
+    downloadVersion(versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>
+    downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation): Promise<Version>
+    downloadVersionJar(type: string, version: Version, minecraft: MinecraftLocation): Promise<Version>
+    downloadVersionJar(type: 'client', version: Version, minecraft: MinecraftLocation): Promise<Version>
+    downloadVersionJar(type: 'server', version: Version, minecraft: MinecraftLocation): Promise<Version>
 }
 export interface AssetsDownloader {
     downloadLibrary(Library: Library, minecraft: MinecraftLocation, callback: () => void): void
@@ -32,37 +36,54 @@ export interface AssetsDownloader {
 }
 
 export class MojangRepository implements VersionDownloader {
-    fetchVersionList(callback: (response: VersionMetaList | Error) => void): void {
-        getString('https://launchermeta.mojang.com/mc/game/version_manifest.json', (r) => {
-            if (typeof r === 'string')
-                try {
-                    callback(JSON.parse(r))
-                } catch (e) {
-                    callback(e)
-                }
-            else callback(r)
-        })
+    fetchVersionList() {
+        return GET('https://launchermeta.mojang.com/mc/game/version_manifest.json').then(r => JSON.parse(r))
     }
 
-    private download(version: VersionMeta, minecraft: MinecraftLocation, callback: (result: Version | Error) => void){
-    
+    downloadVersion(versionMeta: VersionMeta, minecraft: MinecraftLocation) {
+        return this.downloadVersionJson(versionMeta, minecraft)
+            .then((version) => this.downloadVersionJar('client', version, minecraft))
     }
-    downloadClient(version: VersionMeta, minecraft: MinecraftLocation, callback: (result: Version | Error) => void): void {
-        let [root, json, jar] = minecraft.getVersionAll(version.id)
-        url.parse(json)
-        fs.mkdirSync(root)
-        let jsonStream = fs.createWriteStream(json)
-        https.get(version.url, (res) => res.pipe(jsonStream))
-        jsonStream.on('finish', () => {
-            jsonStream.close()
-            let v = Version.parse(minecraft.root, version.id)
-            if (v) {
-                v.downloads['client']
-            }
-        })
-    }
-    downloadServer(version: VersionMeta, minecraft: MinecraftLocation, callback: () => void): void {
 
+    private checkDir(version: string, minecraft: MinecraftLocation) {
+        let v = minecraft.versions
+        if (!fs.existsSync(v)) fs.mkdirSync(v)
+        let vR = minecraft.getVersionRoot(version)
+        if (!fs.existsSync(vR)) fs.mkdirSync(vR)
+    }
+    async downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation) {
+        let json = minecraft.getVersionJson(version.id)
+        this.checkDir(version.id, minecraft)
+        if (!fs.existsSync(json)) await new Promise<void>((res, rej) => {
+            let jsonStream = fs.createWriteStream(json)
+            let u = url.parse(version.url)
+            https.get({ host: u.host, path: u.path }, (res) => res.pipe(jsonStream)).on('error', (e) => rej(e))
+            jsonStream.on('finish', () => {
+                jsonStream.close();
+                res()
+            })
+        });
+        let versionInstance = Version.parse(minecraft.root, version.id)
+        if (versionInstance) return versionInstance
+        else throw new Error('Cannot parse version')
+    }
+
+    async downloadVersionJar(type: string, version: Version, minecraft: MinecraftLocation) {
+        this.checkDir(version.version, minecraft)
+        let filename = type == 'client' ? version.version + '.jar' : version.version + '-' + type + '.jar'
+        let jar = path.join(minecraft.getVersionRoot(version.version), filename)
+        if (fs.existsSync(jar))
+            return version
+        await new Promise<void>((acc, den) => {
+            let jsonStream = fs.createWriteStream(jar)
+            let u = url.parse(version.downloads[type].url)
+            https.get({ host: u.host, path: u.path }, (res) => res.pipe(jsonStream)).on('error', (e) => den(e))
+            jsonStream.on('finish', () => {
+                jsonStream.close();
+                acc()
+            })
+        })
+        return version
     }
 }
 

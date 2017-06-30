@@ -29,10 +29,10 @@
   ],
   "license": "GPL",
   "dependencies": {
-    "uuid": "^3.0.1",
+    "adm-zip": "^0.4.7",
     "bytebuffer": "^5.0.1",
     "long": "^3.2.0",
-    "adm-zip": "^0.4.7"
+    "uuid": "^3.0.1"
   },
   "bugs": {
     "url": "https://github.com/InfinityStudio/ts-minecraft/issues"

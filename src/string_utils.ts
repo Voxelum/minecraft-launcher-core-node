@@ -126,7 +126,41 @@ export function endWith(string: string, postfix: string) {
 import * as http from 'http'
 import * as https from 'https'
 import * as urls from 'url'
+import * as fs from 'fs'
 
+export async function READ(path: string): Promise<string> {
+    return new Promise<string>((res, rej) => {
+        fs.readFile(path, (e, d) => {
+            if (e) rej(e)
+            else res(d.toString())
+        })
+    })
+}
+
+export async function GET(url: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+        let u = urls.parse(url)
+        let buf = ''
+        let call = (res: http.IncomingMessage) => {
+            res.setEncoding('utf-8')
+            res.on('data', (data) => buf += data)
+            res.on('end', () => resolve(buf))
+        }
+        let req
+        if (u.protocol == 'https:') req = https.get({
+            host: u.host,
+            hostname: u.hostname,
+            path: u.path,
+        }, call)
+        else req = http.get({
+            host: u.host,
+            hostname: u.hostname,
+            path: u.path,
+        }, call)
+        req.on('error', (e) => reject(e))
+        req.end()
+    })
+}
 export function getString(url: string, callback: (result: string, error?: Error) => void) {
     let u = urls.parse(url)
     let buf = ''
@@ -136,7 +170,11 @@ export function getString(url: string, callback: (result: string, error?: Error)
         res.on('end', () => callback(buf))
     }
     let req
-    if (u.protocol == 'https:') req = https.get(url, call)
+    if (u.protocol == 'https:') req = https.get({
+        host: u.host,
+        hostname: u.hostname,
+        path: u.path,
+    }, call)
     else req = http.get(url, call)
     req.on('error', (e) => callback('', e))
     req.end()
