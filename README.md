@@ -17,8 +17,8 @@ Supporting:
 - Mod parsing.
 - Minecraft config model
 - WorldInfo modify
-
+- Minecraft client download
 
 Will support in future:
-- Minecraft client download
+- MinecraftForge/Liteloader client download
 - TextComponent to html (render TextComponent)
