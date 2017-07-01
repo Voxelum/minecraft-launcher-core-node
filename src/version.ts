@@ -191,10 +191,7 @@ function parseVersionHierarchy(hierarchy: any[], platform: PlatformDescription) 
 
     return new Version(version, type, mainClass, assets, launchArgs, root, libs, assets == 'legacy', assetIndexInfo, downloads)
 }
-// function parseArtifactName(name: string) {
-//     let splitedGav = name.split(":");
-//     return { groupId: sp }
-// }
+
 function parseLibrary(json: any, platformDescription: PlatformDescription): Library | undefined {
     if (!json) return undefined;
     let clientreq = true
