@@ -4,8 +4,10 @@ All you need for minecraft in typescript.
 # Usage
 `import {NBT, ServerInfo, ...so on...} from 'ts-minecraft'`
 
+!!!!!!!!!
 Notice that this package is still WIP, no much tested yet.
 Used with the risk....
+!!!!!!!!!
 
 Supporting:
 - NBT IO by `NBT` (not done)
@@ -22,3 +24,7 @@ Supporting:
 Will support in future:
 - MinecraftForge/Liteloader client download
 - TextComponent to html (render TextComponent)
+
+Issue:
+- Really need runtime check for parsed Forge/LiteMod data(Hopefully, more people write this correctly)
+- Add sha1 check for the downloaded files 
