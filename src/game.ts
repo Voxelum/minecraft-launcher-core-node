@@ -144,83 +144,29 @@ export class Language {
 }
 
 export namespace Language {
-    export function exportLanguagesS(location: MinecraftLocation | string, version: string): Promise<Language[]> {
+    export async function exportLanguages(location: MinecraftLocation | string, version: string): Promise<Language[]> {
         const loca: MinecraftLocation = typeof location === 'string' ? new MinecraftLocation(location) : location
-        return new Promise<Language[]>((res, rej) => {
-            let json = path.join(loca.assets, 'indexes', version + '.json')
-            if (fs.existsSync(json))
-                READ(json)
-                    .then(r => {
-                        let obj = JSON.parse(r)
-                        let meta = obj.objects['pack.mcmeta']
-                        let hash = meta.hash
-                        let head = hash.substring(0, 2)
-                        let loc = path.join(loca.assets, 'objects', head, hash)
-                        if (fs.existsSync(loc))
-                            return READ(loc)
-                        throw 'The pack.mcmeta object file does not exist!' + hash
-                    }, (reason) => rej(reason))
-                    .then(r => {
-                        if (!r) {
-                            rej()
-                            return
-                        }
-                        let langs = JSON.parse(r)
-                        if (langs.language) {
-                            let arr = []
-                            for (let langKey in langs.language) {
-                                let langObj = langs.language[langKey]
-                                arr.push(new Language(langKey, langObj.name, langObj.region, langObj.bidirectional))
-                            }
-                            res(arr)
-                        }
-                        else { rej(new Error('Illegal pack.mcmeta structure!')) }
-                    }, (e) => rej(e))
-            else rej(new Error('The version indexes json does not exist. Maybe the game assets are incompleted!'))
-        })
-    }
-
-    export function exportLanguages(location: MinecraftLocation, version: string, callback: (languages: Language[], error?: Error) => void): void {
-        let json = path.join(location.assets, 'indexes', version + '.json')
-        if (fs.existsSync(json))
-            fs.readFile(json, (e, d) => {
-                if (e) callback([], e)
-                else {
-                    let obj
-                    try {
-                        obj = JSON.parse(d.toString())
-                    }
-                    catch (e) {
-                        callback([], e)
-                        return
-                    }
-                    let meta = obj.objects['pack.mcmeta']
-                    let hash = meta.hash
-                    let head = hash.substring(0, 2)
-
-                    let loc = path.join(location.assets, 'objects', head, hash)
-                    if (fs.existsSync(loc)) {
-                        try {
-                            let langs = JSON.parse(fs.readFileSync(loc).toString())
-                            if (langs.language) {
-                                let arr = []
-                                for (let langKey in langs.language) {
-                                    let langObj = langs.language[langKey]
-                                    arr.push(new Language(langKey, langObj.name, langObj.region, langObj.bidirectional))
-                                }
-                                callback(arr)
-                            }
-                            else { callback([], new Error('Illegal pack.mcmeta structure!')) }
-
-                        }
-                        catch (e) {
-                            callback([], e)
-                        }
-                    }
-                    else callback([], new Error('The pack.mcmeta object file does not exist!' + hash))
-                }
-            })
-        else callback([], new Error('The version indexes json does not exist. Maybe the game assets are incompleted!'))
+        let json = path.join(loca.assets, 'indexes', version + '.json')
+        if (!fs.existsSync(json))
+            throw (new Error('The version indexes json does not exist. Maybe the game assets are incompleted!'))
+        let jsonString = await READ(json)
+        let obj = JSON.parse(jsonString)
+        let meta = obj.objects['pack.mcmeta']
+        let hash = meta.hash
+        let head = hash.substring(0, 2)
+        let loc = path.join(loca.assets, 'objects', head, hash)
+        if (!fs.existsSync(loc))
+            throw 'The pack.mcmeta object file does not exist!' + hash
+        let metaString = await READ(loc)
+        let langs = JSON.parse(metaString)
+        if (!langs.language)
+            throw new Error('Illegal pack.mcmeta structure!')
+        let arr = []
+        for (let langKey in langs.language) {
+            let langObj = langs.language[langKey]
+            arr.push(new Language(langKey, langObj.name, langObj.region, langObj.bidirectional))
+        }
+        return arr
     }
 }
 
@@ -272,21 +218,21 @@ export namespace ResourcePack {
     export function exportIcon(fileName: string, location: string, callback: () => void): void {
     }
 
-    export function readFromFile(fileName: string, callback: (resourcePack?: ResourcePack, error?: Error) => void): void {
-        let zipFile = new Zip(fileName)
-        zipFile.readFileAsync('pack.mcmeta', (data, err) => {
-            if (err)
-                callback(undefined, new Error(err))
-            else {
-                try {
-                    let obj = JSON.parse(data.toString()).pack
-                    return new ResourcePack(fileName, TextComponent.fromFormattedString(obj.description), obj.pack_format)
+    export function readFromFile(fileName: string): Promise<ResourcePack> {
+        return new Promise<ResourcePack>((resolve, reject) => {
+            let zipFile = new Zip(fileName)
+            zipFile.readFileAsync('pack.mcmeta', (data, err) => {
+                if (err) reject(new Error(err))
+                else {
+                    try {
+                        let obj = JSON.parse(data.toString()).pack
+                        resolve(new ResourcePack(fileName, TextComponent.fromFormattedString(obj.description), obj.pack_format))
+                    }
+                    catch (e) { reject(e) }
                 }
-                catch (e) {
-                    callback(e)
-                }
-            }
-        })
+            })
+        });
+
     }
 }
 
@@ -300,81 +246,83 @@ export class ModContainer<Meta> {
 }
 
 export namespace ModContainer {
-    export function tryParse(fileName: string, callback: (mod?: ModContainer<object>[], err?: Error) => void) {
-        if (endWith(fileName, '.litemod'))
-            parseLiteLoader(fileName, (m, e) => {
-                if (m) callback([m])
-                else callback(undefined, e)
-            })
-        else { parseForge(fileName, callback) }
+    export function tryParse(fileName: string): Promise<ModContainer<object>[]> {
+        if (endWith(fileName, '.litemod')) return parseLiteLoader(fileName).then(v => [v])
+        else return parseForge(fileName)
     }
-    export function parseForge(filePath: string, callback: (mod?: ModContainer<ForModMetaData>[], err?: Error) => void) {
-        let zip = new Zip(filePath)
-        zip.readFileAsync('mcmod.info', (data, err) => {
-            if (err) callback(undefined, new Error(err))
-            else {
-                try {
+
+    export function parseForge(filePath: string): Promise<ModContainer<ForgeMetaData>[]> {
+        return new Promise<ModContainer<ForgeMetaData>[]>((resolve, reject) => {
+            let zip = new Zip(filePath)
+            zip.readFileAsync('mcmod.info', (data, err) => {
+                if (err) reject(new Error(err))
+                else try {
                     let meta = JSON.parse(data.toString())
                     let mods: any[]
                     if (meta instanceof Array) mods = meta
                     else if (meta.modListVersion) mods = meta.modList
                     else mods = [meta]
-                    callback(mods.map(m => { return new ModContainer<ForModMetaData>('forge', new ForModMetaData(m.modid, m)) }))
+                    resolve(mods.map(m => new ModContainer<ForgeMetaData>('forge', m)))
                 }
                 catch (e) {
-                    callback(undefined, e)
+                    reject(e)
                 }
-            }
-
-        })
+            })
+        });
     }
 
-    export function parseLiteLoader(filePath: string, callback: (mod?: ModContainer<LitModeMetaData>, err?: Error) => void) {
-        let zip = new Zip(filePath)
-        zip.readFileAsync('mcmod.info', (data, err) => {
-            let meta = JSON.parse(data.toString())
-        })
+    export function parseLiteLoader(filePath: string): Promise<ModContainer<LiteModMetaData>> {
+        return new Promise<ModContainer<LiteModMetaData>>((resolve, reject) => {
+            let zip = new Zip(filePath)
+            zip.readFileAsync('litemod.json', (data, err) => {
+                if (err) reject(err)
+                else try {
+                    resolve(new ModContainer<LiteModMetaData>('liteloader', JSON.parse(data.toString())))
+                } catch (e) {
+                    reject(e)
+                }
+            })
+        });
     }
 }
 
-export class ForModMetaData implements ModIndentity {
-    constructor(
-        readonly modid: string,
-        readonly name: string,
-        readonly description: string = '',
-        readonly version: string = '',
-        readonly mcVersion: string = '',
-        readonly acceptMinecraftVersion: string = '',
-        readonly updateJSON: string = '',
-        readonly url: string = '',
-        readonly logoFile: string = '',
-        readonly authorList: string[] = [],
-        readonly credit: string = '',
-        readonly parent: string = '',
-        readonly screenShots: string[] = [],
-        readonly fingerprint: string = '',
-        readonly dependencies: string = '',
-        readonly accpetRemoteVersions: string = '',
-        readonly acceptSaveVersions: string = '',
-        readonly isClientOnly: boolean = false,
-        readonly isServerOnly: boolean = false
-    ) { }
+export interface ForgeMetaData extends ModIndentity {
+    readonly modid: string,
+    readonly name: string,
+    readonly description?: string,
+    readonly version: string,
+    readonly mcVersion?: string,
+    readonly acceptMinecraftVersion?: string,
+    readonly updateJSON?: string,
+    readonly url?: string,
+    readonly logoFile?: string,
+    readonly authorList?: string[],
+    readonly credit?: string,
+    readonly parent?: string,
+    readonly screenShots?: string[],
+    readonly fingerprint?: string,
+    readonly dependencies?: string,
+    readonly accpetRemoteVersions?: string,
+    readonly acceptSaveVersions?: string,
+    readonly isClientOnly?: boolean,
+    readonly isServerOnly?: boolean
 }
 
-export class LitModeMetaData {
-    constructor(
-        readonly mcVersion: string,
-        readonly name: string,
-        readonly author: string,
-        readonly version: string,
-        readonly description: string,
-        readonly url: string = '',
-        readonly revision: number = 0,
-        readonly tweakClass: string = '',
-        readonly dependsOn: string[] = [],
-        readonly requiredAPIs: string[] = [],
-        readonly classTransformerClasses: string[] = []
-    ) { }
+export interface LiteModMetaData {
+    readonly mcversion: string,
+    readonly name: string,
+    readonly revision: number,
+
+    readonly author?: string,
+    readonly version?: string,
+    readonly description?: string,
+    readonly url?: string,
+
+    readonly tweakClass?: string,
+    readonly dependsOn?: string[],
+    readonly injectAt?: string,
+    readonly requiredAPIs?: string[],
+    readonly classTransformerClasses?: string[]
 }
 
 function writeString(buff: ByteBuffer, string: string) {
@@ -390,88 +338,91 @@ export namespace ServerInfo {
         return []
     }
 
-    export function fetchServerStatus(server: ServerInfo, callback: (status: ServerStatus, error?: Error) => void, ping: boolean = true) {
-        let port = server.port ? server.port : 25565
-        let connection = net.createConnection(port, server.host, () => {
-            let buffer = buf.allocate(256)
-            //packet id
-            buffer.writeByte(0x00)
-            //protocol version
-            buffer.writeVarint32(210)
-            writeString(buffer, server.host)
+    export function fetchServerStatus(server: ServerInfo, ping: boolean = true): Promise<ServerStatus> {
+        return new Promise<ServerStatus>((resolve, reject) => {
+            let port = server.port ? server.port : 25565
+            let connection = net.createConnection(port, server.host, () => {
+                let buffer = buf.allocate(256)
+                //packet id
+                buffer.writeByte(0x00)
+                //protocol version
+                buffer.writeVarint32(210)
+                writeString(buffer, server.host)
 
-            buffer.writeShort(port & 0xffff)
-            buffer.writeVarint32(1)
-            buffer.flip()
+                buffer.writeShort(port & 0xffff)
+                buffer.writeVarint32(1)
+                buffer.flip()
 
-            let handshakeBuf = buf.allocate(buffer.limit + 8)
-            handshakeBuf.writeVarint32(buffer.limit)
-            handshakeBuf.append(buffer)
-            handshakeBuf.flip()
+                let handshakeBuf = buf.allocate(buffer.limit + 8)
+                handshakeBuf.writeVarint32(buffer.limit)
+                handshakeBuf.append(buffer)
+                handshakeBuf.flip()
 
-            connection.write(Buffer.from(handshakeBuf.toArrayBuffer()))
-            connection.write(Buffer.from([0x01, 0x00]))
-            connection.end()
-        })
-        let recived = ''
-        connection.on('error', (error) => {
-            callback(ServerStatus.error(), error)
-        })
-        connection.on('data', (data) => {
-            recived += data.toString('utf-8')
-        })
-        connection.on('end', () => {
-            let start = recived.indexOf('{')
-            recived = recived.slice(start)
-            let obj = JSON.parse(recived)
-            let motd: TextComponent = TextComponent.str('')
-            if (obj.description) {
-                if (typeof (obj.description) === 'object')
-                    motd = TextComponent.fromObject(obj.description)
-                else if (typeof (obj.description) === 'string')
-                    motd = TextComponent.str(obj.description)
-            }
-
-            let favicon = obj.favicon
-            let version = obj.version
-            let versionText: TextComponent = TextComponent.str('')
-            let protocol = -1
-            let online = -1
-            let max = -1
-            if (version) {
-                if (version.name)
-                    versionText = TextComponent.fromFormattedString(version.name as string)
-                if (version.protocol)
-                    protocol = version.protocol
-            }
-            let players = obj.players
-            if (players) {
-                online = players.online
-                max = players.max
-            }
-
-            let sample = players.sample
-            let profiles = new Array<GameProfile>()
-            if (sample) {
-                profiles = new Array<GameProfile>(sample.length)
-                for (let i = 0; i < sample.length; i++)
-                    profiles[i] = { uuid: sample[i].id, name: sample[i].name }
-            }
-            if (favicon.startsWith("data:image/png;base64,"))
-                server.icon = favicon.substring("data:image/png;base64,".length);
-
-            let modInfoJson = obj.modinfo
-            let modInfo
-            if (modInfoJson) {
-                let list: ModIndentity[] = []
-                let mList = modInfoJson.modList
-                if (mList && mList instanceof Array) list = mList
-                modInfo = {
-                    type: modInfoJson.type,
-                    modList: list
+                connection.write(Buffer.from(handshakeBuf.toArrayBuffer()))
+                connection.write(Buffer.from([0x01, 0x00]))
+                connection.end()
+            })
+            let recived = ''
+            connection.on('error', (error) => {
+                reject(error)
+            })
+            connection.on('data', (data) => {
+                recived += data.toString('utf-8')
+            })
+            connection.on('end', () => {
+                let start = recived.indexOf('{')
+                recived = recived.slice(start)
+                let obj = JSON.parse(recived)
+                let motd: TextComponent = TextComponent.str('')
+                if (obj.description) {
+                    if (typeof (obj.description) === 'object')
+                        motd = TextComponent.fromObject(obj.description)
+                    else if (typeof (obj.description) === 'string')
+                        motd = TextComponent.str(obj.description)
                 }
-            }
-            callback(new ServerStatus(versionText, motd, protocol, online, max, profiles, modInfo))
-        })
+
+                let favicon = obj.favicon
+                let version = obj.version
+                let versionText: TextComponent = TextComponent.str('')
+                let protocol = -1
+                let online = -1
+                let max = -1
+                if (version) {
+                    if (version.name)
+                        versionText = TextComponent.fromFormattedString(version.name as string)
+                    if (version.protocol)
+                        protocol = version.protocol
+                }
+                let players = obj.players
+                if (players) {
+                    online = players.online
+                    max = players.max
+                }
+
+                let sample = players.sample
+                let profiles = new Array<GameProfile>()
+                if (sample) {
+                    profiles = new Array<GameProfile>(sample.length)
+                    for (let i = 0; i < sample.length; i++)
+                        profiles[i] = { uuid: sample[i].id, name: sample[i].name }
+                }
+                if (favicon.startsWith("data:image/png;base64,"))
+                    server.icon = favicon.substring("data:image/png;base64,".length);
+
+                let modInfoJson = obj.modinfo
+                let modInfo
+                if (modInfoJson) {
+                    let list: ModIndentity[] = []
+                    let mList = modInfoJson.modList
+                    if (mList && mList instanceof Array) list = mList
+                    modInfo = {
+                        type: modInfoJson.type,
+                        modList: list
+                    }
+                }
+                resolve(new ServerStatus(versionText, motd, protocol, online, max, profiles, modInfo))
+            })
+        });
+
     }
 }

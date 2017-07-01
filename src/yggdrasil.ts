@@ -27,22 +27,22 @@ export namespace AuthResponse {
 }
 
 export interface AuthService {
-    login(username: string, password: string, clientToken?: string, callback?: (response: AuthResponse | Error) => void): void;
-    refresh(clientToken: string, accessToken: string, profile: string, callback?: (response: AuthResponse | Error) => void): void;
-    validate(accessToken: string, clientToken?: string, callback?: (valid: boolean) => void): void;
+    login(username: string, password: string, clientToken?: string): Promise<AuthResponse>;
+    refresh(clientToken: string, accessToken: string, profile: string): Promise<AuthResponse>;
+    validate(accessToken: string, clientToken?: string): Promise<boolean>;
     invalide(accessToken: string, clientToken: string): void;
     signout(username: string, password: string): void;
 }
 
 export namespace AuthService {
     export interface API {
-        hostName: string;
+        readonly hostName: string;
         //paths
-        authenticate: string;
-        refresh: string;
-        validate: string;
-        invalidate: string;
-        signout: string;
+        readonly authenticate: string;
+        readonly refresh: string;
+        readonly validate: string;
+        readonly invalidate: string;
+        readonly signout: string;
     }
 
     export function mojangAPI(): API {
@@ -57,61 +57,58 @@ export namespace AuthService {
     }
     class Yggdrasil implements AuthService {
         constructor(private api: API) { }
-        private request(payload: any, path: string, callback?: (string: string) => void, error?: (e: Error) => void) {
-            payload = JSON.stringify(payload)
-            let responseHandler = callback ? (response: http.IncomingMessage) => {
-                let buffer = ''
-                response.setEncoding('utf8');
-                response.on('data', (chunk) => {
-                    if (typeof (chunk) === 'string') buffer += chunk
-                })
-                response.on('end', () => { callback(buffer) });
-            } : undefined
-            let req = https.request({
-                hostname: this.api.hostName,
-                path: path,
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': payload.length
+        private request(payload: any, path: string): Promise<string> {
+            return new Promise((resolve, reject) => {
+                payload = JSON.stringify(payload)
+                let responseHandler = (response: http.IncomingMessage) => {
+                    let buffer = ''
+                    response.setEncoding('utf8');
+                    response.on('data', (chunk) => {
+                        if (typeof (chunk) === 'string') buffer += chunk
+                    })
+                    response.on('end', () => { resolve(buffer) });
                 }
-            }, responseHandler)
-            req.on('error', (e) => {
-                if (error) error(e)
-                console.error(`problem with request: ${e.message}`);
+                let req = https.request({
+                    hostname: this.api.hostName,
+                    path: path,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': payload.length
+                    }
+                }, responseHandler)
+                req.on('error', (e) => {
+                    reject(e)
+                });
+                req.write(payload);
+                req.end();
             });
-            req.write(payload);
-            req.end();
+
         }
 
-        private requestAndHandleResponse(payload: any, path: string, callback?: (respon: AuthResponse) => void, error?: (e: Error) => void) {
-            let call = callback ? (s: string) => {
+        private requestAndHandleResponse(payload: any, path: string): Promise<AuthResponse> {
+            return this.request(payload, path).then(s => {
                 let obj = JSON.parse(s)
-                if (obj.error) {
-                    if (error) error(new Error(obj.errorMessage))
-                    return
-                }
-
+                if (obj.error)
+                    throw (new Error(obj.errorMessage))
                 let userId = obj.user ? obj.user.id ? obj.user.id : '' : ''
                 let prop = obj.user ? obj.user.properties ? obj.user.properties : {} : {}
-                if (callback)
-                    callback({
-                        accessToken: <string>obj.accessToken,
-                        clientToken: <string>obj.clientToken,
-                        selectedProfile: <GameProfile>{
-                            uuid: obj.selectedProfile.id,
-                            name: obj.selectedProfile.name
-                        },
-                        profiles: <GameProfile[]>obj.availableProfiles,
-                        userId: userId,
-                        properties: prop,
-                        userType: UserType.Mojang
-                    })
-            } : undefined
-            this.request(payload, path, call, error)
+                return {
+                    accessToken: <string>obj.accessToken,
+                    clientToken: <string>obj.clientToken,
+                    selectedProfile: <GameProfile>{
+                        uuid: obj.selectedProfile.id,
+                        name: obj.selectedProfile.name
+                    },
+                    profiles: <GameProfile[]>obj.availableProfiles,
+                    userId: userId,
+                    properties: prop,
+                    userType: UserType.Mojang
+                }
+            })
         }
 
-        login(username: string, password: string, clientToken?: string | undefined, callback?: (response: AuthResponse | Error) => void | undefined): void {
+        login(username: string, password: string, clientToken?: string | undefined): Promise<AuthResponse> {
             let payload = {
                 agent: 'Minecraft',
                 username: username,
@@ -119,10 +116,10 @@ export namespace AuthService {
                 clientToken: clientToken,
                 requestUser: true
             };
-            this.requestAndHandleResponse(payload, this.api.authenticate, callback, callback)
+            return this.requestAndHandleResponse(payload, this.api.authenticate)
         }
 
-        refresh(clientToken: string, accessToken: string, profile?: string, callback?: (response: AuthResponse | Error) => void): void {
+        refresh(clientToken: string, accessToken: string, profile?: string): Promise<AuthResponse> {
             let payloadObj: any = {
                 // agent: 'Minecraft',
                 clientToken: clientToken,
@@ -133,16 +130,14 @@ export namespace AuthService {
                 payloadObj.selectedProfile = {
                     id: profile
                 }
-            this.requestAndHandleResponse(payloadObj, this.api.refresh, callback, callback)
+            return this.requestAndHandleResponse(payloadObj, this.api.refresh)
         }
-        validate(accessToken: string, clientToken?: string, callback?: (valid: boolean) => void): void {
+        validate(accessToken: string, clientToken?: string): Promise<boolean> {
             let obj = {
                 accessToken: accessToken,
                 clientToken: clientToken
             }
-            this.request(obj, this.api.validate, (s) => {
-                if (callback) callback(true)
-            }, (e) => { if (callback) callback(false) })
+            return this.request(obj, this.api.validate).then(suc => true, fail => false)
         }
         invalide(accessToken: string, clientToken: string): void {
             this.request({ accessToken: accessToken, clientToken: clientToken }, this.api.invalidate)
