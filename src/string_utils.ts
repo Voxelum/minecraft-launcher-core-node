@@ -178,6 +178,9 @@ export async function READ(path: string): Promise<string> {
     })
 }
 
+export async function REQ(url: http.RequestOptions) {
+
+}
 export async function GET(url: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         let u = urls.parse(url)

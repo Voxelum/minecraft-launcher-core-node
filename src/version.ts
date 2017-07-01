@@ -32,9 +32,13 @@ export interface Native extends Library {
  * Abstract interface represent the download info. Closed to the actual file structure. Used by lots of things.
  */
 export interface DownloadInfo {
+    readonly url?: string,
+    readonly sha1?: string,
+    readonly size?: number
+}
+
+export interface VersionDownloadInfo extends DownloadInfo {
     readonly url: string,
-    readonly sha1: string,
-    readonly size: number
 }
 
 export interface LibraryArtifact extends DownloadInfo {
@@ -42,6 +46,7 @@ export interface LibraryArtifact extends DownloadInfo {
 }
 
 export interface AssetIndex extends DownloadInfo {
+    readonly url: string,
     readonly id: string,
     readonly totalSize: number
 }
@@ -52,7 +57,7 @@ export interface AssetIndex extends DownloadInfo {
 export class Version {
     constructor(readonly version: string, readonly type: string, readonly mainClass: string, readonly assets: string, readonly launchArgs: string,
         readonly root: string, readonly libraries: Library[], readonly legacy: boolean, readonly assetIndexDownloadInfo: AssetIndex,
-        readonly downloads: { [id: string]: DownloadInfo }) {
+        readonly downloads: { [id: string]: VersionDownloadInfo }) {
     }
 }
 
@@ -154,8 +159,8 @@ function parseVersionHierarchy(hierarchy: any[], platform: PlatformDescription) 
     let launchArgs: string;
     let type: string;
 
-    let libs = []
-    let downloads: { [key: string]: DownloadInfo } = {};
+    let libs: Library[] = []
+    let downloads: { [key: string]: VersionDownloadInfo } = {};
     let assetIndexInfo: AssetIndex | undefined;
 
     let json: any;
@@ -167,12 +172,9 @@ function parseVersionHierarchy(hierarchy: any[], platform: PlatformDescription) 
         launchArgs = json.minecraftArguments;
         type = json.type;
 
-        if (json.libraries) {
-            for (let s of json.libraries) {
-                let lib = parseLibrary(s, platform)
-                if (lib) libs.push(lib)
-            }
-        }
+        if (json.libraries)
+            for (let libInst of json.libraries)
+                parseLibrary(libInst, platform, libs)
 
         if (json.downloads)
             for (let key in json.downloads)
@@ -192,7 +194,7 @@ function parseVersionHierarchy(hierarchy: any[], platform: PlatformDescription) 
     return new Version(version, type, mainClass, assets, launchArgs, root, libs, assets == 'legacy', assetIndexInfo, downloads)
 }
 
-function parseLibrary(json: any, platformDescription: PlatformDescription): Library | undefined {
+function parseLibrary(json: any, platformDescription: PlatformDescription, libs: Library[]) {
     if (!json) return undefined;
     let clientreq = true
     if (json.clientreq)
@@ -210,6 +212,10 @@ function parseLibrary(json: any, platformDescription: PlatformDescription): Libr
     let jsonNatives = json.natives;
     let classifier = jsonNatives ? parseNativeClassifier(jsonNatives, platformDescription) : undefined;
     let libinfo = parseLibraryDownloads(json.downloads, classifier);
+    if (!libinfo)
+        libinfo = {
+            path: `/${groupId}/${artifactId}/${version}/${artifactId}-${version}.jar`
+        }
     let type = "jar";
 
     let obj: any = {
@@ -228,8 +234,8 @@ function parseLibrary(json: any, platformDescription: PlatformDescription): Libr
         obj.checksums = checksums
     if (jsonNatives) {
         obj.extractExcludes = parseExtractExcludes(json.extract)
-        return <Native>obj
-    } else return obj
+    }
+    libs.push(obj)
 }
 
 function parseNativeClassifier(natives: any, platform: PlatformDescription) {

@@ -1,7 +1,8 @@
-import { GET, DOWN } from './string_utils';
+import { GET, DOWN, DIR, CHECKSUM } from './string_utils';
 import { MinecraftLocation } from './file_struct';
 import * as path from 'path'
 import * as Zip from 'adm-zip';
+import * as fs from 'fs'
 export interface ForgeVersionMetaList {
     adfocus: string,
     artifact: string,
@@ -24,10 +25,11 @@ export interface ForgeVersionMeta {
 }
 
 export interface ForgeVerionDownloader {
-    fetchVersionList(): Promise<ForgeVersionMetaList>
+    fetchVersionList(): Promise<ForgeVersionMetaList>,
+    installForge(version: ForgeVersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Promise<void>
 }
 
-export class DefaultForgeVersionDownloader {
+export class DefaultForgeVersionDownloader implements ForgeVerionDownloader {
     constructor(protected api: DefaultForgeVersionDownloader.API = {
         versions: 'http://files.minecraftforge.net/maven/net/minecraftforge/forge/json',
         maven: 'http://files.minecraftforge.net/maven'
@@ -36,18 +38,34 @@ export class DefaultForgeVersionDownloader {
         return GET(this.api.versions).then(s => JSON.parse(s))
     }
 
-    installForge(version: ForgeVersionMeta, minecraft: MinecraftLocation): Promise<void> {
+    async installForge(version: ForgeVersionMeta, minecraft: MinecraftLocation, checksum: boolean = false): Promise<void> {
         let versionPath = `${version.mcversion}-${version.version}`
         let url = `${this.api.maven}/net/minecraftforge/forge/${versionPath}/${versionPath}-universal.jar`
 
         let forgePath = `${version.mcversion}-forge-${versionPath}`
         let root = minecraft.getVersionRoot(forgePath)
         let filePath = path.join(root, `${forgePath}.jar`)
-
-        return DOWN(url, filePath).then(v => {
-            let zip = new Zip(filePath)
-            zip.extractEntryTo('version.json', path.join(root, `${forgePath}.json`))//TODO performance?
-        })
+        let jsonPath = path.join(root, `${forgePath}.json`)
+        if (!fs.existsSync(root))
+            await DIR(root)
+        if (!fs.existsSync(filePath)) {
+            await DOWN(url, filePath)
+            if (checksum) {
+                let sum
+                if (version.files[2] &&
+                    version.files[2][1] == 'universal' &&
+                    version.files[2][2] &&
+                    await CHECKSUM(filePath) != version.files[2][2])
+                    throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
+                else
+                    for (let arr of version.files)
+                        if (arr[1] == 'universal')
+                            if (await CHECKSUM(filePath) != arr[2])
+                                throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
+            }
+        }
+        if (!fs.existsSync(jsonPath))
+            new Zip(filePath).extractEntryTo('version.json', path.join(root, `${forgePath}.json`))//TODO performance?
     }
 }
 
