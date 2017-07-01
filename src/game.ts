@@ -44,12 +44,9 @@ export namespace GameSetting {
         if (arr) {
             let obj: any = {}
             let pairs = arr.map(pair => pair.split(':')).forEach(pair => {
-                if (pair[0] == 'lastServer' || pair[0] == 'lang' || pair[0] == 'mainHand') {
+                if (pair[0] == 'lastServer' || pair[0] == 'lang' || pair[0] == 'mainHand')
                     obj[pair[0]] = pair[1]
-                }
-                else {
-                    if (pair[0].length != 0) obj[pair[0]] = JSON.parse(pair[1])
-                }
+                else if (pair[0].length != 0) obj[pair[0]] = JSON.parse(pair[1])
             })
             return obj
         }
@@ -333,8 +330,7 @@ function writeString(buff: ByteBuffer, string: string) {
 export namespace ServerInfo {
     export function readFromNBT(buf: Buffer): ServerInfo[] {
         let data = NBT.read(buf)
-        if (data.root.servers)
-            return data.root.servers
+        if (data.root.servers) return data.root.servers
         return []
     }
 

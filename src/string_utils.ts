@@ -127,8 +127,18 @@ import * as http from 'http'
 import * as https from 'https'
 import * as urls from 'url'
 import * as fs from 'fs'
-import * as path from 'path';
+import * as path from 'path'
 import * as dir from 'mkdirp'
+import * as crypto from 'crypto'
+
+export async function CHECKSUM(path: string, algorithm: string = 'sha1'): Promise<string> {
+    return new Promise<string>((resolve, reject) =>
+        fs.readFile(path, (err, data) => {
+            if (err) reject(err)
+            else resolve(crypto.createHash(algorithm).update(data).digest('hex'))
+        })
+    );
+}
 
 export async function DIR(path: string): Promise<string> {
     return new Promise<string>((acc, den) => {

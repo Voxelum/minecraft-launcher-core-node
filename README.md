@@ -6,7 +6,7 @@ All you need for minecraft in typescript.
 
 !!!!!!!!!
 Notice that this package is still WIP, no much tested yet.
-Used with the risk....
+Use with your own risk....
 !!!!!!!!!
 
 Supporting:
@@ -20,6 +20,7 @@ Supporting:
 - Minecraft config model
 - WorldInfo modify
 - Minecraft client download
+- Sha1 check for the downloaded files (not tested)
 
 Will support in future:
 - MinecraftForge/Liteloader client download
@@ -27,4 +28,3 @@ Will support in future:
 
 Issue:
 - Really need runtime check for parsed Forge/LiteMod data(Hopefully, more people write this correctly)
-- Add sha1 check for the downloaded files 

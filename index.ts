@@ -3,9 +3,8 @@ import { GameProfile, AuthInfo, UserType, Authorizer } from './src/auth'
 import {
     GameType, WorldInfo, Language, GameSetting,
     ServerInfo, ServerStatus, ResourceMode, ResourcePack,
-    ModContainer, ModIndentity, ForgeMetaData, LitModeMetaData
-}
-    from './src/game'
+    ModContainer, ModIndentity, ForgeMetaData, LiteModMetaData
+} from './src/game'
 import { TextComponent, TextFormatting, Style } from './src/text'
 import { Version } from './src/version'
 import { MinecraftLocation, ResourceLocation } from './src/file_struct'
@@ -23,7 +22,7 @@ export {
     TextComponent, TextFormatting, Style,
     GameType, WorldInfo, Language, ServerInfo, ServerStatus,
     ResourceMode, ResourcePack, ModContainer,
-    ModIndentity, ForgeMetaData, LitModeMetaData,
+    ModIndentity, ForgeMetaData, LiteModMetaData,
     MinecraftLocation, ResourceLocation,
     NBT
 }

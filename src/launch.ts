@@ -34,17 +34,14 @@ export namespace Launcher {
         ignorePatchDiscrepancies?: boolean
     }
 
-    export function launch(auth: AuthInfo, options: Option): ChildProcess {
+    export async function launch(auth: AuthInfo, options: Option): Promise<ChildProcess> {
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
-
         let mc = new MinecraftLocation(options.resourcePath)
-        let v: Version | undefined = Version.parse(options.resourcePath, options.version)
+        let v: Version = await Version.parse(options.resourcePath, options.version)
         if (!v) throw "Cannot find version " + options.version
         let missing = checkLibs(mc, v)
-        if (missing.length > 0) {
-            throw new Error('Missing library!')
-        }
+        if (missing.length > 0) throw new Error('Missing library!')
         checkNative(mc, v)
         let args = genArgs(auth, options, v).join(' ')
         return exec(args, {
@@ -65,19 +62,14 @@ export namespace Launcher {
 
     function checkNative(mc: MinecraftLocation, version: Version) {
         let native = mc.getNativesRoot(version.root)
-        for (let lib of version.libraries) {
-            if ((lib as Native).extractExcludes) {
-                let from = mc.getLibrary(lib)
-                let zip = new Zip(from)
-                let entries = zip.getEntries()
-                for (let e of entries) {
-                    for (let ex of (lib as Native).extractExcludes) {
-                        if (!startWith(e.entryName, ex)) {
-                            zip.extractEntryTo(e, native, false, true)
-                        }
-                    }
-                }
-            }
+        for (let lib of version.libraries) if ((lib as Native).extractExcludes) {
+            let from = mc.getLibrary(lib)
+            let zip = new Zip(from)
+            let entries = zip.getEntries()
+            for (let e of entries)
+                for (let ex of (lib as Native).extractExcludes)
+                    if (!startWith(e.entryName, ex))
+                        zip.extractEntryTo(e, native, false, true)
         }
     }
 

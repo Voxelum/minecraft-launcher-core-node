@@ -57,10 +57,11 @@ export class Version {
 }
 
 export namespace Version {
-    export function parse(minecraftPath: string, version: string): Version | undefined {
-        let stack = resolveDependency(minecraftPath, version)
-        if (stack.length == 0) return undefined
-        return parseVersionHierarchy(stack, currentPlatform())
+    export function parse(minecraftPath: string, version: string): Promise<Version> {
+        return resolveDependency(minecraftPath, version).then(e => {
+            if (e.length == 0) throw new Error('Dependency error')
+            return parseVersionHierarchy(e, currentPlatform())
+        })
     }
 }
 
@@ -113,7 +114,7 @@ function parseAssetIndex(json: any): Asset[] {
     return assets;
 }
 
-export function resolveDependencyAsync(path: string, version: string): Promise<any[]> {
+export function resolveDependency(path: string, version: string): Promise<any[]> {
     return new Promise<any[]>((res, rej) => {
         let stack: any[] = []
         let fullPath = paths.join(path, 'versions', version, version + '.json')
@@ -132,18 +133,17 @@ export function resolveDependencyAsync(path: string, version: string): Promise<a
     })
 }
 
-function resolveDependency(path: string, version: string): any[] {
-    let stack = []
-    do {
-        let fullPath = paths.join(path, 'versions', version, version + '.json')
-        if (!fs.existsSync(fullPath)) break;
-        let obj = JSON.parse(fs.readFileSync(fullPath).toString('utf-8'))
-        stack.push(obj)
-        version = obj.inheritsFrom
-    } while (version);
-
-    return stack
-}
+// function resolveDependency(path: string, version: string): any[] {
+//     let stack = []
+//     do {
+//         let fullPath = paths.join(path, 'versions', version, version + '.json')
+//         if (!fs.existsSync(fullPath)) break;
+//         let obj = JSON.parse(fs.readFileSync(fullPath).toString('utf-8'))
+//         stack.push(obj)
+//         version = obj.inheritsFrom
+//     } while (version);
+//     return stack
+// }
 
 function parseVersionHierarchy(hierarchy: any[], platform: PlatformDescription) {
     let version: string = hierarchy[0].id;
