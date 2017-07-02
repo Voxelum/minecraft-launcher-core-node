@@ -1,20 +1,4 @@
-import { MojangRepository, VersionMetaList } from './download'
 
-// let r = new MojangRepository()
-// r.fetchVersionList()
-
-import { resolveDependency, Version } from './version';
-
-import { Language } from './game';
-
-// Language.exportLanguagesS('', '')
-//TODO test this
-
-import * as https from 'https'
-import { GET, DOWN } from './string_utils';
-import { MinecraftLocation } from './file_struct';
-
-// let re = new MojangRepository()
 // let loc = new MinecraftLocation(__dirname + '/' + '.minecraft')
 
 // async function down() {
@@ -26,5 +10,31 @@ import { MinecraftLocation } from './file_struct';
 // }
 // down()
 
-DOWN('http://files.minecraftforge.net/maven/jline/jline/2.13/jline-2.13.jar', './test.jar')
-    .then(r => console.log('done'))
+// DOWN('http://files.minecraftforge.net/maven/jline/jline/2.13/jline-2.13.jar', './test.jar')
+//     .then(r => console.log('done'))
+
+import { ForgeVersionMetaList, ForgeVersionMeta } from './forge_download';
+import * as semver from 'semver'
+
+function regular(version: string) {
+    let [ver, patch] = version.split('-')
+    let arr = ver.split('.')
+    if (arr.length == 2)
+        arr.push('0')
+    return arr.join('.') + '-' + patch
+}
+let s = regular('1.12-pas')
+console.log(s)
+// ForgeVersionMetaList.update().then(result => {
+//     let list: Array<any> = new Array
+
+//     console.log(result.list.promos)
+//     for (let k in result.list.promos)
+//         list.push([k, result.list.promos[k]])
+//     list.sort((a, b) => {
+//         let s1: string = a[0]
+//         let s2: string = b[0]
+//         return semver.compare(s1, s2)
+//     })
+//     console.log(list)
+// })

@@ -21,9 +21,10 @@ Supporting:
 - WorldInfo modify
 - Minecraft client download
 - Sha1 check for the downloaded files (not tested)
+- MinecraftForge client download (not tested)
 
 Will support in future:
-- MinecraftForge/Liteloader client download
+- Liteloader client download
 - TextComponent to html (render TextComponent)
 
 Issue:

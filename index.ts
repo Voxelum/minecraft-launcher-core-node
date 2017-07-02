@@ -9,6 +9,8 @@ import { TextComponent, TextFormatting, Style } from './src/text'
 import { Version } from './src/version'
 import { MinecraftLocation, ResourceLocation } from './src/file_struct'
 
+import { ForgeVersionMeta, ForgeVersionMetaList } from './src/forge_download';
+import { VersionChecker, VersionMeta, VersionMetaList, VersionDownloader } from './src/download'
 //these two not done yet
 import { NBT } from './src/nbt'
 import { Launcher } from './src/launch'
@@ -24,5 +26,7 @@ export {
     ResourceMode, ResourcePack, ModContainer,
     ModIndentity, ForgeMetaData, LiteModMetaData,
     MinecraftLocation, ResourceLocation,
+    ForgeVersionMeta, ForgeVersionMetaList,
+    VersionChecker, VersionMeta, VersionMetaList, VersionDownloader,
     NBT
 }

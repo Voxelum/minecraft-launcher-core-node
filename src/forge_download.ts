@@ -1,8 +1,9 @@
-import { GET, DOWN, DIR, CHECKSUM } from './string_utils';
+import { GET, DOWN, DIR, CHECKSUM, UPDATE } from './string_utils';
 import { MinecraftLocation } from './file_struct';
 import * as path from 'path'
 import * as Zip from 'adm-zip';
 import * as fs from 'fs'
+import { Version } from './version';
 export interface ForgeVersionMetaList {
     adfocus: string,
     artifact: string,
@@ -15,6 +16,20 @@ export interface ForgeVersionMetaList {
     number: { [key: string]: ForgeVersionMeta }
 }
 
+export namespace ForgeVersionMetaList {
+    export async function update(option?: {
+        fallback?: {
+            list: ForgeVersionMetaList, date: string
+        }, remote?: string
+    }): Promise<{ list: ForgeVersionMetaList, date: string }> {
+        if (!option) option = {}
+        return UPDATE({
+            fallback: option.fallback,
+            remote: option.remote || 'http://files.minecraftforge.net/maven/net/minecraftforge/forge/json'
+        }).then(result => result as { list: ForgeVersionMetaList, date: string })
+    }
+}
+
 export interface ForgeVersionMeta {
     branch: string | null,
     build: number,
@@ -24,23 +39,11 @@ export interface ForgeVersionMeta {
     version: string
 }
 
-export interface ForgeVerionDownloader {
-    fetchVersionList(): Promise<ForgeVersionMetaList>,
-    installForge(version: ForgeVersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Promise<void>
-}
-
-export class DefaultForgeVersionDownloader implements ForgeVerionDownloader {
-    constructor(protected api: DefaultForgeVersionDownloader.API = {
-        versions: 'http://files.minecraftforge.net/maven/net/minecraftforge/forge/json',
-        maven: 'http://files.minecraftforge.net/maven'
-    }) { }
-    fetchVersionList(): Promise<ForgeVersionMetaList> {
-        return GET(this.api.versions).then(s => JSON.parse(s))
-    }
-
-    async installForge(version: ForgeVersionMeta, minecraft: MinecraftLocation, checksum: boolean = false): Promise<void> {
+export namespace ForgeVersionMeta {
+    export async function installForge(version: ForgeVersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
+        maven: string = 'http://files.minecraftforge.net/maven'): Promise<Version> {
         let versionPath = `${version.mcversion}-${version.version}`
-        let url = `${this.api.maven}/net/minecraftforge/forge/${versionPath}/${versionPath}-universal.jar`
+        let url = `${maven}/net/minecraftforge/forge/${versionPath}/${versionPath}-universal.jar`
 
         let forgePath = `${version.mcversion}-forge-${versionPath}`
         let root = minecraft.getVersionRoot(forgePath)
@@ -65,13 +68,7 @@ export class DefaultForgeVersionDownloader implements ForgeVerionDownloader {
             }
         }
         if (!fs.existsSync(jsonPath))
-            new Zip(filePath).extractEntryTo('version.json', path.join(root, `${forgePath}.json`))//TODO performance?
-    }
-}
-
-export namespace DefaultForgeVersionDownloader {
-    export interface API {
-        readonly versions: string
-        readonly maven: string
+            new Zip(filePath).extractEntryTo('version.json', path.join(root, jsonPath))//TODO performance?
+        return Version.parse(minecraft.root, forgePath)
     }
 }

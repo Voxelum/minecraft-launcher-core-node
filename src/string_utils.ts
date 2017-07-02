@@ -181,6 +181,43 @@ export async function READ(path: string): Promise<string> {
 export async function REQ(url: http.RequestOptions) {
 
 }
+export async function UPDATE(option: {
+    fallback?: {
+        list: any, date: string
+    }, remote: string
+}): Promise<{ list: any, date: string }> {
+    return new Promise<{ list: any, date: string }>((resolve, reject) => {
+        let u = urls.parse(option.remote)
+        let worker
+        if (u.protocol == 'https:')
+            worker = https
+        else worker = http
+        let req = (worker as any).request({
+            protocol: u.protocol,
+            host: u.host,
+            path: u.path,
+            headers: option.fallback ? { 'If-Modified-Since': option.fallback.date } : undefined
+        }, (res: any) => {
+            if (res.statusCode == 200) {
+                res.setEncoding('utf-8')
+                let buf = ''
+                let last = res.headers['last-modified'] as string
+                res.on('data', (e: any) => buf += e)
+                res.on('end', () => {
+                    let obj = JSON.parse(buf)
+                    //TODO check the data
+                    resolve({ list: obj, date: last })
+                })
+            }
+            else if (res.statusCode == 304) {
+                resolve((option as any).fallback)
+            }
+        })
+        req.on('error', (e: any) => reject(e))
+        req.end()
+    });
+}
+
 export async function GET(url: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         let u = urls.parse(url)
