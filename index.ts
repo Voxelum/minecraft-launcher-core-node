@@ -1,5 +1,4 @@
-import { AuthResponse, AuthService } from './src/yggdrasil'
-import { GameProfile, AuthInfo, UserType, Authorizer } from './src/auth'
+import { GameProfile, UserType, AuthResponse, AuthService } from './src/auth'
 import {
     GameType, WorldInfo, Language, GameSetting,
     ServerInfo, ServerStatus, ResourceMode, ResourcePack,
@@ -19,7 +18,7 @@ export {
     Launcher,
     GameSetting,
     AuthResponse, AuthService,
-    GameProfile, AuthInfo, UserType, Authorizer,
+    GameProfile, UserType,
     Version,
     TextComponent, TextFormatting, Style,
     GameType, WorldInfo, Language, ServerInfo, ServerStatus,

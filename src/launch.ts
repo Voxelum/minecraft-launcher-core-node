@@ -1,5 +1,5 @@
 import { Version, Library, Native, Artifact } from './version'
-import { AuthInfo, UserType } from './auth'
+import { AuthResponse, UserType } from './auth'
 import { MinecraftLocation } from './file_struct'
 import { exec, ChildProcess } from 'child_process'
 import * as Zip from 'adm-zip'
@@ -34,7 +34,7 @@ export namespace Launcher {
         ignorePatchDiscrepancies?: boolean
     }
 
-    export async function launch(auth: AuthInfo, options: Option): Promise<ChildProcess> {
+    export async function launch(auth: AuthResponse, options: Option): Promise<ChildProcess> {
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
         let mc = new MinecraftLocation(options.resourcePath)
@@ -73,7 +73,7 @@ export namespace Launcher {
         }
     }
 
-    function genArgs(auth: AuthInfo, options: any, version: Version): string[] {
+    function genArgs(auth: AuthResponse, options: any, version: Version): string[] {
         let mc = new MinecraftLocation(options.resourcePath)
         let cmd: string[] = [];
         if (options.javaPath.match(/.* *.*/)) { options.javaPath = '"' + options.javaPath + '"' }
@@ -123,8 +123,8 @@ export namespace Launcher {
         args = args.replace("${assets_index_name}", version.assets);
         args = args.replace("${game_directory}", options.gamePath);//TODO check if need to handle the dependency
 
-        args = args.replace("${auth_player_name}", auth.profile.name);
-        args = args.replace("${auth_uuid}", auth.profile.uuid.replace('-', ''));
+        args = args.replace("${auth_player_name}", auth.selectedProfile.name);
+        args = args.replace("${auth_uuid}", auth.selectedProfile.uuid.replace('-', ''));
         args = args.replace("${auth_access_token}", auth.accessToken);
         args = args.replace("${user_properties}", JSON.stringify(auth.properties));
         args = args.replace("${user_type}", UserType.toString(auth.userType));

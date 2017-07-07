@@ -1,4 +1,4 @@
-import { AuthService } from '../src/minecraft'
+import { AuthService } from '../src/auth'
 import * as assert from 'assert'
 describe('ygg-auth', () => {
     it('should response with invalid credit', (done) => {
