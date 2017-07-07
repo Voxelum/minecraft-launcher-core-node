@@ -158,21 +158,19 @@ export namespace AuthService {
         return new Yggdrasil(mojangAPI())
     }
 
-    export function offlineAuth(username: string) {
-        return new Promise((resolve, reject) => {
-            resolve({
-                accessToken: v4(),
-                clientToken: v4(),
-                selectedProfile: <GameProfile>{
-                    uuid: v4(),
-                    name: username
-                },
-                profiles: [],
-                userId: username,
-                properties: {},
-                userType: UserType.Mojang
-            })
-        });
+    export function offlineAuth(username: string): AuthResponse {
+        return {
+            accessToken: v4(),
+            clientToken: v4(),
+            selectedProfile: <GameProfile>{
+                uuid: v4(),
+                name: username
+            },
+            profiles: [],
+            userId: username,
+            properties: {},
+            userType: UserType.Mojang
+        }
     }
 
     export function yggdrasilAuth(option: {
