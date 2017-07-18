@@ -7,13 +7,13 @@ import { Version } from './version';
 export interface ForgeVersionMetaList {
     adfocus: string,
     artifact: string,
-    branches: { [key: string]: number[] },
-    mcversion: { [key: string]: number[] },
+    branches: { [key: string]: number[] }, //sort by github branch
+    mcversion: { [key: string]: number[] }, //sort by mcversion
     homepage: string,
     webpath: string,
     name: string,
-    promos: string[],
-    number: { [key: string]: ForgeVersionMeta }
+    promos: { [key: string]: number }, //list all latest
+    number: { [key: string]: ForgeVersionMeta } //search by number
 }
 
 export namespace ForgeVersionMetaList {
@@ -43,8 +43,7 @@ export namespace ForgeVersionMeta {
     export async function installForge(version: ForgeVersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven'): Promise<Version> {
         let versionPath = `${version.mcversion}-${version.version}`
-        let url = `${maven}/net/minecraftforge/forge/${versionPath}/${versionPath}-universal.jar`
-
+        let url = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
         let forgePath = `${version.mcversion}-forge-${versionPath}`
         let root = minecraft.getVersionRoot(forgePath)
         let filePath = path.join(root, `${forgePath}.jar`)
