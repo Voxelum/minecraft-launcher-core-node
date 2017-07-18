@@ -33,10 +33,10 @@ describe('FetchForge', () => {
         ForgeVersionMetaList.update().then((result: { list: ForgeVersionMetaList, date: string }) => {
             return result.list.number[result.list.promos['latest'].toString()]
         }).then(meta => {
-            return ForgeVersionMeta.installForge(meta, new MinecraftLocation('./forge'), false)
+            return ForgeVersionMeta.installForge(meta, new MinecraftLocation('./tests/assets/temp'), false)
         }).then(v => {
             console.log(v)
             done()
         }, err => { done(err) })
-    })).timeout(5000)
+    })).timeout(10000)
 })

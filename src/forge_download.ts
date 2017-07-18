@@ -43,15 +43,37 @@ export namespace ForgeVersionMeta {
     export async function installForge(version: ForgeVersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven'): Promise<Version> {
         let versionPath = `${version.mcversion}-${version.version}`
-        let url = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
-        let forgePath = `${version.mcversion}-forge-${versionPath}`
-        let root = minecraft.getVersionRoot(forgePath)
-        let filePath = path.join(root, `${forgePath}.jar`)
-        let jsonPath = path.join(root, `${forgePath}.json`)
+        let universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
+        let installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
+        let localForgePath = `${version.mcversion}-forge-${version.version}`
+        let root = minecraft.getVersionRoot(localForgePath)
+        let filePath = path.join(root, `${localForgePath}.jar`)
+        let jsonPath = path.join(root, `${localForgePath}.json`)
         if (!fs.existsSync(root))
             await DIR(root)
         if (!fs.existsSync(filePath)) {
-            await DOWN(url, filePath)
+            try {
+                await DOWN(universalURL, filePath)
+            }
+            catch (e) {
+                const installerPath = filePath + '.install.jar'
+                await DOWN(installerURL, installerPath)
+                const installerZip = new Zip(installerPath)
+                const parent = path.dirname(filePath)
+                installerZip.extractEntryTo(`forge-${versionPath}-universal.jar`, parent, false, true);
+                await new Promise<void>((resolve, reject) => {
+                    fs.rename(path.join(parent, `forge-${versionPath}-universal.jar`), filePath, (err => {
+                        if (err) reject(err)
+                        else resolve()
+                    }))
+                })
+                await new Promise((resolve, reject) => {
+                    fs.unlink(installerPath, err => {
+                        if (err) reject(err)
+                        else resolve()
+                    })
+                });
+            }
             if (checksum) {
                 let sum
                 if (version.files[2] &&
@@ -66,8 +88,15 @@ export namespace ForgeVersionMeta {
                                 throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
             }
         }
-        if (!fs.existsSync(jsonPath))
-            new Zip(filePath).extractEntryTo('version.json', path.join(root, jsonPath))//TODO performance?
-        return Version.parse(minecraft.root, forgePath)
+        if (!fs.existsSync(jsonPath)) {
+            new Zip(filePath).extractEntryTo('version.json', path.dirname(jsonPath), false, true)//TODO performance?
+            await new Promise((resolve, reject) => {
+                fs.rename(path.join(path.dirname(jsonPath), 'version.json'), jsonPath, (err) => {
+                    if (err) reject(err)
+                    else resolve()
+                })
+            });
+        }
+        return Version.parse(minecraft.root, localForgePath)
     }
 }

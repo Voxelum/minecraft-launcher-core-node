@@ -153,17 +153,32 @@ export function DOWN(url: string, file: string): Promise<void> {
         let stream = fs.createWriteStream(file)
         let u = urls.parse(url)
         let req
+        let resHandler = (res: any) => {
+            if (res.statusCode === 502) {
+                stream.close();
+                fs.unlink(file, err => {
+                    reject(502);
+                });
+            } else
+                res.pipe(stream)
+            stream.on('finish', () => { stream.close(); resolve() })
+        }
         if (u.protocol == 'https:')
             req = https.get({
                 host: u.host,
                 path: u.path
-            }, res => res.pipe(stream)).on('error', e => { reject(e); fs.unlink(file) })
+            }, resHandler)
         else
             req = http.get({
                 host: u.host,
                 path: u.path
-            }, res => res.pipe(stream)).on('error', e => { reject(e); fs.unlink(file) })
-        stream.on('finish', () => { stream.close(); resolve() })
+            }, resHandler)
+        req.on('error', e => {
+            stream.close();
+            fs.unlink(file, err => {
+                reject(e);
+            });
+        })
         req.end()
     });
 
