@@ -4,6 +4,7 @@ import { ForgeVersionMetaList } from '../src/forge_download';
 import { ForgeVersionMeta } from "../index";
 import { MinecraftLocation } from '../src/file_struct';
 import { DOWN_R } from "../src/string_utils";
+import { LiteVersionMeta, LiteVersionMetaList } from '../src/lite_download';
 describe('FetchVersionList', () => {
     it('should not fetch a list duplicatedly', (done) => {
         let r1: any
@@ -29,25 +30,30 @@ describe('FetchForgeVersionList', () => {
         }).catch(err => done(err))
     }).timeout(5000)
 })
-describe('FetchForge', () => {
-    it('should download forge', done => {
-        ForgeVersionMetaList.update().then((result: { list: ForgeVersionMetaList, date: string }) => {
-            return result.list.number[result.list.promos['latest'].toString()]
-        }).then(meta => {
-            return ForgeVersionMeta.installForge(meta, new MinecraftLocation('./tests/assets/temp'), false)
-        }).then(v => {
-            console.log(v)
-            done()
-        }, err => { done() })
-    }).timeout(10000)
-})
-
-describe('testDown', () => {
-    it('should download correctly', (done) => {
-        DOWN_R('http://dl.liteloader.com/versions/com/mumfrey/liteloader/1.11-SNAPSHOT/1.11-SNAPSHOT.jar', 'test.jar').then(r => {
-            done()
-        }, err => {
-            done(err)
-        })
+// describe('FetchForge', () => {
+//     it('should download forge', done => {
+//         ForgeVersionMetaList.update().then((result: { list: ForgeVersionMetaList, date: string }) => {
+//             return result.list.number[result.list.promos['latest'].toString()]
+//         }).then(meta => {
+//             return ForgeVersionMeta.installForge(meta, new MinecraftLocation('./tests/assets/temp'), false)
+//         }).then(v => {
+//             console.log(v)
+//             done()
+//         }, err => { done() })
+//     }).timeout(10000)
+// })
+describe('FetchLite', () => {
+    it('should download liteloader', done => {
+        LiteVersionMetaList.update()
+            .then((result: { list: LiteVersionMetaList, date: string }) => {
+                let meta = result.list.versions['1.10.2'].release
+                if (meta) {
+                    let promise = LiteVersionMeta.installLiteloader(meta, new MinecraftLocation('./tests/assets/temp'))
+                    return promise.then(v => '')
+                }
+                return ''
+            }).then((r: any) => {
+                done()
+            }, (e: any) => done(e))
     }).timeout(10000)
 })
