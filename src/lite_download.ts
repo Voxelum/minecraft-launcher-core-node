@@ -48,8 +48,15 @@ export interface LiteVersionMeta {
 }
 import * as path from 'path'
 export namespace LiteVersionMeta {
-    export function installLiteloader(version: LiteVersionMeta, artifact: LiteArtifact, location: MinecraftLocation) {
-        const targetURL = path.join(version.repo.url, 'com/mumfrey/liteloader', artifact.version, artifact.file)
+    const snapshotRoot = 'http://dl.liteloader.com/versions/com/mumfrey/liteloader/';
+    const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/com/mumfrey/liteloader/'
+    const jerkinsRoot = 'http://jenkins.liteloader.com/'
+    export function installLiteloader(artifact: LiteArtifact, location: MinecraftLocation) {
+        let targetURL
+        if (artifact.stream === 'SNAPSHOT')
+            targetURL = path.join(snapshotRoot, artifact.version, artifact.version + '.jar')
+        else if (artifact.stream === 'RELEASE')
+            targetURL = path.join(releaseRoot, artifact.version, artifact.file)
     }
 }
 export interface LiteArtifact {
