@@ -34,7 +34,7 @@ export interface AuthResponse {
 }
 
 export interface AuthService {
-    login(username: string, password: string, clientToken?: string): Promise<AuthResponse>;
+    login(username: string, password?: string, clientToken?: string): Promise<AuthResponse>;
     refresh(clientToken: string, accessToken: string, profile: string): Promise<AuthResponse>;
     validate(accessToken: string, clientToken?: string): Promise<boolean>;
     invalide(accessToken: string, clientToken: string): void;
@@ -115,7 +115,7 @@ export namespace AuthService {
             })
         }
 
-        login(username: string, password: string, clientToken?: string | undefined): Promise<AuthResponse> {
+        login(username: string, password?: string, clientToken?: string | undefined): Promise<AuthResponse> {
             let payload = {
                 agent: 'Minecraft',
                 username: username,
@@ -156,6 +156,33 @@ export namespace AuthService {
     export function newYggdrasilAuthService(api?: API): AuthService {
         if (api) return new Yggdrasil(api)
         return new Yggdrasil(mojangAPI())
+    }
+
+    export function newOfflineAuthService(): AuthService {
+        return {
+            login(username: string, password: string, clientToken?: string): Promise<AuthResponse> {
+                return Promise.resolve({
+                    accessToken: v4(),
+                    clientToken: clientToken || v4(),
+                    selectedProfile: <GameProfile>{
+                        uuid: v4(),
+                        name: username
+                    },
+                    profiles: [],
+                    userId: username,
+                    properties: {},
+                    userType: UserType.Mojang
+                })
+            },
+            refresh(clientToken: string, accessToken: string, profile: string): Promise<AuthResponse> {
+                throw new Error('Unsupported operation')
+            },
+            validate(accessToken: string, clientToken?: string): Promise<boolean> {
+                return Promise.resolve(true)
+            },
+            invalide(accessToken: string, clientToken: string): void { },
+            signout(username: string, password: string): void { },
+        }
     }
 
     export function offlineAuth(username: string): AuthResponse {

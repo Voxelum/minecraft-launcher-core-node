@@ -31,11 +31,11 @@
   ],
   "license": "GPL",
   "dependencies": {
-    "semver": "^5.3.0",
-    "mkdirp": "^0.5.1",
     "adm-zip": "^0.4.7",
     "bytebuffer": "^5.0.1",
     "long": "^3.2.0",
+    "mkdirp": "^0.5.1",
+    "semver": "^5.3.0",
     "uuid": "^3.0.1"
   },
   "bugs": {
