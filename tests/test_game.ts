@@ -17,14 +17,14 @@ describe('TextComponent', () => {
 
 describe("GameSetting", () => {
     it('should print all the options', () => {
-        let s = fs.readFileSync('./options.txt')
+        let s = fs.readFileSync('./tests/assets/options.txt')
         let set = GameSetting.readFromString(s.toString())
     })
 })
 
 describe('ServerRead', () => {
     it('should read the server.dat correctly', () => {
-        let data = fs.readFileSync('./servers.dat')
+        let data = fs.readFileSync('./tests/assets/servers.dat')
         let infos = ServerInfo.readFromNBT(data)
         console.log(JSON.stringify(infos, (k, v) => {
             if (k == 'icon') return ''
@@ -48,7 +48,7 @@ describe('ServerPing', () => {
 })
 describe('ForgeMod', () => {
     it('should read mod correctly', (done) => {
-        ModContainer.parseForge('./sample-mod.jar')
+        ModContainer.parseForge('./tests/assets/sample-mod.jar')
             .then(v => {
                 console.log(v)
                 done()
