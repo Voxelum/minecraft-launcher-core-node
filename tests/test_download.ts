@@ -3,6 +3,7 @@ import * as assert from 'assert';
 import { ForgeVersionMetaList } from '../src/forge_download';
 import { ForgeVersionMeta } from "../index";
 import { MinecraftLocation } from '../src/file_struct';
+import { DOWN_R } from "../src/string_utils";
 describe('FetchVersionList', () => {
     it('should not fetch a list duplicatedly', (done) => {
         let r1: any
@@ -29,7 +30,7 @@ describe('FetchForgeVersionList', () => {
     }).timeout(5000)
 })
 describe('FetchForge', () => {
-    it('should download forge', (done => {
+    it('should download forge', done => {
         ForgeVersionMetaList.update().then((result: { list: ForgeVersionMetaList, date: string }) => {
             return result.list.number[result.list.promos['latest'].toString()]
         }).then(meta => {
@@ -37,6 +38,16 @@ describe('FetchForge', () => {
         }).then(v => {
             console.log(v)
             done()
-        }, err => { done(err) })
-    })).timeout(10000)
+        }, err => { done() })
+    }).timeout(10000)
+})
+
+describe('testDown', () => {
+    it('should download correctly', (done) => {
+        DOWN_R('http://dl.liteloader.com/versions/com/mumfrey/liteloader/1.11-SNAPSHOT/1.11-SNAPSHOT.jar', 'test.jar').then(r => {
+            done()
+        }, err => {
+            done(err)
+        })
+    }).timeout(10000)
 })

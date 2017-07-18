@@ -148,6 +148,46 @@ export async function DIR(path: string): Promise<string> {
         })
     })
 }
+
+function _findDownloadRes(requester: any, url: string) {
+    return new Promise((resolve, reject) => {
+        let req = requester.get(url,
+            (res: any) => {
+                if (res.statusCode == 304 || res.statusCode == 302)
+                    resolve(_findDownloadRes(requester, res.headers.location))
+                else resolve(res)
+            })
+        req.on('error', (e: any) => {
+            reject(e);
+        })
+        req.end()
+    })
+}
+export async function DOWN_R(url: string, file: string) {
+    let u = urls.parse(url)
+    let reqestor = u.protocol === 'https' ? https : http
+    let res: any = await _findDownloadRes(reqestor, url);
+
+    if (res.statusCode !== 200) {
+        throw new Error(res.statusCode)
+    } else {
+        let stream = fs.createWriteStream(file)
+        try {
+            await new Promise((resolve, reject) => {
+                res.pipe(stream)
+                stream.on('finish', () => { stream.close(); resolve() })
+            });
+        } catch (e) {
+            stream.close();
+            await new Promise((resolve, reject) => {
+                fs.unlink(file, err => {
+                    reject(e);
+                });
+            });
+        }
+    }
+}
+
 export function DOWN(url: string, file: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         let stream = fs.createWriteStream(file)

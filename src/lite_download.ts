@@ -1,4 +1,5 @@
 import { UPDATE } from "./string_utils";
+import { MinecraftLocation } from './file_struct';
 
 export interface LiteVersionMetaList {
     meta: {
@@ -23,6 +24,7 @@ export namespace LiteVersionMetaList {
         }).then(result => result as { list: LiteVersionMetaList, date: string })
     }
 }
+
 export interface LiteVersionMeta {
     repo: {
         stream: string,
@@ -30,8 +32,34 @@ export interface LiteVersionMeta {
         url: string,
         classifier: string
     },
-    snapshot?:{
-        
+    snapshot?: {
+        libraries: Array<any>,
+        "com.mumfrey:liteloader": {
+            latest: LiteArtifact,
+            [id: string]: LiteArtifact
+        }
+    },
+    artefacts?: {
+        "com.mumfrey:liteloader": {
+            latest: LiteArtifact,
+            [id: string]: LiteArtifact
+        }
     }
-
+}
+import * as path from 'path'
+export namespace LiteVersionMeta {
+    export function installLiteloader(version: LiteVersionMeta, artifact: LiteArtifact, location: MinecraftLocation) {
+        const targetURL = path.join(version.repo.url, 'com/mumfrey/liteloader', artifact.version, artifact.file)
+    }
+}
+export interface LiteArtifact {
+    tweakClass: string,
+    libraries: Array<any>,
+    stream: string,
+    file: string,
+    version: string,
+    build: string,
+    md5: string,
+    timestamp: string,
+    lastSuccessfulBuild: number
 }
