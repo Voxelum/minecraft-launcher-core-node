@@ -6,18 +6,35 @@ import { readString, writeString } from './string_utils'
 //not finished yet...
 export namespace NBT {
     export enum Type {
-        End, Byte, Short, Int, Long, Float, Double, ByteArray, String, List, Compound, IntArray
+        End = 0, Byte = 1, Short = 2, Int = 3, Long = 4, Float = 5, Double = 6,
+        ByteArray = 7, String = 8, List = 9, Compound = 10, IntArray = 11
+    }
+
+    class Scheme {
+        constructor(private scheme: any) {
+        }
+
+        getType(...paths: string[]): NBT.Type | any {
+            if (!paths) return NBT.Type.Compound;
+            let current = this.scheme;
+            for (let path of paths) {
+                current = current[path];
+                if (!current)
+                    return NBT.Type.End;
+            }
+            return current;
+        }
     }
 
     let visitors: Visitor[] = [
-        { read(buf) { }, write(buf, v) { } },
-        { read: (buf) => buf.readByte(), write(buf, v) { buf.writeByte(v) } },
-        { read: (buf) => buf.readShort(), write(buf, v) { buf.writeShort(v) } },
-        { read: (buf) => buf.readInt(), write(buf, v) { buf.writeInt(v) } },
-        { read: (buf) => buf.readLong(), write(buf, v) { buf.writeInt64(v) } },
-        { read: (buf) => buf.readFloat(), write(buf, v) { buf.writeFloat(v) } },
-        { read: (buf) => buf.readDouble(), write(buf, v) { buf.writeDouble(v) } },
-        {
+        { read(buf) { }, write(buf, v) { } }, //end
+        { read: (buf) => buf.readByte(), write(buf, v) { buf.writeByte(v) } }, //byte
+        { read: (buf) => buf.readShort(), write(buf, v) { buf.writeShort(v) } }, //short
+        { read: (buf) => buf.readInt(), write(buf, v) { buf.writeInt(v) } }, //int
+        { read: (buf) => buf.readLong(), write(buf, v) { buf.writeInt64(v) } }, //long
+        { read: (buf) => buf.readFloat(), write(buf, v) { buf.writeFloat(v) } }, //float
+        { read: (buf) => buf.readDouble(), write(buf, v) { buf.writeDouble(v) } }, //double
+        { //byte array
             read(buf) {
                 let len = buf.readInt();
                 let arr: number[] = new Array(length);
@@ -29,10 +46,10 @@ export namespace NBT {
                 for (let i = 0; i < arr.length; i++)  buf.writeByte(arr[i])
             }
         },
-        {
+        { //string
             read(buf) { return readString(buf); }, write(buf, v) { writeString(buf, v) }
         },
-        {
+        { //list
             read(buf, schemaScope) {
                 let id = buf.readByte();
                 let len = buf.readInt();
@@ -48,28 +65,33 @@ export namespace NBT {
                 else for (let i = 0; i < len; i++) arr[i] = visitor.read(buf);
                 return arr;
             },
-            write(buf, v, schemaScope) {
-                if (schemaScope) {
-                    if (typeof (schemaScope) === 'number') {
-
-                    }
-                    else if (typeof (schemaScope) === 'string') {
-
-                    }
-                    else if (schemaScope.length) {
-                        let visitor = visitors[Type.Compound]
-                        for (let i = 0; i < schemaScope.length; i++) {
-                            visitor.write(buf, v[i], )
-                        }
-                    }
+            write(buf, value, context) {
+                const { scope, find } = context
+                const type = scope[0]
+                if (typeof (type) === 'number') {
+                    let writer = visitors[type]
+                    for (let v of value)
+                        writer.write(buf, v, { scope: type, find })
                 }
-                else {
-
+                else if (typeof (type) === 'string') {
+                    let found = find(type)
+                    if (!found) throw new Error(`Cannot find type ${type}!`)
+                    buf.writeByte(NBT.Type.Compound);
+                    buf.writeInt(value.length);
+                    let writer = visitors[NBT.Type.Compound];
+                    for (let v of value)
+                        writer.write(buf, v, { scope: found, find })
                 }
+                else if (typeof (type) === 'object') {
+                    let writer = visitors[NBT.Type.Compound];
+                    for (let v of value)
+                        writer.write(buf, v, { scope: type, find })
+                }
+                else throw new Error("WTH")
             }
         },
         {//tag compound
-            read(buf, schemaScope) {
+            read(buf, scope) {
                 let object: any = {};
                 for (let type = 0; (type = buf.readByte()) != 0;) {
                     let name = visitors[Type.String].read(buf);
@@ -78,39 +100,48 @@ export namespace NBT {
                         throw "No such tag id " + type;
                     if (type == Type.Compound) {
                         let newScope = {};
-                        schemaScope[name] = newScope;
+                        scope[name] = newScope;
                         object[name] = visitor.read(buf, newScope)
-                    }
-                    else if (type == Type.List) {
+                    } else if (type == Type.List) {
                         let newScope: any[] | number = [];
                         object[name] = visitor.read(buf, newScope)
                         if (newScope.length == 1)
                             if (typeof (newScope[0]) === 'number')
                                 newScope = newScope[0]
-                        schemaScope[name] = newScope;
-                    }
-                    else {
-                        schemaScope[name] = type;
+                        scope[name] = newScope;
+                    } else {
+                        scope[name] = type;
                         object[name] = visitor.read(buf)
                     }
                 }
                 return object;
             },
-            write(buf, obj, scope) {
+            write(buf, obj, context) {
+                const { scope, find } = context
                 for (let key in obj) {
-                    visitors[Type.String].write(buf, key)
+                    visitors[Type.String].write(buf, key, context)
                     let value = obj[key]
-                    let type = scope[key]
-                    let writer = visitors[type]
-                    if (!writer) throw "Unknown type " + type
-                    if (type == Type.List) {
-
-                    }
-                    writer.write(buf, value)
+                    const scopeValue = scope[key]
+                    const $type = typeof scopeValue;
+                    if ($type === 'number') {
+                        let writer = visitors[scopeValue]
+                        if (!writer) throw "Unknown type " + scopeValue;
+                        writer.write(buf, value, context)
+                    } else if ($type === 'string') {
+                        let writer = visitors[NBT.Type.Compound]
+                        //support custom type
+                        writer.write(buf, value, { scope: find(scopeValue), find })
+                    } else if (scopeValue instanceof Array) {
+                        let writer = visitors[NBT.Type.List]
+                        writer.write(buf, value, { scope: scopeValue, find })
+                    } else if ($type === 'object') {
+                        let writer = visitors[NBT.Type.Compound]
+                        writer.write(buf, value, { scope: scopeValue, find })
+                    } else throw new Error("WTF")
                 }
             }
         },
-        {
+        { //int array
             read(buf) {
                 let len = buf.readInt();
                 let arr: number[] = new Array(length);
@@ -126,7 +157,7 @@ export namespace NBT {
 
     interface Visitor {
         read(buf: ByteBuffer, schemaObject?: any): any;
-        write(buf: ByteBuffer, value: any, schemaObject?: any): void;
+        write(buf: ByteBuffer, value: any, context: { scope?: any, find: (id: string) => any }): void;
     }
 
     export function read(fileData: Buffer, compressed: boolean = false): { root: any, schema: any } {

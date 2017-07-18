@@ -1,4 +1,5 @@
 import { UPDATE } from "./string_utils";
+import { MinecraftLocation } from './file_struct';
 
 export interface LiteVersionMetaList {
     meta: {
@@ -23,6 +24,7 @@ export namespace LiteVersionMetaList {
         }).then(result => result as { list: LiteVersionMetaList, date: string })
     }
 }
+
 export interface LiteVersionMeta {
     repo: {
         stream: string,
@@ -30,8 +32,41 @@ export interface LiteVersionMeta {
         url: string,
         classifier: string
     },
-    snapshot?:{
-        
+    snapshot?: {
+        libraries: Array<any>,
+        "com.mumfrey:liteloader": {
+            latest: LiteArtifact,
+            [id: string]: LiteArtifact
+        }
+    },
+    artefacts?: {
+        "com.mumfrey:liteloader": {
+            latest: LiteArtifact,
+            [id: string]: LiteArtifact
+        }
     }
-
+}
+import * as path from 'path'
+export namespace LiteVersionMeta {
+    const snapshotRoot = 'http://dl.liteloader.com/versions/com/mumfrey/liteloader/';
+    const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/com/mumfrey/liteloader/'
+    const jerkinsRoot = 'http://jenkins.liteloader.com/'
+    export function installLiteloader(artifact: LiteArtifact, location: MinecraftLocation) {
+        let targetURL
+        if (artifact.stream === 'SNAPSHOT')
+            targetURL = path.join(snapshotRoot, artifact.version, artifact.version + '.jar')
+        else if (artifact.stream === 'RELEASE')
+            targetURL = path.join(releaseRoot, artifact.version, artifact.file)
+    }
+}
+export interface LiteArtifact {
+    tweakClass: string,
+    libraries: Array<any>,
+    stream: string,
+    file: string,
+    version: string,
+    build: string,
+    md5: string,
+    timestamp: string,
+    lastSuccessfulBuild: number
 }

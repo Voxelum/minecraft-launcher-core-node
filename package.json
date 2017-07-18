@@ -1,6 +1,10 @@
 {
   "name": "ts-minecraft",
+<<<<<<< HEAD
   "version": "0.3.3-beta",
+=======
+  "version": "0.3.4-beta",
+>>>>>>> e89f45f309c1e5fa8abdf5dc1c6062103ac1d40b
   "main": "./dist/index.js",
   "typings": "./dist/index",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
@@ -31,12 +35,12 @@
   ],
   "license": "GPL",
   "dependencies": {
-    "semver": "^5.3.0",
-    "mkdirp": "^0.5.1",
     "adm-zip": "^0.4.7",
     "bytebuffer": "^5.0.1",
     "long": "^3.2.0",
-    "uuid": "^3.0.1"
+    "mkdirp": "^0.5.1",
+    "semver": "^5.3.0",
+    "uuid": "^3.1.0"
   },
   "bugs": {
     "url": "https://github.com/InfinityStudio/ts-minecraft/issues"

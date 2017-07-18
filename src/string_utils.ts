@@ -148,22 +148,77 @@ export async function DIR(path: string): Promise<string> {
         })
     })
 }
+
+function _findDownloadRes(requester: any, url: string) {
+    return new Promise((resolve, reject) => {
+        let req = requester.get(url,
+            (res: any) => {
+                if (res.statusCode == 304 || res.statusCode == 302)
+                    resolve(_findDownloadRes(requester, res.headers.location))
+                else resolve(res)
+            })
+        req.on('error', (e: any) => {
+            reject(e);
+        })
+        req.end()
+    })
+}
+export async function DOWN_R(url: string, file: string) {
+    let u = urls.parse(url)
+    let reqestor = u.protocol === 'https' ? https : http
+    let res: any = await _findDownloadRes(reqestor, url);
+
+    if (res.statusCode !== 200) {
+        throw new Error(res.statusCode)
+    } else {
+        let stream = fs.createWriteStream(file)
+        try {
+            await new Promise((resolve, reject) => {
+                res.pipe(stream)
+                stream.on('finish', () => { stream.close(); resolve() })
+            });
+        } catch (e) {
+            stream.close();
+            await new Promise((resolve, reject) => {
+                fs.unlink(file, err => {
+                    reject(e);
+                });
+            });
+        }
+    }
+}
+
 export function DOWN(url: string, file: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         let stream = fs.createWriteStream(file)
         let u = urls.parse(url)
         let req
+        let resHandler = (res: any) => {
+            if (res.statusCode === 502) {
+                stream.close();
+                fs.unlink(file, err => {
+                    reject(502);
+                });
+            } else
+                res.pipe(stream)
+            stream.on('finish', () => { stream.close(); resolve() })
+        }
         if (u.protocol == 'https:')
             req = https.get({
                 host: u.host,
                 path: u.path
-            }, res => res.pipe(stream)).on('error', e => { reject(e); fs.unlink(file) })
+            }, resHandler)
         else
             req = http.get({
                 host: u.host,
                 path: u.path
-            }, res => res.pipe(stream)).on('error', e => { reject(e); fs.unlink(file) })
-        stream.on('finish', () => { stream.close(); resolve() })
+            }, resHandler)
+        req.on('error', e => {
+            stream.close();
+            fs.unlink(file, err => {
+                reject(e);
+            });
+        })
         req.end()
     });
 

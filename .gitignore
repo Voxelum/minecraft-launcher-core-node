@@ -1,3 +1,5 @@
 /node_modules
 /dist
 /.vscode
+/package-lock.json
+/tests/assets/temp
