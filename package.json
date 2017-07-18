@@ -1,10 +1,6 @@
 {
   "name": "ts-minecraft",
-<<<<<<< HEAD
-  "version": "0.3.3-beta",
-=======
   "version": "0.3.4-beta",
->>>>>>> e89f45f309c1e5fa8abdf5dc1c6062103ac1d40b
   "main": "./dist/index.js",
   "typings": "./dist/index",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
