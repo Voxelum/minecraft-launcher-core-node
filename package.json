@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "0.3.2-beta",
+  "version": "0.3.3-beta",
   "main": "./dist/index.js",
   "typings": "./dist/index",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
@@ -36,7 +36,7 @@
     "long": "^3.2.0",
     "mkdirp": "^0.5.1",
     "semver": "^5.3.0",
-    "uuid": "^3.0.1"
+    "uuid": "^3.1.0"
   },
   "bugs": {
     "url": "https://github.com/InfinityStudio/ts-minecraft/issues"
