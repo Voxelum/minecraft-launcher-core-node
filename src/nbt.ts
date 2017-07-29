@@ -37,7 +37,7 @@ export namespace NBT {
         { //byte array
             read(buf) {
                 let len = buf.readInt();
-                let arr: number[] = new Array(length);
+                let arr: number[] = new Array(len);
                 for (let i = 0; i < len; i++) arr[i] = buf.readByte();
                 return arr;
             },
@@ -144,7 +144,7 @@ export namespace NBT {
         { //int array
             read(buf) {
                 let len = buf.readInt();
-                let arr: number[] = new Array(length);
+                let arr: number[] = new Array(len);
                 for (let i = 0; i < len; i++) arr[i] = buf.readInt();
                 return arr;
             },

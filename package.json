@@ -1,20 +1,22 @@
 {
   "name": "ts-minecraft",
-  "version": "0.4.1-beta",
+  "version": "0.4.2-beta",
   "main": "./dist/index.js",
   "typings": "./dist/index",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
   "devDependencies": {
-    "typescript": "^2.3.4",
-    "mocha": "^3.4.2",
-    "@types/mkdirp": "^0.3.29",
-    "@types/long": "^3.0.31",
-    "@types/node": "^7.0.29",
-    "@types/bytebuffer": "^5.0.33",
-    "@types/uuid": "^3.0.0",
-    "@types/mocha": "^2.2.41",
     "@types/adm-zip": "^0.4.31",
-    "@types/semver": "^5.3.32"
+    "@types/bytebuffer": "^5.0.33",
+    "@types/long": "^3.0.31",
+    "@types/mkdirp": "^0.3.29",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^7.0.29",
+    "@types/semver": "^5.3.32",
+    "@types/uuid": "^3.0.0",
+    "babel": "^6.23.0",
+    "babel-core": "^6.25.0",
+    "mocha": "^3.4.2",
+    "typescript": "^2.3.4"
   },
   "scripts": {
     "test": "tsc && node ./node_modules/mocha/bin/mocha dist/tests",
