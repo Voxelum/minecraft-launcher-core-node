@@ -6,7 +6,7 @@ import {
 } from './src/game'
 import { TextComponent, TextFormatting, Style } from './src/text'
 import { Version, VersionMeta, VersionMetaList } from './src/version'
-import { MinecraftFolder, ResourceLocation } from './src/file_struct'
+import { MinecraftFolder, ResourceLocation, MinecraftLocation } from './src/file_struct';
 
 import { ForgeVersionMeta, ForgeVersionMetaList } from './src/forge_download';
 import './src/download';
@@ -25,6 +25,7 @@ export {
     ResourceMode, ResourcePack, ModContainer,
     ModIndentity, ForgeMetaData, LiteModMetaData,
     MinecraftFolder, ResourceLocation,
+    MinecraftLocation,
     ForgeVersionMeta, ForgeVersionMetaList,
     NBT
 }
