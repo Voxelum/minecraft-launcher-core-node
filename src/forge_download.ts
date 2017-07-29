@@ -1,5 +1,5 @@
 import { GET, DOWN, DIR, CHECKSUM, UPDATE } from './string_utils';
-import { MinecraftLocation } from './file_struct';
+import { MinecraftFolder, MinecraftLocation } from './file_struct';
 import * as path from 'path'
 import * as Zip from 'adm-zip';
 import * as fs from 'fs'
@@ -42,11 +42,12 @@ export interface ForgeVersionMeta {
 export namespace ForgeVersionMeta {
     export async function installForge(version: ForgeVersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven'): Promise<Version> {
+        const mc = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft;
         let versionPath = `${version.mcversion}-${version.version}`
         let universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
         let installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
         let localForgePath = `${version.mcversion}-forge-${version.version}`
-        let root = minecraft.getVersionRoot(localForgePath)
+        let root = mc.getVersionRoot(localForgePath)
         let filePath = path.join(root, `${localForgePath}.jar`)
         let jsonPath = path.join(root, `${localForgePath}.json`)
         if (!fs.existsSync(root))
@@ -97,6 +98,6 @@ export namespace ForgeVersionMeta {
                 })
             });
         }
-        return Version.parse(minecraft.root, localForgePath)
+        return Version.parse(minecraft, localForgePath)
     }
 }

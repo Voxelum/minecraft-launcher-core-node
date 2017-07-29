@@ -1,16 +1,16 @@
-import { VersionMetaList } from '../src/download';
+import { Version } from '../src/version';
 import * as assert from 'assert';
 import { ForgeVersionMetaList } from '../src/forge_download';
 import { ForgeVersionMeta } from "../index";
-import { MinecraftLocation } from '../src/file_struct';
+import { MinecraftFolder } from '../src/file_struct';
 import { DOWN_R } from "../src/string_utils";
 import { LiteVersionMeta, LiteVersionMetaList } from '../src/lite_download';
 describe('FetchVersionList', () => {
     it('should not fetch a list duplicatedly', (done) => {
         let r1: any
-        VersionMetaList.update().then(result => {
+        Version.updateVersionMeta().then(result => {
             r1 = result
-            return VersionMetaList.update({ fallback: result })
+            return Version.updateVersionMeta({ fallback: result })
         }).then(result => {
             assert.equal(result, r1)
             done()
@@ -48,7 +48,7 @@ describe('FetchLite', () => {
             .then((result: { list: LiteVersionMetaList, date: string }) => {
                 let meta = result.list.versions['1.10.2'].release
                 if (meta) {
-                    let promise = LiteVersionMeta.installLiteloader(meta, new MinecraftLocation('./tests/assets/temp'))
+                    let promise = LiteVersionMeta.installLiteloader(meta, new MinecraftFolder('./tests/assets/temp'))
                     return promise.then(v => '')
                 }
                 return ''

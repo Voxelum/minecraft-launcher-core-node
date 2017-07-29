@@ -6,6 +6,7 @@ import * as fs from 'fs'
 import * as os from 'os'
 import * as paths from 'path'
 import { READ } from './string_utils'
+import { MinecraftLocation } from './file_struct';
 
 /**
  * Virtual representation of artifact in memory. May not be the same with the file structure.
@@ -62,7 +63,7 @@ export class Version {
 }
 
 export namespace Version {
-    export function parse(minecraftPath: string, version: string): Promise<Version> {
+    export function parse(minecraftPath: MinecraftLocation, version: string): Promise<Version> {
         return resolveDependency(minecraftPath, version).then(e => {
             if (e.length == 0) throw new Error('Dependency error')
             return parseVersionHierarchy(e, currentPlatform())
@@ -119,17 +120,18 @@ function parseAssetIndex(json: any): Asset[] {
     return assets;
 }
 
-export function resolveDependency(path: string, version: string): Promise<any[]> {
+export function resolveDependency(path: MinecraftLocation, version: string): Promise<any[]> {
+    const folderLoc = typeof path === 'string' ? path : path.root;
     return new Promise<any[]>((res, rej) => {
         let stack: any[] = []
-        let fullPath = paths.join(path, 'versions', version, version + '.json')
+        let fullPath = paths.join(folderLoc, 'versions', version, version + '.json')
         if (!fs.existsSync(fullPath)) rej(new Error('No version file for ' + version));
         function interal(fullPath: string): Promise<any[]> {
             return READ(fullPath).then((value) => {
                 let obj = JSON.parse(value)
                 stack.push(obj)
                 if (obj.inheritsFrom)
-                    return interal(paths.join(path, 'versions', obj.inheritsFrom, obj.inheritsFrom + '.json'))
+                    return interal(paths.join(folderLoc, 'versions', obj.inheritsFrom, obj.inheritsFrom + '.json'))
                 else
                     return stack
             })
@@ -137,18 +139,6 @@ export function resolveDependency(path: string, version: string): Promise<any[]>
         interal(fullPath).then(r => res(r), e => rej(e))
     })
 }
-
-// function resolveDependency(path: string, version: string): any[] {
-//     let stack = []
-//     do {
-//         let fullPath = paths.join(path, 'versions', version, version + '.json')
-//         if (!fs.existsSync(fullPath)) break;
-//         let obj = JSON.parse(fs.readFileSync(fullPath).toString('utf-8'))
-//         stack.push(obj)
-//         version = obj.inheritsFrom
-//     } while (version);
-//     return stack
-// }
 
 function parseVersionHierarchy(hierarchy: any[], platform: PlatformDescription) {
     let version: string = hierarchy[0].id;

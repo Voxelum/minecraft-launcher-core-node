@@ -232,10 +232,6 @@ export async function READ(path: string): Promise<string> {
         })
     })
 }
-
-export async function REQ(url: http.RequestOptions) {
-
-}
 export async function UPDATE(option: {
     fallback?: {
         list: any, date: string

@@ -5,11 +5,11 @@ import {
     ModContainer, ModIndentity, ForgeMetaData, LiteModMetaData
 } from './src/game'
 import { TextComponent, TextFormatting, Style } from './src/text'
-import { Version } from './src/version'
-import { MinecraftLocation, ResourceLocation } from './src/file_struct'
+import { Version, VersionMeta, VersionMetaList } from './src/version'
+import { MinecraftFolder, ResourceLocation } from './src/file_struct'
 
 import { ForgeVersionMeta, ForgeVersionMetaList } from './src/forge_download';
-import { VersionChecker, VersionMeta, VersionMetaList, VersionDownloader } from './src/download'
+import './src/download';
 //these two not done yet
 import { NBT } from './src/nbt'
 import { Launcher } from './src/launch'
@@ -19,13 +19,12 @@ export {
     GameSetting,
     AuthResponse, AuthService,
     GameProfile, UserType,
-    Version,
+    Version, VersionMeta, VersionMetaList,
     TextComponent, TextFormatting, Style,
     GameType, WorldInfo, Language, ServerInfo, ServerStatus,
     ResourceMode, ResourcePack, ModContainer,
     ModIndentity, ForgeMetaData, LiteModMetaData,
-    MinecraftLocation, ResourceLocation,
+    MinecraftFolder, ResourceLocation,
     ForgeVersionMeta, ForgeVersionMetaList,
-    VersionChecker, VersionMeta, VersionMetaList, VersionDownloader,
     NBT
 }

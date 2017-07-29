@@ -24,7 +24,7 @@ function getPath0(artfact: Artifact) {
     return getArtifactBasePath(artfact.groupId, artfact.id, artfact.version) +
         artfact.id + "-" + artfact.version + (artfact.classifier ? "-" + artfact.classifier : "") + "." + artfact.type;
 }
-export class MinecraftLocation {
+export class MinecraftFolder {
     constructor(readonly root: string) { }
 
     get mods(): string { return paths.join(this.root, 'mods') }
@@ -61,6 +61,8 @@ export class MinecraftLocation {
         return target
     }
 }
+
+export type MinecraftLocation = MinecraftFolder | string
 
 export class ResourceLocation {
     constructor(readonly domain: string, readonly id: string) { }

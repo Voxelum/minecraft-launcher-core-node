@@ -3,3 +3,4 @@
 /tests
 /package-lock.json
 /dist/tests
+*.log

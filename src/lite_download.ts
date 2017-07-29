@@ -1,5 +1,5 @@
 import { UPDATE, DOWN_R, DOWN, DIR } from './string_utils';
-import { MinecraftLocation } from './file_struct';
+import { MinecraftLocation, MinecraftFolder } from './file_struct';
 
 export interface LiteVersionMetaList {
     meta: {
@@ -9,6 +9,7 @@ export interface LiteVersionMetaList {
         updated: string,
         updatedTime: number
     }
+    
     versions: { [version: string]: { release?: LiteVersionMeta, snapshot?: LiteVersionMeta } }
 }
 export namespace LiteVersionMetaList {
@@ -75,6 +76,7 @@ export namespace LiteVersionMeta {
     const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/com/mumfrey/liteloader'
 
     export async function installLiteloader(meta: LiteVersionMeta, location: MinecraftLocation) {
+        const mc = typeof location === 'string' ? new MinecraftFolder(location) : location
         let targetURL
         if (meta.type === 'SNAPSHOT')
             targetURL = `${snapshotRoot}/${meta.version}/${meta.version}.jar`
@@ -84,7 +86,7 @@ export namespace LiteVersionMeta {
 
         let jsonURL = `https://raw.githubusercontent.com/Mumfrey/LiteLoaderInstaller/${meta.mcversion}/src/main/resources/install_profile.json`
         const liteloaderPath = `${meta.mcversion}-Liteloader-${meta.version}`
-        const versionPath = location.getVersionRoot(liteloaderPath)
+        const versionPath = mc.getVersionRoot(liteloaderPath)
         if (!fs.existsSync(versionPath))
             await DIR(versionPath)
         console.log(targetURL)

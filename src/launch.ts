@@ -1,6 +1,6 @@
 import { Version, Library, Native, Artifact } from './version'
 import { AuthResponse, UserType } from './auth'
-import { MinecraftLocation } from './file_struct'
+import { MinecraftFolder } from './file_struct'
 import { exec, ChildProcess } from 'child_process'
 import * as Zip from 'adm-zip'
 import * as fs from 'fs'
@@ -37,7 +37,7 @@ export namespace Launcher {
     export async function launch(auth: AuthResponse, options: Option): Promise<ChildProcess> {
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
-        let mc = new MinecraftLocation(options.resourcePath)
+        let mc = new MinecraftFolder(options.resourcePath)
         let v: Version = await Version.parse(options.resourcePath, options.version)
         if (!v) throw "Cannot find version " + options.version
         let missing = checkLibs(mc, v)
@@ -52,7 +52,7 @@ export namespace Launcher {
         })
     }
 
-    function checkLibs(resourcePath: MinecraftLocation, version: Version): Library[] {
+    function checkLibs(resourcePath: MinecraftFolder, version: Version): Library[] {
         let libs: Library[] = []
         for (let lib of version.libraries)
             if (!fs.existsSync(resourcePath.getLibrary(lib)))
@@ -60,7 +60,7 @@ export namespace Launcher {
         return libs
     }
 
-    function checkNative(mc: MinecraftLocation, version: Version) {
+    function checkNative(mc: MinecraftFolder, version: Version) {
         let native = mc.getNativesRoot(version.root)
         for (let lib of version.libraries) if ((lib as Native).extractExcludes) {
             let from = mc.getLibrary(lib)
@@ -74,7 +74,7 @@ export namespace Launcher {
     }
 
     function genArgs(auth: AuthResponse, options: any, version: Version): string[] {
-        let mc = new MinecraftLocation(options.resourcePath)
+        let mc = new MinecraftFolder(options.resourcePath)
         let cmd: string[] = [];
         if (options.javaPath.match(/.* *.*/)) { options.javaPath = '"' + options.javaPath + '"' }
         cmd.push(options.javaPath);

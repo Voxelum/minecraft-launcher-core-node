@@ -3,3 +3,4 @@
 /.vscode
 /package-lock.json
 /tests/assets/temp
+*.log
