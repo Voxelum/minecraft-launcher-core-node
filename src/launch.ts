@@ -35,6 +35,7 @@ export namespace Launcher {
     }
 
     export async function launch(auth: AuthResponse, options: Option): Promise<ChildProcess> {
+        await DIR(options.gamePath)
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
         let mc = new MinecraftFolder(options.resourcePath)
@@ -43,6 +44,7 @@ export namespace Launcher {
         let missing = checkLibs(mc, v)
         if (missing.length > 0) throw new Error('Missing library!')
         checkNative(mc, v)
+
         let args = genArgs(auth, options, v).join(' ')
         return exec(args, {
             cwd: options.gamePath

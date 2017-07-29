@@ -9,7 +9,7 @@ Version.parse(folder, '1.9.4').then((ver) => {
     return Version.checkDependency(ver, folder, { checksum: true })
 }).then(ver => {
     return Launcher.launch(AuthService.offlineAuth('ci010'), {
-        javaPath: 'C:/Program Files/Java/jre1.8.0_91/bin/javaw.exe',
+        javaPath: 'C:\\Program Files\\Java\\jdk1.8.0_91\\jre\\bin\\java.exe',
         resourcePath: "C:/Users/CIJhn/AppData/Roaming/.launcher",
         gamePath: 'C:/Users/CIJhn/AppData/Roaming/.launcher/profiles/1486147016881',
         minMemory: 1024,
