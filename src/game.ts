@@ -1,6 +1,6 @@
 import { TextComponent } from './text';
 import { GameProfile } from './auth'
-import { NBT } from './nbt'
+import { NBT } from './nbt';
 import { Version } from './version'
 import { MinecraftFolder, MinecraftLocation } from './file_struct';
 import { endWith, READ } from './string_utils'
@@ -11,6 +11,7 @@ import * as os from 'os'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as Zip from 'adm-zip'
+import * as Long from 'long'
 
 export interface Pos2 {
     x: number, z: number
@@ -334,92 +335,147 @@ export namespace ServerInfo {
         if (data.root.servers) return data.root.servers
         return []
     }
-
-    export function fetchServerStatus(server: ServerInfo, ping: boolean = true): Promise<ServerStatus> {
-        return new Promise<ServerStatus>((resolve, reject) => {
-            let port = server.port ? server.port : 25565
-            let connection = net.createConnection(port, server.host, () => {
-                let buffer = buf.allocate(256)
-                //packet id
-                buffer.writeByte(0x00)
-                //protocol version
-                buffer.writeVarint32(210)
-                writeString(buffer, server.host)
-
-                buffer.writeShort(port & 0xffff)
-                buffer.writeVarint32(1)
-                buffer.flip()
-
-                let handshakeBuf = buf.allocate(buffer.limit + 8)
-                handshakeBuf.writeVarint32(buffer.limit)
-                handshakeBuf.append(buffer)
-                handshakeBuf.flip()
-
-                connection.write(Buffer.from(handshakeBuf.toArrayBuffer()))
-                connection.write(Buffer.from([0x01, 0x00]))
-                connection.end()
-            })
-            let recived = ''
-            connection.on('error', (error) => {
-                reject(error)
-            })
-            connection.on('data', (data) => {
-                recived += data.toString('utf-8')
-            })
-            connection.on('end', () => {
-                let start = recived.indexOf('{')
-                recived = recived.slice(start)
-                let obj = JSON.parse(recived)
-                let motd: TextComponent = TextComponent.str('')
-                if (obj.description) {
-                    if (typeof (obj.description) === 'object')
-                        motd = TextComponent.fromObject(obj.description)
-                    else if (typeof (obj.description) === 'string')
-                        motd = TextComponent.str(obj.description)
-                }
-
-                let favicon = obj.favicon
-                let version = obj.version
-                let versionText: TextComponent = TextComponent.str('')
-                let protocol = -1
-                let online = -1
-                let max = -1
-                if (version) {
-                    if (version.name)
-                        versionText = TextComponent.fromFormattedString(version.name as string)
-                    if (version.protocol)
-                        protocol = version.protocol
-                }
-                let players = obj.players
-                if (players) {
-                    online = players.online
-                    max = players.max
-                }
-
-                let sample = players.sample
-                let profiles = new Array<GameProfile>()
-                if (sample) {
-                    profiles = new Array<GameProfile>(sample.length)
-                    for (let i = 0; i < sample.length; i++)
-                        profiles[i] = { uuid: sample[i].id, name: sample[i].name }
-                }
-                if (favicon.startsWith("data:image/png;base64,"))
-                    server.icon = favicon.substring("data:image/png;base64,".length);
-
-                let modInfoJson = obj.modinfo
-                let modInfo
-                if (modInfoJson) {
-                    let list: ModIndentity[] = []
-                    let mList = modInfoJson.modList
-                    if (mList && mList instanceof Array) list = mList
-                    modInfo = {
-                        type: modInfoJson.type,
-                        modList: list
-                    }
-                }
-                resolve(new ServerStatus(versionText, motd, protocol, online, max, server.icon, profiles, modInfo))
+    function startConnection(host: string, port: number) {
+        return new Promise<net.Socket>((resolve, reject) => {
+            const connection = net.createConnection(port, host, () => {
+                resolve(connection)
             })
         });
+    }
+    function ping(ip: string, port: number, connection: net.Socket): Promise<number> {
+        return new Promise((resolve, reject) => {
+            if (!ip || ip === '') throw new Error("The server info's host name is empty!");
+            const byteBuffer = buf.allocate(16);
+            byteBuffer.writeByte(9);
+            byteBuffer.writeByte(0x01);
+            let time = process.hrtime()
+            let l = Long.fromNumber(time[0]).mul(1000000).add(time[1] / 1000)
+            byteBuffer.writeInt64(l);
+            byteBuffer.flip();
+            connection.write(Buffer.from(byteBuffer.toArrayBuffer()))
+            connection.on('data', (data) => {
+                time = process.hrtime()
+                l = Long.fromNumber(time[0]).mul(1000000).add(time[1] / 1000)
+                const incoming = buf.wrap(data)
+                incoming.readByte() //length
+                incoming.readByte() //id
+                resolve(l.sub(incoming.readLong()).toNumber() / 1000)
+            })
+            connection.once('error', (err) => {
+                reject(err)
+            })
+        });
+    }
+    function handshake(host: string, port: number, connection: net.Socket) {
+        return new Promise<string>((resolve, reject) => {
+            let buffer = buf.allocate(256)
+            //packet id
+            buffer.writeByte(0x00)
+            //protocol version
+            buffer.writeVarint32(210)
+            writeString(buffer, host)
 
+            buffer.writeShort(port & 0xffff)
+            buffer.writeVarint32(1)
+            buffer.flip()
+            let handshakeBuf = buf.allocate(buffer.limit + 8)
+            handshakeBuf.writeVarint32(buffer.limit)
+            handshakeBuf.append(buffer)
+            handshakeBuf.flip()
+            connection.write(Buffer.from(handshakeBuf.toArrayBuffer()))
+            connection.write(Buffer.from([0x01, 0x00]))
+            let remain: number | undefined;
+            let msg: buf;
+            const listener = (incoming: Buffer) => {
+                const inbuf = buf.wrap(incoming)
+                if (remain === undefined) {
+                    remain = inbuf.readVarint32()
+                    msg = buf.allocate(remain)
+                    remain -= inbuf.remaining()
+                    msg.append(inbuf.slice(inbuf.offset))
+                }
+                else {
+                    msg.append(inbuf)
+                    remain -= inbuf.limit
+                    if (remain <= 0) {
+                        connection.removeListener('data', listener)
+                        msg.flip()
+                        const id = msg.readVarint32()
+                        const length = msg.readVarint32()
+                        const u8 = msg.slice(msg.offset).toUTF8()
+                        resolve(u8)
+                    }
+                }
+            }
+            connection.on('data', listener)
+            connection.once('error', (error) => {
+                reject(error)
+            })
+        });
+    }
+    function parseHandshake(recived: string) {
+        let obj = JSON.parse(recived)
+        let motd: TextComponent = TextComponent.str('')
+        if (obj.description) {
+            if (typeof (obj.description) === 'object')
+                motd = TextComponent.fromObject(obj.description)
+            else if (typeof (obj.description) === 'string')
+                motd = TextComponent.str(obj.description)
+        }
+        let favicon = obj.favicon
+        let version = obj.version
+        let versionText: TextComponent = TextComponent.str('')
+        let protocol = -1
+        let online = -1
+        let max = -1
+        if (version) {
+            if (version.name)
+                versionText = TextComponent.fromFormattedString(version.name as string)
+            if (version.protocol)
+                protocol = version.protocol
+        }
+        let players = obj.players
+        if (players) {
+            online = players.online
+            max = players.max
+        }
+
+        let sample = players.sample
+        let profiles = new Array<GameProfile>()
+        if (sample) {
+            profiles = new Array<GameProfile>(sample.length)
+            for (let i = 0; i < sample.length; i++)
+                profiles[i] = { uuid: sample[i].id, name: sample[i].name }
+        }
+        let icon
+        if (favicon.startsWith("data:image/png;base64,"))
+            icon = favicon.substring("data:image/png;base64,".length);
+
+        let modInfoJson = obj.modinfo
+        let modInfo
+        if (modInfoJson) {
+            let list: ModIndentity[] = []
+            let mList = modInfoJson.modList
+            if (mList && mList instanceof Array) list = mList
+            modInfo = {
+                type: modInfoJson.type,
+                modList: list
+            }
+        }
+        return new ServerStatus(versionText, motd, protocol, online, max, icon, profiles, modInfo)
+    }
+    export async function fetchServerStatus(server: ServerInfo, doPing: boolean = true): Promise<ServerStatus> {
+        const port = server.port ? server.port : 25565;
+        const host = server.host;
+        const connection = await startConnection(host, port);
+        const handshakeResponse = await handshake(host, port, connection);
+        const status = parseHandshake(handshakeResponse);
+        if (!doPing) {
+            connection.end();
+            return status;
+        }
+        status.pingToServer = await ping(host, port, connection);
+        connection.end();
+        return status;
     }
 }

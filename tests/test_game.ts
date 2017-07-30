@@ -37,7 +37,8 @@ describe('ServerPing', () => {
     it('should ping the server and return info correctly', (done) => {
         ServerInfo.fetchServerStatus({
             host: 'mc.crafter.me',
-        }).then(status => {
+        }, true).then(status => {
+            console.log(status.pingToServer)
             console.log(JSON.stringify(status, (k, v) => {
                 if (k == 'gameVersion' || k == 'serverMOTD') return v.formatted
                 return v
