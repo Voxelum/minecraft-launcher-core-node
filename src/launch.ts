@@ -7,7 +7,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
 
-import { startWith } from './string_utils'
+import { startWith, DIR } from './string_utils'
 /**
  * this module migrates from JMCCC https://github.com/to2mbn/JMCCC/tree/master/jmccc/src/main/java/org/to2mbn/jmccc/launch
  */

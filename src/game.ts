@@ -186,6 +186,7 @@ export class ServerStatus {
         readonly protocolVersion: number,
         readonly onlinePlayers: number,
         readonly capacity: number,
+        readonly icon?: string,
         readonly playerList?: GameProfile[],
         readonly modInfos?: {
             type: string,
@@ -416,7 +417,7 @@ export namespace ServerInfo {
                         modList: list
                     }
                 }
-                resolve(new ServerStatus(versionText, motd, protocol, online, max, profiles, modInfo))
+                resolve(new ServerStatus(versionText, motd, protocol, online, max, server.icon, profiles, modInfo))
             })
         });
 
