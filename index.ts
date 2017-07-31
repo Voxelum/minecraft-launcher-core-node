@@ -1,7 +1,7 @@
 import { GameProfile, UserType, AuthResponse, AuthService } from './src/auth'
 import {
     GameType, WorldInfo, Language, GameSetting,
-    ServerInfo, ServerStatus, ResourceMode, ResourcePack,
+    ServerInfo, ServerStatus, ResourceMode, ResourcePack, ServerStatusFrame,
     ModContainer, ModIndentity, ForgeMetaData, LiteModMetaData
 } from './src/game'
 import { TextComponent, TextFormatting, Style } from './src/text'
@@ -21,7 +21,8 @@ export {
     GameProfile, UserType,
     Version, VersionMeta, VersionMetaList,
     TextComponent, TextFormatting, Style,
-    GameType, WorldInfo, Language, ServerInfo, ServerStatus,
+    GameType, WorldInfo, Language, ServerInfo, 
+    ServerStatus, ServerStatusFrame,
     ResourceMode, ResourcePack, ModContainer,
     ModIndentity, ForgeMetaData, LiteModMetaData,
     MinecraftFolder, ResourceLocation,
