@@ -177,6 +177,24 @@ export interface ServerInfo {
     resourceMode?: ResourceMode;
 }
 
+export interface ServerStatusFrame {
+    version: {
+        name: string,
+        protocol: number,
+    },
+    players: {
+        max: number,
+        online: number,
+        sample?: Array<{ id: string, name: string }>,
+    },
+    description: object | string,
+    favicon: string | '',
+    modinfo?: {
+        type: string | 'FML',
+        modList: Array<ModIndentity>
+    },
+    ping: number,
+}
 export class ServerStatus {
     pingToServer: number;
     static pinging() { return new ServerStatus(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
@@ -413,8 +431,7 @@ export namespace ServerInfo {
             })
         });
     }
-    function parseHandshake(recived: string) {
-        let obj = JSON.parse(recived)
+    export function parseFrame(obj: ServerStatusFrame) {
         let motd: TextComponent = TextComponent.str('')
         if (obj.description) {
             if (typeof (obj.description) === 'object')
@@ -447,9 +464,9 @@ export namespace ServerInfo {
             for (let i = 0; i < sample.length; i++)
                 profiles[i] = { uuid: sample[i].id, name: sample[i].name }
         }
-        let icon
-        if (favicon.startsWith("data:image/png;base64,"))
-            icon = favicon.substring("data:image/png;base64,".length);
+        // let icon
+        // if (favicon.startsWith("data:image/png;base64,"))
+        //     icon = favicon.substring("data:image/png;base64,".length);
 
         let modInfoJson = obj.modinfo
         let modInfo
@@ -462,20 +479,23 @@ export namespace ServerInfo {
                 modList: list
             }
         }
-        return new ServerStatus(versionText, motd, protocol, online, max, icon, profiles, modInfo)
+        return new ServerStatus(versionText, motd, protocol, online, max, favicon, profiles, modInfo)
     }
-    export async function fetchServerStatus(server: ServerInfo, doPing: boolean = true): Promise<ServerStatus> {
+    export async function fetchServerStatusFrame(server: ServerInfo, doPing: boolean = true): Promise<ServerStatusFrame> {
         const port = server.port ? server.port : 25565;
         const host = server.host;
         const connection = await startConnection(host, port);
-        const handshakeResponse = await handshake(host, port, connection);
-        const status = parseHandshake(handshakeResponse);
+        const frame = JSON.parse(await handshake(host, port, connection)) as ServerStatusFrame;
+        frame.ping = -1;
         if (!doPing) {
             connection.end();
-            return status;
+            return frame;
         }
-        status.pingToServer = await ping(host, port, connection);
+        frame.ping = await ping(host, port, connection);
         connection.end();
-        return status;
+        return frame;
+    }
+    export function fetchServerStatus(server: ServerInfo, doPing: boolean = true): Promise<ServerStatus> {
+        return fetchServerStatusFrame(server, doPing).then(parseFrame)
     }
 }
