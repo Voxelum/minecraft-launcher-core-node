@@ -7,6 +7,9 @@ function writeString(buff: ByteBuffer, string: string) {
     buff.writeVarint32(string.length)
     buff.writeUTF8String(string)
 }
+interface HandshakePacket {
+    
+}
 function handshake(host: string, port: number, connection: Socket) {
     return new Promise<string>((resolve, reject) => {
         let buffer = ByteBuffer.allocate(256)
@@ -30,21 +33,21 @@ function handshake(host: string, port: number, connection: Socket) {
         const listener = (incoming: Buffer) => {
             const inbuf = ByteBuffer.wrap(incoming)
             if (remain === undefined) {
-                console.log(inbuf.offset)
                 remain = inbuf.readVarint32()
-                console.log(inbuf.offset)
+                msg = ByteBuffer.allocate(remain)
                 remain -= inbuf.remaining()
-                msg = inbuf.slice(inbuf.offset)
-                console.log(inbuf.offset)
+                msg.append(inbuf.slice(inbuf.offset))
             }
             else {
-                console.log(incoming.byteLength)
-                console.log(inbuf.limit)
                 msg.append(inbuf)
                 remain -= inbuf.limit
                 if (remain <= 0) {
                     connection.removeListener('data', listener)
-                    resolve(msg.toString('utf-9'))
+                    msg.flip()
+                    const id = msg.readVarint32()
+                    const length = msg.readVarint32()
+                    const u8 = msg.slice(msg.offset).toUTF8()
+                    resolve(u8)
                 }
             }
         }

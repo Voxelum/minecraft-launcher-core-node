@@ -464,9 +464,6 @@ export namespace ServerInfo {
             for (let i = 0; i < sample.length; i++)
                 profiles[i] = { uuid: sample[i].id, name: sample[i].name }
         }
-        // let icon
-        // if (favicon.startsWith("data:image/png;base64,"))
-        //     icon = favicon.substring("data:image/png;base64,".length);
 
         let modInfoJson = obj.modinfo
         let modInfo
