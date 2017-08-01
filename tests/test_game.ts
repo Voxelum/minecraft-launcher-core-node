@@ -37,15 +37,19 @@ describe('ServerPing', () => {
     it('should ping the server and return info correctly', (done) => {
         ServerInfo.fetchServerStatus({
             host: 'mc.crafter.me',
-        }, true).then(status => {
-            console.log(status.pingToServer)
-            console.log(JSON.stringify(status, (k, v) => {
-                if (k == 'gameVersion' || k == 'serverMOTD') return v.formatted
-                return v
-            }))
+        }).then(status => {
             done()
         })
-    })
+    });
+    it('should catch the timeout exception', (done) => {
+        ServerInfo.fetchServerStatus({
+            host: 'crafter.me',
+        }).then(status => {
+            done(new Error('this should not happend'))
+        }, (err) => {
+            done()
+        })
+    }).timeout(100000)
 })
 describe('ForgeMod', () => {
     it('should read mod correctly', (done) => {
