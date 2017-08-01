@@ -358,6 +358,7 @@ export namespace ServerInfo {
             const connection = net.createConnection(port, host, () => {
                 resolve(connection)
             })
+            connection.once('error', reject)
         });
     }
     function ping(ip: string, port: number, connection: net.Socket): Promise<number> {
@@ -384,13 +385,13 @@ export namespace ServerInfo {
             })
         });
     }
-    function handshake(host: string, port: number, connection: net.Socket) {
+    function handshake(host: string, port: number, protocol: number, connection: net.Socket) {
         return new Promise<string>((resolve, reject) => {
             let buffer = buf.allocate(256)
             //packet id
             buffer.writeByte(0x00)
             //protocol version
-            buffer.writeVarint32(210)
+            buffer.writeVarint32(protocol)
             writeString(buffer, host)
 
             buffer.writeShort(port & 0xffff)
@@ -478,21 +479,16 @@ export namespace ServerInfo {
         }
         return new ServerStatus(versionText, motd, protocol, online, max, favicon, profiles, modInfo)
     }
-    export async function fetchServerStatusFrame(server: ServerInfo, doPing: boolean = true): Promise<ServerStatusFrame> {
+    export async function fetchServerStatusFrame(server: ServerInfo, protocol: number = 210): Promise<ServerStatusFrame> {
         const port = server.port ? server.port : 25565;
         const host = server.host;
         const connection = await startConnection(host, port);
-        const frame = JSON.parse(await handshake(host, port, connection)) as ServerStatusFrame;
-        frame.ping = -1;
-        if (!doPing) {
-            connection.end();
-            return frame;
-        }
+        const frame = JSON.parse(await handshake(host, port, protocol, connection)) as ServerStatusFrame;
         frame.ping = await ping(host, port, connection);
         connection.end();
         return frame;
     }
-    export function fetchServerStatus(server: ServerInfo, doPing: boolean = true): Promise<ServerStatus> {
-        return fetchServerStatusFrame(server, doPing).then(parseFrame)
+    export function fetchServerStatus(server: ServerInfo, protocol: number = 210): Promise<ServerStatus> {
+        return fetchServerStatusFrame(server, protocol).then(parseFrame)
     }
 }
