@@ -131,6 +131,17 @@ import * as path from 'path'
 import * as dir from 'mkdirp'
 import * as crypto from 'crypto'
 
+let net: any;
+
+try {
+    const electron = require('electron')
+    net = electron.net
+}
+catch (e) {
+
+}
+
+
 export async function CHECKSUM(path: string, algorithm: string = 'sha1'): Promise<string> {
     return new Promise<string>((resolve, reject) =>
         fs.readFile(path, (err, data) => {
@@ -163,7 +174,7 @@ function _findDownloadRes(requester: any, url: string) {
         req.end()
     })
 }
-export async function DOWN_R(url: string, file: string) {
+async function httpDownloadRec(url: string, file: string) {
     let u = urls.parse(url)
     let reqestor = u.protocol === 'https' ? https : http
     let res: any = await _findDownloadRes(reqestor, url);
@@ -188,7 +199,39 @@ export async function DOWN_R(url: string, file: string) {
     }
 }
 
+function electronNetDownload(url: string, file: string) {
+    const req = net.request(url);
+    req.followRedirect();
+    return new Promise<void>((resolve, reject) => {
+        req.on('response', (response: any) => {
+            if (response.statusCode !== 200) {
+                throw new Error(response.statusCode)
+            }
+            let stream = fs.createWriteStream(file)
+            response.on('error', (e: Error) => {
+                fs.unlink(file, err => {
+                    reject(e);
+                });
+            })
+            response.pipe(stream)
+            stream.on('finish', () => { stream.close(); resolve() })
+        })
+        req.on('error', (err: any) => {
+            fs.unlink(file, e => {
+                reject(err);
+            });
+            reject(err)
+        })
+        req.end()
+    });
+}
+export function DOWN_R(url: string, file: string): Promise<void> {
+    if (net) return electronNetDownload(url, file)
+    else return httpDownloadRec(url, file)
+}
+
 export function DOWN(url: string, file: string): Promise<void> {
+    if (net) return electronNetDownload(url, file);
     return new Promise<void>((resolve, reject) => {
         let stream = fs.createWriteStream(file)
         let u = urls.parse(url)
@@ -269,7 +312,7 @@ export async function UPDATE(option: {
     });
 }
 
-export async function GET(url: string): Promise<string> {
+async function httpget(url: string) {
     return new Promise<string>((resolve, reject) => {
         let u = urls.parse(url)
         let buf = ''
@@ -293,6 +336,28 @@ export async function GET(url: string): Promise<string> {
         req.end()
     })
 }
+
+function enetget(url: string) {
+    return new Promise<string>((resolve, reject) => {
+        const request = net.request(url)
+        let buffer = ''
+        request.on('response', (response: any) => {
+            response.on('data', (chunk: any) => {
+                buffer += chunk.toString()
+            })
+            response.on('end', () => {
+                resolve(buffer)
+            })
+        })
+        request.on('error', (e: any) => reject(e))
+        request.end()
+    });
+}
+export async function GET(url: string): Promise<string> {
+    if (net) return enetget(url)
+    else return httpget(url);
+}
+
 export function getString(url: string, callback: (result: string, error?: Error) => void) {
     let u = urls.parse(url)
     let buf = ''
