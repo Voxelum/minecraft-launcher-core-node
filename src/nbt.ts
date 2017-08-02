@@ -236,6 +236,12 @@ export namespace NBT {
         abstract toJSON(): object;
     }
 
+    class Empty extends Base {
+        constructor() { super(Type.End, null) }
+        toJSON() { return {} }
+    }
+
+    export const EMPTY: Base = new Empty()
     export class List extends Base {
         constructor(type: Type) { super(type, []) }
 
@@ -243,8 +249,26 @@ export namespace NBT {
             return {}
         }
     }
+
     export class Compound extends Base {
-        constructor(type: Type) { super(type, {}) }
+        constructor(original?: Compound | { [key: string]: Base } | Map<string, Base>) { super(Type.Compound, {}) }
+        boolean(name: string, value: boolean): this { this._value[name] = new Primitive(Type.Byte, value); return this }
+        byte(name: string, value: number): this { this._value[name] = new Primitive(Type.Byte, value); return this; }
+        short(name: string, value: number): this { this._value[name] = new Primitive(Type.Short, value); return this; }
+        int(name: string, value: number): this { this._value[name] = new Primitive(Type.Int, value); return this; }
+        long(name: string, value: number | Long): this { this._value[name] = new Primitive(Type.Long, value); return this; }
+        float(name: string, value: number): this { this._value[name] = new Primitive(Type.Float, value); return this; }
+        double(name: string, value: number): this { this._value[name] = new Primitive(Type.Double, value); return this; }
+        string(name: string, value: string): this { this._value[name] = new Primitive(Type.String, value); return this }
+        bytes(name: string, value: number[]): this { this._value[name] = new Primitive(Type.ByteArray, value); return this; }
+        ints(name: string, value: number[]): this { this._value[name] = new Primitive(Type.IntArray, value); return this; }
+        nbt(name: string, value: Base): this { this._value[name] = value; return this }
+
+        get(name: string, fallback?: Base): Base | undefined {
+            const val = this._value[name];
+            return val ? val : fallback;
+        }
+        has(name: string): boolean { return this._value[name] !== undefined }
         toJSON() {
             return {}
         }
