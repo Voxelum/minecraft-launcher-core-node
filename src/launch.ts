@@ -48,9 +48,6 @@ export namespace Launcher {
         let args = genArgs(auth, options, v).join(' ')
         return exec(args, {
             cwd: options.gamePath
-        }, (e, out, err) => {
-            console.log(out)
-            console.error(err)
         })
     }
 
