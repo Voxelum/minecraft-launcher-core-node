@@ -24,7 +24,7 @@ export namespace Launcher {
         javaPath: string
         minMemory: number
         maxMemory?: number
-        version: string
+        version: string | Version,
         server?: { ip: string, port?: number }
         resolution?: { width?: number, height?: number, fullscreen: false }
         extraJVMArgs?: string[]
@@ -39,7 +39,7 @@ export namespace Launcher {
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
         let mc = new MinecraftFolder(options.resourcePath)
-        let v: Version = await Version.parse(options.resourcePath, options.version)
+        let v: Version = options.version instanceof Version ? options.version : await Version.parse(options.resourcePath, options.version)
         if (!v) throw "Cannot find version " + options.version
         let missing = checkLibs(mc, v)
         if (missing.length > 0) throw new Error('Missing library!')
@@ -80,10 +80,10 @@ export namespace Launcher {
 
         if (os.platform() == 'win32')
             cmd.push('-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump')
-        cmd.push('-XX:+UseConcMarkSweepGC');
+        // cmd.push('-XX:+UseConcMarkSweepGC');
         // cmd.push('-XX:+CMSIncrementalMode');
-        cmd.push('-XX:-UseAdaptiveSizePolicy');
-        cmd.push('-XX:-OmitStackTraceInFastThrow');
+        // cmd.push('-XX:-UseAdaptiveSizePolicy');
+        // cmd.push('-XX:-OmitStackTraceInFastThrow');
         cmd.push(`-Xmn${(options.minMemory)}M`);
         cmd.push(`-Xms${(options.maxMemory)}M`);
 
