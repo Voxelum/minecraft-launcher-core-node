@@ -86,11 +86,11 @@ Version.downloadVersionJar = async function (type: string, version: Version, min
         await DOWN(version.downloads[type].url, jar)
     if (checksum) {
         let hash = await CHECKSUM(jar)
-        if (hash != version.assetIndexDownloadInfo.sha1 && exist) {
+        if (hash != version.downloads[type].sha1 && exist) {
             await DOWN(version.downloads[type].url, jar)
             hash = await CHECKSUM(jar)
         }
-        if (hash != version.assetIndexDownloadInfo.sha1)
+        if (hash != version.downloads[type].sha1)
             throw new Error('SHA1 not matched! Probably caused by the incompleted file or illegal file source!')
     }
     return version
@@ -158,7 +158,9 @@ async function downloadAsset(content: any, key: any, folder: any, assetsHost: an
             throw new Error(`SHA1 not matched!\n${sum}\n${hash}\n@${file}\n Probably caused by the incompleted file or illegal file source!`)
     }
 }
-Version.downloadAssets = async function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, assetsHost?: string }): Promise<Version> {
+Version.downloadAssets = async function (version: Version, minecraft: MinecraftLocation, option?: {
+    checksum?: boolean, assetsHost?: string, cb?: (name: string, progress: number) => void
+}): Promise<Version> {
     const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
     let jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
     if (!fs.existsSync(jsonPath)) {
