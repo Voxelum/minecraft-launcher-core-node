@@ -1,3 +1,4 @@
+import interface from '../dist/src/packets/packet';
 const registry: { [key: string]: TextFormatting } = {}
 
 export class TextFormatting {
@@ -175,6 +176,10 @@ export namespace Style {
 }
 
 export interface TextComponent {
+    readonly text: string,
+    readonly siblings: TextComponent[],
+}
+export interface TextComponent {
 
 	/**
 	 * Gets the style of this component. Returns a direct reference; changes to this style will modify the style of this
@@ -280,9 +285,11 @@ class TextComponentString implements TextComponent {
     protected _siblings: TextComponent[] = new Array();
     private _style: Style;
 
-    constructor(public readonly text: string = '', style?: Style) {
+    constructor(public readonly text: string = '', style?: Style, siblings?: TextComponent[]) {
         if (style)
             this._style = style;
+        if (siblings)
+            this._siblings = siblings;
     }
 
     toString(): string { return this.formatted }

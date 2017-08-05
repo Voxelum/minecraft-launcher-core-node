@@ -242,7 +242,7 @@ export enum ResourceMode {
 }
 
 export class ResourcePack {
-    constructor(readonly packName: string, readonly description: TextComponent, readonly format: number, readonly icon?: string) { }
+    constructor(readonly packName: string, readonly description: string, readonly format: number, readonly icon?: string) { }
 }
 
 export namespace ResourcePack {
@@ -253,7 +253,7 @@ export namespace ResourcePack {
                 else {
                     try {
                         let obj = JSON.parse(data.toString()).pack
-                        resolve({ fileName, description: TextComponent.fromFormattedString(obj.description), format: obj.pack_format })
+                        resolve({ fileName, description: obj.description, format: obj.pack_format })
                     }
                     catch (e) { reject(e) }
                 }
