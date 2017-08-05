@@ -228,28 +228,39 @@ export enum ResourceMode {
 }
 
 export class ResourcePack {
-    constructor(readonly packName: string, readonly description: TextComponent, readonly format: number) { }
+    constructor(readonly packName: string, readonly description: TextComponent, readonly format: number, readonly icon?: string) { }
 }
 
 export namespace ResourcePack {
-    export function exportIcon(fileName: string, location: string, callback: () => void): void {
-    }
-
-    export function readFromFile(fileName: string): Promise<ResourcePack> {
-        return new Promise<ResourcePack>((resolve, reject) => {
-            let zipFile = new Zip(fileName)
+    async function readZip(fileName: string, zipFile: Zip, readIcon?: boolean) {
+        const metas = await new Promise<any>((resolve, reject) => {
             zipFile.readFileAsync('pack.mcmeta', (data, err) => {
                 if (err) reject(new Error(err))
                 else {
                     try {
                         let obj = JSON.parse(data.toString()).pack
-                        resolve(new ResourcePack(fileName, TextComponent.fromFormattedString(obj.description), obj.pack_format))
+                        resolve({ fileName, description: TextComponent.fromFormattedString(obj.description), format: obj.pack_format })
                     }
                     catch (e) { reject(e) }
                 }
             })
         });
+        let icon = ''
+        if (readIcon)
+            icon = await new Promise<string>((resolve, reject) => {
+                zipFile.readFileAsync('icon', (data, err) => {
+                    if (err) resolve('')
+                    else resolve(data.toString('base64'))
+                })
+            });
+        return new ResourcePack(metas.fileName, metas.description, metas.format, icon)
+    }
+    export function readFromFile(fileName: string, readIcon: boolean = false): Promise<ResourcePack> {
+        return readZip(fileName, new Zip(fileName));
+    }
 
+    export function readFromBuffer(fileName: string, buffer: Buffer, readIcon: boolean = false): Promise<ResourcePack> {
+        return readZip(fileName, new Zip(buffer));
     }
 }
 
