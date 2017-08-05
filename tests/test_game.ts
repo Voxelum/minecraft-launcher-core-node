@@ -64,9 +64,9 @@ describe('ForgeMod', () => {
 
 describe('Resoucepack', () => {
     it('shold read res pack correctly', (done) => {
-        ResourcePack.readFromFile('./test/assets/sample-resourcepack.zip')
+        const buff = fs.readFileSync('./tests/assets/sample-resourcepack.zip')
+        ResourcePack.readFromBuffer('sample', buff, true)
             .then(v => {
-                console.log(v)
                 done()
             })
     })
