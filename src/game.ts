@@ -1,7 +1,7 @@
 import { TextComponent } from './text';
 import { GameProfile } from './auth'
 import { NBT } from './nbt';
-import { Version } from './version'
+import { Version } from './version';
 import { MinecraftFolder, MinecraftLocation } from './file_struct';
 import { endWith, READ } from './string_utils'
 
@@ -41,15 +41,29 @@ export interface GameSetting {
 
 export namespace GameSetting {
     export function readFromStringRaw(str: string): object | undefined {
-        let arr = str.split(os.EOL)
-        if (arr) {
-            let obj: any = {}
-            let pairs = arr.map(pair => pair.split(':')).forEach(pair => {
-                if (pair[0] == 'lastServer' || pair[0] == 'lang' || pair[0] == 'mainHand')
-                    obj[pair[0]] = pair[1]
-                else if (pair[0].length != 0) obj[pair[0]] = JSON.parse(pair[1])
-            })
-            return obj
+        let lines = str.split('\n')
+        const intPattern = /^\d+$/
+        const floatPattern = /[-+]?[0-9]*\.[0-9]+/
+        const booleanPattern = /(true)|(false)/
+        if (lines) {
+            let setting = lines.map(line => line.trim().split(':'))
+                .filter(pair => pair[0].length != 0)
+                .map(pair => {
+                    let value: any = pair[1]
+                    if (intPattern.test(value))
+                        value = Number.parseInt(value)
+                    else if (floatPattern.test(value))
+                        value = Number.parseFloat(value)
+                    else if (value === 'true') value = true
+                    else if (value === 'false') value = false
+                    else try {
+                        value = JSON.parse(value)
+                    } catch (e) { }
+
+                    return { [pair[0]]: value }
+                })
+                .reduce((prev, current) => Object.assign(prev, current))
+            return setting
         }
         return undefined
     }

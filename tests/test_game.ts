@@ -3,7 +3,7 @@ import { GameSetting, ServerInfo, ServerStatus } from '../index'
 import { TextComponent } from '../index'
 
 import * as fs from 'fs'
-import { Language, ModContainer } from '../src/game';
+import { Language, ModContainer, ResourcePack } from '../src/game';
 describe('TextComponent', () => {
     it('should convert normal text', () => {
         let raw = 'testCommon tesxt'
@@ -19,6 +19,7 @@ describe("GameSetting", () => {
     it('should print all the options', () => {
         let s = fs.readFileSync('./tests/assets/options.txt')
         let set = GameSetting.readFromString(s.toString())
+        console.log(set)
     })
 })
 
@@ -61,6 +62,15 @@ describe('ForgeMod', () => {
     })
 })
 
+describe('Resoucepack', () => {
+    it('shold read res pack correctly', (done) => {
+        ResourcePack.readFromFile('./test/assets/sample-resourcepack.zip')
+            .then(v => {
+                console.log(v)
+                done()
+            })
+    })
+})
 describe('Language', () => {
     it('should throw exception', (done) => {
         Language.exportLanguages('./', '1.12').catch(e => {
