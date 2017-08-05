@@ -1,4 +1,3 @@
-import interface from '../dist/src/packets/packet';
 const registry: { [key: string]: TextFormatting } = {}
 
 export class TextFormatting {
