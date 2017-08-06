@@ -19,7 +19,13 @@ describe("GameSetting", () => {
     it('should print all the options', () => {
         let s = fs.readFileSync('./tests/assets/options.txt')
         let set = GameSetting.readFromString(s.toString())
-        console.log(set)
+        // console.log(set)
+    })
+    it('should write to string correctly', () => {
+        let s = fs.readFileSync('./tests/assets/options.txt').toString()
+        let set = GameSetting.readFromString(s)
+        if (set)
+            GameSetting.writeToString(set)
     })
 })
 

@@ -26,20 +26,34 @@ export interface GameSetting {
     enableFBO: boolean,
     enableVsync: boolean,
     fancyGraphic: boolean,
-    renderCloud: boolean,
+    renderCloud: boolean | 'fast',
     forceUnicode: boolean,
     autoJump: boolean,
     entityShadows: boolean,
-    ao: number,
+    ao: GameSetting.AmbientOcclusion.Off |
+    GameSetting.AmbientOcclusion.Minimum |
+    GameSetting.AmbientOcclusion.Maximum,
     fov: number,
-    mipmap: number,
+    mipmap: 0 | 1 | 2 | 3 | 4,
     maxFps: number,
-    particles: number,
+    particles: GameSetting.Particles.All |
+    GameSetting.Particles.Decreased |
+    GameSetting.Particles.Minimum,
     renderDistance: number,
     resourcePacks: ResourcePack[]
 }
 
 export namespace GameSetting {
+    export namespace AmbientOcclusion {
+        export type Off = 0
+        export type Minimum = 1
+        export type Maximum = 2
+    }
+    export namespace Particles {
+        export type Minimum = 2
+        export type Decreased = 1
+        export type All = 0
+    }
     export function readFromStringRaw(str: string): object | undefined {
         let lines = str.split('\n')
         const intPattern = /^\d+$/
@@ -69,6 +83,14 @@ export namespace GameSetting {
     }
     export function readFromString(str: string): GameSetting | undefined {
         return readFromStringRaw(str) as GameSetting
+    }
+    export function writeToString(setting: GameSetting): string {
+        return Object.keys(setting).map(key => {
+            const val = (setting as any)[key];
+            if (typeof val !== 'string')
+                return `${key}:${JSON.stringify(val)}`
+            else return `${key}:${val}`
+        }).join('\n')
     }
 }
 
