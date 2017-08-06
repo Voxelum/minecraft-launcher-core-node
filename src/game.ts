@@ -23,18 +23,18 @@ export interface Pos3 extends Pos2 {
 
 export interface GameSetting {
     useVBO: boolean,
-    enableFBO: boolean,
+    fboEnable: boolean,
     enableVsync: boolean,
-    fancyGraphic: boolean,
-    renderCloud: boolean | 'fast',
-    forceUnicode: boolean,
+    fancyGraphics: boolean,
+    renderClouds: boolean | 'fast',
+    forceUnicodeFont: boolean,
     autoJump: boolean,
     entityShadows: boolean,
     ao: GameSetting.AmbientOcclusion.Off |
     GameSetting.AmbientOcclusion.Minimum |
     GameSetting.AmbientOcclusion.Maximum,
     fov: number,
-    mipmap: 0 | 1 | 2 | 3 | 4,
+    mipmapLevels: 0 | 1 | 2 | 3 | 4,
     maxFps: number,
     particles: GameSetting.Particles.All |
     GameSetting.Particles.Decreased |
@@ -84,7 +84,7 @@ export namespace GameSetting {
     export function readFromString(str: string): GameSetting | undefined {
         return readFromStringRaw(str) as GameSetting
     }
-    export function writeToString(setting: GameSetting): string {
+    export function writeToString(setting: GameSetting | any): string {
         return Object.keys(setting).map(key => {
             const val = (setting as any)[key];
             if (typeof val !== 'string')
