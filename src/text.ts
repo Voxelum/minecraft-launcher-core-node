@@ -34,14 +34,11 @@ export class TextFormatting {
 
     // private static registry: Map<string, TextFormatting> = new Map<string, TextFormatting>();
 
-    private constructor(readonly formatName: string, readonly formattingCode: string, param: number | null | undefined = undefined) {
-        if (param) {
+    private constructor(readonly formatName: string, readonly formattingCode: string, param: number | undefined = undefined) {
+        if (!param) {
             this.fancyStyling = true;
         }
-        else if (param == null) {
-            this.fancyStyling = true;
-        }
-        else if (typeof param === 'number') {
+        if (typeof param === 'number') {
             this.colorIndex = param;
             this.fancyStyling = false;
         }
@@ -296,7 +293,9 @@ class TextComponentString implements TextComponent {
     get unformatted(): string {
         return this.text;
     }
-
+    set style(style: Style) {
+        this.style = style
+    }
     get style() {
         if (this._style)
             return this._style
