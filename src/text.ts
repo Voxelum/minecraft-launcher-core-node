@@ -1,7 +1,7 @@
 const registry: { [key: string]: TextFormatting } = {}
 
 export class TextFormatting {
-    static readonly RESET: TextFormatting = new TextFormatting("RESET", 'r', null);
+    static readonly RESET: TextFormatting = new TextFormatting("RESET", 'r');
 
     static readonly BLACK: TextFormatting = new TextFormatting('BLACK', '0', 0);
     static readonly DARK_BLUE: TextFormatting = new TextFormatting("DARK_BLUE", '1', 1);
@@ -34,11 +34,8 @@ export class TextFormatting {
 
     // private static registry: Map<string, TextFormatting> = new Map<string, TextFormatting>();
 
-    private constructor(readonly formatName: string, readonly formattingCode: string, param: number | null | undefined = undefined) {
-        if (param) {
-            this.fancyStyling = true;
-        }
-        else if (param == null) {
+    private constructor(readonly formatName: string, readonly formattingCode: string, param: number | undefined = undefined) {
+        if (!param) {
             this.fancyStyling = true;
         }
         else if (typeof param === 'number') {
@@ -296,7 +293,9 @@ class TextComponentString implements TextComponent {
     get unformatted(): string {
         return this.text;
     }
-
+    set style(style: Style) {
+        this._style = style
+    }
     get style() {
         if (this._style)
             return this._style
