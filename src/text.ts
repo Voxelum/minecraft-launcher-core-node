@@ -294,7 +294,7 @@ class TextComponentString implements TextComponent {
         return this.text;
     }
     set style(style: Style) {
-        this.style = style
+        this._style = style
     }
     get style() {
         if (this._style)
