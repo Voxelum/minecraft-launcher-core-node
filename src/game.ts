@@ -3,7 +3,7 @@ import { GameProfile } from './auth'
 import { NBT } from './nbt';
 import { Version } from './version';
 import { MinecraftFolder, MinecraftLocation } from './file_struct';
-import { endWith, READ } from './string_utils'
+import { endWith, READ } from './string_utils';
 
 import * as net from 'net'
 import * as buf from 'bytebuffer'
@@ -318,14 +318,23 @@ export class ModContainer<Meta> {
 }
 
 export namespace ModContainer {
-    export function tryParse(fileName: string): Promise<ModContainer<object>[]> {
+    export async function tryParse(fileName: string): Promise<ModContainer<object>[]> {
         if (endWith(fileName, '.litemod')) return parseLiteLoader(fileName).then(v => [v])
-        else return parseForge(fileName)
+        else if (endWith(fileName, '.jar')) return parseForge(fileName)
+        else return Promise.resolve([]);
     }
 
-    export function parseForge(filePath: string): Promise<ModContainer<ForgeMetaData>[]> {
-        return new Promise<ModContainer<ForgeMetaData>[]>((resolve, reject) => {
-            let zip = new Zip(filePath)
+    export function parseForgeRaw(mod: Buffer | string) {
+        return new Promise<ForgeMetaData[]>((resolve, reject) => {
+            let zip;
+            if (mod instanceof Buffer)
+                zip = new Zip(mod);
+            else if (typeof mod === 'string')
+                zip = new Zip(mod);
+            else {
+                reject('Illegal input type! Expect Buffer or string (filePath)')
+                return
+            }
             zip.readFileAsync('mcmod.info', (data, err) => {
                 if (err) reject(new Error(err))
                 else try {
@@ -334,7 +343,7 @@ export namespace ModContainer {
                     if (meta instanceof Array) mods = meta
                     else if (meta.modListVersion) mods = meta.modList
                     else mods = [meta]
-                    resolve(mods.map(m => new ModContainer<ForgeMetaData>('forge', m)))
+                    resolve(mods.map(m => m as ForgeMetaData))
                 }
                 catch (e) {
                     reject(e)
@@ -343,18 +352,33 @@ export namespace ModContainer {
         });
     }
 
-    export function parseLiteLoader(filePath: string): Promise<ModContainer<LiteModMetaData>> {
-        return new Promise<ModContainer<LiteModMetaData>>((resolve, reject) => {
-            let zip = new Zip(filePath)
+    function parseForge(mod: Buffer | string): Promise<ModContainer<ForgeMetaData>[]> {
+        return parseForgeRaw(mod).then(mods => mods.map(m => new ModContainer<ForgeMetaData>('forge', m)))
+    }
+
+    export function parseLiteLoaderRaw(mod: string | Buffer) {
+        return new Promise<LiteModMetaData>((resolve, reject) => {
+            let zip;
+            if (mod instanceof Buffer)
+                zip = new Zip(mod);
+            else if (typeof mod === 'string')
+                zip = new Zip(mod);
+            else {
+                reject('Illegal input type! Expect Buffer or string (filePath)')
+                return
+            }
             zip.readFileAsync('litemod.json', (data, err) => {
                 if (err) reject(err)
                 else try {
-                    resolve(new ModContainer<LiteModMetaData>('liteloader', JSON.parse(data.toString())))
+                    resolve(JSON.parse(data.toString()) as LiteModMetaData)
                 } catch (e) {
                     reject(e)
                 }
             })
         });
+    }
+    export function parseLiteLoader(mod: string | Buffer): Promise<ModContainer<LiteModMetaData>> {
+        return parseLiteLoaderRaw(mod).then(m => new ModContainer<LiteModMetaData>('liteloader', m))
     }
 }
 
