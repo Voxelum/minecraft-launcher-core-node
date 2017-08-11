@@ -408,11 +408,12 @@ export namespace ServerInfo {
         if (data.root.servers) return data.root.servers
         return []
     }
-    function startConnection(host: string, port: number) {
+    function startConnection(host: string, port: number, timeout?: number) {
         return new Promise<net.Socket>((resolve, reject) => {
             const connection = net.createConnection(port, host, () => {
                 resolve(connection)
             })
+            if (timeout) connection.setTimeout(timeout)
             connection.once('error', reject)
         });
     }
@@ -534,16 +535,18 @@ export namespace ServerInfo {
         }
         return new ServerStatus(versionText, motd, protocol, online, max, favicon, profiles, modInfo)
     }
-    export async function fetchServerStatusFrame(server: ServerInfo, protocol: number = 210): Promise<ServerStatusFrame> {
+    export async function fetchServerStatusFrame(server: ServerInfo, options?: { protocol?: number, timeout?: number }): Promise<ServerStatusFrame> {
         const port = server.port ? server.port : 25565;
+        const protocol = options ? options.protocol ? options.protocol : 210 : 210;
         const host = server.host;
-        const connection = await startConnection(host, port);
+        const timeout = options ? options.timeout : undefined;
+        const connection = await startConnection(host, port, timeout);
         const frame = JSON.parse(await handshake(host, port, protocol, connection)) as ServerStatusFrame;
         frame.ping = await ping(host, port, connection);
         connection.end();
         return frame;
     }
-    export function fetchServerStatus(server: ServerInfo, protocol: number = 210): Promise<ServerStatus> {
-        return fetchServerStatusFrame(server, protocol).then(parseFrame)
+    export function fetchServerStatus(server: ServerInfo, options?: { protocol: number, timeout: number }): Promise<ServerStatus> {
+        return fetchServerStatusFrame(server, options).then(parseFrame)
     }
 }
