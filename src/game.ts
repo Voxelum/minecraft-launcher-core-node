@@ -318,7 +318,7 @@ export class ModContainer<Meta> {
 }
 
 export namespace ModContainer {
-    export async function tryParse(fileName: string): Promise<ModContainer<object>[]> {
+    export function tryParse(fileName: string): Promise<ModContainer<object>[]> {
         if (endWith(fileName, '.litemod')) return parseLiteLoader(fileName).then(v => [v])
         else if (endWith(fileName, '.jar')) return parseForge(fileName)
         else return Promise.resolve([]);
@@ -352,7 +352,7 @@ export namespace ModContainer {
         });
     }
 
-    function parseForge(mod: Buffer | string): Promise<ModContainer<ForgeMetaData>[]> {
+    export function parseForge(mod: Buffer | string): Promise<ModContainer<ForgeMetaData>[]> {
         return parseForgeRaw(mod).then(mods => mods.map(m => new ModContainer<ForgeMetaData>('forge', m)))
     }
 
