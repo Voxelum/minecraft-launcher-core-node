@@ -1,7 +1,7 @@
 const registry: { [key: string]: TextFormatting } = {}
 
 export class TextFormatting {
-    static readonly RESET: TextFormatting = new TextFormatting("RESET", 'r', null);
+    static readonly RESET: TextFormatting = new TextFormatting("RESET", 'r');
 
     static readonly BLACK: TextFormatting = new TextFormatting('BLACK', '0', 0);
     static readonly DARK_BLUE: TextFormatting = new TextFormatting("DARK_BLUE", '1', 1);
@@ -38,7 +38,7 @@ export class TextFormatting {
         if (!param) {
             this.fancyStyling = true;
         }
-        if (typeof param === 'number') {
+        else if (typeof param === 'number') {
             this.colorIndex = param;
             this.fancyStyling = false;
         }
