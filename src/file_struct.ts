@@ -35,7 +35,8 @@ export class MinecraftFolder {
     get logs(): string { return this.getPath('logs') }
     get options(): string { return this.getPath('options.txt') }
     get launcherProfile(): string { return this.getPath('launcher_profiles.json') }
-    get lastestLog(): string { return this.getPath(this.logs, 'latest.log') }
+    get lastestLog(): string { return this.getPath('logs', 'latest.log') }
+    get maps(): string { return this.getPath('saves') }
 
     getNativesRoot(version: string) { return paths.join(this.getVersionRoot(version), version + '-natives') }
     getVersionRoot(version: string) { return paths.join(this.versions, version) }
@@ -48,6 +49,8 @@ export class MinecraftFolder {
     getResourcePack(fileName: string) { return paths.join(this.resourcepacks, fileName) }
     getMod(fileName: string) { return paths.join(this.mods, fileName) }
     getLog(fileName: string) { return paths.join(this.logs, fileName) }
+    getMapInfo(map: string) { return this.getPath('saves', map, 'level.dat') }
+    getMapIcon(map: string) { return this.getPath('saves', map, 'icon.png') }
     getLibrary(library: Library): string {
         if (library.downloadInfo)
             return this.getPath('libraries', library.downloadInfo.path)
@@ -55,10 +58,7 @@ export class MinecraftFolder {
     }
 
     getPath(...path: string[]) {
-        let target = this.root
-        for (let p of path)
-            target = paths.join(target, p)
-        return target
+        return paths.join(this.root, ...path)
     }
 }
 
