@@ -105,10 +105,10 @@ export namespace GameSetting {
 
 export enum GameType {
     NON = -1,
-    SURVIVAL = 1,
-    CREATIVE = 2,
-    ADVENTURE = 3,
-    SPECTATOR = 4
+    SURVIVAL = 0,
+    CREATIVE = 1,
+    ADVENTURE = 2,
+    SPECTATOR = 3
 }
 
 export namespace GameType {
