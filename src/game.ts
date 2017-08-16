@@ -181,8 +181,12 @@ export namespace WorldInfo {
             return fs.existsSync(path.join(map, 'level.dat'))
         else {
             try {
-                new Zip(map).getEntry('level.dat')
-                return true
+                const zip = new Zip(map)
+                if (zip.getEntry('level.dat'))
+                    return true
+                if (zip.getEntry(`${zip.getEntries()[0].entryName}level.dat`))
+                    return true
+                return false
             }
             catch (e) { return false; }
         }
