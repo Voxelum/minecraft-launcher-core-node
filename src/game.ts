@@ -170,6 +170,23 @@ export class WorldInfo {
 }
 
 export namespace WorldInfo {
+    export async function valid(map: string): Promise<boolean> {
+        const isDir = await new Promise((resolve, reject) => {
+            fs.lstat(map, (err, status) => {
+                if (err) reject(err)
+                else resolve(status.isDirectory())
+            })
+        });
+        if (isDir)
+            return fs.existsSync(path.join(map, 'level.dat'))
+        else {
+            try {
+                new Zip(map).getEntry('level.dat')
+                return true
+            }
+            catch (e) { return false; }
+        }
+    }
     export function read(buf: Buffer): WorldInfo {
         let nbt = NBT.read(buf, true)
         let root = nbt.root.Data
@@ -314,7 +331,7 @@ export interface ModIndentity {
 }
 
 export class ModContainer<Meta> {
-    constructor(readonly type: string, readonly meta: Meta) { }
+    constructor(readonly type: string, readonly id: string, readonly meta: Meta) { }
 }
 
 export namespace ModContainer {
@@ -322,6 +339,10 @@ export namespace ModContainer {
         if (endWith(fileName, '.litemod')) return parseLiteLoader(fileName).then(v => [v])
         else if (endWith(fileName, '.jar')) return parseForge(fileName)
         else return Promise.resolve([]);
+    }
+
+    export async function tryParseRaw(mod: Buffer | string): Promise<ModContainer<ForgeMetaData>[] | ModContainer<LiteModMetaData>> {
+        return parseForge(mod).catch(e => parseLiteLoader(mod))
     }
 
     export function parseForgeRaw(mod: Buffer | string) {
@@ -353,7 +374,7 @@ export namespace ModContainer {
     }
 
     export function parseForge(mod: Buffer | string): Promise<ModContainer<ForgeMetaData>[]> {
-        return parseForgeRaw(mod).then(mods => mods.map(m => new ModContainer<ForgeMetaData>('forge', m)))
+        return parseForgeRaw(mod).then(mods => mods.map(m => new ModContainer<ForgeMetaData>('forge', `${m.modid}:${m.version}`, m)))
     }
 
     export function parseLiteLoaderRaw(mod: string | Buffer) {
@@ -378,7 +399,7 @@ export namespace ModContainer {
         });
     }
     export function parseLiteLoader(mod: string | Buffer): Promise<ModContainer<LiteModMetaData>> {
-        return parseLiteLoaderRaw(mod).then(m => new ModContainer<LiteModMetaData>('liteloader', m))
+        return parseLiteLoaderRaw(mod).then(m => new ModContainer<LiteModMetaData>('liteloader', `${m.name}:${m.version}`, m))
     }
 }
 
