@@ -1,4 +1,4 @@
-import { GET, DOWN, DIR, CHECKSUM, UPDATE } from './string_utils';
+import { GET, DOWN, DIR, CHECKSUM, UPDATE } from './utils';
 import { MinecraftFolder, MinecraftLocation } from './file_struct';
 import * as path from 'path'
 import * as Zip from 'adm-zip';

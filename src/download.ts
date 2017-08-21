@@ -3,7 +3,7 @@ import * as https from 'https'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as url from 'url'
-import { GET, DOWN, DIR, READ, CHECKSUM, UPDATE } from './string_utils'
+import { GET, DOWN, DIR, READ, CHECKSUM, UPDATE } from './utils'
 import * as urls from 'url';
 
 declare module './version' {

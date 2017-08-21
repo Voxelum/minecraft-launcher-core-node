@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import { ForgeVersionMetaList } from '../src/forge_download';
 import { ForgeVersionMeta } from "../index";
 import { MinecraftFolder } from '../src/file_struct';
-import { DOWN_R } from "../src/string_utils";
+import { DOWN_R } from "../src/utils";
 import { LiteVersionMeta, LiteVersionMetaList } from '../src/lite_download';
 describe('FetchVersionList', () => {
     it('should not fetch a list duplicatedly', (done) => {

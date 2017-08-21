@@ -1,5 +1,5 @@
 import { Version, Library, Native, Artifact } from './version'
-import { AuthResponse, UserType } from './auth'
+import { AuthResponse, UserType } from './auth';
 import { MinecraftFolder } from './file_struct'
 import { exec, ChildProcess } from 'child_process'
 import * as Zip from 'adm-zip'
@@ -7,7 +7,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
 
-import { startWith, DIR } from './string_utils'
+import { startWith, DIR } from './utils'
 /**
  * this module migrates from JMCCC https://github.com/to2mbn/JMCCC/tree/master/jmccc/src/main/java/org/to2mbn/jmccc/launch
  */
@@ -29,6 +29,11 @@ export namespace Launcher {
         resolution?: { width?: number, height?: number, fullscreen: false }
         extraJVMArgs?: string[]
         extraMCArgs?: string[]
+
+        yggdrasilAgent?: {
+            jar: string,
+            server: string,
+        },
 
         ignoreInvalidMinecraftCertificates?: boolean
         ignorePatchDiscrepancies?: boolean
@@ -92,6 +97,8 @@ export namespace Launcher {
         if (options.ignorePatchDiscrepancies)
             cmd.push('-Dfml.ignorePatchDiscrepancies=true');
 
+        if (options.yggdrasilAgent)
+            cmd.push(`-javaagent:${options.yggdrasilAgent.jar}=@${options.yggdrasilAgent.server}`)
         //add extra jvm args
         if (options.extraJVMArgs) cmd = cmd.concat(options.extraJVMArgs);
 

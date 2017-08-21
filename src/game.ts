@@ -3,7 +3,7 @@ import { GameProfile } from './auth'
 import { NBT } from './nbt';
 import { Version } from './version';
 import { MinecraftFolder, MinecraftLocation } from './file_struct';
-import { endWith, READ } from './string_utils';
+import { endWith, READ } from './utils';
 
 import * as net from 'net'
 import * as buf from 'bytebuffer'

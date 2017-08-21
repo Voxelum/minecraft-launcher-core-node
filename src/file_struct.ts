@@ -1,5 +1,5 @@
 import { Artifact, Library } from './version'
-import { endWith } from './string_utils'
+import { endWith } from './utils'
 
 import * as paths from 'path'
 

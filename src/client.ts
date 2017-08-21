@@ -1,7 +1,7 @@
 
 import { Socket } from 'net'
 import * as ByteBuffer from 'bytebuffer'
-import { ServerStatus } from './game';
+import { ServerStatus } from './server';
 import { EventEmitter } from "events";
 function writeString(buff: ByteBuffer, string: string) {
     buff.writeVarint32(string.length)

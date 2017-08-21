@@ -5,7 +5,7 @@
 import * as fs from 'fs'
 import * as os from 'os'
 import * as paths from 'path'
-import { READ } from './string_utils'
+import { READ } from './utils'
 import { MinecraftLocation } from './file_struct';
 
 /**

@@ -3,7 +3,7 @@ import { GameSetting, ServerInfo, ServerStatus } from '../index'
 import { TextComponent } from '../index'
 
 import * as fs from 'fs'
-import { Language, ModContainer, ResourcePack } from '../src/game';
+import { Language, ModContainer, ResourcePack, WorldInfo } from '../src/game';
 describe('TextComponent', () => {
     it('should convert normal text', () => {
         let raw = 'testCommon tesxt'
@@ -83,5 +83,19 @@ describe('Language', () => {
             assert.equal((e as Error).message, 'The version indexes json does not exist. Maybe the game assets are incompleted!')
             done()
         })
+    })
+})
+
+describe('WorldInfo', () => {
+    it('should validate a simple map', (done) => {
+        WorldInfo.valid('./tests/assets/sample-map')
+            .then(valid => { assert(valid, 'dir fail'); done() })
+            .catch(e => done(e))
+
+    })
+    it('should validate a zip map', (done) => {
+        WorldInfo.valid('./tests/assets/sample-map.zip')
+            .then(valid => { assert(valid, 'zip fail'); done() })
+            .catch(e => done(e))
     })
 })

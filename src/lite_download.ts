@@ -1,4 +1,4 @@
-import { UPDATE, DOWN_R, DOWN, DIR } from './string_utils';
+import { UPDATE, DOWN_R, DOWN, DIR } from './utils';
 import { MinecraftLocation, MinecraftFolder } from './file_struct';
 
 export interface LiteVersionMetaList {
@@ -9,7 +9,7 @@ export interface LiteVersionMetaList {
         updated: string,
         updatedTime: number
     }
-    
+
     versions: { [version: string]: { release?: LiteVersionMeta, snapshot?: LiteVersionMeta } }
 }
 export namespace LiteVersionMetaList {
