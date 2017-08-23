@@ -1,12 +1,39 @@
-import { GET, DOWN, DIR, CHECKSUM, UPDATE, READB } from './utils';
 import { MinecraftFolder, MinecraftLocation } from './file_struct';
 import download from './utils/download'
+import CHECKSUM from './utils/checksum'
+import UPDATE from './utils/update'
 import * as path from 'path'
 import * as zip from 'jszip'
 import * as fs from 'fs-extra'
 import { Version } from './version';
 
 export namespace Forge {
+    export interface ModIndentity {
+        readonly modid: string,
+        readonly version: string
+    }
+    export interface MetaData extends ModIndentity {
+        readonly modid: string,
+        readonly name: string,
+        readonly description?: string,
+        readonly version: string,
+        readonly mcVersion?: string,
+        readonly acceptMinecraftVersion?: string,
+        readonly updateJSON?: string,
+        readonly url?: string,
+        readonly logoFile?: string,
+        readonly authorList?: string[],
+        readonly credit?: string,
+        readonly parent?: string,
+        readonly screenShots?: string[],
+        readonly fingerprint?: string,
+        readonly dependencies?: string,
+        readonly accpetRemoteVersions?: string,
+        readonly acceptSaveVersions?: string,
+        readonly isClientOnly?: boolean,
+        readonly isServerOnly?: boolean
+    }
+
     export interface VersionMetaList {
         adfocus: string,
         artifact: string,
@@ -53,15 +80,15 @@ export namespace Forge {
             let root = mc.getVersionRoot(localForgePath)
             let filePath = path.join(root, `${localForgePath}.jar`)
             let jsonPath = path.join(root, `${localForgePath}.json`)
-            if (!fs.existsSync(root))
-                await DIR(root)
+            await fs.ensureDir(root)
+            let universalBuffer;
             if (!fs.existsSync(filePath)) {
                 try {
-                    await download(universalURL, filePath)
+                    fs.outputFile(filePath, universalBuffer = await universalURL)
                 }
                 catch (e) {
                     await fs.outputFile(filePath,
-                        await zip(await download(installerURL))
+                        universalBuffer = await zip(await download(installerURL))
                             .file(`forge-${versionPath}-universal.jar`)
                             .async('nodebuffer'))
                 }
@@ -80,13 +107,9 @@ export namespace Forge {
                 }
             }
             if (!fs.existsSync(jsonPath)) {
-                new Zip(filePath).extractEntryTo('version.json', path.dirname(jsonPath), false, true)//TODO performance?
-                await new Promise((resolve, reject) => {
-                    fs.rename(path.join(path.dirname(jsonPath), 'version.json'), jsonPath, (err) => {
-                        if (err) reject(err)
-                        else resolve()
-                    })
-                });
+                await fs.outputFile(jsonPath,
+                    await zip(universalBuffer).file('version.json')
+                        .async('nodebuffer'))
             }
             return Version.parse(minecraft, localForgePath)
         }
