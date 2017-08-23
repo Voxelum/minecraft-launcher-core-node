@@ -1,7 +1,7 @@
-import { GET, DOWN, DIR, CHECKSUM, UPDATE } from './utils';
+import { GET, DOWN, DIR, CHECKSUM, UPDATE, READB } from './utils';
 import { MinecraftFolder, MinecraftLocation } from './file_struct';
 import * as path from 'path'
-import * as Zip from 'adm-zip';
+import * as zip from 'jszip'
 import * as fs from 'fs'
 import { Version } from './version';
 export interface ForgeVersionMetaList {
@@ -59,7 +59,11 @@ export namespace ForgeVersionMeta {
             catch (e) {
                 const installerPath = filePath + '.install.jar'
                 await DOWN(installerURL, installerPath)
-                const installerZip = new Zip(installerPath)
+                const buffer = await READB(installerPath)
+                const installerZip = zip(buffer);
+                const buf: Buffer = await installerZip.file(`forge-${versionPath}-universal.jar`)
+                    .async('nodebuffer')
+
                 const parent = path.dirname(filePath)
                 installerZip.extractEntryTo(`forge-${versionPath}-universal.jar`, parent, false, true);
                 await new Promise<void>((resolve, reject) => {

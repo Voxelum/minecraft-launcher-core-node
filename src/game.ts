@@ -263,8 +263,9 @@ export interface ServerStatusFrame {
 }
 export class ServerStatus {
     pingToServer: number;
+    static status(version: TextComponent, motd: TextComponent) { return new ServerStatus(version, motd, -1, -1, -1); }
     static pinging() { return new ServerStatus(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
-    static error() { return new ServerStatus(TextComponent.str('Error'), TextComponent.str("Error"), -1, -1, -1) }
+    static error() { return new ServerStatus(TextComponent.str('Error'), TextComponent.str("Error"), -1, -1, -1); }
     constructor(
         readonly gameVersion: TextComponent,
         readonly serverMOTD: TextComponent,

@@ -1,4 +1,9 @@
-import { UPDATE, DOWN_R, DOWN, DIR } from './utils';
+import UPDATE from './utils/update';
+import download from './utils/download';
+import * as fs from 'fs-extra';
+import * as path from 'path'
+import * as url from 'url'
+
 import { MinecraftLocation, MinecraftFolder } from './file_struct';
 
 export interface LiteVersionMetaList {
@@ -9,8 +14,7 @@ export interface LiteVersionMetaList {
         updated: string,
         updatedTime: number
     }
-
-    versions: { [version: string]: { release?: LiteVersionMeta, snapshot?: LiteVersionMeta } }
+    versions: { [version: string]: { snapshot?: LiteVersionMeta, release?: LiteVersionMeta } }
 }
 export namespace LiteVersionMetaList {
     export async function update(option?: {
@@ -65,12 +69,9 @@ export interface LiteVersionMeta {
     mcversion: string,
     type: "RELEASE" | "SNAPSHOT",
     md5: string,
-    timestamp: string
+    timestamp: string,
 }
 
-import * as path from 'path'
-import * as url from 'url'
-import * as fs from 'fs'
 export namespace LiteVersionMeta {
     const snapshotRoot = 'http://dl.liteloader.com/versions/com/mumfrey/liteloader';
     const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/com/mumfrey/liteloader'
@@ -88,11 +89,11 @@ export namespace LiteVersionMeta {
         const liteloaderPath = `${meta.mcversion}-Liteloader-${meta.version}`
         const versionPath = mc.getVersionRoot(liteloaderPath)
         if (!fs.existsSync(versionPath))
-            await DIR(versionPath)
-        console.log(targetURL)
-        console.log(jsonURL)
-        return Promise.all([DOWN_R(targetURL, path.join(versionPath, liteloaderPath + '.jar')),
-        DOWN(jsonURL, path.join(versionPath, liteloaderPath + '.json'))])
+            await fs.mkdirp(versionPath)
+        return Promise.all([
+            download(targetURL, path.join(versionPath, liteloaderPath + '.jar')),
+            download(jsonURL, path.join(versionPath, liteloaderPath + '.json'))
+        ])
     }
 
     export function installLiteloaderAsMod(meta: LiteVersionMeta, filePath: string) {

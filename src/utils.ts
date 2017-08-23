@@ -126,9 +126,8 @@ export function endWith(string: string, postfix: string) {
 import * as http from 'http'
 import * as https from 'https'
 import * as urls from 'url'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
-import * as dir from 'mkdirp'
 import * as crypto from 'crypto'
 
 let net: any;
@@ -151,13 +150,8 @@ export async function CHECKSUM(path: string, algorithm: string = 'sha1'): Promis
     );
 }
 
-export async function DIR(path: string): Promise<string> {
-    return new Promise<string>((acc, den) => {
-        dir(path, (e, m) => {
-            if (e) den()
-            else acc(m)
-        })
-    })
+export async function DIR(path: string): Promise<void> {
+    return fs.mkdirp(path);
 }
 
 function _findDownloadRes(requester: any, url: string) {
@@ -264,16 +258,18 @@ export function DOWN(url: string, file: string): Promise<void> {
         })
         req.end()
     });
-
 }
 
-export async function READ(path: string): Promise<string> {
-    return new Promise<string>((res, rej) => {
+export function READ(path: string): Promise<string> {
+    return READ(path).then(b => b.toString());
+}
+export function READB(path: string) {
+    return new Promise<Buffer>((res, rej) => {
         fs.readFile(path, (e, d) => {
             if (e) rej(e)
-            else res(d.toString())
+            else res(d)
         })
-    })
+    });
 }
 export async function UPDATE(option: {
     fallback?: {
