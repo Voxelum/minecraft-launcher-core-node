@@ -1,5 +1,4 @@
-import { Version } from '../src/version';
-import { MinecraftFolder } from '../src/file_struct';
+import { MinecraftFolder, Version } from '../index';
 // describe('tes', () => {
 //     it('should check', (done) => {
 //         Version.parse('C:/Users/CIJhn/AppData/Roaming/.launcher', '1.12')

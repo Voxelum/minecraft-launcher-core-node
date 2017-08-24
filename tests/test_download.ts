@@ -1,10 +1,6 @@
-import { Version } from '../src/version';
 import * as assert from 'assert';
-import { ForgeVersionMetaList } from '../src/forge_download';
-import { ForgeVersionMeta } from "../index";
-import { MinecraftFolder } from '../src/file_struct';
-import { DOWN_R } from "../src/utils";
-import { LiteVersionMeta, LiteVersionMetaList } from '../src/lite_download';
+import { Version, MinecraftFolder, Forge, Liteloader } from "../index";
+
 describe('FetchVersionList', () => {
     it('should not fetch a list duplicatedly', (done) => {
         let r1: any
@@ -21,9 +17,9 @@ describe('FetchVersionList', () => {
 describe('FetchForgeVersionList', () => {
     it('should not fetch a list twice', (done) => {
         let r1: any
-        ForgeVersionMetaList.update().then(result => {
+        Forge.VersionMetaList.update().then(result => {
             r1 = result
-            return ForgeVersionMetaList.update({ fallback: result })
+            return Forge.VersionMetaList.update({ fallback: result })
         }).then(result => {
             assert.equal(result, r1)
             done()
@@ -44,11 +40,11 @@ describe('FetchForgeVersionList', () => {
 // })
 describe('FetchLite', () => {
     it('should download liteloader', done => {
-        LiteVersionMetaList.update()
-            .then((result: { list: LiteVersionMetaList, date: string }) => {
+        Liteloader.VersionMetaList.update()
+            .then((result: { list: Liteloader.VersionMetaList, date: string }) => {
                 let meta = result.list.versions['1.10.2'].release
                 if (meta) {
-                    let promise = LiteVersionMeta.installLiteloader(meta, new MinecraftFolder('./tests/assets/temp'))
+                    let promise = Liteloader.install(meta, new MinecraftFolder('./tests/assets/temp'))
                     return promise.then(v => '')
                 }
                 return ''

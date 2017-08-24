@@ -163,3 +163,5 @@ export namespace Launcher {
         return cmd
     }
 }
+
+export default Launcher

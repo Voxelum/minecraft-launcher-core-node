@@ -276,3 +276,5 @@ function checkAllowed(rules: any, platformDescription: PlatformDescription): boo
     }
     return allow;
 }
+
+export default Version;

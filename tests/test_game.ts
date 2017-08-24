@@ -3,7 +3,7 @@ import { GameSetting, ServerInfo, ServerStatus } from '../index'
 import { TextComponent } from '../index'
 
 import * as fs from 'fs'
-import { Language, ModContainer, ResourcePack, WorldInfo } from '../src/game';
+import { Language, Mod, ResourcePack, WorldInfo, Forge } from '../index';
 describe('TextComponent', () => {
     it('should convert normal text', () => {
         let raw = 'testCommon tesxt'
@@ -60,7 +60,7 @@ describe('ServerPing', () => {
 })
 describe('ForgeMod', () => {
     it('should read mod correctly', (done) => {
-        ModContainer.parseForge('./tests/assets/sample-mod.jar')
+        Mod.parse('./tests/assets/sample-mod.jar')
             .then(v => {
                 console.log(v)
                 done()
