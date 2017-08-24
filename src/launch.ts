@@ -28,6 +28,9 @@ export namespace Launcher {
         extraJVMArgs?: string[]
         extraMCArgs?: string[]
 
+        /**
+         * Support yushi's yggdrasil agent
+         */
         yggdrasilAgent?: {
             jar: string,
             server: string,
