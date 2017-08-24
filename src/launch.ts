@@ -1,13 +1,12 @@
 import { Version, Library, Native, Artifact } from './version'
 import { AuthResponse, UserType } from './auth';
-import { MinecraftFolder } from './file_struct'
 import { exec, ChildProcess } from 'child_process'
-import * as Zip from 'adm-zip'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as os from 'os'
-
+import * as Zip from 'jszip'
 import { startWith, DIR } from './utils'
+import { MinecraftFolder } from './utils/folder';
 /**
  * this module migrates from JMCCC https://github.com/to2mbn/JMCCC/tree/master/jmccc/src/main/java/org/to2mbn/jmccc/launch
  */
@@ -64,16 +63,19 @@ export namespace Launcher {
         return libs
     }
 
-    function checkNative(mc: MinecraftFolder, version: Version) {
+    async function checkNative(mc: MinecraftFolder, version: Version) {
         let native = mc.getNativesRoot(version.root)
         for (let lib of version.libraries) if ((lib as Native).extractExcludes) {
+            const excludes = (lib as Native).extractExcludes;
             let from = mc.getLibrary(lib)
-            let zip = new Zip(from)
-            let entries = zip.getEntries()
-            for (let e of entries)
-                for (let ex of (lib as Native).extractExcludes)
-                    if (!startWith(e.entryName, ex))
-                        zip.extractEntryTo(e, native, false, true)
+            let zip = Zip(await fs.readFile(from))
+            for (const entry of zip.filter((path, entry) => {
+                for (let exclude of excludes)
+                    if (path.startsWith(exclude)) return false;
+                return true
+            })) {
+                await fs.writeFile(path.join(native, entry.name), await entry.async('nodebuffer'))
+            }
         }
     }
 

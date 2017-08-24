@@ -1,5 +1,4 @@
-import { Artifact, Library } from './version'
-import { endWith } from './utils'
+import { Artifact, Library } from '../version'
 
 import * as paths from 'path'
 
@@ -7,7 +6,7 @@ function getArtifactBasePath(groupId: string, artifactId: string, version: strin
     return groupId.replace('.', '/') + "/" + artifactId + "/" + version + "/";
 }
 
-function isSnapshot(artifact: Artifact) { return endWith(artifact.version, "-SNAPSHOT"); }
+function isSnapshot(artifact: Artifact) { return artifact.version.endsWith("-SNAPSHOT"); }
 
 function getPath(artfact: Artifact, snapshotPostfix = undefined) {
     var version: string;
@@ -26,7 +25,6 @@ function getPath0(artfact: Artifact) {
 }
 export class MinecraftFolder {
     constructor(readonly root: string) { }
-
     get mods(): string { return paths.join(this.root, 'mods') }
     get resourcepacks(): string { return paths.join(this.root, 'resourcepacks') }
     get assets(): string { return paths.join(this.root, 'assets') }
@@ -64,6 +62,4 @@ export class MinecraftFolder {
 
 export type MinecraftLocation = MinecraftFolder | string
 
-export class ResourceLocation {
-    constructor(readonly domain: string, readonly id: string) { }
-}
+

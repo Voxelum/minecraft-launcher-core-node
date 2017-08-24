@@ -6,7 +6,7 @@ export type UpdatedList = {
     list: any, date: string
 }
 
-export default function (option: {
+export default function UPDATE(option: {
     fallback?: UpdatedList, remote: string
 }): Promise<UpdatedList> {
     return new Promise<UpdatedList>((resolve, reject) => {

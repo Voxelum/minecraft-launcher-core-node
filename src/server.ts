@@ -1,10 +1,11 @@
-import { ModIndentity, ResourceMode } from './game';
+import { ResourceMode } from './game';
 import { TextComponent } from "./text";
 import { GameProfile } from "./auth";
 import * as buf from 'bytebuffer'
-import { NBT } from "./nbt";
+import NBT from "./nbt";
 import * as net from 'net'
 import * as Long from 'long'
+import Forge from './forge';
 
 function writeString(buff: ByteBuffer, string: string) {
     buff.writeVarint32(string.length)
@@ -134,7 +135,7 @@ export namespace ServerInfo {
         let modInfoJson = obj.modinfo
         let modInfo
         if (modInfoJson) {
-            let list: ModIndentity[] = []
+            let list: Forge.ModIndentity[] = []
             let mList = modInfoJson.modList
             if (mList && mList instanceof Array) list = mList
             modInfo = {
@@ -183,7 +184,7 @@ export interface ServerStatusFrame {
     favicon: string | '',
     modinfo?: {
         type: string | 'FML',
-        modList: Array<ModIndentity>
+        modList: Array<Forge.ModIndentity>
     },
     ping: number,
 }
@@ -201,7 +202,7 @@ export class ServerStatus {
         readonly playerList?: GameProfile[],
         readonly modInfos?: {
             type: string,
-            modList: Array<ModIndentity>
+            modList: Array<Forge.ModIndentity>
         }) { }
 
     toString(): string {

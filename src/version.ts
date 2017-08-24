@@ -2,11 +2,10 @@
     This module migrate the JMCCC: https://github.com/to2mbn/JMCCC/blob/master/jmccc/src/main/java/org/to2mbn/jmccc/version/
 */
 
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as os from 'os'
 import * as paths from 'path'
-import { READ } from './utils'
-import { MinecraftLocation } from './file_struct';
+import { MinecraftLocation } from './utils/folder';
 
 /**
  * Virtual representation of artifact in memory. May not be the same with the file structure.
@@ -127,8 +126,8 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
         let fullPath = paths.join(folderLoc, 'versions', version, version + '.json')
         if (!fs.existsSync(fullPath)) rej(new Error('No version file for ' + version));
         function interal(fullPath: string): Promise<any[]> {
-            return READ(fullPath).then((value) => {
-                let obj = JSON.parse(value)
+            return fs.readFile(fullPath).then((value) => {
+                let obj = JSON.parse(value.toString())
                 stack.push(obj)
                 if (obj.inheritsFrom)
                     return interal(paths.join(folderLoc, 'versions', obj.inheritsFrom, obj.inheritsFrom + '.json'))

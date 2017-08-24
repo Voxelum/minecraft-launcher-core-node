@@ -280,3 +280,5 @@ export namespace NBT {
         }
     }
 }
+
+export default NBT;
