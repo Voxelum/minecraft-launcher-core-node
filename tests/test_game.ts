@@ -79,7 +79,7 @@ describe('Resoucepack', () => {
 })
 describe('Language', () => {
     it('should throw exception', (done) => {
-        Language.exportLanguages('./', '1.12').catch(e => {
+        Language.parse('./', '1.12').catch(e => {
             assert.equal((e as Error).message, 'The version indexes json does not exist. Maybe the game assets are incompleted!')
             done()
         })

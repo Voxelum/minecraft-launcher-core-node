@@ -7,7 +7,7 @@ export class Language {
 }
 
 export namespace Language {
-    export async function exportLanguages(location: MinecraftLocation, version: string): Promise<Language[]> {
+    export async function parse(location: MinecraftLocation, version: string): Promise<Language[]> {
         const loca: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location
         let json = path.join(loca.assets, 'indexes', version + '.json')
         if (!fs.existsSync(json))

@@ -29,7 +29,7 @@ export namespace Launcher {
         extraMCArgs?: string[]
 
         /**
-         * Support yushi's yggdrasil agent
+         * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
          */
         yggdrasilAgent?: {
             jar: string,

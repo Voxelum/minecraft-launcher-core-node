@@ -8,22 +8,6 @@ export namespace NBT {
         ByteArray = 7, String = 8, List = 9, Compound = 10, IntArray = 11
     }
 
-    class Scheme {
-        constructor(private scheme: any) {
-        }
-
-        getType(...paths: string[]): NBT.Type | any {
-            if (!paths) return NBT.Type.Compound;
-            let current = this.scheme;
-            for (let path of paths) {
-                current = current[path];
-                if (!current)
-                    return NBT.Type.End;
-            }
-            return current;
-        }
-    }
-
     let visitors: Visitor[] = [
         { read(buf) { }, write(buf, v) { } }, //end
         { read: (buf) => buf.readByte(), write(buf, v) { buf.writeByte(v) } }, //byte
@@ -45,7 +29,8 @@ export namespace NBT {
             }
         },
         { //string
-            read(buf) { return readString(buf); }, write(buf, v) { writeString(buf, v) }
+            read(buf) { return readString(buf); },
+            write(buf, v) { writeString(buf, v) }
         },
         { //list
             read(buf, schemaScope) {
@@ -180,37 +165,59 @@ export namespace NBT {
         return { root: obj, schema: scope }
     }
 
-    export function write(schema?: any, compressed: boolean = false): Buffer {
-        let arr = new ArrayBuffer(4)
-        ByteBuffer.wrap(arr)
-        return Buffer.from('')
+    export function write(tag: Compound, compressed: boolean = false): Buffer {
+        const buffer = new ByteBuffer();
+        buffer.writeByte(10);
+        writeString(buffer, '');
+
+        return Buffer.from(buffer.toArrayBuffer())
+    }
+
+    function writeTag(tag: Base, buffer: ByteBuffer) {
+        buffer.writeByte(tag.type);
+        if (tag.isCompound) {
+            const compound = tag.asCompound()
+            for (const val of compound.values())
+                writeTag(val, buffer);
+        }
+        else if (tag.isList) {
+            const list = tag as List;
+            const type = list.length === 0 ? 1 : list.value[0].type;
+            buffer.writeByte(type)
+            buffer.writeInt(list.length)
+            for (const val of tag.asList().value)
+                writeTag(val, buffer)
+        } else
+            visitors[tag.type].write(buffer, tag.value, { find() { } })
     }
 
     export abstract class Base {
-        protected constructor(readonly type: NBT.Type, protected _value: any) { }
-
-        get numberValue(): number {
-            if (this.isNumber) return this._value
+        protected constructor(readonly type: NBT.Type, readonly value: any) { }
+        as<TP = string | boolean | number | Long | Compound | List>(): TP {
+            return this.value;
+        }
+        asNumber(): number {
+            if (this.isNumber) return this.value
             else throw 'Wrong Type'
         }
-        get stringValue(): string {
-            if (this.isString) return this._value
+        asString(): string {
+            if (this.isString) return this.value
             else throw 'Wrong Type'
         }
-        get longValue(): Long {
-            if (this.isLong) return this._value
+        asLong(): Long {
+            if (this.isLong) return this.value
             else throw 'Wrong Type'
         }
-        get compoundValue(): Compound {
+        asCompound(): Compound {
             if (this.isCompound) return <Compound><any>this
             else throw 'Wrong Type'
         }
-        get listValue(): List {
+        asList(): List {
             if (this.isList) return <List><any>this
             else throw 'Wrong Type'
         }
-        get numberArrayValue(): number[] {
-            if (this.isNumberArray) return this._value
+        asArray(): number[] {
+            if (this.isNumberArray) return this.value
             else throw 'Wrong Type'
         }
         get isNumber(): boolean {
@@ -240,41 +247,146 @@ export namespace NBT {
     }
 
     export const EMPTY: Base = new Empty()
-    export class List extends Base {
-        constructor(type: Type) { super(type, []) }
+    export class List extends Array<Base> implements Base {
+        /**
+        * Returns an object whose properties have the value 'true'
+        * when they will be absent when used in a 'with' statement.
+        */
+        // [Symbol.unscopables]() {
+        //     return {
+        //         copyWithin: true,
+        //         entries: true,
+        //         fill: true,
+        //         find: true,
+        //         findIndex: true,
+        //         keys: true,
+        //         values: true,
+        //         as: true,
+        //         asNumber: true,
+        //         asString: true,
+        //         asLong: true,
+        //         asCompound: true,
+        //         asList: true,
+        //         asArray: true,
+        //         isNumber: true,
+        //         isString: true,
+        //         isNumberArray: true,
+        //         isList: true,
+        //         isLong: true,
+        //         isCompound: true,
+        //         value: true,
+        //         toJSON: true,
+        //         type: true,
+        //     }
+        // };
+        as = Base.prototype.as;
+        asNumber = Base.prototype.asNumber;
+        asString = Base.prototype.asString;
+        asLong = Base.prototype.asLong;
+        asCompound = Base.prototype.asCompound;
+        asList = Base.prototype.asList;
+        asArray = Base.prototype.asArray;
+        isNumber = Base.prototype.isNumber;
+        isString = Base.prototype.isString;
+        isNumberArray = Base.prototype.isNumberArray;
+        isList = Base.prototype.isList;
+        isLong = Base.prototype.isLong;
+        isCompound = Base.prototype.isCompound;
 
+        readonly type: Type = Type.List;
+        constructor() {
+            super();
+            (this as any)[Symbol.unscopables] = {
+                copyWithin: true,
+                entries: true,
+                fill: true,
+                find: true,
+                findIndex: true,
+                keys: true,
+                values: true,
+                as: true,
+                asNumber: true,
+                asString: true,
+                asLong: true,
+                asCompound: true,
+                asList: true,
+                asArray: true,
+                isNumber: true,
+                isString: true,
+                isNumberArray: true,
+                isList: true,
+                isLong: true,
+                isCompound: true,
+                value: true,
+                toJSON: true,
+                type: true,
+            }
+        }
+        get value() { return this; }
         toJSON() {
-            return {}
+            return JSON.parse(JSON.stringify(this))
         }
     }
 
     export class Compound extends Base {
-        constructor(original?: Compound | { [key: string]: Base } | Map<string, Base>) { super(Type.Compound, {}) }
-        boolean(name: string, value: boolean): this { this._value[name] = new Primitive(Type.Byte, value); return this }
-        byte(name: string, value: number): this { this._value[name] = new Primitive(Type.Byte, value); return this; }
-        short(name: string, value: number): this { this._value[name] = new Primitive(Type.Short, value); return this; }
-        int(name: string, value: number): this { this._value[name] = new Primitive(Type.Int, value); return this; }
-        long(name: string, value: number | Long): this { this._value[name] = new Primitive(Type.Long, value); return this; }
-        float(name: string, value: number): this { this._value[name] = new Primitive(Type.Float, value); return this; }
-        double(name: string, value: number): this { this._value[name] = new Primitive(Type.Double, value); return this; }
-        string(name: string, value: string): this { this._value[name] = new Primitive(Type.String, value); return this }
-        bytes(name: string, value: number[]): this { this._value[name] = new Primitive(Type.ByteArray, value); return this; }
-        ints(name: string, value: number[]): this { this._value[name] = new Primitive(Type.IntArray, value); return this; }
-        nbt(name: string, value: Base): this { this._value[name] = value; return this }
+        // [Symbol.unscopables] = {
+        //     as: Base.prototype.as,
+        //     asNumber: Base.prototype.asNumber,
+        //     asString: Base.prototype.asString,
+        //     asLong: Base.prototype.asLong,
+        //     asCompound: Base.prototype.asCompound,
+        //     asList: Base.prototype.asList,
+        //     asArray: Base.prototype.asArray,
+        //     isNumber: Base.prototype.isNumber,
+        //     isString: Base.prototype.isString,
+        //     isNumberArray: Base.prototype.isNumberArray,
+        //     isList: Base.prototype.isList,
+        //     isLong: Base.prototype.isLong,
+        //     isCompound: Base.prototype.isCompound,
+        // }
+        readonly type: Type = Type.Compound;
 
+        constructor(original?: Compound | { [key: string]: Base } | Map<string, Base>, deepcopy: boolean = false) {
+            super(Type.Compound, {})
+            let val: any;
+            if (original instanceof Compound) {
+                val = deepcopy ? JSON.parse(JSON.stringify(original.value)) : { ...original.value }
+            } else if (original instanceof Map) {
+                val = {}
+                original.forEach((v, k) => { val[k] = v; })
+            } else {
+                val = deepcopy ? JSON.parse(JSON.stringify(original)) : { ...original }
+            }
+            (this as any).value = val;
+        }
+
+        boolean(name: string, value: boolean): this { this.value[name] = new Primitive(Type.Byte, value); return this }
+        byte(name: string, value: number): this { this.value[name] = new Primitive(Type.Byte, value); return this; }
+        short(name: string, value: number): this { this.value[name] = new Primitive(Type.Short, value); return this; }
+        int(name: string, value: number): this { this.value[name] = new Primitive(Type.Int, value); return this; }
+        long(name: string, value: number | Long): this { this.value[name] = new Primitive(Type.Long, value); return this; }
+        float(name: string, value: number): this { this.value[name] = new Primitive(Type.Float, value); return this; }
+        double(name: string, value: number): this { this.value[name] = new Primitive(Type.Double, value); return this; }
+        string(name: string, value: string): this { this.value[name] = new Primitive(Type.String, value); return this }
+        bytes(name: string, value: number[]): this { this.value[name] = new Primitive(Type.ByteArray, value); return this; }
+        ints(name: string, value: number[]): this { this.value[name] = new Primitive(Type.IntArray, value); return this; }
+        nbt(name: string, value: Base): this { this.value[name] = value; return this }
         get(name: string, fallback?: Base): Base | undefined {
-            const val = this._value[name];
+            const val = this.value[name];
             return val ? val : fallback;
         }
-        has(name: string): boolean { return this._value[name] !== undefined }
+        has(name: string): boolean { return this.value[name] !== undefined }
+        keys() { return Object.keys(this.value) }
+        [Symbol.iterator]() { return this.keys().map(k => this.value[k]) }
+        values() { return this.keys().map(k => this.value[k]) }
         toJSON() {
-            return {}
+            return JSON.parse(JSON.stringify(this.value))
         }
     }
     export class Primitive extends Base {
         constructor(type: NBT.Type, _value: string | number | boolean | number[] | Long) { super(type, _value) }
         toJSON() {
-            return {}
+            return this.value
         }
     }
 }
