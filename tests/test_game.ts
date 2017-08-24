@@ -60,7 +60,7 @@ describe('ServerPing', () => {
 })
 describe('ForgeMod', () => {
     it('should read mod correctly', (done) => {
-        Mod.parse('./tests/assets/sample-mod.jar')
+        Forge.meta('./tests/assets/sample-mod.jar')
             .then(v => {
                 console.log(v)
                 done()

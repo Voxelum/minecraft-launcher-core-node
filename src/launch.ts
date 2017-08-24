@@ -5,7 +5,6 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as os from 'os'
 import * as Zip from 'jszip'
-import { startWith, DIR } from './utils'
 import { MinecraftFolder } from './utils/folder';
 /**
  * this module migrates from JMCCC https://github.com/to2mbn/JMCCC/tree/master/jmccc/src/main/java/org/to2mbn/jmccc/launch
@@ -39,7 +38,7 @@ export namespace Launcher {
     }
 
     export async function launch(auth: AuthResponse, options: Option): Promise<ChildProcess> {
-        await DIR(options.gamePath)
+        await fs.ensureDir(options.gamePath)
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
         let mc = new MinecraftFolder(options.resourcePath)
