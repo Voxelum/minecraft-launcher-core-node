@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { Version, MinecraftFolder, Forge, Liteloader } from "../index";
+import { Version, MinecraftFolder, Forge, LiteLoader } from "../index";
 
 describe('FetchVersionList', () => {
     it('should not fetch a list duplicatedly', (done) => {
@@ -40,11 +40,11 @@ describe('FetchForgeVersionList', () => {
 // })
 describe('FetchLite', () => {
     it('should download liteloader', done => {
-        Liteloader.VersionMetaList.update()
-            .then((result: { list: Liteloader.VersionMetaList, date: string }) => {
+        LiteLoader.VersionMetaList.update()
+            .then((result: { list: LiteLoader.VersionMetaList, date: string }) => {
                 let meta = result.list.versions['1.10.2'].release
                 if (meta) {
-                    let promise = Liteloader.install(meta, new MinecraftFolder('./tests/assets/temp'))
+                    let promise = LiteLoader.install(meta, new MinecraftFolder('./tests/assets/temp'))
                     return promise.then(v => '')
                 }
                 return ''
