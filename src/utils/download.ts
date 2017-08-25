@@ -92,9 +92,3 @@ catch (e) {
 
 export default using;
 
-using('http://dl.liteloader.com/versions/com/mumfrey/liteloader/1.12-SNAPSHOT/1.12-SNAPSHOT.jar', './test.jar')
-    .then(() => { console.log('done') })
-
-
-
-
