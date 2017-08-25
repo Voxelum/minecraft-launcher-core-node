@@ -169,8 +169,12 @@ export namespace NBT {
         const buffer = new ByteBuffer();
         buffer.writeByte(Type.Compound);
         writeUTF8(buffer, '');
-        writeTag(tag, buffer)
-        return Buffer.from(buffer.toArrayBuffer())
+        writeTag(tag, buffer);
+        if (compressed) {
+            return gzip.gzipSync(Buffer.from(buffer.flip().toArrayBuffer()));
+        } else {
+            return Buffer.from(buffer.flip().toArrayBuffer());
+        }
     }
 
     function writeTag(tag: Base, buffer: ByteBuffer) {
