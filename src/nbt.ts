@@ -1,6 +1,5 @@
 import * as gzip from 'zlib'
 import * as ByteBuffer from 'bytebuffer'
-import function from '../dist/src/utils/checksum';
 
 //not finished yet...
 export namespace NBT {
