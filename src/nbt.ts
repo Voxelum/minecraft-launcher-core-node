@@ -29,8 +29,8 @@ export namespace NBT {
             }
         },
         { //string
-            read(buf) { return readString(buf); },
-            write(buf, v) { writeString(buf, v) }
+            read(buf) { return readUTF8(buf); },
+            write(buf, v) { writeUTF8(buf, v) }
         },
         { //list
             read(buf, schemaScope) {
@@ -167,18 +167,22 @@ export namespace NBT {
 
     export function write(tag: Compound, compressed: boolean = false): Buffer {
         const buffer = new ByteBuffer();
-        buffer.writeByte(10);
-        writeString(buffer, '');
-
+        buffer.writeByte(Type.Compound);
+        writeUTF8(buffer, '');
+        writeTag(tag, buffer)
         return Buffer.from(buffer.toArrayBuffer())
     }
 
     function writeTag(tag: Base, buffer: ByteBuffer) {
-        buffer.writeByte(tag.type);
         if (tag.isCompound) {
             const compound = tag.asCompound()
-            for (const val of compound.values())
+            for (const key of compound.keys()) {
+                const val = compound.value[key]
+                buffer.writeByte(val.type)
+                writeUTF8(buffer, key)
                 writeTag(val, buffer);
+            }
+            buffer.writeByte(0);
         }
         else if (tag.isList) {
             const list = tag as List;
@@ -392,7 +396,7 @@ export namespace NBT {
 }
 export default NBT;
 
-function writeString(out: ByteBuffer, str: string) {
+function writeUTF8(out: ByteBuffer, str: string) {
     let strlen = str.length;
     let utflen = 0;
     let c: number;
@@ -444,7 +448,7 @@ function writeString(out: ByteBuffer, str: string) {
     // out.write(bytearr, 0, utflen + 2);
     return utflen + 2;
 }
-function readString(buff: ByteBuffer) {
+function readUTF8(buff: ByteBuffer) {
     let utflen = buff.readUint16()
     let bytearr: number[] = new Array<number>(utflen);
     let chararr = new Array<number>(utflen);
