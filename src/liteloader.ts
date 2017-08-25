@@ -93,9 +93,9 @@ export namespace LiteLoader {
     export async function meta(mod: string | Buffer) {
         let zip;
         if (mod instanceof Buffer)
-            zip = new Zip(mod);
+            zip = await new Zip().loadAsync(mod);
         else if (typeof mod === 'string')
-            zip = new Zip(await fs.readFile(mod));
+            zip = await new Zip().loadAsync(await fs.readFile(mod));
         else
             throw ('Illegal input type! Expect Buffer or string (filePath)')
         return zip.file('litemod.json').async('nodebuffer').then(data => JSON.parse(data.toString()) as MetaData)

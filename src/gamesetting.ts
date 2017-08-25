@@ -70,7 +70,7 @@ export namespace GameSetting {
                     model[key] = setting[key]
                 }
             }
-        } else model = model
+        } else model = setting
         return Object.keys(model).map(key => {
             const val = model[key];
             if (typeof val !== 'string')

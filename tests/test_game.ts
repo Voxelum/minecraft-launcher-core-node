@@ -47,10 +47,11 @@ describe('ServerPing', () => {
         }).then(status => {
             done()
         })
-    });
+        .catch(done)
+    }).timeout(100000);
     it('should catch the timeout exception', (done) => {
         ServerInfo.fetchStatus({
-            host: 'crafter.me',
+            host: 'crafterr.me',
         }).then(status => {
             done(new Error('this should not happend'))
         }, (err) => {
@@ -73,6 +74,7 @@ describe('Resoucepack', () => {
         const buff = fs.readFileSync('./tests/assets/sample-resourcepack.zip')
         ResourcePack.read('sample', buff)
             .then(v => { done() })
+            .catch(done)
     })
 })
 describe('Language', () => {
@@ -89,7 +91,6 @@ describe('WorldInfo', () => {
         WorldInfo.valid('./tests/assets/sample-map')
             .then(valid => { assert(valid, 'dir fail'); done() })
             .catch(e => done(e))
-
     })
     it('should validate a zip map', (done) => {
         WorldInfo.valid('./tests/assets/sample-map.zip')

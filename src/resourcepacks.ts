@@ -16,7 +16,7 @@ export namespace ResourcePack {
         return new ResourcePack(fileName, description, pack_format, icon)
     }
     export async function read(filePath: string, buffer?: Buffer): Promise<ResourcePack> {
-        return readZip(filePath, new Zip(buffer ? buffer : await fs.readFile(filePath)));
+        return readZip(filePath, await new Zip().loadAsync(buffer ? buffer : await fs.readFile(filePath)));
     }
 }
 

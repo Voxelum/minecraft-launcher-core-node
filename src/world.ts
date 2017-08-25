@@ -40,12 +40,12 @@ export namespace WorldInfo {
             return fs.existsSync(path.join(map, 'level.dat'))
         else {
             try {
-                const zip = new Zip(await fs.readFile(map))
+                const zip = await new Zip().loadAsync(await fs.readFile(map))
                 if (zip.file('level.dat'))
                     return true
-                // todo fix this
-                // if (zip.file(`${Object.keys(zip.files())[0]}level.dat`))
-                    // return true
+                for(const key in zip.files)
+                    if(key.endsWith('/level.dat'))
+                        return true
                 return false
             }
             catch (e) { return false; }
