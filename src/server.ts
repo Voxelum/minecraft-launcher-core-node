@@ -183,7 +183,7 @@ export class ServerStatus {
         let max = -1
         if (version) {
             if (version.name)
-                versionText = TextComponent.fromFormattedString(version.name as string)
+                versionText = TextComponent.from(version.name as string)
             if (version.protocol)
                 protocol = version.protocol
         }

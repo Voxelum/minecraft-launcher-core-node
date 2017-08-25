@@ -7,32 +7,32 @@ import { Language, Mod, ResourcePack, WorldInfo, Forge } from '../index';
 describe('TextComponent', () => {
     it('should convert normal text', () => {
         let raw = 'testCommon tesxt'
-        assert.equal(TextComponent.fromFormattedString(raw).unformatted, raw)
+        assert.equal(TextComponent.from(raw).unformatted, raw)
     })
     it('should convert the string to TextComponent correctly and convert it back', () => {
         let raw = '§1colored§r'
-        assert.equal(TextComponent.fromFormattedString(raw).formatted, raw)
+        assert.equal(TextComponent.from(raw).formatted, raw)
     })
 })
 
 describe("GameSetting", () => {
     it('should print all the options', () => {
         let s = fs.readFileSync('./tests/assets/options.txt')
-        let set = GameSetting.readFromString(s.toString())
+        let set = GameSetting.parse(s.toString())
         // console.log(set)
     })
     it('should write to string correctly', () => {
         let s = fs.readFileSync('./tests/assets/options.txt').toString()
-        let set = GameSetting.readFromString(s)
+        let set = GameSetting.stringify(s)
         if (set)
-            GameSetting.writeToString(set)
+            GameSetting.stringify(set)
     })
 })
 
 describe('ServerRead', () => {
     it('should read the server.dat correctly', () => {
         let data = fs.readFileSync('./tests/assets/servers.dat')
-        let infos = ServerInfo.parse(data)
+        let infos = ServerInfo.parseNBT(data)
         console.log(JSON.stringify(infos, (k, v) => {
             if (k == 'icon') return ''
             return v
@@ -71,10 +71,8 @@ describe('ForgeMod', () => {
 describe('Resoucepack', () => {
     it('shold read res pack correctly', (done) => {
         const buff = fs.readFileSync('./tests/assets/sample-resourcepack.zip')
-        ResourcePack.parse('sample', buff, true)
-            .then(v => {
-                done()
-            })
+        ResourcePack.read('sample', buff)
+            .then(v => { done() })
     })
 })
 describe('Language', () => {
