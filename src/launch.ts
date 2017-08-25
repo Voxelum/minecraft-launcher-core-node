@@ -1,5 +1,5 @@
 import { Version, Library, Native, Artifact } from './version'
-import { AuthResponse, UserType } from './auth';
+import { Auth, UserType } from './auth';
 import { exec, ChildProcess } from 'child_process'
 import * as fs from 'fs-extra'
 import * as path from 'path'
@@ -40,7 +40,7 @@ export namespace Launcher {
         ignorePatchDiscrepancies?: boolean
     }
 
-    export async function launch(auth: AuthResponse, options: Option): Promise<ChildProcess> {
+    export async function launch(auth: Auth, options: Option): Promise<ChildProcess> {
         await fs.ensureDir(options.gamePath)
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
@@ -81,7 +81,7 @@ export namespace Launcher {
         }
     }
 
-    function genArgs(auth: AuthResponse, options: any, version: Version): string[] {
+    function genArgs(auth: Auth, options: any, version: Version): string[] {
         let mc = new MinecraftFolder(options.resourcePath)
         let cmd: string[] = [];
         if (options.javaPath.match(/.* *.*/)) { options.javaPath = '"' + options.javaPath + '"' }

@@ -13,8 +13,8 @@ function writeString(buff: ByteBuffer, string: string) {
 }
 
 export namespace ServerInfo {
-    export function readFromNBT(buf: Buffer): ServerInfo[] {
-        let data = NBT.read(buf)
+    export function parseNBT(buf: Buffer): ServerInfo[] {
+        let data = NBT.parse(buf)
         if (data.root.servers) return data.root.servers
         return []
     }
@@ -98,11 +98,80 @@ export namespace ServerInfo {
             })
         });
     }
-    export function parseFrame(obj: ServerStatusFrame) {
+
+    export async function fetchStatusFrame(server: ServerInfo, options?: { protocol?: number, timeout?: number }): Promise<ServerStatusFrame> {
+        const port = server.port ? server.port : 25565;
+        const protocol = options ? options.protocol ? options.protocol : 210 : 210;
+        const host = server.host;
+        const timeout = options ? options.timeout : undefined;
+        const connection = await startConnection(host, port, timeout);
+        const frame = JSON.parse(await handshake(host, port, protocol, connection)) as ServerStatusFrame;
+        frame.ping = await ping(host, port, connection);
+        connection.end();
+        return frame;
+    }
+    export function fetchStatus(server: ServerInfo, options?: { protocol: number, timeout: number }): Promise<ServerStatus> {
+        return fetchStatusFrame(server, options).then(ServerStatus.from)
+    }
+}
+
+export interface ServerInfo {
+    name?: string;
+    host: string;
+    port?: number;
+    icon?: string;
+    isLanServer?: boolean;
+    resourceMode?: ResourceMode;
+}
+
+export interface ServerStatusFrame {
+    version: {
+        name: string,
+        protocol: number,
+    },
+    players: {
+        max: number,
+        online: number,
+        sample?: Array<{ id: string, name: string }>,
+    },
+    description: object | string,
+    favicon: string | '',
+    modinfo?: {
+        type: string | 'FML',
+        modList: Array<Forge.ModIndentity>
+    },
+    ping: number,
+}
+
+export class ServerStatus {
+    pingToServer: number;
+    static pinging() { return new ServerStatus(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
+    static error() { return new ServerStatus(TextComponent.str('Error'), TextComponent.str("Error"), -1, -1, -1) }
+    constructor(
+        readonly gameVersion: TextComponent,
+        readonly serverMOTD: TextComponent,
+        readonly protocolVersion: number,
+        readonly onlinePlayers: number,
+        readonly capacity: number,
+        readonly icon?: string,
+        readonly playerList?: GameProfile[],
+        readonly modInfos?: {
+            type: string,
+            modList: Array<Forge.ModIndentity>
+        }) { }
+
+    toString(): string {
+        return JSON.stringify(this, (k, v) => {
+            if (k == 'gameVersion') return v + ''
+            if (k == 'serverMOTD') return v + ''
+            return v
+        })
+    }
+    static from(obj: ServerStatusFrame) {
         let motd: TextComponent = TextComponent.str('')
         if (obj.description) {
             if (typeof (obj.description) === 'object')
-                motd = TextComponent.fromObject(obj.description)
+                motd = TextComponent.from(obj.description)
             else if (typeof (obj.description) === 'string')
                 motd = TextComponent.str(obj.description)
         }
@@ -144,72 +213,5 @@ export namespace ServerInfo {
             }
         }
         return new ServerStatus(versionText, motd, protocol, online, max, favicon, profiles, modInfo)
-    }
-    export async function fetchServerStatusFrame(server: ServerInfo, options?: { protocol?: number, timeout?: number }): Promise<ServerStatusFrame> {
-        const port = server.port ? server.port : 25565;
-        const protocol = options ? options.protocol ? options.protocol : 210 : 210;
-        const host = server.host;
-        const timeout = options ? options.timeout : undefined;
-        const connection = await startConnection(host, port, timeout);
-        const frame = JSON.parse(await handshake(host, port, protocol, connection)) as ServerStatusFrame;
-        frame.ping = await ping(host, port, connection);
-        connection.end();
-        return frame;
-    }
-    export function fetchServerStatus(server: ServerInfo, options?: { protocol: number, timeout: number }): Promise<ServerStatus> {
-        return fetchServerStatusFrame(server, options).then(parseFrame)
-    }
-}
-
-export interface ServerInfo {
-    name?: string;
-    host: string;
-    port?: number;
-    icon?: string;
-    isLanServer?: boolean;
-    resourceMode?: ResourceMode;
-}
-
-export interface ServerStatusFrame {
-    version: {
-        name: string,
-        protocol: number,
-    },
-    players: {
-        max: number,
-        online: number,
-        sample?: Array<{ id: string, name: string }>,
-    },
-    description: object | string,
-    favicon: string | '',
-    modinfo?: {
-        type: string | 'FML',
-        modList: Array<Forge.ModIndentity>
-    },
-    ping: number,
-}
-export class ServerStatus {
-    pingToServer: number;
-    static pinging() { return new ServerStatus(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
-    static error() { return new ServerStatus(TextComponent.str('Error'), TextComponent.str("Error"), -1, -1, -1) }
-    constructor(
-        readonly gameVersion: TextComponent,
-        readonly serverMOTD: TextComponent,
-        readonly protocolVersion: number,
-        readonly onlinePlayers: number,
-        readonly capacity: number,
-        readonly icon?: string,
-        readonly playerList?: GameProfile[],
-        readonly modInfos?: {
-            type: string,
-            modList: Array<Forge.ModIndentity>
-        }) { }
-
-    toString(): string {
-        return JSON.stringify(this, (k, v) => {
-            if (k == 'gameVersion') return v + ''
-            if (k == 'serverMOTD') return v + ''
-            return v
-        })
     }
 }

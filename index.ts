@@ -1,4 +1,4 @@
-export { GameProfile, UserType, AuthResponse, AuthService } from './src/auth'
+export { GameProfile, UserType, Auth, AuthService } from './src/auth'
 export { GameType, ResourceMode, Pos2, Pos3, GameRule } from './src/game'
 export { ServerInfo, ServerStatus, ServerStatusFrame } from './src/server'
 export { TextComponent, TextFormatting, Style } from './src/text'

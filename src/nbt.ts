@@ -1,5 +1,6 @@
 import * as gzip from 'zlib'
 import * as ByteBuffer from 'bytebuffer'
+import function from '../dist/src/utils/checksum';
 
 //not finished yet...
 export namespace NBT {
@@ -143,7 +144,7 @@ export namespace NBT {
         write(buf: ByteBuffer, value: any, context: { scope?: any, find: (id: string) => any }): void;
     }
 
-    export function read(fileData: Buffer, compressed: boolean = false): { root: any, schema: any } {
+    export function parse(fileData: Buffer, compressed: boolean = false): { root: any, schema: any } {
         if (compressed) {
             let zip = gzip.gunzipSync(fileData);
             let bytebuffer = ByteBuffer.wrap(zip);

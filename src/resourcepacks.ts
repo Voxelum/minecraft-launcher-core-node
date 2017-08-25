@@ -6,19 +6,17 @@ export class ResourcePack {
 }
 
 export namespace ResourcePack {
-    async function readZip(fileName: string, zipFile: Zip, readIcon?: boolean) {
+    async function readZip(fileName: string, zipFile: Zip) {
         let { description, pack_format } = await zipFile.file('pack.mcmeta').async('nodebuffer').then(data => JSON.parse(data.toString()).pack);
-        let icon = readIcon ?
-            await zipFile.file('pack.png').async('nodebuffer')
-                .then(data => 'data:image/png;base64, ' + data.toString('base64')) :
-            '';
+        let icon = ''
+        try {
+            icon = await zipFile.file('pack.png').async('nodebuffer')
+                .then(data => 'data:image/png;base64, ' + data.toString('base64'));
+        } catch (e) { }
         return new ResourcePack(fileName, description, pack_format, icon)
     }
-    export async function readFromFile(fileName: string, readIcon: boolean = false): Promise<ResourcePack> {
-        return readFromBuffer(fileName, await fs.readFile(fileName), readIcon)
-    }
-    export function readFromBuffer(fileName: string, buffer: Buffer, readIcon: boolean = false): Promise<ResourcePack> {
-        return readZip(fileName, new Zip(buffer), readIcon);
+    export async function read(filePath: string, buffer?: Buffer): Promise<ResourcePack> {
+        return readZip(filePath, new Zip(buffer ? buffer : await fs.readFile(filePath)));
     }
 }
 

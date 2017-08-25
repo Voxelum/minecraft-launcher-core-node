@@ -206,17 +206,19 @@ export namespace TextComponent {
         return new TextComponentString(s);
     }
 
-    export function fromObject(obj: any): TextComponent {
+    export function from(obj: any): TextComponent {
+        if (typeof obj === 'string') 
+            return fromFormattedString(obj)
         let component: TextComponent | undefined = undefined
         if (obj.text) component = TextComponent.str(obj.text)
         if (!component) component = TextComponent.str('')
         if (obj.extra && obj.extra instanceof Array)
             for (let element of obj.extra)
-                component.append(fromObject(element))
+                component.append(from(element))
         return component
     }
 
-    export function fromFormattedString(formatted: string): TextComponent {
+    function fromFormattedString(formatted: string): TextComponent {
         let firstCode = formatted.indexOf('§')
         if (firstCode == -1) return new TextComponentString(formatted)
 

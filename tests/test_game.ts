@@ -32,7 +32,7 @@ describe("GameSetting", () => {
 describe('ServerRead', () => {
     it('should read the server.dat correctly', () => {
         let data = fs.readFileSync('./tests/assets/servers.dat')
-        let infos = ServerInfo.readFromNBT(data)
+        let infos = ServerInfo.parse(data)
         console.log(JSON.stringify(infos, (k, v) => {
             if (k == 'icon') return ''
             return v
@@ -42,14 +42,14 @@ describe('ServerRead', () => {
 
 describe('ServerPing', () => {
     it('should ping the server and return info correctly', (done) => {
-        ServerInfo.fetchServerStatus({
+        ServerInfo.fetchStatus({
             host: 'mc.crafter.me',
         }).then(status => {
             done()
         })
     });
     it('should catch the timeout exception', (done) => {
-        ServerInfo.fetchServerStatus({
+        ServerInfo.fetchStatus({
             host: 'crafter.me',
         }).then(status => {
             done(new Error('this should not happend'))
@@ -71,7 +71,7 @@ describe('ForgeMod', () => {
 describe('Resoucepack', () => {
     it('shold read res pack correctly', (done) => {
         const buff = fs.readFileSync('./tests/assets/sample-resourcepack.zip')
-        ResourcePack.readFromBuffer('sample', buff, true)
+        ResourcePack.parse('sample', buff, true)
             .then(v => {
                 done()
             })
@@ -79,7 +79,7 @@ describe('Resoucepack', () => {
 })
 describe('Language', () => {
     it('should throw exception', (done) => {
-        Language.parse('./', '1.12').catch(e => {
+        Language.read('./', '1.12').catch(e => {
             assert.equal((e as Error).message, 'The version indexes json does not exist. Maybe the game assets are incompleted!')
             done()
         })

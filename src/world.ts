@@ -51,8 +51,8 @@ export namespace WorldInfo {
             catch (e) { return false; }
         }
     }
-    export function read(buf: Buffer): WorldInfo {
-        let nbt = NBT.read(buf, true)
+    export function parse(buf: Buffer): WorldInfo {
+        let nbt = NBT.parse(buf, true)
         let root = nbt.root.Data
         return new WorldInfo(root.LevelName, root.SizeOnDisk, root.LastPlayed, root.GameRules,
             root.DataVersion, root.Version, root.generatorName,

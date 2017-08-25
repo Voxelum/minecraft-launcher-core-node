@@ -23,7 +23,7 @@ import * as http from 'http';
 //this module migrates from jmccc: https://github.com/to2mbn/JMCCC/tree/master/jmccc-yggdrasil-authenticator
 //@author huangyuhui
 
-export interface AuthResponse {
+export interface Auth {
     readonly clientToken: string
     readonly accessToken: string
     readonly selectedProfile: GameProfile
@@ -34,8 +34,8 @@ export interface AuthResponse {
 }
 
 export interface AuthService {
-    login(username: string, password?: string, clientToken?: string): Promise<AuthResponse>;
-    refresh(clientToken: string, accessToken: string, profile: string): Promise<AuthResponse>;
+    login(username: string, password?: string, clientToken?: string): Promise<Auth>;
+    refresh(clientToken: string, accessToken: string, profile: string): Promise<Auth>;
     validate(accessToken: string, clientToken?: string): Promise<boolean>;
     invalide(accessToken: string, clientToken: string): void;
     signout(username: string, password: string): void;
@@ -93,7 +93,7 @@ export namespace AuthService {
 
         }
 
-        private requestAndHandleResponse(payload: any, path: string): Promise<AuthResponse> {
+        private requestAndHandleResponse(payload: any, path: string): Promise<Auth> {
             return this.request(payload, path).then(s => {
                 let obj = JSON.parse(s)
                 if (obj.error)
@@ -115,7 +115,7 @@ export namespace AuthService {
             })
         }
 
-        login(username: string, password?: string, clientToken?: string | undefined): Promise<AuthResponse> {
+        login(username: string, password?: string, clientToken?: string | undefined): Promise<Auth> {
             let payload = {
                 agent: 'Minecraft',
                 username: username,
@@ -126,7 +126,7 @@ export namespace AuthService {
             return this.requestAndHandleResponse(payload, this.api.authenticate)
         }
 
-        refresh(clientToken: string, accessToken: string, profile?: string): Promise<AuthResponse> {
+        refresh(clientToken: string, accessToken: string, profile?: string): Promise<Auth> {
             let payloadObj: any = {
                 // agent: 'Minecraft',
                 clientToken: clientToken,
@@ -160,7 +160,7 @@ export namespace AuthService {
 
     export function newOfflineAuthService(): AuthService {
         return {
-            login(username: string, password: string, clientToken?: string): Promise<AuthResponse> {
+            login(username: string, password: string, clientToken?: string): Promise<Auth> {
                 return Promise.resolve({
                     accessToken: v4(),
                     clientToken: clientToken || v4(),
@@ -174,7 +174,7 @@ export namespace AuthService {
                     userType: UserType.Mojang
                 })
             },
-            refresh(clientToken: string, accessToken: string, profile: string): Promise<AuthResponse> {
+            refresh(clientToken: string, accessToken: string, profile: string): Promise<Auth> {
                 throw new Error('Unsupported operation')
             },
             validate(accessToken: string, clientToken?: string): Promise<boolean> {
@@ -185,7 +185,7 @@ export namespace AuthService {
         }
     }
 
-    export function offlineAuth(username: string): AuthResponse {
+    export function offlineAuth(username: string): Auth {
         return {
             accessToken: v4(),
             clientToken: v4(),
@@ -205,7 +205,7 @@ export namespace AuthService {
         username: string,
         password: string,
         clientToken?: string
-    }): Promise<AuthResponse> {
+    }): Promise<Auth> {
         return newYggdrasilAuthService(option.api).login(option.username, option.password, option.clientToken)
     }
 }

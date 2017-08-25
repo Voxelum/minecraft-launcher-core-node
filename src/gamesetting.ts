@@ -34,7 +34,7 @@ export namespace GameSetting {
         export type Decreased = 1
         export type All = 0
     }
-    export function readFromStringRaw(str: string): object | undefined {
+    export function parse(str: string): GameSetting | undefined {
         let lines = str.split('\n')
         const intPattern = /^\d+$/
         const floatPattern = /[-+]?[0-9]*\.[0-9]+/
@@ -57,25 +57,22 @@ export namespace GameSetting {
                     return { [pair[0]]: value }
                 })
                 .reduce((prev, current) => Object.assign(prev, current))
-            return setting
+            return setting as GameSetting
         }
         return undefined
     }
-    export function readFromString(str: string): GameSetting | undefined {
-        return readFromStringRaw(str) as GameSetting
-    }
-    export function writeToStringSafe(setting: GameSetting | any, original: string): string {
-        const model = readFromStringRaw(original) as any
-        for (const key in model) {
-            if (model.hasOwnProperty(key) && setting.hasOwnProperty(key)) {
-                model[key] = setting[key]
+    export function stringify(setting: GameSetting | any, original?: string): string {
+        let model: any;
+        if (original) {
+            model = parse(original) as any
+            for (const key in model) {
+                if (model.hasOwnProperty(key) && setting.hasOwnProperty(key)) {
+                    model[key] = setting[key]
+                }
             }
-        }
-        return writeToString(model)
-    }
-    export function writeToString(setting: GameSetting | any): string {
-        return Object.keys(setting).map(key => {
-            const val = (setting as any)[key];
+        } else model = model
+        return Object.keys(model).map(key => {
+            const val = model[key];
             if (typeof val !== 'string')
                 return `${key}:${JSON.stringify(val)}`
             else return `${key}:${val}`
