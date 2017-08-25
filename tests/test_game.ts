@@ -1,9 +1,10 @@
-import * as assert from 'assert'
-import { GameSetting, ServerInfo, ServerStatus } from '../index'
-import { TextComponent } from '../index'
+import * as assert from 'assert';
+import * as fs from 'fs';
+import {
+    GameSetting, ServerInfo, ServerStatus, TextComponent,
+    Language, Mod, ResourcePack, WorldInfo, Forge
+} from '../index';
 
-import * as fs from 'fs'
-import { Language, Mod, ResourcePack, WorldInfo, Forge } from '../index';
 describe('TextComponent', () => {
     it('should convert normal text', () => {
         let raw = 'testCommon tesxt'
@@ -47,7 +48,7 @@ describe('ServerPing', () => {
         }).then(status => {
             done()
         })
-        .catch(done)
+            .catch(done)
     }).timeout(100000);
     it('should catch the timeout exception', (done) => {
         ServerInfo.fetchStatus({
