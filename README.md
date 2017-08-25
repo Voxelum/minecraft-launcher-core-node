@@ -1,6 +1,6 @@
 # ts-minecraft
 Provide several useful function for Minecraft in typescript
-# Usage
+## Usage
 `import { NBT, ServerInfo, ...so on...} from 'ts-minecraft'`
 
 !!!!!!!!!
@@ -8,7 +8,7 @@ Notice that this package is still WIP, no much tested yet.
 Use with your own risk....
 !!!!!!!!!
 
-# Getting Started
+## Getting Started
 - **[NBT](#nbt)**
 - **[World](#worldinfo)**<br>
 - **[Server](#server)**<br>
@@ -20,7 +20,7 @@ Use with your own risk....
 - **[Auth](#auth)**<br>
 - **[Launch](#launch)**<br>
 
-## NBT
+### NBT
     import { NBT } from 'ts-minecraft'
     const fileData: Buffer;
     const compressed: boolean;
@@ -28,13 +28,13 @@ Use with your own risk....
 
 Read a NBT buffer to an JSON object. 
 
-## WorldInfo
+### WorldInfo
     import { WorldInfo } from 'ts-minecraft'
     const levelDatBuffer: Buffer;
     const info: WorldInfo = WorldInfo.parse(levelDatBuffer);
 Read a WorldInfo from buffer.
 
-## Server
+### Server
     import { ServerStatus, ServerInfo } from 'ts-minecraft'
     const seversDatBuffer: Buffer;
     const infos: ServerInfo[] = ServerInfo.parseNBT(seversDatBuffer);
@@ -43,7 +43,7 @@ Read a WorldInfo from buffer.
 
 Read sever info and fetch its status.
 
-## Minecraft Install
+### Minecraft Install
     import { VersionMeta, VersionMetaList, Version, MetaContainer, MinecraftLocation } from 'ts-minecraft'
     const minecraft: MinecraftLocation;
     const versionPromise: Promise<Version> = Version.updateVersionMeta()
@@ -52,7 +52,7 @@ Read sever info and fetch its status.
 
 Fully install vanilla minecraft client including assets and libs.
 
-## GameSetting
+### GameSetting
     import { GameSetting } from 'ts-minecraft'
     const settingString;
     const setting: GameSetting = GameSetting.parse(settingString);
@@ -60,7 +60,7 @@ Fully install vanilla minecraft client including assets and libs.
 
 Serialize/Deserialize the minecraft game setting string.
 
-## Language
+### Language
     import { Language, MinecraftLocation } from 'ts-minecraft'
     const location: MinecraftLocation;
     const version: string;
@@ -68,14 +68,14 @@ Serialize/Deserialize the minecraft game setting string.
 
 Read language info from version
 
-## ResourcePack
+### ResourcePack
     import { ResourcePack } from 'ts-minecraft'
     const fileFullPath;
     Promise<ResourcePack> packPromise = ResourcePack.read(fileFullPath);
 
 Read ResourcePack from filePath
 
-## TextComponent
+### TextComponent
     import { TextComponent } from 'ts-minecraft'
     const fromString: TextComponent = TextComponent.str('from string');
     const formattedString: string;
@@ -83,7 +83,7 @@ Read ResourcePack from filePath
 
 Create TextComponent from string OR Minecraft's formatted string, like '§cThis is red'
 
-## Auth
+### Auth
     import { Auth, AuthService } from 'ts-minecraft'
     const username: string;
     const password: string;
@@ -92,7 +92,7 @@ Create TextComponent from string OR Minecraft's formatted string, like '§cThis 
 
 Using AuthService to online/offline auth
 
-## Launch
+### Launch
     import { Launcher, Auth, AuthService } from 'ts-minecraft'
     const version: string;
     const javaPath: string;
@@ -102,13 +102,13 @@ Using AuthService to online/offline auth
 
 Launch minecraft from a version
 
-# Future Works
+## Future Works
 - TextComponent to style string
 
-# Issue
+## Issue
 - Really need runtime check for parsed Forge/LiteMod data(Hopefully, more people write this correctly)
 
-# Credit
-[Haowei Wen](https://github.com/yushijinhun), the author of [JMCCC](https://github.com/to2mbn/JMCCC), [Authlib Injector](https://github.com/to2mbn/authlib-injector), and [Indexyz](https://github.com/Indexyz), helps me a lot on Minecraft launching, authing.
+## Credit
+[Haowei Wen](https://github.com/yushijinhun), the author of [JMCCC](https://github.com/to2mbn/JMCCC), [Authlib Injector](https://github.com/to2mbn/authlib-injector), and [Indexyz](https://github.com/Indexyz), help me a lot on Minecraft launching, authing.
 
 [Yu Xuanchi](https://github.com/yuxuanchiadm), co-worker, quality control of this project.
