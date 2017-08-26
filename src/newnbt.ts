@@ -114,21 +114,53 @@ export namespace NEWNBT {
             super(TagType.List);
             return new Proxy(this, {
                 has(target: TagList<T>, p: PropertyKey): boolean {
-                    // TODO impl
-                    return false;
+                    if (typeof p === 'string') {
+                        let n: number = Number(p);
+                        if (!Number.isInteger(n) || n < 0)
+                            return false;
+                        p = n;
+                    } else if (typeof p !== 'number')
+                        return false;
+                    return p >= 0 && p < target.list.length;
                 },
                 get(target: TagList<T>, p: PropertyKey, receiver: any): any {
-                    // TODO impl
+                    if (typeof p === 'string') {
+                        let n: number = Number(p);
+                        if (!Number.isInteger(n) || n < 0)
+                            return undefined;
+                        p = n;
+                    } else if (typeof p !== 'number')
+                        return undefined;
+                    if (p < 0 || p >= target.list.length)
+                        return undefined;
+                    return target.list[p];
                 },
                 set(target: TagList<T>, p: PropertyKey, value: any, receiver: any): boolean {
-                    // TODO impl
-                    return false;
+                    if (typeof p === 'string') {
+                        let n: number = Number(p);
+                        if (!Number.isInteger(n) || n < 0)
+                            return false;
+                        p = n;
+                    } else if (typeof p !== 'number')
+                        return false;
+                    if (p < 0 || p > target.list.length)
+                        return false;
+                    if (typeof value !== 'object' || !(value instanceof TagBase))
+                        return false;
+                    if (!TagList.checkElement(value, target.elementTagType))
+                        return false;
+                    target.list[p] = value as T;
+                    return true;
                 }
             });
         }
 
         *[Symbol.iterator](): Iterator<T> {
             // TODO impl
+        }
+
+        private static checkElement(element: TagBase, elementTagType: TagType): boolean {
+            return element !== null && element !== undefined && element.tagType === elementTagType;
         }
     }
 }
