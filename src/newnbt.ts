@@ -19,12 +19,12 @@ export namespace NEWNBT {
         LongArray = 12
     }
 
-    export type ScalarTypes = number | Long | string | Buffer;
-
     export abstract class TagBase {
         protected constructor(readonly tagType: TagType) {}
     }
 
+    export type ScalarTypes = number | Long | string | Buffer;
+    
     export class TagScalar<T extends ScalarTypes> extends TagBase {
         protected _value: T;
 
@@ -41,6 +41,17 @@ export namespace NEWNBT {
             TagScalar.checkTagValue(this.tagType, value);
             this._value = value;
         }
+
+        static newByte(value: number): TagByte { return new TagScalar(TagType.Byte, value); }
+        static newShort(value: number): TagShort { return new TagScalar(TagType.Short, value); }
+        static newInt(value: number): TagInt { return new TagScalar(TagType.Int, value); }
+        static newLong(value: Long): TagLong { return new TagScalar(TagType.Long, value); }
+        static newFloat(value: number): TagFloat { return new TagScalar(TagType.Float, value); }
+        static newDouble(value: number): TagDouble { return new TagScalar(TagType.Double, value); }
+        static newByteArray(value: Buffer): TagByteArray { return new TagScalar(TagType.ByteArray, value); }
+        static newString(value: string): TagString { return new TagScalar(TagType.String, value); }
+        static newIntArray(value: Buffer): TagIntArray { return new TagScalar(TagType.IntArray, value); }
+        static newLongArray(value: Buffer): TagLongArray { return new TagScalar(TagType.LongArray, value); }
 
         private static checkTagValue(tagType: TagType, value: ScalarTypes): void {
             if (tagType === TagType.End || tagType === TagType.List || tagType === TagType.Compound)
@@ -108,7 +119,7 @@ export namespace NEWNBT {
     export type TagLongArray = TagScalar<Buffer>;
 
     export class TagList<T extends TagBase> extends TagBase implements Iterable<T> {
-        protected list: Array<T>
+        protected readonly list: Array<T> = [];
 
         protected constructor(readonly elementTagType: TagType) {
             super(TagType.List);
@@ -117,20 +128,20 @@ export namespace NEWNBT {
                     if (typeof p === 'string') {
                         let n: number = Number(p);
                         if (!Number.isInteger(n) || n < 0)
-                            return false;
+                            return Reflect.has(target, p);
                         p = n;
                     } else if (typeof p !== 'number')
-                        return false;
+                        return Reflect.has(target, p);
                     return p >= 0 && p < target.list.length;
                 },
                 get(target: TagList<T>, p: PropertyKey, receiver: any): any {
                     if (typeof p === 'string') {
                         let n: number = Number(p);
                         if (!Number.isInteger(n) || n < 0)
-                            return undefined;
+                            return Reflect.get(target, p, receiver);
                         p = n;
                     } else if (typeof p !== 'number')
-                        return undefined;
+                        return Reflect.get(target, p, receiver);
                     if (p < 0 || p >= target.list.length)
                         return undefined;
                     return target.list[p];
@@ -139,10 +150,10 @@ export namespace NEWNBT {
                     if (typeof p === 'string') {
                         let n: number = Number(p);
                         if (!Number.isInteger(n) || n < 0)
-                            return false;
+                            return Reflect.set(target, p, value, receiver);
                         p = n;
                     } else if (typeof p !== 'number')
-                        return false;
+                        return Reflect.set(target, p, value, receiver);
                     if (p < 0 || p > target.list.length)
                         return false;
                     if (typeof value !== 'object' || !(value instanceof TagBase))
@@ -155,12 +166,32 @@ export namespace NEWNBT {
             });
         }
 
+        [index: number]: T;
+
         *[Symbol.iterator](): Iterator<T> {
-            // TODO impl
+            for (let i: number = 0; i < this.list.length; i++)
+                yield this.list[i];
         }
+
+        static newByteList(): TagList<TagByte> { return new TagList(TagType.Byte); }
+        static newShortList(): TagList<TagShort> { return new TagList(TagType.Short); }
+        static newIntList(): TagList<TagInt> { return new TagList(TagType.Int); }
+        static newLongList(): TagList<TagLong> { return new TagList(TagType.Long); }
+        static newFloatList(): TagList<TagFloat> { return new TagList(TagType.Float); }
+        static newDoubleList(): TagList<TagDouble> { return new TagList(TagType.Double); }
+        static newByteArrayList(): TagList<TagByteArray> { return new TagList(TagType.ByteArray); }
+        static newStringList(): TagList<TagString> { return new TagList(TagType.String); }
+        static newListList(): TagList<TagList<TagBase>> { return new TagList(TagType.List); }
+        static newListCompound(): TagList<TagCompound> { return new TagList(TagType.Compound); }
+        static newIntArrayList(): TagList<TagIntArray> { return new TagList(TagType.IntArray); }
+        static newLongArrayList(): TagList<TagLongArray> { return new TagList(TagType.LongArray); }
 
         private static checkElement(element: TagBase, elementTagType: TagType): boolean {
             return element !== null && element !== undefined && element.tagType === elementTagType;
         }
+    }
+
+    export class TagCompound extends TagBase {
+
     }
 }
