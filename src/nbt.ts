@@ -234,9 +234,9 @@ export namespace NBT {
             super(Type.List, list ? list : []);
         }
         get length() { return this.value.length; }
-        get value(): Array<Base> { return this.value; }
+        readonly value: Array<Base>;
         toJSON() {
-            return JSON.parse(JSON.stringify(this))
+            return this.value.map(v => v.toJSON());
         }
     }
 
@@ -273,7 +273,7 @@ export namespace NBT {
         doubles(name: string, value: number[]): this { this.value[name] = new List(value.map(v => new Primitive(Type.Double, v))); return this; }
         strings(name: string, value: string[]): this { this.value[name] = new List(value.map(v => new Primitive(Type.String, v))); return this }
         compounds(name: string, value: Compound[]): this { this.value[name] = new List(value); return this; }
-        
+
         list(name: string, value: Base[]): this {
             if (value.length == 0) return this;
             this.value[name] = new List(value)
@@ -289,14 +289,16 @@ export namespace NBT {
         keys() { return Object.keys(this.value) }
         [Symbol.iterator]() { return this.keys().map(k => this.value[k]) }
         values() { return this.keys().map(k => this.value[k]) }
+        readonly value: { [key: string]: Base };
         toJSON() {
-            return JSON.parse(JSON.stringify(this.value))
+            return this.keys().map(k => Object.create({ [k]: this.value[k].toJSON() }))
+                .reduce((prev, cur) => Object.assign(cur, prev));
         }
     }
     export class Primitive extends Base {
         constructor(type: NBT.Type, value: string | number | boolean | number[] | Long) { super(type, value) }
         toJSON() {
-            return this.value
+            return (this.value instanceof Array) ? [...this.value] : this.value;
         }
     }
 }
