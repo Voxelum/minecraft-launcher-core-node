@@ -6,6 +6,7 @@ export { Version, VersionMeta, VersionMetaList } from './src/version'
 export { MinecraftFolder, MinecraftLocation } from './src/utils/folder';
 export * from './src/download';
 export * from './src/nbt'
+export * from './src/newnbt'
 export * from './src/launch'
 export * from './src/world'
 export * from './src/language'
