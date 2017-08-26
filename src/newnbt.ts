@@ -26,9 +26,20 @@ export namespace NEWNBT {
     }
 
     export class TagScalar<T extends ScalarTypes> extends TagBase {
-        protected constructor(tagType: TagType, protected value: T) {
+        protected _value: T;
+
+        protected constructor(tagType: TagType, value: T) {
             super(tagType);
-            TagScalar.checkTagValue(tagType, value);
+            this.value = value;
+        }
+
+        get value(): T {
+            return this._value;
+        }
+
+        set value(value: T) {
+            TagScalar.checkTagValue(this.tagType, value);
+            this._value = value;
         }
 
         private static checkTagValue(tagType: TagType, value: ScalarTypes): void {
@@ -95,4 +106,16 @@ export namespace NEWNBT {
     export type TagString = TagScalar<string>;
     export type TagIntArray = TagScalar<Buffer>;
     export type TagLongArray = TagScalar<Buffer>;
+
+    export class TagList<T extends TagBase> extends TagBase implements Iterable<T> {
+        protected list: Array<T>
+
+        protected constructor(readonly elementTagType: TagType) {
+            super(TagType.List);
+        }
+
+        *[Symbol.iterator](): Iterator<T> {
+            // TODO impl
+        }
+    }
 }
