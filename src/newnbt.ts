@@ -112,6 +112,19 @@ export namespace NEWNBT {
 
         protected constructor(readonly elementTagType: TagType) {
             super(TagType.List);
+            return new Proxy(this, {
+                has(target: TagList<T>, p: PropertyKey): boolean {
+                    // TODO impl
+                    return false;
+                },
+                get(target: TagList<T>, p: PropertyKey, receiver: any): any {
+                    // TODO impl
+                },
+                set(target: TagList<T>, p: PropertyKey, value: any, receiver: any): boolean {
+                    // TODO impl
+                    return false;
+                }
+            });
         }
 
         *[Symbol.iterator](): Iterator<T> {
