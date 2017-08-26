@@ -143,6 +143,21 @@ export namespace NBT {
         write(buf: ByteBuffer, value: any, context: { scope?: any, find: (id: string) => any }): void;
     }
 
+    export function compound(original?: Compound | { [key: string]: Base } | Map<string, Base>, deepcopy: boolean = false) {
+        return new NBT.Compound(original, deepcopy);
+    }
+    export function list(list: Base[]): List { return new List(list) }
+    export function boolean(value: boolean): Primitive { return new Primitive(Type.Byte, value); }
+    export function byte(value: number): Primitive { return new Primitive(Type.Byte, value);; }
+    export function short(value: number): Primitive { return new Primitive(Type.Short, value);; }
+    export function int(value: number): Primitive { return new Primitive(Type.Int, value);; }
+    export function long(value: number | Long): Primitive { return new Primitive(Type.Long, value);; }
+    export function float(value: number): Primitive { return new Primitive(Type.Float, value);; }
+    export function double(value: number): Primitive { return new Primitive(Type.Double, value);; }
+    export function string(value: string): Primitive { return new Primitive(Type.String, value); }
+    export function bytes(value: number[]): Primitive { return new Primitive(Type.ByteArray, value);; }
+    export function ints(value: number[]): Primitive { return new Primitive(Type.IntArray, value);; }
+
     export function parse(fileData: Buffer, compressed: boolean = false): { root: any, schema: any } {
         if (compressed) {
             let zip = gzip.gunzipSync(fileData);
@@ -248,8 +263,17 @@ export namespace NBT {
         float(name: string, value: number): this { this.value[name] = new Primitive(Type.Float, value); return this; }
         double(name: string, value: number): this { this.value[name] = new Primitive(Type.Double, value); return this; }
         string(name: string, value: string): this { this.value[name] = new Primitive(Type.String, value); return this }
+        compound(name: string, value: Compound): this { this.value[name] = value; return this }
+
         bytes(name: string, value: number[]): this { this.value[name] = new Primitive(Type.ByteArray, value); return this; }
         ints(name: string, value: number[]): this { this.value[name] = new Primitive(Type.IntArray, value); return this; }
+        shorts(name: string, value: number[]): this { this.value[name] = new List(value.map(v => new Primitive(Type.Short, v))); return this; }
+        longs(name: string, value: number[] | Long[]): this { this.value[name] = new List((value as any[]).map((v) => new Primitive(Type.Long, v))); return this; }
+        floats(name: string, value: number[]): this { this.value[name] = new List(value.map(v => new Primitive(Type.Float, v))); return this; }
+        doubles(name: string, value: number[]): this { this.value[name] = new List(value.map(v => new Primitive(Type.Double, v))); return this; }
+        strings(name: string, value: string[]): this { this.value[name] = new List(value.map(v => new Primitive(Type.String, v))); return this }
+        compounds(name: string, value: Compound[]): this { this.value[name] = new List(value); return this; }
+        
         list(name: string, value: Base[]): this {
             if (value.length == 0) return this;
             this.value[name] = new List(value)
