@@ -264,6 +264,11 @@ export namespace NewNBT {
         static newListCompound(): TagList<TagCompound> { return new TagList(TagType.Compound); }
         static newIntArrayList(): TagList<TagIntArray> { return new TagList(TagType.IntArray); }
         static newLongArrayList(): TagList<TagLongArray> { return new TagList(TagType.LongArray); }
+        static newAnyList(elementTagType: TagType): TagAnyList {
+            if (elementTagType === TagType.End)
+                throw new TypeError('Illegal element tag type');
+            return new TagList(elementTagType);
+        }
 
         private static checkElement(element: TagBase, elementTagType: TagType): boolean {
             return element !== null && element !== undefined && element.tagType === elementTagType;
@@ -386,8 +391,57 @@ export namespace NewNBT {
                 read(buf) { return TagScalar.newString(readJavaModifiedUTF8(buf)); },
                 write(buf, tag) { writeJavaModifiedUTF8(buf, tag.value); }
             } as IOHandler<TagString>,
-            [TagType.List]: undefined,
-            [TagType.Compound]: undefined,
+            [TagType.List]: {
+                read(buf) {
+                    let elementTagTypeByte: number = buf.readInt8();
+                    let elementTagType: TagType = readTagType(elementTagTypeByte);
+                    if (elementTagType === TagType.End)
+                        throw new Error('Illegal element tag type');
+                    let len: number = buf.readInt32();
+                    if (len < 0)
+                        throw new RangeError('Illegal size');
+                    let tag: TagAnyList = TagList.newAnyList(elementTagType);
+                    for (let i: number = 0; i < len; i++) {
+                        let element: TagBase = ofHandler<TagBase>(elementTagType).read(buf);
+                        tag[i] = element;
+                    }
+                    return tag;
+                },
+                write(buf, tag) {
+                    let elementTagType: TagType = tag.elementTagType;
+                    let elementTagTypeByte: number = writeTagType(elementTagType);
+                    buf.writeInt8(elementTagTypeByte);
+                    let len: number = tag.length;
+                    buf.writeInt32(len);
+                    for (let i: number = 0; i < len; i++) {
+                        let element: TagBase = tag[i];
+                        ofHandler<TagBase>(elementTagType).write(buf, element);
+                    }
+                }
+            } as IOHandler<TagAnyList>,
+            [TagType.Compound]: {
+                read(buf) {
+                    let tag: TagCompound = TagCompound.newCompound();
+                    for (let tagHead: TagHead = readTagHead(buf), tagType: TagType = tagHead.tagType;
+                        tagType !== TagType.End;
+                        tagHead = readTagHead(buf), tagType = tagHead.tagType) {
+                            let key: string = tagHead.tagName;
+                            let value: TagNormal = ofHandler<TagNormal>(tagType).read(buf);
+                            tag.set(key, value);
+                    }
+                    ofHandler<TagEnd>(TagType.End).read(buf);
+                    return tag;
+                },
+                write(buf, tag) {
+                    for (let [key, value] of tag) {
+                        let tagType: TagType = value.tagType;
+                        writeTagHead(buf, { tagType: tagType, tagName: key });
+                        ofHandler<TagBase>(tagType).write(buf, value);
+                    }
+                    writeTagHead(buf, { tagType: TagType.End, tagName: '' });
+                    ofHandler<TagEnd>(TagType.End).write(buf, TagEnd.newEnd());
+                }
+            } as IOHandler<TagCompound>,
             [TagType.IntArray]: {
                 read(buf) {
                     let len: number = buf.readInt32();

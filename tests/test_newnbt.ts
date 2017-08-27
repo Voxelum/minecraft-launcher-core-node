@@ -22,3 +22,25 @@ describe('Test', () => {
         console.log(compound.has('abc'));
     })
 })
+describe('TestEmpty', () => {
+    it('should empty nbt parse and write correctly', () => {
+        let nbtData: Buffer = Buffer.from([0x0A, 0x00, 0x00,                    //'': Compound
+            0x00]);                                                             //'': End
+        let rootTag: NewNBT.TagCompound = NewNBT.Persistence.readRoot(nbtData);
+        let testTag: NewNBT.TagCompound = NewNBT.TagCompound.newCompound();
+        assert.deepEqual(rootTag, testTag);
+        assert.deepEqual(NewNBT.Persistence.writeRoot(rootTag), nbtData);
+    })
+})
+describe('TestSignleValue', () => {
+    it('should signle value nbt parse and write correctly', () => {
+        let nbtData: Buffer = Buffer.from([0x0A, 0x00, 0x00,                    //'': Compound
+            0x03, 0x00, 0x03, 0x62, 0x61, 0x72, 0x00, 0x00, 0x00, 0x01,         //    'bar': Int = 1
+            0x00]);                                                             //'': End
+        let rootTag: NewNBT.TagCompound = NewNBT.Persistence.readRoot(nbtData);
+        let testTag: NewNBT.TagCompound = NewNBT.TagCompound.newCompound();
+        testTag.set('bar', NewNBT.TagScalar.newInt(1))
+        assert.deepEqual(rootTag, testTag);
+        assert.deepEqual(NewNBT.Persistence.writeRoot(rootTag), nbtData);
+    })
+})
