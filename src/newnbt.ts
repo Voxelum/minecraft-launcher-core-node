@@ -170,10 +170,16 @@ export namespace NEWNBT {
             return this.list.length;
         }
 
+        set length(length: number) {
+            if (length < 0 || length > this.list.length)
+                throw "Illegal length";
+            this.list.length = length;
+        }
+
         push(...items: T[]): number {
             for (let i: number = 0; i < items.length; i++)
                 if (!TagList.checkElement(items[i], this.elementTagType))
-                    throw "Illegal element"
+                    throw "Illegal element";
             return Array.prototype.push.apply(this.list, items);
         }
 
@@ -188,11 +194,11 @@ export namespace NEWNBT {
         unshift(...items: T[]): number {
             for (let i: number = 0; i < items.length; i++)
                 if (!TagList.checkElement(items[i], this.elementTagType))
-                    throw "Illegal element"
+                    throw "Illegal element";
             return Array.prototype.unshift.apply(this.list, items);
         }
 
-        *[Symbol.iterator](): Iterator<T> {
+        *[Symbol.iterator](): IterableIterator<T> {
             for (let i: number = 0; i < this.list.length; i++)
                 yield this.list[i];
         }
