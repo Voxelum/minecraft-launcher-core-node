@@ -2,7 +2,7 @@ import * as gzip from 'zlib'
 import * as ByteBuffer from 'bytebuffer'
 import * as Long from 'long'
 
-export namespace NEWNBT {
+export namespace NewNBT {
     export const enum TagType {
         End = 0,
         Byte = 1,
@@ -310,5 +310,23 @@ export namespace NEWNBT {
         }
 
         static newCompound(): TagCompound { return new TagCompound(); }
+    }
+
+    export namespace Persistence {
+        export interface ReadOptions {
+            compressed?: boolean;
+        }
+
+        export function readRoot(buffer: Buffer, options?: ReadOptions): TagCompound {
+            return readRoot(buffer, options);
+        }
+
+        export interface WriteOptions {
+            compressed?: boolean;
+        }
+
+        export function writeRoot(rootTag: TagCompound, options?: WriteOptions): Buffer {
+            return writeRoot(rootTag, options);
+        }
     }
 }
