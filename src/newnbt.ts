@@ -336,7 +336,10 @@ export namespace NewNBT {
         }
 
         let handlers: { [key: number]: IOHandler<TagBase> | undefined } = {
-            [TagType.End]: undefined,
+            [TagType.End]: {
+                read(buf) { return TagEnd.newEnd(); },
+                write(buf, tag) {}
+            } as IOHandler<TagEnd>,
             [TagType.Byte]: {
                read(buf) { return TagScalar.newByte(buf.readInt8()); },
                write(buf, tag) { buf.writeInt8(tag.value); }
@@ -489,6 +492,8 @@ export namespace NewNBT {
         function readTagHead(buf: ByteBuffer): TagHead {
             let tagTypeByte: number = buf.readInt8();
             let tagType: TagType = readTagType(tagTypeByte);
+            if (tagType === TagType.End)
+                return { tagType: tagType, tagName: '' };
             let tagNameTag: TagString = ofHandler<TagString>(TagType.String).read(buf);
             let tagName: string = tagNameTag.value;
             return { tagType: tagType, tagName: tagName };
@@ -497,9 +502,11 @@ export namespace NewNBT {
         function writeTagHead(buf: ByteBuffer, tagHead: TagHead): void {
             let tagType: TagType = tagHead.tagType;
             let tagTypeByte: number = writeTagType(tagType);
+            buf.writeInt8(tagTypeByte);
+            if (tagType === TagType.End)
+                return;
             let tagName: string = tagHead.tagName;
             let tagNameTag: TagString = TagScalar.newString(tagName);
-            buf.writeInt8(tagTypeByte);
             ofHandler<TagString>(TagType.String).write(buf, tagNameTag);
         }
 
