@@ -22,6 +22,7 @@ export namespace NewNBT {
     export abstract class TagBase {
         protected constructor(readonly tagType: TagType) {}
 
+        asTagEnd(): TagEnd { if (this.tagType !== TagType.End) throw new TypeError('Illegal tag type'); return this as any; };
         asTagByte(): TagByte { if (this.tagType !== TagType.Byte) throw new TypeError('Illegal tag type'); return this as any; };
         asTagShort(): TagShort { if (this.tagType !== TagType.Short) throw new TypeError('Illegal tag type'); return this as any; };
         asTagInt(): TagInt { if (this.tagType !== TagType.Int) throw new TypeError('Illegal tag type'); return this as any; };
@@ -34,6 +35,18 @@ export namespace NewNBT {
         asTagCompound(): TagCompound { if (this.tagType !== TagType.Compound) throw new TypeError('Illegal tag type'); return this as any; };
         asTagIntArray(): TagIntArray { if (this.tagType !== TagType.IntArray) throw new TypeError('Illegal tag type'); return this as any; };
         asTagLongArray(): TagLongArray { if (this.tagType !== TagType.LongArray) throw new TypeError('Illegal tag type'); return this as any; };
+    }
+
+    export type TagNormal = TagByte | TagShort | TagInt | TagLong | TagFloat | TagDouble | TagByteArray | TagString | TagAnyList | TagCompound | TagIntArray | TagLongArray;
+
+    export class TagEnd extends TagBase {
+        protected constructor() {
+            super(TagType.End);
+        }
+
+        private static readonly INSTANCE = new TagEnd();
+
+        static newEnd(): TagEnd { return TagEnd.INSTANCE; }
     }
 
     export type ScalarTypes = number | Long | string | Buffer;
@@ -259,15 +272,15 @@ export namespace NewNBT {
 
     export type TagAnyList = TagList<TagBase>;
 
-    export class TagCompound extends TagBase implements Iterable<[string, TagBase]> {
-        protected readonly map: { [key: string]: TagBase } = Object.create(null);
+    export class TagCompound extends TagBase implements Iterable<[string, TagNormal]> {
+        protected readonly map: { [key: string]: TagNormal } = Object.create(null);
         protected _size: number = 0;
 
         protected constructor() {
             super(TagType.Compound);
         }
 
-        *[Symbol.iterator](): IterableIterator<[string, TagBase]> {
+        *[Symbol.iterator](): IterableIterator<[string, TagNormal]> {
             for (let key in this.map)
                 yield [key, this.map[key]];
         }
@@ -286,7 +299,7 @@ export namespace NewNBT {
             return true;
         }
 
-        get(key: string): TagBase | undefined {
+        get(key: string): TagNormal | undefined {
             return this.map[key];
         }
 
@@ -294,11 +307,11 @@ export namespace NewNBT {
             return key in this.map;
         }
 
-        set(key: string, value: TagBase): this {
+        set(key: string, value: TagNormal): this {
             if (typeof value !== 'object' || !(value instanceof TagBase))
-                throw new TypeError('Illegal element');
-            if (value === null || value === undefined)
-                throw new TypeError('Illegal element');
+                throw new TypeError('Illegal value');
+            if (!TagCompound.checkValue(value))
+                throw new TypeError('Illegal value');
             if (!(key in this.map))
                 this._size++;
             this.map[key] = value;
@@ -310,6 +323,10 @@ export namespace NewNBT {
         }
 
         static newCompound(): TagCompound { return new TagCompound(); }
+
+        private static checkValue(value: TagNormal): boolean {
+            return value !== null && value !== undefined && value.tagType !== TagType.End;
+        }
     }
 
     export namespace Persistence {
@@ -442,7 +459,7 @@ export namespace NewNBT {
 
         export function writeRoot(rootTag: TagCompound, options?: WriteOptions): Buffer {
             const byteBuffer: ByteBuffer = new ByteBuffer();
-            let rootTagHead: TagHead = { tagType: rootTag.tagType, tagName: '' }
+            let rootTagHead: TagHead = { tagType: rootTag.tagType, tagName: '' };
             writeTagHead(byteBuffer, rootTagHead);
             ofHandler<TagCompound>(TagType.Compound).write(byteBuffer, rootTag);
             let buffer: Buffer = Buffer.from(byteBuffer.flip().toArrayBuffer());
@@ -466,21 +483,21 @@ export namespace NewNBT {
 
         interface TagHead {
             tagType: TagType;
-            tagName: string
+            tagName: string;
         }
 
         function readTagHead(buf: ByteBuffer): TagHead {
             let tagTypeByte: number = buf.readInt8();
             let tagType: TagType = readTagType(tagTypeByte);
             let tagNameTag: TagString = ofHandler<TagString>(TagType.String).read(buf);
-            let tagName = tagNameTag.value;
+            let tagName: string = tagNameTag.value;
             return { tagType: tagType, tagName: tagName };
         }
 
         function writeTagHead(buf: ByteBuffer, tagHead: TagHead): void {
             let tagType: TagType = tagHead.tagType;
             let tagTypeByte: number = writeTagType(tagType);
-            let tagName = tagHead.tagName;
+            let tagName: string = tagHead.tagName;
             let tagNameTag: TagString = TagScalar.newString(tagName);
             buf.writeInt8(tagTypeByte);
             ofHandler<TagString>(TagType.String).write(buf, tagNameTag);
