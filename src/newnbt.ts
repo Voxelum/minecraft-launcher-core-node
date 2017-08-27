@@ -166,12 +166,38 @@ export namespace NEWNBT {
             });
         }
 
-        [index: number]: T;
+        get length(): number {
+            return this.list.length;
+        }
+
+        push(...items: T[]): number {
+            for (let i: number = 0; i < items.length; i++)
+                if (!TagList.checkElement(items[i], this.elementTagType))
+                    throw "Illegal element"
+            return Array.prototype.push.apply(this.list, items);
+        }
+
+        pop(): T | undefined {
+            return this.list.pop();
+        }
+
+        shift(): T | undefined {
+            return this.list.shift();
+        }
+
+        unshift(...items: T[]): number {
+            for (let i: number = 0; i < items.length; i++)
+                if (!TagList.checkElement(items[i], this.elementTagType))
+                    throw "Illegal element"
+            return Array.prototype.unshift.apply(this.list, items);
+        }
 
         *[Symbol.iterator](): Iterator<T> {
             for (let i: number = 0; i < this.list.length; i++)
                 yield this.list[i];
         }
+
+        [index: number]: T;
 
         static newByteList(): TagList<TagByte> { return new TagList(TagType.Byte); }
         static newShortList(): TagList<TagShort> { return new TagList(TagType.Short); }
@@ -181,7 +207,7 @@ export namespace NEWNBT {
         static newDoubleList(): TagList<TagDouble> { return new TagList(TagType.Double); }
         static newByteArrayList(): TagList<TagByteArray> { return new TagList(TagType.ByteArray); }
         static newStringList(): TagList<TagString> { return new TagList(TagType.String); }
-        static newListList(): TagList<TagList<TagBase>> { return new TagList(TagType.List); }
+        static newListList(): TagList<TagAnyList> { return new TagList(TagType.List); }
         static newListCompound(): TagList<TagCompound> { return new TagList(TagType.Compound); }
         static newIntArrayList(): TagList<TagIntArray> { return new TagList(TagType.IntArray); }
         static newLongArrayList(): TagList<TagLongArray> { return new TagList(TagType.LongArray); }
@@ -190,6 +216,8 @@ export namespace NEWNBT {
             return element !== null && element !== undefined && element.tagType === elementTagType;
         }
     }
+
+    export type TagAnyList = TagList<TagBase>;
 
     export class TagCompound extends TagBase {
 
