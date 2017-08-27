@@ -21,6 +21,19 @@ export namespace NEWNBT {
 
     export abstract class TagBase {
         protected constructor(readonly tagType: TagType) {}
+
+        asTagByte(): TagByte { if (this.tagType !== TagType.Byte) throw 'Illegal tag type'; return this as any; };
+        asTagShort(): TagShort { if (this.tagType !== TagType.Short) throw 'Illegal tag type'; return this as any; };
+        asTagInt(): TagInt { if (this.tagType !== TagType.Int) throw 'Illegal tag type'; return this as any; };
+        asTagLong(): TagLong { if (this.tagType !== TagType.Long) throw 'Illegal tag type'; return this as any; };
+        asTagFloat(): TagFloat { if (this.tagType !== TagType.Float) throw 'Illegal tag type'; return this as any; };
+        asTagDouble(): TagDouble { if (this.tagType !== TagType.Double) throw 'Illegal tag type'; return this as any; };
+        asTagByteArray(): TagByteArray { if (this.tagType !== TagType.ByteArray) throw 'Illegal tag type'; return this as any; };
+        asTagString(): TagString { if (this.tagType !== TagType.String) throw 'Illegal tag type'; return this as any; };
+        asTagList(): TagAnyList { if (this.tagType !== TagType.List) throw 'Illegal tag type'; return this as any; };
+        asTagCompound(): TagCompound { if (this.tagType !== TagType.Compound) throw 'Illegal tag type'; return this as any; };
+        asTagIntArray(): TagIntArray { if (this.tagType !== TagType.IntArray) throw 'Illegal tag type'; return this as any; };
+        asTagLongArray(): TagLongArray { if (this.tagType !== TagType.LongArray) throw 'Illegal tag type'; return this as any; };
     }
 
     export type ScalarTypes = number | Long | string | Buffer;
@@ -95,11 +108,11 @@ export namespace NEWNBT {
                         throw 'Illegal value';
                     break;
                 case TagType.IntArray:
-                    if (typeof value !== 'object' || !(value instanceof Buffer) || value.length % 4 != 0)
+                    if (typeof value !== 'object' || !(value instanceof Buffer) || value.length % 4 !== 0)
                         throw 'Illegal value';
                     break;
                 case TagType.LongArray:
-                    if (typeof value !== 'object' || !(value instanceof Buffer) || value.length % 8 != 0)
+                    if (typeof value !== 'object' || !(value instanceof Buffer) || value.length % 8 !== 0)
                         throw 'Illegal value';
                     break;
                 }
@@ -212,6 +225,19 @@ export namespace NEWNBT {
         }
 
         [index: number]: T;
+
+        asTagListByte(): TagList<TagByte> { if (this.elementTagType !== TagType.Byte) throw 'Illegal element tag type'; return this as any; };
+        asTagListShort(): TagList<TagShort> { if (this.elementTagType !== TagType.Short) throw 'Illegal element tag type'; return this as any; };
+        asTagListInt(): TagList<TagInt> { if (this.elementTagType !== TagType.Int) throw 'Illegal element tag type'; return this as any; };
+        asTagListLong(): TagList<TagLong> { if (this.elementTagType !== TagType.Long) throw 'Illegal element tag type'; return this as any; };
+        asTagListFloat(): TagList<TagFloat> { if (this.elementTagType !== TagType.Float) throw 'Illegal element tag type'; return this as any; };
+        asTagListDouble(): TagList<TagDouble> { if (this.elementTagType !== TagType.Double) throw 'Illegal element tag type'; return this as any; };
+        asTagListByteArray(): TagList<TagByteArray> { if (this.elementTagType !== TagType.ByteArray) throw 'Illegal element tag type'; return this as any; };
+        asTagListString(): TagList<TagString> { if (this.elementTagType !== TagType.String) throw 'Illegal element tag type'; return this as any; };
+        asTagListList(): TagList<TagAnyList> { if (this.elementTagType !== TagType.List) throw 'Illegal element tag type'; return this as any; };
+        asTagListCompound(): TagList<TagCompound> { if (this.elementTagType !== TagType.Compound) throw 'Illegal element tag type'; return this as any; };
+        asTagListIntArray(): TagList<TagIntArray> { if (this.elementTagType !== TagType.IntArray) throw 'Illegal element tag type'; return this as any; };
+        asTagListLongArray(): TagList<TagLongArray> { if (this.elementTagType !== TagType.LongArray) throw 'Illegal element tag type'; return this as any; };
 
         static newByteList(): TagList<TagByte> { return new TagList(TagType.Byte); }
         static newShortList(): TagList<TagShort> { return new TagList(TagType.Short); }
