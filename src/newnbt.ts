@@ -76,19 +76,19 @@ export namespace NewNBT {
             else {
                 switch (tagType) {
                 case TagType.Byte:
-                    if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 0xFF)
+                    if (typeof value !== 'number' || !Number.isInteger(value) || value < -0x80 || value > 0x7F)
                         throw new TypeError('Illegal value');
                     break;
                 case TagType.Short:
-                    if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 0xFFFF)
+                    if (typeof value !== 'number' || !Number.isInteger(value) || value < -0x8000 || value > 0x7FFF)
                         throw new TypeError('Illegal value');
                     break;
                 case TagType.Int:
-                    if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 0xFFFFFFFF)
+                    if (typeof value !== 'number' || !Number.isInteger(value) || value < -0x80000000 || value > 0x7FFFFFFF)
                         throw new TypeError('Illegal value');
                     break;
                 case TagType.Long:
-                    if (typeof value !== 'object' || !(value instanceof Long))
+                    if (typeof value !== 'object' || !(value instanceof Long) || value.unsigned)
                         throw new TypeError('Illegal value');
                     break;
                 case TagType.Float:
@@ -313,6 +313,103 @@ export namespace NewNBT {
     }
 
     export namespace Persistence {
+        interface IOHandler<T extends TagBase> {
+            read(buf: ByteBuffer): T;
+            write(buf: ByteBuffer, tag: T): void;
+        }
+
+        let handlers: { [key: number]: IOHandler<TagBase> | undefined } = {
+            [TagType.End]: undefined,
+            [TagType.Byte]: {
+               read(buf) { return TagScalar.newByte(buf.readInt8()); },
+               write(buf, tag) { buf.writeInt8(tag.value); }
+            } as IOHandler<TagByte>,
+            [TagType.Short]: {
+                read(buf) { return TagScalar.newShort(buf.readInt16()); },
+                write(buf, tag) { buf.writeInt16(tag.value); }
+            } as IOHandler<TagShort>,
+            [TagType.Int]: {
+                read(buf) { return TagScalar.newInt(buf.readInt32()); },
+                write(buf, tag) { buf.writeInt32(tag.value); }
+            } as IOHandler<TagInt>,
+            [TagType.Long]: {
+                read(buf) { return TagScalar.newLong(buf.readInt64()); },
+                write(buf, tag) { buf.writeInt64(tag.value); }
+            } as IOHandler<TagLong>,
+            [TagType.Float]: {
+                read(buf) { return TagScalar.newFloat(buf.readFloat32()); },
+                write(buf, tag) { buf.writeFloat32(tag.value); }
+            } as IOHandler<TagFloat>,
+            [TagType.Double]: {
+                read(buf) { return TagScalar.newDouble(buf.readFloat64()); },
+                write(buf, tag) { buf.writeFloat64(tag.value); }
+            } as IOHandler<TagDouble>,
+            [TagType.ByteArray]: {
+                read(buf) {
+                    let len: number = buf.readInt32();
+                    if (len < 0)
+                        throw new RangeError('Illegal size');
+                    let bytes: number = len;
+                    let array: Buffer = Buffer.from(buf.slice(buf.offset, buf.offset + bytes).toArrayBuffer(true));
+                    buf.skip(bytes);
+                    return TagScalar.newByteArray(array);
+                },
+                write(buf, tag) {
+                    let array: Buffer = tag.value;
+                    let bytes: number = array.length;
+                    let len = bytes;
+                    buf.writeInt32(len);
+                    buf.append(ByteBuffer.wrap(array))
+                }
+            } as IOHandler<TagByteArray>,
+            [TagType.String]: {
+                read(buf) { return TagScalar.newString(readJavaModifiedUTF8(buf)); },
+                write(buf, tag) { writeJavaModifiedUTF8(buf, tag.value); }
+            } as IOHandler<TagString>,
+            [TagType.List]: undefined,
+            [TagType.Compound]: undefined,
+            [TagType.IntArray]: {
+                read(buf) {
+                    let len: number = buf.readInt32();
+                    if (len < 0)
+                        throw new RangeError('Illegal size');
+                    let bytes: number = len * 4;
+                    let array: Buffer = Buffer.from(buf.slice(buf.offset, buf.offset + bytes).toArrayBuffer(true));
+                    buf.skip(bytes);
+                    return TagScalar.newByteArray(array);
+                },
+                write(buf, tag) {
+                    let array: Buffer = tag.value;
+                    let bytes: number = array.length;
+                    if (bytes % 4 !== 0)
+                        throw new Error('Illegal buffer length');
+                    let len: number = bytes / 4;
+                    buf.writeInt32(len);
+                    buf.append(ByteBuffer.wrap(array))
+                }
+            } as IOHandler<TagIntArray>,
+            [TagType.LongArray]: {
+                read(buf) {
+                    let len: number = buf.readInt32();
+                    if (len < 0)
+                        throw new RangeError('Illegal size');
+                    let bytes: number = len * 8;
+                    let array: Buffer = Buffer.from(buf.slice(buf.offset, buf.offset + bytes).toArrayBuffer(true));
+                    buf.skip(bytes);
+                    return TagScalar.newByteArray(array);
+                },
+                write(buf, tag) {
+                    let array: Buffer = tag.value;
+                    let bytes: number = array.length;
+                    if (bytes % 8 !== 0)
+                        throw new Error('Illegal buffer length');
+                    let len: number = bytes / 8;
+                    buf.writeInt32(len);
+                    buf.append(ByteBuffer.wrap(array))
+                }
+            } as IOHandler<TagLongArray>
+        };
+
         export interface ReadOptions {
             compressed?: boolean;
         }
@@ -324,7 +421,7 @@ export namespace NewNBT {
             }
             const byteBuffer = ByteBuffer.wrap(buffer);
             // TODO: NYI
-            throw new Error("NYI");
+            throw new Error('NYI');
         }
 
         export interface WriteOptions {
@@ -341,5 +438,125 @@ export namespace NewNBT {
             }
             return buffer;
         }
+
+        // Java Modified UTF-8 Encoding
+        function writeJavaModifiedUTF8(out: ByteBuffer, str: string) {
+            let strlen = str.length;
+            let utflen = 0;
+            let c: number;
+            let count: number = 0;
+        
+            /* use charAt instead of copying String to char array */
+            for (let i = 0; i < strlen; i++) {
+                c = str.charCodeAt(i);
+                if ((c >= 0x0001) && (c <= 0x007F)) {
+                    utflen++;
+                } else if (c > 0x07FF) {
+                    utflen += 3;
+                } else {
+                    utflen += 2;
+                }
+            }
+        
+            if (utflen > 65535)
+                throw new Error(
+                    'encoded string too long: ' + utflen + ' bytes');
+        
+            let bytearr = new Uint8Array(utflen + 2);
+        
+            bytearr[count++] = ((utflen >>> 8) & 0xFF);
+            bytearr[count++] = ((utflen >>> 0) & 0xFF);
+        
+            let i = 0;
+            for (i = 0; i < strlen; i++) {
+                c = str.charCodeAt(i);
+                if (!((c >= 0x0001) && (c <= 0x007F))) break;
+                bytearr[count++] = c;
+            }
+        
+            for (; i < strlen; i++) {
+                c = str.charCodeAt(i);
+                if ((c >= 0x0001) && (c <= 0x007F)) {
+                    bytearr[count++] = c;
+        
+                } else if (c > 0x07FF) {
+                    bytearr[count++] = (0xE0 | ((c >> 12) & 0x0F));
+                    bytearr[count++] = (0x80 | ((c >> 6) & 0x3F));
+                    bytearr[count++] = (0x80 | ((c >> 0) & 0x3F));
+                } else {
+                    bytearr[count++] = (0xC0 | ((c >> 6) & 0x1F));
+                    bytearr[count++] = (0x80 | ((c >> 0) & 0x3F));
+                }
+            }
+            out.append(bytearr)
+            // out.write(bytearr, 0, utflen + 2);
+            return utflen + 2;
+        }
+
+        function readJavaModifiedUTF8(buff: ByteBuffer) {
+            let utflen = buff.readUint16()
+            let bytearr: number[] = new Array<number>(utflen);
+            let chararr = new Array<number>(utflen);
+        
+            let c, char2, char3;
+            let count = 0;
+            let chararr_count = 0;
+        
+            for (let i = 0; i < utflen; i++)
+                bytearr[i] = (buff.readByte())
+        
+            while (count < utflen) {
+                c = bytearr[count] & 0xff;
+                if (c > 127) break;
+                count++;
+                chararr[chararr_count++] = c;
+            }
+        
+            while (count < utflen) {
+                c = bytearr[count] & 0xff;
+                switch (c >> 4) {
+                    case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+                        /* 0xxxxxxx*/
+                        count++;
+                        chararr[chararr_count++] = c;
+                        break;
+                    case 12: case 13:
+                        /* 110x xxxx   10xx xxxx*/
+                        count += 2;
+                        if (count > utflen)
+                            throw new Error(
+                                'malformed input: partial character at end');
+                        char2 = bytearr[count - 1];
+                        if ((char2 & 0xC0) != 0x80)
+                            throw new Error(
+                                'malformed input around byte ' + count);
+                        chararr[chararr_count++] = (((c & 0x1F) << 6) |
+                            (char2 & 0x3F));
+                        break;
+                    case 14:
+                        /* 1110 xxxx  10xx xxxx  10xx xxxx */
+                        count += 3;
+                        if (count > utflen)
+                            throw new Error(
+                                'malformed input: partial character at end');
+                        char2 = bytearr[count - 2];
+                        char3 = bytearr[count - 1];
+                        if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80))
+                            throw new Error(
+                                'malformed input around byte ' + (count - 1));
+                        chararr[chararr_count++] = (((c & 0x0F) << 12) |
+                            ((char2 & 0x3F) << 6) |
+                            ((char3 & 0x3F) << 0));
+                        break;
+                    default:
+                        /* 10xx xxxx,  1111 xxxx */
+                        throw new Error(
+                            'malformed input around byte ' + count);
+                }
+            }
+            // The number of chars produced may be less than utflen
+            return chararr.map(i => String.fromCharCode(i)).join('')
+        }
     }
 }
+export default NewNBT;
