@@ -359,7 +359,7 @@ export namespace NewNBT {
                     let bytes: number = array.length;
                     let len = bytes;
                     buf.writeInt32(len);
-                    buf.append(ByteBuffer.wrap(array))
+                    buf.append(ByteBuffer.wrap(array));
                 }
             } as IOHandler<TagByteArray>,
             [TagType.String]: {
@@ -385,7 +385,7 @@ export namespace NewNBT {
                         throw new Error('Illegal buffer length');
                     let len: number = bytes / 4;
                     buf.writeInt32(len);
-                    buf.append(ByteBuffer.wrap(array))
+                    buf.append(ByteBuffer.wrap(array));
                 }
             } as IOHandler<TagIntArray>,
             [TagType.LongArray]: {
@@ -405,10 +405,17 @@ export namespace NewNBT {
                         throw new Error('Illegal buffer length');
                     let len: number = bytes / 8;
                     buf.writeInt32(len);
-                    buf.append(ByteBuffer.wrap(array))
+                    buf.append(ByteBuffer.wrap(array));
                 }
             } as IOHandler<TagLongArray>
         };
+
+        function ofHandler<T extends TagBase>(tagType: TagType): IOHandler<T> {
+            let handler: IOHandler<TagBase> | undefined = handlers[tagType];
+            if (handler === undefined)
+                throw new Error('No IO handler founded');
+            return handler as IOHandler<T>;
+        }
 
         export interface ReadOptions {
             compressed?: boolean;
@@ -420,8 +427,13 @@ export namespace NewNBT {
                     buffer = gzip.gunzipSync(buffer);
             }
             const byteBuffer = ByteBuffer.wrap(buffer);
-            // TODO: NYI
-            throw new Error('NYI');
+            let rootTagHead: TagHead = readTagHead(byteBuffer);
+            if (rootTagHead.tagType !== TagType.Compound)
+                throw new Error('Root tag must be compound');
+            if (rootTagHead.tagName !== '')
+                throw new Error('Root tag name must be empty');
+            let rootTag: TagCompound = ofHandler<TagCompound>(TagType.Compound).read(byteBuffer);
+            return rootTag;
         }
 
         export interface WriteOptions {
@@ -430,13 +442,48 @@ export namespace NewNBT {
 
         export function writeRoot(rootTag: TagCompound, options?: WriteOptions): Buffer {
             const byteBuffer: ByteBuffer = new ByteBuffer();
-            // TODO: NYI
+            let rootTagHead: TagHead = { tagType: rootTag.tagType, tagName: '' }
+            writeTagHead(byteBuffer, rootTagHead);
+            ofHandler<TagCompound>(TagType.Compound).write(byteBuffer, rootTag);
             let buffer: Buffer = Buffer.from(byteBuffer.flip().toArrayBuffer());
             if (options !== undefined) {
                 if (options.compressed !== undefined && options.compressed)
                     buffer = gzip.gzipSync(buffer);
             }
             return buffer;
+        }
+
+        function readTagType(tagTypeByte: number): TagType {
+            if (tagTypeByte < 0 || tagTypeByte > 12)
+                throw new Error('Illegal tag type');
+            return tagTypeByte;
+        }
+
+        function writeTagType(tagType: TagType): number {
+            let tagTypeByte = tagType;
+            return tagTypeByte;
+        }
+
+        interface TagHead {
+            tagType: TagType;
+            tagName: string
+        }
+
+        function readTagHead(buf: ByteBuffer): TagHead {
+            let tagTypeByte: number = buf.readInt8();
+            let tagType: TagType = readTagType(tagTypeByte);
+            let tagNameTag: TagString = ofHandler<TagString>(TagType.String).read(buf);
+            let tagName = tagNameTag.value;
+            return { tagType: tagType, tagName: tagName };
+        }
+
+        function writeTagHead(buf: ByteBuffer, tagHead: TagHead): void {
+            let tagType: TagType = tagHead.tagType;
+            let tagTypeByte: number = writeTagType(tagType);
+            let tagName = tagHead.tagName;
+            let tagNameTag: TagString = TagScalar.newString(tagName);
+            buf.writeInt8(tagTypeByte);
+            ofHandler<TagString>(TagType.String).write(buf, tagNameTag);
         }
 
         // Java Modified UTF-8 Encoding
