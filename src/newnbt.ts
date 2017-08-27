@@ -282,5 +282,7 @@ export namespace NEWNBT {
         get size(): number {
             return this._size;
         }
+
+        static newCompound(): TagCompound { return new TagCompound(); }
     }
 }
