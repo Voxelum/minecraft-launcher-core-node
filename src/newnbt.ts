@@ -318,7 +318,13 @@ export namespace NewNBT {
         }
 
         export function readRoot(buffer: Buffer, options?: ReadOptions): TagCompound {
-            return readRoot(buffer, options);
+            if (options !== undefined) {
+                if (options.compressed !== undefined && options.compressed)
+                    buffer = gzip.gunzipSync(buffer);
+            }
+            const byteBuffer = ByteBuffer.wrap(buffer);
+            // TODO: NYI
+            throw new Error("NYI");
         }
 
         export interface WriteOptions {
@@ -326,7 +332,14 @@ export namespace NewNBT {
         }
 
         export function writeRoot(rootTag: TagCompound, options?: WriteOptions): Buffer {
-            return writeRoot(rootTag, options);
+            const byteBuffer: ByteBuffer = new ByteBuffer();
+            // TODO: NYI
+            let buffer: Buffer = Buffer.from(byteBuffer.flip().toArrayBuffer());
+            if (options !== undefined) {
+                if (options.compressed !== undefined && options.compressed)
+                    buffer = gzip.gzipSync(buffer);
+            }
+            return buffer;
         }
     }
 }
