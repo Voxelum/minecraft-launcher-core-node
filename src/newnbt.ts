@@ -172,14 +172,18 @@ export namespace NEWNBT {
 
         set length(length: number) {
             if (length < 0 || length > this.list.length)
-                throw "Illegal length";
+                throw 'Illegal length';
             this.list.length = length;
         }
 
         push(...items: T[]): number {
-            for (let i: number = 0; i < items.length; i++)
-                if (!TagList.checkElement(items[i], this.elementTagType))
-                    throw "Illegal element";
+            for (let i: number = 0; i < items.length; i++) {
+                let value: T = items[i];
+                if (typeof value !== 'object' || !(value instanceof TagBase))
+                    throw 'Illegal element';
+                if (!TagList.checkElement(value, this.elementTagType))
+                    throw 'Illegal element';
+            }
             return Array.prototype.push.apply(this.list, items);
         }
 
@@ -192,9 +196,13 @@ export namespace NEWNBT {
         }
 
         unshift(...items: T[]): number {
-            for (let i: number = 0; i < items.length; i++)
-                if (!TagList.checkElement(items[i], this.elementTagType))
-                    throw "Illegal element";
+            for (let i: number = 0; i < items.length; i++) {
+                let value: T = items[i];
+                if (typeof value !== 'object' || !(value instanceof TagBase))
+                    throw 'Illegal element';
+                if (!TagList.checkElement(value, this.elementTagType))
+                    throw 'Illegal element';
+            }
             return Array.prototype.unshift.apply(this.list, items);
         }
 
@@ -225,7 +233,54 @@ export namespace NEWNBT {
 
     export type TagAnyList = TagList<TagBase>;
 
-    export class TagCompound extends TagBase {
+    export class TagCompound extends TagBase implements Iterable<[string, TagBase]> {
+        protected readonly map: { [key: string]: TagBase } = Object.create(null);
+        protected _size: number = 0;
 
+        protected constructor() {
+            super(TagType.Compound);
+        }
+
+        *[Symbol.iterator](): IterableIterator<[string, TagBase]> {
+            for (let key in this.map)
+                yield [key, this.map[key]];
+        }
+
+        clear(): void {
+            for (let key in this.map)
+                delete this.map[key];
+            this._size = 0;
+        }
+
+        delete(key: string): boolean {
+            if (!(key in this.map))
+                return false;
+            delete this.map[key];
+            this._size--;
+            return true;
+        }
+
+        get(key: string): TagBase | undefined {
+            return this.map[key];
+        }
+
+        has(key: string): boolean {
+            return key in this.map;
+        }
+
+        set(key: string, value: TagBase): this {
+            if (typeof value !== 'object' || !(value instanceof TagBase))
+                throw 'Illegal element';
+            if (value === null || value === undefined)
+                throw 'Illegal element';
+            if (!(key in this.map))
+                this._size++;
+            this.map[key] = value;
+            return this;
+        }
+
+        get size(): number {
+            return this._size;
+        }
     }
 }
