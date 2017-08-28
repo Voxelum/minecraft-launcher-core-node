@@ -1,5 +1,6 @@
 import { NBT } from '../index'
 import * as assert from 'assert';
+import * as Long from 'long'
 
 describe('NBT', () => {
     let ser: NBT.Serializer;
@@ -12,12 +13,12 @@ describe('NBT', () => {
     let to: any;
     it('should create and register serializer', () => {
         ser = NBT.Serializer.create().register('test', {
-            name: NBT.Type.String,
-            type: NBT.Type.String,
-            short: NBT.Type.Short,
-            int: NBT.Type.Int,
-            value: NBT.Type.String,
-            byte: NBT.Type.Byte,
+            name: NBT.TagType.String,
+            type: NBT.TagType.String,
+            short: NBT.TagType.Short,
+            int: NBT.TagType.Int,
+            value: NBT.TagType.String,
+            byte: NBT.TagType.Byte,
             nested: 'test',
         });
     })
@@ -31,8 +32,6 @@ describe('NBT', () => {
         assert.deepEqual(from, to);
     })
 })
-
-import * as Long from 'long'
 describe('Test', () => {
     it('just test', () => {
         let list: NBT.TagList<NBT.TagByte> = NBT.TagList.newByteList();
