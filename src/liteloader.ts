@@ -117,7 +117,7 @@ export namespace LiteLoader {
         const liteloaderPath = `${meta.mcversion}-Liteloader-${meta.version}`
         const versionPath = mc.getVersionRoot(liteloaderPath)
         if (!fs.existsSync(versionPath))
-            await fs.mkdirp(versionPath)
+            await fs.ensureDir(versionPath)
         return Promise.all([
             download(targetURL, path.join(versionPath, liteloaderPath + '.jar')),
             download(jsonURL, path.join(versionPath, liteloaderPath + '.json'))
