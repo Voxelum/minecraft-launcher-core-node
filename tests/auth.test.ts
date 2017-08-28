@@ -1,6 +1,6 @@
 import { AuthService } from '../index'
 import * as assert from 'assert'
-describe('ygg-auth', () => {
+describe('Auth', () => {
     it('should response with invalid credit', (done) => {
         AuthService.newYggdrasilAuthService().login('18211378@163.com', 'asd-x', 'cc')
             .then((suc) => {
