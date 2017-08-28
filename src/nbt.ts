@@ -217,16 +217,16 @@ export namespace NBT {
     }
 
     export type TagNormal = TagByte | TagShort | TagInt | TagLong | TagFloat | TagDouble | TagByteArray | TagString | TagAnyList | TagCompound | TagIntArray | TagLongArray;
-    export type TagByte = TagScalar<number>;
-    export type TagShort = TagScalar<number>;
-    export type TagInt = TagScalar<number>;
-    export type TagLong = TagScalar<Long>;
-    export type TagFloat = TagScalar<number>;
-    export type TagDouble = TagScalar<number>;
-    export type TagByteArray = TagScalar<Buffer>;
-    export type TagString = TagScalar<string>;
-    export type TagIntArray = TagScalar<Buffer>;
-    export type TagLongArray = TagScalar<Buffer>;
+    export type TagByte = TagScalar<number> & TagType.Byte;
+    export type TagShort = TagScalar<number> & TagType.Short;
+    export type TagInt = TagScalar<number> & TagType.Int;
+    export type TagLong = TagScalar<Long> & TagType.Long;
+    export type TagFloat = TagScalar<number> & TagType.Float;
+    export type TagDouble = TagScalar<number> & TagType.Double;
+    export type TagByteArray = TagScalar<Buffer> & TagType.ByteArray;
+    export type TagString = TagScalar<string> & TagType.String;
+    export type TagIntArray = TagScalar<Buffer> & TagType.IntArray;
+    export type TagLongArray = TagScalar<Buffer> & TagType.LongArray;
     export type TagAnyList = TagList<TagBase>;
 
     export abstract class TagBase {
@@ -276,16 +276,16 @@ export namespace NBT {
             this._value = value;
         }
 
-        static newByte(value: number): TagByte { return new TagScalar(TagType.Byte, value); }
-        static newShort(value: number): TagShort { return new TagScalar(TagType.Short, value); }
-        static newInt(value: number): TagInt { return new TagScalar(TagType.Int, value); }
-        static newLong(value: Long): TagLong { return new TagScalar(TagType.Long, value); }
-        static newFloat(value: number): TagFloat { return new TagScalar(TagType.Float, value); }
-        static newDouble(value: number): TagDouble { return new TagScalar(TagType.Double, value); }
-        static newByteArray(value: Buffer): TagByteArray { return new TagScalar(TagType.ByteArray, value); }
-        static newString(value: string): TagString { return new TagScalar(TagType.String, value); }
-        static newIntArray(value: Buffer): TagIntArray { return new TagScalar(TagType.IntArray, value); }
-        static newLongArray(value: Buffer): TagLongArray { return new TagScalar(TagType.LongArray, value); }
+        static newByte(value: number): TagByte { return new TagScalar(TagType.Byte, value) as TagByte; }
+        static newShort(value: number): TagShort { return new TagScalar(TagType.Short, value) as TagShort; }
+        static newInt(value: number): TagInt { return new TagScalar(TagType.Int, value) as TagInt; }
+        static newLong(value: Long): TagLong { return new TagScalar(TagType.Long, value) as TagLong; }
+        static newFloat(value: number): TagFloat { return new TagScalar(TagType.Float, value) as TagFloat; }
+        static newDouble(value: number): TagDouble { return new TagScalar(TagType.Double, value) as TagDouble; }
+        static newByteArray(value: Buffer): TagByteArray { return new TagScalar(TagType.ByteArray, value) as TagByteArray; }
+        static newString(value: string): TagString { return new TagScalar(TagType.String, value) as TagString; }
+        static newIntArray(value: Buffer): TagIntArray { return new TagScalar(TagType.IntArray, value) as TagIntArray; }
+        static newLongArray(value: Buffer): TagLongArray { return new TagScalar(TagType.LongArray, value) as TagLongArray; }
 
         private static checkTagValue(tagType: TagType, value: ScalarTypes): void {
             if (tagType === TagType.End || tagType === TagType.List || tagType === TagType.Compound)
