@@ -52,7 +52,7 @@ export namespace WorldInfo {
         }
     }
     export function parse(buf: Buffer): WorldInfo {
-        let nbt = NBT.parse(buf, true)
+        let nbt = NBT.Serializer.deserialize(buf, true)
         let root = nbt.value.Data
         return new WorldInfo(root.LevelName, root.SizeOnDisk, root.LastPlayed, root.GameRules,
             root.DataVersion, root.Version, root.generatorName,

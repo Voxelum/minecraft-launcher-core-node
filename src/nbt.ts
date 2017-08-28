@@ -1,7 +1,12 @@
 import * as gzip from 'zlib'
 import * as ByteBuffer from 'bytebuffer'
+import * as Long from 'long'
 
-//not finished yet...
+/**
+ * @author yuxuan
+ * @author ci010
+ */
+
 export namespace NBT {
     interface IO {
         read(buf: ByteBuffer, find: (shape: string) => string | undefined): { type: any, value: any };
@@ -9,26 +14,24 @@ export namespace NBT {
     }
     export enum Type {
         End = 0, Byte = 1, Short = 2, Int = 3, Long = 4, Float = 5, Double = 6,
-        ByteArray = 7, String = 8, List = 9, Compound = 10, IntArray = 11
-    }
-
-    export function parse(fileData: Buffer, compressed: boolean = false, find: (shape: string) => string | undefined = () => undefined): { value: any, type: any | string } {
-        if (compressed) {
-            let zip = gzip.gunzipSync(fileData);
-            let bytebuffer = ByteBuffer.wrap(zip);
-            return readRootTag(bytebuffer, find)
-        }
-        else {
-            let bytebuffer = ByteBuffer.wrap(fileData);
-            return readRootTag(bytebuffer, find)
-        }
-    }
-
-    export function serializer() {
-        return new Serializer()
+        ByteArray = 7, String = 8, List = 9, Compound = 10, IntArray = 11, LongArray = 12
     }
 
     export class Serializer {
+        static create() {
+            return new Serializer();
+        }
+        static deserialize(fileData: Buffer, compressed: boolean = false, find: (shape: string) => string | undefined = () => undefined) {
+            if (compressed) {
+                let zip = gzip.gunzipSync(fileData);
+                let bytebuffer = ByteBuffer.wrap(zip);
+                return readRootTag(bytebuffer, find)
+            }
+            else {
+                let bytebuffer = ByteBuffer.wrap(fileData);
+                return readRootTag(bytebuffer, find)
+            }
+        }
         private registry: { [id: string]: any } = {};
         private reversedRegistry: { [shape: string]: any } = {};
         register(type: string, schema: any): this {
@@ -52,8 +55,16 @@ export namespace NBT {
                 return Buffer.from(buffer.flip().toArrayBuffer());
             }
         }
-        deserialize(buf: Buffer, compressed: boolean = false): { value: any, type: any | string } {
-            return parse(buf, compressed, (shape) => this.reversedRegistry[shape]);
+        deserialize(fileData: Buffer, compressed: boolean = false): { value: any, type: any | string } {
+            if (compressed) {
+                let zip = gzip.gunzipSync(fileData);
+                let bytebuffer = ByteBuffer.wrap(zip);
+                return readRootTag(bytebuffer, (shape) => this.reversedRegistry[shape])
+            }
+            else {
+                let bytebuffer = ByteBuffer.wrap(fileData);
+                return readRootTag(bytebuffer, (shape) => this.reversedRegistry[shape])
+            }
         }
     }
 
@@ -192,7 +203,556 @@ export namespace NBT {
         }
     ];
 
+    export const TagType = NBT.Type;
+    export type TagType = Type;
+    export type TagNormal = TagByte | TagShort | TagInt | TagLong | TagFloat | TagDouble | TagByteArray | TagString | TagAnyList | TagCompound | TagIntArray | TagLongArray;
+    export type ScalarTypes = number | Long | string | Buffer;
+    export type TagByte = TagScalar<number>;
+    export type TagShort = TagScalar<number>;
+    export type TagInt = TagScalar<number>;
+    export type TagLong = TagScalar<Long>;
+    export type TagFloat = TagScalar<number>;
+    export type TagDouble = TagScalar<number>;
+    export type TagByteArray = TagScalar<Buffer>;
+    export type TagString = TagScalar<string>;
+    export type TagIntArray = TagScalar<Buffer>;
+    export type TagLongArray = TagScalar<Buffer>;
+    export type TagAnyList = TagList<TagBase>;
+
+    export abstract class TagBase {
+        protected constructor(readonly tagType: TagType) { }
+
+        asTagEnd(): TagEnd { if (this.tagType !== TagType.End) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagByte(): TagByte { if (this.tagType !== TagType.Byte) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagShort(): TagShort { if (this.tagType !== TagType.Short) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagInt(): TagInt { if (this.tagType !== TagType.Int) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagLong(): TagLong { if (this.tagType !== TagType.Long) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagFloat(): TagFloat { if (this.tagType !== TagType.Float) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagDouble(): TagDouble { if (this.tagType !== TagType.Double) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagByteArray(): TagByteArray { if (this.tagType !== TagType.ByteArray) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagString(): TagString { if (this.tagType !== TagType.String) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagList(): TagAnyList { if (this.tagType !== TagType.List) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagCompound(): TagCompound { if (this.tagType !== TagType.Compound) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagIntArray(): TagIntArray { if (this.tagType !== TagType.IntArray) throw new TypeError('Illegal tag type'); return this as any; };
+        asTagLongArray(): TagLongArray { if (this.tagType !== TagType.LongArray) throw new TypeError('Illegal tag type'); return this as any; };
+    }
+
+
+    export class TagEnd extends TagBase {
+        protected constructor() {
+            super(TagType.End);
+        }
+
+        private static readonly INSTANCE = new TagEnd();
+
+        static newEnd(): TagEnd { return TagEnd.INSTANCE; }
+    }
+
+
+    export class TagScalar<T extends ScalarTypes> extends TagBase {
+        protected _value: T;
+
+        protected constructor(tagType: TagType, value: T) {
+            super(tagType);
+            this.value = value;
+        }
+
+        get value(): T {
+            return this._value;
+        }
+
+        set value(value: T) {
+            TagScalar.checkTagValue(this.tagType, value);
+            this._value = value;
+        }
+
+        static newByte(value: number): TagByte { return new TagScalar(TagType.Byte, value); }
+        static newShort(value: number): TagShort { return new TagScalar(TagType.Short, value); }
+        static newInt(value: number): TagInt { return new TagScalar(TagType.Int, value); }
+        static newLong(value: Long): TagLong { return new TagScalar(TagType.Long, value); }
+        static newFloat(value: number): TagFloat { return new TagScalar(TagType.Float, value); }
+        static newDouble(value: number): TagDouble { return new TagScalar(TagType.Double, value); }
+        static newByteArray(value: Buffer): TagByteArray { return new TagScalar(TagType.ByteArray, value); }
+        static newString(value: string): TagString { return new TagScalar(TagType.String, value); }
+        static newIntArray(value: Buffer): TagIntArray { return new TagScalar(TagType.IntArray, value); }
+        static newLongArray(value: Buffer): TagLongArray { return new TagScalar(TagType.LongArray, value); }
+
+        private static checkTagValue(tagType: TagType, value: ScalarTypes): void {
+            if (tagType === TagType.End || tagType === TagType.List || tagType === TagType.Compound)
+                throw new TypeError('Illegal tagType');
+            else if (typeof value === 'undefined')
+                throw new TypeError('Illegal value');
+            else if (value === null)
+                throw new TypeError('Illegal value');
+            else {
+                switch (tagType) {
+                    case TagType.Byte:
+                        if (typeof value !== 'number' || !Number.isInteger(value) || value < -0x80 || value > 0x7F)
+                            throw new TypeError('Illegal value');
+                        break;
+                    case TagType.Short:
+                        if (typeof value !== 'number' || !Number.isInteger(value) || value < -0x8000 || value > 0x7FFF)
+                            throw new TypeError('Illegal value');
+                        break;
+                    case TagType.Int:
+                        if (typeof value !== 'number' || !Number.isInteger(value) || value < -0x80000000 || value > 0x7FFFFFFF)
+                            throw new TypeError('Illegal value');
+                        break;
+                    case TagType.Long:
+                        if (typeof value !== 'object' || !(value instanceof Long) || value.unsigned)
+                            throw new TypeError('Illegal value');
+                        break;
+                    case TagType.Float:
+                        if (typeof value !== 'number')
+                            throw new TypeError('Illegal value');
+                        break;
+                    case TagType.Double:
+                        if (typeof value !== 'number')
+                            throw new TypeError('Illegal value');
+                        break;
+                    case TagType.ByteArray:
+                        if (typeof value !== 'object' || !(value instanceof Buffer))
+                            throw new TypeError('Illegal value');
+                        break;
+                    case TagType.String:
+                        if (typeof value !== 'string')
+                            throw new TypeError('Illegal value');
+                        break;
+                    case TagType.IntArray:
+                        if (typeof value !== 'object' || !(value instanceof Buffer) || value.length % 4 !== 0)
+                            throw new TypeError('Illegal value');
+                        break;
+                    case TagType.LongArray:
+                        if (typeof value !== 'object' || !(value instanceof Buffer) || value.length % 8 !== 0)
+                            throw new TypeError('Illegal value');
+                        break;
+                }
+            }
+        }
+    }
+
+
+    export class TagList<T extends TagBase> extends TagBase implements Iterable<T> {
+        protected readonly list: Array<T> = [];
+
+        protected constructor(readonly elementTagType: TagType) {
+            super(TagType.List);
+            return new Proxy(this, {
+                has(target: TagList<T>, p: PropertyKey): boolean {
+                    if (typeof p === 'string') {
+                        let n: number = Number(p);
+                        if (!Number.isInteger(n) || n < 0)
+                            return Reflect.has(target, p);
+                        p = n;
+                    } else if (typeof p !== 'number')
+                        return Reflect.has(target, p);
+                    return p >= 0 && p < target.list.length;
+                },
+                get(target: TagList<T>, p: PropertyKey, receiver: any): any {
+                    if (typeof p === 'string') {
+                        let n: number = Number(p);
+                        if (!Number.isInteger(n) || n < 0)
+                            return Reflect.get(target, p, receiver);
+                        p = n;
+                    } else if (typeof p !== 'number')
+                        return Reflect.get(target, p, receiver);
+                    if (p < 0 || p >= target.list.length)
+                        return undefined;
+                    return target.list[p];
+                },
+                set(target: TagList<T>, p: PropertyKey, value: any, receiver: any): boolean {
+                    if (typeof p === 'string') {
+                        let n: number = Number(p);
+                        if (!Number.isInteger(n) || n < 0)
+                            return Reflect.set(target, p, value, receiver);
+                        p = n;
+                    } else if (typeof p !== 'number')
+                        return Reflect.set(target, p, value, receiver);
+                    if (p < 0 || p > target.list.length)
+                        return false;
+                    if (typeof value !== 'object' || !(value instanceof TagBase))
+                        return false;
+                    if (!TagList.checkElement(value, target.elementTagType))
+                        return false;
+                    target.list[p] = value as T;
+                    return true;
+                }
+            });
+        }
+
+        get length(): number {
+            return this.list.length;
+        }
+
+        set length(length: number) {
+            if (length < 0 || length > this.list.length)
+                throw new RangeError('Illegal length');
+            this.list.length = length;
+        }
+
+        push(...items: T[]): number {
+            for (let i: number = 0; i < items.length; i++) {
+                let value: T = items[i];
+                if (typeof value !== 'object' || !(value instanceof TagBase))
+                    throw new TypeError('Illegal element');
+                if (!TagList.checkElement(value, this.elementTagType))
+                    throw new TypeError('Illegal element');
+            }
+            return Array.prototype.push.apply(this.list, items);
+        }
+
+        pop(): T | undefined {
+            return this.list.pop();
+        }
+
+        shift(): T | undefined {
+            return this.list.shift();
+        }
+
+        unshift(...items: T[]): number {
+            for (let i: number = 0; i < items.length; i++) {
+                let value: T = items[i];
+                if (typeof value !== 'object' || !(value instanceof TagBase))
+                    throw new TypeError('Illegal element');
+                if (!TagList.checkElement(value, this.elementTagType))
+                    throw new TypeError('Illegal element');
+            }
+            return Array.prototype.unshift.apply(this.list, items);
+        }
+
+        *[Symbol.iterator](): IterableIterator<T> {
+            for (let i: number = 0; i < this.list.length; i++)
+                yield this.list[i];
+        }
+
+        [index: number]: T;
+
+        asTagListByte(): TagList<TagByte> { if (this.elementTagType !== TagType.Byte) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListShort(): TagList<TagShort> { if (this.elementTagType !== TagType.Short) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListInt(): TagList<TagInt> { if (this.elementTagType !== TagType.Int) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListLong(): TagList<TagLong> { if (this.elementTagType !== TagType.Long) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListFloat(): TagList<TagFloat> { if (this.elementTagType !== TagType.Float) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListDouble(): TagList<TagDouble> { if (this.elementTagType !== TagType.Double) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListByteArray(): TagList<TagByteArray> { if (this.elementTagType !== TagType.ByteArray) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListString(): TagList<TagString> { if (this.elementTagType !== TagType.String) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListList(): TagList<TagAnyList> { if (this.elementTagType !== TagType.List) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListCompound(): TagList<TagCompound> { if (this.elementTagType !== TagType.Compound) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListIntArray(): TagList<TagIntArray> { if (this.elementTagType !== TagType.IntArray) throw new TypeError('Illegal element tag type'); return this as any; };
+        asTagListLongArray(): TagList<TagLongArray> { if (this.elementTagType !== TagType.LongArray) throw new TypeError('Illegal element tag type'); return this as any; };
+
+        static newByteList(): TagList<TagByte> { return new TagList(TagType.Byte); }
+        static newShortList(): TagList<TagShort> { return new TagList(TagType.Short); }
+        static newIntList(): TagList<TagInt> { return new TagList(TagType.Int); }
+        static newLongList(): TagList<TagLong> { return new TagList(TagType.Long); }
+        static newFloatList(): TagList<TagFloat> { return new TagList(TagType.Float); }
+        static newDoubleList(): TagList<TagDouble> { return new TagList(TagType.Double); }
+        static newByteArrayList(): TagList<TagByteArray> { return new TagList(TagType.ByteArray); }
+        static newStringList(): TagList<TagString> { return new TagList(TagType.String); }
+        static newListList(): TagList<TagAnyList> { return new TagList(TagType.List); }
+        static newListCompound(): TagList<TagCompound> { return new TagList(TagType.Compound); }
+        static newIntArrayList(): TagList<TagIntArray> { return new TagList(TagType.IntArray); }
+        static newLongArrayList(): TagList<TagLongArray> { return new TagList(TagType.LongArray); }
+        static newAnyList(elementTagType: TagType): TagAnyList {
+            if (elementTagType === TagType.End)
+                throw new TypeError('Illegal element tag type');
+            return new TagList(elementTagType);
+        }
+
+        private static checkElement(element: TagBase, elementTagType: TagType): boolean {
+            return element !== null && element !== undefined && element.tagType === elementTagType;
+        }
+    }
+
+
+    export class TagCompound extends TagBase implements Iterable<[string, TagNormal]> {
+        protected readonly map: { [key: string]: TagNormal } = Object.create(null);
+        protected _size: number = 0;
+
+        protected constructor() {
+            super(TagType.Compound);
+        }
+
+        *[Symbol.iterator](): IterableIterator<[string, TagNormal]> {
+            for (let key in this.map)
+                yield [key, this.map[key]];
+        }
+
+        clear(): void {
+            for (let key in this.map)
+                delete this.map[key];
+            this._size = 0;
+        }
+
+        delete(key: string): boolean {
+            if (!(key in this.map))
+                return false;
+            delete this.map[key];
+            this._size--;
+            return true;
+        }
+
+        get(key: string): TagNormal | undefined {
+            return this.map[key];
+        }
+
+        has(key: string): boolean {
+            return key in this.map;
+        }
+
+        set(key: string, value: TagNormal): this {
+            if (typeof value !== 'object' || !(value instanceof TagBase))
+                throw new TypeError('Illegal value');
+            if (!TagCompound.checkValue(value))
+                throw new TypeError('Illegal value');
+            if (!(key in this.map))
+                this._size++;
+            this.map[key] = value;
+            return this;
+        }
+
+        get size(): number {
+            return this._size;
+        }
+
+        static newCompound(): TagCompound { return new TagCompound(); }
+
+        private static checkValue(value: TagNormal): boolean {
+            return value !== null && value !== undefined && value.tagType !== TagType.End;
+        }
+    }
+
+    export namespace Persistence {
+        interface IOHandler<T extends TagBase> {
+            read(buf: ByteBuffer): T;
+            write(buf: ByteBuffer, tag: T): void;
+        }
+
+        let handlers: { [key: number]: IOHandler<TagBase> | undefined } = {
+            [TagType.End]: {
+                read(buf) { return TagEnd.newEnd(); },
+                write(buf, tag) { }
+            } as IOHandler<TagEnd>,
+            [TagType.Byte]: {
+                read(buf) { return TagScalar.newByte(buf.readInt8()); },
+                write(buf, tag) { buf.writeInt8(tag.value); }
+            } as IOHandler<TagByte>,
+            [TagType.Short]: {
+                read(buf) { return TagScalar.newShort(buf.readInt16()); },
+                write(buf, tag) { buf.writeInt16(tag.value); }
+            } as IOHandler<TagShort>,
+            [TagType.Int]: {
+                read(buf) { return TagScalar.newInt(buf.readInt32()); },
+                write(buf, tag) { buf.writeInt32(tag.value); }
+            } as IOHandler<TagInt>,
+            [TagType.Long]: {
+                read(buf) { return TagScalar.newLong(buf.readInt64()); },
+                write(buf, tag) { buf.writeInt64(tag.value); }
+            } as IOHandler<TagLong>,
+            [TagType.Float]: {
+                read(buf) { return TagScalar.newFloat(buf.readFloat32()); },
+                write(buf, tag) { buf.writeFloat32(tag.value); }
+            } as IOHandler<TagFloat>,
+            [TagType.Double]: {
+                read(buf) { return TagScalar.newDouble(buf.readFloat64()); },
+                write(buf, tag) { buf.writeFloat64(tag.value); }
+            } as IOHandler<TagDouble>,
+            [TagType.ByteArray]: {
+                read(buf) {
+                    let len: number = buf.readInt32();
+                    if (len < 0)
+                        throw new RangeError('Illegal size');
+                    let bytes: number = len;
+                    let array: Buffer = Buffer.from(buf.slice(buf.offset, buf.offset + bytes).toArrayBuffer(true));
+                    buf.skip(bytes);
+                    return TagScalar.newByteArray(array);
+                },
+                write(buf, tag) {
+                    let array: Buffer = tag.value;
+                    let bytes: number = array.length;
+                    let len = bytes;
+                    buf.writeInt32(len);
+                    buf.append(ByteBuffer.wrap(array));
+                }
+            } as IOHandler<TagByteArray>,
+            [TagType.String]: {
+                read(buf) { return TagScalar.newString(readUTF8(buf)); },
+                write(buf, tag) { writeUTF8(buf, tag.value); }
+            } as IOHandler<TagString>,
+            [TagType.List]: {
+                read(buf) {
+                    let elementTagTypeByte: number = buf.readInt8();
+                    let elementTagType: TagType = readTagType(elementTagTypeByte);
+                    if (elementTagType === TagType.End)
+                        throw new Error('Illegal element tag type');
+                    let len: number = buf.readInt32();
+                    if (len < 0)
+                        throw new RangeError('Illegal size');
+                    let tag: TagAnyList = TagList.newAnyList(elementTagType);
+                    for (let i: number = 0; i < len; i++) {
+                        let element: TagBase = ofHandler<TagBase>(elementTagType).read(buf);
+                        tag[i] = element;
+                    }
+                    return tag;
+                },
+                write(buf, tag) {
+                    let elementTagType: TagType = tag.elementTagType;
+                    let elementTagTypeByte: number = writeTagType(elementTagType);
+                    buf.writeInt8(elementTagTypeByte);
+                    let len: number = tag.length;
+                    buf.writeInt32(len);
+                    for (let i: number = 0; i < len; i++) {
+                        let element: TagBase = tag[i];
+                        ofHandler<TagBase>(elementTagType).write(buf, element);
+                    }
+                }
+            } as IOHandler<TagAnyList>,
+            [TagType.Compound]: {
+                read(buf) {
+                    let tag: TagCompound = TagCompound.newCompound();
+                    for (let tagHead: TagHead = readTagHead(buf), tagType: TagType = tagHead.tagType;
+                        tagType !== TagType.End;
+                        tagHead = readTagHead(buf), tagType = tagHead.tagType) {
+                        let key: string = tagHead.tagName;
+                        let value: TagNormal = ofHandler<TagNormal>(tagType).read(buf);
+                        tag.set(key, value);
+                    }
+                    ofHandler<TagEnd>(TagType.End).read(buf);
+                    return tag;
+                },
+                write(buf, tag) {
+                    for (let [key, value] of tag) {
+                        let tagType: TagType = value.tagType;
+                        writeTagHead(buf, { tagType: tagType, tagName: key });
+                        ofHandler<TagBase>(tagType).write(buf, value);
+                    }
+                    writeTagHead(buf, { tagType: TagType.End, tagName: '' });
+                    ofHandler<TagEnd>(TagType.End).write(buf, TagEnd.newEnd());
+                }
+            } as IOHandler<TagCompound>,
+            [TagType.IntArray]: {
+                read(buf) {
+                    let len: number = buf.readInt32();
+                    if (len < 0)
+                        throw new RangeError('Illegal size');
+                    let bytes: number = len * 4;
+                    let array: Buffer = Buffer.from(buf.slice(buf.offset, buf.offset + bytes).toArrayBuffer(true));
+                    buf.skip(bytes);
+                    return TagScalar.newIntArray(array);
+                },
+                write(buf, tag) {
+                    let array: Buffer = tag.value;
+                    let bytes: number = array.length;
+                    if (bytes % 4 !== 0)
+                        throw new Error('Illegal buffer length');
+                    let len: number = bytes / 4;
+                    buf.writeInt32(len);
+                    buf.append(ByteBuffer.wrap(array));
+                }
+            } as IOHandler<TagIntArray>,
+            [TagType.LongArray]: {
+                read(buf) {
+                    let len: number = buf.readInt32();
+                    if (len < 0)
+                        throw new RangeError('Illegal size');
+                    let bytes: number = len * 8;
+                    let array: Buffer = Buffer.from(buf.slice(buf.offset, buf.offset + bytes).toArrayBuffer(true));
+                    buf.skip(bytes);
+                    return TagScalar.newLongArray(array);
+                },
+                write(buf, tag) {
+                    let array: Buffer = tag.value;
+                    let bytes: number = array.length;
+                    if (bytes % 8 !== 0)
+                        throw new Error('Illegal buffer length');
+                    let len: number = bytes / 8;
+                    buf.writeInt32(len);
+                    buf.append(ByteBuffer.wrap(array));
+                }
+            } as IOHandler<TagLongArray>
+        };
+
+        function ofHandler<T extends TagBase>(tagType: TagType): IOHandler<T> {
+            let handler: IOHandler<TagBase> | undefined = handlers[tagType];
+            if (handler === undefined)
+                throw new Error('No IO handler founded');
+            return handler as IOHandler<T>;
+        }
+
+        export interface ReadOptions {
+            compressed?: boolean;
+        }
+
+        export function readRoot(buffer: Buffer, options?: ReadOptions): TagCompound {
+            if (options !== undefined) {
+                if (options.compressed !== undefined && options.compressed)
+                    buffer = gzip.gunzipSync(buffer);
+            }
+            const byteBuffer = ByteBuffer.wrap(buffer);
+            let rootTagHead: TagHead = readTagHead(byteBuffer);
+            if (rootTagHead.tagType !== TagType.Compound)
+                throw new Error('Root tag must be compound');
+            if (rootTagHead.tagName !== '')
+                throw new Error('Root tag name must be empty');
+            let rootTag: TagCompound = ofHandler<TagCompound>(TagType.Compound).read(byteBuffer);
+            return rootTag;
+        }
+
+        export interface WriteOptions {
+            compressed?: boolean;
+        }
+
+        export function writeRoot(rootTag: TagCompound, options?: WriteOptions): Buffer {
+            const byteBuffer: ByteBuffer = new ByteBuffer();
+            let rootTagHead: TagHead = { tagType: rootTag.tagType, tagName: '' };
+            writeTagHead(byteBuffer, rootTagHead);
+            ofHandler<TagCompound>(TagType.Compound).write(byteBuffer, rootTag);
+            let buffer: Buffer = Buffer.from(byteBuffer.flip().toArrayBuffer());
+            if (options !== undefined) {
+                if (options.compressed !== undefined && options.compressed)
+                    buffer = gzip.gzipSync(buffer);
+            }
+            return buffer;
+        }
+
+        function readTagType(tagTypeByte: number): TagType {
+            if (tagTypeByte < 0 || tagTypeByte > 12)
+                throw new Error('Illegal tag type');
+            return tagTypeByte;
+        }
+
+        function writeTagType(tagType: TagType): number {
+            let tagTypeByte = tagType;
+            return tagTypeByte;
+        }
+
+        interface TagHead {
+            tagType: TagType;
+            tagName: string;
+        }
+
+        function readTagHead(buf: ByteBuffer): TagHead {
+            let tagTypeByte: number = buf.readInt8();
+            let tagType: TagType = readTagType(tagTypeByte);
+            if (tagType === TagType.End)
+                return { tagType: tagType, tagName: '' };
+            let tagNameTag: TagString = ofHandler<TagString>(TagType.String).read(buf);
+            let tagName: string = tagNameTag.value;
+            return { tagType: tagType, tagName: tagName };
+        }
+
+        function writeTagHead(buf: ByteBuffer, tagHead: TagHead): void {
+            let tagType: TagType = tagHead.tagType;
+            let tagTypeByte: number = writeTagType(tagType);
+            buf.writeInt8(tagTypeByte);
+            if (tagType === TagType.End)
+                return;
+            let tagName: string = tagHead.tagName;
+            let tagNameTag: TagString = TagScalar.newString(tagName);
+            ofHandler<TagString>(TagType.String).write(buf, tagNameTag);
+        }
+    }
 }
+
 export default NBT;
 
 
@@ -312,3 +872,4 @@ function readUTF8(buff: ByteBuffer) {
     // The number of chars produced may be less than utflen
     return chararr.map(i => String.fromCharCode(i)).join('')
 }
+

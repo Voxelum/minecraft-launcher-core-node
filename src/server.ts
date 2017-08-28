@@ -14,7 +14,7 @@ function writeString(buff: ByteBuffer, string: string) {
 
 export namespace ServerInfo {
     export function parseNBT(buf: Buffer): ServerInfo[] {
-        let { value } = NBT.parse(buf)
+        let { value } = NBT.Serializer.deserialize(buf)
         if (value.servers) return value.servers;
         return []
     }
