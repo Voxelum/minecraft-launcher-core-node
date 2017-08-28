@@ -227,3 +227,44 @@ describe('TestNestedList', () => {
         assert.deepEqual(NBT.Persistence.writeRoot(rootTag), nbtData);
     })
 })
+describe('TypedNBTDocs', () => {
+    it('test typed nbt docs', () => {
+        // First create NBT tag like this.
+        let rootTag: NBT.TagCompound = NBT.TagCompound.newCompound();
+        rootTag.set('TheEnd', NBT.TagScalar.newString("That's all"));
+        rootTag.set('key1', NBT.TagScalar.newString('value1'));
+        // Checks if key exists. Then cast it to string tag.
+        let key1Tag: NBT.TagString = checkExists(rootTag.get('key1')).asTagString();
+        function checkExists<T>(t: T | undefined): T {
+            if (t === undefined)
+                throw new Error('key not exists');
+            return t;
+        }
+        console.log(key1Tag.value); // print value1
+        // If list contains list. list those inside forget there element type.
+        let listTag: NBT.TagList<NBT.TagAnyList> = NBT.TagList.newListList();
+        rootTag.set('testList', listTag);
+        let stringListTag: NBT.TagList<NBT.TagString> = NBT.TagList.newStringList();
+        stringListTag.push(NBT.TagScalar.newString('hello'), NBT.TagScalar.newString('world'));
+        let doubleListTag: NBT.TagList<NBT.TagDouble> = NBT.TagList.newDoubleList();
+        // This gives you a way to add different list in.
+        listTag.push(stringListTag, doubleListTag);
+        // And still prevent you add other things in it.
+        // listTag.push(NBT.TagCompound.newCompound()); // Illegal
+        // You can cast list to whatever list you want after you got a list without element type.
+        console.log(listTag[0].asTagListString()[0].asTagString().value); // print hello
+        // You can iterate values in list.
+        for (let stringTag of stringListTag) {
+            console.log(stringTag.value); // print hello then print world
+        }
+        // And also entries in compound.
+        for (let [key, value] of rootTag) {
+            if (value.tagType === NBT.TagType.String)
+                console.log('[' + key + ' = ' + value.asTagString().value + ']');
+        }
+        // Finally you can write root tags to buffer and read root tags from buffer.
+        let buffer: Buffer = NBT.Persistence.writeRoot(rootTag, { compressed: true } );
+        let ourTag: NBT.TagCompound = NBT.Persistence.readRoot(buffer, { compressed: true } );
+        console.log(checkExists(ourTag.get('TheEnd')).asTagString().value); // print That's all
+    })
+})
