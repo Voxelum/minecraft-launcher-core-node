@@ -12,10 +12,6 @@ export namespace NBT {
         read(buf: ByteBuffer, find: (shape: string) => string | undefined): { type: any, value: any };
         write(buf: ByteBuffer, value: any, scope: any, find: (id: string) => any): void;
     }
-    export enum Type {
-        End = 0, Byte = 1, Short = 2, Int = 3, Long = 4, Float = 5, Double = 6,
-        ByteArray = 7, String = 8, List = 9, Compound = 10, IntArray = 11, LongArray = 12
-    }
 
     export class Serializer {
         static create() {
@@ -78,19 +74,19 @@ export namespace NBT {
 
     function val(type: any, value: any) { return { type, value } }
     const visitors: IO[] = [
-        { read: (buf) => val(NBT.Type.End, undefined), write(buf, v) { } }, //end
-        { read: (buf) => val(NBT.Type.Byte, buf.readByte()), write(buf, v) { buf.writeByte(v) } }, //byte
-        { read: (buf) => val(NBT.Type.Short, buf.readShort()), write(buf, v) { buf.writeShort(v) } }, //short
-        { read: (buf) => val(NBT.Type.Int, buf.readInt()), write(buf, v) { buf.writeInt(v) } }, //int
-        { read: (buf) => val(NBT.Type.Long, buf.readLong()), write(buf, v) { buf.writeInt64(v) } }, //long
-        { read: (buf) => val(NBT.Type.Float, buf.readFloat()), write(buf, v) { buf.writeFloat(v) } }, //float
-        { read: (buf) => val(NBT.Type.Double, buf.readDouble()), write(buf, v) { buf.writeDouble(v) } }, //double
+        { read: (buf) => val(Type.End, undefined), write(buf, v) { } }, //end
+        { read: (buf) => val(Type.Byte, buf.readByte()), write(buf, v) { buf.writeByte(v) } }, //byte
+        { read: (buf) => val(Type.Short, buf.readShort()), write(buf, v) { buf.writeShort(v) } }, //short
+        { read: (buf) => val(Type.Int, buf.readInt()), write(buf, v) { buf.writeInt(v) } }, //int
+        { read: (buf) => val(Type.Long, buf.readLong()), write(buf, v) { buf.writeInt64(v) } }, //long
+        { read: (buf) => val(Type.Float, buf.readFloat()), write(buf, v) { buf.writeFloat(v) } }, //float
+        { read: (buf) => val(Type.Double, buf.readDouble()), write(buf, v) { buf.writeDouble(v) } }, //double
         { //byte array
             read(buf) {
                 let len = buf.readInt();
                 let arr: number[] = new Array(len);
                 for (let i = 0; i < len; i++) arr[i] = buf.readByte();
-                return val(NBT.Type.ByteArray, arr);
+                return val(Type.ByteArray, arr);
             },
             write(buf, arr) {
                 buf.writeInt(arr.length)
@@ -98,7 +94,7 @@ export namespace NBT {
             }
         },
         { //string
-            read(buf) { return val(NBT.Type.String, readUTF8(buf)); },
+            read(buf) { return val(Type.String, readUTF8(buf)); },
             write(buf, v) { writeUTF8(buf, v) }
         },
         { //list
@@ -129,13 +125,13 @@ export namespace NBT {
                 else if (typeof type === 'string') {
                     let customScope = find(type)
                     if (!customScope) throw `Unknown custom type [${type}]`
-                    buf.writeByte(NBT.Type.Compound);
+                    buf.writeByte(Type.Compound);
                     buf.writeInt(value.length);
-                    let writer = visitors[NBT.Type.Compound];
+                    let writer = visitors[Type.Compound];
                     for (let v of value) writer.write(buf, v, customScope, find)
                 }
                 else if (typeof type === 'object') {
-                    let writer = visitors[NBT.Type.Compound];
+                    let writer = visitors[Type.Compound];
                     for (let v of value) writer.write(buf, v, type, find)
                 }
                 else throw new Error("WTH")
@@ -170,13 +166,13 @@ export namespace NBT {
                         nextType = type
                     } else if (type instanceof Array) {
                         nextScope = type;
-                        nextType = NBT.Type.List
+                        nextType = Type.List
                     } else if (typeof type === 'string') {
-                        nextType = NBT.Type.Compound;
+                        nextType = Type.Compound;
                         nextScope = find(type);  //support custom type
                         if (!nextScope) throw `Unknown custom type [${type}]`
                     } else if (typeof type === 'object') {
-                        nextType = NBT.Type.Compound
+                        nextType = Type.Compound
                         nextScope = type;
                     } else throw `Invalid type [${type}]`
 
@@ -194,7 +190,7 @@ export namespace NBT {
                 let len = buf.readInt();
                 let arr: number[] = new Array(len);
                 for (let i = 0; i < len; i++) arr[i] = buf.readInt();
-                return val(NBT.Type.IntArray, arr);
+                return val(Type.IntArray, arr);
             },
             write(buf, v) {
                 buf.writeInt(v.length)
@@ -202,9 +198,15 @@ export namespace NBT {
             }
         }
     ];
-
-    export const TagType = NBT.Type;
-    export type TagType = Type;
+    
+    export enum TagType {
+        End = 0, Byte = 1, Short = 2, Int = 3, Long = 4, Float = 5, Double = 6,
+        ByteArray = 7, String = 8, List = 9, Compound = 10, IntArray = 11, LongArray = 12
+    }
+    const Type = TagType; 
+    
+    // export const TagType = Type;
+    // export type TagType = Type;
     export type TagNormal = TagByte | TagShort | TagInt | TagLong | TagFloat | TagDouble | TagByteArray | TagString | TagAnyList | TagCompound | TagIntArray | TagLongArray;
     export type ScalarTypes = number | Long | string | Buffer;
     export type TagByte = TagScalar<number>;
