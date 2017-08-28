@@ -429,6 +429,19 @@ export namespace NBT {
             return Array.prototype.unshift.apply(this.list, items);
         }
 
+        add(value: T): this {
+            if (typeof value !== 'object' || !(value instanceof TagBase))
+                throw new TypeError('Illegal element');
+            if (!TagList.checkElement(value, this.elementTagType))
+                throw new TypeError('Illegal element');
+            this.list.push(value);
+            return this;
+        }
+
+        clear(): void {
+            this.list.length = 0;
+        }
+
         *[Symbol.iterator](): IterableIterator<T> {
             for (let i: number = 0; i < this.list.length; i++)
                 yield this.list[i];
