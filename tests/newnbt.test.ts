@@ -1,6 +1,7 @@
 import { NewNBT } from '../index'
 import * as Long from 'long'
 import * as assert from 'assert'
+
 describe('Test', () => {
     it('just test', () => {
         let list: NewNBT.TagList<NewNBT.TagByte> = NewNBT.TagList.newByteList();
