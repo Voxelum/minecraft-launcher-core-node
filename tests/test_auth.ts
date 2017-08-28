@@ -1,8 +1,8 @@
-import { AuthService } from '../src/auth'
+import { AuthService } from '../index'
 import * as assert from 'assert'
 describe('ygg-auth', () => {
     it('should response with invalid credit', (done) => {
-        AuthService.newYggdrasilAuthService().login('18211182378@163.com', 'asd-x', 'cc')
+        AuthService.newYggdrasilAuthService().login('18211378@163.com', 'asd-x', 'cc')
             .then((suc) => {
                 throw "This should not happen...";
             }, (err) => {
@@ -10,5 +10,8 @@ describe('ygg-auth', () => {
                 assert.equal('Invalid credentials. Invalid username or password.', (err as Error).message)
                 done()
             })
+    })
+    it('offline auth username should be correctly', () => {
+        assert.equal(AuthService.offlineAuth('ci010').selectedProfile.name, 'ci010')
     })
 })

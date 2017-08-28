@@ -1,13 +1,11 @@
 import { Version, Library, Native, Artifact } from './version'
-import { AuthResponse, UserType } from './auth'
-import { MinecraftFolder } from './file_struct'
+import { Auth, UserType } from './auth';
 import { exec, ChildProcess } from 'child_process'
-import * as Zip from 'adm-zip'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as os from 'os'
-
-import { startWith, DIR } from './string_utils'
+import * as Zip from 'jszip'
+import { MinecraftFolder } from './utils/folder';
 /**
  * this module migrates from JMCCC https://github.com/to2mbn/JMCCC/tree/master/jmccc/src/main/java/org/to2mbn/jmccc/launch
  */
@@ -30,12 +28,20 @@ export namespace Launcher {
         extraJVMArgs?: string[]
         extraMCArgs?: string[]
 
+        /**
+         * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
+         */
+        yggdrasilAgent?: {
+            jar: string,
+            server: string,
+        },
+
         ignoreInvalidMinecraftCertificates?: boolean
         ignorePatchDiscrepancies?: boolean
     }
 
-    export async function launch(auth: AuthResponse, options: Option): Promise<ChildProcess> {
-        await DIR(options.gamePath)
+    export async function launch(auth: Auth, options: Option): Promise<ChildProcess> {
+        await fs.ensureDir(options.gamePath)
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
         let mc = new MinecraftFolder(options.resourcePath)
@@ -59,20 +65,23 @@ export namespace Launcher {
         return libs
     }
 
-    function checkNative(mc: MinecraftFolder, version: Version) {
+    async function checkNative(mc: MinecraftFolder, version: Version) {
         let native = mc.getNativesRoot(version.root)
         for (let lib of version.libraries) if ((lib as Native).extractExcludes) {
+            const excludes = (lib as Native).extractExcludes;
             let from = mc.getLibrary(lib)
-            let zip = new Zip(from)
-            let entries = zip.getEntries()
-            for (let e of entries)
-                for (let ex of (lib as Native).extractExcludes)
-                    if (!startWith(e.entryName, ex))
-                        zip.extractEntryTo(e, native, false, true)
+            let zip = Zip(await fs.readFile(from))
+            for (const entry of zip.filter((path, entry) => {
+                for (let exclude of excludes)
+                    if (path.startsWith(exclude)) return false;
+                return true
+            })) {
+                await fs.writeFile(path.join(native, entry.name), await entry.async('nodebuffer'))
+            }
         }
     }
 
-    function genArgs(auth: AuthResponse, options: any, version: Version): string[] {
+    function genArgs(auth: Auth, options: any, version: Version): string[] {
         let mc = new MinecraftFolder(options.resourcePath)
         let cmd: string[] = [];
         if (options.javaPath.match(/.* *.*/)) { options.javaPath = '"' + options.javaPath + '"' }
@@ -92,6 +101,8 @@ export namespace Launcher {
         if (options.ignorePatchDiscrepancies)
             cmd.push('-Dfml.ignorePatchDiscrepancies=true');
 
+        if (options.yggdrasilAgent)
+            cmd.push(`-javaagent:${options.yggdrasilAgent.jar}=@${options.yggdrasilAgent.server}`)
         //add extra jvm args
         if (options.extraJVMArgs) cmd = cmd.concat(options.extraJVMArgs);
 
@@ -154,3 +165,5 @@ export namespace Launcher {
         return cmd
     }
 }
+
+export default Launcher

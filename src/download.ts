@@ -1,10 +1,13 @@
-import { MinecraftLocation, MinecraftFolder } from './file_struct';
 import * as https from 'https'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as url from 'url'
-import { GET, DOWN, DIR, READ, CHECKSUM, UPDATE } from './string_utils'
 import * as urls from 'url';
+import UPDATE from './utils/update'
+import DOWN from './utils/download'
+import CHECKSUM from './utils/checksum'
+import { Asset, Library, Version, VersionMeta, VersionMetaList } from './version'
+import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 
 declare module './version' {
     interface VersionMeta {
@@ -28,6 +31,10 @@ declare module './version' {
             fallback?: MetaContainer, remote?: string
         }): Promise<MetaContainer>;
 
+        function install(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
+        function install(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
+        function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
+
         function downloadVersion(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Promise<Version>
         function downloadVersion(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Promise<Version>
         function downloadVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Promise<Version>
@@ -44,8 +51,6 @@ declare module './version' {
     }
 }
 
-import { Asset, Library, Version, VersionMeta, VersionMetaList } from './version'
-
 Version.updateVersionMeta = function (option?: {
     fallback?: Version.MetaContainer, remote?: string
 }): Promise<Version.MetaContainer> {
@@ -56,13 +61,19 @@ Version.updateVersionMeta = function (option?: {
     }).then(result => result as { list: VersionMetaList, date: string })
 }
 
+
+Version.install = function (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) {
+    return Version.downloadVersion(type, versionMeta, minecraft, option ? option.checksum : undefined)
+        .then(ver => type === 'client' ? Version.checkDependency(ver, minecraft, option) : ver)
+}
+
 Version.downloadVersion = function downloadVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = true): Promise<Version> {
     return Version.downloadVersionJson(versionMeta, minecraft).then((version) => Version.downloadVersionJar(type, version, minecraft, checksum))
 }
 Version.downloadVersionJson = async function (version: VersionMeta, minecraft: MinecraftLocation) {
     const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
     let json = folder.getVersionJson(version.id)
-    await DIR(folder.getVersionRoot(version.id))
+    fs.ensureDir(folder.getVersionRoot(version.id))
     if (!fs.existsSync(json)) await new Promise<void>((res, rej) => {
         let jsonStream = fs.createWriteStream(json)
         let u = url.parse(version.url)
@@ -78,7 +89,7 @@ Version.downloadVersionJson = async function (version: VersionMeta, minecraft: M
 }
 Version.downloadVersionJar = async function (type: string, version: Version, minecraft: MinecraftLocation, checksum: boolean = false): Promise<Version> {
     const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-    await DIR(folder.getVersionRoot(version.version))
+    await fs.ensureDir(folder.getVersionRoot(version.version))
     let filename = type == 'client' ? version.version + '.jar' : version.version + '-' + type + '.jar'
     let jar = path.join(folder.getVersionRoot(version.version), filename)
     const exist = fs.existsSync(jar)
@@ -107,7 +118,7 @@ async function downloadLib(lib: any, folder: any, libraryHost: any, checksum: an
         const exist = fs.existsSync(filePath);
         const rpath = libraryHost || lib.customizedUrl || 'https://libraries.minecraft.net'
         if (!exist) {
-            if (!fs.existsSync(dirPath)) await DIR(dirPath)
+            await fs.ensureDir(dirPath)
             await DOWN(rpath + "/" + rawPath, filePath)
         }
         if (checksum && lib.downloadInfo.sha1) {
@@ -144,13 +155,13 @@ async function downloadAsset(content: any, key: any, folder: any, assetsHost: an
     let file = path.join(dir, hash)
     const exist = fs.existsSync(file)
     if (!exist) {
-        await DIR(dir)
+        await fs.ensureDir(dir)
         await DOWN(`${assetsHost}/${head}/${hash}`, file)
     }
     if (checksum) {
         let sum = await CHECKSUM(file)
         if (sum != hash && exist) {// if exist, re-download
-            await DIR(dir)
+            await fs.ensureDir(dir)
             await DOWN(`${assetsHost}/${head}/${hash}`, file)
             sum = await CHECKSUM(file)
         }
@@ -164,11 +175,11 @@ Version.downloadAssets = async function (version: Version, minecraft: MinecraftL
     const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
     let jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
     if (!fs.existsSync(jsonPath)) {
-        await DIR(path.join(folder.assets, 'indexes'))
+        await fs.ensureDir(path.join(folder.assets, 'indexes'))
         await DOWN(version.assetIndexDownloadInfo.url, jsonPath)
     }
-    let content: any = JSON.parse(await READ(jsonPath)).objects
-    await DIR(folder.getPath('assets', 'objects'))
+    let content: any = (await fs.readJson(jsonPath)).objects
+    await fs.ensureDir(folder.getPath('assets', 'objects'))
     const assetsHost = option ? option.assetsHost || 'https://resources.download.minecraft.net' : 'https://resources.download.minecraft.net';
     const checksum = option ? option.checksum ? option.checksum : false : false;
     try {

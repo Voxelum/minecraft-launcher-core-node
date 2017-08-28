@@ -1,29 +1,11 @@
 import * as gzip from 'zlib'
 import * as ByteBuffer from 'bytebuffer'
 
-import { readString, writeString } from './string_utils'
-
 //not finished yet...
 export namespace NBT {
     export enum Type {
         End = 0, Byte = 1, Short = 2, Int = 3, Long = 4, Float = 5, Double = 6,
         ByteArray = 7, String = 8, List = 9, Compound = 10, IntArray = 11
-    }
-
-    class Scheme {
-        constructor(private scheme: any) {
-        }
-
-        getType(...paths: string[]): NBT.Type | any {
-            if (!paths) return NBT.Type.Compound;
-            let current = this.scheme;
-            for (let path of paths) {
-                current = current[path];
-                if (!current)
-                    return NBT.Type.End;
-            }
-            return current;
-        }
     }
 
     let visitors: Visitor[] = [
@@ -47,7 +29,8 @@ export namespace NBT {
             }
         },
         { //string
-            read(buf) { return readString(buf); }, write(buf, v) { writeString(buf, v) }
+            read(buf) { return readUTF8(buf); },
+            write(buf, v) { writeUTF8(buf, v) }
         },
         { //list
             read(buf, schemaScope) {
@@ -160,7 +143,7 @@ export namespace NBT {
         write(buf: ByteBuffer, value: any, context: { scope?: any, find: (id: string) => any }): void;
     }
 
-    export function read(fileData: Buffer, compressed: boolean = false): { root: any, schema: any } {
+    export function parse(fileData: Buffer, compressed: boolean = false): { root: any, schema: any } {
         if (compressed) {
             let zip = gzip.gunzipSync(fileData);
             let bytebuffer = ByteBuffer.wrap(zip);
@@ -182,57 +165,45 @@ export namespace NBT {
         return { root: obj, schema: scope }
     }
 
-    export function write(schema?: any, compressed: boolean = false): Buffer {
-        let arr = new ArrayBuffer(4)
-        ByteBuffer.wrap(arr)
-        return Buffer.from('')
+    export function write(tag: Compound, compressed: boolean = false): Buffer {
+        const buffer = new ByteBuffer();
+        buffer.writeByte(Type.Compound);
+        writeUTF8(buffer, '');
+        writeTag(tag, buffer);
+        if (compressed) {
+            return gzip.gzipSync(Buffer.from(buffer.flip().toArrayBuffer()));
+        } else {
+            return Buffer.from(buffer.flip().toArrayBuffer());
+        }
+    }
+
+    function writeTag(tag: Base, buffer: ByteBuffer) {
+        if (tag.type === Type.Compound) {
+            const compound = <Compound><any>tag
+            for (const key of compound.keys()) {
+                const val = compound.value[key]
+                buffer.writeByte(val.type)
+                writeUTF8(buffer, key)
+                writeTag(val, buffer);
+            }
+            buffer.writeByte(0);
+        }
+        else if (tag.type === Type.List) {
+            const list = <List><any>tag;
+            const type = list.length === 0 ? 1 : list.value[0].type;
+            buffer.writeByte(type)
+            buffer.writeInt(list.length)
+            for (const val of list.value) {
+                if (val.type === type)
+                    writeTag(val, buffer)
+                else throw new Error(`Invalid type [${val.type}] for list with type [${type}]`)
+            }
+        } else
+            visitors[tag.type].write(buffer, tag.value, { find() { } })
     }
 
     export abstract class Base {
-        protected constructor(readonly type: NBT.Type, protected _value: any) { }
-
-        get numberValue(): number {
-            if (this.isNumber) return this._value
-            else throw 'Wrong Type'
-        }
-        get stringValue(): string {
-            if (this.isString) return this._value
-            else throw 'Wrong Type'
-        }
-        get longValue(): Long {
-            if (this.isLong) return this._value
-            else throw 'Wrong Type'
-        }
-        get compoundValue(): Compound {
-            if (this.isCompound) return <Compound><any>this
-            else throw 'Wrong Type'
-        }
-        get listValue(): List {
-            if (this.isList) return <List><any>this
-            else throw 'Wrong Type'
-        }
-        get numberArrayValue(): number[] {
-            if (this.isNumberArray) return this._value
-            else throw 'Wrong Type'
-        }
-        get isNumber(): boolean {
-            return this.type == NBT.Type.Int ||
-                this.type == NBT.Type.Byte ||
-                this.type == NBT.Type.Short ||
-                this.type == NBT.Type.Float ||
-                this.type == NBT.Type.Double
-        }
-        get isString(): boolean { return this.type == Type.String }
-        get isNumberArray(): boolean {
-            return this.type == Type.IntArray ||
-                this.type == Type.ByteArray
-        }
-        get isList(): boolean {
-            return this.type == Type.List
-        }
-        get isLong(): boolean { return this.type == Type.Long }
-        get isCompound(): boolean { return this.type == Type.Compound }
-
+        protected constructor(readonly type: NBT.Type, readonly value: any) { }
         abstract toJSON(): object;
     }
 
@@ -242,41 +213,184 @@ export namespace NBT {
     }
 
     export const EMPTY: Base = new Empty()
-    export class List extends Base {
-        constructor(type: Type) { super(type, []) }
 
+    export class List extends Base {
+        constructor(list?: Base[]) {
+            super(Type.List, list ? list : []);
+        }
+        get length() { return this.value.length; }
+        get value(): Array<Base> { return this.value; }
         toJSON() {
-            return {}
+            return JSON.parse(JSON.stringify(this))
         }
     }
 
     export class Compound extends Base {
-        constructor(original?: Compound | { [key: string]: Base } | Map<string, Base>) { super(Type.Compound, {}) }
-        boolean(name: string, value: boolean): this { this._value[name] = new Primitive(Type.Byte, value); return this }
-        byte(name: string, value: number): this { this._value[name] = new Primitive(Type.Byte, value); return this; }
-        short(name: string, value: number): this { this._value[name] = new Primitive(Type.Short, value); return this; }
-        int(name: string, value: number): this { this._value[name] = new Primitive(Type.Int, value); return this; }
-        long(name: string, value: number | Long): this { this._value[name] = new Primitive(Type.Long, value); return this; }
-        float(name: string, value: number): this { this._value[name] = new Primitive(Type.Float, value); return this; }
-        double(name: string, value: number): this { this._value[name] = new Primitive(Type.Double, value); return this; }
-        string(name: string, value: string): this { this._value[name] = new Primitive(Type.String, value); return this }
-        bytes(name: string, value: number[]): this { this._value[name] = new Primitive(Type.ByteArray, value); return this; }
-        ints(name: string, value: number[]): this { this._value[name] = new Primitive(Type.IntArray, value); return this; }
-        nbt(name: string, value: Base): this { this._value[name] = value; return this }
+        constructor(original?: Compound | { [key: string]: Base } | Map<string, Base>, deepcopy: boolean = false) {
+            super(Type.Compound, {})
+            let val: any;
+            if (original instanceof Compound) {
+                val = deepcopy ? JSON.parse(JSON.stringify(original.value)) : { ...original.value }
+            } else if (original instanceof Map) {
+                val = {}
+                original.forEach((v, k) => { val[k] = v; })
+            } else {
+                val = deepcopy ? JSON.parse(JSON.stringify(original)) : { ...original }
+            }
+            (this as any).value = val;
+        }
 
+        boolean(name: string, value: boolean): this { this.value[name] = new Primitive(Type.Byte, value); return this }
+        byte(name: string, value: number): this { this.value[name] = new Primitive(Type.Byte, value); return this; }
+        short(name: string, value: number): this { this.value[name] = new Primitive(Type.Short, value); return this; }
+        int(name: string, value: number): this { this.value[name] = new Primitive(Type.Int, value); return this; }
+        long(name: string, value: number | Long): this { this.value[name] = new Primitive(Type.Long, value); return this; }
+        float(name: string, value: number): this { this.value[name] = new Primitive(Type.Float, value); return this; }
+        double(name: string, value: number): this { this.value[name] = new Primitive(Type.Double, value); return this; }
+        string(name: string, value: string): this { this.value[name] = new Primitive(Type.String, value); return this }
+        bytes(name: string, value: number[]): this { this.value[name] = new Primitive(Type.ByteArray, value); return this; }
+        ints(name: string, value: number[]): this { this.value[name] = new Primitive(Type.IntArray, value); return this; }
+        list(name: string, value: Base[]): this {
+            if (value.length == 0) return this;
+            this.value[name] = new List(value)
+            return this;
+        }
+
+        nbt(name: string, value: Base): this { this.value[name] = value; return this }
         get(name: string, fallback?: Base): Base | undefined {
-            const val = this._value[name];
+            const val = this.value[name];
             return val ? val : fallback;
         }
-        has(name: string): boolean { return this._value[name] !== undefined }
+        has(name: string): boolean { return this.value[name] !== undefined }
+        keys() { return Object.keys(this.value) }
+        [Symbol.iterator]() { return this.keys().map(k => this.value[k]) }
+        values() { return this.keys().map(k => this.value[k]) }
         toJSON() {
-            return {}
+            return JSON.parse(JSON.stringify(this.value))
         }
     }
     export class Primitive extends Base {
-        constructor(type: NBT.Type, _value: string | number | boolean | number[] | Long) { super(type, _value) }
+        constructor(type: NBT.Type, value: string | number | boolean | number[] | Long) { super(type, value) }
         toJSON() {
-            return {}
+            return this.value
         }
     }
+}
+export default NBT;
+
+function writeUTF8(out: ByteBuffer, str: string) {
+    let strlen = str.length;
+    let utflen = 0;
+    let c: number;
+    let count: number = 0;
+
+    /* use charAt instead of copying String to char array */
+    for (let i = 0; i < strlen; i++) {
+        c = str.charCodeAt(i);
+        if ((c >= 0x0001) && (c <= 0x007F)) {
+            utflen++;
+        } else if (c > 0x07FF) {
+            utflen += 3;
+        } else {
+            utflen += 2;
+        }
+    }
+
+    if (utflen > 65535)
+        throw new Error(
+            "encoded string too long: " + utflen + " bytes");
+
+    let bytearr = new Uint8Array(utflen + 2);
+
+    bytearr[count++] = ((utflen >>> 8) & 0xFF);
+    bytearr[count++] = ((utflen >>> 0) & 0xFF);
+
+    let i = 0;
+    for (i = 0; i < strlen; i++) {
+        c = str.charCodeAt(i);
+        if (!((c >= 0x0001) && (c <= 0x007F))) break;
+        bytearr[count++] = c;
+    }
+
+    for (; i < strlen; i++) {
+        c = str.charCodeAt(i);
+        if ((c >= 0x0001) && (c <= 0x007F)) {
+            bytearr[count++] = c;
+
+        } else if (c > 0x07FF) {
+            bytearr[count++] = (0xE0 | ((c >> 12) & 0x0F));
+            bytearr[count++] = (0x80 | ((c >> 6) & 0x3F));
+            bytearr[count++] = (0x80 | ((c >> 0) & 0x3F));
+        } else {
+            bytearr[count++] = (0xC0 | ((c >> 6) & 0x1F));
+            bytearr[count++] = (0x80 | ((c >> 0) & 0x3F));
+        }
+    }
+    out.append(bytearr)
+    // out.write(bytearr, 0, utflen + 2);
+    return utflen + 2;
+}
+function readUTF8(buff: ByteBuffer) {
+    let utflen = buff.readUint16()
+    let bytearr: number[] = new Array<number>(utflen);
+    let chararr = new Array<number>(utflen);
+
+    let c, char2, char3;
+    let count = 0;
+    let chararr_count = 0;
+
+    for (let i = 0; i < utflen; i++)
+        bytearr[i] = (buff.readByte())
+
+    while (count < utflen) {
+        c = bytearr[count] & 0xff;
+        if (c > 127) break;
+        count++;
+        chararr[chararr_count++] = c;
+    }
+
+    while (count < utflen) {
+        c = bytearr[count] & 0xff;
+        switch (c >> 4) {
+            case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+                /* 0xxxxxxx*/
+                count++;
+                chararr[chararr_count++] = c;
+                break;
+            case 12: case 13:
+                /* 110x xxxx   10xx xxxx*/
+                count += 2;
+                if (count > utflen)
+                    throw new Error(
+                        "malformed input: partial character at end");
+                char2 = bytearr[count - 1];
+                if ((char2 & 0xC0) != 0x80)
+                    throw new Error(
+                        "malformed input around byte " + count);
+                chararr[chararr_count++] = (((c & 0x1F) << 6) |
+                    (char2 & 0x3F));
+                break;
+            case 14:
+                /* 1110 xxxx  10xx xxxx  10xx xxxx */
+                count += 3;
+                if (count > utflen)
+                    throw new Error(
+                        "malformed input: partial character at end");
+                char2 = bytearr[count - 2];
+                char3 = bytearr[count - 1];
+                if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80))
+                    throw new Error(
+                        "malformed input around byte " + (count - 1));
+                chararr[chararr_count++] = (((c & 0x0F) << 12) |
+                    ((char2 & 0x3F) << 6) |
+                    ((char3 & 0x3F) << 0));
+                break;
+            default:
+                /* 10xx xxxx,  1111 xxxx */
+                throw new Error(
+                    "malformed input around byte " + count);
+        }
+    }
+    // The number of chars produced may be less than utflen
+    return chararr.map(i => String.fromCharCode(i)).join('')
 }
