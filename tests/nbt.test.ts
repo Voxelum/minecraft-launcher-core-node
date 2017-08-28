@@ -27,6 +27,8 @@ describe('NBT', () => {
     })
     it('should deserialize object', () => {
         to = ser.deserialize(buf).value
+        const raw = NBT.Serializer.deserialize(buf).value;
+        assert.deepEqual(to, raw)
     })
     it('should produce same object from deserializing', () => {
         assert.deepEqual(from, to);
