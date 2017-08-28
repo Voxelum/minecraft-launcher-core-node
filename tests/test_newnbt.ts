@@ -65,8 +65,8 @@ describe('TestAllTags', () => {
                   0x6F,                                                         //
             0x09, 0x00, 0x04, 0x62, 0x61, 0x72, 0x39, 0x08, 0x00, 0x00, 0x00,   //    'bar9': List<String>[2]
                   0x02,                                                         //
-                  0x00, 0x03, 0x66, 0x6F, 0x6F,                                 //        'foo'
-                  0x00, 0x03, 0x62, 0x61, 0x72,                                 //        'bar'
+                  0x00, 0x03, 0x66, 0x6F, 0x6F,                                 //        0: String = 'foo'
+                  0x00, 0x03, 0x62, 0x61, 0x72,                                 //        1: String = 'bar'
             0x0A, 0x00, 0x04, 0x62, 0x61, 0x72, 0x41,                           //    'barA': Compound
                   0x01, 0x00, 0x04, 0x62, 0x61, 0x72, 0x31, 0x01,               //        'bar1': Byte = 1
                   0x02, 0x00, 0x04, 0x62, 0x61, 0x72, 0x32, 0x00, 0x01,         //        'bar2': Short = 1
@@ -164,6 +164,32 @@ describe('TestNestedCompound', () => {
         ATag.set('B', BTag);
         testTag.set('C', CTag);  
         CTag.set('D', DTag);      
+        assert.deepEqual(rootTag, testTag);
+        assert.deepEqual(NewNBT.Persistence.writeRoot(rootTag), nbtData);
+    })
+})
+describe('TestNestedList', () => {
+    it('should nested list read and write correctly', () => {
+        let nbtData: Buffer = Buffer.from
+        ([0x0A, 0x00, 0x00,                                                     //'': Compound
+            0x09, 0x00, 0x01, 0x41, 0x09, 0x00, 0x00, 0x00, 0x02,               //    'A': List<List>[2]
+                0x09, 0x00, 0x00, 0x00, 0x01,                                   //        0: List<List>[1]
+                    0x09, 0x00, 0x00, 0x00, 0x00,                               //            0: List<List>[0]
+                0x09, 0x00, 0x00, 0x00, 0x01,                                   //        1: List<List>[1]
+                    0x09, 0x00, 0x00, 0x00, 0x00,                               //            0: List<List>[0]
+            0x00]);                                                             //    '': End
+        let rootTag: NewNBT.TagCompound = NewNBT.Persistence.readRoot(nbtData);
+        let testTag: NewNBT.TagCompound = NewNBT.TagCompound.newCompound(); 
+        let listATag: NewNBT.TagList<NewNBT.TagAnyList> = NewNBT.TagList.newListList();
+        let list0Tag: NewNBT.TagList<NewNBT.TagAnyList> = NewNBT.TagList.newListList();
+        let list0_0Tag: NewNBT.TagList<NewNBT.TagAnyList> = NewNBT.TagList.newListList();
+        let list1Tag: NewNBT.TagList<NewNBT.TagAnyList> = NewNBT.TagList.newListList();
+        let list1_0Tag: NewNBT.TagList<NewNBT.TagAnyList> = NewNBT.TagList.newListList();
+        testTag.set('A', listATag);
+        listATag[0] = list0Tag;
+        list0Tag[0] = list0_0Tag;
+        listATag[1] = list1Tag;
+        list1Tag[0] = list1_0Tag;
         assert.deepEqual(rootTag, testTag);
         assert.deepEqual(NewNBT.Persistence.writeRoot(rootTag), nbtData);
     })
