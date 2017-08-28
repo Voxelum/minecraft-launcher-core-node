@@ -450,7 +450,7 @@ export namespace NewNBT {
                     let bytes: number = len * 4;
                     let array: Buffer = Buffer.from(buf.slice(buf.offset, buf.offset + bytes).toArrayBuffer(true));
                     buf.skip(bytes);
-                    return TagScalar.newByteArray(array);
+                    return TagScalar.newIntArray(array);
                 },
                 write(buf, tag) {
                     let array: Buffer = tag.value;
@@ -470,7 +470,7 @@ export namespace NewNBT {
                     let bytes: number = len * 8;
                     let array: Buffer = Buffer.from(buf.slice(buf.offset, buf.offset + bytes).toArrayBuffer(true));
                     buf.skip(bytes);
-                    return TagScalar.newByteArray(array);
+                    return TagScalar.newLongArray(array);
                 },
                 write(buf, tag) {
                     let array: Buffer = tag.value;
