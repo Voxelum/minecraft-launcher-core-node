@@ -196,15 +196,27 @@ export namespace NBT {
                 buf.writeInt(v.length)
                 for (let i = 0; i < v.length; i++) buf.writeInt(v[i])
             }
+        },
+        { //long array
+            read(buf) {
+                let len = buf.readInt();
+                let arr: Long[] = new Array(len);
+                for (let i = 0; i < len; i++) arr[i] = buf.readLong();
+                return val(Type.LongArray, arr);
+            },
+            write(buf, v) {
+                buf.writeInt(v.length)
+                for (let i = 0; i < v.length; i++) buf.writeInt64(v[i])
+            }
         }
     ];
-    
+
     export enum TagType {
         End = 0, Byte = 1, Short = 2, Int = 3, Long = 4, Float = 5, Double = 6,
         ByteArray = 7, String = 8, List = 9, Compound = 10, IntArray = 11, LongArray = 12
     }
-    const Type = TagType; 
-    
+    const Type = TagType;
+
     // export const TagType = Type;
     // export type TagType = Type;
     export type TagNormal = TagByte | TagShort | TagInt | TagLong | TagFloat | TagDouble | TagByteArray | TagString | TagAnyList | TagCompound | TagIntArray | TagLongArray;
