@@ -97,3 +97,43 @@ describe('TestAllTags', () => {
         assert.deepEqual(NewNBT.Persistence.writeRoot(rootTag), nbtData);
     })
 })
+describe('TestIllegalTags', () => {
+    it('should illegal tags throw error', () => {
+        assert.throws(() => {
+            let compoundTag: NewNBT.TagCompound = NewNBT.TagCompound.newCompound();
+            compoundTag.set('bar', null as any);
+        })
+        assert.throws(() => {
+            let compoundTag: NewNBT.TagCompound = NewNBT.TagCompound.newCompound();
+            compoundTag.set('bar', undefined as any);
+        })
+        assert.throws(() => {
+            let compoundTag: NewNBT.TagCompound = NewNBT.TagCompound.newCompound();
+            compoundTag.set('bar', NewNBT.TagEnd.newEnd() as any);
+        })
+        assert.throws(() => {
+            let listTag: NewNBT.TagList<NewNBT.TagString> = NewNBT.TagList.newStringList();
+            listTag.push(null as any);
+        })
+        assert.throws(() => {
+            let listTag: NewNBT.TagList<NewNBT.TagString> = NewNBT.TagList.newStringList();
+            listTag.push(undefined as any);
+        })
+        assert.throws(() => {
+            let listTag: NewNBT.TagList<NewNBT.TagString> = NewNBT.TagList.newStringList();
+            listTag.push(NewNBT.TagEnd.newEnd() as any);
+        })
+        assert.throws(() => {
+            let listTag: NewNBT.TagList<NewNBT.TagString> = NewNBT.TagList.newStringList();
+            listTag[0] = null as any;
+        })
+        assert.throws(() => {
+            let listTag: NewNBT.TagList<NewNBT.TagString> = NewNBT.TagList.newStringList();
+            listTag[0] = undefined as any;
+        })
+        assert.throws(() => {
+            let listTag: NewNBT.TagList<NewNBT.TagString> = NewNBT.TagList.newStringList();
+            listTag[0] = NewNBT.TagEnd.newEnd() as any;
+        })
+    })
+})
