@@ -286,6 +286,7 @@ export namespace NBT {
         static newString(value: string): TagString { return new TagScalar(TagType.String, value) as TagString; }
         static newIntArray(value: Buffer): TagIntArray { return new TagScalar(TagType.IntArray, value) as TagIntArray; }
         static newLongArray(value: Buffer): TagLongArray { return new TagScalar(TagType.LongArray, value) as TagLongArray; }
+        static newScalar<S extends ScalarTypes>(tagType: TagType, value: S): TagScalar<S> { return new TagScalar(tagType, value); }
 
         private static checkTagValue(tagType: TagType, value: ScalarTypes): void {
             if (tagType === TagType.End || tagType === TagType.List || tagType === TagType.Compound)
@@ -440,6 +441,29 @@ export namespace NBT {
 
         clear(): void {
             this.list.length = 0;
+        }
+
+        pushScalar<S extends ScalarTypes>(this: TagList<TagScalar<S>> & this, ...items: S[]): number {
+            let scalars: T[] = [];
+            for (let i: number = 0; i < items.length; i++) {
+                let value: T = TagScalar.newScalar(this.elementTagType, items[i]) as any;
+                scalars.push(value);
+            }
+            return TagList.prototype.push.apply(this, scalars);
+        }
+
+        unshiftScalar<S extends ScalarTypes>(this: TagList<TagScalar<S>> & this, ...items: S[]): number {
+            let scalars: T[] = [];
+            for (let i: number = 0; i < items.length; i++) {
+                let value: T = TagScalar.newScalar(this.elementTagType, items[i]) as any;
+                scalars.push(value);
+            }
+            return TagList.prototype.unshift.apply(this, scalars);
+        }
+
+        addScalar<S extends ScalarTypes>(this: TagList<TagScalar<S>> & this, value: S): this {
+            this.add(TagScalar.newScalar(this.elementTagType, value));
+            return this;
         }
 
         *[Symbol.iterator](): IterableIterator<T> {
