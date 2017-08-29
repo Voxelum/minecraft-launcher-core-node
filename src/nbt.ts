@@ -452,6 +452,20 @@ export namespace NBT {
             return TagList.prototype.push.apply(this, scalars);
         }
 
+        popScalar<S extends ScalarTypes>(this: TagList<TagScalar<S>> & this): S | undefined {
+            let value: TagScalar<S> | undefined = this.pop();
+            if (value === undefined)
+                return undefined;
+            return value.value;
+        }
+
+        shiftScalar<S extends ScalarTypes>(this: TagList<TagScalar<S>> & this): S | undefined {
+            let value: TagScalar<S> | undefined = this.shift();
+            if (value === undefined)
+                return undefined;
+            return value.value;
+        }
+
         unshiftScalar<S extends ScalarTypes>(this: TagList<TagScalar<S>> & this, ...items: S[]): number {
             let scalars: T[] = [];
             for (let i: number = 0; i < items.length; i++) {
