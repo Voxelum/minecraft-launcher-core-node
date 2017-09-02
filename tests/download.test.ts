@@ -1,18 +1,18 @@
 import * as assert from 'assert';
 import { Version, MinecraftFolder, Forge, LiteLoader } from "../index";
 
-// describe('FetchVersionList', () => {
-//     it('should not fetch a list duplicatedly', (done) => {
-//         let r1: any
-//         Version.updateVersionMeta().then(result => {
-//             r1 = result
-//             return Version.updateVersionMeta({ fallback: result })
-//         }).then(result => {
-//             assert.equal(result, r1)
-//             done()
-//         }).catch(err => done(err))
-//     })
-// })
+describe('FetchVersionList', () => {
+    it('should not fetch a list duplicatedly', (done) => {
+        let r1: any
+        Version.updateVersionMeta().then(result => {
+            r1 = result
+            return Version.updateVersionMeta({ fallback: result })
+        }).then(result => {
+            assert.equal(result, r1)
+            done()
+        }).catch(err => done(err))
+    })
+})
 
 // describe('FetchForgeVersionList', () => {
 //     it('should not fetch a list twice', (done) => {

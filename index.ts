@@ -4,7 +4,7 @@ export { ServerInfo, ServerStatus, ServerStatusFrame } from './src/server'
 export { TextComponent, TextFormatting, Style } from './src/text'
 export { Version, VersionMeta, VersionMetaList } from './src/version'
 export { MinecraftFolder, MinecraftLocation } from './src/utils/folder';
-export * from './src/download';
+import './src/download';
 export * from './src/nbt'
 export * from './src/launch'
 export * from './src/world'
