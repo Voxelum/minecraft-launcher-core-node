@@ -14,8 +14,8 @@ function writeString(buff: ByteBuffer, string: string) {
 
 export namespace ServerInfo {
     export function parseNBT(buf: Buffer): ServerInfo[] {
-        let data = NBT.parse(buf)
-        if (data.root.servers) return data.root.servers
+        let { value } = NBT.Serializer.deserialize(buf)
+        if (value.servers) return value.servers;
         return []
     }
     function startConnection(host: string, port: number, timeout?: number) {
@@ -23,7 +23,8 @@ export namespace ServerInfo {
             const connection = net.createConnection(port, host, () => {
                 resolve(connection)
             })
-            if (timeout) connection.setTimeout(timeout)
+            if (timeout)
+                connection.setTimeout(timeout)
             connection.once('error', reject)
         });
     }
@@ -48,6 +49,9 @@ export namespace ServerInfo {
             })
             connection.once('error', (err) => {
                 reject(err)
+            })
+            connection.on('timeout', () => {
+                reject(new Error(`timeout`))
             })
         });
     }
@@ -110,7 +114,7 @@ export namespace ServerInfo {
         connection.end();
         return frame;
     }
-    export function fetchStatus(server: ServerInfo, options?: { protocol: number, timeout: number }): Promise<ServerStatus> {
+    export function fetchStatus(server: ServerInfo, options?: { protocol?: number, timeout?: number }): Promise<ServerStatus> {
         return fetchStatusFrame(server, options).then(ServerStatus.from)
     }
 }

@@ -8,11 +8,11 @@ type Requestor = {
     get(options: http.RequestOptions | string, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
 };
 
-let using: (url: string, file?: string) => Promise<Buffer | void>;
+let download: (url: string, file?: string) => Promise<Buffer | void>;
 try {
     const electron = require('electron')
     const net = electron.net
-    using = (url: string, file?: string) => {
+    download = (url: string, file?: string) => {
         const req = net.request(url);
         return new Promise<Buffer | void>((resolve, reject) => {
             req.on('response', (response: any) => {
@@ -58,7 +58,7 @@ catch (e) {
             req.end()
         })
     }
-    using = (url: string, file?: string): Promise<void> => {
+    download = (url: string, file?: string): Promise<void> => {
         let u = urls.parse(url)
         let reqestor: Requestor = u.protocol === 'https' ? https : http
         return findSource(reqestor, url)
@@ -90,5 +90,5 @@ catch (e) {
     }
 }
 
-export default using;
+export default download;
 

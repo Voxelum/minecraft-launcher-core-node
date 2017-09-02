@@ -52,8 +52,8 @@ export namespace WorldInfo {
         }
     }
     export function parse(buf: Buffer): WorldInfo {
-        let nbt = NBT.parse(buf, true)
-        let root = nbt.root.Data
+        let nbt = NBT.Serializer.deserialize(buf, true)
+        let root = nbt.value.Data
         return new WorldInfo(root.LevelName, root.SizeOnDisk, root.LastPlayed, root.GameRules,
             root.DataVersion, root.Version, root.generatorName,
             root.Difficulty, root.GameType, root.hardcore == 1, root.allowCommands == 1,
