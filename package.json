@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "./dist/index.js",
   "typings": "./dist/index",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
