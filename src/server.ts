@@ -1,6 +1,6 @@
 import { ResourceMode } from './game';
 import { TextComponent } from "./text";
-import { GameProfile } from "./auth";
+import { GameProfile } from "./profile";
 import * as buf from 'bytebuffer'
 import NBT from "./nbt";
 import * as net from 'net'
@@ -202,7 +202,7 @@ export class ServerStatus {
         if (sample) {
             profiles = new Array<GameProfile>(sample.length)
             for (let i = 0; i < sample.length; i++)
-                profiles[i] = { uuid: sample[i].id, name: sample[i].name }
+                profiles[i] = { id: sample[i].id, name: sample[i].name }
         }
 
         let modInfoJson = obj.modinfo

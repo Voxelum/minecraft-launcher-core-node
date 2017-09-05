@@ -134,7 +134,7 @@ export namespace Launcher {
         args = args.replace("${game_directory}", options.gamePath);//TODO check if need to handle the dependency
 
         args = args.replace("${auth_player_name}", auth.selectedProfile.name);
-        args = args.replace("${auth_uuid}", auth.selectedProfile.uuid.replace('-', ''));
+        args = args.replace("${auth_uuid}", auth.selectedProfile.id.replace('-', ''));
         args = args.replace("${auth_access_token}", auth.accessToken);
         args = args.replace("${user_properties}", JSON.stringify(auth.properties));
         args = args.replace("${user_type}", UserType.toString(auth.userType));

@@ -1,4 +1,5 @@
 import { v4 } from 'uuid'
+import { GameProfile } from './profile'
 
 export enum UserType {
     Legacy, Mojang
@@ -10,11 +11,6 @@ export namespace UserType {
             return 'mojang';
         else return 'legacy';
     }
-}
-
-export interface GameProfile {
-    readonly uuid: string,
-    readonly name: string
 }
 
 import * as https from 'https';
@@ -103,10 +99,7 @@ export namespace AuthService {
                 return {
                     accessToken: <string>obj.accessToken,
                     clientToken: <string>obj.clientToken,
-                    selectedProfile: <GameProfile>{
-                        uuid: obj.selectedProfile.id,
-                        name: obj.selectedProfile.name
-                    },
+                    selectedProfile: <GameProfile>obj.selectedProfile,
                     profiles: <GameProfile[]>obj.availableProfiles,
                     userId: userId,
                     properties: prop,
@@ -164,8 +157,8 @@ export namespace AuthService {
                 return Promise.resolve({
                     accessToken: v4(),
                     clientToken: clientToken || v4(),
-                    selectedProfile: <GameProfile>{
-                        uuid: v4(),
+                    selectedProfile: {
+                        id: v4(),
                         name: username
                     },
                     profiles: [],
@@ -189,8 +182,8 @@ export namespace AuthService {
         return {
             accessToken: v4(),
             clientToken: v4(),
-            selectedProfile: <GameProfile>{
-                uuid: v4(),
+            selectedProfile: {
+                id: v4(),
                 name: username
             },
             profiles: [],

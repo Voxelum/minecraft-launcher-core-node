@@ -1,9 +1,10 @@
-export { GameProfile, UserType, Auth, AuthService } from './src/auth'
-export { GameType, ResourceMode, Pos2, Pos3, GameRule } from './src/game'
-export { ServerInfo, ServerStatus, ServerStatusFrame } from './src/server'
-export { TextComponent, TextFormatting, Style } from './src/text'
+export * from './src/auth'
+export * from './src/game'
+export * from './src/server'
+export * from './src/text'
 export { Version, VersionMeta, VersionMetaList } from './src/version'
-export { MinecraftFolder, MinecraftLocation } from './src/utils/folder';
+export * from './src/utils/folder';
+export * from './src/profile'
 import './src/download';
 export * from './src/nbt'
 export * from './src/launch'
