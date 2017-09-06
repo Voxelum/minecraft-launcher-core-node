@@ -79,7 +79,7 @@ export namespace ProfileService {
             }
             obj.properties = to;
         }
-        return obj;
+        return obj as GameProfile;
     }
     export function fetch(uuid: string, option: { api?: API, pubKey?: string } = {}) {
         return fetchProfile((option.api || mojang).profile(uuid) + '?' + queryString.stringify({
@@ -95,7 +95,6 @@ export namespace ProfileService {
         else target = (api.profileByName(name) + "?" + queryString.stringify({
             at: (time / 1000),
         }))
-        console.log(api.profileByName(name))
         return fetchProfile(target, option.pubKey)
     }
 }
