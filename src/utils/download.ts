@@ -48,10 +48,20 @@ try {
 catch (e) {
     const findSource = (requester: Requestor, url: string): Promise<http.IncomingMessage> => {
         return new Promise((resolve, reject) => {
-            let req = requester.get(url,
+            const target = urls.parse(url);
+            let path = target.path;
+            if (!path) { reject(); return }
+            let req = requester.get({
+                path: (path + target.search ? target.search : ''),
+                host: target.host,
+            },
                 res => {
                     if (res.statusCode == 304 || res.statusCode == 302)
                         resolve(findSource(requester, res.headers['location'] as string))
+                    else if (res.statusCode === 301) {
+                        console.log(res.headers)
+                        resolve(findSource(requester, res.headers['location'] as string))
+                    }
                     else resolve(res)
                 })
             req.on('error', reject)

@@ -54,6 +54,8 @@ describe('WorldInfo', () => {
             .then(valid => { assert(valid, 'zip fail'); done() })
             .catch(e => done(e))
     })
+    // it('should read a simpe map', (done) => {
+    // })
 })
 describe('ForgeMod', () => {
     it('should read mod correctly', (done) => {
