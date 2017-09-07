@@ -122,18 +122,17 @@ export namespace WorldInfo {
             { x: root.BorderCenterX, z: root.BorderCenterZ },
             root.BorderDamagePerBlock, root.BorderWarningBlocks, root.BorderSizeLerpTarget)
     }
-    export function manipulate(buf: Buffer, info: WorldInfo): Buffer {
-        const nbt = NBT.Persistence.readRoot(buf, { compressed: true });
-        let data = nbt.asTagCompound().get('Data')
-        if (data) {
-            data = data.asTagCompound();
-            const Tag = NBT.TagScalar
-            data.set('LevelName', Tag.newString(info.displayName))
-            data.set('SizeOnDisk', Tag.newLong(info.sizeOnDisk))
-            data.set('LastPlayed', Tag.newLong(info.lastPlayed))
-        }
-        return Buffer.from([])
-    }
+    // export function manipulate(buf: Buffer, info: WorldInfo): Buffer {
+    //     const nbt = NBT.Persistence.readRoot(buf, { compressed: true });
+    //     let data = nbt.asTagCompound().get('Data')
+    //     if (data) {
+    //         data = data.asTagCompound();
+    //         const Tag = NBT.TagScalar
+    //         data.set('LevelName', Tag.newString(info.displayName))
+    //         data.set('Difficulty', Tag.newInt(info.difficulty))
+    //     }
+    //     return Buffer.from([])
+    // }
 }
 
 export default WorldInfo;
