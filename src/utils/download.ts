@@ -18,7 +18,7 @@ try {
         return new Promise<Buffer | void>((resolve, reject) => {
             req.on('response', (response: any) => {
                 if (response.statusCode !== 200) {
-                    throw new Error(response.statusCode)
+                    reject(new Error(response.statusCode))
                 }
                 let stream = file ? fs.createWriteStream(file) : new WriteableBuffer()
                 response.on('error', (e: Error) => {
@@ -77,7 +77,7 @@ catch (e) {
         return findSource(url)
             .then(res => {
                 if (res.statusCode !== 200)
-                    throw new Error(`Error ${res.statusCode}`)
+                    reject(new Error(response.statusCode))
                 else {
                     let stream = file ? fs.createWriteStream(file) : new WriteableBuffer()
                     return new Promise<void | Buffer>((resolve, reject) => {
