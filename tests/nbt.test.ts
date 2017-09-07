@@ -46,6 +46,15 @@ describe('Test', () => {
         let compound: NBT.TagCompound = NBT.TagCompound.newCompound();
         compound.set('foo', NBT.TagScalar.newString('bar'));
         compound.set('abc', NBT.TagScalar.newInt(12450));
+        console.log('foo' in compound.accessor);
+        console.log('123' in compound.accessor);
+        console.log(compound.accessor['foo']);
+        console.log(compound.accessor['123']);
+        compound.accessor['123'] = NBT.TagScalar.newString('456');
+        console.log(compound.accessor['123']);
+        console.log(delete compound.accessor['123']);
+        console.log(compound.accessor['123']);
+        console.log(delete compound.accessor['123']);
         console.log(compound.get('foo'));
         console.log(compound.get('abc'));
         console.log(compound.get('123'));

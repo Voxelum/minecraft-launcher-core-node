@@ -523,12 +523,45 @@ export namespace NBT {
         }
     }
 
+    export type TagCompoundAccessor = { [key: string]: TagNormal };      
+
     export class TagCompound extends TagBase implements Iterable<[string, TagNormal]> {
         protected readonly map: { [key: string]: TagNormal } = Object.create(null);
         protected _size: number = 0;
 
+        readonly accessor: TagCompoundAccessor;
+
         protected constructor() {
             super(TagType.Compound);
+            let tagCompound: this = this;
+            this.accessor = new Proxy(Object.create(null), {
+                has(target: TagCompoundAccessor, p: PropertyKey): boolean {
+                    if (typeof p !== 'string')
+                        return Reflect.has(target, p);
+                    return tagCompound.has(p);
+                },
+                get(target: TagCompoundAccessor, p: PropertyKey, receiver: any): any {
+                    if (typeof p !== 'string')
+                        return Reflect.get(target, p, receiver);
+                    return tagCompound.get(p);
+                },
+                set(target: TagCompoundAccessor, p: PropertyKey, value: any, receiver: any): boolean {
+                    if (typeof p !== 'string')
+                        return Reflect.set(target, p, value, receiver);
+                    if (typeof value !== 'object' || !(value as TagNormal instanceof TagBase))
+                        return false;
+                    if (!TagCompound.checkValue(value))
+                        return false;
+                    tagCompound.set(p, value);
+                    return true;
+                },
+                deleteProperty(target: TagCompoundAccessor, p: PropertyKey): boolean {
+                    if (typeof p !== 'string')
+                        return Reflect.deleteProperty(target, p);
+                    tagCompound.delete(p);
+                    return true;
+                }
+            });
         }
 
         *[Symbol.iterator](): IterableIterator<[string, TagNormal]> {
@@ -586,7 +619,7 @@ export namespace NBT {
             write(buf: ByteBuffer, tag: T): void;
         }
 
-        let handlers: { [key: number]: IOHandler<TagBase> | undefined } = {
+        let handlers: { readonly [key: number]: IOHandler<TagBase> | undefined } = {
             [TagType.End]: {
                 read(buf) { return TagEnd.newEnd(); },
                 write(buf, tag) { }
