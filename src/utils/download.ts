@@ -77,7 +77,7 @@ catch (e) {
         return findSource(url)
             .then(res => {
                 if (res.statusCode !== 200)
-                    reject(new Error(response.statusCode))
+                    throw new Error(`Error ${res.statusCode}`)
                 else {
                     let stream = file ? fs.createWriteStream(file) : new WriteableBuffer()
                     return new Promise<void | Buffer>((resolve, reject) => {
