@@ -6,7 +6,7 @@ import * as Zip from 'jszip'
 import * as fs from 'fs-extra'
 import { Version } from './version';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
-import { ClassVisitor, Opcodes, AnnotationVisitor, ClassReader } from 'java-asm'
+import { ClassVisitor, Opcodes, AnnotationVisitor, ClassReader, FieldVisitor, Attribute } from 'java-asm'
 
 import Mod from './mod'
 export namespace Forge {
@@ -19,6 +19,16 @@ export namespace Forge {
     class KVisitor extends ClassVisitor {
         public constructor(readonly map: { [key: string]: any }) {
             super(Opcodes.ASM5);
+        }
+        private className: string = '';
+        public fields: any = {}
+        visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
+            this.className = name;
+        }
+        public visitField(access: number, name: string, desc: string, signature: string, value: any) {
+            if (this.className === 'Config')
+                this.fields[name] = value
+            return null;
         }
 
         public visitAnnotation(desc: string, visible: boolean): AnnotationVisitor | null {
@@ -35,7 +45,7 @@ export namespace Forge {
         readonly name: string,
         readonly description?: string,
         readonly version: string,
-        readonly mcVersion?: string,
+        readonly mcversion?: string,
         readonly acceptMinecraftVersion?: string,
         readonly updateJSON?: string,
         readonly url?: string,
@@ -95,24 +105,37 @@ export namespace Forge {
         } else {
             throw ('Illegal input type! Expect Buffer or string (filePath)')
         }
-        const meta = await zip.file('mcmod.info').async('nodebuffer').then(buf => JSON.parse(buf.toString()))
         const modidTree: any = {}
-        for (const m of meta)
-            modidTree[m.modid] = m;
 
+        try {
+            for (const m of await zip.file('mcmod.info').async('nodebuffer').then(buf => JSON.parse(buf.toString())))
+                modidTree[m.modid] = m;
+        } catch (e) { }
         for (const key in zip.files) {
             if (key.endsWith('.class')) {
                 const asmmod: any = (await zip.files[key].async('nodebuffer')
                     .then(data => {
-                        const map = {};
-                        new ClassReader(data).accept(new KVisitor(map))
+                        const map: any = {};
+                        let visitor;
+                        new ClassReader(data).accept(visitor = new KVisitor(map))
+                        if (Object.keys(map).length === 0) {
+                            if (visitor.fields && visitor.fields.OF_NAME) {
+                                map.modid = visitor.fields.OF_NAME;
+                                map.name = visitor.fields.OF_NAME;
+                                map.mcversion = visitor.fields.MC_VERSION;
+                                map.version = `${visitor.fields.OF_EDITION}_${visitor.fields.OF_RELEASE}`
+                                map.description = 'OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.'
+                                map.authorList = ['sp614x']
+                                map.url = 'https://optifine.net'
+                                map.isClientOnly = true
+                            }
+                        }
                         return map
                     }))
                 let modid = asmmod.modid;
                 const mod = modidTree[modid];
-                if (mod)
-                    for (const key in asmmod)
-                        mod[key] = asmmod;
+                if (mod) for (const key in asmmod)
+                    mod[key] = asmmod[key];
                 else modidTree[modid] = asmmod;
             }
         }
