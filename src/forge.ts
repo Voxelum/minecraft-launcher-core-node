@@ -6,9 +6,26 @@ import * as Zip from 'jszip'
 import * as fs from 'fs-extra'
 import { Version } from './version';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
+import { ClassVisitor, Opcodes, AnnotationVisitor, ClassReader } from 'java-asm'
 
 import Mod from './mod'
 export namespace Forge {
+    class AVisitor extends AnnotationVisitor {
+        constructor(readonly map: { [key: string]: any }) { super(Opcodes.ASM5); }
+        public visit(s: string, o: any) {
+            this.map[s] = o
+        }
+    }
+    class KVisitor extends ClassVisitor {
+        public constructor(readonly map: { [key: string]: any }) {
+            super(Opcodes.ASM5);
+        }
+
+        public visitAnnotation(desc: string, visible: boolean): AnnotationVisitor | null {
+            if (desc == "Lnet/minecraftforge/fml/common/Mod;" || desc === 'Lcpw/mods/fml/common/Mod;') return new AVisitor(this.map);
+            return null;
+        }
+    }
     export interface ModIndentity {
         readonly modid: string,
         readonly version: string
@@ -79,11 +96,27 @@ export namespace Forge {
             throw ('Illegal input type! Expect Buffer or string (filePath)')
         }
         const meta = await zip.file('mcmod.info').async('nodebuffer').then(buf => JSON.parse(buf.toString()))
-        let mods: any[]
-        if (meta instanceof Array) mods = meta
-        else if (meta.modListVersion) mods = meta.modList
-        else mods = [meta]
-        return mods.map(m => m as Forge.MetaData)
+        const modidTree: any = {}
+        for (const m of meta)
+            modidTree[m.modid] = m;
+
+        for (const key in zip.files) {
+            if (key.endsWith('.class')) {
+                const asmmod: any = (await zip.files[key].async('nodebuffer')
+                    .then(data => {
+                        const map = {};
+                        new ClassReader(data).accept(new KVisitor(map))
+                        return map
+                    }))
+                let modid = asmmod.modid;
+                const mod = modidTree[modid];
+                if (mod)
+                    for (const key in asmmod)
+                        mod[key] = asmmod;
+                else modidTree[modid] = asmmod;
+            }
+        }
+        return Object.keys(modidTree).map(k => modidTree[k] as Forge.MetaData)
     }
 
     export async function install(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
