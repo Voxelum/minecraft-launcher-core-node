@@ -139,7 +139,9 @@ export namespace Forge {
                 else modidTree[modid] = asmmod;
             }
         }
+
         return Object.keys(modidTree).map(k => modidTree[k] as Forge.MetaData)
+            .filter(m => m.modid === undefined)
     }
 
     export async function install(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
@@ -186,7 +188,5 @@ export namespace Forge {
         return Version.parse(minecraft, localForgePath)
     }
 }
-Mod.register('forge', (option) => {
-    return Forge.meta(option).then(mods => mods.map(m => new Mod<Forge.MetaData>('forge', `${m.modid}:${m.version}`, m)))
-})
+Mod.register('forge', option => Forge.meta(option).then(mods => mods.map(m => new Mod<Forge.MetaData>('forge', `${m.modid}:${m.version ? m.mcversion : '0.0.0'}`, m))))
 export default Forge

@@ -17,7 +17,12 @@ export namespace Mod {
     export function parse(data: string | Buffer, type?: string) {
         if (!type)
             for (const type in registry) {
-                try { return registry[type](data) }
+                try {
+                    const result = registry[type](data);
+                    if (result instanceof Array && result.length !== 0)
+                        return result;
+                    else if(result) return result;
+                }
                 catch (e) { }
             }
         else return registry[type](data)
