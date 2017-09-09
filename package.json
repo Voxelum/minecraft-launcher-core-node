@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "main": "./dist/index.js",
   "typings": "./dist/index",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
@@ -38,6 +38,7 @@
     "long": "^3.2.0",
     "node-rsa": "^0.4.2",
     "semver": "^5.3.0",
+    "java-asm": "^0.0.1",
     "uuid": "^3.1.0"
   },
   "bugs": {

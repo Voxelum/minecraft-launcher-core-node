@@ -5,11 +5,6 @@ Provide several useful function for Minecraft in typescript
 
 `import { NBT, ServerInfo, ...so on...} from 'ts-minecraft'`
 
-!!!!!!!!!
-Notice that this package is still WIP, no much tested yet.
-Use with your own risk....
-!!!!!!!!!
-
 ## Getting Started
 
 - **[NBT](#nbt)**
@@ -176,6 +171,7 @@ Launch minecraft from a version
 
 ## Credit
 
+[Yu Xuanchi](https://github.com/yuxuanchiadm), co-worker, quality control of this project.
+
 [Haowei Wen](https://github.com/yushijinhun), the author of [JMCCC](https://github.com/to2mbn/JMCCC), [Authlib Injector](https://github.com/to2mbn/authlib-injector), and [Indexyz](https://github.com/Indexyz), help me a lot on Minecraft launching, authing.
 
-[Yu Xuanchi](https://github.com/yuxuanchiadm), co-worker, quality control of this project.

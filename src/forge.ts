@@ -131,6 +131,6 @@ export namespace Forge {
     }
 }
 Mod.register('forge', (option) => {
-    return Forge.meta(option.data).then(mods => mods.map(m => new Mod<Forge.MetaData>('forge', `${m.modid}:${m.version}`, m)))
+    return Forge.meta(option).then(mods => mods.map(m => new Mod<Forge.MetaData>('forge', `${m.modid}:${m.version}`, m)))
 })
 export default Forge

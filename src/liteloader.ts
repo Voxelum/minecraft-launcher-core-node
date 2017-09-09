@@ -129,7 +129,7 @@ export namespace LiteLoader {
     }
 }
 Mod.register('liteloader', (option)=>{
-    return LiteLoader.meta(option.data).then(m => new Mod<LiteLoader.MetaData>('liteloader', `${m.name}:${m.version}`, m))
+    return LiteLoader.meta(option).then(m => new Mod<LiteLoader.MetaData>('liteloader', `${m.name}:${m.version}`, m))
 })
 
 export default LiteLoader;
