@@ -10,8 +10,8 @@ describe('Auth', () => {
                 assert.equal('Invalid credentials. Invalid username or password.', (err as Error).message)
                 done()
             })
-    })
+    }).timeout(10000)
     it('offline auth username should be correctly', () => {
         assert.equal(AuthService.offlineAuth('ci010').selectedProfile.name, 'ci010')
-    })
+    }).timeout(10000)
 })

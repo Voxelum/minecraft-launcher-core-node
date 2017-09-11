@@ -500,22 +500,22 @@ export namespace NBT {
         asTagListIntArray(): TagList<TagIntArray> { if (this.elementTagType !== TagType.IntArray) throw new TypeError('Illegal element tag type'); return this as any; };
         asTagListLongArray(): TagList<TagLongArray> { if (this.elementTagType !== TagType.LongArray) throw new TypeError('Illegal element tag type'); return this as any; };
 
-        static newByteList(): TagList<TagByte> { return new TagList(TagType.Byte); }
-        static newShortList(): TagList<TagShort> { return new TagList(TagType.Short); }
-        static newIntList(): TagList<TagInt> { return new TagList(TagType.Int); }
-        static newLongList(): TagList<TagLong> { return new TagList(TagType.Long); }
-        static newFloatList(): TagList<TagFloat> { return new TagList(TagType.Float); }
-        static newDoubleList(): TagList<TagDouble> { return new TagList(TagType.Double); }
-        static newByteArrayList(): TagList<TagByteArray> { return new TagList(TagType.ByteArray); }
-        static newStringList(): TagList<TagString> { return new TagList(TagType.String); }
-        static newListList(): TagList<TagAnyList> { return new TagList(TagType.List); }
-        static newListCompound(): TagList<TagCompound> { return new TagList(TagType.Compound); }
-        static newIntArrayList(): TagList<TagIntArray> { return new TagList(TagType.IntArray); }
-        static newLongArrayList(): TagList<TagLongArray> { return new TagList(TagType.LongArray); }
+        static newByteList(): TagList<TagByte> { return new TagList<any>(TagType.Byte); }
+        static newShortList(): TagList<TagShort> { return new TagList<any>(TagType.Short); }
+        static newIntList(): TagList<TagInt> { return new TagList<any>(TagType.Int); }
+        static newLongList(): TagList<TagLong> { return new TagList<any>(TagType.Long); }
+        static newFloatList(): TagList<TagFloat> { return new TagList<any>(TagType.Float); }
+        static newDoubleList(): TagList<TagDouble> { return new TagList<any>(TagType.Double); }
+        static newByteArrayList(): TagList<TagByteArray> { return new TagList<any>(TagType.ByteArray); }
+        static newStringList(): TagList<TagString> { return new TagList<any>(TagType.String); }
+        static newListList(): TagList<TagAnyList> { return new TagList<any>(TagType.List); }
+        static newListCompound(): TagList<TagCompound> { return new TagList<any>(TagType.Compound); }
+        static newIntArrayList(): TagList<TagIntArray> { return new TagList<any>(TagType.IntArray); }
+        static newLongArrayList(): TagList<TagLongArray> { return new TagList<any>(TagType.LongArray); }
         static newAnyList(elementTagType: TagType): TagAnyList {
             if (elementTagType === TagType.End)
                 throw new TypeError('Illegal element tag type');
-            return new TagList(elementTagType);
+            return new TagList<any>(elementTagType);
         }
 
         private static checkElement(element: TagBase, elementTagType: TagType): boolean {
