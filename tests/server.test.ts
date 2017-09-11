@@ -1,26 +1,20 @@
 
 import { ServerInfo } from "../index";
 import * as fs from 'fs-extra';
+import * as assert from 'assert';
 
 describe('ServerRead', () => {
     it('should read the server.dat correctly', () => {
         let data = fs.readFileSync('./tests/assets/servers.dat')
         let infos = ServerInfo.parseNBT(data)
-        console.log(JSON.stringify(infos, (k, v) => {
-            if (k == 'icon') return ''
-            return v
-        }))
+        assert.equal(infos[0].name, 'nyaacat')
+        assert.equal(infos[1].name, 'himajin')
+        assert.equal(infos[2].name, 'mcJp')
+        assert.equal(infos[3].name, 'Minecraft Server')
     })
 })
 
 describe('ServerPing', () => {
-    it('should ping the server and return info correctly', (done) => {
-        ServerInfo.fetchStatus({
-            host: 'mc.crafter.me',
-        }, { timeout: 10000 }).then(status => {
-            done()
-        }).catch(done)
-    }).timeout(100000);
     it('should catch the timeout exception', (done) => {
         ServerInfo.fetchStatus({
             host: 'crafterr.me',
@@ -30,4 +24,12 @@ describe('ServerPing', () => {
             done()
         })
     }).timeout(100000)
+    it('should ping the server and return info correctly', (done) => {
+        ServerInfo.fetchStatus({
+            host: 'mc.crafter.me',
+        }, { timeout: 10000 }).then(status => {
+            done()
+        }).catch(e => { done(e) })
+    }).timeout(100000);
+
 })

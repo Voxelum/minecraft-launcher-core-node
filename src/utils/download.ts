@@ -9,7 +9,7 @@ type Requestor = {
     get(options: http.RequestOptions | string, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
 };
 
-export interface IncomingMessage extends Readable {
+interface IncomingMessage extends Readable {
     headers: any;
     statusCode: number;
     statusMessage: string;
