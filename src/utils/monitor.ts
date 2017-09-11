@@ -1,4 +1,5 @@
-export class Task extends NodeJS.EventEmitter {
+import { EventEmitter } from 'events'
+export class TaskImpl extends EventEmitter {
     constructor(readonly id: string, readonly total: number) {
         super();
     }
@@ -7,8 +8,16 @@ export class Task extends NodeJS.EventEmitter {
     finish() { this.emit('finish') }
 }
 
-export interface Monitor extends NodeJS.EventEmitter {
+export interface Task extends EventEmitter {
+    readonly id: string,
+    readonly total: number,
+    on(event: 'error', listener: (err: Error) => void): this;
+    on(event: 'update', listener: (progress: number, state?: string) => void): this;
+    on(event: 'finish', listener: () => void): this;
+}
+
+export interface Monitor extends EventEmitter {
     on(event: 'task', handler: (task: Task) => void): this;
 }
 
-export const monitor: Monitor = new NodeJS.EventEmitter();
+export const monitor: Monitor = new EventEmitter();

@@ -14,14 +14,17 @@ export namespace Mod {
         if (registry[type]) throw new Error(`duplicated type [${type}].`)
         registry[type] = parser;
     }
-    export function parse(data: string | Buffer, type?: string) {
+    export async function parse(data: string | Buffer, type?: string) {
         if (!type)
             for (const type in registry) {
                 try {
-                    const result = registry[type](data);
-                    if (result instanceof Array && result.length !== 0)
-                        return result;
-                    else if(result) return result;
+                    const result = await registry[type](data);
+                    if (result instanceof Array)
+                        if (result.length !== 0)
+                            return result;
+                        else throw new Error()
+                    if (result) return result;
+                    throw new Error()
                 }
                 catch (e) { }
             }

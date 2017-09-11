@@ -4,7 +4,7 @@ import * as https from 'https'
 import * as urls from 'url'
 import { Writable } from 'stream';
 import * as ByteBuffer from "bytebuffer";
-
+import { monitor, TaskImpl } from './monitor';
 type Requestor = {
     get(options: http.RequestOptions | string, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
 };
@@ -13,22 +13,35 @@ let download: (url: string, file?: string) => Promise<Buffer | void>;
 try {
     const electron = require('electron')
     const net = electron.net
-    download = (url: string, file?: string) => {
+    download = (url: string, file?: string, trace?: string) => {
         const req = net.request(url);
         return new Promise<Buffer | void>((resolve, reject) => {
             req.on('response', (response: any) => {
                 if (response.statusCode !== 200) {
                     reject(new Error(response.statusCode))
                 }
+                let total = -1;
+                try { total = Number.parseInt(response.headers['content-length']) }
+                catch (e) { }
+                const task = new TaskImpl(url, total);
+                monitor.emit('task', task)
+
                 let stream = file ? fs.createWriteStream(file) : new WriteableBuffer()
                 response.on('error', (e: Error) => {
+                    task.emit('error', e)
                     if (file) fs.unlink(file, err => {
                         reject(e);
                     });
                 })
+                let len = 0;
+                response.on('data', (buf: Buffer | string) => {
+                    len += buf.length
+                    task.emit('update', len)
+                })
                 response.pipe(stream)
                 stream.on('finish', () => {
                     if (file) {
+                        task.emit('finish');
                         (stream as any).close();
                         resolve()
                     } else {
@@ -64,8 +77,7 @@ catch (e) {
                     if (res.statusCode == 304 || res.statusCode == 302)
                         resolve(findSource(res.headers['location'] as string))
                     else if (res.statusCode === 301) {
-                        console.log(res.headers)
-                        // resolve(findSource(requester, res.headers['location'] as string))
+                        resolve(findSource(res.headers['location'] as string))
                     }
                     else resolve(res)
                 })
@@ -79,10 +91,22 @@ catch (e) {
                 if (res.statusCode !== 200)
                     throw new Error(`Error ${res.statusCode}`)
                 else {
+                    let total = -1;
+                    try { total = Number.parseInt(res.headers['content-length'] as string) }
+                    catch (e) { }
+                    const task = new TaskImpl(url, total);
+                    monitor.emit('task', task)
+
                     let stream = file ? fs.createWriteStream(file) : new WriteableBuffer()
                     return new Promise<void | Buffer>((resolve, reject) => {
+                        let len = 0;
+                        res.on('data', (buf) => {
+                            len += buf.length;
+                            task.emit('update', len)
+                        })
                         res.pipe(stream)
                         res.on('error', (err) => {
+                            task.emit('error');
                             if (file) {
                                 (stream as any).close();
                                 fs.unlink(file, e => {
@@ -91,6 +115,7 @@ catch (e) {
                             } else reject(err);
                         })
                         stream.on('finish', () => {
+                            task.emit('finish')
                             if (file) {
                                 (stream as any).close(); resolve();
                             } else {

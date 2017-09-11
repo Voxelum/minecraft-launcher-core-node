@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import {
     GameSetting, ServerInfo, ServerStatus, TextComponent,
-    Language, Mod, ResourcePack, WorldInfo, Forge
+    Language, Mod, ResourcePack, WorldInfo,
 } from '../index';
 
 describe('TextComponent', () => {
@@ -56,13 +56,4 @@ describe('WorldInfo', () => {
     })
     // it('should read a simpe map', (done) => {
     // })
-})
-describe('ForgeMod', () => {
-    it('should read mod correctly', (done) => {
-        Forge.meta('./tests/assets/sample-mod.jar')
-            .then(v => {
-                console.log(v)
-                done()
-            })
-    })
 })

@@ -99,6 +99,10 @@ export namespace LiteLoader {
         else
             throw ('Illegal input type! Expect Buffer or string (filePath)')
         return zip.file('litemod.json').async('nodebuffer').then(data => JSON.parse(data.toString()) as MetaData)
+            .then(m => {
+                if (!m.version) (m as any).version = `${m.name}:${m.version ? m.version : m.mcversion ? m.mcversion + '_' + m.revision || '0' : m.revision || '0'}`
+                return m;
+            })
     }
 
     const snapshotRoot = 'http://dl.liteloader.com/versions/com/mumfrey/liteloader';

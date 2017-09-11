@@ -141,7 +141,7 @@ export namespace Forge {
         }
 
         return Object.keys(modidTree).map(k => modidTree[k] as Forge.MetaData)
-            .filter(m => m.modid === undefined)
+            .filter(m => m.modid !== undefined)
     }
 
     export async function install(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
@@ -158,13 +158,14 @@ export namespace Forge {
         let universalBuffer;
         if (!fs.existsSync(filePath)) {
             try {
-                fs.outputFile(filePath, universalBuffer = await universalURL)
+                universalBuffer = await download(universalURL)
+                fs.outputFile(filePath, universalBuffer)
             }
             catch (e) {
-                await fs.outputFile(filePath,
-                    universalBuffer = await Zip(await download(installerURL))
-                        .file(`forge-${versionPath}-universal.jar`)
-                        .async('nodebuffer'))
+                universalBuffer = (await Zip().loadAsync(await download(installerURL)))
+                    .file(`forge-${versionPath}-universal.jar`)
+                    .async('nodebuffer')
+                await fs.outputFile(filePath, universalBuffer)
             }
             if (checksum) {
                 let sum
@@ -181,9 +182,9 @@ export namespace Forge {
             }
         }
         if (!fs.existsSync(jsonPath)) {
+            const zip = await Zip().loadAsync(universalBuffer);
             await fs.outputFile(jsonPath,
-                await Zip(universalBuffer).file('version.json')
-                    .async('nodebuffer'))
+                await zip.file('version.json').async('nodebuffer'))
         }
         return Version.parse(minecraft, localForgePath)
     }

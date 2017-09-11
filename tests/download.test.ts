@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import { Version, MinecraftFolder, Forge, LiteLoader } from "../index";
+import { monitor } from '../src/utils/monitor';
 
 describe('FetchVersionList', () => {
     it('should not fetch a list duplicatedly', (done) => {
@@ -26,18 +27,27 @@ describe('FetchVersionList', () => {
 //         }).catch(err => done(err))
 //     }).timeout(5000)
 // })
-// describe('FetchForge', () => {
-//     it('should download forge', done => {
-//         ForgeVersionMetaList.update().then((result: { list: ForgeVersionMetaList, date: string }) => {
-//             return result.list.number[result.list.promos['latest'].toString()]
-//         }).then(meta => {
-//             return ForgeVersionMeta.installForge(meta, new MinecraftLocation('./tests/assets/temp'), false)
-//         }).then(v => {
-//             console.log(v)
-//             done()
-//         }, err => { done() })
-//     }).timeout(10000)
-// })
+describe('FetchForge', () => {
+    it('should download forge', done => {
+        monitor.on('task', (task) => {
+            console.log('create task ' + task.id)
+            task.on('update', (progress) => {
+                console.log(`${progress / task.total}: ${progress}/${task.total}`)
+            })
+            task.on('finish', () => {
+                console.log(`finish ${task.id}`)
+            })
+        })
+        Forge.VersionMetaList.update().then((result: { list: Forge.VersionMetaList, date: string }) => {
+            return result.list.number[result.list.promos['latest'].toString()]
+        }).then(meta => {
+            return Forge.install(meta, new MinecraftFolder('./tests/assets/temp'), false)
+        }).then(v => {
+            console.log(v)
+            done()
+        }, err => { done() })
+    }).timeout(10000000000)
+})
 // describe('FetchLite', () => {
 //     it('should download liteloader', done => {
 //         LiteLoader.VersionMetaList.update()
