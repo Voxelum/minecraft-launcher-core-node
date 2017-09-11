@@ -162,7 +162,7 @@ export namespace Forge {
             }
             if (!fs.existsSync(jsonPath)) {
                 await context.wrap('writeJson', fs.outputFile(jsonPath,
-                    await Zip(universalBuffer).file('version.json')
+                    await (await Zip().loadAsync(universalBuffer)).file('version.json')
                         .async('nodebuffer')))
             }
             return Version.parse(minecraft, localForgePath)
