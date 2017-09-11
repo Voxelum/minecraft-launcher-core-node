@@ -1,11 +1,12 @@
 import UPDATE from './utils/update';
-import download from './utils/download';
+import download, { DownloadTask } from './utils/download';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import * as fs from 'fs-extra';
 import * as path from 'path'
 import * as url from 'url'
 import * as Zip from 'jszip'
 import Mod from './mod';
+import { AbstractTask, Task } from './utils/task';
 
 export namespace LiteLoader {
     export interface MetaData {
@@ -108,26 +109,35 @@ export namespace LiteLoader {
     const snapshotRoot = 'http://dl.liteloader.com/versions/com/mumfrey/liteloader';
     const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/com/mumfrey/liteloader'
 
-    export async function install(meta: VersionMeta, location: MinecraftLocation) {
-        const mc = typeof location === 'string' ? new MinecraftFolder(location) : location
-        let targetURL
-        if (meta.type === 'SNAPSHOT')
-            targetURL = `${snapshotRoot}/${meta.version}/${meta.version}.jar`
-        else if (meta.type === 'RELEASE')
-            targetURL = `${releaseRoot}/${meta.version}/${meta.file}`
-        else throw new Error("Unknown meta type: " + meta.type)
-
-        let jsonURL = `https://raw.githubusercontent.com/Mumfrey/LiteLoaderInstaller/${meta.mcversion}/src/main/resources/install_profile.json`
-        const liteloaderPath = `${meta.mcversion}-Liteloader-${meta.version}`
-        const versionPath = mc.getVersionRoot(liteloaderPath)
-        if (!fs.existsSync(versionPath))
-            await fs.ensureDir(versionPath)
-        return Promise.all([
-            download(targetURL, path.join(versionPath, liteloaderPath + '.jar')),
-            download(jsonURL, path.join(versionPath, liteloaderPath + '.json'))
-        ])
+    export function install(meta: VersionMeta, location: MinecraftLocation) {
+        return Task.execute(new InstallTask(meta, location))
     }
+    export function installTask(meta: VersionMeta, location: MinecraftLocation): Task<void> {
+        return new InstallTask(meta, location)
+    }
+    class InstallTask extends AbstractTask<void>{
+        constructor(readonly meta: VersionMeta, readonly location: MinecraftLocation) { super() }
+        async execute(context: Task.Context): Promise<void> {
+            const { location, meta } = this;
+            const mc = typeof location === 'string' ? new MinecraftFolder(location) : location
+            let targetURL
+            if (meta.type === 'SNAPSHOT')
+                targetURL = `${snapshotRoot}/${meta.version}/${meta.version}.jar`
+            else if (meta.type === 'RELEASE')
+                targetURL = `${releaseRoot}/${meta.version}/${meta.file}`
+            else throw new Error("Unknown meta type: " + meta.type)
 
+            let jsonURL = `https://raw.githubusercontent.com/Mumfrey/LiteLoaderInstaller/${meta.mcversion}/src/main/resources/install_profile.json`
+            const liteloaderPath = `${meta.mcversion}-Liteloader-${meta.version}`
+            const versionPath = mc.getVersionRoot(liteloaderPath)
+            if (!fs.existsSync(versionPath))
+                await fs.ensureDir(versionPath)
+            await Promise.all([
+                context.execute(new DownloadTask('downloadJar', targetURL, path.join(versionPath, liteloaderPath + '.jar'))),
+                context.execute(new DownloadTask('downloadJson', jsonURL, path.join(versionPath, liteloaderPath + '.json')))
+            ])
+        }
+    }
     export function installLiteloaderAsMod(meta: VersionMeta, filePath: string) {
 
     }

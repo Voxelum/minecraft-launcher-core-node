@@ -3,11 +3,14 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as url from 'url'
 import * as urls from 'url';
+import { EventEmitter } from 'events';
 import UPDATE from './utils/update'
-import DOWN from './utils/download'
+import DOWN, { DownloadTask } from './utils/download'
+import Task from './utils/task';
 import CHECKSUM from './utils/checksum'
 import { Asset, Library, Version, VersionMeta, VersionMetaList } from './version'
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
+import { AbstractTask } from './utils/task';
 
 declare module './version' {
     interface VersionMeta {
@@ -35,19 +38,35 @@ declare module './version' {
         function install(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
         function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
 
+        function installTask(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
+        function installTask(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
+        function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
+
         function downloadVersion(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Promise<Version>
         function downloadVersion(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Promise<Version>
         function downloadVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Promise<Version>
 
+        function downloadVersionTask(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Task<Version>
+        function downloadVersionTask(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Task<Version>
+        function downloadVersionTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean): Task<Version>
+
         function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation): Promise<Version>
+        function downloadVersionJsonTask(version: VersionMeta, minecraft: MinecraftLocation): Task<Version>
 
         function downloadVersionJar(type: 'client', version: Version, minecraft: MinecraftLocation, checksum?: boolean): Promise<Version>
         function downloadVersionJar(type: 'server', version: Version, minecraft: MinecraftLocation, checksum?: boolean): Promise<Version>
         function downloadVersionJar(type: string, version: Version, minecraft: MinecraftLocation, checksum?: boolean): Promise<Version>
 
+        function downloadVersionJarTask(type: 'client', version: Version, minecraft: MinecraftLocation, checksum?: boolean): Task<Version>
+        function downloadVersionJarTask(type: 'server', version: Version, minecraft: MinecraftLocation, checksum?: boolean): Task<Version>
+        function downloadVersionJarTask(type: string, version: Version, minecraft: MinecraftLocation, checksum?: boolean): Task<Version>
+
         function checkDependency(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
+        function checkDependencyTask(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
         function downloadLibraries(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string }): Promise<Version>;
+        function downloadLibrariesTask(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string }): Task<Version>;
         function downloadAssets(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, assetsHost?: string }): Promise<Version>;
+        function downloadAssetsTask(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, assetsHost?: string }): Task<Version>;
     }
 }
 
@@ -61,53 +80,132 @@ Version.updateVersionMeta = function (option?: {
     }).then(result => result as { list: VersionMetaList, date: string })
 }
 
-
 Version.install = function (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) {
     return Version.downloadVersion(type, versionMeta, minecraft, option ? option.checksum : undefined)
         .then(ver => type === 'client' ? Version.checkDependency(ver, minecraft, option) : ver)
 }
 
-Version.downloadVersion = function downloadVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = true): Promise<Version> {
-    return Version.downloadVersionJson(versionMeta, minecraft).then((version) => Version.downloadVersionJar(type, version, minecraft, checksum))
-}
-Version.downloadVersionJson = async function (version: VersionMeta, minecraft: MinecraftLocation) {
-    const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-    let json = folder.getVersionJson(version.id)
-    fs.ensureDir(folder.getVersionRoot(version.id))
-    if (!fs.existsSync(json)) await new Promise<void>((res, rej) => {
-        let jsonStream = fs.createWriteStream(json)
-        let u = url.parse(version.url)
-        https.get({ host: u.host, path: u.path }, res => res.pipe(jsonStream)).on('error', (e) => rej(e))
-        jsonStream.on('finish', () => {
-            jsonStream.close();
-            res()
-        })
-    });
-    let versionInstance = Version.parse(minecraft, version.id)
-    if (versionInstance) return versionInstance
-    else throw new Error('Cannot parse version')
-}
-Version.downloadVersionJar = async function (type: string, version: Version, minecraft: MinecraftLocation, checksum: boolean = false): Promise<Version> {
-    const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-    await fs.ensureDir(folder.getVersionRoot(version.version))
-    let filename = type == 'client' ? version.version + '.jar' : version.version + '-' + type + '.jar'
-    let jar = path.join(folder.getVersionRoot(version.version), filename)
-    const exist = fs.existsSync(jar)
-    if (!exist)
-        await DOWN(version.downloads[type].url, jar)
-    if (checksum) {
-        let hash = await CHECKSUM(jar)
-        if (hash != version.downloads[type].sha1 && exist) {
-            await DOWN(version.downloads[type].url, jar)
-            hash = await CHECKSUM(jar)
-        }
-        if (hash != version.downloads[type].sha1)
-            throw new Error('SHA1 not matched! Probably caused by the incompleted file or illegal file source!')
+Version.installTask = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) =>
+    new InstallTask(type, versionMeta, minecraft, option)
+
+Version.downloadVersion = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = true) =>
+    Task.execute(new DownloadVersion(type, versionMeta, minecraft, checksum))
+
+Version.downloadVersionTask = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = true) =>
+    new DownloadVersion(type, versionMeta, minecraft, checksum)
+
+Version.downloadVersionJson = (version: VersionMeta, minecraft: MinecraftLocation) =>
+    Task.execute(new DownloadVersionJson(version, minecraft))
+
+Version.downloadVersionJsonTask = (version: VersionMeta, minecraft: MinecraftLocation) =>
+    new DownloadVersionJson(version, minecraft)
+
+Version.downloadVersionJar = (type: string, version: Version, minecraft: MinecraftLocation, checksum: boolean = false) =>
+    Task.execute(new DownloadVersionJar(type, version, minecraft, checksum));
+
+Version.downloadVersionJarTask = (type: string, version: Version, minecraft: MinecraftLocation, checksum: boolean = false) =>
+    new DownloadVersionJar(type, version, minecraft, checksum);
+
+Version.downloadLibraries = (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string }) =>
+    Task.execute(new DownloadLibraries(version, minecraft, option))
+
+Version.downloadLibrariesTask = (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string }) =>
+    new DownloadLibraries(version, minecraft, option)
+
+Version.checkDependency = (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) =>
+    Task.execute(new CheckDependencies(version, minecraft, option))
+
+Version.checkDependencyTask = (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) =>
+    new CheckDependencies(version, minecraft, option)
+
+Version.downloadAssets = (version: Version, minecraft: MinecraftLocation, option?: {
+    checksum?: boolean, assetsHost?: string
+}) => Task.execute(new DownloadAssets(version, minecraft, option))
+
+Version.downloadAssetsTask = (version: Version, minecraft: MinecraftLocation, option?: {
+    checksum?: boolean, assetsHost?: string
+}) => new DownloadAssets(version, minecraft, option)
+
+
+class InstallTask extends AbstractTask<Version>{
+    execute(context: Task.Context): Promise<Version> {
+        const { type, versionMeta, minecraft, option } = this;
+        return context.execute(new DownloadVersion(type, versionMeta, minecraft, option ? option.checksum : undefined))
+            .then(ver => type === 'client' ? Version.checkDependency(ver, minecraft, option) : ver)
     }
-    return version
+    constructor(readonly type: string, readonly versionMeta: VersionMeta,
+        readonly minecraft: MinecraftLocation,
+        readonly option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) { super() }
 }
-Version.checkDependency = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version> {
-    return Promise.all([this.downloadAssets(version, minecraft, option), this.downloadLibraries(version, minecraft, option)]).then(v => version)
+class DownloadVersion extends AbstractTask<Version>{
+    execute(context: Task.Context): Promise<Version> {
+        const { type, versionMeta, minecraft, checksum } = this;
+        return context.execute(new DownloadVersionJson(versionMeta, minecraft))
+            .then((version) => context.execute(new DownloadVersionJar(type, version, minecraft, checksum)))
+    }
+    constructor(readonly type: string, readonly versionMeta: VersionMeta, readonly minecraft: MinecraftLocation,
+        readonly checksum: boolean = true) {
+        super();
+    }
+}
+
+class DownloadVersionJson extends AbstractTask<Version>{
+    constructor(readonly version: VersionMeta, readonly minecraft: MinecraftLocation) { super() }
+    async execute(context: Task.Context): Promise<Version> {
+        const { minecraft, version } = this;
+        const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
+        let json = folder.getVersionJson(version.id)
+        await context.wrap('ensureVersionRoot', fs.ensureDir(folder.getVersionRoot(version.id)))
+        if (!fs.existsSync(json)) await context.wrap('getJson', new Promise<void>((res, rej) => {
+            let jsonStream = fs.createWriteStream(json)
+            let u = url.parse(version.url)
+            https.get({ host: u.host, path: u.path }, res => res.pipe(jsonStream)).on('error', (e) => rej(e))
+            jsonStream.on('finish', () => {
+                jsonStream.close();
+                res()
+            })
+        }));
+        let versionInstance = Version.parse(minecraft, version.id)
+        if (versionInstance) return versionInstance
+        else throw new Error('Cannot parse version')
+    }
+}
+
+class DownloadVersionJar extends AbstractTask<Version>{
+    constructor(
+        readonly type: string, readonly version: Version,
+        readonly minecraft: MinecraftLocation,
+        readonly checksum: boolean = false) {
+        super();
+    }
+    async execute(context: Task.Context) {
+        const { type, version, minecraft, checksum } = this;
+        const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
+        await context.wrap('ensureRootDir', () => fs.ensureDir(folder.getVersionRoot(version.version)))
+        let filename = type == 'client' ? version.version + '.jar' : version.version + '-' + type + '.jar'
+        let jar = path.join(folder.getVersionRoot(version.version), filename);
+        const exist = fs.existsSync(jar);
+        if (!exist)
+            await context.execute(new DownloadTask(version.downloads[type].url, jar))
+        if (checksum) {
+            let hash = await context.wrap('checksumJar', CHECKSUM(jar))
+            if (hash != version.downloads[type].sha1 && exist) {
+                await context.execute(new DownloadTask('redownloadJar', version.downloads[type].url, jar));
+                hash = await context.wrap('rechecksumJar', CHECKSUM(jar))
+            }
+            if (hash != version.downloads[type].sha1)
+                throw new Error('SHA1 not matched! Probably caused by the incompleted file or illegal file source!')
+        }
+        return version
+    }
+}
+class CheckDependencies extends AbstractTask<Version>{
+    constructor(readonly version: Version, readonly minecraft: MinecraftLocation, readonly option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string })
+    { super() }
+    execute(context: Task.Context): Promise<Version> {
+        const { version, minecraft, option } = this;
+        return context.execute(new DownloadAssets(version, minecraft, option)).then((version) => context.execute(new DownloadLibraries(version, minecraft, option)))
+    }
 }
 
 async function downloadLib(lib: any, folder: any, libraryHost: any, checksum: any) {
@@ -132,20 +230,25 @@ async function downloadLib(lib: any, folder: any, libraryHost: any, checksum: an
         }
     }
 }
-Version.downloadLibraries = async function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string }): Promise<Version> {
-    const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-    let all = []
-    const libraryHost = option ? option.libraryHost : undefined
-    const checksum = option ? option.checksum : true;
-    try {
-        await Promise.all(version.libraries.map(lib => downloadLib(lib, folder, libraryHost, checksum)))
-    }
-    catch (e) {
-        throw e;
-    }
-    return version;
-}
 
+class DownloadLibraries extends AbstractTask<Version> {
+    async execute(context: Task.Context): Promise<Version> {
+        const { version, minecraft, option } = this;
+        const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
+        let all = []
+        const libraryHost = option ? option.libraryHost : undefined
+        const checksum = option ? option.checksum : true;
+        try {
+            await Promise.all(version.libraries.map(lib => context.wrap(lib.id, downloadLib(lib, folder, libraryHost, checksum))))
+        }
+        catch (e) {
+            throw e;
+        }
+        return version;
+    }
+    constructor(readonly version: Version, readonly minecraft: MinecraftLocation, readonly option?: { checksum?: boolean, libraryHost?: string }) { super() }
+
+}
 async function downloadAsset(content: any, key: any, folder: any, assetsHost: any, checksum: any) {
     if (!content.hasOwnProperty(key)) return
     var element = content[key];
@@ -169,26 +272,31 @@ async function downloadAsset(content: any, key: any, folder: any, assetsHost: an
             throw new Error(`SHA1 not matched!\n${sum}\n${hash}\n@${file}\n Probably caused by the incompleted file or illegal file source!`)
     }
 }
-Version.downloadAssets = async function (version: Version, minecraft: MinecraftLocation, option?: {
-    checksum?: boolean, assetsHost?: string, cb?: (name: string, progress: number) => void
-}): Promise<Version> {
-    const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-    let jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
-    if (!fs.existsSync(jsonPath)) {
-        await fs.ensureDir(path.join(folder.assets, 'indexes'))
-        await DOWN(version.assetIndexDownloadInfo.url, jsonPath)
+
+class DownloadAssets extends AbstractTask<Version>{
+    constructor(readonly version: Version, readonly minecraft: MinecraftLocation, readonly option?: {
+        checksum?: boolean, assetsHost?: string
+    }) { super() }
+    async execute(context: Task.Context): Promise<Version> {
+        const { version, minecraft, option } = this;
+        const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
+        let jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
+        if (!fs.existsSync(jsonPath)) {
+            await context.wrap('ensureIndexes', fs.ensureDir(path.join(folder.assets, 'indexes')))
+            await context.execute(new DownloadTask('downloadAssetsJson', version.assetIndexDownloadInfo.url, jsonPath))
+        }
+        let content: any = (await fs.readJson(jsonPath)).objects
+        await context.wrap('ensureObjects', fs.ensureDir(folder.getPath('assets', 'objects')))
+        const assetsHost = option ? option.assetsHost || 'https://resources.download.minecraft.net' : 'https://resources.download.minecraft.net';
+        const checksum = option ? option.checksum ? option.checksum : false : false;
+        try {
+            await Object.keys(content).map(key => context.wrap(key, downloadAsset(content, key, folder, assetsHost, checksum)))
+        }
+        catch (e) {
+            throw e;
+        }
+        return version;
     }
-    let content: any = (await fs.readJson(jsonPath)).objects
-    await fs.ensureDir(folder.getPath('assets', 'objects'))
-    const assetsHost = option ? option.assetsHost || 'https://resources.download.minecraft.net' : 'https://resources.download.minecraft.net';
-    const checksum = option ? option.checksum ? option.checksum : false : false;
-    try {
-        await Object.keys(content).map(key => downloadAsset(content, key, folder, assetsHost, checksum))
-    }
-    catch (e) {
-        throw e;
-    }
-    return version;
 }
 
 

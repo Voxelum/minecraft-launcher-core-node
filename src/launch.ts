@@ -1,6 +1,6 @@
 import { Version, Library, Native, Artifact } from './version'
 import { Auth, UserType } from './auth';
-import { exec, ChildProcess } from 'child_process'
+import { exec, ChildProcess, ExecOptions } from 'child_process'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as os from 'os'
@@ -27,6 +27,8 @@ export namespace Launcher {
         resolution?: { width?: number, height?: number, fullscreen: false }
         extraJVMArgs?: string[]
         extraMCArgs?: string[]
+        extraExecOption?: ExecOptions,
+
 
         /**
          * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
@@ -38,6 +40,7 @@ export namespace Launcher {
 
         ignoreInvalidMinecraftCertificates?: boolean
         ignorePatchDiscrepancies?: boolean
+
     }
 
     export async function launch(auth: Auth, options: Option): Promise<ChildProcess> {
@@ -53,6 +56,7 @@ export namespace Launcher {
 
         let args = genArgs(auth, options, v).join(' ')
         return exec(args, {
+            encoding: "binary",
             cwd: options.gamePath
         })
     }
