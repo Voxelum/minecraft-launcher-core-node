@@ -104,7 +104,7 @@ import Task, { AbstractTask } from './task'
 
 export class DownloadTask extends AbstractTask<void | Buffer> {
     constructor(id: string, readonly url: string, readonly file?: string) { super(id); }
-    execture(context: Task.Context): Promise<void | Buffer> {
+    execute(context: Task.Context): Promise<void | Buffer> {
         return download(this.url, this.file, (progress, total) => {
             this.emit('update', progress, total);
         })
