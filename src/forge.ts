@@ -1,4 +1,4 @@
-import download from './utils/download'
+import download, { DownloadTask } from './utils/download'
 import CHECKSUM from './utils/checksum'
 import UPDATE from './utils/update'
 import * as path from 'path'
@@ -9,6 +9,7 @@ import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import { ClassVisitor, Opcodes, AnnotationVisitor, ClassReader } from 'java-asm'
 
 import Mod from './mod'
+import { AbstractTask, Task } from './utils/task';
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
         constructor(readonly map: { [key: string]: any }) { super(Opcodes.ASM5); }
@@ -119,48 +120,58 @@ export namespace Forge {
         return Object.keys(modidTree).map(k => modidTree[k] as Forge.MetaData)
     }
 
+    class InstallTask extends AbstractTask<Version>{
+        constructor(readonly version: VersionMeta, readonly minecraft: MinecraftLocation, readonly checksum: boolean = false,
+            readonly maven: string = 'http://files.minecraftforge.net/maven') { super() }
+        async execute(context: Task.Context): Promise<Version> {
+            const { version, minecraft, checksum, maven } = this;
+            const mc = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft;
+            let versionPath = `${version.mcversion}-${version.version}`
+            let universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
+            let installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
+            let localForgePath = `${version.mcversion}-forge-${version.version}`
+            let root = mc.getVersionRoot(localForgePath)
+            let filePath = path.join(root, `${localForgePath}.jar`)
+            let jsonPath = path.join(root, `${localForgePath}.json`)
+            await context.wrap('unsureRoot', fs.ensureDir(root))
+            let universalBuffer;
+            if (!fs.existsSync(filePath)) {
+                try {
+                    await context.wrap('writeJar', fs.outputFile(filePath,
+                        universalBuffer = await context.execute(new DownloadTask('downloadJar', universalURL))))
+                }
+                catch (e) {
+                    await context.wrap('rewriteJar', fs.outputFile(filePath,
+                        universalBuffer = await (await Zip().loadAsync(await context.execute(new DownloadTask('redownloadJar', installerURL))))
+                            .file(`forge-${versionPath}-universal.jar`)
+                            .async('nodebuffer')))
+                }
+                if (checksum) {
+                    let sum
+                    if (version.files[2] &&
+                        version.files[2][1] == 'universal' &&
+                        version.files[2][2] &&
+                        (await context.wrap('checksum', CHECKSUM(filePath))) != version.files[2][2])
+                        throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
+                    else
+                        for (let arr of version.files)
+                            if (arr[1] == 'universal')
+                                if ((await context.wrap('checksum', CHECKSUM(filePath))) != arr[2])
+                                    throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
+                }
+            }
+            if (!fs.existsSync(jsonPath)) {
+                await context.wrap('writeJson', fs.outputFile(jsonPath,
+                    await Zip(universalBuffer).file('version.json')
+                        .async('nodebuffer')))
+            }
+            return Version.parse(minecraft, localForgePath)
+        }
+
+    }
     export async function install(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven'): Promise<Version> {
-        const mc = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft;
-        let versionPath = `${version.mcversion}-${version.version}`
-        let universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
-        let installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
-        let localForgePath = `${version.mcversion}-forge-${version.version}`
-        let root = mc.getVersionRoot(localForgePath)
-        let filePath = path.join(root, `${localForgePath}.jar`)
-        let jsonPath = path.join(root, `${localForgePath}.json`)
-        await fs.ensureDir(root)
-        let universalBuffer;
-        if (!fs.existsSync(filePath)) {
-            try {
-                fs.outputFile(filePath, universalBuffer = await universalURL)
-            }
-            catch (e) {
-                await fs.outputFile(filePath,
-                    universalBuffer = await Zip(await download(installerURL))
-                        .file(`forge-${versionPath}-universal.jar`)
-                        .async('nodebuffer'))
-            }
-            if (checksum) {
-                let sum
-                if (version.files[2] &&
-                    version.files[2][1] == 'universal' &&
-                    version.files[2][2] &&
-                    await CHECKSUM(filePath) != version.files[2][2])
-                    throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
-                else
-                    for (let arr of version.files)
-                        if (arr[1] == 'universal')
-                            if (await CHECKSUM(filePath) != arr[2])
-                                throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
-            }
-        }
-        if (!fs.existsSync(jsonPath)) {
-            await fs.outputFile(jsonPath,
-                await Zip(universalBuffer).file('version.json')
-                    .async('nodebuffer'))
-        }
-        return Version.parse(minecraft, localForgePath)
+        return Task.execute(new InstallTask(version, minecraft, checksum, maven))
     }
 }
 Mod.register('forge', (option) => {
