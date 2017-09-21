@@ -37,6 +37,140 @@ export namespace Forge {
             return null;
         }
     }
+    export interface Config {
+        [category: string]: {
+            comment?: string,
+            properties: Config.Property<any>[],
+        };
+    }
+    export namespace Config {
+        export type Type = 'I' | 'D' | 'S' | 'B'
+        export interface Property<T = number | boolean | string | number[] | boolean[] | string[]> {
+            readonly type: Type,
+            readonly name: string,
+            readonly comment?: string,
+            value: T,
+        }
+
+        export function stringify(config: Config) {
+            let string = '# Configuration file\n\n\n';
+            const propIndent = '    ', arrIndent = '        '
+            Object.keys(config).forEach(cat => {
+                string += `${cat} {\n\n`
+                config[cat].properties.forEach(prop => {
+                    if (prop.comment) {
+                        const lines = prop.comment.split('\n')
+                        for (const l of lines)
+                            string += `${propIndent}# ${l}\n`
+                    }
+                    if (prop.value instanceof Array) {
+                        string += `${propIndent}${prop.type}:${prop.name} <\n`
+                        prop.value.forEach(v => string += `${arrIndent}${v}\n`)
+                        string += `${propIndent}>\n`
+                    } else {
+                        string += `${propIndent}${prop.type}:${prop.name}=${prop.value}\n`
+                    }
+                    string += '\n'
+                })
+                string += `}\n\n`
+            })
+            return string
+        }
+
+        export function parse(string: string): Config {
+            const lines = string.split('\n').map(s => s.trim())
+                .filter(s => s.length !== 0)
+            let category: string | undefined = undefined;
+            let pendingCategory: string | undefined;
+
+            const parseVal = (type: Type, value: any) => {
+                const map: { [string: string]: (s: string) => any } = {
+                    I: Number.parseInt,
+                    D: Number.parseFloat,
+                    S: (s: string) => s,
+                    B: (s: string) => s === 'true',
+                }
+                const handler = map[type];
+                return handler(value)
+            }
+            const config: Config = {};
+            let inlist = false;
+            let comment: string | undefined = undefined;
+            let last: any = undefined;
+
+            const readProp = (type: Type, line: string) => {
+                line = line.substring(line.indexOf(':') + 1, line.length);
+                const pair = line.split('=')
+                if (pair.length == 0 || pair.length == 1) {
+                    let value = undefined;
+                    let name = undefined;
+                    if (line.endsWith(' <')) {
+                        value = []
+                        name = line.substring(0, line.length - 2)
+                        inlist = true;
+                    } else { }
+                    if (!category) throw new Error(line);
+                    config[category].properties.push(last = { name, type, value, comment } as Property)
+                } else {
+                    inlist = false;
+                    if (!category) throw new Error(line);
+                    config[category].properties.push({ name: pair[0], value: parseVal(type, pair[1]), type, comment } as Property)
+                }
+                comment = undefined;
+            }
+            for (const line of lines) {
+                if (inlist) {
+                    if (!last) throw new Error(line)
+                    if (line === '>') inlist = false;
+                    else if (line.endsWith(' >')) {
+                        last.value.push(parseVal(last.type, line.substring(0, line.length - 2)))
+                        inlist = false;
+                    } else last.value.push(parseVal(last.type, line))
+                    continue
+                }
+                switch (line.charAt(0)) {
+                    case '#':
+                        if (!comment)
+                            comment = line.substring(1, line.length).trim();
+                        else {
+                            comment = comment.concat('\n', line.substring(1, line.length).trim())
+                        }
+                        break;
+                    case 'I':
+                    case 'D':
+                    case 'S':
+                    case 'B':
+                        readProp(line.charAt(0) as Type, line);
+                        break;
+                    case '<':
+                        break;
+                    case '{':
+                        if (pendingCategory) {
+                            category = pendingCategory;
+                            config[category] = { comment, properties: [] }
+                            comment = undefined;
+                        }
+                        else throw new Error(line)
+                        break;
+                    case '}':
+                        category = undefined;
+                        break;
+                    default:
+                        if (!category) {
+                            if (line.endsWith('{')) {
+                                category = line.substring(0, line.length - 1).trim()
+                                config[category] = { comment, properties: [] }
+                                comment = undefined;
+                            } else {
+                                pendingCategory = line;
+                            }
+                        } else throw new Error(line)
+                }
+            }
+            return config;
+        }
+    }
+
     export interface ModIndentity {
         readonly modid: string,
         readonly version: string
@@ -194,6 +328,12 @@ export namespace Forge {
         }
 
     }
+
+    export function installTask(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
+        maven: string = 'http://files.minecraftforge.net/maven'): Task<Version> {
+        return new InstallTask(version, minecraft, checksum, maven)
+    }
+    
     export async function install(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven'): Promise<Version> {
         return Task.execute(new InstallTask(version, minecraft, checksum, maven))

@@ -14,6 +14,7 @@ Provide several useful function for Minecraft in typescript
 - **[GameSetting](#gamesetting)**
 - **[Language](#language)**
 - **[ResourcePack](#resourcepack)**
+- **[Forge](#forge)**
 - **[TextComponent](#textcomponent)**
 - **[Auth](#auth)**
 - **[Launch](#launch)**
@@ -130,6 +131,20 @@ Read language info from version
     Promise<ResourcePack> packPromise = ResourcePack.read(fileFullPath);
 
 Read ResourcePack from filePath
+
+### Forge
+
+    import { Forge } from 'ts-minecraft'
+    const forgeModJarBuff: Buffer;
+    Promise<Forge.MetaData[]> metasPromise = Forge.meta(forgeModJarBuff);
+
+Read the forge mod metadata
+
+    const modConfigString: string;
+    const config: Forge.Config = Forge.Config.parse(modConfigString);
+    const serializedBack = Forge.Config.stringify(config);
+
+Read the forge mod config
 
 ### TextComponent
 
