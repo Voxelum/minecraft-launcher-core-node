@@ -16,3 +16,4 @@ export * from './src/forge'
 export * from './src/liteloader'
 export * from './src/mod'
 export * from './src/utils/location';
+export * from './src/utils/task';
