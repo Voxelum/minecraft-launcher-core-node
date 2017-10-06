@@ -186,7 +186,7 @@ class DownloadVersionJar extends AbstractTask<Version>{
         let jar = path.join(folder.getVersionRoot(version.version), filename);
         const exist = fs.existsSync(jar);
         if (!exist)
-            await context.execute(new DownloadTask(version.downloads[type].url, jar))
+            await context.execute(new DownloadTask('downloadJar', version.downloads[type].url, jar))
         if (checksum) {
             let hash = await context.wrap('checksumJar', CHECKSUM(jar))
             if (hash != version.downloads[type].sha1 && exist) {
@@ -200,8 +200,7 @@ class DownloadVersionJar extends AbstractTask<Version>{
     }
 }
 class CheckDependencies extends AbstractTask<Version>{
-    constructor(readonly version: Version, readonly minecraft: MinecraftLocation, readonly option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string })
-    { super() }
+    constructor(readonly version: Version, readonly minecraft: MinecraftLocation, readonly option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) { super() }
     execute(context: Task.Context): Promise<Version> {
         const { version, minecraft, option } = this;
         return context.execute(new DownloadAssets(version, minecraft, option)).then((version) => context.execute(new DownloadLibraries(version, minecraft, option)))
