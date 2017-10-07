@@ -71,10 +71,11 @@ export namespace Launcher {
 
     async function checkNative(mc: MinecraftFolder, version: Version) {
         let native = mc.getNativesRoot(version.root)
+        fs.ensureDir(native)
         for (let lib of version.libraries) if ((lib as Native).extractExcludes) {
             const excludes = (lib as Native).extractExcludes;
             let from = mc.getLibrary(lib)
-            let zip = Zip(await fs.readFile(from))
+            let zip = await Zip().loadAsync(await fs.readFile(from))
             for (const entry of zip.filter((path, entry) => {
                 for (let exclude of excludes)
                     if (path.startsWith(exclude)) return false;
