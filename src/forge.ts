@@ -231,9 +231,11 @@ export namespace Forge {
         modified: number,
         version: string
     }
-    export async function meta(mod: Buffer | string) {
+    export async function meta(mod: Buffer | string | Zip) {
         let zip;
-        if (mod instanceof Buffer)
+        if (mod instanceof Zip)
+            zip = mod;
+        else if (mod instanceof Buffer)
             zip = await new Zip().loadAsync(mod);
         else if (typeof mod === 'string') {
             zip = await new Zip().loadAsync(await fs.readFile(mod))
@@ -274,8 +276,10 @@ export namespace Forge {
                 else modidTree[modid] = asmmod;
             }
         }
+        const modids = Object.keys(modidTree);
+        if (modids.length === 0) throw new Error('Not a Mod!')
 
-        return Object.keys(modidTree).map(k => modidTree[k] as Forge.MetaData)
+        return modids.map(k => modidTree[k] as Forge.MetaData)
             .filter(m => m.modid !== undefined)
     }
 
@@ -333,7 +337,7 @@ export namespace Forge {
         maven: string = 'http://files.minecraftforge.net/maven'): Task<Version> {
         return new InstallTask(version, minecraft, checksum, maven)
     }
-    
+
     export async function install(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven'): Promise<Version> {
         return Task.execute(new InstallTask(version, minecraft, checksum, maven))

@@ -91,9 +91,11 @@ export namespace LiteLoader {
         timestamp: string,
     }
 
-    export async function meta(mod: string | Buffer) {
+    export async function meta(mod: string | Buffer | Zip) {
         let zip;
-        if (mod instanceof Buffer)
+        if (mod instanceof Zip)
+            zip = mod;
+        else if (mod instanceof Buffer)
             zip = await new Zip().loadAsync(mod);
         else if (typeof mod === 'string')
             zip = await new Zip().loadAsync(await fs.readFile(mod));
