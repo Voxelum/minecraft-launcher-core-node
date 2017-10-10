@@ -125,7 +125,6 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
         let stack: any[] = []
         let fullPath = paths.join(folderLoc, 'versions', version, version + '.json')
         if (!fs.existsSync(fullPath)) rej(new Error('No version file for ' + version));
-        if (!fs.existsSync(paths.join(folderLoc, 'versions', version, version + '.jar'))) rej(new Error('No version jar for ' + version));
         function interal(fullPath: string): Promise<any[]> {
             return fs.readFile(fullPath).then((value) => {
                 let obj = JSON.parse(value.toString())
