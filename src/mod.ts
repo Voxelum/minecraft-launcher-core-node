@@ -29,6 +29,7 @@ export namespace Mod {
                 catch (e) { }
             }
         else return registry[type](data)
+        throw new Error('Cannot parse.')
     }
 }
 export default Mod;

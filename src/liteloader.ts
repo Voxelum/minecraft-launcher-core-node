@@ -36,7 +36,7 @@ export namespace LiteLoader {
         versions: { [version: string]: { snapshot?: VersionMeta, release?: VersionMeta } }
     }
     export namespace VersionMetaList {
-        export async function update(option?: {
+        export function update(option?: {
             fallback?: {
                 list: VersionMetaList, date: string
             }, remote?: string
