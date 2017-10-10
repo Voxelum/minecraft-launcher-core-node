@@ -50,7 +50,8 @@ export namespace Launcher {
         let mc = new MinecraftFolder(options.resourcePath)
         let v: Version = options.version instanceof Version ? options.version : await Version.parse(options.resourcePath, options.version)
         if (!v) throw "Cannot find version " + options.version
-        if (!fs.existsSync(path.join(v.root, v.version + '.jar')))
+        
+        if (!fs.existsSync(path.join(mc.versions, v.version, v.version + '.jar')))
             throw new Error('No version jar for ' + v.version);
         let missing = checkLibs(mc, v)
         if (missing.length > 0) throw new Error('Missing library!')
