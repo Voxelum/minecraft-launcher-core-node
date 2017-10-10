@@ -131,7 +131,7 @@ class InstallTask extends AbstractTask<Version>{
     execute(context: Task.Context): Promise<Version> {
         const { type, versionMeta, minecraft, option } = this;
         return context.execute(new DownloadVersion(type, versionMeta, minecraft, option ? option.checksum : undefined))
-            .then(ver => type === 'client' ? Version.checkDependency(ver, minecraft, option) : ver)
+            .then(ver => type === 'client' ? context.execute(new CheckDependencies(ver, minecraft, option)) : ver)
     }
     constructor(readonly type: string, readonly versionMeta: VersionMeta,
         readonly minecraft: MinecraftLocation,
