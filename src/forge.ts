@@ -245,7 +245,7 @@ export namespace Forge {
         const modidTree: any = {}
 
         try {
-            for (const m of await zip.file('mcmod.info').async('nodebuffer').then(buf => JSON.parse(buf.toString())))
+            for (const m of await zip.file('mcmod.info').async('nodebuffer').then(buf => JSON.parse(buf.toString().trim())))
                 modidTree[m.modid] = m;
         } catch (e) { }
         for (const key in zip.files) {

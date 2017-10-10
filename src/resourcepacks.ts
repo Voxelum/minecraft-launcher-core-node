@@ -7,7 +7,8 @@ export class ResourcePack {
 
 export namespace ResourcePack {
     async function readZip(fileName: string, zipFile: Zip) {
-        let { description, pack_format } = await zipFile.file('pack.mcmeta').async('nodebuffer').then(data => JSON.parse(data.toString()).pack);
+        let { description, pack_format } = await zipFile.file('pack.mcmeta').async('nodebuffer')
+            .then(data => JSON.parse(data.toString('utf-8').trim()).pack);
         let icon = ''
         try {
             icon = await zipFile.file('pack.png').async('nodebuffer')
