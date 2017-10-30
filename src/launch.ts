@@ -45,12 +45,13 @@ export namespace Launcher {
 
     export async function launch(auth: Auth, options: Option): Promise<ChildProcess> {
         await fs.ensureDir(options.gamePath)
+        if (!path.isAbsolute(options.gamePath)) options.gamePath = path.resolve(options.gamePath)
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
         let mc = new MinecraftFolder(options.resourcePath)
         let v: Version = options.version instanceof Version ? options.version : await Version.parse(options.resourcePath, options.version)
         if (!v) throw "Cannot find version " + options.version
-        
+
         if (!fs.existsSync(path.join(mc.versions, v.version, v.version + '.jar')))
             throw new Error('No version jar for ' + v.version);
         let missing = checkLibs(mc, v)
@@ -116,14 +117,14 @@ export namespace Launcher {
 
         cmd.push('-Djava.library.path=' + mc.getNativesRoot(version.root));
 
-        cmd.push('-cp');
+        cmd.push('-classpath');
 
         let libs: Library[] = version.libraries.slice();
         // libs.filter(lib => lib instanceof Native).map(lib => <Native>lib).forEach(handleNative);
         let libPaths: string[] = libs.map(lib => mc.getLibrary(lib));
         libPaths.push(mc.getVersionJar(version.root));
 
-        cmd.push(libPaths.join(";"));
+        cmd.push(libPaths.join(os.platform() === 'darwin' ? ':' : ';'));
 
         if (version.legacy) {
             //handle

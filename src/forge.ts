@@ -296,15 +296,15 @@ export namespace Forge {
             let root = mc.getVersionRoot(localForgePath)
             let filePath = path.join(root, `${localForgePath}.jar`)
             let jsonPath = path.join(root, `${localForgePath}.json`)
-            await context.wrap('unsureRoot', fs.ensureDir(root))
-            let universalBuffer;
+            await context.wrapAndExecute('unsureRoot', () => fs.ensureDir(root))
+            let universalBuffer: any;
             if (!fs.existsSync(filePath)) {
                 try {
-                    await context.wrap('writeJar', fs.outputFile(filePath,
+                    await context.wrapAndExecute('writeJar', async () => fs.outputFile(filePath,
                         universalBuffer = await context.execute(new DownloadTask('downloadJar', universalURL))))
                 }
                 catch (e) {
-                    await context.wrap('rewriteJar', fs.outputFile(filePath,
+                    await context.wrapAndExecute('rewriteJar', async () => fs.outputFile(filePath,
                         universalBuffer = await (await Zip().loadAsync(await context.execute(new DownloadTask('redownloadJar', installerURL))))
                             .file(`forge-${versionPath}-universal.jar`)
                             .async('nodebuffer')))
@@ -314,17 +314,17 @@ export namespace Forge {
                     if (version.files[2] &&
                         version.files[2][1] == 'universal' &&
                         version.files[2][2] &&
-                        (await context.wrap('checksum', CHECKSUM(filePath))) != version.files[2][2])
+                        (await context.wrapAndExecute('checksum', () => CHECKSUM(filePath))) != version.files[2][2])
                         throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
                     else
                         for (let arr of version.files)
                             if (arr[1] == 'universal')
-                                if ((await context.wrap('checksum', CHECKSUM(filePath))) != arr[2])
+                                if ((await context.wrapAndExecute('checksum', () => CHECKSUM(filePath))) != arr[2])
                                     throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
                 }
             }
             if (!fs.existsSync(jsonPath)) {
-                await context.wrap('writeJson', fs.outputFile(jsonPath,
+                await context.wrapAndExecute('writeJson', async () => fs.outputFile(jsonPath,
                     await (await Zip().loadAsync(universalBuffer)).file('version.json')
                         .async('nodebuffer')))
             }

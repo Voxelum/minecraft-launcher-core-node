@@ -2,7 +2,7 @@ import * as https from 'https'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as url from 'url'
-import * as urls from 'url';
+import * as os from 'os';
 import { EventEmitter } from 'events';
 import UPDATE from './utils/update'
 import DOWN, { DownloadTask } from './utils/download'
@@ -155,8 +155,8 @@ class DownloadVersionJson extends AbstractTask<Version>{
         const { minecraft, version } = this;
         const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
         let json = folder.getVersionJson(version.id)
-        await context.wrap('ensureVersionRoot', fs.ensureDir(folder.getVersionRoot(version.id)))
-        if (!fs.existsSync(json)) await context.wrap('getJson', new Promise<void>((res, rej) => {
+        await context.wrapAndExecute('ensureVersionRoot', () => fs.ensureDir(folder.getVersionRoot(version.id)))
+        if (!fs.existsSync(json)) await context.wrapAndExecute('getJson', () => new Promise<void>((res, rej) => {
             let jsonStream = fs.createWriteStream(json)
             let u = url.parse(version.url)
             https.get({ host: u.host, path: u.path }, res => res.pipe(jsonStream)).on('error', (e) => rej(e))
@@ -181,17 +181,17 @@ class DownloadVersionJar extends AbstractTask<Version>{
     async execute(context: Task.Context) {
         const { type, version, minecraft, checksum } = this;
         const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-        await context.wrap('ensureRootDir', () => fs.ensureDir(folder.getVersionRoot(version.version)))
+        await context.wrapAndExecute('ensureRootDir', () => fs.ensureDir(folder.getVersionRoot(version.version)))
         let filename = type == 'client' ? version.version + '.jar' : version.version + '-' + type + '.jar'
         let jar = path.join(folder.getVersionRoot(version.version), filename);
         const exist = fs.existsSync(jar);
         if (!exist)
             await context.execute(new DownloadTask('downloadJar', version.downloads[type].url, jar))
         if (checksum) {
-            let hash = await context.wrap('checksumJar', CHECKSUM(jar))
+            let hash = await context.wrapAndExecute('checksumJar', () => CHECKSUM(jar))
             if (hash != version.downloads[type].sha1 && exist) {
                 await context.execute(new DownloadTask('redownloadJar', version.downloads[type].url, jar));
-                hash = await context.wrap('rechecksumJar', CHECKSUM(jar))
+                hash = await context.wrapAndExecute('rechecksumJar', () => CHECKSUM(jar))
             }
             if (hash != version.downloads[type].sha1)
                 throw new Error('SHA1 not matched! Probably caused by the incompleted file or illegal file source!')
@@ -238,7 +238,7 @@ class DownloadLibraries extends AbstractTask<Version> {
         const libraryHost = option ? option.libraryHost : undefined
         const checksum = option ? option.checksum : true;
         try {
-            await Promise.all(version.libraries.map(lib => context.wrap(lib.id, downloadLib(lib, folder, libraryHost, checksum))))
+            await context.executeAll(version.libraries.map(lib => Task.wrap(lib.id, () => downloadLib(lib, folder, libraryHost, checksum))))
         }
         catch (e) {
             throw e;
@@ -281,15 +281,15 @@ class DownloadAssets extends AbstractTask<Version>{
         const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
         let jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
         if (!fs.existsSync(jsonPath)) {
-            await context.wrap('ensureIndexes', fs.ensureDir(path.join(folder.assets, 'indexes')))
+            await context.wrapAndExecute('ensureIndexes', () => fs.ensureDir(path.join(folder.assets, 'indexes')))
             await context.execute(new DownloadTask('downloadAssetsJson', version.assetIndexDownloadInfo.url, jsonPath))
         }
         let content: any = (await fs.readJson(jsonPath)).objects
-        await context.wrap('ensureObjects', fs.ensureDir(folder.getPath('assets', 'objects')))
+        await context.wrapAndExecute('ensureObjects', () => fs.ensureDir(folder.getPath('assets', 'objects')))
         const assetsHost = option ? option.assetsHost || 'https://resources.download.minecraft.net' : 'https://resources.download.minecraft.net';
         const checksum = option ? option.checksum ? option.checksum : false : false;
         try {
-            await Object.keys(content).map(key => context.wrap(key, downloadAsset(content, key, folder, assetsHost, checksum)))
+            await context.executeAll(Object.keys(content).map(key => Task.wrap(key, () => downloadAsset(content, key, folder, assetsHost, checksum))))
         }
         catch (e) {
             throw e;

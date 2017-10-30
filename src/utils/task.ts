@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import * as os from 'os';
 
 export interface Task<T> extends EventEmitter {
     readonly id: string;
@@ -9,7 +10,7 @@ export interface Task<T> extends EventEmitter {
 }
 
 export class SimpleTask<T> extends EventEmitter implements Task<T> {
-    constructor(readonly id: string, readonly promise: (() => Promise<T>) | Promise<T>) { super(); }
+    constructor(readonly id: string, readonly promise: (() => Promise<T>) | Promise<T>, readonly retry: number = 0) { super(); }
     execute(context: Task.Context): Promise<T> {
         if (this.promise instanceof Promise) {
             return this.promise;
@@ -28,20 +29,25 @@ export abstract class AbstractTask<T> extends EventEmitter implements Task<T> {
     abstract execute(context: Task.Context): Promise<T>;
 }
 
+
 export namespace Task {
     export interface Context {
         execute<T>(task: Task<T>): Promise<T>;
-        wrap<T>(id: string, promise: (() => Promise<T>) | Promise<T>): Promise<T>;
+        wrapAndExecute<T>(id: string, promise: () => Promise<T>): Promise<T>;
+        executeAll<T>(task: Task<T>[]): Promise<T[]>;
     }
 
-    export function wrap<T>(id: string, promise: (() => Promise<T>) | Promise<T>): Task<T> {
+    export function wrap<T>(id: string, promise: () => Promise<T>): Task<T> {
         return new SimpleTask(id, promise);
     }
 
     export function execute<T>(task: Task<T>) {
         return dummyContext.execute(task);
     }
-    class DummyContext implements Context {
+
+    export class ParallelContext implements Context {
+        constructor(readonly parallelNumber: number = os.cpus.length == 0 ? 5 : os.cpus.length) {
+        }
         execute<T>(task: Task<T>): Promise<T> {
             return task.execute(this).then((r) => {
                 task.emit('finish', r);
@@ -51,11 +57,25 @@ export namespace Task {
                 throw e;
             })
         }
-        wrap<T>(id: string, promise: Promise<T> | (() => Promise<T>)): Promise<T> {
+        wrapAndExecute<T>(id: string, promise: () => Promise<T>): Promise<T> {
             return Task.wrap(id, promise).execute(this);
         }
+
+        async executeAll<T>(task: Task<T>[]): Promise<T[]> {
+            const result: T[] = []
+            for (let i = 0; i < task.length; i += this.parallelNumber) {
+                let promises: Promise<T>[] = []
+                for (let j = 0; j < this.parallelNumber; ++j) {
+                    if (task[j + i]) {
+                        promises.push(task[j + i].execute(this))
+                    }
+                }
+                result.push(...(await Promise.all(promises)))
+            }
+            return result;
+        }
     }
-    const dummyContext = new DummyContext()
+    const dummyContext = new ParallelContext()
 }
 
 export default Task;

@@ -139,6 +139,10 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
     })
 }
 
+function parseVersionHierarchyNew(hierarchy: any[], platform: PlatformDescription) {
+    
+}
+
 function parseVersionHierarchy(hierarchy: any[], platform: PlatformDescription) {
     let version: string = hierarchy[0].id;
     let root: string = hierarchy[hierarchy.length - 1].id;
