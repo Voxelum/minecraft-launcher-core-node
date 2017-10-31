@@ -1,4 +1,4 @@
-import { Version, Library, Native, Artifact } from './version'
+import { Version, Library, Native, Artifact, PlatformDescription, checkAllowed } from './version'
 import { Auth, UserType } from './auth';
 import { exec, ChildProcess, ExecOptions } from 'child_process'
 import * as fs from 'fs-extra'
@@ -96,8 +96,25 @@ export namespace Launcher {
         if (options.javaPath.match(/.* *.*/)) { options.javaPath = '"' + options.javaPath + '"' }
         cmd.push(options.javaPath);
 
-        if (os.platform() == 'win32')
-            cmd.push('-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump')
+        const replaceJVM = (elem: any) => {
+            if (typeof elem === 'object') {
+                if (checkAllowed(elem.rules)) {
+                    return elem.value instanceof Array ? elem.value.join(' ') : elem.value
+                }
+            }
+            if (elem.indexOf('$') !== -1) {
+                if (elem.indexOf('${natives_directory}') !== -1)
+                    elem.replace('${natives_directory}', mc.getNativesRoot(version.root))
+                elem.replace('${launcher_name}', 'launcher')
+                elem.replace('${launcher_version}', 'launcher')
+                if (elem.indexOf('${classpath}') !== -1)
+                    elem.replace('${classpath}',
+                        [...version.libraries.map(lib => mc.getLibrary(lib)), mc.getVersionJar(version.root)]
+                            .join(os.platform() === 'darwin' ? ':' : ';'))
+            }
+            return elem;
+        }
+
         // cmd.push('-XX:+UseConcMarkSweepGC');
         // cmd.push('-XX:+CMSIncrementalMode');
         // cmd.push('-XX:-UseAdaptiveSizePolicy');
@@ -115,41 +132,36 @@ export namespace Launcher {
         //add extra jvm args
         if (options.extraJVMArgs) cmd = cmd.concat(options.extraJVMArgs);
 
-        cmd.push('-Djava.library.path=' + mc.getNativesRoot(version.root));
-
-        cmd.push('-classpath');
-
-        let libs: Library[] = version.libraries.slice();
-        // libs.filter(lib => lib instanceof Native).map(lib => <Native>lib).forEach(handleNative);
-        let libPaths: string[] = libs.map(lib => mc.getLibrary(lib));
-        libPaths.push(mc.getVersionJar(version.root));
-
-        cmd.push(libPaths.join(os.platform() === 'darwin' ? ':' : ';'));
+        cmd.push(...version.jvmArgs.map(replaceJVM))
 
         if (version.legacy) {
             //handle
         }
         cmd.push(version.mainClass);
 
-        let args = version.launchArgs;
-
-        args = args.replace("${version_name}", version.version);
-        args = args.replace("${version_type}", (version.type) ? version.type : 'alpha');
-
+        let gameArgs = version.gameArgs;
         let assetsDir = path.join(options.resourcePath, (version.legacy ? path.join('assets', 'virtual, legacy') : 'assets'));
-        args = args.replace("${assets_root}", assetsDir);
-        args = args.replace("${game_assets}", assetsDir);
-        args = args.replace("${assets_index_name}", version.assets);
-        args = args.replace("${game_directory}", options.gamePath);//TODO check if need to handle the dependency
 
-        args = args.replace("${auth_player_name}", auth.selectedProfile.name);
-        args = args.replace("${auth_uuid}", auth.selectedProfile.id.replace('-', ''));
-        args = args.replace("${auth_access_token}", auth.accessToken);
-        args = args.replace("${user_properties}", JSON.stringify(auth.properties));
-        args = args.replace("${user_type}", UserType.toString(auth.userType));
+        const replace = (element: string) => {
+            if (element.startsWith('$')) {
+                switch (element) {
+                    case '${version_name}': return version.version
+                    case '${version_type}': return (version.type) ? version.type : 'alpha'
+                    case '${assets_root}': return assetsDir
+                    case '${game_assets}': return assetsDir
+                    case '${assets_index_name}': return version.assets
+                    case '${game_directory}': return options.gamePath
+                    case '${auth_player_name}': return auth.selectedProfile.name
+                    case '${auth_uuid}': return auth.selectedProfile.id.replace('-', '')
+                    case '${auth_access_token}': return auth.accessToken
+                    case '${user_properties}': return JSON.stringify(auth.properties)
+                    case '${user_type}': return UserType.toString(auth.userType)
+                }
+            }
+            return element;
+        }
+        cmd.push(...gameArgs.map(replace))
 
-        cmd.push(args);
-        //extra mc args
         if (options.extraMCArgs)
             cmd = cmd.concat(options.extraMCArgs);
 
