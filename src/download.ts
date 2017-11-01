@@ -135,7 +135,7 @@ class InstallTask extends AbstractTask<Version>{
     }
     constructor(readonly type: string, readonly versionMeta: VersionMeta,
         readonly minecraft: MinecraftLocation,
-        readonly option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) { super() }
+        readonly option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) { super(); if (!this.versionMeta) throw new Error('Version cannot be null') }
 }
 class DownloadVersion extends AbstractTask<Version>{
     execute(context: Task.Context): Promise<Version> {
@@ -207,7 +207,7 @@ class CheckDependencies extends AbstractTask<Version>{
     }
 }
 
-async function downloadLib(lib: any, folder: any, libraryHost: any, checksum: any) {
+async function downloadLib(lib: Library, folder: any, libraryHost: any, checksum: any) {
     if (lib.downloadInfo) {
         const rawPath = lib.downloadInfo.path
         const filePath = path.join(folder.libraries, rawPath)

@@ -143,8 +143,8 @@ function parseVersionHierarchy(hierarchy: any[]) {
         json = hierarchy.pop();
 
         if (json.minimumLauncherVersion && json.minimumLauncherVersion >= 21) {
-            gameArgs = json.argments.game;
-            jvmArgs = json.argments.jvm;
+            gameArgs = json.arguments.game;
+            jvmArgs = json.arguments.jvm;
         } else {
             gameArgs = json.minecraftArguments.split(' ');
             jvmArgs = ['-Djava.library.path=${natives_directory}', '-classpath', '${classpath}']
@@ -216,7 +216,7 @@ function parseLibrary(json: any, libs: Library[]) {
         obj.customizedUrl = url
     if (checksums)
         obj.checksums = checksums
-    if (jsonNatives) {
+    if (classifier) {
         obj.extractExcludes = parseExtractExcludes(json.extract)
     }
     libs.push(obj)

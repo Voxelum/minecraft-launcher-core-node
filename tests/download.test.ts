@@ -14,7 +14,9 @@ describe('FetchMinecraft', () => {
         }).catch(err => done(err))
     })
     it('should install minecraft correctly', (done) => {
-        Version.install('client', r1.list.versions.filter((val) => val.id === '1.10.2')[0], './tests/assets/temp')
+        const meta = r1.list.versions.filter((val) => val.id === '17w43b')[0];
+        console.log(meta)
+        Version.install('client', meta, './tests/assets/temp')
             .then(v => Launcher.launch(AuthService.offlineAuth('ci010'), {
                 version: v,
                 gamePath: './tests/assets/temp',

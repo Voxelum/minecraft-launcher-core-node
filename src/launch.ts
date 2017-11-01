@@ -1,4 +1,4 @@
-import { Version, Library, Native, Artifact, PlatformDescription, checkAllowed } from './version'
+import { Version, Library, Native, Artifact, checkAllowed } from './version'
 import { Auth, UserType } from './auth';
 import { exec, ChildProcess, ExecOptions } from 'child_process'
 import * as fs from 'fs-extra'
@@ -45,6 +45,7 @@ export namespace Launcher {
 
     export async function launch(auth: Auth, options: Option): Promise<ChildProcess> {
         await fs.ensureDir(options.gamePath)
+        if (!options.version) throw new Error('Version cannot be null!')
         if (!path.isAbsolute(options.gamePath)) options.gamePath = path.resolve(options.gamePath)
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
@@ -75,18 +76,20 @@ export namespace Launcher {
 
     async function checkNative(mc: MinecraftFolder, version: Version) {
         let native = mc.getNativesRoot(version.root)
-        fs.ensureDir(native)
-        for (let lib of version.libraries) if ((lib as Native).extractExcludes) {
-            const excludes = (lib as Native).extractExcludes;
-            let from = mc.getLibrary(lib)
+        await fs.ensureDir(native)
+        const natives = version.libraries.map(lib => lib as Native)
+            .filter(lib => lib.extractExcludes)
+        for (let n of natives) {
+            const containsExcludes = (path: string) =>
+                n.extractExcludes.filter((ex) => path.startsWith(ex)).length === 0
+            let from = mc.getLibrary(n)
             let zip = await Zip().loadAsync(await fs.readFile(from))
-            for (const entry of zip.filter((path, entry) => {
-                for (let exclude of excludes)
-                    if (path.startsWith(exclude)) return false;
-                return true
-            })) {
-                await fs.writeFile(path.join(native, entry.name), await entry.async('nodebuffer'))
+            for (const entry of zip.filter(containsExcludes)) {
+                const filePath = path.join(native, entry.name);
+                await fs.ensureFile(filePath)
+                await fs.writeFile(filePath, await entry.async('nodebuffer'))
             }
+
         }
     }
 
@@ -101,14 +104,15 @@ export namespace Launcher {
                 if (checkAllowed(elem.rules)) {
                     return elem.value instanceof Array ? elem.value.join(' ') : elem.value
                 }
+                return undefined;
             }
             if (elem.indexOf('$') !== -1) {
                 if (elem.indexOf('${natives_directory}') !== -1)
-                    elem.replace('${natives_directory}', mc.getNativesRoot(version.root))
-                elem.replace('${launcher_name}', 'launcher')
-                elem.replace('${launcher_version}', 'launcher')
+                    return elem.replace('${natives_directory}', mc.getNativesRoot(version.root))
+                elem = elem.replace('${launcher_name}', 'launcher')
+                elem = elem.replace('${launcher_version}', 'launcher')
                 if (elem.indexOf('${classpath}') !== -1)
-                    elem.replace('${classpath}',
+                    return elem.replace('${classpath}',
                         [...version.libraries.map(lib => mc.getLibrary(lib)), mc.getVersionJar(version.root)]
                             .join(os.platform() === 'darwin' ? ':' : ';'))
             }
@@ -132,7 +136,7 @@ export namespace Launcher {
         //add extra jvm args
         if (options.extraJVMArgs) cmd = cmd.concat(options.extraJVMArgs);
 
-        cmd.push(...version.jvmArgs.map(replaceJVM))
+        cmd.push(...version.jvmArgs.map(replaceJVM).filter(e => e !== undefined))
 
         if (version.legacy) {
             //handle
@@ -143,6 +147,9 @@ export namespace Launcher {
         let assetsDir = path.join(options.resourcePath, (version.legacy ? path.join('assets', 'virtual, legacy') : 'assets'));
 
         const replace = (element: string) => {
+            if (typeof element !== 'string') {
+                return undefined;
+            }
             if (element.startsWith('$')) {
                 switch (element) {
                     case '${version_name}': return version.version
@@ -160,7 +167,7 @@ export namespace Launcher {
             }
             return element;
         }
-        cmd.push(...gameArgs.map(replace))
+        cmd.push(...gameArgs.map(replace).filter(e => e !== undefined))
 
         if (options.extraMCArgs)
             cmd = cmd.concat(options.extraMCArgs);
@@ -180,7 +187,6 @@ export namespace Launcher {
                 if (options.resolution.width)
                     cmd.push(`--width ${options.resolution.width}`)
             }
-
         }
 
         return cmd
