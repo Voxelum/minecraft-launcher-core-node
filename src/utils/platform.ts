@@ -14,8 +14,10 @@ switch (platform) {
         break
 }
 
+let arch = os.arch();
+if(arch.startsWith('x')) arch = arch.substring(1);
 export default {
     name: osName,
     version: os.release(),
-    arch: platform
+    arch,
 }

@@ -55,7 +55,8 @@ export interface AssetIndex extends DownloadInfo {
  * the version json file
  */
 export class Version {
-    constructor(readonly version: string, readonly type: string, readonly mainClass: string, readonly assets: string, readonly gameArgs: string[], readonly jvmArgs: string[],
+    constructor(readonly version: string,
+        readonly type: string, readonly mainClass: string, readonly assets: string, readonly gameArgs: string[], readonly jvmArgs: string[],
         readonly root: string, readonly libraries: Library[], readonly legacy: boolean, readonly assetIndexDownloadInfo: AssetIndex,
         readonly downloads: { [id: string]: VersionDownloadInfo }) {
     }
@@ -135,6 +136,7 @@ function parseVersionHierarchy(hierarchy: any[]) {
 
     let gameArgs;
     let jvmArgs;
+    let logging;
 
     let argments: any;
 
@@ -150,6 +152,7 @@ function parseVersionHierarchy(hierarchy: any[]) {
             jvmArgs = ['-Djava.library.path=${natives_directory}', '-classpath', '${classpath}']
         }
         assets = json.assets;
+        logging = json.logging ? json.logging : logging;
         mainClass = json.mainClass;
         // launchArgs = json.minecraftArguments;
         type = json.type;
