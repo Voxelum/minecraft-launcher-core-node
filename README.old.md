@@ -88,11 +88,11 @@ Read a WorldInfo from buffer.
 
 ### Server
 
-    import { Server } from 'ts-minecraft'
+    import { ServerStatus, ServerInfo } from 'ts-minecraft'
     const seversDatBuffer: Buffer;
-    const infos: Server.Info[] = Server.parseNBT(seversDatBuffer);
-    const info: Server.Info = infos[0]
-    const promise: Promise<Server.Status> = Server.fetchStatus(info);
+    const infos: ServerInfo[] = ServerInfo.parseNBT(seversDatBuffer);
+    const info: ServerInfo = infos[0]
+    const promise: Promise<ServerStatus> = ServerInfo.fetchStatus(info);
 
 Read sever info and fetch its status.
 
@@ -157,21 +157,22 @@ Create TextComponent from string OR Minecraft's formatted string, like '§cThis 
 
 ### Auth
 
-    import { Auth } from 'ts-minecraft'
+    import { Auth, AuthService } from 'ts-minecraft'
     const username: string;
     const password: string;
-    const authFromMojang: Promise<Auth> = Auth.yggdrasil({username, password});
-    const authOffline = Auth.offline(username);
+    const authFromMojang: Promise<Auth> = AuthService.yggdrasilAuth({username, password});
+    const authOffline = AuthService.offlineAuth(username);
 
 Using AuthService to online/offline auth
 
 ### Launch
 
-    import { Launcher } from 'ts-minecraft'
+    import { Launcher, Auth, AuthService } from 'ts-minecraft'
     const version: string;
     const javaPath: string;
     const gamePath: string;
-    const proc: Promise<ChildProcess> = Launcher.launch({gamePath, javaPath, version});
+    const auth: Auth = AuthService.offlineAuth('username');
+    const proc: Promise<ChildProcess> = Launcher.launch(auth, {gamePath, javaPath, minMemory, version});
 
 Launch minecraft from a version
 
