@@ -1,7 +1,7 @@
 
 import { Socket } from 'net'
 import * as ByteBuffer from 'bytebuffer'
-import { ServerStatus } from './server';
+import { Server } from './server';
 import { EventEmitter } from "events";
 function writeString(buff: ByteBuffer, string: string) {
     buff.writeVarint32(string.length)
@@ -71,7 +71,7 @@ export class MinecraftConnection extends EventEmitter {
     private cache: ByteBuffer | undefined;
     private remaining: number = -1;
     constructor(readonly host: string, readonly port: number,
-        private connection: Socket, private cachedStatus: ServerStatus) {
+        private connection: Socket, private cachedStatus: Server.Status) {
         super();
         connection.on('data', this.handlePacket);
     }

@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { Version, MinecraftFolder, Forge, LiteLoader, Launcher, AuthService } from "../index";
+import { Version, MinecraftFolder, Forge, LiteLoader, Launcher } from "../index";
 import { monitor } from '../src/utils/monitor';
 import * as fs from 'fs-extra'
 

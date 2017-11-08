@@ -1,8 +1,8 @@
-import { AuthService } from '../index'
+import { Auth } from '../index'
 import * as assert from 'assert'
 describe('Auth', () => {
     it('should response with invalid credit', (done) => {
-        AuthService.newYggdrasilAuthService().login('18211378@163.com', 'asd-x', 'cc')
+        Auth.yggdrasil({ username: '18211378@163.com', password: 'asd-x' })
             .then((suc) => {
                 throw "This should not happen...";
             }, (err) => {
@@ -12,6 +12,6 @@ describe('Auth', () => {
             })
     }).timeout(10000)
     it('offline auth username should be correctly', () => {
-        assert.equal(AuthService.offlineAuth('ci010').selectedProfile.name, 'ci010')
+        assert.equal(Auth.offline('ci010').selectedProfile.name, 'ci010')
     }).timeout(10000)
 })

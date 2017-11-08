@@ -1,5 +1,5 @@
 import { Version, Library, Native, Artifact } from './version'
-import { Auth, UserType, AuthService } from './auth';
+import { Auth, UserType } from './auth';
 import { exec, ChildProcess, ExecOptions } from 'child_process'
 import * as fs from 'fs-extra'
 import * as path from 'path'
@@ -49,7 +49,7 @@ export namespace Launcher {
     export async function launch(options: Option): Promise<ChildProcess> {
         await fs.ensureDir(options.gamePath)
         if (!options.version) throw new Error('Version cannot be null!')
-        if (!options.auth) options.auth = AuthService.offlineAuth('Steve');
+        if (!options.auth) options.auth = Auth.offline('Steve');
         if (!path.isAbsolute(options.gamePath)) options.gamePath = path.resolve(options.gamePath)
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.minMemory) options.minMemory = 512;

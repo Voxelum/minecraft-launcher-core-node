@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
 import {
-    GameSetting, ServerInfo, ServerStatus, TextComponent,
+    GameSetting, TextComponent,
     Language, Mod, ResourcePack, WorldInfo,
 } from '../index';
 
