@@ -12,8 +12,109 @@ function writeString(buff: ByteBuffer, string: string) {
     buff.writeUTF8String(string)
 }
 
-export namespace ServerInfo {
-    export function parseNBT(buf: Buffer): ServerInfo[] {
+export namespace Server {
+    export interface Info {
+        name?: string;
+        host: string;
+        port?: number;
+        icon?: string;
+        isLanServer?: boolean;
+        resourceMode?: ResourceMode;
+    }
+
+    export interface StatusFrame {
+        version: {
+            name: string,
+            protocol: number,
+        },
+        players: {
+            max: number,
+            online: number,
+            sample?: Array<{ id: string, name: string }>,
+        },
+        description: object | string,
+        favicon: string | '',
+        modinfo?: {
+            type: string | 'FML',
+            modList: Array<Forge.ModIndentity>
+        },
+        ping: number,
+    }
+
+
+    export class Status {
+        pingToServer: number;
+        static pinging() { return new Status(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
+        static error() { return new Status(TextComponent.str('Error'), TextComponent.str("Error"), -1, -1, -1) }
+        constructor(
+            readonly gameVersion: TextComponent,
+            readonly serverMOTD: TextComponent,
+            readonly protocolVersion: number,
+            readonly onlinePlayers: number,
+            readonly capacity: number,
+            readonly icon?: string,
+            readonly playerList?: GameProfile[],
+            readonly modInfos?: {
+                type: string,
+                modList: Array<Forge.ModIndentity>
+            }) { }
+
+        toString(): string {
+            return JSON.stringify(this, (k, v) => {
+                if (k == 'gameVersion') return v + ''
+                if (k == 'serverMOTD') return v + ''
+                return v
+            })
+        }
+        static from(obj: StatusFrame) {
+            let motd: TextComponent = TextComponent.str('')
+            if (obj.description) {
+                if (typeof (obj.description) === 'object')
+                    motd = TextComponent.from(obj.description)
+                else if (typeof (obj.description) === 'string')
+                    motd = TextComponent.str(obj.description)
+            }
+            let favicon = obj.favicon
+            let version = obj.version
+            let versionText: TextComponent = TextComponent.str('')
+            let protocol = -1
+            let online = -1
+            let max = -1
+            if (version) {
+                if (version.name)
+                    versionText = TextComponent.from(version.name as string)
+                if (version.protocol)
+                    protocol = version.protocol
+            }
+            let players = obj.players
+            if (players) {
+                online = players.online
+                max = players.max
+            }
+
+            let sample = players.sample
+            let profiles = new Array<GameProfile>()
+            if (sample) {
+                profiles = new Array<GameProfile>(sample.length)
+                for (let i = 0; i < sample.length; i++)
+                    profiles[i] = { id: sample[i].id, name: sample[i].name }
+            }
+
+            let modInfoJson = obj.modinfo
+            let modInfo
+            if (modInfoJson) {
+                let list: Forge.ModIndentity[] = []
+                let mList = modInfoJson.modList
+                if (mList && mList instanceof Array) list = mList
+                modInfo = {
+                    type: modInfoJson.type,
+                    modList: list
+                }
+            }
+            return new Status(versionText, motd, protocol, online, max, favicon, profiles, modInfo)
+        }
+    }
+    export function parseNBT(buf: Buffer): Info[] {
         let { value } = NBT.Serializer.deserialize(buf)
         if (value.servers) return value.servers;
         return []
@@ -103,119 +204,19 @@ export namespace ServerInfo {
         });
     }
 
-    export async function fetchStatusFrame(server: ServerInfo, options?: { protocol?: number, timeout?: number }): Promise<ServerStatusFrame> {
+    export async function fetchStatusFrame(server: Info, options?: { protocol?: number, timeout?: number }): Promise<StatusFrame> {
         const port = server.port ? server.port : 25565;
         const protocol = options ? options.protocol ? options.protocol : 210 : 210;
         const host = server.host;
         const timeout = options ? options.timeout : undefined;
         const connection = await startConnection(host, port, timeout);
-        const frame = JSON.parse(await handshake(host, port, protocol, connection)) as ServerStatusFrame;
+        const frame = JSON.parse(await handshake(host, port, protocol, connection)) as StatusFrame;
         frame.ping = await ping(host, port, connection);
         connection.end();
         return frame;
     }
-    export function fetchStatus(server: ServerInfo, options?: { protocol?: number, timeout?: number }): Promise<ServerStatus> {
-        return fetchStatusFrame(server, options).then(ServerStatus.from)
+    export function fetchStatus(server: Info, options?: { protocol?: number, timeout?: number }): Promise<Status> {
+        return fetchStatusFrame(server, options).then(Status.from)
     }
 }
 
-export interface ServerInfo {
-    name?: string;
-    host: string;
-    port?: number;
-    icon?: string;
-    isLanServer?: boolean;
-    resourceMode?: ResourceMode;
-}
-
-export interface ServerStatusFrame {
-    version: {
-        name: string,
-        protocol: number,
-    },
-    players: {
-        max: number,
-        online: number,
-        sample?: Array<{ id: string, name: string }>,
-    },
-    description: object | string,
-    favicon: string | '',
-    modinfo?: {
-        type: string | 'FML',
-        modList: Array<Forge.ModIndentity>
-    },
-    ping: number,
-}
-
-export class ServerStatus {
-    pingToServer: number;
-    static pinging() { return new ServerStatus(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
-    static error() { return new ServerStatus(TextComponent.str('Error'), TextComponent.str("Error"), -1, -1, -1) }
-    constructor(
-        readonly gameVersion: TextComponent,
-        readonly serverMOTD: TextComponent,
-        readonly protocolVersion: number,
-        readonly onlinePlayers: number,
-        readonly capacity: number,
-        readonly icon?: string,
-        readonly playerList?: GameProfile[],
-        readonly modInfos?: {
-            type: string,
-            modList: Array<Forge.ModIndentity>
-        }) { }
-
-    toString(): string {
-        return JSON.stringify(this, (k, v) => {
-            if (k == 'gameVersion') return v + ''
-            if (k == 'serverMOTD') return v + ''
-            return v
-        })
-    }
-    static from(obj: ServerStatusFrame) {
-        let motd: TextComponent = TextComponent.str('')
-        if (obj.description) {
-            if (typeof (obj.description) === 'object')
-                motd = TextComponent.from(obj.description)
-            else if (typeof (obj.description) === 'string')
-                motd = TextComponent.str(obj.description)
-        }
-        let favicon = obj.favicon
-        let version = obj.version
-        let versionText: TextComponent = TextComponent.str('')
-        let protocol = -1
-        let online = -1
-        let max = -1
-        if (version) {
-            if (version.name)
-                versionText = TextComponent.from(version.name as string)
-            if (version.protocol)
-                protocol = version.protocol
-        }
-        let players = obj.players
-        if (players) {
-            online = players.online
-            max = players.max
-        }
-
-        let sample = players.sample
-        let profiles = new Array<GameProfile>()
-        if (sample) {
-            profiles = new Array<GameProfile>(sample.length)
-            for (let i = 0; i < sample.length; i++)
-                profiles[i] = { id: sample[i].id, name: sample[i].name }
-        }
-
-        let modInfoJson = obj.modinfo
-        let modInfo
-        if (modInfoJson) {
-            let list: Forge.ModIndentity[] = []
-            let mList = modInfoJson.modList
-            if (mList && mList instanceof Array) list = mList
-            modInfo = {
-                type: modInfoJson.type,
-                modList: list
-            }
-        }
-        return new ServerStatus(versionText, motd, protocol, online, max, favicon, profiles, modInfo)
-    }
-}
