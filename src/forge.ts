@@ -43,6 +43,7 @@ export namespace Forge {
             properties: Config.Property<any>[],
         };
     }
+
     export namespace Config {
         export type Type = 'I' | 'D' | 'S' | 'B'
         export interface Property<T = number | boolean | string | number[] | boolean[] | string[]> {

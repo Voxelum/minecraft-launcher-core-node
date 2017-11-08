@@ -8,7 +8,7 @@ import UPDATE from './utils/update'
 import DOWN, { DownloadTask } from './utils/download'
 import Task from './utils/task';
 import CHECKSUM from './utils/checksum'
-import { Asset, Library, Version, VersionMeta, VersionMetaList } from './version'
+import { Library, Version, VersionMeta, VersionMetaList } from './version'
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import { AbstractTask } from './utils/task';
 
@@ -171,7 +171,7 @@ class DownloadVersionJson extends AbstractTask<Version>{
     }
 }
 
-class DownloadVersionJar extends AbstractTask<Version>{
+class DownloadVersionJar extends AbstractTask<Version> {
     constructor(
         readonly type: string, readonly version: Version,
         readonly minecraft: MinecraftLocation,
@@ -181,9 +181,9 @@ class DownloadVersionJar extends AbstractTask<Version>{
     async execute(context: Task.Context) {
         const { type, version, minecraft, checksum } = this;
         const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-        await context.wrapAndExecute('ensureRootDir', () => fs.ensureDir(folder.getVersionRoot(version.version)))
-        let filename = type == 'client' ? version.version + '.jar' : version.version + '-' + type + '.jar'
-        let jar = path.join(folder.getVersionRoot(version.version), filename);
+        await context.wrapAndExecute('ensureRootDir', () => fs.ensureDir(folder.getVersionRoot(version.id)))
+        let filename = type == 'client' ? version.id + '.jar' : version.id + '-' + type + '.jar'
+        let jar = path.join(folder.getVersionRoot(version.id), filename);
         const exist = fs.existsSync(jar);
         if (!exist)
             await context.execute(new DownloadTask('downloadJar', version.downloads[type].url, jar))
@@ -208,25 +208,23 @@ class CheckDependencies extends AbstractTask<Version>{
 }
 
 async function downloadLib(lib: Library, folder: any, libraryHost: any, checksum: any) {
-    if (lib.downloadInfo) {
-        const rawPath = lib.downloadInfo.path
-        const filePath = path.join(folder.libraries, rawPath)
-        const dirPath = path.dirname(filePath)
-        const exist = fs.existsSync(filePath);
-        const rpath = libraryHost || lib.customizedUrl || 'https://libraries.minecraft.net'
-        if (!exist) {
-            await fs.ensureDir(dirPath)
+    const rawPath = lib.download.path
+    const filePath = path.join(folder.libraries, rawPath)
+    const dirPath = path.dirname(filePath)
+    const exist = fs.existsSync(filePath);
+    const rpath = libraryHost || 'https://libraries.minecraft.net'
+    if (!exist) {
+        await fs.ensureDir(dirPath)
+        await DOWN(rpath + "/" + rawPath, filePath)
+    }
+    if (checksum && lib.download.sha1) {
+        let sum = await CHECKSUM(filePath)
+        if (exist && sum != lib.download.sha1) {
             await DOWN(rpath + "/" + rawPath, filePath)
+            sum = await CHECKSUM(filePath)
         }
-        if (checksum && lib.downloadInfo.sha1) {
-            let sum = await CHECKSUM(filePath)
-            if (exist && sum != lib.downloadInfo.sha1) {
-                await DOWN(rpath + "/" + rawPath, filePath)
-                sum = await CHECKSUM(filePath)
-            }
-            if (sum != lib.downloadInfo.sha1)
-                throw new Error('')
-        }
+        if (sum != lib.download.sha1)
+            throw new Error('')
     }
 }
 
@@ -238,7 +236,7 @@ class DownloadLibraries extends AbstractTask<Version> {
         const libraryHost = option ? option.libraryHost : undefined
         const checksum = option ? option.checksum : true;
         try {
-            await context.executeAll(version.libraries.map(lib => Task.wrap(lib.id, () => downloadLib(lib, folder, libraryHost, checksum))))
+            await context.executeAll(version.libraries.map(lib => Task.wrap(lib.name, () => downloadLib(lib, folder, libraryHost, checksum))))
         }
         catch (e) {
             throw e;
@@ -282,7 +280,7 @@ class DownloadAssets extends AbstractTask<Version>{
         let jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
         if (!fs.existsSync(jsonPath)) {
             await context.wrapAndExecute('ensureIndexes', () => fs.ensureDir(path.join(folder.assets, 'indexes')))
-            await context.execute(new DownloadTask('downloadAssetsJson', version.assetIndexDownloadInfo.url, jsonPath))
+            await context.execute(new DownloadTask('downloadAssetsJson', version.assetIndex.url, jsonPath))
         }
         let content: any = (await fs.readJson(jsonPath)).objects
         await context.wrapAndExecute('ensureObjects', () => fs.ensureDir(folder.getPath('assets', 'objects')))

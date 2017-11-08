@@ -1,28 +1,27 @@
-import { Artifact, Library } from '../version'
+// import { Artifact, Library } from '../version'
 
 import * as paths from 'path'
 
-function getArtifactBasePath(groupId: string, artifactId: string, version: string): string {
-    return groupId.replace('.', '/') + "/" + artifactId + "/" + version + "/";
-}
+// function getArtifactBasePath(groupId: string, artifactId: string, version: string): string {
+//     return groupId.replace('.', '/') + "/" + artifactId + "/" + version + "/";
+// }
 
-function isSnapshot(artifact: Artifact) { return artifact.version.endsWith("-SNAPSHOT"); }
+// function isSnapshot(artifact: Artifact) { return artifact.version.endsWith("-SNAPSHOT"); }
 
-function getPath(artfact: Artifact, snapshotPostfix = undefined) {
-    var version: string;
-    if (snapshotPostfix) {
-        if (!isSnapshot(artfact))
-            throw new TypeError("The artifact is not a snapshot.");
-        version = artfact.version.substring(0, artfact.version.length - "SNAPSHOT".length) + snapshotPostfix;
-    } else version = artfact.version;
+// function getPath(artfact: Artifact, snapshotPostfix = undefined) {
+//     var version: string;
+//     if (snapshotPostfix) {
+//         if (!isSnapshot(artfact))
+//             throw new TypeError("The artifact is not a snapshot.");
+//         version = artfact.version.substring(0, artfact.version.length - "SNAPSHOT".length) + snapshotPostfix;
+//     } else version = artfact.version;
+//     return getPath0(artfact);
+// }
 
-    return getPath0(artfact);
-}
-
-function getPath0(artfact: Artifact) {
-    return getArtifactBasePath(artfact.groupId, artfact.id, artfact.version) +
-        artfact.id + "-" + artfact.version + (artfact.classifier ? "-" + artfact.classifier : "") + "." + artfact.type;
-}
+// function getPath0(artfact: Artifact) {
+//     return getArtifactBasePath(artfact.groupId, artfact.id, artfact.version) +
+//         artfact.id + "-" + artfact.version + (artfact.classifier ? "-" + artfact.classifier : "") + "." + artfact.type;
+// }
 export class MinecraftFolder {
     constructor(readonly root: string) { }
     get mods(): string { return paths.join(this.root, 'mods') }
@@ -49,11 +48,14 @@ export class MinecraftFolder {
     getLog(fileName: string) { return paths.join(this.logs, fileName) }
     getMapInfo(map: string) { return this.getPath('saves', map, 'level.dat') }
     getMapIcon(map: string) { return this.getPath('saves', map, 'icon.png') }
-    getLibrary(library: Library): string {
-        if (library.downloadInfo)
-            return this.getPath('libraries', library.downloadInfo.path)
-        return this.getPath('libraries', getPath(library))
+    getLibraryByPath(libraryPath: string): string {
+        return paths.join(this.libraries, libraryPath);
     }
+    // getLibrary(library: Library): string {
+    //     if (library.downloadInfo)
+    //         return this.getPath('libraries', library.downloadInfo.path)
+    //     return this.getPath('libraries', getPath(library))
+    // }
 
     getPath(...path: string[]) {
         return paths.join(this.root, ...path)

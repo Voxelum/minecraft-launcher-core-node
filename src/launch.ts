@@ -1,16 +1,19 @@
-import { Version, Library, Native, Artifact, checkAllowed } from './version'
-import { Auth, UserType } from './auth';
+import { Version, Library, Native, Artifact } from './version'
+import { Auth, UserType, AuthService } from './auth';
 import { exec, ChildProcess, ExecOptions } from 'child_process'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as os from 'os'
 import * as Zip from 'jszip'
 import { MinecraftFolder } from './utils/folder';
-/**
- * this module migrates from JMCCC https://github.com/to2mbn/JMCCC/tree/master/jmccc/src/main/java/org/to2mbn/jmccc/launch
- */
+import format from './utils/format'
+
 export namespace Launcher {
     export interface Option {
+        auth?: Auth,
+        launcherName?: string,
+        launcherBrand?: string,
+
         /**
          * The path for saves/logs/configs
          */
@@ -20,7 +23,8 @@ export namespace Launcher {
          */
         resourcePath?: string
         javaPath: string
-        minMemory: number
+
+        minMemory?: number
         maxMemory?: number
         version: string | Version,
         server?: { ip: string, port?: number }
@@ -28,7 +32,7 @@ export namespace Launcher {
         extraJVMArgs?: string[]
         extraMCArgs?: string[]
         extraExecOption?: ExecOptions,
-
+        isDemo?: boolean,
 
         /**
          * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
@@ -40,56 +44,54 @@ export namespace Launcher {
 
         ignoreInvalidMinecraftCertificates?: boolean
         ignorePatchDiscrepancies?: boolean
-
     }
 
-    export async function launch(auth: Auth, options: Option): Promise<ChildProcess> {
+    export async function launch(options: Option): Promise<ChildProcess> {
         await fs.ensureDir(options.gamePath)
         if (!options.version) throw new Error('Version cannot be null!')
+        if (!options.auth) options.auth = AuthService.offlineAuth('Steve');
         if (!path.isAbsolute(options.gamePath)) options.gamePath = path.resolve(options.gamePath)
         if (!options.resourcePath) options.resourcePath = options.gamePath;
+        if (!options.minMemory) options.minMemory = 512;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
+        if (!options.launcherName) options.launcherName = 'JMCCC'
+        if (!options.launcherBrand) options.launcherBrand = 'InfinityStudio'
+        if (!options.isDemo) options.isDemo = false;
         let mc = new MinecraftFolder(options.resourcePath)
-        let v: Version = options.version instanceof Version ? options.version : await Version.parse(options.resourcePath, options.version)
+        let v: Version = typeof options.version === 'string' ? await Version.parse(options.resourcePath, options.version) : options.version;
         if (!v) throw "Cannot find version " + options.version
 
-        if (!fs.existsSync(path.join(mc.versions, v.version, v.version + '.jar')))
-            throw new Error('No version jar for ' + v.version);
-        let missing = checkLibs(mc, v)
+        if (!fs.existsSync(path.join(mc.versions, v.id, v.id + '.jar')))
+            throw new Error('No version jar for ' + v.id);
+        let missing = ensureLibraries(mc, v)
         if (missing.length > 0) throw new Error('Missing library!')
-        checkNative(mc, v)
+        extractNative(mc, v)
 
-        let args = genArgs(auth, options, v).join(' ')
+        let args = genArgs(options.auth, options, v).join(' ')
         return exec(args, {
             encoding: "binary",
             cwd: options.gamePath
         })
     }
 
-    function checkLibs(resourcePath: MinecraftFolder, version: Version): Library[] {
-        let libs: Library[] = []
-        for (let lib of version.libraries)
-            if (!fs.existsSync(resourcePath.getLibrary(lib)))
-                libs.push(lib)
-        return libs
+    function ensureLibraries(resourcePath: MinecraftFolder, version: Version): Library[] {
+        return version.libraries.filter(lib => !fs.existsSync(resourcePath.getLibraryByPath(lib.download.path)))
     }
 
-    async function checkNative(mc: MinecraftFolder, version: Version) {
-        let native = mc.getNativesRoot(version.root)
+    async function extractNative(mc: MinecraftFolder, version: Version) {
+        let native = mc.getNativesRoot(version.id)
         await fs.ensureDir(native)
-        const natives = version.libraries.map(lib => lib as Native)
-            .filter(lib => lib.extractExcludes)
+        const natives = version.libraries.filter(lib => lib instanceof Native) as Native[];
         for (let n of natives) {
-            const containsExcludes = (path: string) =>
-                n.extractExcludes.filter((ex) => path.startsWith(ex)).length === 0
-            let from = mc.getLibrary(n)
+            const excluded: string[] = n.extractExclude ? n.extractExclude : []
+            const containsExcludes = (path: string) => excluded.filter(s => path.startsWith(s)).length === 0
+            let from = mc.getLibraryByPath(n.download.path)
             let zip = await Zip().loadAsync(await fs.readFile(from))
             for (const entry of zip.filter(containsExcludes)) {
                 const filePath = path.join(native, entry.name);
                 await fs.ensureFile(filePath)
                 await fs.writeFile(filePath, await entry.async('nodebuffer'))
             }
-
         }
     }
 
@@ -99,30 +101,6 @@ export namespace Launcher {
         if (options.javaPath.match(/.* *.*/)) { options.javaPath = '"' + options.javaPath + '"' }
         cmd.push(options.javaPath);
 
-        const replaceJVM = (elem: any) => {
-            if (typeof elem === 'object') {
-                if (checkAllowed(elem.rules)) {
-                    return elem.value instanceof Array ? elem.value.join(' ') : elem.value
-                }
-                return undefined;
-            }
-            if (elem.indexOf('$') !== -1) {
-                if (elem.indexOf('${natives_directory}') !== -1)
-                    return elem.replace('${natives_directory}', mc.getNativesRoot(version.root))
-                elem = elem.replace('${launcher_name}', 'launcher')
-                elem = elem.replace('${launcher_version}', 'launcher')
-                if (elem.indexOf('${classpath}') !== -1)
-                    return elem.replace('${classpath}',
-                        [...version.libraries.map(lib => mc.getLibrary(lib)), mc.getVersionJar(version.root)]
-                            .join(os.platform() === 'darwin' ? ':' : ';'))
-            }
-            return elem;
-        }
-
-        // cmd.push('-XX:+UseConcMarkSweepGC');
-        // cmd.push('-XX:+CMSIncrementalMode');
-        // cmd.push('-XX:-UseAdaptiveSizePolicy');
-        // cmd.push('-XX:-OmitStackTraceInFastThrow');
         cmd.push(`-Xmn${(options.minMemory)}M`);
         cmd.push(`-Xms${(options.maxMemory)}M`);
 
@@ -136,38 +114,30 @@ export namespace Launcher {
         //add extra jvm args
         if (options.extraJVMArgs) cmd = cmd.concat(options.extraJVMArgs);
 
-        cmd.push(...version.jvmArgs.map(replaceJVM).filter(e => e !== undefined))
-
-        if (version.legacy) {
-            //handle
-        }
+        cmd.push(format(version.jvmArguments, {
+            natives_directory: mc.getNativesRoot(version.id),
+            launcher_name: options.launcherName,
+            launcher_version: options.launcherBrand,
+            classpath: [...version.libraries.map(lib => mc.getLibraryByPath(lib.download.path)), mc.getVersionJar(version.id)]
+                .join(os.platform() === 'darwin' ? ':' : ';')
+        }));
         cmd.push(version.mainClass);
 
-        let gameArgs = version.gameArgs;
-        let assetsDir = path.join(options.resourcePath, (version.legacy ? path.join('assets', 'virtual, legacy') : 'assets'));
+        let assetsDir = path.join(options.resourcePath, 'assets');
 
-        const replace = (element: string) => {
-            if (typeof element !== 'string') {
-                return undefined;
-            }
-            if (element.startsWith('$')) {
-                switch (element) {
-                    case '${version_name}': return version.version
-                    case '${version_type}': return (version.type) ? version.type : 'alpha'
-                    case '${assets_root}': return assetsDir
-                    case '${game_assets}': return assetsDir
-                    case '${assets_index_name}': return version.assets
-                    case '${game_directory}': return options.gamePath
-                    case '${auth_player_name}': return auth.selectedProfile.name
-                    case '${auth_uuid}': return auth.selectedProfile.id.replace('-', '')
-                    case '${auth_access_token}': return auth.accessToken
-                    case '${user_properties}': return JSON.stringify(auth.properties)
-                    case '${user_type}': return UserType.toString(auth.userType)
-                }
-            }
-            return element;
-        }
-        cmd.push(...gameArgs.map(replace).filter(e => e !== undefined))
+        cmd.push(format(version.minecraftArguments, {
+            version_name: version.id,
+            version_type: version.type,
+            assets_root: assetsDir,
+            game_assets: assetsDir,
+            assets_index_name: version.assets,
+            game_directory: options.gamePath,
+            auth_player_name: auth.selectedProfile.name,
+            auth_uuid: auth.selectedProfile.id.replace('-', ''),
+            auth_access_token: auth.accessToken,
+            user_properties: JSON.stringify(auth.properties),
+            user_type: UserType.toString(auth.userType),
+        }));
 
         if (options.extraMCArgs)
             cmd = cmd.concat(options.extraMCArgs);

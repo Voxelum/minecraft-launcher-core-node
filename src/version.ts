@@ -1,116 +1,96 @@
-/*
-    This module migrate the JMCCC: https://github.com/to2mbn/JMCCC/blob/master/jmccc/src/main/java/org/to2mbn/jmccc/version/
-*/
-
-import * as fs from 'fs-extra'
-import platform from './utils/platform'
 import * as paths from 'path'
-import { MinecraftLocation } from './utils/folder';
+import * as fs from 'fs-extra'
 
-/**
- * Virtual representation of artifact in memory. May not be the same with the file structure.
- */
-export interface Artifact {
-    readonly groupId: string,
-    readonly id: string,
-    readonly version: string,
-    readonly classifier?: string,
-    readonly type: string //= 'jar'
-}
+import { MinecraftLocation } from '../index';
 
-export interface Library extends Artifact {
-    readonly downloadInfo?: LibraryArtifact,
-    readonly customizedUrl?: string,
-    readonly checksums?: string[]
-}
-
-export interface Native extends Library {
-    readonly extractExcludes: string[]
-}
-
-/**
- * Abstract interface represent the download info. Closed to the actual file structure. Used by lots of things.
- */
-export interface DownloadInfo {
-    readonly url?: string,
-    readonly sha1?: string,
-    readonly size?: number
-}
-
-export interface VersionDownloadInfo extends DownloadInfo {
-    readonly url: string,
-}
-
-export interface LibraryArtifact extends DownloadInfo {
-    readonly path: string
-}
-
-export interface AssetIndex extends DownloadInfo {
-    readonly url: string,
-    readonly id: string,
-    readonly totalSize: number
-}
-
-/**
- * the version json file
- */
-export class Version {
-    constructor(readonly version: string,
-        readonly type: string, readonly mainClass: string, readonly assets: string, readonly gameArgs: string[], readonly jvmArgs: string[],
-        readonly root: string, readonly libraries: Library[], readonly legacy: boolean, readonly assetIndexDownloadInfo: AssetIndex,
-        readonly downloads: { [id: string]: VersionDownloadInfo }) {
+function getPlatform() {
+    const os = require('os')
+    let arch = os.arch();
+    if (arch.startsWith('x')) arch = arch.substring(1);
+    const version = os.release();
+    let name: string = 'unknown'
+    switch (os.platform()) {
+        case 'darwin':
+            return { name: 'osx', version, arch }
+        case 'linux':
+            return { name, version, arch }
+        case 'win32':
+            return { name: 'windows', version, arch }
+        default:
+            return { name: 'unknown', version, arch }
     }
 }
 
+export interface Download {
+    readonly sha1: string,
+    readonly size: number,
+    readonly url: string
+}
+export interface AssetIndex extends Download {
+    readonly id: string,
+    readonly totalSize: number
+}
+export interface Artifact extends Download {
+    readonly path: string
+}
+export interface LoggingFile extends Download {
+    readonly id: string
+}
+export interface Version {
+    inheritsFrom?: string,
+    assetIndex: AssetIndex,
+    assets: string,
+    downloads: {
+        client: Download,
+        server: Download,
+        [key: string]: Download,
+    },
+    libraries: Library[],
+    id: string,
+    mainClass: string,
+    jvmArguments: string,
+    minecraftArguments: string,
+    minimumLauncherVersion: number,
+    releaseTime: string,
+    time: string,
+    type: string,
+    logging?: {
+        [key: string]: {
+            file: Download,
+            argument: string,
+            type: string,
+        }
+    }
+}
 export namespace Version {
     export function parse(minecraftPath: MinecraftLocation, version: string): Promise<Version> {
         return resolveDependency(minecraftPath, version).then(e => {
-            if (e.length == 0) throw new Error('Dependency error')
+            if (e.length == 0) throw new Error('Dependency error!');
             return parseVersionHierarchy(e)
         })
     }
 }
-
-/**
- * the json tokens in assets index file
- */
-export interface Asset {
-    readonly virtualPath: string,
-    readonly hash: string,
-    readonly size: number
+export class Library {
+    constructor(readonly name: string, readonly download: Artifact) { }
 }
-
-export namespace Asset {
-    export function getPath(asset: Asset): string {
-        return asset.hash.substring(0, 2) + "/" + asset.hash;
+export class Native extends Library {
+    constructor(name: string, download: Artifact, readonly extractExclude?: string[]) {
+        super(name, download);
     }
 }
 
-
-function parseAssetIndex(json: any): Asset[] {
-    let objects = json['objects'];
-    let assets = [];
-    for (let rawVirtualPath in objects) {
-        let object = objects[rawVirtualPath];
-        object.virtualPath = rawVirtualPath
-        assets.push(<Asset>object);
-    }
-    return assets;
-}
-
-
-export function resolveDependency(path: MinecraftLocation, version: string): Promise<any[]> {
+export function resolveDependency(path: MinecraftLocation, version: string): Promise<Version[]> {
     const folderLoc = typeof path === 'string' ? path : path.root;
-    return new Promise<any[]>((res, rej) => {
-        let stack: any[] = []
+    return new Promise<Version[]>((res, rej) => {
+        let stack: Version[] = []
         let fullPath = paths.join(folderLoc, 'versions', version, version + '.json')
         if (!fs.existsSync(fullPath)) rej(new Error('No version file for ' + version));
-        function interal(fullPath: string): Promise<any[]> {
+        function interal(fullPath: string): Promise<Version[]> {
             return fs.readFile(fullPath).then((value) => {
-                let obj = JSON.parse(value.toString());
-                stack.push(obj);
-                if (obj.inheritsFrom)
-                    return interal(paths.join(folderLoc, 'versions', obj.inheritsFrom, obj.inheritsFrom + '.json'))
+                let ver = parseVersionJson(value.toString());
+                stack.push(ver);
+                if (ver.inheritsFrom)
+                    return interal(paths.join(folderLoc, 'versions', ver.inheritsFrom, ver.inheritsFrom + '.json'))
                 else
                     return stack
             })
@@ -120,159 +100,128 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
 }
 
 
-function parseVersionHierarchy(hierarchy: any[]) {
-    let version: string = hierarchy[0].id;
-    let root: string = hierarchy[hierarchy.length - 1].id;
+function parseVersionHierarchy(hierarchy: Version[]): Version {
+    if (hierarchy.length === 0) throw new Error('The hierarchy cannot be empty!');
+    let id: string = hierarchy[0].id;
+    let assetIndex: AssetIndex = hierarchy[0].assetIndex;
+    let assets: string
 
-    let assets = "legacy";
-    let mainClass: string;
-    let launchArgs: string;
-    let type: string;
-    let minLaunchVersion: number;
+    let downloadsMap: { [key: string]: Download } = {};
+    let librariesMap: { [key: string]: Library } = {};
+    let nativesMap: { [key: string]: Native } = {};
 
-    let libs: Library[] = []
-    let downloads: { [key: string]: VersionDownloadInfo } = {};
-    let assetIndexInfo: AssetIndex | undefined;
+    let mainClass: string
+    let jvmArguments: string
+    let minecraftArguments: string
+    let minimumLauncherVersion: number = hierarchy[0].minimumLauncherVersion;
+    let releaseTime: string = hierarchy[0].releaseTime;
+    let time: string = hierarchy[0].time;
+    let type: string
+    let logging: any;
 
-    let gameArgs;
-    let jvmArgs;
-    let logging;
-
-    let argments: any;
-
-    let json: any;
+    let json: Version;
     do {
-        json = hierarchy.pop();
-
-        if (json.minimumLauncherVersion && json.minimumLauncherVersion >= 21) {
-            gameArgs = json.arguments.game;
-            jvmArgs = json.arguments.jvm;
-        } else {
-            gameArgs = json.minecraftArguments.split(' ');
-            jvmArgs = ['-Djava.library.path=${natives_directory}', '-classpath', '${classpath}']
-        }
+        json = hierarchy.pop() as Version;
+        jvmArguments = json.jvmArguments;
+        minecraftArguments = json.minecraftArguments;
+        logging = json.logging;
         assets = json.assets;
-        logging = json.logging ? json.logging : logging;
-        mainClass = json.mainClass;
-        // launchArgs = json.minecraftArguments;
         type = json.type;
-
-        if (json.libraries)
-            for (let libInst of json.libraries)
-                parseLibrary(libInst, libs)
-
+        mainClass = json.mainClass;
+        if (json.assetIndex) assetIndex = json.assetIndex
+        if (json.libraries) {
+            json.libraries.forEach(lib => {
+                if (lib instanceof Native) {
+                    nativesMap[lib.name] = lib;
+                } else {
+                    librariesMap[lib.name] = lib;
+                }
+            })
+        }
         if (json.downloads)
             for (let key in json.downloads)
-                downloads[key] = json.downloads[key]
-
-        if (json.assetIndex)
-            assetIndexInfo = json.assetIndex
+                downloadsMap[key] = json.downloads[key]
     } while (hierarchy.length != 0);
 
     if (!mainClass)
         throw new Error("Missing mainClass");
-    if (!gameArgs)
+    if (!minecraftArguments)
         throw new Error("Missing gameArguments");
-    if (!jvmArgs)
+    if (!jvmArguments)
         throw new Error('Missing jvmArguments')
-    if (!assetIndexInfo)
+    if (!assetIndex)
         throw new Error('Missing asset!');
 
-    return new Version(version, type, mainClass, assets, gameArgs, jvmArgs, root, libs, assets == 'legacy', assetIndexInfo, downloads)
+    return {
+        id, assetIndex, assets,
+        downloads: downloadsMap,
+        libraries: Object.keys(librariesMap).map(k => librariesMap[k]).concat(Object.keys(nativesMap).map(k => nativesMap[k])),
+        minecraftArguments,
+        mainClass, minimumLauncherVersion, jvmArguments, releaseTime, time, type, logging,
+    } as Version
 }
 
-function parseLibrary(json: any, libs: Library[]) {
-    if (!json) return undefined;
-    let clientreq = true
-    if (json.clientreq)
-        clientreq = json.clientreq
-    if (!checkAllowed(json.rules)
-        || !clientreq)
-        return undefined;
-    let splitedGav = json["name"].split(":", 3);
-    let groupId = splitedGav[0];
-    let artifactId = splitedGav[1];
-    let version = splitedGav[2];
-
-    let url = json.url;
-    let checksums = json.checksums;
-    let jsonNatives = json.natives;
-    let classifier = jsonNatives ? parseNativeClassifier(jsonNatives) : undefined;
-    let libinfo = parseLibraryDownloads(json.downloads, classifier);
-    if (!libinfo)
-        libinfo = {
-            path: `/${groupId}/${artifactId}/${version}/${artifactId}-${version}.jar`
+function parseVersionJson(versionString: string): Version {
+    const platform = getPlatform();
+    const checkAllowed = (rules: { action?: string, os?: any }[]) => {
+        // by default it's allowed
+        if (!rules) return true;
+        // else it's disallow by default
+        let allow = false;
+        for (let rule of rules) {
+            let action = rule.action == "allow";
+            // apply by default
+            let apply = true;
+            if (rule["os"]) {
+                // don't apply by default if has os rule
+                apply = false;
+                let osRule = rule.os;
+                if (platform.name == osRule.name
+                    && (!osRule.version || platform.version.match(osRule.version)))
+                    apply = true;
+            }
+            if (apply) allow = action;
         }
-    let type = "jar";
-
-    let obj: any = {
-        groupId: groupId,
-        id: artifactId,
-        version: version,
-        type: type,
-        downloadInfo: libinfo
+        return allow;
     }
-
-    if (classifier)
-        obj.classifier = classifier
-    if (url)
-        obj.customizedUrl = url
-    if (checksums)
-        obj.checksums = checksums
-    if (classifier) {
-        obj.extractExcludes = parseExtractExcludes(json.extract)
+    const parseLibs = (libs: Array<any>) => {
+        const empty = new Library('', { path: '', sha1: '', size: 0, url: '' })
+        return libs.map(lib => {
+            if (lib.rules && !checkAllowed(lib.rules)) return empty;
+            if (lib.natives) {
+                if (!lib.natives[platform.name]) return empty;
+                const classifier = (lib.natives[platform.name] as string).replace('${arch}', platform.arch);
+                const nativArt = lib.downloads.classifiers[classifier]
+                if (!nativArt) return empty;
+                return new Native(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
+            } else {
+                return new Library(lib.name, lib.downloads.artifact)
+            }
+        }).filter(l => l !== empty)
     }
-    libs.push(obj)
-}
-
-function parseNativeClassifier(natives: any) {
-    if (!natives) return undefined;
-    let classifier = natives[platform.name]
-    // if (classifier)
-    // classifier = classifier("\\Q${arch}", platform.arch)
-    return classifier;
-}
-
-function parseLibraryDownloads(json: any, classifier?: string): LibraryArtifact | undefined {
-    if (!json) return undefined;
-    if (!classifier)
-        return json["artifact"];
-    else {
-        let classifiers = json.classifiers;
-        if (!classifiers) return undefined;
-        return classifiers[classifier];
+    const parseArgs = (args: any) => {
+        if (args.jvm) args.jvm = args.jvm.map((a: string | any) => {
+            if (typeof a === 'object') return checkAllowed(a.rules) ? a.value : undefined
+            return a;
+        }).filter((a: any) => a !== undefined).reduce((a: Array<string>, b: string | Array<string>) => {
+            if (b instanceof Array) a.push(...b);
+            else a.push(b);
+            return a
+        }, [])
+        if (args.game) args.game = args.game.filter((a: string) => typeof a === 'string')
+        return args;
     }
-}
-
-function parseExtractExcludes(json: any): string[] | undefined {
-    if (!json) return undefined;
-    let elements = json.exclude;
-    if (!elements) return undefined;
-    return elements;
-}
-
-export function checkAllowed(rules: any): boolean {
-    // by default it's allowed
-    if (rules == null || Object.keys(rules).length == 0)
-        return true;
-    // else it's disallow by default
-    let allow = false;
-    for (let rule of rules) {
-        let action = rule["action"] == "allow";
-        // apply by default
-        let apply = true;
-        if (rule["os"]) {
-            // don't apply by default if has os rule
-            apply = false;
-            let osRule = rule.os;
-
-            if (platform.name == osRule.name
-                && (!osRule.version || platform.version.match(osRule.version)))
-                apply = true;
-        }
-        if (apply) allow = action;
+    const parsed = JSON.parse(versionString, (key, value) => {
+        if (key === 'libraries') return parseLibs(value)
+        if (key === 'arguments') return parseArgs(value)
+        return value;
+    })
+    if (parsed.arguments) {
+        parsed.minecraftArguments = parsed.arguments.game.join(' ')
+        parsed.jvmArguments = parsed.arguments.jvm.join(' ')
+        delete parsed.arguments
+    } else {
+        parsed.jvmArguments = '-Djava.library.path=${natives_directory} -Dminecraft.launcher.brand=${launcher_name} -Dminecraft.launcher.version=${launcher_version} -cp ${classpath}'
     }
-    return allow;
+    return parsed as Version;
 }
-
-export default Version;
