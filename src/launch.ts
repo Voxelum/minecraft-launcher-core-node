@@ -114,24 +114,24 @@ export namespace Launcher {
         //add extra jvm args
         if (options.extraJVMArgs) cmd = cmd.concat(options.extraJVMArgs);
 
+        const wrap = (s: string) => `"${s}"`
         cmd.push(format(version.jvmArguments, {
-            natives_directory: mc.getNativesRoot(version.id),
+            natives_directory: `"${mc.getNativesRoot(version.id)}"`,
             launcher_name: options.launcherName,
             launcher_version: options.launcherBrand,
-            classpath: [...version.libraries.map(lib => mc.getLibraryByPath(lib.download.path)), mc.getVersionJar(version.id)]
-                .join(os.platform() === 'darwin' ? ':' : ';')
+            classpath: `"${[...version.libraries.map(lib => mc.getLibraryByPath(lib.download.path)), mc.getVersionJar(version.id)]
+                .join(os.platform() === 'darwin' ? ':' : ';')}"`
         }));
         cmd.push(version.mainClass);
-
         let assetsDir = path.join(options.resourcePath, 'assets');
 
         cmd.push(format(version.minecraftArguments, {
             version_name: version.id,
             version_type: version.type,
-            assets_root: assetsDir,
-            game_assets: assetsDir,
+            assets_root: wrap(assetsDir),
+            game_assets: wrap(assetsDir),
             assets_index_name: version.assets,
-            game_directory: options.gamePath,
+            game_directory: wrap(options.gamepath),
             auth_player_name: auth.selectedProfile.name,
             auth_uuid: auth.selectedProfile.id.replace('-', ''),
             auth_access_token: auth.accessToken,
