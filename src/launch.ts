@@ -68,6 +68,7 @@ export namespace Launcher {
         extractNative(mc, v)
 
         let args = genArgs(options.auth, options, v).join(' ')
+        console.log(args)
         return exec(args, {
             encoding: "binary",
             cwd: options.gamePath
@@ -131,7 +132,7 @@ export namespace Launcher {
             assets_root: wrap(assetsDir),
             game_assets: wrap(assetsDir),
             assets_index_name: version.assets,
-            game_directory: wrap(options.gamepath),
+            game_directory: wrap(options.gamePath),
             auth_player_name: auth.selectedProfile.name,
             auth_uuid: auth.selectedProfile.id.replace('-', ''),
             auth_access_token: auth.accessToken,
