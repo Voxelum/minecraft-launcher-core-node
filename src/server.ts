@@ -209,12 +209,16 @@ export namespace Server {
         const host = server.host;
         const timeout = options ? options.timeout : undefined;
 
-        let frame: StatusFrame | undefined = undefined;
         const connection = await startConnection(host, port, timeout);
-        connection.once('end', () => {
-            if (!frame) throw new Error('Closed by server!')
-        })
-        frame = JSON.parse(await handshake(host, port, protocol, connection)) as StatusFrame;
+
+        const frame = await new Promise((resolve, reject) => {
+            connection.once('end', () => {
+                if (!frame) reject(new Error('Closed by server!'))
+            })
+            handshake(host, port, protocol, connection)
+                .then(JSON.parse)
+                .then(f => { resolve(f); })
+        }) as StatusFrame
 
         await new Promise((resolve, reject) => {
             connection.once('end', () => {
