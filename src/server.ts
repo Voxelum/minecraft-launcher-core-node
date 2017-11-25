@@ -1,10 +1,10 @@
 import { ResourceMode } from './game';
 import { TextComponent } from "./text";
 import { GameProfile } from "./profile";
-import * as buf from 'bytebuffer'
+import * as buf from 'bytebuffer';
 import NBT from "./nbt";
-import * as net from 'net'
-import * as Long from 'long'
+import * as net from 'net';
+import * as Long from 'long';
 import Forge from './forge';
 
 function writeString(buff: ByteBuffer, string: string) {
@@ -124,9 +124,8 @@ export namespace Server {
             const connection = net.createConnection(port, host, () => {
                 resolve(connection)
             })
-            if (timeout)
-                connection.setTimeout(timeout)
-            connection.once('error', reject)
+            if (timeout) connection.setTimeout(timeout)
+            connection.once('error', (e) => { reject(e) })
         });
     }
     function ping(ip: string, port: number, connection: net.Socket): Promise<number> {
@@ -209,9 +208,25 @@ export namespace Server {
         const protocol = options ? options.protocol ? options.protocol : 210 : 210;
         const host = server.host;
         const timeout = options ? options.timeout : undefined;
+
+        let frame: StatusFrame | undefined = undefined;
         const connection = await startConnection(host, port, timeout);
-        const frame = JSON.parse(await handshake(host, port, protocol, connection)) as StatusFrame;
-        frame.ping = await ping(host, port, connection);
+        connection.once('end', () => {
+            if (!frame) throw new Error('Closed by server!')
+        })
+        frame = JSON.parse(await handshake(host, port, protocol, connection)) as StatusFrame;
+
+        await new Promise((resolve, reject) => {
+            connection.once('end', () => {
+                (frame as any).ping = -1;
+                resolve()
+            });
+            ping(host, port, connection)
+                .then(p => {
+                    (frame as any).ping = p;
+                    resolve();
+                }).catch(e => reject(e))
+        });
         connection.end();
         return frame;
     }
