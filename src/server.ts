@@ -69,10 +69,7 @@ export namespace Server {
         static from(obj: StatusFrame) {
             let motd: TextComponent = TextComponent.str('')
             if (obj.description) {
-                if (typeof (obj.description) === 'object')
-                    motd = TextComponent.from(obj.description)
-                else if (typeof (obj.description) === 'string')
-                    motd = TextComponent.str(obj.description)
+                motd = TextComponent.from(obj.description)
             }
             let favicon = obj.favicon
             let version = obj.version
