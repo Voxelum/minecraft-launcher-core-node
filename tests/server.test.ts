@@ -15,6 +15,33 @@ describe('ServerRead', () => {
 })
 
 describe('ServerPing', () => {
+    it('should fetch frame', (done) => {
+        Server.fetchStatusFrame({ host: 'mc.hypixel.net' })
+            .then((frame) => {
+                assert(frame);
+                done();
+            })
+            .catch((err) => {
+                done(err)
+            })
+    }).timeout(100000)
+    it('should control the port', (done) => {
+        Server.fetchStatusFrame({ host: 'mc.hypixel.net', port: 0 })
+            .then(() => done('This should not happen'))
+            .catch((err) => { done(err) })
+    }).timeout(100000)
+    it('should convert the frame to status', (done) => {
+        Server.fetchStatusFrame({ host: 'mc.hypixel.net' })
+            .then(frame => new Promise((resolve, reject) => {
+                Server.fetchStatus({ host: 'mc.hypixel.net' })
+                    .then((status) => {
+                        assert.deepEqual(Server.Status.from(frame), status);
+                        done()
+                    })
+                    .catch((err) => { done(err) })
+            }))
+            .catch((err) => { done(err) })
+    }).timeout(100000)
     it('should catch the timeout exception', (done) => {
         Server.fetchStatus({
             host: 'crafterr.me',
@@ -26,7 +53,7 @@ describe('ServerPing', () => {
     }).timeout(100000)
     it('should ping the server and return info correctly', (done) => {
         Server.fetchStatus({
-            host: 'mc.crafter.me',
+            host: 'mc.hypixel.net',
         }, { timeout: 10000 }).then(status => {
             done()
         }).catch(e => { done(e) })
