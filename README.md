@@ -1,6 +1,11 @@
 # ts-minecraft
 
 Provide several useful function for Minecraft in typescript
+
+[![npm version](https://img.shields.io/npm/v/ts-minecraft.svg?style=flat-square)](https://www.npmjs.com/package/ts-minecraft)
+
+[![npm](https://img.shields.io/npm/l/ts-minecraft.svg)](https://github.com/InfinityStudio/ILauncher/blob/master/LICENSE)
+
 ## Usage
 
 `import { NBT, ServerInfo, ...so on...} from 'ts-minecraft'`
