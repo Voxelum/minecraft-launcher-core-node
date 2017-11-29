@@ -110,8 +110,14 @@ export namespace NBT {
                     arr[i] = value;
                     scope.push(type)
                 }
-                if (scope.every(val => val === scope[0]))
-                    scope = [scope[0]]
+                if (typeof scope[0] !== 'object') {
+                    if (scope.every(val => val === scope[0]))
+                        scope = [scope[0]]
+                } else {
+                    const base = JSON.stringify(scope[0]);
+                    if (scope.every(val => JSON.stringify(val) === base))
+                        scope = [scope[0]]
+                }
                 return val(scope, arr);
             },
             write(buf, value, scope, find) {
@@ -210,7 +216,7 @@ export namespace NBT {
             }
         }
     ];
-    
+
     export const enum TagType {
         End = 0, Byte = 1, Short = 2, Int = 3, Long = 4, Float = 5, Double = 6,
         ByteArray = 7, String = 8, List = 9, Compound = 10, IntArray = 11, LongArray = 12
@@ -257,8 +263,8 @@ export namespace NBT {
         static newEnd(): TagEnd { return TagEnd.INSTANCE; }
     }
 
-    export type ScalarTypes = number | Long | string | Buffer;    
-    
+    export type ScalarTypes = number | Long | string | Buffer;
+
     export class TagScalar<T extends ScalarTypes> extends TagBase {
         protected _value: T;
 
@@ -523,7 +529,7 @@ export namespace NBT {
         }
     }
 
-    export type TagCompoundAccessor = { [key: string]: TagNormal };      
+    export type TagCompoundAccessor = { [key: string]: TagNormal };
 
     export class TagCompound extends TagBase implements Iterable<[string, TagNormal]> {
         protected readonly map: { [key: string]: TagNormal } = Object.create(null);
