@@ -17,7 +17,10 @@ export namespace ResourcePack {
         return new ResourcePack(fileName, description, pack_format, icon)
     }
     export async function read(filePath: string, buffer?: Buffer): Promise<ResourcePack> {
-        if (!fs.existsSync(filePath)) throw new Error('Cannot parse empty!')
+        return readZip(filePath, await new Zip().loadAsync(buffer ? buffer : await fs.readFile(filePath)));
+    }
+    export async function readFolder(filePath: string) {
+        if (!fs.existsSync(filePath)) throw new Error(`Cannot parse empty! ${filePath}`)
         if ((await fs.stat(filePath)).isDirectory()) {
             const metaPath = `${filePath}/pack.mcmeta`;
             const iconPath = `${filePath}/pack.png`;
@@ -32,7 +35,6 @@ export namespace ResourcePack {
             } catch (e) { }
             return new ResourcePack(filePath, description, pack_format, icon)
         }
-        return readZip(filePath, await new Zip().loadAsync(buffer ? buffer : await fs.readFile(filePath)));
     }
 }
 
