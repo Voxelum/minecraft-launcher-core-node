@@ -17,6 +17,21 @@ export namespace ResourcePack {
         return new ResourcePack(fileName, description, pack_format, icon)
     }
     export async function read(filePath: string, buffer?: Buffer): Promise<ResourcePack> {
+        if (!fs.existsSync(filePath)) throw new Error('Cannot parse empty!')
+        if ((await fs.stat(filePath)).isDirectory()) {
+            const metaPath = `${filePath}/pack.mcmeta`;
+            const iconPath = `${filePath}/pack.png`;
+
+            if (!fs.existsSync(metaPath)) throw Error('Illegal Resourcepack')
+            const metadata = await fs.readFile(metaPath)
+            const { description, pack_format } = JSON.parse(metadata.toString('utf-8').trim()).pack;
+            let icon = ''
+            try {
+                icon = await fs.readFile(iconPath)
+                    .then(data => 'data:image/png;base64, ' + data.toString('base64'));
+            } catch (e) { }
+            return new ResourcePack(filePath, description, pack_format, icon)
+        }
         return readZip(filePath, await new Zip().loadAsync(buffer ? buffer : await fs.readFile(filePath)));
     }
 }
