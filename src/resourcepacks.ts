@@ -17,7 +17,8 @@ export namespace ResourcePack {
         return new ResourcePack(fileName, description, pack_format, icon)
     }
     export async function read(filePath: string, buffer?: Buffer): Promise<ResourcePack> {
-        return readZip(filePath, await new Zip().loadAsync(buffer ? buffer : await fs.readFile(filePath)));
+        const zip = await new Zip().loadAsync(buffer ? buffer : await fs.readFile(filePath));
+        return readZip(filePath, zip);
     }
     export async function readFolder(filePath: string) {
         if (!fs.existsSync(filePath)) throw new Error(`Cannot parse empty! ${filePath}`)

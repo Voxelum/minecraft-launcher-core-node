@@ -27,7 +27,7 @@ describe("GameSetting", () => {
         if (set) GameSetting.stringify(set)
     })
 })
-describe('Resoucepack', () => {
+describe('Resourcepack', () => {
     it('shold read res pack correctly', (done) => {
         const buff = fs.readFileSync('./tests/assets/sample-resourcepack.zip')
         ResourcePack.read('sample', buff)
