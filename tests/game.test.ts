@@ -6,29 +6,29 @@ import {
 } from '../index';
 
 describe('TextComponent', () => {
-    it('should convert normal text', () => {
+    it('normal text converting', () => {
         let raw = 'testCommon tesxt'
         assert.equal(TextComponent.from(raw).unformatted, raw)
     })
-    it('should convert the string to TextComponent correctly and convert it back', () => {
+    it('string to TextComponent and reverse convention', () => {
         let raw = '§1colored§r'
         assert.equal(TextComponent.from(raw).formatted, raw)
     })
 })
 describe("GameSetting", () => {
-    it('should parse all the options', () => {
+    it('all options parsing', () => {
         let s = fs.readFileSync('./tests/assets/options.txt')
         let set = GameSetting.parse(s.toString())
         // console.log(set)
     })
-    it('should write to string correctly', () => {
+    it('option writing', () => {
         let s = fs.readFileSync('./tests/assets/options.txt').toString()
         let set = GameSetting.stringify(s)
         if (set) GameSetting.stringify(set)
     })
 })
 describe('Resoucepack', () => {
-    it('shold read res pack correctly', (done) => {
+    it('resourcepack reading', (done) => {
         const buff = fs.readFileSync('./tests/assets/sample-resourcepack.zip')
         ResourcePack.read('sample', buff)
             .then(v => { done() })
@@ -36,7 +36,7 @@ describe('Resoucepack', () => {
     })
 })
 describe('Language', () => {
-    it('should throw exception', (done) => {
+    it('no successful version reading', (done) => {
         Language.read('./', '1.12').catch(e => {
             assert.equal((e as Error).message, 'The version indexes json does not exist. Maybe the game assets are incompleted!')
             done()
@@ -44,12 +44,12 @@ describe('Language', () => {
     })
 })
 describe('WorldInfo', () => {
-    it('should validate a simple map', (done) => {
+    it('simple map validating', (done) => {
         WorldInfo.valid('./tests/assets/sample-map')
             .then(valid => { assert(valid, 'dir fail'); done() })
             .catch(e => done(e))
     })
-    it('should validate a zip map', (done) => {
+    it('zip map validating', (done) => {
         WorldInfo.valid('./tests/assets/sample-map.zip')
             .then(valid => { assert(valid, 'zip fail'); done() })
             .catch(e => done(e))

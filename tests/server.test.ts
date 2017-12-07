@@ -4,7 +4,7 @@ import * as fs from 'fs-extra';
 import * as assert from 'assert';
 
 describe('ServerRead', () => {
-    it('should read the server.dat correctly', () => {
+    it('server.dat reading', () => {
         let data = fs.readFileSync('./tests/assets/servers.dat')
         let infos = Server.parseNBT(data)
         assert.equal(infos[0].name, 'nyaacat')
@@ -15,7 +15,7 @@ describe('ServerRead', () => {
 })
 
 describe('ServerPing', () => {
-    it('should fetch frame', (done) => {
+    it('frame fetching', (done) => {
         Server.fetchStatusFrame({ host: 'mc.hypixel.net' })
             .then((frame) => {
                 assert(frame);
@@ -25,12 +25,12 @@ describe('ServerPing', () => {
                 done(err)
             })
     }).timeout(100000)
-    it('should control the port', (done) => {
+    it('port controlling', (done) => {
         Server.fetchStatusFrame({ host: 'mc.hypixel.net', port: 0 })
             .then(() => done('This should not happen'))
             .catch((err) => { done(err) })
     }).timeout(100000)
-    it('should convert the frame to status', (done) => {
+    it('frame to status converting', (done) => {
         Server.fetchStatusFrame({ host: 'mc.hypixel.net' })
             .then(frame => new Promise((resolve, reject) => {
                 Server.fetchStatus({ host: 'mc.hypixel.net' })
@@ -42,7 +42,7 @@ describe('ServerPing', () => {
             }))
             .catch((err) => { done(err) })
     }).timeout(100000)
-    it('should catch the timeout exception', (done) => {
+    it('timeout exception catching', (done) => {
         Server.fetchStatus({
             host: 'crafterr.me',
         }, { timeout: 100 }).then(status => {
@@ -51,7 +51,7 @@ describe('ServerPing', () => {
             done()
         })
     }).timeout(100000)
-    it('should ping the server and return info correctly', (done) => {
+    it('server pinging and info fetching', (done) => {
         Server.fetchStatus({
             host: 'mc.hypixel.net',
         }, { timeout: 10000 }).then(status => {

@@ -66,7 +66,9 @@ export namespace Server {
                 return v
             })
         }
-        static from(obj: StatusFrame) {
+        static from(obj: StatusFrame | Status): Status {
+            if (obj instanceof Status)
+                return obj;    
             let motd: TextComponent = TextComponent.str('')
             if (obj.description) {
                 motd = TextComponent.from(obj.description)
@@ -116,7 +118,7 @@ export namespace Server {
         if (value.servers) return value.servers;
         return []
     }
-    function startConnection(host: string, port: number, timeout?: number) {
+    async function startConnection(host: string, port: number, timeout?: number) {
         return new Promise<net.Socket>((resolve, reject) => {
             const connection = net.createConnection(port, host, () => {
                 resolve(connection)
@@ -200,7 +202,13 @@ export namespace Server {
         });
     }
 
-    export async function fetchStatusFrame(server: Info, options?: { protocol?: number, timeout?: number }): Promise<StatusFrame> {
+    export interface FetchOptions {
+        protocol?: number
+        timeout?: number
+        retryTimes?: number
+    }
+
+    export async function fetchStatusFrame(server: Info, options?: FetchOptions): Promise<StatusFrame> {
         const port = server.port ? server.port : 25565;
         const protocol = options ? options.protocol ? options.protocol : 210 : 210;
         const host = server.host;
@@ -210,7 +218,9 @@ export namespace Server {
 
         const frame = await new Promise((resolve, reject) => {
             connection.once('end', () => {
-                if (!frame) reject(new Error('Closed by server!'))
+                if (!frame) {
+                    reject(new Error('Closed by server!'))
+                }
             })
             handshake(host, port, protocol, connection)
                 .then(JSON.parse)
@@ -231,8 +241,23 @@ export namespace Server {
         connection.end();
         return frame;
     }
-    export function fetchStatus(server: Info, options?: { protocol?: number, timeout?: number }): Promise<Status> {
-        return fetchStatusFrame(server, options).then(Status.from)
+    export function fetchStatus(server: Info, options?: FetchOptions): Promise<Status> {
+        const retryTimes = options ? options.retryTimes ? options.retryTimes : 5 : 5;
+        return fetchStatusFrame(server, options).catch(async e => {
+            if (retryTimes > 0) {
+                if (options === undefined)
+                    return fetchStatus(server, { retryTimes: retryTimes - 1 });
+                else {
+                    if (options.retryTimes)
+                        --options.retryTimes;
+                    else
+                        options.retryTimes = retryTimes - 1;
+                    return fetchStatus(server, options);
+                }
+            } else {
+                throw e;
+            }
+        }).then(Status.from)
     }
 }
 

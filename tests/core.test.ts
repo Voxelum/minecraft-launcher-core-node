@@ -7,19 +7,19 @@ import * as fs from 'fs-extra'
 describe('InstallMinecraft', () => {
     let version: Version.MetaContainer;
     const loc = new MinecraftFolder('./tests/assets/temp');
-    it('should fetch minecraft correctly', (done) => {
+    it('minecraft version fetching', (done) => {
         Version.updateVersionMeta().then(result => {
             version = result;
             done();
         }).catch(e => done(e))
     }).timeout(100000)
-    it('should not fetch a list duplicatedly', (done) => {
+    it('no duplicate version fetching', (done) => {
         Version.updateVersionMeta({ fallback: version }).then(result => {
             assert.equal(result, version)
             done()
         }).catch(err => done(err))
     })
-    it('should install minecraft correctly', (done) => {
+    it('minecraft installing', (done) => {
         const meta = version.list.versions.filter((val) => val.id === '1.12.2')[0];
         Version.install('client', meta, loc, { checksum: true }).then(v => {
             assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.jar'));
@@ -36,7 +36,7 @@ describe('InstallMinecraft', () => {
                 .catch(e => done(e));
         });
     }).timeout(1000000)
-    it('should install new minecraft correctly', (done) => {
+    it('new minecraft installing', (done) => {
         const nMc = version.list.versions.filter((val) => val.id === '17w43b')[0];
         Version.install('client', nMc, loc, { checksum: true }).then(v => {
             assert(fs.existsSync('./tests/assets/temp/versions/17w43b/17w43b.jar'));
@@ -53,7 +53,7 @@ describe('InstallMinecraft', () => {
                 .catch(e => done(e));
         });
     })
-    it('should launch minecraft correctly', (done) => {
+    it('minecraft launching', (done) => {
         Launcher.launch({
             gamePath: loc.root,
             javaPath: '/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java',
@@ -70,7 +70,7 @@ describe('InstallMinecraft', () => {
             })
         }).catch((e) => done(e));
     }).timeout(1000000)
-    it('should launch new minecraft correctly', (done) => {
+    it('new minecraft launching', (done) => {
         Launcher.launch({
             gamePath: loc.root,
             javaPath: '/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java',
@@ -91,7 +91,7 @@ describe('InstallMinecraft', () => {
 
 describe('FetchForge', () => {
     let r1: any
-    it('should not fetch a list twice', (done) => {
+    it('no duplicate forge version fetching', (done) => {
         Forge.VersionMetaList.update().then(result => {
             r1 = result
             return Forge.VersionMetaList.update({ fallback: result })
@@ -100,7 +100,7 @@ describe('FetchForge', () => {
             done()
         }).catch(err => done(err))
     }).timeout(5000)
-    it('should download forge', done => {
+    it('forge downloading', done => {
         Forge.VersionMetaList.update().then(
             (result: { list: Forge.VersionMetaList, date: string }) => {
                 return result.list.number[result.list.promos['latest'].toString()]
@@ -112,7 +112,7 @@ describe('FetchForge', () => {
     }).timeout(100000)
 })
 describe('FetchLite', () => {
-    it('should download liteloader', done => {
+    it('liteloader downloading', done => {
         LiteLoader.VersionMetaList.update()
             .then((result: { list: LiteLoader.VersionMetaList, date: string }) => {
                 let meta = result.list.versions['1.10.2'].release
