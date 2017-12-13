@@ -293,7 +293,9 @@ export namespace Forge {
             let versionPath = `${version.mcversion}-${version.version}`
             let universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
             let installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
-            let localForgePath = `${version.mcversion}-forge-${version.version}`
+
+            let localForgePath = `${version.mcversion}-forge${version.mcversion}-${version.version}`
+
             let root = mc.getVersionRoot(localForgePath)
             let filePath = path.join(root, `${localForgePath}.jar`)
             let jsonPath = path.join(root, `${localForgePath}.json`)
