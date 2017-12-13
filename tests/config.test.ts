@@ -28,19 +28,19 @@ describe('ForgeConfig', () => {
     
     `;
     let config: Forge.Config;
-    it('should parse the config correctly', () => {
+    it('forge config parsing', () => {
         config = Forge.Config.parse(cfg1);
     })
-    it('should parse categories', () => {
+    it('forge config categories parsing', () => {
         assert(config['versioncheck'])
         assert(config['tweaks'])
     })
-    it('should parse a property', () => {
+    it('forge config property parsing', () => {
         assert.equal(config['tweaks'].properties[0].name, 'replaceInGameConfig')
         assert.equal(config['tweaks'].properties[0].comment, 'Replace the FML test config GUI with a working GUI.')
         assert.equal(config['tweaks'].properties[0].type, 'B')
     })
-    it('should parse multiple properties', () => {
+    it('forge config multiple properties parsing', () => {
         assert.equal(config['versioncheck'].properties[0].name, 'checkForUpdates')
         assert.equal(config['versioncheck'].properties[1].name, 'knownVersions')
         assert.equal(config['versioncheck'].properties[2].name, 'silenceKnownUpdates')

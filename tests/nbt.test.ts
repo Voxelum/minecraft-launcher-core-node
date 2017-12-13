@@ -11,7 +11,7 @@ describe('NBT', () => {
         }
     };
     let to: any;
-    it('should create and register serializer', () => {
+    it('serializer creating and registring', () => {
         ser = NBT.Serializer.create().register('test', {
             name: NBT.TagType.String,
             type: NBT.TagType.String,
@@ -22,15 +22,15 @@ describe('NBT', () => {
             nested: 'test',
         });
     })
-    it('should serialize object', () => {
+    it('object serializing', () => {
         buf = ser.serialize(from, 'test')
     })
-    it('should deserialize object', () => {
+    it('object deserializing', () => {
         to = ser.deserialize(buf).value
         const raw = NBT.Serializer.deserialize(buf).value;
         assert.deepEqual(to, raw)
     })
-    it('should produce same object from deserializing', () => {
+    it('deserialize same object producing', () => {
         assert.deepEqual(from, to);
     })
 })
@@ -66,7 +66,7 @@ describe('Test', () => {
     })
 })
 describe('TestEmpty', () => {
-    it('should empty nbt read and write correctly', () => {
+    it('empty nbt reading and writing', () => {
         let nbtData: Buffer = Buffer.from
         ([0x0A, 0x00, 0x00,                                                     //'': Compound
             0x00]);                                                             //    '': End
@@ -77,7 +77,7 @@ describe('TestEmpty', () => {
     })
 })
 describe('TestSignleValue', () => {
-    it('should signle value nbt read and write correctly', () => {
+    it('single nbt reading and writing', () => {
         let nbtData: Buffer = Buffer.from
         ([0x0A, 0x00, 0x00,                                                     //'': Compound
             0x03, 0x00, 0x03, 0x62, 0x61, 0x72, 0x00, 0x00, 0x00, 0x01,         //    'bar': Int = 1
@@ -90,7 +90,7 @@ describe('TestSignleValue', () => {
     })
 })
 describe('TestAllTags', () => {
-    it('should all tags read and write correctly', () => {
+    it('all tags reading and writing', () => {
         let nbtData: Buffer = Buffer.from
         ([0x0A, 0x00, 0x00,                                                     //'': Compound
             0x01, 0x00, 0x04, 0x62, 0x61, 0x72, 0x31, 0x01,                     //    'bar1': Byte = 1
@@ -144,7 +144,7 @@ describe('TestAllTags', () => {
     })
 })
 describe('TestIllegalTags', () => {
-    it('should illegal tags throw error', () => {
+    it('illegal tag error throwing', () => {
         assert.throws(() => {
             let compoundTag: NBT.TagCompound = NBT.TagCompound.newCompound();
             compoundTag.set('bar', null as any);
@@ -184,7 +184,7 @@ describe('TestIllegalTags', () => {
     })
 })
 describe('TestNestedCompound', () => {
-    it('should nested compound read and write correctly', () => {
+    it('nested compound reading and writing', () => {
         let nbtData: Buffer = Buffer.from
         ([0x0A, 0x00, 0x00,                                                     //'': Compound
             0x0A, 0x00, 0x01, 0x41,                                             //    'A': Compound
@@ -211,7 +211,7 @@ describe('TestNestedCompound', () => {
     })
 })
 describe('TestNestedList', () => {
-    it('should nested list read and write correctly', () => {
+    it('nested list reading and writing', () => {
         let nbtData: Buffer = Buffer.from
         ([0x0A, 0x00, 0x00,                                                     //'': Compound
             0x09, 0x00, 0x01, 0x41, 0x09, 0x00, 0x00, 0x00, 0x02,               //    'A': List<List>[2]
@@ -237,7 +237,7 @@ describe('TestNestedList', () => {
     })
 })
 describe('TypedNBTDocs', () => {
-    it('test typed nbt docs', () => {
+    it('typed nbt documenting', () => {
         // First create NBT tag like this.
         let rootTag: NBT.TagCompound = NBT.TagCompound.newCompound();
         rootTag.set('TheEnd', NBT.TagScalar.newString("That's all"));

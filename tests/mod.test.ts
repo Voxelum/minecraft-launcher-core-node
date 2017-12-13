@@ -1,7 +1,7 @@
 import { Forge, Mod } from '../index'
 
 describe('ForgeMod', () => {
-    it('should read mod correctly', (done) => {
+    it('mod reading', (done) => {
         Forge.meta('./tests/assets/sample-mod.jar')
             .then(v => {
                 done()
@@ -9,13 +9,13 @@ describe('ForgeMod', () => {
     })
 })
 describe('Mod', () => {
-    it('should read mod correctly', (done) => {
+    it('mod reading', (done) => {
         Mod.parse('./tests/assets/sample-mod.jar')
             .then((v: any) => {
                 done()
             }).catch(done)
     })
-    it('should read litemod correctly', (done) => {
+    it('litemod reading', (done) => {
         Mod.parse('./tests/assets/sample-mod.litemod')
             .then((v: any) => {
                 done()
