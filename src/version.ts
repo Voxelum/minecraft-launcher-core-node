@@ -195,6 +195,7 @@ function parseVersionJson(versionString: string): Version {
                 if (!nativArt) return empty;
                 return new Native(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
             } else {
+                if(!lib.downloads) return empty;
                 return new Library(lib.name, lib.downloads.artifact)
             }
         }).filter(l => l !== empty)
