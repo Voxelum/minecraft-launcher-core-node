@@ -53,40 +53,40 @@ describe('InstallMinecraft', () => {
                 .catch(e => done(e));
         });
     })
-    it('should launch minecraft correctly', (done) => {
-        Launcher.launch({
-            gamePath: loc.root,
-            javaPath: '/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java',
-            version: '1.12.2'
-        }).then((p) => {
-            p.stderr.on('data', (data) => {
-                console.error(data)
-            })
-            p.stdout.on('data', (data) => {
-                console.log(data)
-            })
-            p.on('close', () => {
-                done()
-            })
-        }).catch((e) => done(e));
-    }).timeout(1000000)
-    it('should launch new minecraft correctly', (done) => {
-        Launcher.launch({
-            gamePath: loc.root,
-            javaPath: '/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java',
-            version: '17w43b'
-        }).then((p) => {
-            p.stderr.on('data', (data) => {
-                console.error(data)
-            })
-            p.stdout.on('data', (data) => {
-                console.log(data)
-            })
-            p.on('close', () => {
-                done()
-            })
-        }).catch((e) => done(e));
-    }).timeout(1000000)
+    // it('should launch minecraft correctly', (done) => {
+    //     Launcher.launch({
+    //         gamePath: loc.root,
+    //         javaPath: '/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java',
+    //         version: '1.12.2'
+    //     }).then((p) => {
+    //         p.stderr.on('data', (data) => {
+    //             console.error(data)
+    //         })
+    //         p.stdout.on('data', (data) => {
+    //             console.log(data)
+    //         })
+    //         p.on('close', () => {
+    //             done()
+    //         })
+    //     }).catch((e) => done(e));
+    // }).timeout(1000000)
+    // it('should launch new minecraft correctly', (done) => {
+    //     Launcher.launch({
+    //         gamePath: loc.root,
+    //         javaPath: '/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java',
+    //         version: '17w43b'
+    //     }).then((p) => {
+    //         p.stderr.on('data', (data) => {
+    //             console.error(data)
+    //         })
+    //         p.stdout.on('data', (data) => {
+    //             console.log(data)
+    //         })
+    //         p.on('close', () => {
+    //             done()
+    //         })
+    //     }).catch((e) => done(e));
+    // }).timeout(1000000)
 })
 
 describe('FetchForge', () => {

@@ -39,30 +39,30 @@ describe('Test', () => {
         let list: NBT.TagList<NBT.TagByte> = NBT.TagList.newByteList();
         list[0] = NBT.TagScalar.newByte(0);
         list[1] = NBT.TagScalar.newByte(1);
-        console.log(list.push(NBT.TagScalar.newByte(2), NBT.TagScalar.newByte(3)));
-        for (let child of list) {
-            console.log(child);
-        }
+        // console.log(list.push(NBT.TagScalar.newByte(2), NBT.TagScalar.newByte(3)));
+        // for (let child of list) {
+            // console.log(child);
+        // }
         let compound: NBT.TagCompound = NBT.TagCompound.newCompound();
         compound.set('foo', NBT.TagScalar.newString('bar'));
         compound.set('abc', NBT.TagScalar.newInt(12450));
-        console.log('foo' in compound.accessor);
-        console.log('123' in compound.accessor);
-        console.log(compound.accessor['foo']);
-        console.log(compound.accessor['123']);
+        // console.log('foo' in compound.accessor);
+        // console.log('123' in compound.accessor);
+        // console.log(compound.accessor['foo']);
+        // console.log(compound.accessor['123']);
         compound.accessor['123'] = NBT.TagScalar.newString('456');
-        console.log(compound.accessor['123']);
-        console.log(delete compound.accessor['123']);
-        console.log(compound.accessor['123']);
-        console.log(delete compound.accessor['123']);
-        console.log(compound.get('foo'));
-        console.log(compound.get('abc'));
-        console.log(compound.get('123'));
-        console.log(compound.has('abc'));
-        console.log(compound.delete('123'));
-        console.log(compound.delete('abc'));
-        console.log(compound.get('abc'));
-        console.log(compound.has('abc'));
+        // console.log(compound.accessor['123']);
+        // console.log(delete compound.accessor['123']);
+        // console.log(compound.accessor['123']);
+        // console.log(delete compound.accessor['123']);
+        // console.log(compound.get('foo'));
+        // console.log(compound.get('abc'));
+        // console.log(compound.get('123'));
+        // console.log(compound.has('abc'));
+        // console.log(compound.delete('123'));
+        // console.log(compound.delete('abc'));
+        // console.log(compound.get('abc'));
+        // console.log(compound.has('abc'));
     })
 })
 describe('TestEmpty', () => {

@@ -26,7 +26,7 @@ describe('ServerPing', () => {
             })
     }).timeout(100000)
     it('should control the port', (done) => {
-        Server.fetchStatusFrame({ host: 'mc.hypixel.net', port: 0 })
+        Server.fetchStatusFrame({ host: 'mc.hypixel.net', port: 138 })
             .then(() => done('This should not happen'))
             .catch((err) => { done(err) })
     }).timeout(100000)
