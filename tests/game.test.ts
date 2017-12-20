@@ -7,11 +7,11 @@ import {
 
 describe('TextComponent', () => {
     it('normal text converting', () => {
-        let raw = 'testCommon tesxt'
+        const raw = 'testCommon tesxt'
         assert.equal(TextComponent.from(raw).unformatted, raw)
     })
     it('string to TextComponent and reverse convention', () => {
-        let raw = '§1colored§r'
+        const raw = '§1colored§r'
         assert.equal(TextComponent.from(raw).formatted, raw)
     })
 })

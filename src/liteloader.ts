@@ -144,6 +144,9 @@ export namespace LiteLoader {
 
     }
 }
-Mod.register('liteloader', option => LiteLoader.meta(option).then(m => new Mod<LiteLoader.MetaData>('liteloader', `${m.name}:${m.version}`, m)))
+
+Mod.register('liteloader', option =>
+    LiteLoader.meta(option)
+        .then(m => [new Mod<LiteLoader.MetaData>(`${m.name}:${m.version}`, m)]))
 
 export default LiteLoader;
