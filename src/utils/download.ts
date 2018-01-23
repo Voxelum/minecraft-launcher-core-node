@@ -50,6 +50,7 @@ try {
     const electron = require('electron');
     let net = electron.net ? electron.net : electron.remote.require('net')
     if (!net) throw new Error()
+    if (typeof net.request !== 'function') throw new Error()
     download = (url: string, file?: string, cb?: (progress: number, total: number) => void) => {
         const req = net.request(url);
         return new Promise<Buffer | void>((resolve, reject) => {
