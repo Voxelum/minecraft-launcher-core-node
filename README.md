@@ -22,6 +22,7 @@ Provide several useful function for Minecraft in typescript
 - **[Forge](#forge)**
 - **[TextComponent](#textcomponent)**
 - **[Auth](#auth)**
+- **[Version](#version)**
 - **[Launch](#launch)**
 
 ### NBT
@@ -165,10 +166,19 @@ Create TextComponent from string OR Minecraft's formatted string, like '§cThis 
     import { Auth } from 'ts-minecraft'
     const username: string;
     const password: string;
-    const authFromMojang: Promise<Auth> = Auth.yggdrasil({username, password});
+    const authFromMojang: Promise<Auth> = Auth.Yggdrasil.login({username, password});
     const authOffline = Auth.offline(username);
 
 Using AuthService to online/offline auth
+
+### Version
+
+    import { Version } from 'ts-minecraft'
+    const location: MinecraftLocation;
+    const versionId: string;
+    const version: Version = Version.parse(location, versionId);
+
+Parse existed version.
 
 ### Launch
 
@@ -179,6 +189,7 @@ Using AuthService to online/offline auth
     const proc: Promise<ChildProcess> = Launcher.launch({gamePath, javaPath, version});
 
 Launch minecraft from a version
+
 
 ## Future Works
 
