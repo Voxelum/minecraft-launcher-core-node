@@ -1,6 +1,7 @@
 import { Version, Library, Native, Artifact } from './version'
 import { Auth, UserType } from './auth';
 import { exec, ChildProcess, ExecOptions } from 'child_process'
+import { v4 } from 'uuid'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as os from 'os'
@@ -133,9 +134,9 @@ export namespace Launcher {
             game_assets: wrap(assetsDir),
             assets_index_name: version.assets,
             game_directory: wrap(options.gamePath),
-            auth_player_name: auth.selectedProfile.name,
+            auth_player_name: auth.selectedProfile ? auth.selectedProfile.name || 'Steve' : 'Steve',
             auth_uuid: auth.selectedProfile.id.replace('-', ''),
-            auth_access_token: auth.accessToken,
+            auth_access_token: auth.accessToken || v4(),
             user_properties: JSON.stringify(auth.properties),
             user_type: UserType.toString(auth.userType),
         }));

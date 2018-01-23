@@ -25,14 +25,14 @@ export namespace GameProfile {
             if (texture.data) return texture;
             return {
                 ...texture,
-                data: await get(texture.url).then(buf => (buf as Buffer).toString('base64'))
+                data: await get(texture.url).then(buf => (buf as Buffer))
             }
         }
     }
     export interface Texture {
-        metadata: { model: 'slim' | 'steve' },
+        metadata: { model: 'slim' | 'steve', [key: string]: any },
         url: string,
-        data?: string, // base64 skin data
+        data?: Buffer, 
     }
     export async function cacheTextures(profile: GameProfile) {
         const tex = getTextures(profile);

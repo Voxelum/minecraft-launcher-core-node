@@ -27,14 +27,8 @@ export interface Auth {
 }
 
 export namespace Auth {
-    export interface Yggdrasil {
-        login(username: string, password?: string, clientToken?: string): Promise<Auth>;
-        refresh(clientToken: string, accessToken: string, profile: string): Promise<Auth>;
-        validate(accessToken: string, clientToken?: string): Promise<boolean>;
-        invalide(accessToken: string, clientToken: string): void;
-        signout(username: string, password: string): void;
-    }
-
+    //this module migrates from jmccc: https://github.com/to2mbn/JMCCC/tree/master/jmccc-yggdrasil-authenticator
+    //@author huangyuhui
     export namespace Yggdrasil {
         export interface API {
             readonly hostName: string;
@@ -45,30 +39,96 @@ export namespace Auth {
             readonly invalidate: string;
             readonly signout: string;
         }
-        export function mojangAPI(): API {
-            return {
-                hostName: 'authserver.mojang.com',
-                authenticate: '/authenticate',
-                refresh: '/refresh',
-                validate: "/validate",
-                invalidate: '/invalidate',
-                signout: '/signout',
-            }
+        const mojang = {
+            hostName: 'authserver.mojang.com',
+            authenticate: '/authenticate',
+            refresh: '/refresh',
+            validate: "/validate",
+            invalidate: '/invalidate',
+            signout: '/signout',
         }
-        export function create(api?: API): Yggdrasil {
-            if (api) return new YggdrasilImpl(api)
-            return new YggdrasilImpl(mojangAPI())
+
+        function request(api: API, payload: any, path: string): Promise<string> {
+            return new Promise((resolve, reject) => {
+                payload = JSON.stringify(payload)
+                let responseHandler = (response: http.IncomingMessage) => {
+                    let buffer = ''
+                    response.setEncoding('utf8');
+                    response.on('data', (chunk) => {
+                        if (typeof (chunk) === 'string') buffer += chunk
+                    })
+                    response.on('end', () => { resolve(buffer) });
+                }
+                let req = https.request({
+                    hostname: api.hostName,
+                    path: path,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': payload.length
+                    }
+                }, responseHandler)
+                req.on('error', (e) => {
+                    reject(e)
+                });
+                req.write(payload);
+                req.end();
+            });
+
+        }
+
+        function requestAndHandleResponse(api: API, payload: any, path: string): Promise<Auth> {
+            return request(api, payload, path).then(s => {
+                let obj = JSON.parse(s)
+                if (obj.error)
+                    throw (new Error(obj.errorMessage))
+                let userId = obj.user ? obj.user.id ? obj.user.id : '' : ''
+                let prop = obj.user ? obj.user.properties ? obj.user.properties : {} : {}
+                return {
+                    accessToken: <string>obj.accessToken,
+                    clientToken: <string>obj.clientToken,
+                    selectedProfile: <GameProfile>obj.selectedProfile,
+                    profiles: <GameProfile[]>obj.availableProfiles,
+                    userId: userId,
+                    properties: prop,
+                    userType: UserType.Mojang
+                }
+            })
+        }
+
+        export function login(option: { username: string, password?: string, clientToken?: string | undefined },
+            api: API = mojang): Promise<Auth> {
+            return requestAndHandleResponse(api, Object.assign({
+                agent: 'Minecraft',
+                requestUser: true
+            }, option), api.authenticate)
+        }
+
+        export function refresh(option: { clientToken: string, accessToken: string, profile?: string },
+            api: API = mojang): Promise<Auth> {
+            let payloadObj: any = {
+                // agent: 'Minecraft',
+                clientToken: option.clientToken,
+                accessToken: option.accessToken,
+                requestUser: true
+            }
+            if (option.profile)
+                payloadObj.selectedProfile = {
+                    id: option.profile
+                }
+            return requestAndHandleResponse(api, payloadObj, api.refresh)
+        }
+        export function validate(option: { accessToken: string, clientToken?: string }, api: API = mojang): Promise<boolean> {
+            return request(api, Object.assign({}, option), api.validate).then(suc => true, fail => false)
+        }
+        export function invalide(option: { accessToken: string, clientToken: string }, api: API = mojang): void {
+            request(api, option, api.invalidate)
+        }
+        export function signout(option: { username: string, password: string }, api: API = mojang): void {
+            request(api, option, api.signout)
         }
     }
 
-    export function yggdrasil(option: {
-        api?: Yggdrasil.API,
-        username: string,
-        password: string,
-        clientToken?: string
-    }) {
-        return Yggdrasil.create(option.api).login(option.username, option.password, option.clientToken)
-    }
     export function offline(username: string): Auth {
         return {
             accessToken: v4(),
@@ -85,94 +145,3 @@ export namespace Auth {
     }
 }
 
-
-//this module migrates from jmccc: https://github.com/to2mbn/JMCCC/tree/master/jmccc-yggdrasil-authenticator
-//@author huangyuhui
-class YggdrasilImpl implements Auth.Yggdrasil {
-    constructor(private api: Auth.Yggdrasil.API) { }
-    private request(payload: any, path: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            payload = JSON.stringify(payload)
-            let responseHandler = (response: http.IncomingMessage) => {
-                let buffer = ''
-                response.setEncoding('utf8');
-                response.on('data', (chunk) => {
-                    if (typeof (chunk) === 'string') buffer += chunk
-                })
-                response.on('end', () => { resolve(buffer) });
-            }
-            let req = https.request({
-                hostname: this.api.hostName,
-                path: path,
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': payload.length
-                }
-            }, responseHandler)
-            req.on('error', (e) => {
-                reject(e)
-            });
-            req.write(payload);
-            req.end();
-        });
-
-    }
-
-    private requestAndHandleResponse(payload: any, path: string): Promise<Auth> {
-        return this.request(payload, path).then(s => {
-            let obj = JSON.parse(s)
-            if (obj.error)
-                throw (new Error(obj.errorMessage))
-            let userId = obj.user ? obj.user.id ? obj.user.id : '' : ''
-            let prop = obj.user ? obj.user.properties ? obj.user.properties : {} : {}
-            return {
-                accessToken: <string>obj.accessToken,
-                clientToken: <string>obj.clientToken,
-                selectedProfile: <GameProfile>obj.selectedProfile,
-                profiles: <GameProfile[]>obj.availableProfiles,
-                userId: userId,
-                properties: prop,
-                userType: UserType.Mojang
-            }
-        })
-    }
-
-    login(username: string, password?: string, clientToken?: string | undefined): Promise<Auth> {
-        let payload = {
-            agent: 'Minecraft',
-            username: username,
-            password: password,
-            clientToken: clientToken,
-            requestUser: true
-        };
-        return this.requestAndHandleResponse(payload, this.api.authenticate)
-    }
-
-    refresh(clientToken: string, accessToken: string, profile?: string): Promise<Auth> {
-        let payloadObj: any = {
-            // agent: 'Minecraft',
-            clientToken: clientToken,
-            accessToken: accessToken,
-            requestUser: true
-        }
-        if (profile)
-            payloadObj.selectedProfile = {
-                id: profile
-            }
-        return this.requestAndHandleResponse(payloadObj, this.api.refresh)
-    }
-    validate(accessToken: string, clientToken?: string): Promise<boolean> {
-        let obj = {
-            accessToken: accessToken,
-            clientToken: clientToken
-        }
-        return this.request(obj, this.api.validate).then(suc => true, fail => false)
-    }
-    invalide(accessToken: string, clientToken: string): void {
-        this.request({ accessToken: accessToken, clientToken: clientToken }, this.api.invalidate)
-    }
-    signout(username: string, password: string): void {
-        this.request({ username: username, password: password }, this.api.signout)
-    }
-}

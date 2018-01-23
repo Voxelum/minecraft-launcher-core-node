@@ -348,10 +348,10 @@ export namespace Forge {
 }
 Mod.register('forge', option => Forge.meta(option).then(mods => mods.map(m => new Mod<Forge.MetaData>(`${m.modid}:${m.version ? m.mcversion : '0.0.0'}`, m))))
 
-declare module './mod' {
-    namespace Mod {
-        function parse(data: string | Buffer, type: 'forge'): Promise<Mod.File<Forge.MetaData>>
-    }
-}
+// declare module './mod' {
+//     namespace Mod {
+//         function parse(data: string | Buffer, type: 'forge'): Promise<Mod.File<Forge.MetaData>>
+//     }
+// }
 
 export default Forge

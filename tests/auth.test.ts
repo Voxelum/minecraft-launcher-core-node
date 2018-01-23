@@ -2,7 +2,7 @@ import { Auth } from '../index'
 import * as assert from 'assert'
 describe('Auth', () => {
     it('online credit responding', (done) => {
-        Auth.yggdrasil({ username: '18211378@163.com', password: 'asd-x' })
+        Auth.Yggdrasil.login({ username: '18211378@163.com', password: 'asd-x' })
             .then((suc) => {
                 throw "Credit shouldn't have succeed";
             }, (err) => {
