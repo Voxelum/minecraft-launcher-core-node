@@ -15,7 +15,7 @@ difficulty:1
 fancyGraphics:false
 ao:1
 renderClouds:false
-resourcePacks:["Models pack.zip"]
+resourcePacks:["Xray Ultimate 1.12 v2.2.1.zip"]
 incompatibleResourcePacks:[]
 lastServer:play.mcndsj.com
 lang:en_US

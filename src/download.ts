@@ -14,15 +14,15 @@ import { AbstractTask } from './utils/task';
 
 declare module './version' {
     interface VersionMeta {
-        id: string,
-        type: string,
-        time: string,
-        releaseTime: string,
+        id: string
+        type: string
+        time: string
+        releaseTime: string
         url: string
     }
     interface VersionMetaList {
         latest: {
-            snapshot: string,
+            snapshot: string
             release: string
         },
         versions: VersionMeta[]

@@ -1,20 +1,20 @@
-import download, { DownloadTask } from './utils/download'
-import CHECKSUM from './utils/checksum'
-import UPDATE from './utils/update'
-import * as path from 'path'
-import * as Zip from 'jszip'
-import * as fs from 'fs-extra'
+import download, { DownloadTask } from './utils/download';
+import CHECKSUM from './utils/checksum';
+import UPDATE from './utils/update';
+import * as path from 'path';
+import * as Zip from 'jszip';
+import * as fs from 'fs-extra';
 import { Version } from './version';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import { ClassVisitor, Opcodes, AnnotationVisitor, ClassReader, FieldVisitor, Attribute } from 'java-asm'
 
-import Mod from './mod'
+import Mod from './mod';
 import { AbstractTask, Task } from './utils/task';
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
         constructor(readonly map: { [key: string]: any }) { super(Opcodes.ASM5); }
         public visit(s: string, o: any) {
-            this.map[s] = o
+            this.map[s] = o;
         }
     }
     class KVisitor extends ClassVisitor {
@@ -28,7 +28,7 @@ export namespace Forge {
         }
         public visitField(access: number, name: string, desc: string, signature: string, value: any) {
             if (this.className === 'Config')
-                this.fields[name] = value
+                this.fields[name] = value;
             return null;
         }
 
@@ -346,5 +346,12 @@ export namespace Forge {
         return Task.execute(new InstallTask(version, minecraft, checksum, maven))
     }
 }
-Mod.register('forge', option => Forge.meta(option).then(mods => mods.map(m => new Mod<Forge.MetaData>('forge', `${m.modid}:${m.version ? m.mcversion : '0.0.0'}`, m))))
+Mod.register('forge', option => Forge.meta(option).then(mods => mods.map(m => new Mod<Forge.MetaData>(`${m.modid}:${m.version ? m.mcversion : '0.0.0'}`, m))))
+
+declare module './mod' {
+    namespace Mod {
+        function parse(data: string | Buffer, type: 'forge'): Promise<Mod.File<Forge.MetaData>>
+    }
+}
+
 export default Forge
