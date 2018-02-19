@@ -1,5 +1,6 @@
 import UPDATE from './utils/update';
-import download, { DownloadTask } from './utils/download';
+import Task from 'treelike-task'
+import download, { downloadTask } from './utils/download';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import * as fs from 'fs-extra';
 import * as path from 'path'
@@ -111,15 +112,11 @@ export namespace LiteLoader {
     const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/com/mumfrey/liteloader'
 
     export function install(meta: VersionMeta, location: MinecraftLocation) {
-        return Task.execute(new InstallTask(meta, location))
+        return installTask(meta, location).execute();
     }
+
     export function installTask(meta: VersionMeta, location: MinecraftLocation): Task<void> {
-        return new InstallTask(meta, location)
-    }
-    class InstallTask extends AbstractTask<void>{
-        constructor(readonly meta: VersionMeta, readonly location: MinecraftLocation) { super() }
-        async execute(context: Task.Context): Promise<void> {
-            const { location, meta } = this;
+        return Task.create('installLiteloader', async (context) => {
             const mc = typeof location === 'string' ? new MinecraftFolder(location) : location
             let targetURL
             if (meta.type === 'SNAPSHOT')
@@ -134,10 +131,10 @@ export namespace LiteLoader {
             if (!fs.existsSync(versionPath))
                 await fs.ensureDir(versionPath)
             await Promise.all([
-                context.execute(new DownloadTask('downloadJar', targetURL, path.join(versionPath, liteloaderPath + '.jar'))),
-                context.execute(new DownloadTask('downloadJson', jsonURL, path.join(versionPath, liteloaderPath + '.json')))
+                context.execute('downloadJar', downloadTask(targetURL, path.join(versionPath, liteloaderPath + '.jar'))),
+                context.execute('downloadJson', downloadTask(jsonURL, path.join(versionPath, liteloaderPath + '.json')))
             ])
-        }
+        });
     }
     export function installLiteloaderAsMod(meta: VersionMeta, filePath: string) {
 

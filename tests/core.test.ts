@@ -1,43 +1,57 @@
 import * as assert from 'assert';
 import { Version, MinecraftFolder, Forge, LiteLoader, Launcher } from "../index";
-import { monitor } from '../src/utils/monitor';
 import * as fs from 'fs-extra'
 
 
 describe('InstallMinecraft', () => {
     let version: Version.MetaContainer;
     const loc = new MinecraftFolder('./tests/assets/temp');
-    it('minecraft version fetching', (done) => {
-        Version.updateVersionMeta().then(result => {
-            version = result;
-            done();
-        }).catch(e => done(e))
-    }).timeout(100000)
-    it('no duplicate version fetching', (done) => {
-        Version.updateVersionMeta({ fallback: version }).then(result => {
-            assert.equal(result, version)
-            done()
-        }).catch(err => done(err))
+    it('minecraft version fetching', () => Version.updateVersionMeta()).timeout(100000)
+    it('no duplicate version fetching', async () => {
+        const first = await Version.updateVersionMeta();
+        const sec = await Version.updateVersionMeta({ fallback: first })
+        assert.equal(first, sec);
     })
-    it('minecraft installing', (done) => {
-        const meta = version.list.versions.filter((val) => val.id === '1.12.2')[0];
-        Version.install('client', meta, loc, { checksum: true }).then(v => {
-            assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.jar'));
-            assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.json'));
-            Version.parse(new MinecraftFolder('./tests/assets/temp'), '1.12.2')
-                .then(ver => {
-                    const missing = ver.libraries.filter(lib => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
-                    if (missing.length !== 0) {
-                        console.error(missing);
-                        throw new Error('Missing Libs')
-                    }
-                    done()
-                })
-                .catch(e => done(e));
-        });
+    it('minecraft installing', () => {
+        const meta = {
+            id: '1.12.2',
+            type: 'release',
+            time: '2018-02-15T16:26:45+00:00',
+            releaseTime: '2017-09-18T08:39:46+00:00',
+            url: 'https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json'
+        };
+        return Version.installTask('client', meta, loc, { checksum: true }).onChild((path, child) => {
+            let indent = '';
+            for (let i = 0; i < path.length - 1; ++i)
+                indent += '\t';
+            console.log(`${indent}[${path[path.length - 1]}] create child ${child}`)
+        }).onFinish((path, result) => {
+            let indent = '';
+            for (let i = 0; i < path.length - 1; ++i)
+                indent += '\t';
+            console.log(`${indent}[${path[path.length - 1]}] finished`)
+        }).execute()
+            .then(v => {
+                assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.jar'));
+                assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.json'));
+                Version.parse(new MinecraftFolder('./tests/assets/temp'), '1.12.2')
+                    .then(ver => {
+                        const missing = ver.libraries.filter(lib => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
+                        if (missing.length !== 0) {
+                            console.error(missing);
+                            throw new Error('Missing Libs')
+                        }
+                    })
+            });
     }).timeout(1000000)
-    it('new minecraft installing', (done) => {
-        const nMc = version.list.versions.filter((val) => val.id === '17w43b')[0];
+    it('new minecraft installing', () => {
+        const nMc = {
+            id: '17w43b',
+            type: 'snapshot',
+            time: '2018-01-15T11:09:31+00:00',
+            releaseTime: '2017-10-26T13:36:22+00:00',
+            url: 'https://launchermeta.mojang.com/mc/game/0383e8585ef976baa88e2dc3357e6b9899bf263e/17w43b.json'
+        }
         Version.install('client', nMc, loc, { checksum: true }).then(v => {
             assert(fs.existsSync('./tests/assets/temp/versions/17w43b/17w43b.jar'));
             assert(fs.existsSync('./tests/assets/temp/versions/17w43b/17w43b.json'));
@@ -48,45 +62,9 @@ describe('InstallMinecraft', () => {
                         console.error(missing);
                         throw new Error('Missing Libs')
                     }
-                    done()
                 })
-                .catch(e => done(e));
         });
     })
-    // it('should launch minecraft correctly', (done) => {
-    //     Launcher.launch({
-    //         gamePath: loc.root,
-    //         javaPath: '/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java',
-    //         version: '1.12.2'
-    //     }).then((p) => {
-    //         p.stderr.on('data', (data) => {
-    //             console.error(data)
-    //         })
-    //         p.stdout.on('data', (data) => {
-    //             console.log(data)
-    //         })
-    //         p.on('close', () => {
-    //             done()
-    //         })
-    //     }).catch((e) => done(e));
-    // }).timeout(1000000)
-    // it('should launch new minecraft correctly', (done) => {
-    //     Launcher.launch({
-    //         gamePath: loc.root,
-    //         javaPath: '/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java',
-    //         version: '17w43b'
-    //     }).then((p) => {
-    //         p.stderr.on('data', (data) => {
-    //             console.error(data)
-    //         })
-    //         p.stdout.on('data', (data) => {
-    //             console.log(data)
-    //         })
-    //         p.on('close', () => {
-    //             done()
-    //         })
-    //     }).catch((e) => done(e));
-    // }).timeout(1000000)
 })
 
 describe('FetchForge', () => {

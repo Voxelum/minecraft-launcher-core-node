@@ -69,11 +69,25 @@ export namespace Launcher {
         extractNative(mc, v)
 
         let args = genArgs(options.auth, options, v).join(' ')
-        console.log(args)
         return exec(args, {
             encoding: "binary",
             cwd: options.gamePath
         })
+    }
+
+    export async function generateArguments(options: Option) {
+        if (!options.version) throw new Error('Version cannot be null!')
+        if (!options.auth) options.auth = Auth.offline('Steve');
+        if (!path.isAbsolute(options.gamePath)) options.gamePath = path.resolve(options.gamePath)
+        if (!options.resourcePath) options.resourcePath = options.gamePath;
+        if (!options.minMemory) options.minMemory = 512;
+        if (!options.maxMemory) options.maxMemory = options.minMemory;
+        if (!options.launcherName) options.launcherName = 'JMCCC'
+        if (!options.launcherBrand) options.launcherBrand = 'InfinityStudio'
+        if (!options.isDemo) options.isDemo = false;
+        let v: Version = typeof options.version === 'string' ? await Version.parse(options.resourcePath, options.version) : options.version;
+        let mc = new MinecraftFolder(options.resourcePath)
+        return genArgs(options.auth, options, v);
     }
 
     function ensureLibraries(resourcePath: MinecraftFolder, version: Version): Library[] {

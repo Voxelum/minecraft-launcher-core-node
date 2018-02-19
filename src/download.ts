@@ -7,11 +7,10 @@ import Task from 'treelike-task'
 
 import { EventEmitter } from 'events';
 import UPDATE from './utils/update'
-import DOWN, { DownloadTask, downloadTask } from './utils/download'
+import DOWN, { downloadTask } from './utils/download'
 import CHECKSUM from './utils/checksum'
 import { Library, Version, VersionMeta, VersionMetaList } from './version'
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
-// import { AbstractTask } from './utils/task';
 
 declare module './version' {
     interface VersionMeta {
@@ -75,24 +74,15 @@ function downloadVersion(type: string, versionMeta: VersionMeta, minecraft: Mine
     }
 }
 
-
 function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation) {
     return async (context: Task.Context) => {
-        const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-        let json = folder.getVersionJson(version.id)
-        await context.execute('ensureVersionRoot', () => fs.ensureDir(folder.getVersionRoot(version.id)))
-        if (!fs.existsSync(json)) await context.execute('getJson', () => new Promise<void>((res, rej) => {
-            let jsonStream = fs.createWriteStream(json)
-            let u = url.parse(version.url)
-            https.get({ host: u.host, path: u.path }, res => res.pipe(jsonStream)).on('error', (e) => rej(e))
-            jsonStream.on('finish', () => {
-                jsonStream.close();
-                res()
-            })
-        }));
-        let versionInstance = Version.parse(minecraft, version.id)
-        if (versionInstance) return versionInstance
-        else throw new Error('Cannot parse version')
+        const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft;
+        let json = folder.getVersionJson(version.id);
+        await context.execute('ensureVersionRoot', () => fs.ensureDir(folder.getVersionRoot(version.id)));
+        if (!fs.existsSync(json)) await context.execute('getJson', downloadTask(version.url, json));
+        let ver = Version.parse(minecraft, version.id);
+        if (ver) return ver;
+        else throw new Error('Cannot parse version');
     }
 }
 
@@ -164,25 +154,25 @@ function downloadLibraries(version: Version, minecraft: MinecraftLocation, optio
     }
 }
 
-function downloadAsset(content: any, key: any, folder: any, assetsHost: any, checksum: any) {
+function downloadAsset(content: any, key: string, folder: MinecraftFolder, assetsHost: string, checksum: boolean) {
     return async (context: Task.Context) => {
         if (!content.hasOwnProperty(key)) return
-        var element = content[key];
-        let hash: string = element.hash
-        let head = hash.substring(0, 2)
-        let dir = folder.getPath('assets', 'objects', head)
-        let file = path.join(dir, hash)
+        const element = content[key];
+        const hash: string = element.hash;
+        const head = hash.substring(0, 2)
+        const dir = folder.getPath('assets', 'objects', head)
+        const file = path.join(dir, hash)
         const exist = fs.existsSync(file)
         if (!exist) {
-            await fs.ensureDir(dir)
-            await DOWN(`${assetsHost}/${head}/${hash}`, file)
+            await fs.ensureDir(dir);
+            await context.execute(hash, downloadTask(`${assetsHost}/${head}/${hash}`, file))
         }
         if (checksum) {
-            let sum = await CHECKSUM(file)
+            let sum = await context.execute('checksum', () => CHECKSUM(file))
             if (sum != hash && exist) {// if exist, re-download
                 await fs.ensureDir(dir)
-                await DOWN(`${assetsHost}/${head}/${hash}`, file)
-                sum = await CHECKSUM(file)
+                await context.execute(`re-${hash}`, downloadTask(`${assetsHost}/${head}/${hash}`, file))
+                sum = await context.execute('re-checksum', () => CHECKSUM(file))
             }
             if (sum != hash)
                 throw new Error(`SHA1 not matched!\n${sum}\n${hash}\n@${file}\n Probably caused by the incompleted file or illegal file source!`)
@@ -193,12 +183,12 @@ function downloadAsset(content: any, key: any, folder: any, assetsHost: any, che
 function downloadAssets(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, assetsHost?: string }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-        let jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
+        const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
         if (!fs.existsSync(jsonPath)) {
             await context.execute('ensureIndexes', () => fs.ensureDir(path.join(folder.assets, 'indexes')))
             await context.execute('downloadAssetsJson', downloadTask(version.assetIndex.url, jsonPath))
         }
-        let content: any = (await fs.readJson(jsonPath)).objects
+        const content: any = (await fs.readJson(jsonPath)).objects
         await context.execute('ensureObjects', () => fs.ensureDir(folder.getPath('assets', 'objects')))
         const assetsHost = option ? option.assetsHost || 'https://resources.download.minecraft.net' : 'https://resources.download.minecraft.net';
         const checksum = option ? option.checksum ? option.checksum : false : false;

@@ -1,6 +1,7 @@
-import download, { DownloadTask } from './utils/download';
+import download, { downloadTask } from './utils/download';
 import CHECKSUM from './utils/checksum';
 import UPDATE from './utils/update';
+import Task from 'treelike-task';
 import * as path from 'path';
 import * as Zip from 'jszip';
 import * as fs from 'fs-extra';
@@ -223,6 +224,26 @@ export namespace Forge {
         }
     }
 
+    export namespace VersionMetaList {
+        export function mcversions(list: VersionMetaList) {
+            return Object.keys(list.mcversion);
+        }
+        export function metasByVersion(list: VersionMetaList, version: string) {
+            return list.mcversion[version].map(n => list.number[n]);
+        }
+        export function recommendedsVersions(list: VersionMetaList) {
+            return Object.keys(list.promos);
+        }
+        export function metaByRecommended(list: VersionMetaList, recommendedsVersion: string) {
+            return list.number[list.promos[recommendedsVersion]];
+        }
+    }
+
+    export interface VersionMetaList0 {
+        mcversion: { [key: string]: VersionMeta },
+        latest: { [key: string]: VersionMeta },
+    }
+
     export interface VersionMeta {
         branch: string | null,
         build: number,
@@ -231,6 +252,7 @@ export namespace Forge {
         modified: number,
         version: string
     }
+
     export async function meta(mod: Buffer | string | Zip) {
         let zip;
         if (mod instanceof Zip)
@@ -282,69 +304,68 @@ export namespace Forge {
         return modids.map(k => modidTree[k] as Forge.MetaData)
             .filter(m => m.modid !== undefined)
     }
-
-    class InstallTask extends AbstractTask<Version>{
-        constructor(readonly version: VersionMeta, readonly minecraft: MinecraftLocation, readonly checksum: boolean = false,
-            readonly maven: string = 'http://files.minecraftforge.net/maven') { super() }
-        async execute(context: Task.Context): Promise<Version> {
-            const { version, minecraft, checksum, maven } = this;
+    function installTask0(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
+        maven: string = 'http://files.minecraftforge.net/maven') {
+        return async (context: Task.Context) => {
             const mc = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft;
-            let versionPath = `${version.mcversion}-${version.version}`
-            let universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
-            let installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
+            const versionPath = `${version.mcversion}-${version.version}`
+            const universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
+            const installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
 
-            let localForgePath = `${version.mcversion}-forge${version.mcversion}-${version.version}`
+            const localForgePath = `${version.mcversion}-forge${version.mcversion}-${version.version}`
 
-            let root = mc.getVersionRoot(localForgePath)
-            let filePath = path.join(root, `${localForgePath}.jar`)
-            let jsonPath = path.join(root, `${localForgePath}.json`)
-            await context.wrapAndExecute('unsureRoot', () => fs.ensureDir(root))
+            const root = mc.getVersionRoot(localForgePath)
+            const filePath = path.join(root, `${localForgePath}.jar`)
+            const jsonPath = path.join(root, `${localForgePath}.json`)
+            await context.execute('ensureRoot', () => fs.ensureDir(root))
             let universalBuffer: any;
             if (!fs.existsSync(filePath)) {
                 try {
-                    await context.wrapAndExecute('writeJar', async () => fs.outputFile(filePath,
-                        universalBuffer = await context.execute(new DownloadTask('downloadJar', universalURL))))
+                    universalBuffer = await context.execute('downloadJar', downloadTask(universalURL));
+                    await context.execute('writeJar', async () => fs.outputFile(filePath, universalBuffer))
                 }
                 catch (e) {
-                    await context.wrapAndExecute('rewriteJar', async () => fs.outputFile(filePath,
-                        universalBuffer = await (await Zip().loadAsync(await context.execute(new DownloadTask('redownloadJar', installerURL))))
+                    universalBuffer = await context.execute('redownloadJar', downloadTask(installerURL));
+                    universalBuffer = await context.execute('extractJar', async () =>
+                        (await Zip().loadAsync(universalBuffer))
                             .file(`forge-${versionPath}-universal.jar`)
-                            .async('nodebuffer')))
+                            .async('nodebuffer'))
+                    await context.execute('rewriteJar', async () => fs.outputFile(filePath, universalBuffer))
                 }
                 if (checksum) {
-                    let sum
+                    let sum;
                     if (version.files[2] &&
                         version.files[2][1] == 'universal' &&
                         version.files[2][2] &&
-                        (await context.wrapAndExecute('checksum', () => CHECKSUM(filePath))) != version.files[2][2])
+                        (await context.execute('checksum', () => CHECKSUM(filePath))) != version.files[2][2])
                         throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
                     else
                         for (let arr of version.files)
                             if (arr[1] == 'universal')
-                                if ((await context.wrapAndExecute('checksum', () => CHECKSUM(filePath))) != arr[2])
+                                if ((await context.execute('checksum', () => CHECKSUM(filePath))) != arr[2])
                                     throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
                 }
             }
             if (!fs.existsSync(jsonPath)) {
-                await context.wrapAndExecute('writeJson', async () => fs.outputFile(jsonPath,
-                    await (await Zip().loadAsync(universalBuffer)).file('version.json')
-                        .async('nodebuffer')))
+                const buff = await context.execute('extraVersionJson',
+                    async () => (await Zip().loadAsync(universalBuffer)).file('version.json').async('nodebuffer'));
+                await context.execute('writeJson', async () => fs.outputFile(jsonPath, buff))
             }
             return Version.parse(minecraft, localForgePath)
         }
-
     }
 
     export function installTask(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven'): Task<Version> {
-        return new InstallTask(version, minecraft, checksum, maven)
+        return Task.create('installForge', installTask0(version, minecraft, checksum, maven));
     }
 
     export async function install(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven'): Promise<Version> {
-        return Task.execute(new InstallTask(version, minecraft, checksum, maven))
+        return installTask(version, minecraft, checksum, maven).execute()
     }
 }
+
 Mod.register('forge', option => Forge.meta(option).then(mods => mods.map(m => new Mod<Forge.MetaData>(`${m.modid}:${m.version ? m.mcversion : '0.0.0'}`, m))))
 
 // declare module './mod' {
