@@ -9,7 +9,6 @@ import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import { ClassVisitor, Opcodes, AnnotationVisitor, ClassReader, FieldVisitor, Attribute } from 'java-asm'
 
 import Mod from './mod';
-import { AbstractTask, Task } from './utils/task';
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
         constructor(readonly map: { [key: string]: any }) { super(Opcodes.ASM5); }

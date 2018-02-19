@@ -270,7 +270,7 @@ export namespace NBT {
 
         protected constructor(tagType: TagType, value: T) {
             super(tagType);
-            this.value = value;
+            this._value = value;
         }
 
         get value(): T {

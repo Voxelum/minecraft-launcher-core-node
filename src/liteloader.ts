@@ -6,7 +6,6 @@ import * as path from 'path'
 import * as url from 'url'
 import * as Zip from 'jszip'
 import Mod from './mod';
-import { AbstractTask, Task } from './utils/task';
 
 export namespace LiteLoader {
     export interface MetaData {

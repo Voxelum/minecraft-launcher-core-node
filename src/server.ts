@@ -43,7 +43,7 @@ export namespace Server {
 
 
     export class Status {
-        pingToServer: number;
+        pingToServer?: number;
         static pinging() { return new Status(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
         static error() { return new Status(TextComponent.str('Error'), TextComponent.str("Error"), -1, -1, -1) }
         constructor(

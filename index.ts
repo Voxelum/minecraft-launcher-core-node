@@ -5,6 +5,7 @@ export * from './src/text'
 export { Version, VersionMeta, VersionMetaList } from './src/version'
 export * from './src/utils/folder';
 export * from './src/profile'
+export * from './src/mojang'
 import './src/download';
 export * from './src/nbt'
 export * from './src/launch'
@@ -16,5 +17,4 @@ export * from './src/forge'
 export * from './src/liteloader'
 export * from './src/mod'
 export * from './src/utils/location';
-export * from './src/utils/task';
 

@@ -49,8 +49,7 @@ let download: (url: string, file?: string, cb?: (progress: number, total: number
 try {
     const electron = require('electron');
     let net = electron.net ? electron.net : electron.remote.require('net')
-    if (!net) throw new Error()
-    if (typeof net.request !== 'function') throw new Error()
+    if (!net || typeof net.request !== 'function') throw new Error()
     download = (url: string, file?: string, cb?: (progress: number, total: number) => void) => {
         const req = net.request(url);
         return new Promise<Buffer | void>((resolve, reject) => {
@@ -103,7 +102,15 @@ catch (e) {
 }
 
 import Task, { AbstractTask } from './task'
+import Tasks from 'treelike-task'
 
+export function downloadTask(url: string, file?: string) {
+    return (context: Tasks.Context) => {
+        return download(url, file, (progress, total) => {
+            context.update(progress, total);
+        })
+    }
+}
 export class DownloadTask extends AbstractTask<void | Buffer> {
     constructor(id: string, readonly url: string, readonly file?: string) { super(id); }
     execute(context: Task.Context): Promise<void | Buffer> {

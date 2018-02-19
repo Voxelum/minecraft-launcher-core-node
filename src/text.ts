@@ -281,7 +281,7 @@ export namespace TextComponent {
 }
 class TextComponentString implements TextComponent {
     protected _siblings: TextComponent[] = new Array();
-    private _style: Style;
+    private _style?: Style;
 
     constructor(public readonly text: string = '', style?: Style, siblings?: TextComponent[]) {
         if (style)
