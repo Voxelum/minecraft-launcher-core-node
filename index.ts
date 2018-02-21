@@ -8,6 +8,7 @@ export * from './src/profile'
 export * from './src/mojang'
 import './src/download';
 export * from './src/nbt'
+import './src/nbt0'
 export * from './src/launch'
 export * from './src/world'
 export * from './src/language'

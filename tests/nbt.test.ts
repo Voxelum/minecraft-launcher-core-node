@@ -1,6 +1,22 @@
 import { NBT } from '../index'
 import * as assert from 'assert';
 import * as Long from 'long'
+import * as fs from 'fs-extra'
+
+describe('ddd', () => {
+    it('should read level.dat', () => {
+        const buff = fs.readFileSync('./tests/assets/sample-map/level.dat');
+        const obj = NBT.Serializer.deserialize(buff, true);
+        const ser = NBT.Serializer.create().register('level', obj.type as NBT.Schema);
+        // console.log(JSON.stringify(buff))
+
+        const buff1 = ser.serialize(obj.value, 'level', true);
+        console.log(buff1 === undefined)
+        // console.log(JSON.stringify(buff1))
+
+        assert(buff1.equals(buff));
+    })
+})
 
 describe('NBT', () => {
     let ser: NBT.Serializer;
@@ -41,7 +57,7 @@ describe('Test', () => {
         list[1] = NBT.TagScalar.newByte(1);
         // console.log(list.push(NBT.TagScalar.newByte(2), NBT.TagScalar.newByte(3)));
         // for (let child of list) {
-            // console.log(child);
+        // console.log(child);
         // }
         let compound: NBT.TagCompound = NBT.TagCompound.newCompound();
         compound.set('foo', NBT.TagScalar.newString('bar'));
@@ -68,8 +84,8 @@ describe('Test', () => {
 describe('TestEmpty', () => {
     it('empty nbt reading and writing', () => {
         let nbtData: Buffer = Buffer.from
-        ([0x0A, 0x00, 0x00,                                                     //'': Compound
-            0x00]);                                                             //    '': End
+            ([0x0A, 0x00, 0x00,                                                     //'': Compound
+                0x00]);                                                             //    '': End
         let rootTag: NBT.TagCompound = NBT.Persistence.readRoot(nbtData);
         let testTag: NBT.TagCompound = NBT.TagCompound.newCompound();
         assert.deepEqual(rootTag, testTag);
@@ -79,9 +95,9 @@ describe('TestEmpty', () => {
 describe('TestSignleValue', () => {
     it('single nbt reading and writing', () => {
         let nbtData: Buffer = Buffer.from
-        ([0x0A, 0x00, 0x00,                                                     //'': Compound
-            0x03, 0x00, 0x03, 0x62, 0x61, 0x72, 0x00, 0x00, 0x00, 0x01,         //    'bar': Int = 1
-            0x00]);                                                             //    '': End
+            ([0x0A, 0x00, 0x00,                                                     //'': Compound
+                0x03, 0x00, 0x03, 0x62, 0x61, 0x72, 0x00, 0x00, 0x00, 0x01,         //    'bar': Int = 1
+                0x00]);                                                             //    '': End
         let rootTag: NBT.TagCompound = NBT.Persistence.readRoot(nbtData);
         let testTag: NBT.TagCompound = NBT.TagCompound.newCompound();
         testTag.set('bar', NBT.TagScalar.newInt(1))
@@ -92,33 +108,33 @@ describe('TestSignleValue', () => {
 describe('TestAllTags', () => {
     it('all tags reading and writing', () => {
         let nbtData: Buffer = Buffer.from
-        ([0x0A, 0x00, 0x00,                                                     //'': Compound
-            0x01, 0x00, 0x04, 0x62, 0x61, 0x72, 0x31, 0x01,                     //    'bar1': Byte = 1
-            0x02, 0x00, 0x04, 0x62, 0x61, 0x72, 0x32, 0x00, 0x01,               //    'bar2': Short = 1
-            0x03, 0x00, 0x04, 0x62, 0x61, 0x72, 0x33, 0x00, 0x00, 0x00, 0x01,   //    'bar3': Int = 1
-            0x04, 0x00, 0x04, 0x62, 0x61, 0x72, 0x34, 0x00, 0x00, 0x00, 0x00,   //    'bar4': Long = 1
-                  0x00, 0x00, 0x00, 0x01,                                       //
-            0x05, 0x00, 0x04, 0x62, 0x61, 0x72, 0x35, 0x3F, 0x80, 0x00, 0x00,   //    'bar5': Float = 1
-            0x06, 0x00, 0x04, 0x62, 0x61, 0x72, 0x36, 0x3F, 0xF0, 0x00, 0x00,   //    'bar6': Double = 1
-                  0x00, 0x00, 0x00, 0x00,                                       //
-            0x07, 0x00, 0x04, 0x62, 0x61, 0x72, 0x37, 0x00, 0x00, 0x00, 0x02,   //    'bar7': ByteArray = [ 0x01, 0x02 ]
-                  0x01, 0x02,                                                   //
-            0x08, 0x00, 0x04, 0x62, 0x61, 0x72, 0x38, 0x00, 0x03, 0x66, 0x6F,   //    'bar8': String = 'foo'
-                  0x6F,                                                         //
-            0x09, 0x00, 0x04, 0x62, 0x61, 0x72, 0x39, 0x08, 0x00, 0x00, 0x00,   //    'bar9': List<String>[2]
-                  0x02,                                                         //
-                  0x00, 0x03, 0x66, 0x6F, 0x6F,                                 //        0: String = 'foo'
-                  0x00, 0x03, 0x62, 0x61, 0x72,                                 //        1: String = 'bar'
-            0x0A, 0x00, 0x04, 0x62, 0x61, 0x72, 0x41,                           //    'barA': Compound
-                  0x01, 0x00, 0x04, 0x62, 0x61, 0x72, 0x31, 0x01,               //        'bar1': Byte = 1
-                  0x02, 0x00, 0x04, 0x62, 0x61, 0x72, 0x32, 0x00, 0x01,         //        'bar2': Short = 1
-                  0x00,                                                         //        '': End
-            0x0B, 0x00, 0x04, 0x62, 0x61, 0x72, 0x42, 0x00, 0x00, 0x00, 0x02,   //    'barB': IntArray = [ 0x00000001, 0x00000002 ]
-                  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02,               //
-            0x0C, 0x00, 0x04, 0x62, 0x61, 0x72, 0x43, 0x00, 0x00, 0x00, 0x02,   //    'barC': LongArray = [ 0x0000000000000001, 0x0000000000000002 ]
-                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,   //
-                  0x00, 0x00, 0x00, 0x00, 0x00, 0x02,                           //
-            0x00]);                                                             //    '': End
+            ([0x0A, 0x00, 0x00,                                                     //'': Compound
+                0x01, 0x00, 0x04, 0x62, 0x61, 0x72, 0x31, 0x01,                     //    'bar1': Byte = 1
+                0x02, 0x00, 0x04, 0x62, 0x61, 0x72, 0x32, 0x00, 0x01,               //    'bar2': Short = 1
+                0x03, 0x00, 0x04, 0x62, 0x61, 0x72, 0x33, 0x00, 0x00, 0x00, 0x01,   //    'bar3': Int = 1
+                0x04, 0x00, 0x04, 0x62, 0x61, 0x72, 0x34, 0x00, 0x00, 0x00, 0x00,   //    'bar4': Long = 1
+                0x00, 0x00, 0x00, 0x01,                                       //
+                0x05, 0x00, 0x04, 0x62, 0x61, 0x72, 0x35, 0x3F, 0x80, 0x00, 0x00,   //    'bar5': Float = 1
+                0x06, 0x00, 0x04, 0x62, 0x61, 0x72, 0x36, 0x3F, 0xF0, 0x00, 0x00,   //    'bar6': Double = 1
+                0x00, 0x00, 0x00, 0x00,                                       //
+                0x07, 0x00, 0x04, 0x62, 0x61, 0x72, 0x37, 0x00, 0x00, 0x00, 0x02,   //    'bar7': ByteArray = [ 0x01, 0x02 ]
+                0x01, 0x02,                                                   //
+                0x08, 0x00, 0x04, 0x62, 0x61, 0x72, 0x38, 0x00, 0x03, 0x66, 0x6F,   //    'bar8': String = 'foo'
+                0x6F,                                                         //
+                0x09, 0x00, 0x04, 0x62, 0x61, 0x72, 0x39, 0x08, 0x00, 0x00, 0x00,   //    'bar9': List<String>[2]
+                0x02,                                                         //
+                0x00, 0x03, 0x66, 0x6F, 0x6F,                                 //        0: String = 'foo'
+                0x00, 0x03, 0x62, 0x61, 0x72,                                 //        1: String = 'bar'
+                0x0A, 0x00, 0x04, 0x62, 0x61, 0x72, 0x41,                           //    'barA': Compound
+                0x01, 0x00, 0x04, 0x62, 0x61, 0x72, 0x31, 0x01,               //        'bar1': Byte = 1
+                0x02, 0x00, 0x04, 0x62, 0x61, 0x72, 0x32, 0x00, 0x01,         //        'bar2': Short = 1
+                0x00,                                                         //        '': End
+                0x0B, 0x00, 0x04, 0x62, 0x61, 0x72, 0x42, 0x00, 0x00, 0x00, 0x02,   //    'barB': IntArray = [ 0x00000001, 0x00000002 ]
+                0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02,               //
+                0x0C, 0x00, 0x04, 0x62, 0x61, 0x72, 0x43, 0x00, 0x00, 0x00, 0x02,   //    'barC': LongArray = [ 0x0000000000000001, 0x0000000000000002 ]
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,   //
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x02,                           //
+                0x00]);                                                             //    '': End
         let rootTag: NBT.TagCompound = NBT.Persistence.readRoot(nbtData);
         let testTag: NBT.TagCompound = NBT.TagCompound.newCompound();
         testTag.set('bar1', NBT.TagScalar.newByte(1));
@@ -186,16 +202,16 @@ describe('TestIllegalTags', () => {
 describe('TestNestedCompound', () => {
     it('nested compound reading and writing', () => {
         let nbtData: Buffer = Buffer.from
-        ([0x0A, 0x00, 0x00,                                                     //'': Compound
-            0x0A, 0x00, 0x01, 0x41,                                             //    'A': Compound
+            ([0x0A, 0x00, 0x00,                                                     //'': Compound
+                0x0A, 0x00, 0x01, 0x41,                                             //    'A': Compound
                 0x0A, 0x00, 0x01, 0x42,                                         //        'B': Compound
-                    0x00,                                                       //            '': End
+                0x00,                                                       //            '': End
                 0x00,                                                           //        '': End
-            0x0A, 0x00, 0x01, 0x43,                                             //    'C': Compound
+                0x0A, 0x00, 0x01, 0x43,                                             //    'C': Compound
                 0x0A, 0x00, 0x01, 0x44,                                         //        'D': Compound
-                    0x00,                                                       //            '': End
+                0x00,                                                       //            '': End
                 0x00,                                                           //        '': End
-            0x00]);                                                             //    '': End
+                0x00]);                                                             //    '': End
         let rootTag: NBT.TagCompound = NBT.Persistence.readRoot(nbtData);
         let testTag: NBT.TagCompound = NBT.TagCompound.newCompound();
         let ATag: NBT.TagCompound = NBT.TagCompound.newCompound();
@@ -204,8 +220,8 @@ describe('TestNestedCompound', () => {
         let DTag: NBT.TagCompound = NBT.TagCompound.newCompound();
         testTag.set('A', ATag);
         ATag.set('B', BTag);
-        testTag.set('C', CTag);  
-        CTag.set('D', DTag);      
+        testTag.set('C', CTag);
+        CTag.set('D', DTag);
         assert.deepEqual(rootTag, testTag);
         assert.deepEqual(NBT.Persistence.writeRoot(rootTag), nbtData);
     })
@@ -213,15 +229,15 @@ describe('TestNestedCompound', () => {
 describe('TestNestedList', () => {
     it('nested list reading and writing', () => {
         let nbtData: Buffer = Buffer.from
-        ([0x0A, 0x00, 0x00,                                                     //'': Compound
-            0x09, 0x00, 0x01, 0x41, 0x09, 0x00, 0x00, 0x00, 0x02,               //    'A': List<List>[2]
+            ([0x0A, 0x00, 0x00,                                                     //'': Compound
+                0x09, 0x00, 0x01, 0x41, 0x09, 0x00, 0x00, 0x00, 0x02,               //    'A': List<List>[2]
                 0x09, 0x00, 0x00, 0x00, 0x01,                                   //        0: List<List>[1]
-                    0x09, 0x00, 0x00, 0x00, 0x00,                               //            0: List<List>[0]
+                0x09, 0x00, 0x00, 0x00, 0x00,                               //            0: List<List>[0]
                 0x09, 0x00, 0x00, 0x00, 0x01,                                   //        1: List<List>[1]
-                    0x09, 0x00, 0x00, 0x00, 0x00,                               //            0: List<List>[0]
-            0x00]);                                                             //    '': End
+                0x09, 0x00, 0x00, 0x00, 0x00,                               //            0: List<List>[0]
+                0x00]);                                                             //    '': End
         let rootTag: NBT.TagCompound = NBT.Persistence.readRoot(nbtData);
-        let testTag: NBT.TagCompound = NBT.TagCompound.newCompound(); 
+        let testTag: NBT.TagCompound = NBT.TagCompound.newCompound();
         let listATag: NBT.TagList<NBT.TagAnyList> = NBT.TagList.newListList();
         let list0Tag: NBT.TagList<NBT.TagAnyList> = NBT.TagList.newListList();
         let list0_0Tag: NBT.TagList<NBT.TagAnyList> = NBT.TagList.newListList();
@@ -272,8 +288,8 @@ describe('TypedNBTDocs', () => {
                 console.log('[' + key + ' = ' + value.asTagString().value + ']');
         }
         // Finally you can write root tags to buffer and read root tags from buffer.
-        let buffer: Buffer = NBT.Persistence.writeRoot(rootTag, { compressed: true } );
-        let ourTag: NBT.TagCompound = NBT.Persistence.readRoot(buffer, { compressed: true } );
+        let buffer: Buffer = NBT.Persistence.writeRoot(rootTag, { compressed: true });
+        let ourTag: NBT.TagCompound = NBT.Persistence.readRoot(buffer, { compressed: true });
         console.log(checkExists(ourTag.get('TheEnd')).asTagString().value); // print That's all
     })
 })

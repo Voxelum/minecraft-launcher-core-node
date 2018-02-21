@@ -120,6 +120,8 @@ describe('WorldInfo', () => {
             .then(valid => { assert(valid, 'zip fail'); done() })
             .catch(e => done(e))
     })
-    // it('should read a simpe map', (done) => {
-    // })
+    it('should read a simpe map', () => {
+        console.log(WorldInfo.parse(fs.readFileSync('./tests/assets/sample-map/level.dat')))
+        return WorldInfo.parse(fs.readFileSync('./tests/assets/sample-map/level.dat'));
+    })
 })

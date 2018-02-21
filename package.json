@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "2.1.1",
+  "version": "3.0.0-beta",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
@@ -19,6 +19,7 @@
   },
   "scripts": {
     "test": "tsc && node ./node_modules/mocha/bin/mocha dist/tests",
+    "build": "rm -rf ./dist && tsc",
     "prepare": "tsc"
   },
   "repository": {

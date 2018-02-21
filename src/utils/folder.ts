@@ -1,5 +1,3 @@
-// import { Artifact, Library } from '../version'
-
 import * as paths from 'path'
 export class MinecraftFolder {
     constructor(readonly root: string) { }
