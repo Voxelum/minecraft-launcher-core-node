@@ -214,7 +214,8 @@ export namespace Forge {
         export async function update(option?: {
             fallback?: {
                 list: VersionMetaList, date: string
-            }, remote?: string
+            },
+            remote?: string
         }): Promise<{ list: VersionMetaList, date: string }> {
             if (!option) option = {}
             return UPDATE({

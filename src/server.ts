@@ -114,7 +114,7 @@ export namespace Server {
         }
     }
     export function parseNBT(buf: Buffer): Info[] {
-        let { value } = NBT.Serializer.deserialize(buf)
+        let value = NBT.Serializer.deserialize(buf)
         if (value.servers) return value.servers;
         return []
     }

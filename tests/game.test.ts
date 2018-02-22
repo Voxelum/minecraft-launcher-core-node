@@ -94,11 +94,18 @@ describe("GameSetting", () => {
     })
 })
 describe('Resourcepack', () => {
-    it('shold read res pack correctly', (done) => {
+    it('should read resource pack correctly', async () => {
         const buff = fs.readFileSync('./tests/assets/sample-resourcepack.zip')
-        ResourcePack.read('sample', buff)
-            .then(v => { done() })
-            .catch(done)
+        const pack = await ResourcePack.read('sample', buff)
+        if (!pack) throw new Error('Pack cannot be null');
+        assert.equal(pack.description, 'Vattic\u0027s Faithful 32x32 pack');
+        assert.equal(pack.format, 1);
+    })
+    it('should read resource pack folder', async () => {
+        const pack = await ResourcePack.readFolder('./tests/assets/sample-resourcepack');
+        if (!pack) throw new Error('Pack cannot be null');
+        assert.equal(pack.description, 'Vattic\u0027s Faithful 32x32 pack');
+        assert.equal(pack.format, 1);
     })
 })
 describe('Language', () => {
@@ -110,18 +117,15 @@ describe('Language', () => {
     })
 })
 describe('WorldInfo', () => {
-    it('simple map validating', (done) => {
-        WorldInfo.valid('./tests/assets/sample-map')
-            .then(valid => { assert(valid, 'dir fail'); done() })
-            .catch(e => done(e))
+    it('should validate a simple map', async () => {
+        const valid = WorldInfo.valid('./tests/assets/sample-map');
+        assert(valid, 'dir fail');
     })
-    it('zip map validating', (done) => {
-        WorldInfo.valid('./tests/assets/sample-map.zip')
-            .then(valid => { assert(valid, 'zip fail'); done() })
-            .catch(e => done(e))
+    it('should validate a zip map', async () => {
+        const valid = await WorldInfo.valid('./tests/assets/sample-map.zip');
+        assert(valid, 'zip fail');
     })
     it('should read a simpe map', () => {
-        console.log(WorldInfo.parse(fs.readFileSync('./tests/assets/sample-map/level.dat')))
-        return WorldInfo.parse(fs.readFileSync('./tests/assets/sample-map/level.dat'));
+        assert(WorldInfo.parse(fs.readFileSync('./tests/assets/sample-map/level.dat')));
     })
 })

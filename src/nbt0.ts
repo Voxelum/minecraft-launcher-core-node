@@ -14,7 +14,7 @@ declare module './nbt' {
         }
         type Type = Schema | string;
         interface TypedObject {
-            __nbtPrototype__: Schema;
+            readonly __nbtPrototype__: Schema;
             [key: string]: any;
         }
         class Serializer {
@@ -37,6 +37,21 @@ interface IO {
     write(buf: ByteBuffer, value: any, scope?: Scope, find?: (id: string) => CompoundSchema): void;
 }
 
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
+function deepFreeze(obj: any) {
+    // Retrieve the property names defined on obj
+    var propNames = Object.getOwnPropertyNames(obj);
+    // Freeze properties before freezing self
+    propNames.forEach(function (name) {
+        var prop = obj[name];
+        // Freeze prop if it is an object
+        if (typeof prop == 'object' && prop !== null)
+            deepFreeze(prop);
+    });
+    // Freeze self (no-op if already frozen)
+    return Object.freeze(obj);
+}
+
 NBT.Serializer = class Serializer {
     static create() {
         return new Serializer();
@@ -44,17 +59,19 @@ NBT.Serializer = class Serializer {
     static deserialize(fileData: Buffer, compressed?: boolean): NBT.TypedObject {
         if (compressed) {
             const { value, type } = readRootTag(ByteBuffer.wrap(gzip.gunzipSync(fileData)));
-            value.__nbtPrototype__ = type;
+            deepFreeze(type);
+            Object.defineProperty(value, '__nbtPrototype__', { value: type })
             return value;
         }
         else {
             const { value, type } = readRootTag(ByteBuffer.wrap(fileData));
-            value.__nbtPrototype__ = type;
+            deepFreeze(type);
+            Object.defineProperty(value, '__nbtPrototype__', { value: type })
             return value;
         }
     }
     static serialize(object: NBT.TypedObject, type: NBT.Type, compressed?: boolean): Buffer {
-        return writeRootTag(object, compressed || false,  object.__nbtPrototype__);
+        return writeRootTag(object, compressed || false, object.__nbtPrototype__);
     }
 
     private registry: { [id: string]: CompoundSchema } = {};
@@ -174,7 +191,6 @@ const visitors: IO[] = [
     },
     {//tag compound
         read(buf, find) {
-            if (!find) throw new Error();
             const object: any = {};
             const scope: CompoundSchema = {};
             const a: ArraySchema = [2];
@@ -186,7 +202,7 @@ const visitors: IO[] = [
                 object[name] = value;
                 scope[name] = type;
             }
-            const id = find(scope);
+            const id = find ? find(scope) : undefined;
             return val(id ? id : scope, object);
         },
         write(buf, object, scope, find) {
