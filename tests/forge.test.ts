@@ -32,9 +32,9 @@ describe('Forge', () => {
             version: '14.23.2.2611'
         };
         await Forge.install(meta, new MinecraftFolder('./tests/assets/temp'), false);
-        assert(fs.existsSync('./tests/assets/temp/1.12.2-forge1.12.2-14.23.2.2611'))
-        assert(fs.existsSync('./tests/assets/temp/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2618.json'))
-        assert(fs.existsSync('./tests/assets/temp/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2618.jar'))
+        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611'), 'no such folder')
+        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2611.json'), 'no json')
+        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2611.jar'), 'no jar')
     }).timeout(100000)
 
 

@@ -68,7 +68,7 @@ export namespace Server {
         }
         static from(obj: StatusFrame | Status): Status {
             if (obj instanceof Status)
-                return obj;    
+                return obj;
             let motd: TextComponent = TextComponent.str('')
             if (obj.description) {
                 motd = TextComponent.from(obj.description)
@@ -110,22 +110,15 @@ export namespace Server {
                     modList: list
                 }
             }
-            return new Status(versionText, motd, protocol, online, max, favicon, profiles, modInfo)
+            const status = new Status(versionText, motd, protocol, online, max, favicon, profiles, modInfo);
+            status.pingToServer = obj.ping;
+            return status;
         }
     }
     export function parseNBT(buf: Buffer): Info[] {
         let value = NBT.Serializer.deserialize(buf)
         if (value.servers) return value.servers;
         return []
-    }
-    async function startConnection(host: string, port: number, timeout?: number) {
-        return new Promise<net.Socket>((resolve, reject) => {
-            const connection = net.createConnection(port, host, () => {
-                resolve(connection)
-            })
-            if (timeout) connection.setTimeout(timeout)
-            connection.once('error', (e) => { reject(e) })
-        });
     }
     function ping(ip: string, port: number, connection: net.Socket): Promise<number> {
         return new Promise((resolve, reject) => {
@@ -208,13 +201,15 @@ export namespace Server {
         retryTimes?: number
     }
 
-    export async function fetchStatusFrame(server: Info, options?: FetchOptions): Promise<StatusFrame> {
-        const port = server.port ? server.port : 25565;
-        const protocol = options ? options.protocol ? options.protocol : 210 : 210;
-        const host = server.host;
-        const timeout = options ? options.timeout : undefined;
-
-        const connection = await startConnection(host, port, timeout);
+    async function fetchFrame(host: string, port: number, timeout: number, protocol: number) {
+        const connection = await new Promise<net.Socket>((resolve, reject) => {
+            const connection = net.createConnection(port, host, () => {
+                resolve(connection)
+            })
+            connection.setTimeout(timeout);
+            connection.once('error', (e) => { reject(e) })
+            connection.once('timeout', () => { reject(new Error(`Connection timeout ${timeout}`)) })
+        });
 
         const frame = await new Promise((resolve, reject) => {
             connection.once('end', () => {
@@ -241,23 +236,29 @@ export namespace Server {
         connection.end();
         return frame;
     }
-    export function fetchStatus(server: Info, options?: FetchOptions): Promise<Status> {
-        const retryTimes = options ? options.retryTimes ? options.retryTimes : 5 : 5;
-        return fetchStatusFrame(server, options).catch(async e => {
-            if (retryTimes > 0) {
-                if (options === undefined)
-                    return fetchStatus(server, { retryTimes: retryTimes - 1 });
-                else {
-                    if (options.retryTimes)
-                        --options.retryTimes;
-                    else
-                        options.retryTimes = retryTimes - 1;
-                    return fetchStatus(server, options);
-                }
-            } else {
-                throw e;
+    export async function fetchStatusFrame(server: Info, options: FetchOptions = {}): Promise<StatusFrame> {
+        const host = server.host;
+        const port = server.port || 25565;
+        const timeout = options.timeout || 4000;
+        const protocol = options.protocol || 210;
+        const retry = (options.retryTimes || 1) + 1;
+
+        let result: StatusFrame | undefined = undefined;
+        let error: Error | undefined;
+        for (let retryTimes = retry; retryTimes > 0; retryTimes--) {
+            try {
+                result = await fetchFrame(host, port, timeout, protocol);
+                break;
+            } catch (e) {
+                e = error;
             }
-        }).then(Status.from)
+        }
+        if (result)
+            return result;
+        throw error;
+    }
+    export function fetchStatus(server: Info, options: FetchOptions = {}): Promise<Status> {
+        return fetchStatusFrame(server, options).then(Status.from);
     }
 }
 

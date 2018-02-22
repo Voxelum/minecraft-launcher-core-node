@@ -20,9 +20,9 @@ describe('Server', () => {
             assert(frame);
         }).timeout(100000)
         it('should control the port', (done) => {
-            Server.fetchStatusFrame({ host: 'mc.hypixel.net', port: 138 }, { timeout: 10000 })
+            Server.fetchStatusFrame({ host: 'mc.hypixel.net', port: 138 }, { timeout: 500, retryTimes: 0 })
                 .then(() => done('This should not happen'))
-                .catch((err) => { done(err) })
+                .catch((err) => { done() })
         }).timeout(100000)
         it('frame to status converting', async () => {
             const frame: Server.StatusFrame = {
@@ -33,12 +33,12 @@ describe('Server', () => {
                 ping: 5,
             }
             const status = Server.Status.from(frame);
-            assert.equal(status.capacity, 1)
-            assert.equal(status.pingToServer, 5)
-            assert.equal(status.onlinePlayers, 1)
-            assert.equal(status.serverMOTD.text, 'abc');
-            assert.equal(status.icon, '');
-            assert.equal(status.protocolVersion, 1);
+            assert.equal(status.capacity, 1, 'capacity')
+            assert.equal(status.pingToServer, 5, 'ping')
+            assert.equal(status.onlinePlayers, 1, 'online')
+            assert.equal(status.serverMOTD.text, 'abc', 'motd');
+            assert.equal(status.icon, '', 'icon');
+            assert.equal(status.protocolVersion, 1, 'protocol');
         })
         it('timeout exception catching', (done) => {
             Server.fetchStatus({
