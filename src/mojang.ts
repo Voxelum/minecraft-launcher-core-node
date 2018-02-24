@@ -6,7 +6,7 @@ import * as ByteBuffer from 'bytebuffer'
 import { GameProfile } from './profile'
 import * as crypto from 'crypto'
 
-export interface AccountInfo {
+export interface MojangAccount {
     readonly id: string
     readonly email: string
     readonly username: string
@@ -52,7 +52,7 @@ export namespace MojangService {
             .then(b => JSON.parse((b as Buffer).toString()))
             .then(arr => arr.reduce((a: any, b: any) => Object.assign(a, b), {}))
     }
-    export function getAccountInfo(accessToken: string, provider: Provider = defaultProvider): Promise<AccountInfo> {
+    export function getAccountInfo(accessToken: string, provider: Provider = defaultProvider): Promise<MojangAccount> {
         return new Promise((resolve, reject) => {
             const userInfUrl = url.parse(provider.userInfo);
             const req = https.get({
