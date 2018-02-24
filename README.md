@@ -12,18 +12,20 @@ Provide several useful function for Minecraft in typescript
 
 ## Getting Started
 
-- **[NBT](#nbt)**
-- **[World](#worldinfo)**
-- **[Server](#server)**
-- **[Minecraft Install](#minecraft-install)**
-- **[GameSetting](#gamesetting)**
-- **[Language](#language)**
-- **[ResourcePack](#resourcepack)**
-- **[Forge](#forge)**
-- **[TextComponent](#textcomponent)**
-- **[Auth](#auth)**
-- **[Version](#version)**
-- **[Launch](#launch)**
+- [NBT](#nbt)
+- [WorldInfo](#worldinfo)
+- [Server](#server)
+- [Minecraft Install](#minecraft-install)
+- [GameSetting](#gamesetting)
+- [Language](#language)
+- [ResourcePack](#resourcepack)
+- [Game Profile](#game-profile)
+- [Mojang Account Info](#mojang-account-info)
+- [Forge](#forge)
+- [TextComponent](#textcomponent)
+- [Auth](#auth)
+- [Version](#version)
+- [Launch](#launch)
 
 ### NBT
 
@@ -161,7 +163,7 @@ Fetch the user game profile by uuid. This could also be used for get skin.
     const gameProfile: GameProfile;
     const texturesPromise: Promise<GameProfile.Textures> = ProfileService.fetchProfileTexture(gameProfile);
 
-## Mojang Account Info
+### Mojang Account Info
 
     import { MojangService } from 'ts-minecraft'
     const accessToken: string;
