@@ -6,6 +6,26 @@ import * as ByteBuffer from 'bytebuffer'
 import { GameProfile } from './profile'
 import * as crypto from 'crypto'
 
+export interface AccountInfo {
+    readonly id: string
+    readonly email: string
+    readonly username: string
+    readonly registerIp: string
+    readonly registeredAt: Long
+    readonly passwordChangedAt: Long
+    readonly dateOfBirth: Long
+    readonly deleted: boolean
+    readonly blocked: boolean
+    readonly secured: boolean
+    readonly migrated: boolean
+    readonly emailVerified: boolean
+    readonly legacyUser: boolean
+    readonly verifiedByParent: boolean
+    readonly fullName: string
+    readonly fromMigratedUser: boolean
+    readonly hashed: boolean
+}
+
 export namespace MojangService {
     export interface Provider {
         readonly apiStatus: string
@@ -137,26 +157,6 @@ export namespace MojangService {
         } else {
             throw new Error();
         }
-    }
-
-    export interface AccountInfo {
-        readonly id: string
-        readonly email: string
-        readonly username: string
-        readonly registerIp: string
-        readonly registeredAt: Long
-        readonly passwordChangedAt: Long
-        readonly dateOfBirth: Long
-        readonly deleted: boolean
-        readonly blocked: boolean
-        readonly secured: boolean
-        readonly migrated: boolean
-        readonly emailVerified: boolean
-        readonly legacyUser: boolean
-        readonly verifiedByParent: boolean
-        readonly fullName: string
-        readonly fromMigratedUser: boolean
-        readonly hashed: boolean
     }
 }
 

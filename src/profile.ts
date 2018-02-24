@@ -15,39 +15,24 @@ export namespace GameProfile {
         profileName: string,
         profileId: string,
         textures: {
-            SKIN?: Texture,
-            CAPE?: Texture,
-            ELYTRA?: Texture,
-        }
-    }
-    export namespace Textures {
-        export async function cache(texture: Texture): Promise<Texture> {
-            if (texture.data) return texture;
-            return {
-                ...texture,
-                data: await get(texture.url).then(buf => (buf as Buffer))
-            }
+            skin?: Texture,
+            cape?: Texture,
+            elytra?: Texture,
         }
     }
     export interface Texture {
         metadata: { model: 'slim' | 'steve', [key: string]: any },
         url: string,
-        data?: Buffer, 
+        data?: Buffer,
     }
-    export async function cacheTextures(profile: GameProfile) {
-        const tex = getTextures(profile);
-        if (!tex) return Promise.reject('No textures')
-        if (tex.textures.SKIN)
-            tex.textures.SKIN = await Textures.cache(tex.textures.SKIN)
-        if (tex.textures.CAPE)
-            tex.textures.CAPE = await Textures.cache(tex.textures.CAPE)
-        if (tex.textures.ELYTRA)
-            tex.textures.ELYTRA = await Textures.cache(tex.textures.ELYTRA)
-        return tex;
-    }
-    export function getTextures(profile: GameProfile): Textures | undefined {
+
+    export function parseTexturesInfo(profile: GameProfile): Textures | undefined {
         if (!profile.properties || !profile.properties.textures) return undefined;
-        return JSON.parse(new Buffer(profile.properties.textures, 'base64').toString())
+        const obj = JSON.parse(new Buffer(profile.properties.textures, 'base64').toString());
+        obj.texture.skin = obj.texture.SKIN;
+        obj.texture.cape = obj.texture.CAPE;
+        obj.texture.elytra = obj.texture.ELYTRA;
+        return obj;
     }
 }
 
@@ -63,6 +48,31 @@ export namespace ProfileService {
         profileByName(name: string) {
             return "https://api.mojang.com/users/profiles/minecraft/" + name;
         },
+    }
+
+    async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
+        if (texture.data) return texture;
+        return {
+            ...texture,
+            data: await get(texture.url).then(buf => (buf as Buffer))
+        }
+    }
+
+    export async function cacheTextures(tex: GameProfile.Textures) {
+        if (!tex) return Promise.reject('No textures')
+        if (tex.textures.skin)
+            tex.textures.skin = await cache(tex.textures.skin);
+        if (tex.textures.cape)
+            tex.textures.cape = await cache(tex.textures.cape);
+        if (tex.textures.elytra)
+            tex.textures.elytra = await cache(tex.textures.elytra);
+        return tex;
+    }
+
+    export async function fetchProfileTexture(profile: GameProfile): Promise<GameProfile.Textures> {
+        const texture = GameProfile.parseTexturesInfo(profile);
+        if (texture) return cacheTextures(texture);
+        return Promise.reject(`No texture for user ${profile.id}.`);
     }
 
     async function fetchProfile(target: string, pubKey?: string) {

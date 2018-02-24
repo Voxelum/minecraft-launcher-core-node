@@ -172,56 +172,7 @@ export class GameSetting {
     autoJump = true
     narrator = 0
     tutorialStep = 'movement'
-    'key_key.attack' = -100
-    'key_key.use' = -99
-    'key_key.forward' = 17
-    'key_key.left' = 30
-    'key_key.back' = 31
-    'key_key.right' = 32
-    'key_key.jump' = 57
-    'key_key.sneak' = 42
-    'key_key.sprint' = 29
-    'key_key.drop' = 16
-    'key_key.inventory' = 18
-    'key_key.chat' = 20
-    'key_key.playerlist' = 15
-    'key_key.pickItem' = -98
-    'key_key.command' = 53
-    'key_key.screenshot' = 60
-    'key_key.togglePerspective' = 63
-    'key_key.smoothCamera' = 0
-    'key_key.fullscreen' = 87
-    'key_key.spectatorOutlines' = 0
-    'key_key.swapHands' = 33
-    'key_key.saveToolbarActivator' = 46
-    'key_key.loadToolbarActivator' = 45
-    'key_key.advancements' = 38
-    'key_key.hotbar.1' = 2
-    'key_key.hotbar.2' = 3
-    'key_key.hotbar.3' = 4
-    'key_key.hotbar.4' = 5
-    'key_key.hotbar.5' = 6
-    'key_key.hotbar.6' = 7
-    'key_key.hotbar.7' = 8
-    'key_key.hotbar.8' = 9
-    'key_key.hotbar.9' = 10
-    soundCategory_master = 1
-    soundCategory_music = 1
-    soundCategory_record = 1
-    soundCategory_weather = 1
-    soundCategory_block = 1
-    soundCategory_hostile = 1
-    soundCategory_neutral = 1
-    soundCategory_player = 1
-    soundCategory_ambient = 1
-    soundCategory_voice = 1
-    modelPart_cape = true
-    modelPart_jacket = true
-    modelPart_left_sleeve = true
-    modelPart_right_sleeve = true
-    modelPart_left_pants_leg = true
-    modelPart_right_pants_leg = true
-    modelPart_hat = true
+
     constructor(frame?: GameSetting.Frame) {
         if (frame) {
             Object.keys(frame)
@@ -242,13 +193,13 @@ export class GameSetting {
     get ambientOcclusion() { return this.ao }
     set ambientOcclusion(ao) { this.ao = ao }
 
-    setKey(keyName: GameSetting.HotKeys, key: number) {
+    setHotKey(keyName: GameSetting.HotKeys, key: number) {
         const realKey = `key_key.${keyName}`;
         if ((this as any)[realKey]) {
             (this as any)[realKey] = key;
         }
     }
-    getKey(keyName: GameSetting.HotKeys): number {
+    getHotKey(keyName: GameSetting.HotKeys): number {
         const realKey = `key_key.${keyName}`;
         if ((this as any)[realKey]) {
             return (this as any)[realKey];
@@ -284,6 +235,56 @@ export class GameSetting {
         return 0;
     }
 
+    private 'key_key.attack' = -100
+    private 'key_key.use' = -99
+    private 'key_key.forward' = 17
+    private 'key_key.left' = 30
+    private 'key_key.back' = 31
+    private 'key_key.right' = 32
+    private 'key_key.jump' = 57
+    private 'key_key.sneak' = 42
+    private 'key_key.sprint' = 29
+    private 'key_key.drop' = 16
+    private 'key_key.inventory' = 18
+    private 'key_key.chat' = 20
+    private 'key_key.playerlist' = 15
+    private 'key_key.pickItem' = -98
+    private 'key_key.command' = 53
+    private 'key_key.screenshot' = 60
+    private 'key_key.togglePerspective' = 63
+    private 'key_key.smoothCamera' = 0
+    private 'key_key.fullscreen' = 87
+    private 'key_key.spectatorOutlines' = 0
+    private 'key_key.swapHands' = 33
+    private 'key_key.saveToolbarActivator' = 46
+    private 'key_key.loadToolbarActivator' = 45
+    private 'key_key.advancements' = 38
+    private 'key_key.hotbar.1' = 2
+    private 'key_key.hotbar.2' = 3
+    private 'key_key.hotbar.3' = 4
+    private 'key_key.hotbar.4' = 5
+    private 'key_key.hotbar.5' = 6
+    private 'key_key.hotbar.6' = 7
+    private 'key_key.hotbar.7' = 8
+    private 'key_key.hotbar.8' = 9
+    private 'key_key.hotbar.9' = 10
+    private soundCategory_master = 1
+    private soundCategory_music = 1
+    private soundCategory_record = 1
+    private soundCategory_weather = 1
+    private soundCategory_block = 1
+    private soundCategory_hostile = 1
+    private soundCategory_neutral = 1
+    private soundCategory_player = 1
+    private soundCategory_ambient = 1
+    private soundCategory_voice = 1
+    private modelPart_cape = true
+    private modelPart_jacket = true
+    private modelPart_left_sleeve = true
+    private modelPart_right_sleeve = true
+    private modelPart_left_pants_leg = true
+    private modelPart_right_pants_leg = true
+    private modelPart_hat = true
 }
 
 export namespace GameSetting {

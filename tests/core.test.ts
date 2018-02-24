@@ -1,7 +1,14 @@
 import * as assert from 'assert';
-import { Version, MinecraftFolder, Launcher } from "../index";
+import { Version, MinecraftFolder, Launcher, WorldInfo, NBT } from "../index";
 import * as fs from 'fs-extra'
 
+describe('ddd', () => {
+    it('should owkr', () => {
+        const buf = fs.readFileSync('./tests/assets/sample-map/level.dat');
+        const de = NBT.Serializer.deserialize(buf, true);
+        console.log(JSON.stringify(de.__nbtPrototype__, undefined, 4));
+    })
+})
 
 describe('InstallMinecraft', () => {
     let version: Version.MetaContainer;

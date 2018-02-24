@@ -196,6 +196,9 @@ export namespace Server {
     }
 
     export interface FetchOptions {
+        /** 
+         * see http://wiki.vg/Protocol_version_numbers
+        */
         protocol?: number
         timeout?: number
         retryTimes?: number

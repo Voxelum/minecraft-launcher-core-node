@@ -19,7 +19,7 @@ declare module './nbt' {
         }
         class Serializer {
             static create(): Serializer;
-            static serialize(object: TypedObject, type: Type, compressed?: boolean): Buffer;
+            static serialize(object: TypedObject, compressed?: boolean): Buffer;
             static deserialize(fileData: Buffer, compressed?: boolean, find?: (schema: Schema) => string | undefined): TypedObject;
             register(type: string, schema: Schema): this;
             serialize(object: object, type: Type, compressed?: boolean): Buffer;
@@ -32,10 +32,6 @@ type CompoundSchema = NBT.Schema;
 type ArraySchema = Array<NBT.TagType | string | CompoundSchema>;
 type Scope = ArraySchema | CompoundSchema;
 
-interface IO {
-    read(buf: ByteBuffer, find?: Finder): { type: Scope | NBT.TagType, value: any };
-    write(buf: ByteBuffer, value: any, scope?: Scope, find?: (id: string) => CompoundSchema): void;
-}
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
 function deepFreeze(obj: any) {
@@ -70,7 +66,7 @@ NBT.Serializer = class Serializer {
             return value;
         }
     }
-    static serialize(object: NBT.TypedObject, type: NBT.Type, compressed?: boolean): Buffer {
+    static serialize(object: NBT.TypedObject, compressed?: boolean): Buffer {
         return writeRootTag(object, compressed || false, object.__nbtPrototype__);
     }
 
@@ -83,7 +79,6 @@ NBT.Serializer = class Serializer {
         return this;
     }
     serialize(object: object, type: string, compressed: boolean = false) {
-        let template;
         const schema = this.registry[type]
         if (!schema) throw `Unknown type [${schema}]`
 
@@ -124,6 +119,11 @@ function readRootTag(buffer: ByteBuffer, find?: Finder) {
 }
 
 function val(type: any, value: any) { return { type, value } }
+
+interface IO {
+    read(buf: ByteBuffer, find?: Finder): { type: Scope | NBT.TagType, value: any };
+    write(buf: ByteBuffer, value: any, scope?: Scope, find?: (id: string) => CompoundSchema): void;
+}
 const visitors: IO[] = [
     { read: (buf) => val(NBT.TagType.End, undefined), write(buf, v) { } }, //end
     { read: (buf) => val(NBT.TagType.Byte, buf.readByte()), write(buf, v) { buf.writeByte(v) } }, //byte
@@ -156,7 +156,7 @@ const visitors: IO[] = [
             for (let i = 0; i < len; i++) {
                 const { type, value } = visitors[listType].read(buf, find);
                 list[i] = value;
-                scope = type;
+                scope = [type];
             }
             return val(scope, list);
         },
@@ -226,7 +226,9 @@ const visitors: IO[] = [
                 } else if (typeof type === 'object') {
                     nextType = NBT.TagType.Compound
                     nextScope = type;
-                } else throw `Invalid type [${type}]`
+                } else {
+                    return; // just ignore it if it's not on definition
+                }
 
                 const writer = visitors[nextType];
                 if (!writer) throw "Unknown type " + type;

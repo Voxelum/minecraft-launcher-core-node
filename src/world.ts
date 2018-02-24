@@ -27,67 +27,6 @@ export class WorldInfo {
         public BorderSizeLerpTarget: number
     ) { }
 }
-
-
-const D = NBT.TagType.Double, I = NBT.TagType.Int, S = NBT.TagType.String, L = NBT.TagType.Long, B = NBT.TagType.Byte, F = NBT.TagType.Float, ST = NBT.TagType.Short;
-
-const itemFormat = {
-    Count: B, Slot: B, Damage: ST, id: S, tag: NBT.TagType.Compound
-}
-const playerFormat = {
-    DataVersion: I,
-    Dimension: I,
-    playerGameType: I,
-    Score: I,
-    SelectedItemSlot: I,
-    SpawnX: I, SpawnY: I, SpawnZ: I,
-    SpawnForced: B,
-    Sleeping: B,
-    foodLevel: I,
-    foodExhaustionLevel: F,
-    foodSaturationLevel: F,
-    foodTickTimer: I,
-    XpLevel: I, XpTotal: I, XpSeed: I,
-    XpP: F,
-}
-const levelFormat = {
-    DimensionData: {
-        1: {
-            DragonFight: {
-                ExitPortalLocation: {
-                    X: B, Y: B, Z: B
-                },
-                Gateways: [I],
-                DragonKilled: B,
-                DragonUUIDLeast: L, DragonUUIDMost: L,
-                PreviouslyKilled: B,
-            }
-        }
-    },
-    LevelName: S, generatorName: S,
-    generatorVersion: I, generatorOptions: S,
-    RandomSeed: L,
-    MapFeatures: B,
-    LastPlayed: L, SizeOnDisk: L,
-    allowCommands: B, hardcore: B, GameType: I,
-    Difficulty: I,
-    DifficultyLocked: B,
-    Time: L,
-    DayTime: L,
-    SpawnX: I, SpawnY: I, SpawnZ: I,
-    BorderCenterZ: D, BorderCenterX: D,
-    BorderSize: D, BorderSafeZone: D,
-    BorderWarningBlocks: D, BorderWarningTime: D,
-    BorderSizeLerpTime: L, BorderDamagePerBlock: D,
-    BorderSizeLerpTarget: D,
-    raining: B, rainTime: I,
-    thundering: B, thunderTime: I,
-    clearWeatherTime: I,
-    GameRules: "GameRules",
-    Version: {
-        Id: I, Name: S, Snapshot: B
-    },
-}
 export namespace WorldInfo {
     export async function valid(map: string): Promise<boolean> {
         const isDir = await new Promise((resolve, reject) => {
@@ -96,8 +35,7 @@ export namespace WorldInfo {
                 else resolve(status.isDirectory())
             })
         });
-        if (isDir)
-            return fs.existsSync(path.join(map, 'level.dat'))
+        if (isDir) return fs.existsSync(path.join(map, 'level.dat'))
         else {
             try {
                 const zip = await new Zip().loadAsync(await fs.readFile(map))
@@ -119,16 +57,16 @@ export namespace WorldInfo {
             root.Difficulty, root.GameType, root.hardcore == 1, root.allowCommands == 1,
             { x: root.SpawnX, y: root.SpawnY, z: root.SpawnZ },
             { x: root.BorderCenterX, z: root.BorderCenterZ },
-            root.BorderDamagePerBlock, root.BorderWarningBlocks, root.BorderSizeLerpTarget)
+            root.BorderDamagePerBlock, root.BorderWarningBlocks, root.BorderSizeLerpTarget);
     }
     export function manipulate(buf: Buffer, info: WorldInfo): Buffer {
         const nbt = NBT.Persistence.readRoot(buf, { compressed: true });
-        let data = nbt.asTagCompound().get('Data')
+        let data = nbt.asTagCompound().get('Data');
         if (data) {
             data = data.asTagCompound();
-            const Tag = NBT.TagScalar
-            data.set('LevelName', Tag.newString(info.displayName))
-            data.set('Difficulty', Tag.newInt(info.difficulty))
+            const Tag = NBT.TagScalar;
+            data.set('LevelName', Tag.newString(info.displayName));
+            data.set('Difficulty', Tag.newInt(info.difficulty));
         }
         return NBT.Persistence.writeRoot(nbt, { compressed: true });
     }
