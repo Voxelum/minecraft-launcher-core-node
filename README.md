@@ -30,7 +30,7 @@ Provide several useful function for Minecraft in typescript
     import { NBT } from 'ts-minecraft'
     const fileData: Buffer;
     const compressed: boolean;
-    const readed: any = NBT.Serializer.deserialize(fileData, compressed).value;
+    const readed: NBT.TypedObject = NBT.Serializer.deserialize(fileData, compressed);
 
     const serial: NBT.Serializer.create()
         .register('server', {
@@ -90,6 +90,7 @@ Typed NBT API for structured NBT manipulation.
     import { WorldInfo } from 'ts-minecraft'
     const levelDatBuffer: Buffer;
     const info: WorldInfo = WorldInfo.parse(levelDatBuffer);
+
 Read a WorldInfo from buffer.
 
 ### Server
@@ -98,7 +99,10 @@ Read a WorldInfo from buffer.
     const seversDatBuffer: Buffer;
     const infos: Server.Info[] = Server.parseNBT(seversDatBuffer);
     const info: Server.Info = infos[0]
+    // fetch the server status
     const promise: Promise<Server.Status> = Server.fetchStatus(info);
+    // or you want the raw json
+    const rawJsonPromise: Promise<Server.StatusFrame> = Server.fetchStatusFrame(info);
 
 Read sever info and fetch its status.
 
@@ -135,8 +139,33 @@ Read language info from version
     import { ResourcePack } from 'ts-minecraft'
     const fileFullPath;
     Promise<ResourcePack> packPromise = ResourcePack.read(fileFullPath);
+    // or you want read from folder
+    Promise<ResourcePack> fromFolder = ResourcePack.readFolder(fileFullPath);
 
 Read ResourcePack from filePath
+
+### Game Profile 
+
+    import { ProfileService, GameProfile } from 'ts-minecraft'
+    const userUUID: string;
+    const gameProfilePromise: Promise<GameProfile> = ProfileService.fetch(userUUID);
+
+Or lookup profile by name.
+
+    const username: string;
+    const gameProfilePromise: Promise<GameProfile> = ProfileService.lookup(username);
+    
+
+Fetch the user game profile by uuid. This could also be used for get skin.
+
+    const gameProfile: GameProfile;
+    const texturesPromise: Promise<GameProfile.Textures> = ProfileService.fetchProfileTexture(gameProfile);
+
+## Mojang Account Info
+
+    import { MojangService } from 'ts-minecraft'
+    const accessToken: string;
+    const info: Promise<MojangAccount> = MojangService.getAccountInfo(accessToken); 
 
 ### Forge
 
@@ -189,11 +218,6 @@ Parse existed version.
     const proc: Promise<ChildProcess> = Launcher.launch({gamePath, javaPath, version});
 
 Launch minecraft from a version
-
-
-## Future Works
-
-- TextComponent to style string
 
 ## Issue
 
