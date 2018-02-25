@@ -41,6 +41,9 @@ declare module './version' {
         function installTask(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
         function installTask(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
         function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
+
+        function checkDependencies(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
+        function checkDependenciesTask(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
     }
 }
 
@@ -59,6 +62,15 @@ Version.install = function (type: string, versionMeta: VersionMeta, minecraft: M
 }
 Version.installTask = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) =>
     Task.create('install', install(type, versionMeta, minecraft, option))
+
+Version.checkDependencies = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) {
+    return Version.checkDependenciesTask(version, minecraft, option).execute();
+}
+
+Version.checkDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version> {
+    return Task.create('checkDependency', checkDependency(version, minecraft, option));
+}
+
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) {
     return (context: Task.Context) => {
@@ -117,19 +129,18 @@ function checkDependency(version: Version, minecraft: MinecraftLocation, option?
 
 function downloadLib(lib: Library, folder: any, libraryHost: any, checksum: any) {
     return async (context: Task.Context) => {
-        const rawPath = lib.download.path
-        const filePath = path.join(folder.libraries, rawPath)
-        const dirPath = path.dirname(filePath)
+        const rawPath = lib.download.path;
+        const filePath = path.join(folder.libraries, rawPath);
         const exist = fs.existsSync(filePath);
-        const rpath = libraryHost || 'https://libraries.minecraft.net'
+        // const rpath = libraryHost || 'https://libraries.minecraft.net'
         if (!exist) {
-            await fs.ensureDir(dirPath)
-            await DOWN(rpath + "/" + rawPath, filePath)
+            await fs.ensureDir(path.dirname(filePath))
+            await DOWN(lib.download.url, filePath)
         }
         if (checksum && lib.download.sha1) {
             let sum = await CHECKSUM(filePath)
             if (exist && sum != lib.download.sha1) {
-                await DOWN(rpath + "/" + rawPath, filePath)
+                await DOWN(lib.download.url, filePath)
                 sum = await CHECKSUM(filePath)
             }
             if (sum != lib.download.sha1)

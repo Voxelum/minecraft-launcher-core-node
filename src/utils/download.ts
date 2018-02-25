@@ -14,9 +14,10 @@ interface IncomingMessage extends Readable {
     statusMessage: string;
 }
 
-function handleResponse(response: IncomingMessage, reject: (any?: any) => void, resolve: (any?: any) => void, file?: string, cb?: (progress: number, total: number) => void) {
+function handleResponse(url: string, response: IncomingMessage, reject: (any?: any) => void, resolve: (any?: any) => void, file?: string, cb?: (progress: number, total: number) => void) {
     if (response.statusCode !== 200) {
-        reject(new Error(response.statusCode.toString()))
+        reject(new Error(`URL ${url} return error code: ${response.statusCode.toString()}`));
+        return;
     }
     let stream = file ? fs.createWriteStream(file) : new WriteableBuffer()
     response.on('error', (e: Error) => {
@@ -53,7 +54,7 @@ try {
         const req = net.request(url);
         return new Promise<Buffer | void>((resolve, reject) => {
             req.on('response', (response: any) => {
-                handleResponse(response, reject, resolve, file, cb);
+                handleResponse(url, response, reject, resolve, file, cb);
             })
             req.on('error', (err: any) => {
                 if (file) fs.unlink(file, e => {
@@ -94,7 +95,7 @@ catch (e) {
     download = (url: string, file?: string, cb?: (progress: number, total: number) => void): Promise<void | Buffer> => {
         return findSource(url).then(res => {
             return new Promise<void | Buffer>((resolve, reject) => {
-                handleResponse(res as IncomingMessage, reject, resolve, file, cb);
+                handleResponse(url, res as IncomingMessage, reject, resolve, file, cb);
             });
         })
     }

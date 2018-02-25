@@ -54,6 +54,8 @@ export interface Version {
     releaseTime: string,
     time: string,
     type: string,
+    client: string,
+    server: string,
     logging?: {
         [key: string]: {
             file: Download,
@@ -104,7 +106,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     if (hierarchy.length === 0) throw new Error('The hierarchy cannot be empty!');
     let id: string = hierarchy[0].id;
     let assetIndex: AssetIndex = hierarchy[0].assetIndex;
-    let assets: string
+    let assets: string = '';
 
     let downloadsMap: { [key: string]: Download } = {};
     let librariesMap: { [key: string]: Library } = {};
@@ -112,20 +114,24 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
 
     let mainClass: string
     let jvmArguments: string
-    let minecraftArguments: string
+    let minecraftArguments: string = ''
     let minimumLauncherVersion: number = hierarchy[0].minimumLauncherVersion;
     let releaseTime: string = hierarchy[0].releaseTime;
     let time: string = hierarchy[0].time;
     let type: string
     let logging: any;
+    let client: string | undefined = undefined;
 
     let json: Version;
     do {
         json = hierarchy.pop() as Version;
+
+        client = (json as any).jar || client || json.id;
+
         jvmArguments = json.jvmArguments;
-        minecraftArguments = json.minecraftArguments;
-        logging = json.logging;
-        assets = json.assets;
+        minecraftArguments = json.minecraftArguments || minecraftArguments;
+        logging = json.logging || logging;
+        assets = json.assets || assets;
         type = json.type;
         mainClass = json.mainClass;
         if (json.assetIndex) assetIndex = json.assetIndex
@@ -153,7 +159,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
         throw new Error('Missing asset!');
 
     return {
-        id, assetIndex, assets,
+        id, assetIndex, assets, client,
         downloads: downloadsMap,
         libraries: Object.keys(librariesMap).map(k => librariesMap[k]).concat(Object.keys(nativesMap).map(k => nativesMap[k])),
         minecraftArguments,
@@ -195,8 +201,23 @@ function parseVersionJson(versionString: string): Version {
                 if (!nativArt) return empty;
                 return new Native(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
             } else {
-                if(!lib.downloads) return empty;
-                return new Library(lib.name, lib.downloads.artifact)
+                if (lib.downloads)
+                    return new Library(lib.name, lib.downloads.artifact);
+                const url = lib.url || 'https://libraries.minecraft.net/';
+                const pathArr = lib.name.split(':');
+                const groupPath = pathArr[0].replace(/\./g, '/')
+                const id = pathArr[1];
+                const version = pathArr[2];
+                const isSnapshot = version.endsWith('-SNAPSHOT');
+
+                const path = `${groupPath}/${id}/${version}/${id}-${version}.jar`
+                const artifact: Artifact = {
+                    size: -1,
+                    sha1: '',
+                    path,
+                    url: `${url}${path}`
+                }
+                return new Library(lib.name, artifact);
             }
         }).filter(l => l !== empty)
     }

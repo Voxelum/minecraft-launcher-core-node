@@ -117,23 +117,30 @@ export namespace LiteLoader {
 
     export function installTask(meta: VersionMeta, location: MinecraftLocation): Task<void> {
         return Task.create('installLiteloader', async (context) => {
-            const mc = typeof location === 'string' ? new MinecraftFolder(location) : location
-            let targetURL
+            const mc = typeof location === 'string' ? new MinecraftFolder(location) : location;
+            let targetURL;
             if (meta.type === 'SNAPSHOT')
-                targetURL = `${snapshotRoot}/${meta.version}/${meta.version}.jar`
+                targetURL = `${snapshotRoot}/${meta.version}/${meta.version}.jar`;
             else if (meta.type === 'RELEASE')
-                targetURL = `${releaseRoot}/${meta.version}/${meta.file}`
-            else throw new Error("Unknown meta type: " + meta.type)
+                targetURL = `${releaseRoot}/${meta.version}/${meta.file}`;
+            else throw new Error("Unknown meta type: " + meta.type);
 
-            let jsonURL = `https://raw.githubusercontent.com/Mumfrey/LiteLoaderInstaller/${meta.mcversion}/src/main/resources/install_profile.json`
-            const liteloaderPath = `${meta.mcversion}-Liteloader-${meta.version}`
-            const versionPath = mc.getVersionRoot(liteloaderPath)
+            const jsonURL = `https://raw.githubusercontent.com/Mumfrey/LiteLoaderInstaller/${meta.mcversion}/src/main/resources/install_profile.json`;
+
+            const buffer = await context.execute('downloadJson', downloadTask(jsonURL));
+            if (!buffer) throw new Error();
+            const liteJson = JSON.parse(buffer.toString());
+            const versionInf = liteJson.versionInfo;
+            const liteloaderPath = versionInf.id;
+            const versionPath = mc.getVersionRoot(liteloaderPath);
+
+            await fs.ensureDir(versionPath);
+            await context.execute('writeJson', () => fs.writeFile(path.join(versionPath, liteloaderPath + '.json'), JSON.stringify(versionInf)));
+
             if (!fs.existsSync(versionPath))
-                await fs.ensureDir(versionPath)
-            await Promise.all([
-                context.execute('downloadJar', downloadTask(targetURL, path.join(versionPath, liteloaderPath + '.jar'))),
-                context.execute('downloadJson', downloadTask(jsonURL, path.join(versionPath, liteloaderPath + '.json')))
-            ])
+                await fs.ensureDir(versionPath);
+
+            await context.execute('downloadJar', downloadTask(targetURL, path.join(versionPath, liteloaderPath + '.jar')));
         });
     }
     export function installLiteloaderAsMod(meta: VersionMeta, filePath: string) {

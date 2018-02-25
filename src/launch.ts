@@ -69,6 +69,7 @@ export namespace Launcher {
         extractNative(mc, v)
 
         let args = genArgs(options.auth, options, v).join(' ')
+        console.log(args)
         return exec(args, {
             encoding: "binary",
             cwd: options.gamePath
@@ -130,12 +131,13 @@ export namespace Launcher {
         //add extra jvm args
         if (options.extraJVMArgs) cmd = cmd.concat(options.extraJVMArgs);
 
-        const wrap = (s: string) => `"${s}"`
+        const wrap = (s: string) => `"${s}"`;
         cmd.push(format(version.jvmArguments, {
             natives_directory: `"${mc.getNativesRoot(version.id)}"`,
             launcher_name: options.launcherName,
             launcher_version: options.launcherBrand,
-            classpath: `"${[...version.libraries.map(lib => mc.getLibraryByPath(lib.download.path)), mc.getVersionJar(version.id)]
+            classpath: `"${[...version.libraries.map(lib => mc.getLibraryByPath(lib.download.path)),
+                mc.getVersionJar(version.client)]
                 .join(os.platform() === 'darwin' ? ':' : ';')}"`
         }));
         cmd.push(version.mainClass);
