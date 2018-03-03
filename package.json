@@ -41,6 +41,7 @@
     "node-rsa": "^0.4.2",
     "semver": "^5.3.0",
     "treelike-task": "0.0.3",
+    "unpack200": "0.0.1",
     "uuid": "^3.1.0"
   },
   "bugs": {
