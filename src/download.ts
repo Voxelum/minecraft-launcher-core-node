@@ -7,7 +7,7 @@ import Task from 'treelike-task'
 
 import { EventEmitter } from 'events';
 import UPDATE from './utils/update'
-import DOWN, { downloadTask } from './utils/download'
+import { downloadTask } from './utils/download'
 import CHECKSUM from './utils/checksum'
 import { Library, Version, VersionMeta, VersionMetaList } from './version'
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
@@ -135,12 +135,12 @@ function downloadLib(lib: Library, folder: any, libraryHost: any, checksum: any)
         // const rpath = libraryHost || 'https://libraries.minecraft.net'
         if (!exist) {
             await fs.ensureDir(path.dirname(filePath))
-            await DOWN(lib.download.url, filePath)
+            await context.execute('downloadLib', downloadTask(lib.download.url, filePath))
         }
         if (checksum && lib.download.sha1) {
             let sum = await CHECKSUM(filePath)
             if (exist && sum != lib.download.sha1) {
-                await DOWN(lib.download.url, filePath)
+                await context.execute('downloadLib', downloadTask(lib.download.url, filePath))
                 sum = await CHECKSUM(filePath)
             }
             if (sum != lib.download.sha1)

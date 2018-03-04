@@ -1,7 +1,7 @@
 import * as https from 'https'
 import * as queryString from 'querystring'
 import * as url from 'url'
-import get from './utils/download'
+import { download as get } from './utils/download'
 
 export interface GameProfile {
     readonly id: string,

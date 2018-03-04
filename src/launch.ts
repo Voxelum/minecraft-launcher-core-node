@@ -69,7 +69,6 @@ export namespace Launcher {
         extractNative(mc, v)
 
         let args = genArgs(options.auth, options, v).join(' ')
-        console.log(args)
         return exec(args, {
             encoding: "binary",
             cwd: options.gamePath

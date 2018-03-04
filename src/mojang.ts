@@ -1,6 +1,6 @@
 import * as https from 'https'
 import * as url from 'url'
-import request from './utils/download'
+import { download as request } from './utils/download'
 import { Auth } from './auth';
 import * as ByteBuffer from 'bytebuffer'
 import { GameProfile } from './profile'

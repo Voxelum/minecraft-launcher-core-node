@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "baseUrl": "types",
+        "typeRoots": [
+            "types"
+        ]
+    },
+    "files": [
+        "index.d.ts"
+    ]
+}

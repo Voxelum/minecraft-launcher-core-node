@@ -4,125 +4,86 @@ import * as https from 'https'
 import * as urls from 'url'
 import { Writable, Readable } from 'stream';
 import * as ByteBuffer from "bytebuffer";
-type Requestor = {
-    get(options: http.RequestOptions | string, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
-};
+import Task from 'treelike-task'
 
-interface IncomingMessage extends Readable {
-    headers: any;
-    statusCode: number;
-    statusMessage: string;
-}
+type GET = (options: http.RequestOptions, callback?: (res: http.IncomingMessage) => void) => http.ClientRequest;
 
-function handleResponse(url: string, response: IncomingMessage, reject: (any?: any) => void, resolve: (any?: any) => void, file?: string, cb?: (progress: number, total: number) => void) {
-    if (response.statusCode !== 200) {
-        reject(new Error(`URL ${url} return error code: ${response.statusCode.toString()}`));
-        return;
-    }
-    let stream = file ? fs.createWriteStream(file) : new WriteableBuffer()
-    response.on('error', (e: Error) => {
-        if (file) fs.unlink(file, err => {
-            reject(e);
-        });
-        else reject(e)
-    })
-    if (cb) {
-        let len = 0;
-        const total = Number.parseInt(response.headers['content-length'])
-        cb(-1, total)
-        response.on('data', (buf: Buffer) => {
-            len += buf.length;
-            cb(len, total)
-        })
-    }
-    response.pipe(stream)
-    stream.on('finish', () => {
-        if (file) {
-            (stream as any).close();
-            resolve()
-        } else {
-            resolve((stream as WriteableBuffer).toBuffer())
-        }
-    })
-}
-let download: (url: string, file?: string, cb?: (progress: number, total: number) => void) => Promise<Buffer | void>;
-try {
-    const electron = require('electron');
-    let net = electron.net ? electron.net : electron.remote.require('net')
-    if (!net || typeof net.request !== 'function') throw new Error()
-    download = (url: string, file?: string, cb?: (progress: number, total: number) => void) => {
-        const req = net.request(url);
-        return new Promise<Buffer | void>((resolve, reject) => {
-            req.on('response', (response: any) => {
-                handleResponse(url, response, reject, resolve, file, cb);
-            })
-            req.on('error', (err: any) => {
-                if (file) fs.unlink(file, e => {
-                    reject(err);
-                });
-                else reject(err)
-            })
-            req.end()
-        });
-    }
-}
-catch (e) {
-    const findSource = (url: string): Promise<http.IncomingMessage> => {
-        const target = urls.parse(url);
-        let requester: Requestor = target.protocol === 'https:' ? https : http
+function pipeTo<T extends NodeJS.WritableStream>(readable: Readable, writable: T, total: number,
+    progress?: (progress: number, total: number) => void) {
+    return (context: Task.Context) => {
         return new Promise((resolve, reject) => {
-            let path = target.path;
-            if (!path) { reject(); return }
-            if (target.search !== null && target.search !== undefined)
-                path += target.search;
-            let req = requester.get({
-                path,
-                protocol: target.protocol,
-                host: target.host,
-            },
-                res => {
-                    if (res.statusCode == 304 || res.statusCode == 302)
-                        resolve(findSource(res.headers['location'] as string))
-                    else if (res.statusCode === 301) {
-                        resolve(findSource(res.headers['location'] as string))
-                    }
-                    else resolve(res)
-                })
-            req.on('error', reject)
-            req.end()
-        })
-    }
-    download = (url: string, file?: string, cb?: (progress: number, total: number) => void): Promise<void | Buffer> => {
-        return findSource(url).then(res => {
-            return new Promise<void | Buffer>((resolve, reject) => {
-                handleResponse(url, res as IncomingMessage, reject, resolve, file, cb);
-            });
-        })
+            readable.on('error', (e) => { reject(e) });
+            let len = 0;
+            context.update(-1, total);
+            readable.on('data', (buf) => { context.update(len += buf.length, total) })
+            readable.pipe(writable);
+            writable.on('finish', () => { resolve() })
+        });
     }
 }
 
-import Tasks from 'treelike-task'
-
-export function downloadTask(url: string, file?: string) {
-    return (context: Tasks.Context) => {
-        return download(url, file, (progress, total) => {
-            context.update(progress, total);
-        })
-    }
+function nodeJsDownload(options: http.RequestOptions | string): Promise<http.IncomingMessage> {
+    let option: http.RequestOptions;
+    if (typeof options === 'string') {
+        const parsed = urls.parse(options);
+        option = {
+            protocol: parsed.protocol,
+            host: parsed.host,
+            hostname: parsed.hostname,
+            port: parsed.port ? Number.parseInt(parsed.port) : undefined,
+            path: parsed.path,
+            auth: parsed.auth,
+        };
+    } else option = options;
+    const get: GET = option.protocol === 'https:' ? https.get : http.get;
+    return new Promise((resolve, reject) => {
+        get(option, (res) => {
+            if (!res.statusCode) {
+                reject();
+                return;
+            }
+            if (res.statusCode >= 200 && res.statusCode < 300)
+                resolve(res);
+            else if (res.headers.location)
+                resolve(nodeJsDownload(res.headers.location as string))
+            else reject();
+        }).on('error', reject).end()
+    })
 }
+
+export function downloadTask(options: http.RequestOptions | string, file?: string) {
+    return async (context: Task.Context) => {
+        const writable: Writable = file ? fs.createWriteStream(file) : new WriteableBuffer();
+        try {
+            const readable = await context.execute('fetchMessage', () => nodeJsDownload(options));
+            const total = Number.parseInt(readable.headers['content-length'])
+            await context.execute('fetchData', pipeTo(readable, writable, total))
+        } catch {
+            if (file) await fs.unlink(file);
+        }
+        if (!file) {
+            return (writable as WriteableBuffer).toBuffer();
+        }
+    };
+}
+
+export function download(options: http.RequestOptions | string, file?: string) {
+    return Task.create('download', downloadTask(options, file)).execute()
+}
+
 class WriteableBuffer extends Writable {
-    constructor(public buffer: ByteBuffer = new ByteBuffer()) {
+    constructor(private buffers: Buffer[] = []) {
         super();
     }
     _write(chunk: any, encoding: string, callback: Function): void {
         if (chunk instanceof Buffer) {
-            this.buffer.append(chunk)
+            this.buffers.push(chunk);
         }
         callback()
     }
     toBuffer() {
-        return Buffer.from(this.buffer.flip().toArrayBuffer())
+        return Buffer.concat(this.buffers);
     }
 }
-export default download;
+
 

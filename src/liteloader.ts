@@ -1,6 +1,6 @@
 import UPDATE from './utils/update';
 import Task from 'treelike-task'
-import download, { downloadTask } from './utils/download';
+import { downloadTask } from './utils/download';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import * as fs from 'fs-extra';
 import * as path from 'path'
