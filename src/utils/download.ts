@@ -56,7 +56,7 @@ export function downloadTask(options: http.RequestOptions | string, file?: strin
         const writable: Writable = file ? fs.createWriteStream(file) : new WriteableBuffer();
         try {
             const readable = await context.execute('fetchMessage', () => nodeJsDownload(options));
-            const total = Number.parseInt(readable.headers['content-length'])
+            const total = Number.parseInt(readable.headers['content-length'] as string)
             await context.execute('fetchData', pipeTo(readable, writable, total))
         } catch {
             if (file) await fs.unlink(file);
