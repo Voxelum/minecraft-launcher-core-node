@@ -4,6 +4,8 @@ import * as path from 'path'
 import * as url from 'url'
 import * as os from 'os';
 import Task from 'treelike-task'
+import unpack200 from 'unpack200'
+import * as lzma from 'lzma-native'
 
 import { EventEmitter } from 'events';
 import UPDATE from './utils/update'
@@ -127,24 +129,45 @@ function checkDependency(version: Version, minecraft: MinecraftLocation, option?
     }
 }
 
-function downloadLib(lib: Library, folder: any, libraryHost: any, checksum: any) {
+function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: string, checksum?: boolean) {
     return async (context: Task.Context) => {
         const rawPath = lib.download.path;
         const filePath = path.join(folder.libraries, rawPath);
         const exist = fs.existsSync(filePath);
-        // const rpath = libraryHost || 'https://libraries.minecraft.net'
+        let downloadURL: string;
+        if (libraryHost) {
+            downloadURL = libraryHost + lib.download.path;
+        } else {
+            downloadURL = lib.download.url;
+        }
+        if (lib.download.compressed) {
+            downloadURL += '.pack.xz';
+        }
         if (!exist) {
-            await fs.ensureDir(path.dirname(filePath))
-            await context.execute('downloadLib', downloadTask(lib.download.url, filePath))
+            await fs.ensureDir(path.dirname(filePath));
+            if (lib.download.compressed) {
+                const buf: Buffer = await context.execute('downloadLib', downloadTask(downloadURL)) as Buffer;
+                const packPath = filePath + '.pack';
+                const decompressed = await context.execute('decompress', () => lzma.decompress(buf));
+                await fs.writeFile(packPath, decompressed);
+                try {
+                    await context.execute('unpack', () => unpack200(packPath, { removeAfter: true, outfile: filePath }));
+                } catch (e) {
+                    if (e.exitCode !== 4294967295) {
+                        throw e;
+                    }
+                }
+            } else
+                await context.execute('downloadLib', downloadTask(downloadURL, filePath))
         }
         if (checksum && lib.download.sha1) {
-            let sum = await CHECKSUM(filePath)
+            let sum = await CHECKSUM(filePath);
             if (exist && sum != lib.download.sha1) {
                 await context.execute('downloadLib', downloadTask(lib.download.url, filePath))
-                sum = await CHECKSUM(filePath)
+                sum = await CHECKSUM(filePath);
             }
             if (sum != lib.download.sha1)
-                throw new Error('')
+                throw new Error('');
         }
     }
 }
@@ -156,7 +179,12 @@ function downloadLibraries(version: Version, minecraft: MinecraftLocation, optio
         const libraryHost = option ? option.libraryHost : undefined
         const checksum = option ? option.checksum : true;
         try {
-            await Promise.all(version.libraries.map(lib => context.execute(lib.name, downloadLib(lib, folder, libraryHost, checksum))))
+            const promises = version.libraries.map(lib =>
+                context.execute(lib.name, downloadLib(lib, folder, libraryHost, checksum)).catch(e => {
+                    console.error(`Error occured during: ${lib.name}`)
+                    console.error(e)
+                }));
+            await Promise.all(promises)
         }
         catch (e) {
             throw e;

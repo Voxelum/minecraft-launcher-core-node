@@ -8,11 +8,11 @@ export class Language {
 
 export namespace Language {
     export async function read(location: MinecraftLocation, version: string): Promise<Language[]> {
-        const loca: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location
-        let json = path.join(loca.assets, 'indexes', version + '.json')
+        const loca: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location;;
+        let json = path.join(loca.assets, 'indexes', version + '.json');
         if (!fs.existsSync(json))
             throw (new Error('The version indexes json does not exist. Maybe the game assets are incompleted!'))
-        let obj = await fs.readJson(json)
+        let obj = await fs.readJson(json);
         let meta = obj.objects['pack.mcmeta'];
         let hash = meta.hash;
         let head = hash.substring(0, 2);
@@ -27,7 +27,7 @@ export namespace Language {
             let langObj = langs.language[langKey];
             arr.push(new Language(langKey, langObj.name, langObj.region, langObj.bidirectional));
         }
-        return arr
+        return arr;
     }
 }
 

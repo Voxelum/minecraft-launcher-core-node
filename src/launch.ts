@@ -62,8 +62,8 @@ export namespace Launcher {
         let v: Version = typeof options.version === 'string' ? await Version.parse(options.resourcePath, options.version) : options.version;
         if (!v) throw "Cannot find version " + options.version
 
-        if (!fs.existsSync(path.join(mc.versions, v.id, v.id + '.jar')))
-            throw new Error('No version jar for ' + v.id);
+        // if (!fs.existsSync(path.join(mc.versions, v.id, v.id + '.jar')))
+        //     throw new Error('No version jar for ' + v.id);
         let missing = ensureLibraries(mc, v)
         if (missing.length > 0) throw new Error('Missing library!')
         extractNative(mc, v)

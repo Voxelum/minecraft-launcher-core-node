@@ -1,4 +1,4 @@
-import download, { downloadTask } from './utils/download';
+import  { downloadTask } from './utils/download';
 import CHECKSUM from './utils/checksum';
 import UPDATE from './utils/update';
 import Task from 'treelike-task';
@@ -304,9 +304,6 @@ export namespace Forge {
 
         return modids.map(k => modidTree[k] as Forge.MetaData)
             .filter(m => m.modid !== undefined)
-    }
-    function installLib() {
-
     }
     function installTask0(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven') {

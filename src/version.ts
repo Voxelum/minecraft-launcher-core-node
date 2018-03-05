@@ -31,7 +31,8 @@ export interface AssetIndex extends Download {
     readonly totalSize: number
 }
 export interface Artifact extends Download {
-    readonly path: string
+    readonly path: string;
+    readonly compressed: boolean;
 }
 export interface LoggingFile extends Download {
     readonly id: string
@@ -191,7 +192,7 @@ function parseVersionJson(versionString: string): Version {
         return allow;
     }
     const parseLibs = (libs: Array<any>) => {
-        const empty = new Library('', { path: '', sha1: '', size: 0, url: '' })
+        const empty = new Library('', { path: '', sha1: '', size: 0, url: '', compressed: false })
         return libs.map(lib => {
             if (lib.rules && !checkAllowed(lib.rules)) return empty;
             if (lib.natives) {
@@ -215,6 +216,7 @@ function parseVersionJson(versionString: string): Version {
                     size: -1,
                     sha1: '',
                     path,
+                    compressed: lib.checksums ? lib.checksums.length > 1 ? true : false : false,
                     url: `${url}${path}`
                 }
                 return new Library(lib.name, artifact);

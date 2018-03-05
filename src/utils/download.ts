@@ -51,17 +51,18 @@ function nodeJsDownload(options: http.RequestOptions | string): Promise<http.Inc
     })
 }
 
-export function downloadTask(options: http.RequestOptions | string, file?: string) {
+export function downloadTask(options: http.RequestOptions | string, fileOrOutStream?: string | Writable) {
     return async (context: Task.Context) => {
-        const writable: Writable = file ? fs.createWriteStream(file) : new WriteableBuffer();
+        const writable: Writable = typeof fileOrOutStream === 'string' ? fs.createWriteStream(fileOrOutStream) :
+            fileOrOutStream === undefined ? new WriteableBuffer() : fileOrOutStream;
         try {
             const readable = await context.execute('fetchMessage', () => nodeJsDownload(options));
             const total = Number.parseInt(readable.headers['content-length'] as string)
             await context.execute('fetchData', pipeTo(readable, writable, total))
         } catch {
-            if (file) await fs.unlink(file);
+            if (typeof fileOrOutStream === 'string') await fs.unlink(fileOrOutStream);
         }
-        if (!file) {
+        if (!fileOrOutStream) {
             return (writable as WriteableBuffer).toBuffer();
         }
     };
@@ -82,7 +83,8 @@ class WriteableBuffer extends Writable {
         callback()
     }
     toBuffer() {
-        return Buffer.concat(this.buffers);
+        const concat = Buffer.concat(this.buffers);
+        return concat;
     }
 }
 
