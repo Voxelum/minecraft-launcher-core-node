@@ -37,6 +37,8 @@ export interface Artifact extends Download {
 export interface LoggingFile extends Download {
     readonly id: string
 }
+
+export type LaunchArgument = string | { rules: { action: string, features?: any, os?: { name?: string, version?: string } }[], value: string | string[] };
 export interface Version {
     inheritsFrom?: string,
     assetIndex: AssetIndex,
@@ -48,9 +50,11 @@ export interface Version {
     },
     libraries: Library[],
     id: string,
+    arguments: {
+        game: LaunchArgument[],
+        jvm: LaunchArgument[],
+    },
     mainClass: string,
-    jvmArguments: string,
-    minecraftArguments: string,
     minimumLauncherVersion: number,
     releaseTime: string,
     time: string,
@@ -114,8 +118,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     let nativesMap: { [key: string]: Native } = {};
 
     let mainClass: string
-    let jvmArguments: string
-    let minecraftArguments: string = ''
+    let args: any;
     let minimumLauncherVersion: number = hierarchy[0].minimumLauncherVersion;
     let releaseTime: string = hierarchy[0].releaseTime;
     let time: string = hierarchy[0].time;
@@ -129,8 +132,8 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
 
         client = (json as any).jar || client || json.id;
 
-        jvmArguments = json.jvmArguments;
-        minecraftArguments = json.minecraftArguments || minecraftArguments;
+        args = json.arguments;
+
         logging = json.logging || logging;
         assets = json.assets || assets;
         type = json.type;
@@ -152,19 +155,20 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
 
     if (!mainClass)
         throw new Error("Missing mainClass");
-    if (!minecraftArguments)
-        throw new Error("Missing gameArguments");
-    if (!jvmArguments)
-        throw new Error('Missing jvmArguments')
+    // if (!minecraftArguments)
+        // throw new Error("Missing gameArguments");
+    // if (!jvmArguments)
+    //     throw new Error('Missing jvmArguments')
     if (!assetIndex)
         throw new Error('Missing asset!');
 
     return {
         id, assetIndex, assets, client,
+        arguments: args,
         downloads: downloadsMap,
         libraries: Object.keys(librariesMap).map(k => librariesMap[k]).concat(Object.keys(nativesMap).map(k => nativesMap[k])),
-        minecraftArguments,
-        mainClass, minimumLauncherVersion, jvmArguments, releaseTime, time, type, logging,
+        // minecraftArguments, jvmArguments,
+        mainClass, minimumLauncherVersion,  releaseTime, time, type, logging,
     } as Version
 }
 
@@ -214,7 +218,7 @@ function parseVersionJson(versionString: string): Version {
                 const path = `${groupPath}/${id}/${version}/${id}-${version}.jar`
                 const artifact: Artifact = {
                     size: -1,
-                    sha1: '',
+                    sha1: lib.checksums,
                     path,
                     compressed: lib.checksums ? lib.checksums.length > 1 ? true : false : false,
                     url: `${url}${path}`
@@ -224,15 +228,17 @@ function parseVersionJson(versionString: string): Version {
         }).filter(l => l !== empty)
     }
     const parseArgs = (args: any) => {
-        if (args.jvm) args.jvm = args.jvm.map((a: string | any) => {
-            if (typeof a === 'object') return checkAllowed(a.rules) ? a.value : undefined
-            return a;
-        }).filter((a: any) => a !== undefined).reduce((a: Array<string>, b: string | Array<string>) => {
-            if (b instanceof Array) a.push(...b);
-            else a.push(b);
-            return a
-        }, [])
-        if (args.game) args.game = args.game.filter((a: string) => typeof a === 'string')
+        if (args.jvm)
+            args.jvm = args.jvm.map((a: string | any) => {
+                if (typeof a === 'object') return checkAllowed(a.rules) ? a.value : undefined
+                return a;
+            }).filter((a: any) => a !== undefined).reduce((a: Array<string>, b: string | Array<string>) => {
+                if (b instanceof Array) a.push(...b);
+                else a.push(b);
+                return a
+            }, [])
+        if (args.game)
+            args.game = args.game.filter((a: string) => typeof a === 'string')
         return args;
     }
     const parsed = JSON.parse(versionString, (key, value) => {
@@ -240,12 +246,61 @@ function parseVersionJson(versionString: string): Version {
         if (key === 'arguments') return parseArgs(value)
         return value;
     })
-    if (parsed.arguments) {
-        parsed.minecraftArguments = parsed.arguments.game.join(' ')
-        parsed.jvmArguments = parsed.arguments.jvm.join(' ')
-        delete parsed.arguments
-    } else {
-        parsed.jvmArguments = '-Djava.library.path=${natives_directory} -Dminecraft.launcher.brand=${launcher_name} -Dminecraft.launcher.version=${launcher_version} -cp ${classpath}'
+    if (!parsed.arguments) {
+        parsed.arguments = {
+            game: parsed.minecraftArguments.split(' '),
+            "jvm": [
+                {
+                    "rules": [
+                        {
+                            "action": "allow",
+                            "os": {
+                                "name": "osx"
+                            }
+                        }
+                    ],
+                    "value": [
+                        "-XstartOnFirstThread"
+                    ]
+                },
+                {
+                    "rules": [
+                        {
+                            "action": "allow",
+                            "os": {
+                                "name": "windows"
+                            }
+                        }
+                    ],
+                    "value": "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump"
+                },
+                {
+                    "rules": [
+                        {
+                            "action": "allow",
+                            "os": {
+                                "name": "windows",
+                                "version": "^10\\."
+                            }
+                        }
+                    ],
+                    "value": [
+                        "-Dos.name=Windows 10",
+                        "-Dos.version=10.0"
+                    ]
+                },
+                "-Djava.library.path=${natives_directory}",
+                "-Dminecraft.launcher.brand=${launcher_name}",
+                "-Dminecraft.launcher.version=${launcher_version}",
+                "-cp",
+                "${classpath}"
+            ]
+        }
+        const jvms: string[] = [];
+        parsed.arguments.jvm
+            .filter((arg: LaunchArgument) => typeof arg === 'string' ? true : checkAllowed(arg.rules) ? true : false)
+            .forEach((arg: LaunchArgument) => typeof arg === 'string' ? jvms.push(arg) : arg.value instanceof Array ? jvms.push(...arg.value) : jvms.push(arg.value as string))
+        parsed.arguments.jvm = jvms;
     }
     return parsed as Version;
 }

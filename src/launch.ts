@@ -1,6 +1,6 @@
 import { Version, Library, Native, Artifact } from './version'
 import { Auth, UserType } from './auth';
-import { exec, ChildProcess, ExecOptions } from 'child_process'
+import {  ChildProcess, ExecOptions, spawn } from 'child_process'
 import { v4 } from 'uuid'
 import * as fs from 'fs-extra'
 import * as path from 'path'
@@ -62,15 +62,12 @@ export namespace Launcher {
         let v: Version = typeof options.version === 'string' ? await Version.parse(options.resourcePath, options.version) : options.version;
         if (!v) throw "Cannot find version " + options.version
 
-        // if (!fs.existsSync(path.join(mc.versions, v.id, v.id + '.jar')))
-        //     throw new Error('No version jar for ' + v.id);
         let missing = ensureLibraries(mc, v)
         if (missing.length > 0) throw new Error('Missing library!')
         extractNative(mc, v)
 
-        let args = genArgs(options.auth, options, v).join(' ')
-        return exec(args, {
-            encoding: "binary",
+        const args = genArgs(options.auth, options, v)
+        return spawn(args[0], args.slice(1), {
             cwd: options.gamePath
         })
     }
@@ -114,7 +111,6 @@ export namespace Launcher {
     function genArgs(auth: Auth, options: any, version: Version): string[] {
         let mc = new MinecraftFolder(options.resourcePath)
         let cmd: string[] = [];
-        if (options.javaPath.match(/.* *.*/)) { options.javaPath = '"' + options.javaPath + '"' }
         cmd.push(options.javaPath);
 
         cmd.push(`-Xmn${(options.minMemory)}M`);
@@ -130,31 +126,36 @@ export namespace Launcher {
         //add extra jvm args
         if (options.extraJVMArgs) cmd = cmd.concat(options.extraJVMArgs);
 
-        const wrap = (s: string) => `"${s}"`;
-        cmd.push(format(version.jvmArguments, {
-            natives_directory: `"${mc.getNativesRoot(version.id)}"`,
+        const jvmOptions = {
+            natives_directory: (mc.getNativesRoot(version.id)),
             launcher_name: options.launcherName,
             launcher_version: options.launcherBrand,
-            classpath: `"${[...version.libraries.map(lib => mc.getLibraryByPath(lib.download.path)),
-                mc.getVersionJar(version.client)]
-                .join(os.platform() === 'darwin' ? ':' : ';')}"`
-        }));
-        cmd.push(version.mainClass);
-        let assetsDir = path.join(options.resourcePath, 'assets');
+            classpath: `${[...version.libraries.map(lib => mc.getLibraryByPath(lib.download.path)),
+            mc.getVersionJar(version.client)]
+                .join(os.platform() === 'darwin' ? ':' : ';')}`
+        };
+        cmd.push(...version.arguments.jvm.map(arg => format(arg as string, jvmOptions)))
 
-        cmd.push(format(version.minecraftArguments, {
+        cmd.push(version.mainClass);
+        const assetsDir = path.join(options.resourcePath, 'assets');
+        const resolution = options.resolution || { width: 850, height: 470 }
+        const mcOptions = {
             version_name: version.id,
             version_type: version.type,
-            assets_root: wrap(assetsDir),
-            game_assets: wrap(assetsDir),
+            assets_root: (assetsDir),
+            game_assets: (assetsDir),
             assets_index_name: version.assets,
-            game_directory: wrap(options.gamePath),
+            game_directory: (options.gamePath),
             auth_player_name: auth.selectedProfile ? auth.selectedProfile.name || 'Steve' : 'Steve',
             auth_uuid: auth.selectedProfile.id.replace('-', ''),
             auth_access_token: auth.accessToken || v4(),
             user_properties: JSON.stringify(auth.properties),
             user_type: UserType.toString(auth.userType),
-        }));
+            resolution_width: resolution.width || 850,
+            resolution_height: resolution.height || 470,
+        }
+
+        cmd.push(...version.arguments.game.map(arg => format(arg as string, mcOptions)));
 
         if (options.extraMCArgs)
             cmd = cmd.concat(options.extraMCArgs);

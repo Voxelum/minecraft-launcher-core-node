@@ -2,14 +2,6 @@ import * as assert from 'assert';
 import { Version, MinecraftFolder, Launcher, WorldInfo, NBT } from "../index";
 import * as fs from 'fs-extra'
 
-describe('ddd', () => {
-    it('should owkr', () => {
-        const buf = fs.readFileSync('./tests/assets/sample-map/level.dat');
-        const de = NBT.Serializer.deserialize(buf, true);
-        console.log(JSON.stringify(de.__nbtPrototype__, undefined, 4));
-    })
-})
-
 describe('InstallMinecraft', () => {
     let version: Version.MetaContainer;
     const loc = new MinecraftFolder('./tests/assets/temp');
@@ -27,17 +19,7 @@ describe('InstallMinecraft', () => {
             releaseTime: '2017-09-18T08:39:46+00:00',
             url: 'https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json'
         };
-        return Version.installTask('client', meta, loc, { checksum: true }).onChild((path, child) => {
-            // let indent = '';
-            // for (let i = 0; i < path.length - 1; ++i)
-            //     indent += '\t';
-            // console.log(`${indent}[${path[path.length - 1]}] create child ${child}`)
-        }).onFinish((path, result) => {
-            // let indent = '';
-            // for (let i = 0; i < path.length - 1; ++i)
-            //     indent += '\t';
-            // console.log(`${indent}[${path[path.length - 1]}] finished`)
-        }).execute()
+        return Version.installTask('client', meta, loc, { checksum: true }).execute()
             .then(v => {
                 assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.jar'));
                 assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.json'));

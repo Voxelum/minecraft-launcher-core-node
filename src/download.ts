@@ -7,11 +7,10 @@ import Task from 'treelike-task'
 import unpack200 from 'unpack200'
 import * as lzma from 'lzma-native'
 
-import { EventEmitter } from 'events';
-import UPDATE from './utils/update'
-import { downloadTask } from './utils/download'
-import CHECKSUM from './utils/checksum'
-import { Library, Version, VersionMeta, VersionMetaList } from './version'
+import UPDATE from './utils/update';
+import { downloadTask } from './utils/download';
+import CHECKSUM from './utils/checksum';
+import { Library, Version, VersionMeta, VersionMetaList } from './version';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 
 declare module './version' {
@@ -143,48 +142,45 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: string
         if (lib.download.compressed) {
             downloadURL += '.pack.xz';
         }
-        if (!exist) {
+        const _download = async () => {
             await fs.ensureDir(path.dirname(filePath));
             if (lib.download.compressed) {
-                const buf: Buffer = await context.execute('downloadLib', downloadTask(downloadURL)) as Buffer;
+                const decompressed = await context.execute('decompress',
+                    async () => lzma.decompress(
+                        await context.execute('downloadLib', downloadTask(downloadURL)) as Buffer));
+
                 const packPath = filePath + '.pack';
-                const decompressed = await context.execute('decompress', () => lzma.decompress(buf));
                 await fs.writeFile(packPath, decompressed);
                 try {
                     await context.execute('unpack', () => unpack200(packPath, { removeAfter: true, outfile: filePath }));
                 } catch (e) {
-                    if (e.exitCode !== 4294967295) {
-                        throw e;
-                    }
+                    if (e.exitCode !== 4294967295) throw e;
+                    await fs.unlink(packPath).catch(e => console.error(e))
                 }
-            } else
-                await context.execute('downloadLib', downloadTask(downloadURL, filePath))
+            } else await context.execute('downloadLib', downloadTask(downloadURL, filePath))
         }
-        if (checksum && lib.download.sha1) {
-            let sum = await CHECKSUM(filePath);
-            if (exist && sum != lib.download.sha1) {
-                await context.execute('downloadLib', downloadTask(lib.download.url, filePath))
-                sum = await CHECKSUM(filePath);
-            }
-            if (sum != lib.download.sha1)
-                throw new Error('');
+        if (!exist) {
+            await _download();
+        } else if (lib.download.sha1 && typeof lib.download.sha1 === 'string') {
+            if (await CHECKSUM(filePath) !== lib.download.sha1)
+                await _download();
         }
     }
 }
 
 function downloadLibraries(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string }) {
     return async (context: Task.Context) => {
-        const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-        let all = []
-        const libraryHost = option ? option.libraryHost : undefined
+        const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft;
+        let all = [];
+        const libraryHost = option ? option.libraryHost : undefined;
         const checksum = option ? option.checksum : true;
         try {
             const promises = version.libraries.map(lib =>
                 context.execute(lib.name, downloadLib(lib, folder, libraryHost, checksum)).catch(e => {
-                    console.error(`Error occured during: ${lib.name}`)
-                    console.error(e)
+                    console.error(`Error occured during: ${lib.name}`);
+                    console.error(e);
                 }));
-            await Promise.all(promises)
+            await Promise.all(promises);
         }
         catch (e) {
             throw e;
@@ -195,23 +191,23 @@ function downloadLibraries(version: Version, minecraft: MinecraftLocation, optio
 
 function downloadAsset(content: any, key: string, folder: MinecraftFolder, assetsHost: string, checksum: boolean) {
     return async (context: Task.Context) => {
-        if (!content.hasOwnProperty(key)) return
+        if (!content.hasOwnProperty(key)) return;
         const element = content[key];
         const hash: string = element.hash;
-        const head = hash.substring(0, 2)
-        const dir = folder.getPath('assets', 'objects', head)
-        const file = path.join(dir, hash)
-        const exist = fs.existsSync(file)
+        const head = hash.substring(0, 2);
+        const dir = folder.getPath('assets', 'objects', head);
+        const file = path.join(dir, hash);
+        const exist = fs.existsSync(file);
         if (!exist) {
             await fs.ensureDir(dir);
-            await context.execute(hash, downloadTask(`${assetsHost}/${head}/${hash}`, file))
+            await context.execute(hash, downloadTask(`${assetsHost}/${head}/${hash}`, file));
         }
         if (checksum) {
-            let sum = await context.execute('checksum', () => CHECKSUM(file))
+            let sum = await context.execute('checksum', () => CHECKSUM(file));
             if (sum != hash && exist) {// if exist, re-download
-                await fs.ensureDir(dir)
-                await context.execute(`re-${hash}`, downloadTask(`${assetsHost}/${head}/${hash}`, file))
-                sum = await context.execute('re-checksum', () => CHECKSUM(file))
+                await fs.ensureDir(dir);
+                await context.execute(`re-${hash}`, downloadTask(`${assetsHost}/${head}/${hash}`, file));
+                sum = await context.execute('re-checksum', () => CHECKSUM(file));
             }
             if (sum != hash)
                 throw new Error(`SHA1 not matched!\n${sum}\n${hash}\n@${file}\n Probably caused by the incompleted file or illegal file source!`)
@@ -240,5 +236,3 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option?:
         return version;
     }
 }
-
-

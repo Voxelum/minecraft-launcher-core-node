@@ -1,21 +1,52 @@
 import { Launcher, Version } from '../index'
 import * as assert from 'assert'
+import { spawn } from 'child_process'
 
 describe('Launch', () => {
-    it('should launch minecraft', async () => {
-        const option = { version: '1.12.2-forge1.12.2-14.23.2.2611', gamePath: './tests/assets/temp', javaPath: 'C:/Program Files/Java/jre1.8.0_151/bin/javaw.exe' };
-        const ver = await Version.parse('./tests/assets/temp', '1.12.2-forge1.12.2-14.23.2.2611')
+    let javaPath: string;
+    before(function () {
+        if (process.env.JAVA_HOME) {
+            javaPath = `${process.env.JAVA_HOME}/bin/java`
+        } else {
+            this.skip()
+        }
+    })
+    it('should launch normal minecraft', async () => {
+        const option = { version: '1.12.2', gamePath: './tests/assets/temp', javaPath };
         const proc = await Launcher.launch(option)
         await new Promise((resol, rej) => {
             proc.stdout.on('data', (chunk) => {
-                console.log(chunk.toString())
+                const str = chunk.toString();
+                if (str.indexOf('[Client thread/INFO]: Created: 1024x512 textures-atlas') !== -1) {
+                    proc.kill('SIGINT');
+                }
+                // console.log(chunk.toString())
             })
             proc.stderr.on('data', (chunk) => {
-                console.log(chunk.toString())
+                // console.log(chunk.toString())
             })
             proc.on('exit', () => {
                 resol();
             })
         })
-    }).timeout
+    }).timeout(100000)
+    it('should launch forge minecraft', async () => {
+        const option = { version: '1.12.2-forge1.12.2-14.23.2.2611', gamePath: './tests/assets/temp', javaPath };
+        const proc = await Launcher.launch(option)
+        await new Promise((resol, rej) => {
+            proc.stdout.on('data', (chunk) => {
+                const str = chunk.toString();
+                if (str.indexOf('[main/INFO] [FML]: Itemstack injection complete') !== -1) {
+                    proc.kill('SIGINT');
+                }
+                // console.log(chunk.toString())
+            })
+            proc.stderr.on('data', (chunk) => {
+                // console.log(chunk.toString())
+            })
+            proc.on('exit', () => {
+                resol();
+            })
+        })
+    }).timeout(100000)
 })
