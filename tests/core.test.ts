@@ -1,8 +1,8 @@
 import * as assert from 'assert';
-import { Version, MinecraftFolder, Launcher, WorldInfo, NBT } from "../index";
+import { Version, MinecraftFolder, Launcher, WorldInfo, NBT, Forge, LiteLoader } from "../index";
 import * as fs from 'fs-extra'
 
-describe('InstallMinecraft', () => {
+describe('Install', () => {
     let version: Version.MetaContainer;
     const loc = new MinecraftFolder('./tests/assets/temp');
     it('minecraft version fetching', () => Version.updateVersionMeta()).timeout(100000)
@@ -33,6 +33,35 @@ describe('InstallMinecraft', () => {
                     })
             });
     }).timeout(1000000)
+    it('should install forge version', async () => {
+        const meta: Forge.VersionMeta = {
+            branch: null,
+            build: 2611,
+            files:
+                [['zip', 'mdk', 'b9175ac5d6fe2458b91913222b7c2aec'],
+                ['txt', 'changelog', 'ea1aed49bc657e1205959df241744988'],
+                ['jar', 'universal', '8e4cd927a804abab5c48ecedaa2834cd'],
+                ['jar', 'userdev', '2912ce4d9bef6a2fde549568675ee8e6'],
+                ['exe', 'installer-win', '59c6162a94600e3b983ad533f96df8e2'],
+                ['jar', 'installer', '19c0683c7ba0054a66a719113aecb0d0']],
+            mcversion: '1.12.2',
+            modified: 1517630820,
+            version: '14.23.2.2611'
+        };
+        const ver = await Forge.install(meta, new MinecraftFolder('./tests/assets/temp'), false);
+        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611'), 'no such folder')
+        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2611.json'), 'no json')
+    }).timeout(10000000)
+
+    it('should be able to install Liteloader', async () => {
+        const meta: LiteLoader.VersionMeta = { "url": "http://repo.mumfrey.com/content/repositories/snapshots/", "type": "SNAPSHOT", "file": "liteloader-1.12.2-SNAPSHOT.jar", "version": "1.12.2-SNAPSHOT", "md5": "1420785ecbfed5aff4a586c5c9dd97eb", "timestamp": "1511880271", "mcversion": "1.12.2", "tweakClass": "com.mumfrey.liteloader.launch.LiteLoaderTweaker", "libraries": [{ "name": "net.minecraft:launchwrapper:1.12" }, { "name": "org.ow2.asm:asm-all:5.2" }] };
+        return LiteLoader.install(meta, new MinecraftFolder('./tests/assets/temp'));
+    }).timeout(1000000)
+    it('should be able to install Liteloader to forge', async () => {
+        const meta: LiteLoader.VersionMeta = { "url": "http://repo.mumfrey.com/content/repositories/snapshots/", "type": "SNAPSHOT", "file": "liteloader-1.12.2-SNAPSHOT.jar", "version": "1.12.2-SNAPSHOT", "md5": "1420785ecbfed5aff4a586c5c9dd97eb", "timestamp": "1511880271", "mcversion": "1.12.2", "tweakClass": "com.mumfrey.liteloader.launch.LiteLoaderTweaker", "libraries": [{ "name": "net.minecraft:launchwrapper:1.12" }, { "name": "org.ow2.asm:asm-all:5.2" }] };
+        return LiteLoader.install(meta, new MinecraftFolder('./tests/assets/temp'), '1.12.2-forge1.12.2-14.23.2.2611');
+    }).timeout(10000000)
+
     it('new minecraft installing', async () => {
         const nMc = {
             id: '17w43b',

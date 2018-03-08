@@ -16,26 +16,6 @@ describe('Forge', () => {
         const listContainer1 = await Forge.VersionMetaList.update({ fallback: listContainer0 });
         assert.equal(listContainer0, listContainer1);
     }).timeout(100000)
-    it('should install forge version', async () => {
-        const meta: Forge.VersionMeta = {
-            branch: null,
-            build: 2611,
-            files:
-                [['zip', 'mdk', 'b9175ac5d6fe2458b91913222b7c2aec'],
-                ['txt', 'changelog', 'ea1aed49bc657e1205959df241744988'],
-                ['jar', 'universal', '8e4cd927a804abab5c48ecedaa2834cd'],
-                ['jar', 'userdev', '2912ce4d9bef6a2fde549568675ee8e6'],
-                ['exe', 'installer-win', '59c6162a94600e3b983ad533f96df8e2'],
-                ['jar', 'installer', '19c0683c7ba0054a66a719113aecb0d0']],
-            mcversion: '1.12.2',
-            modified: 1517630820,
-            version: '14.23.2.2611'
-        };
-        const ver = await Forge.install(meta, new MinecraftFolder('./tests/assets/temp'), false);
-        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611'), 'no such folder')
-        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2611.json'), 'no json')
-    }).timeout(10000000)
-
 
     describe('Config', () => {
         const cfg1 = `
