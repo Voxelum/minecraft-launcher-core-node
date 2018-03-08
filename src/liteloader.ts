@@ -146,9 +146,11 @@ export namespace LiteLoader {
         if (mountedJSON.arguments) {
             info.arguments = {
                 game: args,
-                jvm: [...mountedJSON.arguments.jvm]
+                jvm: ['--tweakClass', meta.tweakClass,...mountedJSON.arguments.jvm]
             }
         } else {
+            args.unshift(meta.tweakClass)
+            args.unshift('--tweakClass');
             info.minecraftArguments = args.join(' ');
         }
         return info;
