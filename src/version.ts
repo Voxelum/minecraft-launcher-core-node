@@ -156,7 +156,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     if (!mainClass)
         throw new Error("Missing mainClass");
     // if (!minecraftArguments)
-        // throw new Error("Missing gameArguments");
+    // throw new Error("Missing gameArguments");
     // if (!jvmArguments)
     //     throw new Error('Missing jvmArguments')
     if (!assetIndex)
@@ -168,7 +168,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
         downloads: downloadsMap,
         libraries: Object.keys(librariesMap).map(k => librariesMap[k]).concat(Object.keys(nativesMap).map(k => nativesMap[k])),
         // minecraftArguments, jvmArguments,
-        mainClass, minimumLauncherVersion,  releaseTime, time, type, logging,
+        mainClass, minimumLauncherVersion, releaseTime, time, type, logging,
     } as Version
 }
 
@@ -215,7 +215,7 @@ function parseVersionJson(versionString: string): Version {
                 const version = pathArr[2];
                 const isSnapshot = version.endsWith('-SNAPSHOT');
 
-                const path = `${groupPath}/${id}/${version}/${id}-${version}.jar`
+                const path = !isSnapshot ? `${groupPath}/${id}/${version}/${id}-${version}.jar` : `${groupPath}/${id}/${version}/${version}.jar`
                 const artifact: Artifact = {
                     size: -1,
                     sha1: lib.checksums,

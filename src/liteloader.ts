@@ -2,6 +2,7 @@ import UPDATE from './utils/update';
 import Task from 'treelike-task'
 import { downloadTask } from './utils/download';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
+import { Version } from './version'
 import * as fs from 'fs-extra';
 import * as path from 'path'
 import * as url from 'url'
@@ -32,6 +33,7 @@ export namespace LiteLoader {
             url: string,
             updated: string,
             updatedTime: number
+
         }
         versions: { [version: string]: { snapshot?: VersionMeta, release?: VersionMeta } }
     }
@@ -52,28 +54,35 @@ export namespace LiteLoader {
                         = (metalist.versions as any)[mcversion] = {}
                     const snapshots = result.list.versions[mcversion].snapshots;
                     const artifacts = result.list.versions[mcversion].artefacts; //that's right, artefact
+                    const url = result.list.versions[mcversion].repo.url;
                     if (snapshots) {
-                        const { stream, file, version, md5, timestamp } = snapshots['com.mumfrey:liteloader'].latest;
+                        const { stream, file, version, md5, timestamp, tweakClass, libraries } = snapshots['com.mumfrey:liteloader'].latest;
                         const type = (stream === 'RELEASE' ? 'RELEASE' : 'SNAPSHOT');
                         versions.snapshot = {
+                            url,
                             type,
                             file,
                             version,
                             md5,
                             timestamp,
-                            mcversion
+                            mcversion,
+                            tweakClass,
+                            libraries,
                         }
                     }
                     if (artifacts) {
-                        const { stream, file, version, md5, timestamp } = artifacts['com.mumfrey:liteloader'].latest;
+                        const { stream, file, version, md5, timestamp, tweakClass, libraries } = artifacts['com.mumfrey:liteloader'].latest;
                         const type = (stream === 'RELEASE' ? 'RELEASE' : 'SNAPSHOT');
                         versions.release = {
+                            url,
                             type,
                             file,
                             version,
                             md5,
                             timestamp,
-                            mcversion
+                            mcversion,
+                            tweakClass,
+                            libraries,
                         }
                     }
                 }
@@ -84,11 +93,14 @@ export namespace LiteLoader {
 
     export interface VersionMeta {
         version: string,
+        url: string,
         file: string,
         mcversion: string,
         type: "RELEASE" | "SNAPSHOT",
         md5: string,
         timestamp: string,
+        libraries: { name: string, url?: string }[],
+        tweakClass: string,
     }
 
     export async function meta(mod: string | Buffer | Zip) {
@@ -108,39 +120,58 @@ export namespace LiteLoader {
             })
     }
 
-    const snapshotRoot = 'http://dl.liteloader.com/versions/com/mumfrey/liteloader';
-    const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/com/mumfrey/liteloader'
+    const snapshotRoot = 'http://dl.liteloader.com/versions/';
+    const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/'
 
-    export function install(meta: VersionMeta, location: MinecraftLocation) {
-        return installTask(meta, location).execute();
+    export function install(meta: VersionMeta, location: MinecraftLocation, version?: string) {
+        return installTask(meta, location, version).execute();
     }
 
-    export function installTask(meta: VersionMeta, location: MinecraftLocation): Task<void> {
+    function buildVersionInfo(meta: VersionMeta, mountedJSON: any) {
+        const id = `${mountedJSON.id}-Liteloader${meta.mcversion}-${meta.version}`;
+        const time = new Date(Number.parseInt(meta.timestamp) * 1000).toISOString();
+        const releaseTime = time;
+        const type = meta.type;
+        const args = mountedJSON.arguments ? mountedJSON.arguments.game : mountedJSON.minecraftArguments.split(' ');
+        const libraries = [{
+            name: `com.mumfrey:liteloader:${meta.version}`,
+            url: type === 'SNAPSHOT' ? snapshotRoot : releaseRoot,
+        }, ...meta.libraries];
+        const mainClass = 'net.minecraft.launchwrapper.Launch';
+        const inheritsFrom = mountedJSON.id;
+        const jar = mountedJSON.jar || mountedJSON.id;
+        const info: any = {
+            id, time, releaseTime, type, libraries, mainClass, inheritsFrom, jar
+        };
+        if (mountedJSON.arguments) {
+            info.arguments = {
+                game: args,
+                jvm: [...mountedJSON.arguments.jvm]
+            }
+        } else {
+            info.minecraftArguments = args.join(' ');
+        }
+        return info;
+    }
+
+    export function installTask(meta: VersionMeta, location: MinecraftLocation, version?: string): Task<void> {
         return Task.create('installLiteloader', async (context) => {
-            const mc = typeof location === 'string' ? new MinecraftFolder(location) : location;
-            let targetURL;
-            if (meta.type === 'SNAPSHOT')
-                targetURL = `${snapshotRoot}/${meta.version}/${meta.version}.jar`;
-            else if (meta.type === 'RELEASE')
-                targetURL = `${releaseRoot}/${meta.version}/${meta.file}`;
-            else throw new Error("Unknown meta type: " + meta.type);
+            const mc: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location;
+            const mountVersion = version || meta.mcversion;
 
-            const jsonURL = `https://raw.githubusercontent.com/Mumfrey/LiteLoaderInstaller/${meta.mcversion}/src/main/resources/install_profile.json`;
-
-            const buffer = await context.execute('downloadJson', downloadTask(jsonURL));
-            if (!buffer) throw new Error();
-            const liteJson = JSON.parse(buffer.toString());
-            const versionInf = liteJson.versionInfo;
-            const liteloaderPath = versionInf.id;
-            const versionPath = mc.getVersionRoot(liteloaderPath);
+            if (!fs.existsSync(mc.getVersionJson(mountVersion))) throw new Error(`Version doesn't exist: ${mountVersion}`);
+            const mountedJSON: any = await fs.readJson(mc.getVersionJson(mountVersion));
+            const versionInf = buildVersionInfo(meta, mountedJSON);
+            const versionPath = mc.getVersionRoot(versionInf.id);
 
             await fs.ensureDir(versionPath);
-            await context.execute('writeJson', () => fs.writeFile(path.join(versionPath, liteloaderPath + '.json'), JSON.stringify(versionInf)));
+            await context.execute('writeJson', () => fs.writeFile(path.join(versionPath, versionInf.id + '.json'), JSON.stringify(versionInf, undefined, 4)));
 
             if (!fs.existsSync(versionPath))
                 await fs.ensureDir(versionPath);
 
-            await context.execute('downloadJar', downloadTask(targetURL, path.join(versionPath, liteloaderPath + '.jar')));
+            const resolved = await Version.parse(mc, versionInf.id)
+            await context.execute('checkDependency', Version.checkDependenciesTask(resolved, mc).work);
         });
     }
     export function installLiteloaderAsMod(meta: VersionMeta, filePath: string) {
