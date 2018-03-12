@@ -176,9 +176,6 @@ export namespace LiteLoader {
             await context.execute('checkDependency', Version.checkDependenciesTask(resolved, mc).work);
         });
     }
-    export function installLiteloaderAsMod(meta: VersionMeta, filePath: string) {
-
-    }
 }
 
 Mod.register('liteloader', option =>
