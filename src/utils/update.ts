@@ -19,7 +19,7 @@ export default function UPDATE(option: {
             protocol: u.protocol,
             host: u.host,
             path: u.path,
-            headers: option.fallback ? { 'If-Modified-Since': option.fallback.date } : undefined
+            headers: option.fallback && option.fallback.date ? { 'If-Modified-Since': option.fallback.date } : undefined
         }, (res: any) => {
             if (res.statusCode == 200) {
                 res.setEncoding('utf-8')
