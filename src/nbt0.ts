@@ -67,7 +67,7 @@ NBT.Serializer = class Serializer {
         }
     }
     static serialize(object: NBT.TypedObject, compressed?: boolean): Buffer {
-        return writeRootTag(object, compressed || false, object.__nbtPrototype__);
+        return writeRootTag(object, compressed || false, object.__nbtPrototype__, () => ({}));
     }
 
     private registry: { [id: string]: CompoundSchema } = {};
@@ -161,7 +161,7 @@ const visitors: IO[] = [
             return val(scope, list);
         },
         write(buf, value: Array<any>, scope, find) {
-            if (!scope || !find) throw new Error();
+            if (!scope || !find) throw new Error('Missing list scope!');
             const type = (scope as ArraySchema)[0];
             switch (typeof type) {
                 case 'number':
@@ -209,6 +209,7 @@ const visitors: IO[] = [
             if (!scope || !find) throw new Error();
             Object.keys(object).forEach(key => {
                 const value = object[key];
+                if (!value) return;
                 const type = (scope as CompoundSchema)[key];
                 let nextScope: Scope | undefined = undefined;
                 let a: ArraySchema;

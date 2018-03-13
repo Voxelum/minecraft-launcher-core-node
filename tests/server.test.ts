@@ -4,18 +4,26 @@ import * as fs from 'fs-extra';
 import * as assert from 'assert';
 
 describe('Server', () => {
-    describe('Read', () => {
-        it('server.dat reading', () => {
-            let data = fs.readFileSync('./tests/assets/servers.dat')
-            let infos = Server.parseNBT(data)
-            assert.equal(infos[0].name, 'nyaacat')
-            assert.equal(infos[1].name, 'himajin')
-            assert.equal(infos[2].name, 'mcJp')
-            assert.equal(infos[3].name, 'Minecraft Server')
-        })
+    it('should read server.dat file', () => {
+        let data = fs.readFileSync('./tests/assets/servers.dat')
+        let infos = Server.parseNBT(data);
+        assert.equal(infos[0].name, 'nyaacat')
+        assert.equal(infos[1].name, 'himajin')
+        assert.equal(infos[2].name, 'mcJp')
+        assert.equal(infos[3].name, 'Minecraft Server')
+    })
+    it('should write to nbt data right', () => {
+        const byte = Server.writeNBT([{
+            name: 'abc',
+            host: 'ip!'
+        }]);
+        const readBack = Server.parseNBT(byte);
+        assert(readBack[0]);
+        assert.equal(readBack[0].name, 'abc');
+        assert.equal(readBack[0].host, 'ip!');
     })
     describe('Ping', () => {
-        it('frame fetching', async () => {
+        it('should fetch server frame', async () => {
             const frame = Server.fetchStatusFrame({ host: 'mc.hypixel.net' })
             assert(frame);
         }).timeout(100000)

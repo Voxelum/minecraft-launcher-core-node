@@ -116,10 +116,38 @@ export namespace Server {
         }
     }
     export function parseNBT(buf: Buffer): Info[] {
-        let value = NBT.Serializer.deserialize(buf)
-        if (value.servers) return value.servers;
-        return []
+        let value = NBT.Serializer.deserialize(buf);
+        if (!value.servers) throw new Error('Invalid Server NBT Syntext!');
+        return value.servers.map((i: any) => ({
+            icon: i.icon,
+            host: i.ip,
+            name: i.name,
+            resourceMode: i.acceptTextures === undefined ? ResourceMode.PROMPT : i.acceptTextures ? ResourceMode.ENABLED : ResourceMode.DISABLED,
+        }))
     }
+    export function writeNBT(infos: Info[]): Buffer {
+        const object = {
+            servers: infos.map(i => ({
+                ip: i.host, 
+                icon: i.icon, 
+                name: i.name,
+                acceptTextures: i.resourceMode === ResourceMode.PROMPT ? undefined :
+                    i.resourceMode === ResourceMode.ENABLED ? 1 : 0,
+            })),
+            __nbtPrototype__: {
+                servers: [
+                    {
+                        icon: 8,
+                        ip: 8,
+                        name: 8,
+                        acceptTextures: 1,
+                    }
+                ],
+            },
+        }
+        return NBT.Serializer.serialize(object);
+    }
+
     function ping(ip: string, port: number, connection: net.Socket): Promise<number> {
         return new Promise((resolve, reject) => {
             if (!ip || ip === '') throw new Error("The server info's host name is empty!");

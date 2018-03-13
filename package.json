@@ -18,9 +18,9 @@
     "typescript": "^2.3.4"
   },
   "scripts": {
-    "test": "tsc && node ./node_modules/mocha/bin/mocha dist/tests --timeout 10000",
+    "test": "npm run build && node ./node_modules/mocha/bin/mocha dist/tests --timeout 10000",
     "build": "rm -rf ./dist && tsc",
-    "prepare": "tsc"
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
