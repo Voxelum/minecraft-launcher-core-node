@@ -48,7 +48,7 @@ describe('Install', () => {
             modified: 1517630820,
             version: '14.23.2.2611'
         };
-        const ver = await Forge.install(meta, new MinecraftFolder('./tests/assets/temp'), false);
+        const ver = await Forge.install(meta, new MinecraftFolder('./tests/assets/temp'));
         assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611'), 'no such folder')
         assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2611.json'), 'no json')
     }).timeout(10000000)
