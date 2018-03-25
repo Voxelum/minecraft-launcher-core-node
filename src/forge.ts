@@ -1,4 +1,4 @@
-import  { downloadTask } from './utils/download';
+import { downloadTask } from './utils/download';
 import CHECKSUM from './utils/checksum';
 import UPDATE from './utils/update';
 import Task from 'treelike-task';
@@ -338,7 +338,7 @@ export namespace Forge {
             await context.execute('ensureRoot', () => fs.ensureDir(root))
             if (!fs.existsSync(libForgePath) || !fs.existsSync(jsonPath)) {
                 await context.execute('writeJar', async () => fs.outputFile(libForgePath, universalBuffer));
-                await context.execute('writeJson', async () => fs.outputFile(jsonPath, buff));
+                await context.execute('writeJson', async () => fs.writeJSON(jsonPath, versionJSON));
 
                 if (checksum) {
                     let sum;
@@ -354,20 +354,40 @@ export namespace Forge {
                                     throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
                 }
             }
-            const ver = await context.execute('versionParse', () => Version.parse(minecraft, localForgePath));
-            await context.execute('checkDependencies', Version.checkDependenciesTask(ver, minecraft).work);
-            return ver;
+            return versionJSON.id;
         }
     }
 
-    export function installTask(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
-        maven: string = 'http://files.minecraftforge.net/maven'): Task<Version> {
-        return Task.create('installForge', installTask0(version, minecraft, checksum, maven));
+    export function install(version: VersionMeta, minecraft: MinecraftLocation, option?:
+        {
+            checksum?: boolean,
+            maven?: string,
+            id?: string,
+        }) {
+        return installTask(version, minecraft, option);
+    }
+    export function installTask(version: VersionMeta, minecraft: MinecraftLocation, option?:
+        {
+            checksum?: boolean,
+            maven?: string,
+            id?: string,
+        }): Task<void> {
+        const op = option || {}
+        return Task.create('installForge', installTask0(version, minecraft, op.checksum || false, op.maven || 'http://files.minecraftforge.net/maven'));
     }
 
-    export async function install(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
+    export function installAndCheckTask(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
+        maven: string = 'http://files.minecraftforge.net/maven'): Task<Version> {
+        return Task.create('installForgeAndCheck', async (context) => {
+            const id = await context.execute('install', installTask0(version, minecraft, checksum, maven));
+            const ver = await context.execute('versionParse', () => Version.parse(minecraft, id));
+            return context.execute('checkDependencies', Version.checkDependenciesTask(ver, minecraft).work)
+        })
+    }
+
+    export async function installAndCheck(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven'): Promise<Version> {
-        return installTask(version, minecraft, checksum, maven).execute();
+        return installAndCheckTask(version, minecraft, checksum, maven).execute();
     }
 }
 

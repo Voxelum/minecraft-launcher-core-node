@@ -32,7 +32,7 @@ describe('Server', () => {
                 .then(() => done('This should not happen'))
                 .catch((err) => { done() })
         }).timeout(100000)
-        it('frame to status converting', async () => {
+        it('should convert frame to status', async () => {
             const frame: Server.StatusFrame = {
                 version: { name: 'test-version', protocol: 1 },
                 players: { max: 1, online: 1 },
@@ -48,7 +48,7 @@ describe('Server', () => {
             assert.equal(status.icon, '', 'icon');
             assert.equal(status.protocolVersion, 1, 'protocol');
         })
-        it('timeout exception catching', (done) => {
+        it('should capture timeout exception', (done) => {
             Server.fetchStatus({
                 host: 'crafterr.me',
             }, { timeout: 100 }).then(status => {
@@ -57,7 +57,7 @@ describe('Server', () => {
                 done()
             })
         }).timeout(100000)
-        it('server pinging and info fetching', (done) => {
+        it('should fetch server info and ping', (done) => {
             Server.fetchStatus({
                 host: 'mc.hypixel.net',
             }, { timeout: 10000 }).then(status => {

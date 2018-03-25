@@ -5,13 +5,13 @@ import * as fs from 'fs-extra'
 describe('Install', () => {
     let version: Version.MetaContainer;
     const loc = new MinecraftFolder('./tests/assets/temp');
-    it('minecraft version fetching', () => Version.updateVersionMeta()).timeout(100000)
-    it('no duplicate version fetching', async () => {
+    it('should fetch minecraft version', () => Version.updateVersionMeta()).timeout(100000)
+    it('should not fetch duplicate version', async () => {
         const first = await Version.updateVersionMeta();
         const sec = await Version.updateVersionMeta({ fallback: first })
         assert.equal(first, sec);
     })
-    it('minecraft installing', () => {
+    it('should intall minecraft', () => {
         const meta = {
             id: '1.12.2',
             type: 'release',
@@ -62,7 +62,7 @@ describe('Install', () => {
         return LiteLoader.install(meta, new MinecraftFolder('./tests/assets/temp'), '1.12.2-forge1.12.2-14.23.2.2611');
     }).timeout(10000000)
 
-    it('new minecraft installing', async () => {
+    it('should install new minecraft', async () => {
         const nMc = {
             id: '17w43b',
             type: 'snapshot',

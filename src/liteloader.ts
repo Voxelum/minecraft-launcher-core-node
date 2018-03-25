@@ -123,9 +123,7 @@ export namespace LiteLoader {
     const snapshotRoot = 'http://dl.liteloader.com/versions/';
     const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/'
 
-    export function install(meta: VersionMeta, location: MinecraftLocation, version?: string) {
-        return installTask(meta, location, version).execute();
-    }
+
 
     function buildVersionInfo(meta: VersionMeta, mountedJSON: any) {
         const id = `${mountedJSON.id}-Liteloader${meta.mcversion}-${meta.version}`;
@@ -156,7 +154,33 @@ export namespace LiteLoader {
         return info;
     }
 
+    export function install(meta: VersionMeta, location: MinecraftLocation, version?: string) {
+        return installTask(meta, location, version).execute();
+    }
+
     export function installTask(meta: VersionMeta, location: MinecraftLocation, version?: string): Task<void> {
+        return Task.create('installLiteloader', async (context) => {
+            const mc: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location;
+            const mountVersion = version || meta.mcversion;
+
+            if (!fs.existsSync(mc.getVersionJson(mountVersion))) throw new Error(`Version doesn't exist: ${mountVersion}`);
+            const mountedJSON: any = await fs.readJson(mc.getVersionJson(mountVersion));
+            const versionInf = buildVersionInfo(meta, mountedJSON);
+            const versionPath = mc.getVersionRoot(versionInf.id);
+
+            await fs.ensureDir(versionPath);
+            await context.execute('writeJson', () => fs.writeFile(path.join(versionPath, versionInf.id + '.json'), JSON.stringify(versionInf, undefined, 4)));
+
+            if (!fs.existsSync(versionPath))
+                await fs.ensureDir(versionPath);
+        });
+    }
+
+    export function installAndCheck(meta: VersionMeta, location: MinecraftLocation, version?: string) {
+        return installAndCheckTask(meta, location, version).execute();
+    }
+    
+    export function installAndCheckTask(meta: VersionMeta, location: MinecraftLocation, version?: string): Task<void> {
         return Task.create('installLiteloader', async (context) => {
             const mc: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location;
             const mountVersion = version || meta.mcversion;
