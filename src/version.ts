@@ -1,5 +1,6 @@
 import * as paths from 'path'
 import * as fs from 'fs-extra'
+import { decompressXZ, unpack200 } from './utils/decompress'
 
 import { MinecraftLocation } from '../index';
 
@@ -69,12 +70,97 @@ export interface Version {
         }
     }
 }
+
+
 export namespace Version {
+    export interface Raw {
+        id: string,
+        time: string,
+        type: string,
+        releaseTime: string,
+        inheritsFrom?: string,
+        minimumLauncherVersion?: number,
+
+        minecraftArguments?: string,
+        arguments?: {
+            game: LaunchArgument[],
+            jvm: LaunchArgument[],
+        },
+
+        mainClass: string,
+        libraries: Library[],
+
+        jar?: string,
+
+
+        assetIndex?: AssetIndex,
+        assets?: string,
+        downloads?: {
+            client: Download,
+            server: Download,
+            [key: string]: Download,
+        },
+
+        client?: string,
+        server?: string,
+        logging?: {
+            [key: string]: {
+                file: Download,
+                argument: string,
+                type: string,
+            }
+        }
+    }
     export function parse(minecraftPath: MinecraftLocation, version: string): Promise<Version> {
         return resolveDependency(minecraftPath, version).then(e => {
             if (e.length == 0) throw new Error('Dependency error!');
             return parseVersionHierarchy(e)
         })
+    }
+    export function mixinArgument(hi: LaunchArgument[], lo: LaunchArgument[]): LaunchArgument[] {
+        const args: { [key: string]: Array<string | object> } = {};
+        const out: LaunchArgument[] = [];
+
+        for (let i = 0; i < hi.length; i++) {
+            const e = hi[i];
+            if (typeof e === 'string') {
+                if (!args[e]) { args[e] = []; }
+                args[e].push(hi[i + 1]);
+                ++i;
+            } else {
+
+            }
+        }
+
+        return out;
+    }
+    export function mixinArgumentString(hi: string, lo: string): string {
+        const arrA = lo.split(' ');
+        const arrB = hi.split(' ');
+        const args: { [key: string]: Array<string> } = {};
+        for (let i = 0; i < arrA.length; i++) {
+            const element = arrA[i];
+            if (!args[element]) { args[element] = []; }
+            if (arrA[i + 1]) args[element].push(arrA[i + 1]);
+        }
+        for (let i = 0; i < arrB.length; i++) {
+            const element = arrB[i];
+            if (!args[element]) { args[element] = []; }
+            if (arrB[i + 1]) args[element].push(arrB[i + 1]);
+        }
+        let out = []
+        for (const k of Object.keys(args)) {
+            switch (k) {
+                case '--tweakClass':
+                    for (const val of args[k])
+                        if (val) out.push(k, val);
+                    break;
+                default:
+                    if (args[0]) out.push(k, args[0]);
+                    break;
+            }
+        }
+        return out.join(' ');
     }
 }
 export class Library {
@@ -216,12 +302,30 @@ function parseVersionJson(versionString: string): Version {
                 const isSnapshot = version.endsWith('-SNAPSHOT');
 
                 const path = !isSnapshot ? `${groupPath}/${id}/${version}/${id}-${version}.jar` : `${groupPath}/${id}/${version}/${version}.jar`
+                
+                /**
+                 * we have to check if our module support decompression or not
+                 */
+                const shouldCompressed = (lib.checksums) ? lib.checksums.length > 1 ? true : false : false
+                const compressed = shouldCompressed && decompressXZ !== undefined;
+
+                let actualUrl = `${url}${path}`;
+                /**
+                 * if we just cannot compress... maybe change source
+                 */
+                if (shouldCompressed && !compressed) {
+                    /**
+                     * use maven central
+                     */
+                    actualUrl = `http://central.maven.org/maven2/${path}`;
+                }
+
                 const artifact: Artifact = {
                     size: -1,
                     sha1: lib.checksums,
                     path,
-                    compressed: lib.checksums ? lib.checksums.length > 1 ? true : false : false,
-                    url: `${url}${path}`
+                    compressed,
+                    url: actualUrl
                 }
                 return new Library(lib.name, artifact);
             }

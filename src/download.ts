@@ -4,14 +4,13 @@ import * as path from 'path'
 import * as url from 'url'
 import * as os from 'os';
 import Task from 'treelike-task'
-import unpack200 from 'unpack200'
-import * as lzma from 'lzma-native'
 
 import UPDATE from './utils/update';
 import { downloadTask } from './utils/download';
 import CHECKSUM from './utils/checksum';
 import { Library, Version, VersionMeta, VersionMetaList } from './version';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
+import { decompressXZ, unpack200 } from './utils/decompress';
 
 declare module './version' {
     interface VersionMeta {
@@ -121,21 +120,25 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
     }
 }
 
-function checkDependency(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) {
+export type LibraryHost = (libId: string) => string | undefined;
+
+function checkDependency(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string | LibraryHost, assetsHost?: string }) {
     return async (context: Task.Context) => {
         return context.execute('downloadAssets', downloadAssets(version, minecraft, option))
             .then((version) => context.execute('downloadLibraries', downloadLibraries(version, minecraft, option)))
     }
 }
 
-function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: string, checksum?: boolean) {
+function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: LibraryHost, checksum?: boolean) {
     return async (context: Task.Context) => {
         const rawPath = lib.download.path;
         const filePath = path.join(folder.libraries, rawPath);
         const exist = fs.existsSync(filePath);
         let downloadURL: string;
         if (libraryHost) {
-            downloadURL = libraryHost + lib.download.path;
+            const url = libraryHost(lib.name);
+            if (url) downloadURL = url;
+            else downloadURL = lib.download.url;
         } else {
             downloadURL = lib.download.url;
         }
@@ -145,19 +148,12 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: string
         const _download = async () => {
             await fs.ensureDir(path.dirname(filePath));
             if (lib.download.compressed) {
+                if (!decompressXZ || !unpack200) throw new Error('Require external support for unpack compressed library!');
                 const decompressed = await context.execute('decompress',
-                    async () => lzma.decompress(
-                        await context.execute('downloadLib', downloadTask(downloadURL)) as Buffer));
-
-                const packPath = filePath + '.pack';
-                await fs.writeFile(packPath, decompressed);
-                try {
-                    await context.execute('unpack', () => unpack200(packPath, { removeAfter: true, outfile: filePath }));
-                } catch (e) {
-                    if (e.exitCode !== 4294967295) throw e;
-                    await fs.unlink(packPath).catch(e => console.error(e))
-                }
-            } else await context.execute('downloadLib', downloadTask(downloadURL, filePath))
+                    async () => decompressXZ(await context.execute('downloadLib', downloadTask(downloadURL)) as Buffer));
+                await context.execute('unpack', () => unpack200(decompressed).then(buf => fs.writeFile(filePath, buf)));
+            } else
+                await context.execute('downloadLib', downloadTask(downloadURL, filePath))
         }
         if (!exist) {
             await _download();
@@ -168,11 +164,12 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: string
     }
 }
 
-function downloadLibraries(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string }) {
+function downloadLibraries(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string | LibraryHost }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft;
         let all = [];
-        const libraryHost = option ? option.libraryHost : undefined;
+        const op = option || {};
+        const libraryHost: LibraryHost | undefined = (typeof op.libraryHost === 'string' ? (l) => undefined : op.libraryHost);
         const checksum = option ? option.checksum : true;
         try {
             const promises = version.libraries.map(lib =>

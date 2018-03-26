@@ -330,7 +330,7 @@ export namespace Forge {
             const versionJSON = JSON.parse(buff.toString());
 
             const localForgePath = versionJSON.id;
-            const libForgePath = mc.getLibraryByPath('net/minecraftforge/forge/1.12.2-14.23.2.2611/forge-1.12.2-14.23.2.2611.jar');
+            const libForgePath = mc.getLibraryByPath(`net/minecraftforge/forge/${versionPath}/forge-${versionPath}.jar`);
 
             const root = mc.getVersionRoot(localForgePath);
             const jsonPath = path.join(root, `${localForgePath}.json`);
