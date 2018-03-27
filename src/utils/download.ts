@@ -59,8 +59,15 @@ export function downloadTask(options: http.RequestOptions | string, fileOrOutStr
             const readable = await context.execute('fetchMessage', () => nodeJsDownload(options));
             const total = Number.parseInt(readable.headers['content-length'] as string)
             await context.execute('fetchData', pipeTo(readable, writable, total))
-        } catch {
-            if (typeof fileOrOutStream === 'string') await fs.unlink(fileOrOutStream);
+        } catch (e) {
+            console.error('Error occured during download')
+            console.error(e);
+            console.error(options);
+            
+            if (typeof fileOrOutStream === 'string') {
+                console.log(fileOrOutStream);
+                await fs.unlink(fileOrOutStream);
+            }
         }
         if (!fileOrOutStream) {
             return (writable as WriteableBuffer).toBuffer();
