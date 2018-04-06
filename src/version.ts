@@ -313,12 +313,12 @@ function parseVersionJson(versionString: string): Version {
                 /**
                  * if we just cannot compress... maybe change source
                  */
-                if (shouldCompressed && !compressed) {
-                    /**
-                     * use maven central
-                     */
-                    actualUrl = `http://central.maven.org/maven2/${path}`;
-                }
+                // if (shouldCompressed && !compressed) {
+                //     /**
+                //      * use maven central
+                //      */
+                //     actualUrl = `http://central.maven.org/maven2/${path}`;
+                // }
 
                 const artifact: Artifact = {
                     size: -1,

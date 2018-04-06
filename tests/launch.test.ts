@@ -23,12 +23,12 @@ describe('Launch', () => {
                 // console.log(chunk.toString())
             })
             proc.stderr.on('data', (chunk) => {
-                // console.log(chunk.toString())
+                console.log(chunk.toString())
             })
             proc.on('exit', (code, signal) => {
                 if (signal === 'SIGINT')
                     resol();
-                else rej()
+                else rej({ code, signal })
             })
         })
     }).timeout(100000)
@@ -44,12 +44,12 @@ describe('Launch', () => {
                 // console.log(chunk.toString())
             })
             proc.stderr.on('data', (chunk) => {
-                // console.log(chunk.toString())
+                console.log(chunk.toString())
             })
             proc.on('exit', (code, signal) => {
                 if (signal === 'SIGINT')
                     resol();
-                else rej()
+                else rej({ code, signal })
             })
         })
     }).timeout(100000)
@@ -57,18 +57,21 @@ describe('Launch', () => {
         const option = { version: '1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT', gamePath: './tests/assets/temp', javaPath };
         const proc = await Launcher.launch(option)
         await new Promise((resol, rej) => {
+            const out: string[] = []
             proc.stdout.on('data', (chunk) => {
                 const str = chunk.toString();
+                out.push(str)
                 if (str.indexOf('LiteLoader begin POSTINIT') !== -1) {
                     proc.kill('SIGINT');
                 }
             })
             proc.stderr.on('data', (chunk) => {
+                out.push(chunk.toString())
             })
             proc.on('exit', (code, signal) => {
                 if (signal === 'SIGINT')
                     resol();
-                else rej()
+                else rej({ code, signal })
             })
         })
     }).timeout(100000)
@@ -79,19 +82,22 @@ describe('Launch', () => {
         await new Promise((resol, rej) => {
             let foundLite = false;
             let foundForge = false;
+            const out: string[] = []
             proc.stdout.on('data', (chunk) => {
                 const str = chunk.toString();
+                out.push(str)
                 if (str.indexOf('LiteLoader begin POSTINIT') !== -1) foundLite = true;
                 if (str.indexOf('[main/INFO] [FML]: Itemstack injection complete') !== -1) foundForge = true;
                 if (foundForge && foundLite)
                     proc.kill('SIGINT');
             })
             proc.stderr.on('data', (chunk) => {
+                out.push(chunk.toString())
             })
             proc.on('exit', (code, signal) => {
                 if (signal === 'SIGINT')
                     resol();
-                else rej()
+                else rej({ code, signal, log: out })
             })
         })
     }).timeout(100000)

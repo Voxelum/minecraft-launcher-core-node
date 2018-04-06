@@ -1,6 +1,6 @@
 import { Version, Library, Native, Artifact } from './version'
 import { Auth, UserType } from './auth';
-import {  ChildProcess, ExecOptions, spawn } from 'child_process'
+import { ChildProcess, ExecOptions, spawn } from 'child_process'
 import { v4 } from 'uuid'
 import * as fs from 'fs-extra'
 import * as path from 'path'
@@ -63,7 +63,7 @@ export namespace Launcher {
         if (!v) throw "Cannot find version " + options.version
 
         let missing = ensureLibraries(mc, v)
-        if (missing.length > 0) throw new Error('Missing library!')
+        if (missing.length > 0) throw new Error('Missing library! ' + missing)
         extractNative(mc, v)
 
         const args = genArgs(options.auth, options, v)
@@ -88,6 +88,7 @@ export namespace Launcher {
     }
 
     function ensureLibraries(resourcePath: MinecraftFolder, version: Version): Library[] {
+        console.log(version.libraries.map(l => l.name))
         return version.libraries.filter(lib => !fs.existsSync(resourcePath.getLibraryByPath(lib.download.path)))
     }
 

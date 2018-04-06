@@ -60,14 +60,14 @@ export function downloadTask(options: http.RequestOptions | string, fileOrOutStr
             const total = Number.parseInt(readable.headers['content-length'] as string)
             await context.execute('fetchData', pipeTo(readable, writable, total))
         } catch (e) {
-            console.error('Error occured during download')
-            console.error(e);
-            console.error(options);
-            
             if (typeof fileOrOutStream === 'string') {
-                console.log(fileOrOutStream);
-                await fs.unlink(fileOrOutStream);
+                try {
+                    await fs.unlink(fileOrOutStream);
+                } catch (e) {
+
+                }
             }
+            throw { error: e, options };
         }
         if (!fileOrOutStream) {
             return (writable as WriteableBuffer).toBuffer();

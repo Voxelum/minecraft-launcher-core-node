@@ -140,7 +140,10 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
             if (url) downloadURL = url;
             else downloadURL = lib.download.url;
         } else {
-            downloadURL = lib.download.url;
+            if (lib.name.startsWith('com.typesafe:config:') || lib.name.startsWith('com.typesafe.akka:akka-actor_2.11'))
+                downloadURL = `http://central.maven.org/maven2/${lib.download.path}`;
+            else
+                downloadURL = lib.download.url;
         }
         if (lib.download.compressed) {
             downloadURL += '.pack.xz';
@@ -152,8 +155,9 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
                 const decompressed = await context.execute('decompress',
                     async () => decompressXZ(await context.execute('downloadLib', downloadTask(downloadURL)) as Buffer));
                 await context.execute('unpack', () => unpack200(decompressed).then(buf => fs.writeFile(filePath, buf)));
-            } else
-                await context.execute('downloadLib', downloadTask(downloadURL, filePath))
+            } else {
+                await context.execute('downloadLib', downloadTask(downloadURL, filePath));
+            }
         }
         if (!exist) {
             await _download();
