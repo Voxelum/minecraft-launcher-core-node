@@ -253,17 +253,7 @@ export namespace Server {
                 .then(f => { resolve(f); })
         }) as StatusFrame
 
-        await new Promise((resolve, reject) => {
-            connection.once('end', () => {
-                (frame as any).ping = -1;
-                resolve()
-            });
-            ping(host, port, connection)
-                .then(p => {
-                    (frame as any).ping = p;
-                    resolve();
-                }).catch(e => reject(e))
-        });
+        frame.ping = await ping(host, port, connection)
         connection.end();
         return frame;
     }
