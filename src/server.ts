@@ -128,8 +128,8 @@ export namespace Server {
     export function writeNBT(infos: Info[]): Buffer {
         const object = {
             servers: infos.map(i => ({
-                ip: i.host, 
-                icon: i.icon, 
+                ip: i.host,
+                icon: i.icon,
                 name: i.name,
                 acceptTextures: i.resourceMode === ResourceMode.PROMPT ? undefined :
                     i.resourceMode === ResourceMode.ENABLED ? 1 : 0,
@@ -152,20 +152,20 @@ export namespace Server {
         return new Promise((resolve, reject) => {
             if (!ip || ip === '') throw new Error("The server info's host name is empty!");
             const byteBuffer = buf.allocate(16);
+            const currentMill = () => {
+                const time = process.hrtime();
+                return time[0] * 1000 + time[1] * 1e-6;
+            }
             byteBuffer.writeByte(9);
             byteBuffer.writeByte(0x01);
-            let time = process.hrtime()
-            let l = Long.fromNumber(time[0]).mul(1000000).add(time[1] / 1000)
-            byteBuffer.writeInt64(l);
+            byteBuffer.writeInt64(currentMill());
             byteBuffer.flip();
             connection.write(Buffer.from(byteBuffer.toArrayBuffer()))
             connection.on('data', (data) => {
-                time = process.hrtime()
-                l = Long.fromNumber(time[0]).mul(1000000).add(time[1] / 1000)
                 const incoming = buf.wrap(data)
                 incoming.readByte() //length
                 incoming.readByte() //id
-                resolve(l.sub(incoming.readLong()).toNumber() / 1000)
+                resolve(currentMill() - incoming.readLong().toNumber())
             })
             connection.once('error', (err) => {
                 reject(err)
@@ -242,17 +242,17 @@ export namespace Server {
             connection.once('timeout', () => { reject(new Error(`Connection timeout ${timeout}`)) })
         });
 
-        const frame = await new Promise((resolve, reject) => {
-            connection.once('end', () => {
-                if (!frame) {
-                    reject(new Error('Closed by server!'))
-                }
-            })
-            handshake(host, port, protocol, connection)
-                .then(JSON.parse)
-                .then(f => { resolve(f); })
-        }) as StatusFrame
-
+        // const frame = await new Promise((resolve, reject) => {
+        //     connection.once('end', () => {
+        //         if (!frame) {
+        //             reject(new Error('Closed by server!'))
+        //         }
+        //     })
+        //     handshake(host, port, protocol, connection)
+        //         .then(JSON.parse)
+        //         .then(f => { resolve(f); })
+        // }) as StatusFrame
+        const frame = await handshake(host, port, protocol, connection).then(JSON.parse);
         frame.ping = await ping(host, port, connection)
         connection.end();
         return frame;
@@ -271,7 +271,7 @@ export namespace Server {
                 result = await fetchFrame(host, port, timeout, protocol);
                 break;
             } catch (e) {
-                e = error;
+                error = e;
             }
         }
         if (result)
