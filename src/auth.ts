@@ -81,7 +81,7 @@ export namespace Auth {
             return request(api, payload, path).then(s => {
                 let obj = JSON.parse(s)
                 if (obj.error)
-                    throw (new Error(obj.errorMessage))
+                    throw obj
                 let userId = obj.user ? obj.user.id ? obj.user.id : '' : ''
                 let prop = obj.user ? obj.user.properties ? obj.user.properties : {} : {}
                 return {
@@ -119,7 +119,8 @@ export namespace Auth {
             return requestAndHandleResponse(api, payloadObj, api.refresh)
         }
         export function validate(option: { accessToken: string, clientToken?: string }, api: API = mojang): Promise<boolean> {
-            return request(api, Object.assign({}, option), api.validate).then(suc => true, fail => false)
+            return request(api, Object.assign({}, option), api.validate)
+                .then(s => JSON.parse(s).error === undefined, fail => false)
         }
         export function invalide(option: { accessToken: string, clientToken: string }, api: API = mojang): void {
             request(api, option, api.invalidate)

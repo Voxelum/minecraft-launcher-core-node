@@ -66,6 +66,12 @@ export namespace MojangService {
             })
             req.on('error', (e) => { reject(e) })
             req.end();
+        }).then((obj) => {
+            if ((obj as any).error) {
+                throw obj
+            } else {
+                return (obj as MojangAccount);
+            }
         });
     }
     export async function setTexture($option: {
