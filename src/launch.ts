@@ -88,7 +88,6 @@ export namespace Launcher {
     }
 
     function ensureLibraries(resourcePath: MinecraftFolder, version: Version): Library[] {
-        console.log(version.libraries.map(l => l.name))
         return version.libraries.filter(lib => !fs.existsSync(resourcePath.getLibraryByPath(lib.download.path)))
     }
 
@@ -162,9 +161,10 @@ export namespace Launcher {
             cmd = cmd.concat(options.extraMCArgs);
 
         if (options.server) {
-            cmd.push(`--server ${options.server.ip}`)
-            if (options.server.port)
-                cmd.push(`--port ${options.server.port}`)
+            cmd.push('--server'); cmd.push(options.server.ip);
+            if (options.server.port) {
+                cmd.push('--port'); cmd.push(options.server.port.toString());
+            }
         }
 
         if (options.resolution) {

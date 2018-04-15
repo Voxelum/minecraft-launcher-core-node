@@ -11,6 +11,7 @@ describe('Launch', () => {
             this.skip()
         }
     })
+
     it('should launch normal minecraft', async () => {
         const option = { version: '1.12.2', gamePath: './tests/assets/temp', javaPath };
         const proc = await Launcher.launch(option)
@@ -21,6 +22,31 @@ describe('Launch', () => {
                     proc.kill('SIGINT');
                 }
                 // console.log(chunk.toString())
+            })
+            proc.stderr.on('data', (chunk) => {
+                console.log(chunk.toString())
+            })
+            proc.on('exit', (code, signal) => {
+                if (signal === 'SIGINT')
+                    resol();
+                else rej({ code, signal })
+            })
+        })
+    }).timeout(100000)
+    it('should launch server', async () => {
+        const option: Launcher.Option = {
+            version: '1.12.2', gamePath: './tests/assets/temp', javaPath, server: {
+                ip: '127.0.0.1',
+                port: 25565,
+            }
+        };
+        const proc = await Launcher.launch(option)
+        await new Promise((resol, rej) => {
+            proc.stdout.on('data', (chunk) => {
+                const str = chunk.toString();
+                if (str.indexOf('[Client thread/INFO]: Connecting to 127.0.0.1, 25565') !== -1) {
+                    proc.kill('SIGINT');
+                }
             })
             proc.stderr.on('data', (chunk) => {
                 console.log(chunk.toString())
