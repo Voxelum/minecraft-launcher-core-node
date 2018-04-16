@@ -87,7 +87,7 @@ export namespace MojangService {
                     inc.on('error', (e) => { reject(e) });
                     inc.on('data', (b) => d += b.toString());
                     inc.on('end', () => {
-                        if (d === '') resolve()
+                        if (d === '' && inc.statusCode === 204) resolve()
                         else reject(JSON.parse(d));
                     })
                 });
@@ -104,7 +104,7 @@ export namespace MojangService {
             })
         else if ($option.texture.data) {
             let status = 0;
-            const boundary = `---------------------------${crypto.randomBytes(8).toString('hex')}`;
+            const boundary = `----------------------${crypto.randomBytes(8).toString('hex')}`;
             let buff: ByteBuffer = new ByteBuffer();
             const diposition = (key: string, value: string) => {
                 if (status === 0) {
