@@ -110,18 +110,30 @@ export namespace Forge {
                         name = line.substring(0, line.length - 2)
                         inlist = true;
                     } else { }
-                    if (!category) throw new Error(line);
+                    if (!category) throw {
+                        type: 'CorruptedForgeConfig',
+                        reason: 'MissingCategory',
+                        line,
+                    };
                     config[category].properties.push(last = { name, type, value, comment } as Property)
                 } else {
                     inlist = false;
-                    if (!category) throw new Error(line);
+                    if (!category) throw {
+                        type: 'CorruptedForgeConfig',
+                        reason: 'MissingCategory',
+                        line,
+                    };
                     config[category].properties.push({ name: pair[0], value: parseVal(type, pair[1]), type, comment } as Property)
                 }
                 comment = undefined;
             }
             for (const line of lines) {
                 if (inlist) {
-                    if (!last) throw new Error(line)
+                    if (!last) throw {
+                        type: 'CorruptedForgeConfig',
+                        reason: 'CorruptedList',
+                        line,
+                    }
                     if (line === '>') inlist = false;
                     else if (line.endsWith(' >')) {
                         last.value.push(parseVal(last.type, line.substring(0, line.length - 2)))
@@ -150,8 +162,11 @@ export namespace Forge {
                             category = pendingCategory;
                             config[category] = { comment, properties: [] }
                             comment = undefined;
-                        }
-                        else throw new Error(line)
+                        } else throw {
+                            type: 'CorruptedForgeConfig',
+                            reason: 'MissingCategory',
+                            line,
+                        };
                         break;
                     case '}':
                         category = undefined;
@@ -165,7 +180,11 @@ export namespace Forge {
                             } else {
                                 pendingCategory = line;
                             }
-                        } else throw new Error(line)
+                        } else throw {
+                            type: 'CorruptedForgeConfig',
+                            reason: 'Duplicated',
+                            line,
+                        }
                 }
             }
             return config;
@@ -300,7 +319,7 @@ export namespace Forge {
             }
         }
         const modids = Object.keys(modidTree);
-        if (modids.length === 0) throw new Error('Not a Mod!')
+        if (modids.length === 0) throw { type: 'NonmodTypeFile' }
 
         return modids.map(k => modidTree[k] as Forge.MetaData)
             .filter(m => m.modid !== undefined)

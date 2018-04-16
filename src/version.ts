@@ -112,10 +112,7 @@ export namespace Version {
         }
     }
     export function parse(minecraftPath: MinecraftLocation, version: string): Promise<Version> {
-        return resolveDependency(minecraftPath, version).then(e => {
-            if (e.length == 0) throw new Error('Dependency error!');
-            return parseVersionHierarchy(e)
-        })
+        return resolveDependency(minecraftPath, version).then(parseVersionHierarchy)
     }
     export function mixinArgument(hi: LaunchArgument[], lo: LaunchArgument[]): LaunchArgument[] {
         const args: { [key: string]: Array<string | object> } = {};
@@ -177,7 +174,10 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
     return new Promise<Version[]>((res, rej) => {
         let stack: Version[] = []
         let fullPath = paths.join(folderLoc, 'versions', version, version + '.json')
-        if (!fs.existsSync(fullPath)) rej(new Error('No version file for ' + version));
+        if (!fs.existsSync(fullPath)) rej({
+            type: "MissingVersionJson",
+            version,
+        });
         function interal(fullPath: string): Promise<Version[]> {
             return fs.readFile(fullPath).then((value) => {
                 let ver = parseVersionJson(value.toString());
@@ -240,20 +240,23 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     } while (hierarchy.length != 0);
 
     if (!mainClass)
-        throw new Error("Missing mainClass");
-    // if (!minecraftArguments)
-    // throw new Error("Missing gameArguments");
-    // if (!jvmArguments)
-    //     throw new Error('Missing jvmArguments')
+        throw {
+            type: 'CorruptedVersionJson',
+            missing: 'MainClass',
+            version: id,
+        };
     if (!assetIndex)
-        throw new Error('Missing asset!');
+        throw {
+            type: 'CorruptedVersionJson',
+            version: id,
+            missing: 'AssetIndex',
+        };
 
     return {
         id, assetIndex, assets, client,
         arguments: args,
         downloads: downloadsMap,
         libraries: Object.keys(librariesMap).map(k => librariesMap[k]).concat(Object.keys(nativesMap).map(k => nativesMap[k])),
-        // minecraftArguments, jvmArguments,
         mainClass, minimumLauncherVersion, releaseTime, time, type, logging,
     } as Version
 }
@@ -302,7 +305,7 @@ function parseVersionJson(versionString: string): Version {
                 const isSnapshot = version.endsWith('-SNAPSHOT');
 
                 const path = !isSnapshot ? `${groupPath}/${id}/${version}/${id}-${version}.jar` : `${groupPath}/${id}/${version}/${version}.jar`
-                
+
                 /**
                  * we have to check if our module support decompression or not
                  */

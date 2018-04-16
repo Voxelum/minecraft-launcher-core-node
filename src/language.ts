@@ -11,17 +11,17 @@ export namespace Language {
         const loca: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location;;
         let json = path.join(loca.assets, 'indexes', version + '.json');
         if (!fs.existsSync(json))
-            throw (new Error('The version indexes json does not exist. Maybe the game assets are incompleted!'))
+            throw { type: 'MissingVersionIndex', location: loca.root }
         let obj = await fs.readJson(json);
         let meta = obj.objects['pack.mcmeta'];
         let hash = meta.hash;
         let head = hash.substring(0, 2);
         let loc = path.join(loca.assets, 'objects', head, hash);
         if (!fs.existsSync(loc))
-            throw 'The pack.mcmeta object file does not exist!' + hash;
+            throw { type: 'PackMcmetaNotExist', hash, location: loca.root };
         let langs = await fs.readJson(loc);
         if (!langs.language)
-            throw new Error('Illegal pack.mcmeta structure!');
+            throw { type: 'IllegalPackMcmetaStructure', location: loca.root };
         let arr = [];
         for (let langKey in langs.language) {
             let langObj = langs.language[langKey];

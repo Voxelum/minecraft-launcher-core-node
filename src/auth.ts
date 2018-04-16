@@ -120,7 +120,7 @@ export namespace Auth {
         }
         export function validate(option: { accessToken: string, clientToken?: string }, api: API = mojang): Promise<boolean> {
             return request(api, Object.assign({}, option), api.validate)
-                .then(s => JSON.parse(s).error === undefined, fail => false)
+                .then(s => s === '' || JSON.parse(s).error === undefined, fail => false)
         }
         export function invalide(option: { accessToken: string, clientToken: string }, api: API = mojang): void {
             request(api, option, api.invalidate)

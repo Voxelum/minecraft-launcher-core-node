@@ -118,12 +118,14 @@ describe('Language', () => {
 })
 describe('WorldInfo', () => {
     it('should validate a simple map', async () => {
-        const valid = WorldInfo.valid('./tests/assets/sample-map');
-        assert(valid, 'dir fail');
+        const entry = await WorldInfo.findEntry('./tests/assets/sample-map');
+        assert(entry, 'dir fail');
+        assert.equal(entry, 'level.dat');
     })
     it('should validate a zip map', async () => {
-        const valid = await WorldInfo.valid('./tests/assets/sample-map.zip');
-        assert(valid, 'zip fail');
+        const entry = await WorldInfo.findEntry('./tests/assets/sample-map.zip');
+        assert(entry, 'zip fail');
+        assert.equal(entry, 'sample-map/level.dat');
     })
     it('should read a simpe map', () => {
         assert(WorldInfo.parse(fs.readFileSync('./tests/assets/sample-map/level.dat')));

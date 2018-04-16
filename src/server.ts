@@ -117,7 +117,9 @@ export namespace Server {
     }
     export function parseNBT(buf: Buffer): Info[] {
         let value = NBT.Serializer.deserialize(buf);
-        if (!value.servers) throw new Error('Invalid Server NBT Syntext!');
+        if (!value.servers) throw {
+            type: 'InvalidServerSyntext'
+        }
         return value.servers.map((i: any) => ({
             icon: i.icon,
             host: i.ip,

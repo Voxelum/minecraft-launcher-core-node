@@ -29,9 +29,12 @@ export namespace GameProfile {
     export function parseTexturesInfo(profile: GameProfile): Textures | undefined {
         if (!profile.properties || !profile.properties.textures) return undefined;
         const obj = JSON.parse(new Buffer(profile.properties.textures, 'base64').toString());
-        obj.texture.skin = obj.texture.SKIN;
-        obj.texture.cape = obj.texture.CAPE;
-        obj.texture.elytra = obj.texture.ELYTRA;
+        obj.textures.skin = obj.textures.SKIN;
+        if (obj.textures.CAPE) obj.textures.cape = obj.textures.CAPE;
+        if (obj.textures.ELYTRA) obj.textures.elytra = obj.textures.ELYTRA;
+        delete obj.textures.SKIN;
+        delete obj.textures.CAPE;
+        delete obj.textures.ELYTRA;
         return obj;
     }
 }

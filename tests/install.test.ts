@@ -19,7 +19,8 @@ describe('Install', () => {
             releaseTime: '2017-09-18T08:39:46+00:00',
             url: 'https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json'
         };
-        return Version.installTask('client', meta, loc, { checksum: true }).execute()
+        return Version.installTask('client', meta, loc, { checksum: true })
+            .execute()
             .then(v => {
                 assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.jar'));
                 assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.json'));

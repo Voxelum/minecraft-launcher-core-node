@@ -8,18 +8,16 @@ import Task from 'treelike-task'
 
 type GET = (options: http.RequestOptions, callback?: (res: http.IncomingMessage) => void) => http.ClientRequest;
 
-function pipeTo<T extends NodeJS.WritableStream>(readable: Readable, writable: T, total: number,
+function pipeTo<T extends NodeJS.WritableStream>(context: Task.Context, readable: Readable, writable: T, total: number,
     progress?: (progress: number, total: number) => void) {
-    return (context: Task.Context) => {
-        return new Promise((resolve, reject) => {
-            readable.on('error', (e) => { reject(e) });
-            let len = 0;
-            context.update(-1, total);
-            readable.on('data', (buf) => { context.update(len += buf.length, total) })
-            readable.pipe(writable);
-            writable.on('finish', () => { resolve() })
-        });
-    }
+    return new Promise((resolve, reject) => {
+        readable.on('error', (e) => { reject(e) });
+        let len = 0;
+        context.update(-1, total);
+        readable.on('data', (buf) => { context.update(len += buf.length, total) })
+        readable.pipe(writable);
+        writable.on('finish', () => { resolve() })
+    });
 }
 
 function nodeJsDownload(options: http.RequestOptions | string): Promise<http.IncomingMessage> {
@@ -56,15 +54,14 @@ export function downloadTask(options: http.RequestOptions | string, fileOrOutStr
         const writable: Writable = typeof fileOrOutStream === 'string' ? fs.createWriteStream(fileOrOutStream) :
             fileOrOutStream === undefined ? new WriteableBuffer() : fileOrOutStream;
         try {
-            const readable = await context.execute('fetchMessage', () => nodeJsDownload(options));
+            const readable = await nodeJsDownload(options);
             const total = Number.parseInt(readable.headers['content-length'] as string)
-            await context.execute('fetchData', pipeTo(readable, writable, total))
+            await pipeTo(context, readable, writable, total);
         } catch (e) {
             if (typeof fileOrOutStream === 'string') {
                 try {
                     await fs.unlink(fileOrOutStream);
                 } catch (e) {
-
                 }
             }
             throw { error: e, options };

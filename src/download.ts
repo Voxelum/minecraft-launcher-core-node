@@ -92,9 +92,7 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
         let json = folder.getVersionJson(version.id);
         await context.execute('ensureVersionRoot', () => fs.ensureDir(folder.getVersionRoot(version.id)));
         if (!fs.existsSync(json)) await context.execute('getJson', downloadTask(version.url, json));
-        let ver = Version.parse(minecraft, version.id);
-        if (ver) return ver;
-        else throw new Error('Cannot parse version');
+        return Version.parse(minecraft, version.id);
     }
 }
 
@@ -156,7 +154,7 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
                     async () => decompressXZ(await context.execute('downloadLib', downloadTask(downloadURL)) as Buffer));
                 await context.execute('unpack', () => unpack200(decompressed).then(buf => fs.writeFile(filePath, buf)));
             } else {
-                await context.execute('downloadLib', downloadTask(downloadURL, filePath));
+                await downloadTask(downloadURL, filePath)(context);
             }
         }
         if (!exist) {
@@ -197,39 +195,45 @@ function downloadAsset(content: any, key: string, folder: MinecraftFolder, asset
         const hash: string = element.hash;
         const head = hash.substring(0, 2);
         const dir = folder.getPath('assets', 'objects', head);
+        await fs.ensureDir(dir);
         const file = path.join(dir, hash);
         const exist = fs.existsSync(file);
         if (!exist) {
-            await fs.ensureDir(dir);
-            await context.execute(hash, downloadTask(`${assetsHost}/${head}/${hash}`, file));
-        }
-        if (checksum) {
-            let sum = await context.execute('checksum', () => CHECKSUM(file));
-            if (sum != hash && exist) {// if exist, re-download
-                await fs.ensureDir(dir);
-                await context.execute(`re-${hash}`, downloadTask(`${assetsHost}/${head}/${hash}`, file));
-                sum = await context.execute('re-checksum', () => CHECKSUM(file));
+            await downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
+        } else {
+            let sum = await CHECKSUM(file);
+            if (sum !== hash) {
+                await downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
             }
-            if (sum != hash)
-                throw new Error(`SHA1 not matched!\n${sum}\n${hash}\n@${file}\n Probably caused by the incompleted file or illegal file source!`)
         }
     }
 }
+
+const cores = os.cpus.length || 4;
 
 function downloadAssets(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, assetsHost?: string }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
         const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
         if (!fs.existsSync(jsonPath)) {
-            await context.execute('ensureIndexes', () => fs.ensureDir(path.join(folder.assets, 'indexes')))
+            await fs.ensureDir(path.join(folder.assets, 'indexes'))
             await context.execute('downloadAssetsJson', downloadTask(version.assetIndex.url, jsonPath))
         }
         const content: any = (await fs.readJson(jsonPath)).objects
-        await context.execute('ensureObjects', () => fs.ensureDir(folder.getPath('assets', 'objects')))
+        await fs.ensureDir(folder.getPath('assets', 'objects'));
         const assetsHost = option ? option.assetsHost || 'https://resources.download.minecraft.net' : 'https://resources.download.minecraft.net';
         const checksum = option ? option.checksum ? option.checksum : false : false;
         try {
-            await Promise.all(Object.keys(content).map(key => context.execute(key, downloadAsset(content, key, folder, assetsHost, checksum))))
+            const keys = Object.keys(content);
+            for (let i = 0; i < keys.length; i += cores) {
+                const all = [];
+                for (let j = 0; j < cores; j++) {
+                    const hash = keys[j + i];
+                    if (hash === undefined) break;
+                    all.push(context.execute(`${hash}`, downloadAsset(content, hash, folder, assetsHost, checksum)));
+                }
+                await Promise.all(all);
+            }
         }
         catch (e) {
             throw e;

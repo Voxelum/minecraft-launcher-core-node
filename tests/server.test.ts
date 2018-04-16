@@ -24,8 +24,9 @@ describe('Server', () => {
     })
     describe('Ping', () => {
         it('should fetch server frame', async () => {
-            const frame = Server.fetchStatusFrame({ host: 'mc.hypixel.net' })
+            const frame = await Server.fetchStatusFrame({ host: 'mc.hypixel.net' })
             assert(frame);
+            assert(frame.ping !== -1, "Frame should have ping")
         }).timeout(100000)
         it('should control the port', (done) => {
             Server.fetchStatusFrame({ host: 'mc.hypixel.net', port: 138 }, { timeout: 500, retryTimes: 0 })
@@ -61,6 +62,7 @@ describe('Server', () => {
             Server.fetchStatus({
                 host: 'mc.hypixel.net',
             }, { timeout: 10000 }).then(status => {
+                assert(status.pingToServer !== -1);
                 done()
             }).catch(e => { done(e) })
         }).timeout(100000);

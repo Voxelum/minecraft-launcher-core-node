@@ -60,10 +60,16 @@ export namespace Launcher {
         if (!options.isDemo) options.isDemo = false;
         let mc = new MinecraftFolder(options.resourcePath)
         let v: Version = typeof options.version === 'string' ? await Version.parse(options.resourcePath, options.version) : options.version;
-        if (!v) throw "Cannot find version " + options.version
+        if (!v) throw {
+            type: "CannotResolveVersion",
+            version: options.version,
+        }
 
         let missing = ensureLibraries(mc, v)
-        if (missing.length > 0) throw new Error('Missing library! ' + missing)
+        if (missing.length > 0) throw {
+            type: "MissingLibs",
+            libs: missing,
+        }
         extractNative(mc, v)
 
         const args = genArgs(options.auth, options, v)

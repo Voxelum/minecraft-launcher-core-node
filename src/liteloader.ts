@@ -124,7 +124,6 @@ export namespace LiteLoader {
     const releaseRoot = 'http://repo.mumfrey.com/content/repositories/liteloader/'
 
 
-
     function buildVersionInfo(meta: VersionMeta, mountedJSON: any) {
         const id = `${mountedJSON.id}-Liteloader${meta.mcversion}-${meta.version}`;
         const time = new Date(Number.parseInt(meta.timestamp) * 1000).toISOString();
@@ -143,8 +142,8 @@ export namespace LiteLoader {
         };
         if (mountedJSON.arguments) {
             info.arguments = {
-                game: args,
-                jvm: ['--tweakClass', meta.tweakClass,...mountedJSON.arguments.jvm]
+                game: ['--tweakClass', meta.tweakClass, ...args],
+                jvm: [...mountedJSON.arguments.jvm]
             }
         } else {
             args.unshift(meta.tweakClass)
@@ -163,7 +162,7 @@ export namespace LiteLoader {
             const mc: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location;
             const mountVersion = version || meta.mcversion;
 
-            if (!fs.existsSync(mc.getVersionJson(mountVersion))) throw new Error(`Version doesn't exist: ${mountVersion}`);
+            if (!fs.existsSync(mc.getVersionJson(mountVersion))) throw { type: 'MissingVersionJson', version: mountVersion, location: mc.root };
             const mountedJSON: any = await fs.readJson(mc.getVersionJson(mountVersion));
             const versionInf = buildVersionInfo(meta, mountedJSON);
             const versionPath = mc.getVersionRoot(versionInf.id);
@@ -179,13 +178,13 @@ export namespace LiteLoader {
     export function installAndCheck(meta: VersionMeta, location: MinecraftLocation, version?: string) {
         return installAndCheckTask(meta, location, version).execute();
     }
-    
+
     export function installAndCheckTask(meta: VersionMeta, location: MinecraftLocation, version?: string): Task<void> {
         return Task.create('installLiteloader', async (context) => {
             const mc: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location;
             const mountVersion = version || meta.mcversion;
 
-            if (!fs.existsSync(mc.getVersionJson(mountVersion))) throw new Error(`Version doesn't exist: ${mountVersion}`);
+            if (!fs.existsSync(mc.getVersionJson(mountVersion))) throw { type: 'MissingVersionJson', version: mountVersion, location: mc.root };
             const mountedJSON: any = await fs.readJson(mc.getVersionJson(mountVersion));
             const versionInf = buildVersionInfo(meta, mountedJSON);
             const versionPath = mc.getVersionRoot(versionInf.id);
