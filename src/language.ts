@@ -7,6 +7,12 @@ export class Language {
 }
 
 export namespace Language {
+    /**
+     * Read all Minecraft supported languages from a version of Minecraft game asset. This requires a installed Minecraft assets.
+     *  
+     * @param location The location of Minecraft game, .minecraft folder
+     * @param version The version you want to read
+     */
     export async function read(location: MinecraftLocation, version: string): Promise<Language[]> {
         const loca: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location;;
         let json = path.join(loca.assets, 'indexes', version + '.json');

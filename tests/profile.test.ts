@@ -7,7 +7,7 @@ describe('ProfileService', () => {
         const s = await ProfileService.fetch('abf81fe99f0d4948a9097721a8198ac4');
         assert.equal(s.name, 'CI010')
         assert.equal('abf81fe99f0d4948a9097721a8198ac4', s.id);
-        const textures = await ProfileService.fetchProfileTexture(s);
+        const textures = await ProfileService.getTextures(s);
         assert(textures.textures)
     }).timeout(10000);
     it('should fetch profile by name', async () => {

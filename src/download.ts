@@ -12,6 +12,7 @@ import { Library, Version, VersionMeta, VersionMetaList } from './version';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import { decompressXZ, unpack200 } from './utils/decompress';
 
+type LibraryHost = (libId: string) => string | undefined;
 declare module './version' {
     interface VersionMeta {
         id: string
@@ -27,6 +28,8 @@ declare module './version' {
         },
         versions: VersionMeta[]
     }
+    type LibraryHost = (libId: string) => string | undefined;
+
     namespace Version {
         type MetaContainer = { list: VersionMetaList, date: string }
 
@@ -34,16 +37,39 @@ declare module './version' {
             fallback?: MetaContainer, remote?: string
         }): Promise<MetaContainer>;
 
-        function install(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
-        function install(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
-        function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
+        /**
+         * Install the server to a location by version metadata
+         */
+        function install(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version>;
 
-        function installTask(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
-        function installTask(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
-        function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
+        /**
+         * Install the client to a location by version metadata
+         */
+        function install(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version>;
 
-        function checkDependencies(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Promise<Version>;
-        function checkDependenciesTask(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version>;
+        /**
+         * Install the Minecraft game to a location by version metadata
+         * 
+         * @param type The type of game, client or server
+         * @param versionMeta The version metadata
+         * @param minecraft The Minecraft location
+         * @param option 
+         */
+        function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version>;
+
+        function installTask(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
+        function installTask(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
+        function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
+
+        /**
+         * Check the completeness of the Minecraft game assets and libraries.
+         * 
+         * @param version 
+         * @param minecraft 
+         * @param option 
+         */
+        function checkDependencies(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version>;
+        function checkDependenciesTask(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
     }
 }
 
@@ -57,22 +83,22 @@ Version.updateVersionMeta = function (option?: {
     }).then(result => result as { list: VersionMetaList, date: string })
 }
 
-Version.install = function (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) {
+Version.install = function (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return Version.installTask(type, versionMeta, minecraft, option).execute();
 }
-Version.installTask = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) =>
+Version.installTask = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) =>
     Task.create('install', install(type, versionMeta, minecraft, option))
 
-Version.checkDependencies = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) {
+Version.checkDependencies = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return Version.checkDependenciesTask(version, minecraft, option).execute();
 }
 
-Version.checkDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }): Task<Version> {
+Version.checkDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
     return Task.create('checkDependency', checkDependency(version, minecraft, option));
 }
 
 
-function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string, assetsHost?: string }) {
+function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return (context: Task.Context) => {
         return context.execute('downloadVersion', downloadVersion(type, versionMeta, minecraft, option ? option.checksum : undefined))
             .then(ver => type === 'client' ? context.execute('checkDependencies', checkDependency(ver, minecraft, option)) : ver)
@@ -118,9 +144,8 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
     }
 }
 
-export type LibraryHost = (libId: string) => string | undefined;
 
-function checkDependency(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string | LibraryHost, assetsHost?: string }) {
+function checkDependency(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return async (context: Task.Context) => {
         return context.execute('downloadAssets', downloadAssets(version, minecraft, option))
             .then((version) => context.execute('downloadLibraries', downloadLibraries(version, minecraft, option)))
@@ -166,12 +191,12 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
     }
 }
 
-function downloadLibraries(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: string | LibraryHost }) {
+function downloadLibraries(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft;
         let all = [];
         const op = option || {};
-        const libraryHost: LibraryHost | undefined = (typeof op.libraryHost === 'string' ? (l) => undefined : op.libraryHost);
+        const libraryHost: LibraryHost | undefined = op.libraryHost;
         const checksum = option ? option.checksum : true;
         try {
             const promises = version.libraries.map(lib =>

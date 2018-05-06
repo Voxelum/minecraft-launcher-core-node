@@ -111,7 +111,7 @@ describe('Resourcepack', () => {
 describe('Language', () => {
     it('no successful version reading', (done) => {
         Language.read('./', '1.12').catch(e => {
-            assert.equal((e as Error).message, 'The version indexes json does not exist. Maybe the game assets are incompleted!')
+            assert.equal(e.type, 'MissingVersionIndex')
             done()
         })
     })

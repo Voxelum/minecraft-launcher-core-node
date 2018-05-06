@@ -6,18 +6,18 @@ import * as assert from 'assert';
 describe('Server', () => {
     it('should read server.dat file', () => {
         let data = fs.readFileSync('./tests/assets/servers.dat')
-        let infos = Server.parseNBT(data);
+        let infos = Server.readInfo(data);
         assert.equal(infos[0].name, 'nyaacat')
         assert.equal(infos[1].name, 'himajin')
         assert.equal(infos[2].name, 'mcJp')
         assert.equal(infos[3].name, 'Minecraft Server')
     })
     it('should write to nbt data right', () => {
-        const byte = Server.writeNBT([{
+        const byte = Server.writeInfo([{
             name: 'abc',
             host: 'ip!'
         }]);
-        const readBack = Server.parseNBT(byte);
+        const readBack = Server.readInfo(byte);
         assert(readBack[0]);
         assert.equal(readBack[0].name, 'abc');
         assert.equal(readBack[0].host, 'ip!');

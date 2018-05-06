@@ -501,10 +501,21 @@ export namespace GameSetting {
         return target as GameSetting.Frame;
     }
 
+    /**
+     * Parse the game settings from string representation. The input game setting string should comes from .minecraft/options.txt 
+     *  
+     * @param str 
+     */
     export function parse(str: string): GameSetting {
         return new GameSetting(parseFrame(str));
     }
 
+    /**
+     * Generate text format game setting for options.txt file.
+     * 
+     * @param setting The game setting object
+     * @param original 
+     */
     export function stringify(setting: GameSetting | GameSetting.Frame | any, original?: string): string {
         let model: any;
         if (original) {

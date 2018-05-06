@@ -13,6 +13,9 @@ function writeString(buff: ByteBuffer, string: string) {
 }
 
 export namespace Server {
+    /**
+     * The servers.dat format server information, contains known host displayed in "Multipler" page. 
+     */
     export interface Info {
         name?: string;
         host: string;
@@ -22,6 +25,9 @@ export namespace Server {
         resourceMode?: ResourceMode;
     }
 
+    /**
+     * The JSON format of server status. 
+     */
     export interface StatusFrame {
         version: {
             name: string,
@@ -32,6 +38,9 @@ export namespace Server {
             online: number,
             sample?: Array<{ id: string, name: string }>,
         },
+        /**
+         * The motd of server, which might be the raw TextComponent string or structurelized TextComponent JSON 
+         */
         description: object | string,
         favicon: string | '',
         modinfo?: {
@@ -115,7 +124,12 @@ export namespace Server {
             return status;
         }
     }
-    export function parseNBT(buf: Buffer): Info[] {
+    /**
+     * Read the server information from the binary data of .minecraft/server.dat file, which stores the local known server host information.
+     * 
+     * @param buf The binary data of .minecraft/server.dat 
+     */
+    export function readInfo(buf: Buffer): Info[] {
         let value = NBT.Serializer.deserialize(buf);
         if (!value.servers) throw {
             type: 'InvalidServerSyntext'
@@ -127,7 +141,12 @@ export namespace Server {
             resourceMode: i.acceptTextures === undefined ? ResourceMode.PROMPT : i.acceptTextures ? ResourceMode.ENABLED : ResourceMode.DISABLED,
         }))
     }
-    export function writeNBT(infos: Info[]): Buffer {
+    /**
+     * Write the information to NBT format used by .minecraft/server.dat file.
+     * 
+     * @param infos The array of server information.
+     */
+    export function writeInfo(infos: Info[]): Buffer {
         const object = {
             servers: infos.map(i => ({
                 ip: i.host,
@@ -244,21 +263,17 @@ export namespace Server {
             connection.once('timeout', () => { reject(new Error(`Connection timeout ${timeout}`)) })
         });
 
-        // const frame = await new Promise((resolve, reject) => {
-        //     connection.once('end', () => {
-        //         if (!frame) {
-        //             reject(new Error('Closed by server!'))
-        //         }
-        //     })
-        //     handshake(host, port, protocol, connection)
-        //         .then(JSON.parse)
-        //         .then(f => { resolve(f); })
-        // }) as StatusFrame
         const frame = await handshake(host, port, protocol, connection).then(JSON.parse);
         frame.ping = await ping(host, port, connection)
         connection.end();
         return frame;
     }
+    /**
+     * Fetch the server status in raw JSON format.
+     * 
+     * @param server The server information
+     * @param options The fetch options
+     */
     export async function fetchStatusFrame(server: Info, options: FetchOptions = {}): Promise<StatusFrame> {
         const host = server.host;
         const port = server.port || 25565;
@@ -280,6 +295,12 @@ export namespace Server {
             return result;
         throw error;
     }
+    /**
+     * Fetch the server status in resolved object format.
+     * 
+     * @param server The server information
+     * @param options The fetch options
+     */
     export function fetchStatus(server: Info, options: FetchOptions = {}): Promise<Status> {
         return fetchStatusFrame(server, options).then(Status.from);
     }

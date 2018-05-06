@@ -96,6 +96,13 @@ export namespace Auth {
             })
         }
 
+        /**
+         * Login to the server by username and password. Notice that the auth server usually have the cooldown time for login. 
+         * You have to wait for about a minute after one approch of login, to login again.
+         * 
+         * @param option The login options, contains the username, password and clientToken
+         * @param api The API of the auth server
+         */
         export function login(option: { username: string, password?: string, clientToken?: string | undefined },
             api: API = mojang): Promise<Auth> {
             return requestAndHandleResponse(api, Object.assign({
@@ -104,6 +111,15 @@ export namespace Auth {
             }, option), api.authenticate)
         }
 
+        /**
+         * Refresh the current access token with specific client token.
+         * Notice that the client token and access token must match. 
+         * 
+         * You can use this function to get a new token when your old token is expired.
+         * 
+         * @param option The tokens 
+         * @param api The API of the auth server
+         */
         export function refresh(option: { clientToken: string, accessToken: string, profile?: string },
             api: API = mojang): Promise<Auth> {
             let payloadObj: any = {
@@ -118,18 +134,41 @@ export namespace Auth {
                 }
             return requestAndHandleResponse(api, payloadObj, api.refresh)
         }
+        /**
+         * Determine whether the access/client token pair is valid. 
+         * 
+         * @param option The tokens
+         * @param api The API of the auth server
+         */
         export function validate(option: { accessToken: string, clientToken?: string }, api: API = mojang): Promise<boolean> {
             return request(api, Object.assign({}, option), api.validate)
                 .then(s => s === '' || JSON.parse(s).error === undefined, fail => false)
         }
+        /**
+         * Invalidate an access/client token pair 
+         * 
+         * @param option The tokens
+         * @param api The API of the auth server
+         */
         export function invalide(option: { accessToken: string, clientToken: string }, api: API = mojang): void {
             request(api, option, api.invalidate)
         }
+        /**
+         * Signout user by username and password
+         *  
+         * @param option The username and password
+         * @param api The API of the auth server
+         */
         export function signout(option: { username: string, password: string }, api: API = mojang): void {
             request(api, option, api.signout)
         }
     }
 
+    /**
+     * Create an offline auth.
+     * 
+     * @param username The username you want to have in-game.
+     */
     export function offline(username: string): Auth {
         return {
             accessToken: v4(),

@@ -124,6 +124,14 @@ interface IO {
     read(buf: ByteBuffer, find?: Finder): { type: Scope | NBT.TagType, value: any };
     write(buf: ByteBuffer, value: any, scope?: Scope, find?: (id: string) => CompoundSchema): void;
 }
+function ensureType(type: string, v: any) {
+    if (typeof v !== type) {
+        throw {
+            type: 'IllegalInputFormat'
+        }
+    }
+}
+
 const visitors: IO[] = [
     { read: (buf) => val(NBT.TagType.End, undefined), write(buf, v) { } }, //end
     { read: (buf) => val(NBT.TagType.Byte, buf.readByte()), write(buf, v) { buf.writeByte(v) } }, //byte
@@ -235,7 +243,16 @@ const visitors: IO[] = [
                 if (!writer) throw "Unknown type " + type;
                 buf.writeByte(nextType);
                 writeUTF8(buf, key);
-                writer.write(buf, value, nextScope, find);
+                try {
+                    writer.write(buf, value, nextScope, find);
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        throw {
+                            type: 'IllegalInputType',
+                            message: `Require ${Object.keys(NBT.TagType)[13 + nextType]} but found ${typeof value}`
+                        }
+                    }
+                }
             })
             buf.writeByte(0);
         }

@@ -11,6 +11,9 @@ import format from './utils/format'
 
 export namespace Launcher {
     export interface Option {
+        /**
+         * The auth information
+         */
         auth?: Auth,
         launcherName?: string,
         launcherBrand?: string,
@@ -47,6 +50,14 @@ export namespace Launcher {
         ignorePatchDiscrepancies?: boolean
     }
 
+    /**
+     * Launch the minecraft as a child process. This function use spawn to create child process. To use an alternative way, see function generateArguments
+     * 
+     * @param options The detail options for this launching. 
+     * @see ChildProcess
+     * @see spawn
+     * @see generateArguments
+     */
     export async function launch(options: Option): Promise<ChildProcess> {
         await fs.ensureDir(options.gamePath)
         if (!options.version) throw new Error('Version cannot be null!')
@@ -55,7 +66,7 @@ export namespace Launcher {
         if (!options.resourcePath) options.resourcePath = options.gamePath;
         if (!options.minMemory) options.minMemory = 512;
         if (!options.maxMemory) options.maxMemory = options.minMemory;
-        if (!options.launcherName) options.launcherName = 'JMCCC'
+        if (!options.launcherName) options.launcherName = 'INF'
         if (!options.launcherBrand) options.launcherBrand = 'InfinityStudio'
         if (!options.isDemo) options.isDemo = false;
         let mc = new MinecraftFolder(options.resourcePath)
@@ -78,6 +89,9 @@ export namespace Launcher {
         })
     }
 
+    /**
+     * Generate the arguments array by options. This function is useful if you want to launch the process by yourself.
+     */
     export async function generateArguments(options: Option) {
         if (!options.version) throw new Error('Version cannot be null!')
         if (!options.auth) options.auth = Auth.offline('Steve');

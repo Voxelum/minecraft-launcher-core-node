@@ -57,9 +57,9 @@ function handshake(host: string, port: number, connection: Socket) {
         })
     });
 }
-export interface Handler extends Function {
-    accept(buffer: ByteBuffer): void;
-}
+
+export type Handler = (buffer: ByteBuffer) => void
+
 const internalHandlers = {
     0x00: {
         accept(buffer: ByteBuffer): void {
@@ -95,5 +95,4 @@ export class MinecraftConnection extends EventEmitter {
     on(event: 'packet', listener: Handler): this {
         return super.on(event, listener)
     }
-
 }

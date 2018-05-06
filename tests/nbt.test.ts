@@ -3,27 +3,17 @@ import * as assert from 'assert';
 import * as Long from 'long'
 import * as fs from 'fs-extra'
 
-// describe('ddd', () => {
-//     it('should read level.dat', () => {
-//         const buff = fs.readFileSync('./tests/assets/sample-map/level.dat');
-//         const obj = NBT.Serializer.deserialize(buff, true);
-//         const ser = NBT.Serializer.create().register('level', obj.type as NBT.Schema);
-//         const buff1 = ser.serialize(obj.value, 'level', true);
-//         console.log(buff1 === undefined)
-//         assert(buff1.equals(buff));
-//     })
-// })
-
 describe('NBT', () => {
     let ser: NBT.Serializer;
     let buf: Buffer;
-    let from = {
+    let src = {
         name: 'ci010', type: 'author', byte: 10, short: 10, int: 10, nested: {
             name: 'indexyz', type: 'author', value: 'ilauncher',
         }
     };
-    let to: any;
-    it('serializer creating and registring', () => {
+    let deserializedDirect: any;
+    let deserialized: any;
+    it('should be able to register serializer', () => {
         ser = NBT.Serializer.create().register('test', {
             name: NBT.TagType.String,
             type: NBT.TagType.String,
@@ -34,16 +24,68 @@ describe('NBT', () => {
             nested: 'test',
         });
     })
-    it('object serializing', () => {
-        buf = ser.serialize(from, 'test');
+    it('should be able to serialize object', () => {
+        buf = ser.serialize(src, 'test');
+        assert(buf);
     })
-    it('object deserializing', () => {
-        to = ser.deserialize(buf).value;
-        const raw = NBT.Serializer.deserialize(buf);
-        assert.deepEqual(to, raw);
+    it('should be able to deserialize buffer', () => {
+        deserialized = ser.deserialize(buf).value;
+        assert(deserialized);
     })
-    it('deserialize same object producing', () => {
-        assert.deepEqual(from, to);
+    it('should be able to deserialize buffer directly', () => {
+        deserializedDirect = NBT.Serializer.deserialize(buf);
+        assert(deserializedDirect);
+    })
+    it('should produce the same results across two type of deserializations', () => {
+        assert.deepEqual(deserializedDirect, deserialized);
+    })
+    it('should produce the same result as the input', () => {
+        assert.deepEqual(src, deserialized);
+    })
+    it('should not serialize the error input', () => {
+        const input = { name: 'ci010' };
+        const inputType = { name: NBT.TagType.Byte };
+        const serializer = NBT.Serializer.create().register('test', inputType);
+        try {
+            serializer.serialize(input, 'test', false);
+        } catch (e) {
+            assert.equal(e.type, 'IllegalInputType');
+            assert.equal(e.message, 'Require Byte but found string');
+        }
+        try {
+            NBT.Serializer.serialize({
+                ...input,
+                __nbtPrototype__: inputType
+            });
+        } catch (e) {
+            assert.equal(e.type, 'IllegalInputType');
+            assert.equal(e.message, 'Require Byte but found string');
+        }
+    })
+    it('should ignore the additional field in serialization', () => {
+        const input = { name: 'ci010', age: 0, };
+        const inputType = { name: NBT.TagType.String };
+        const serializer = NBT.Serializer.create().register('test', inputType);
+
+        const matchedInput = { name: 'ci010' };
+
+        const matchedSer = serializer.serialize(matchedInput, 'test', false);
+        const matchedDirectSer = serializer.serialize(matchedInput, 'test', false);
+        
+        const ser = serializer.serialize(input, 'test', false);
+        const directSer = NBT.Serializer.serialize({
+            ...input,
+            __nbtPrototype__: inputType
+        });
+
+        assert.equal(0, matchedSer.compare(matchedDirectSer));
+        assert.equal(0, matchedSer.compare(ser));
+        assert.equal(0, matchedSer.compare(directSer));
+
+        const reversed = serializer.deserialize(ser);
+        const reversedDirect = NBT.Serializer.deserialize(ser);
+        assert.deepEqual(matchedInput, reversed.value);
+        assert.deepEqual(matchedInput, reversedDirect);
     })
 
 

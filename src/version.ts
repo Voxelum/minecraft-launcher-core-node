@@ -111,10 +111,26 @@ export namespace Version {
             }
         }
     }
+    /**
+     * Recursively parse the version JSON. 
+     * 
+     * This function requires that the id in version.json is identical to the directory name of that version.
+     * 
+     * e.g. .minecraft/<version-a>/<version-a.json> and in <version-a.json>:
+     * 
+     * { "id": "<version-a>", ... }
+     *  
+     * @param minecraftPath The .minecraft path
+     * @param version The vesion id.
+     * @return The final resolved version detail
+     */
     export function parse(minecraftPath: MinecraftLocation, version: string): Promise<Version> {
         return resolveDependency(minecraftPath, version).then(parseVersionHierarchy)
     }
-    export function mixinArgument(hi: LaunchArgument[], lo: LaunchArgument[]): LaunchArgument[] {
+    /**
+     * @deprecated
+     */
+    function mixinArgument(hi: LaunchArgument[], lo: LaunchArgument[]): LaunchArgument[] {
         const args: { [key: string]: Array<string | object> } = {};
         const out: LaunchArgument[] = [];
 
@@ -131,6 +147,12 @@ export namespace Version {
 
         return out;
     }
+    /**
+     * Mixin the string arguments
+     * @deprecated
+     * @param hi 
+     * @param lo 
+     */
     export function mixinArgumentString(hi: string, lo: string): string {
         const arrA = lo.split(' ');
         const arrB = hi.split(' ');
