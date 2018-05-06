@@ -2,6 +2,8 @@ import * as https from 'https'
 import * as queryString from 'querystring'
 import * as url from 'url'
 import { download as get } from './utils/download'
+import * as ByteBuffer from 'bytebuffer'
+import * as crypto from 'crypto'
 
 export interface GameProfile {
     readonly id: string,
@@ -40,17 +42,30 @@ export namespace GameProfile {
 }
 
 export namespace ProfileService {
+    const DEFAULT_KEY = `-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAylB4B6m5lz7jwrcFz6Fd
+/fnfUhcvlxsTSn5kIK/2aGG1C3kMy4VjhwlxF6BFUSnfxhNswPjh3ZitkBxEAFY2
+5uzkJFRwHwVA9mdwjashXILtR6OqdLXXFVyUPIURLOSWqGNBtb08EN5fMnG8iFLg
+EJIBMxs9BvF3s3/FhuHyPKiVTZmXY0WY4ZyYqvoKR+XjaTRPPvBsDa4WI2u1zxXM
+eHlodT3lnCzVvyOYBLXL6CJgByuOxccJ8hnXfF9yY4F0aeL080Jz/3+EBNG8RO4B
+yhtBf4Ny8NQ6stWsjfeUIvH7bU/4zCYcYOq4WrInXHqS8qruDmIl7P5XXGcabuzQ
+stPf/h2CRAUpP/PlHXcMlvewjmGU6MfDK+lifScNYwjPxRo4nKTGFZf/0aqHCh/E
+AsQyLKrOIYRE0lDG3bzBh8ogIMLAugsAfBb6M3mqCqKaTMAf/VAjh5FFJnjS+7bE
++bZEV0qwax1CEoPPJL1fIQjOS8zj086gjpGRCtSy9+bTPTfTR/SJ+VUB5G2IeCIt
+kNHpJX2ygojFZ9n5Fnj7R9ZnOM+L8nyIjPu3aePvtcrXlyLhH/hvOfIOjPxOlqW+
+O5QwSFP4OEcyLAUgDdUgyW36Z5mB285uKW/ighzZsOTevVUG2QwDItObIV6i8RCx
+FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
+-----END PUBLIC KEY-----`;
+
     export interface API {
-        profile(uuid: string): string,
-        profileByName(name: string): string,
+        profile(uuid: string): string
+        profileByName(name: string): string
+        texture(uuid: string, type: 'skin' | 'cape' | 'elytra'): string
     }
     export const mojang: API = {
-        profile(uuid: string) {
-            return `https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`;
-        },
-        profileByName(name: string) {
-            return "https://api.mojang.com/users/profiles/minecraft/" + name;
-        },
+        profile: (uuid: string) => `https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`,
+        profileByName: (name: string) => `https://api.mojang.com/users/profiles/minecraft/${name}`,
+        texture: (uuid, type) => `https://api.mojang.com/user/profile/${uuid}/${type}`,
     }
 
     async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
@@ -59,6 +74,27 @@ export namespace ProfileService {
             ...texture,
             data: await get(texture.url).then(buf => (buf as Buffer))
         }
+    }
+
+    function checkSign(value: string, signature: string, pemKey: string) {
+        return crypto.createVerify('SHA1').update(value, 'utf8')
+            .verify(pemKey, signature, 'base64');
+    }
+
+    async function fetchProfile(target: string, pemPubKey?: string) {
+        const buf = await get(target) as Buffer;
+        const obj = JSON.parse(buf.toString())
+        if (obj.properties) {
+            const properties = obj.properties;
+            const to: any = {}
+            for (const prop of properties) {
+                if (prop.signature && pemPubKey && !checkSign(prop.value, prop.signature, pemPubKey)) 
+                    throw { type: 'SignatureMissMatch' };
+                to[prop.name] = prop.value;
+            }
+            obj.properties = to;
+        }
+        return obj as GameProfile;
     }
 
     export async function cacheTextures(tex: GameProfile.Textures) {
@@ -72,34 +108,35 @@ export namespace ProfileService {
         return tex;
     }
 
-    export async function fetchProfileTexture(profile: GameProfile): Promise<GameProfile.Textures> {
+    /**
+     * Get all the textures of this GameProfile and cache them.
+     *  
+     * @param profile 
+     */
+    export async function getTextures(profile: GameProfile): Promise<GameProfile.Textures> {
         const texture = GameProfile.parseTexturesInfo(profile);
         if (texture) return cacheTextures(texture);
         return Promise.reject(`No texture for user ${profile.id}.`);
     }
 
-    async function fetchProfile(target: string, pubKey?: string) {
-        const buf = await get(target) as Buffer;
-        const obj = JSON.parse(buf.toString())
-        if (obj.properties) {
-            const properties = obj.properties;
-            const to: any = {}
-            for (const prop of properties) {
-                if (prop.signature && pubKey) {
 
-                }
-                to[prop.name] = prop.value;
-            }
-            obj.properties = to;
-        }
-        return obj as GameProfile;
-    }
-    export function fetch(uuid: string, option: { api?: API, pubKey?: string } = {}) {
+    /**
+     * Fetch the GameProfile by uuid.
+     * 
+     * @param uuid The unique id of user/player 
+     * @param option the options for this function
+     */
+    export function fetch(uuid: string, option: { api?: API, pemPubKey?: string } = {}) {
         return fetchProfile((option.api || mojang).profile(uuid) + '?' + queryString.stringify({
             unsigned: false,
-        }), option.pubKey)
+        }), option.pemPubKey || DEFAULT_KEY)
     }
-    export function lookup(name: string, option: { api?: API, timestamp?: number, pubKey?: string } = {}) {
+    /**
+     * Look up the GameProfile by username in game.
+     * @param name The username in game.
+     * @param option the options of this function
+     */
+    export function lookup(name: string, option: { api?: API, timestamp?: number, pemPubKey?: string } = {}) {
         const api = option.api || mojang;
         const time: number = option.timestamp || 0;
         let target;
@@ -108,6 +145,103 @@ export namespace ProfileService {
         else target = (api.profileByName(name) + "?" + queryString.stringify({
             at: (time / 1000),
         }))
-        return fetchProfile(target, option.pubKey)
+        return fetchProfile(target, option.pemPubKey || DEFAULT_KEY)
+    }
+
+    /**
+     * Set texture by access token and uuid. 
+     * 
+     * @param option 
+     * @param provider 
+     */
+    export async function setTexture(option: {
+        accessToken: string, uuid: string, type: 'skin' | 'cape' | 'elytra',
+        texture?: GameProfile.Texture
+    }, provider: API = mojang): Promise<void> {
+        const textUrl = url.parse(provider.texture(option.uuid, option.type));
+        const headers: any = { Authorization: `Bearer: ${option.accessToken}` }
+        const requireEmpty = (_option: https.RequestOptions, content?: string | Buffer) =>
+            new Promise<void>((resolve, reject) => {
+                const req = https.request(_option, (inc) => {
+                    let d = ''
+                    inc.on('error', (e) => { reject(e) });
+                    inc.on('data', (b) => d += b.toString());
+                    inc.on('end', () => {
+                        if (d === '' && inc.statusCode === 204) resolve()
+                        else reject(JSON.parse(d));
+                    })
+                });
+                req.on('error', e => reject(e))
+                if (content) req.write(content)
+                req.end();
+            })
+        if (!option.texture)
+            return requireEmpty({
+                method: 'DELETE',
+                path: textUrl.path,
+                host: textUrl.host,
+                headers,
+            })
+        else if (option.texture.data) {
+            let status = 0;
+            const boundary = `----------------------${crypto.randomBytes(8).toString('hex')}`;
+            let buff: ByteBuffer = new ByteBuffer();
+            const diposition = (key: string, value: string) => {
+                if (status === 0) {
+                    buff.writeUTF8String(`--${boundary}\r\nContent-Disposition: form-data`)
+                    status = 1
+                }
+                buff.writeUTF8String(`; ${key}="${value}"`);
+            }
+            const header = (key: string, value: string) => {
+                if (status === 1) {
+                    buff.writeUTF8String('\r\n')
+                    status = 2;
+                }
+                buff.writeUTF8String(`${key}:${value}\r\n`);
+            }
+            const content = (payload: Buffer) => {
+                if (status === 1)
+                    buff.writeUTF8String('\r\n')
+                status = 0;
+                buff.writeUTF8String('\r\n')
+                buff = buff.append(payload)
+                buff.writeUTF8String('\r\n')
+            }
+            const finish = () => {
+                buff.writeUTF8String(`--${boundary}--\r\n`)
+            }
+
+            for (const key in option.texture.metadata) {
+                diposition('name', key)
+                content(option.texture.metadata[key])
+            }
+            diposition('name', 'file')
+            header('Content-Type', 'image/png')
+            content(option.texture.data)
+            finish();
+            buff.flip();
+            const out = Buffer.from(buff.toArrayBuffer());
+            headers['Content-Type'] = `multipart/form-data; boundary=${boundary}`
+            headers['Content-Length'] = out.byteLength;
+            return requireEmpty({
+                method: 'PUT',
+                host: textUrl.host,
+                path: textUrl.path,
+                headers,
+            }, out);
+        } else if (option.texture.url) {
+            const param = new url.URLSearchParams(Object.assign({ url: option.texture.url }, option.texture.metadata)).toString();
+            headers['Content-Type'] = 'x-www-form-urlencoded'
+            headers['Content-Length'] = param.length;
+            return requireEmpty({
+                method: 'POST',
+                host: textUrl.host,
+                path: textUrl.path,
+                headers,
+            }, param)
+        } else {
+            throw new Error('Illegal Option Format!');
+        }
     }
 }
