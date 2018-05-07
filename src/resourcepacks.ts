@@ -1,5 +1,6 @@
 import * as Zip from 'jszip'
 import * as fs from 'fs-extra'
+import * as path from 'path'
 
 export class ResourcePack {
     constructor(readonly packName: string, readonly description: string, readonly format: number, readonly icon?: string) { }
@@ -42,7 +43,8 @@ export namespace ResourcePack {
         const stat = await fs.stat(filePath);
         if (stat.isDirectory()) return readDirectory(filePath);
         const zip = await new Zip().loadAsync(buffer ? buffer : await fs.readFile(filePath));
-        return readZip(filePath, zip);
+        const base = path.basename(filePath);
+        return readZip(base, zip);
     }
     /**
      * @deprecated

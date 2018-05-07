@@ -96,7 +96,7 @@ describe("GameSetting", () => {
 describe('Resourcepack', () => {
     it('should read resource pack correctly', async () => {
         const buff = fs.readFileSync('./tests/assets/sample-resourcepack.zip')
-        const pack = await ResourcePack.read('sample', buff)
+        const pack = await ResourcePack.read('./tests/assets/sample-resourcepack.zip', buff)
         if (!pack) throw new Error('Pack cannot be null');
         assert.equal(pack.description, 'Vattic\u0027s Faithful 32x32 pack');
         assert.equal(pack.format, 1);
