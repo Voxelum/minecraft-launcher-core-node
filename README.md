@@ -1,7 +1,7 @@
 # ts-minecraft
 
 [![npm version](https://img.shields.io/npm/v/ts-minecraft.svg?style=flat-square)](https://www.npmjs.com/package/ts-minecraft)
-[![npm](https://img.shields.io/npm/l/ts-minecraft.svg?style=flat-square)](https://github.com/InfinityStudio/ILauncher/blob/3.0/LICENSE)
+[![npm](https://img.shields.io/npm/l/ts-minecraft.svg?style=flat-square)](https://github.com/InfinityStudio/ts-minecraft/blob/3.0/LICENSE)
 
 Provide several useful function for Minecraft in typescript
 
