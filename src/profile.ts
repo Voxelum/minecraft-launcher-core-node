@@ -42,7 +42,20 @@ export namespace GameProfile {
 }
 
 export namespace ProfileService {
-    const DEFAULT_KEY = `-----BEGIN PUBLIC KEY-----
+    export interface API {
+        profile(uuid: string): string
+        profileByName(name: string): string
+        texture(uuid: string, type: 'skin' | 'cape' | 'elytra'): string
+        /**
+         * The PEM public key
+         */
+        publicKey?: string
+    }
+    export const mojang: API = {
+        profile: (uuid: string) => `https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`,
+        profileByName: (name: string) => `https://api.mojang.com/users/profiles/minecraft/${name}`,
+        texture: (uuid, type) => `https://api.mojang.com/user/profile/${uuid}/${type}`,
+        publicKey: `-----BEGIN PUBLIC KEY-----
 MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAylB4B6m5lz7jwrcFz6Fd
 /fnfUhcvlxsTSn5kIK/2aGG1C3kMy4VjhwlxF6BFUSnfxhNswPjh3ZitkBxEAFY2
 5uzkJFRwHwVA9mdwjashXILtR6OqdLXXFVyUPIURLOSWqGNBtb08EN5fMnG8iFLg
@@ -55,17 +68,7 @@ AsQyLKrOIYRE0lDG3bzBh8ogIMLAugsAfBb6M3mqCqKaTMAf/VAjh5FFJnjS+7bE
 kNHpJX2ygojFZ9n5Fnj7R9ZnOM+L8nyIjPu3aePvtcrXlyLhH/hvOfIOjPxOlqW+
 O5QwSFP4OEcyLAUgDdUgyW36Z5mB285uKW/ighzZsOTevVUG2QwDItObIV6i8RCx
 FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
------END PUBLIC KEY-----`;
-
-    export interface API {
-        profile(uuid: string): string
-        profileByName(name: string): string
-        texture(uuid: string, type: 'skin' | 'cape' | 'elytra'): string
-    }
-    export const mojang: API = {
-        profile: (uuid: string) => `https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`,
-        profileByName: (name: string) => `https://api.mojang.com/users/profiles/minecraft/${name}`,
-        texture: (uuid, type) => `https://api.mojang.com/user/profile/${uuid}/${type}`,
+-----END PUBLIC KEY-----`
     }
 
     async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
@@ -88,7 +91,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
             const properties = obj.properties;
             const to: any = {}
             for (const prop of properties) {
-                if (prop.signature && pemPubKey && !checkSign(prop.value, prop.signature, pemPubKey)) 
+                if (prop.signature && pemPubKey && !checkSign(prop.value, prop.signature, pemPubKey))
                     throw { type: 'SignatureMissMatch' };
                 to[prop.name] = prop.value;
             }
@@ -126,17 +129,18 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
      * @param uuid The unique id of user/player 
      * @param option the options for this function
      */
-    export function fetch(uuid: string, option: { api?: API, pemPubKey?: string } = {}) {
-        return fetchProfile((option.api || mojang).profile(uuid) + '?' + queryString.stringify({
+    export function fetch(uuid: string, option: { api?: API } = {}) {
+        const api = option.api || mojang;
+        return fetchProfile(api.profile(uuid) + '?' + queryString.stringify({
             unsigned: false,
-        }), option.pemPubKey || DEFAULT_KEY)
+        }), api.publicKey);
     }
     /**
      * Look up the GameProfile by username in game.
      * @param name The username in game.
      * @param option the options of this function
      */
-    export function lookup(name: string, option: { api?: API, timestamp?: number, pemPubKey?: string } = {}) {
+    export function lookup(name: string, option: { api?: API, timestamp?: number } = {}) {
         const api = option.api || mojang;
         const time: number = option.timestamp || 0;
         let target;
@@ -145,11 +149,11 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         else target = (api.profileByName(name) + "?" + queryString.stringify({
             at: (time / 1000),
         }))
-        return fetchProfile(target, option.pemPubKey || DEFAULT_KEY)
+        return fetchProfile(target, api.publicKey)
     }
 
     /**
-     * Set texture by access token and uuid. 
+     * Set texture by access token and uuid. If the texture is undefined, it will clear the texture to default steve.
      * 
      * @param option 
      * @param provider 
