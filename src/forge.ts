@@ -272,24 +272,7 @@ export namespace Forge {
         modified: number,
         version: string
     }
-
-    export async function meta(mod: Buffer | string | Zip) {
-        let zip;
-        if (mod instanceof Zip)
-            zip = mod;
-        else if (mod instanceof Buffer)
-            zip = await new Zip().loadAsync(mod);
-        else if (typeof mod === 'string') {
-            zip = await new Zip().loadAsync(await fs.readFile(mod))
-        } else {
-            throw ('Illegal input type! Expect Buffer or string (filePath)')
-        }
-        const modidTree: any = {}
-
-        try {
-            for (const m of await zip.file('mcmod.info').async('nodebuffer').then(buf => JSON.parse(buf.toString().trim())))
-                modidTree[m.modid] = m;
-        } catch (e) { }
+    async function asmMetaData(zip: Zip, modidTree: any) {
         for (const key in zip.files) {
             if (key.endsWith('.class')) {
                 const asmmod: any = (await zip.files[key].async('nodebuffer')
@@ -313,16 +296,51 @@ export namespace Forge {
                     }))
                 let modid = asmmod.modid;
                 const mod = modidTree[modid];
-                if (mod) for (const key in asmmod)
-                    mod[key] = asmmod[key];
+                if (mod)
+                    for (const key in asmmod)
+                        mod[key] = asmmod[key];
                 else modidTree[modid] = asmmod;
             }
         }
+    }
+
+    async function jsonMetaData(zip: Zip, modidTree: any) {
+        try {
+            for (const m of await zip.file('mcmod.info').async('nodebuffer').then(buf => JSON.parse(buf.toString().trim())))
+                modidTree[m.modid] = m;
+        } catch (e) { }
+    }
+
+    async function regulize(mod: Buffer | string | Zip) {
+        let zip;
+        if (mod instanceof Zip)
+            zip = mod;
+        else if (mod instanceof Buffer)
+            zip = await new Zip().loadAsync(mod);
+        else if (typeof mod === 'string')
+            zip = await new Zip().loadAsync(await fs.readFile(mod))
+        else
+            throw new Error('Illegal input! Expect Buffer or string (filePath)')
+        return zip;
+    }
+    /**
+     * Read metadata of the input mod.
+     * 
+     * @param mod The mod path or data
+     * @param asmOnly True for only reading the metadata from java bytecode, ignoring the mcmod.info
+     */
+    export async function readModMetaData(mod: Buffer | string | Zip, asmOnly: boolean = false) {
+        const zip = await regulize(mod);
+        const modidTree: any = {};
+        if (!asmOnly) await jsonMetaData(zip, modidTree);
+        await asmMetaData(zip, modidTree);
         const modids = Object.keys(modidTree);
         if (modids.length === 0) throw { type: 'NonmodTypeFile' }
-
         return modids.map(k => modidTree[k] as Forge.MetaData)
             .filter(m => m.modid !== undefined)
+    }
+    export async function meta(mod: Buffer | string | Zip, asmOnly: boolean = false) {
+        return readModMetaData(mod, asmOnly);
     }
     function installTask0(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven') {
@@ -410,7 +428,7 @@ export namespace Forge {
     }
 }
 
-Mod.register('forge', option => Forge.meta(option).then(mods => mods.map(m => new Mod<Forge.MetaData>(`${m.modid}:${m.version ? m.mcversion : '0.0.0'}`, m))))
+Mod.register('forge', option => Forge.readModMetaData(option).then(mods => mods.map(m => new Mod<Forge.MetaData>(`${m.modid}:${m.version ? m.mcversion : '0.0.0'}`, m))))
 
 // declare module './mod' {
 //     namespace Mod {
