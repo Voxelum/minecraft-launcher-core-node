@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import { Version, MinecraftFolder, Launcher, WorldInfo, NBT, Forge, LiteLoader } from "../index";
 import * as fs from 'fs-extra'
 
+
 describe('Install', () => {
     let version: Version.MetaContainer;
     const loc = new MinecraftFolder('./tests/assets/temp');
@@ -11,7 +12,7 @@ describe('Install', () => {
         const sec = await Version.updateVersionMeta({ fallback: first })
         assert.equal(first, sec);
     })
-    it('should intall minecraft', () => {
+    it('should intall minecraft 1.12.2', async () => {
         const meta = {
             id: '1.12.2',
             type: 'release',
@@ -19,20 +20,15 @@ describe('Install', () => {
             releaseTime: '2017-09-18T08:39:46+00:00',
             url: 'https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json'
         };
-        return Version.installTask('client', meta, loc, { checksum: true })
-            .execute()
-            .then(v => {
-                assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.jar'));
-                assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.json'));
-                Version.parse(new MinecraftFolder('./tests/assets/temp'), '1.12.2')
-                    .then(ver => {
-                        const missing = ver.libraries.filter(lib => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
-                        if (missing.length !== 0) {
-                            console.error(missing);
-                            throw new Error('Missing Libs')
-                        }
-                    })
-            });
+        const v = await Version.installTask('client', meta, loc, { checksum: true }).execute();
+        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.jar'));
+        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.json'));
+        const ver = await Version.parse(new MinecraftFolder('./tests/assets/temp'), '1.12.2')
+        const missing = ver.libraries.filter(lib => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
+        if (missing.length !== 0) {
+            console.error(missing);
+            throw new Error('Missing Libs')
+        }
     }).timeout(1000000)
     it('should install forge version', async () => {
         const meta: Forge.VersionMeta = {

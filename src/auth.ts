@@ -39,7 +39,7 @@ export namespace Auth {
             readonly invalidate: string;
             readonly signout: string;
         }
-        const mojang = {
+        export const API_MOJANG = {
             hostName: 'authserver.mojang.com',
             authenticate: '/authenticate',
             refresh: '/refresh',
@@ -80,8 +80,9 @@ export namespace Auth {
         function requestAndHandleResponse(api: API, payload: any, path: string): Promise<Auth> {
             return request(api, payload, path).then(s => {
                 let obj = JSON.parse(s)
-                if (obj.error)
-                    throw obj
+                if (obj.error) {
+                    throw { type: obj.error, message: obj.errorMessage };
+                }
                 let userId = obj.user ? obj.user.id ? obj.user.id : '' : ''
                 let prop = obj.user ? obj.user.properties ? obj.user.properties : {} : {}
                 return {
@@ -104,7 +105,7 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export function login(option: { username: string, password?: string, clientToken?: string | undefined },
-            api: API = mojang): Promise<Auth> {
+            api: API = API_MOJANG): Promise<Auth> {
             return requestAndHandleResponse(api, Object.assign({
                 agent: 'Minecraft',
                 requestUser: true
@@ -121,7 +122,7 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export function refresh(option: { clientToken: string, accessToken: string, profile?: string },
-            api: API = mojang): Promise<Auth> {
+            api: API = API_MOJANG): Promise<Auth> {
             let payloadObj: any = {
                 // agent: 'Minecraft',
                 clientToken: option.clientToken,
@@ -140,7 +141,7 @@ export namespace Auth {
          * @param option The tokens
          * @param api The API of the auth server
          */
-        export function validate(option: { accessToken: string, clientToken?: string }, api: API = mojang): Promise<boolean> {
+        export function validate(option: { accessToken: string, clientToken?: string }, api: API = API_MOJANG): Promise<boolean> {
             return request(api, Object.assign({}, option), api.validate)
                 .then(s => s === '' || JSON.parse(s).error === undefined, fail => false)
         }
@@ -150,7 +151,7 @@ export namespace Auth {
          * @param option The tokens
          * @param api The API of the auth server
          */
-        export function invalide(option: { accessToken: string, clientToken: string }, api: API = mojang): void {
+        export function invalide(option: { accessToken: string, clientToken: string }, api: API = API_MOJANG): void {
             request(api, option, api.invalidate)
         }
         /**
@@ -159,7 +160,7 @@ export namespace Auth {
          * @param option The username and password
          * @param api The API of the auth server
          */
-        export function signout(option: { username: string, password: string }, api: API = mojang): void {
+        export function signout(option: { username: string, password: string }, api: API = API_MOJANG): void {
             request(api, option, api.signout)
         }
     }

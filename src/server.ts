@@ -1,5 +1,5 @@
 import { ResourceMode } from './game';
-import { TextComponent } from "./text";
+import { TextComponent, TextComponentFrame } from "./text";
 import { GameProfile } from "./profile";
 import * as buf from 'bytebuffer';
 import NBT from "./nbt";
@@ -41,7 +41,7 @@ export namespace Server {
         /**
          * The motd of server, which might be the raw TextComponent string or structurelized TextComponent JSON 
          */
-        description: object | string,
+        description: TextComponentFrame | string,
         favicon: string | '',
         modinfo?: {
             type: string | 'FML',

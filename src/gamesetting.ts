@@ -468,12 +468,18 @@ export namespace GameSetting {
         All = 0
     };
 
+    /**
+     * Parse raw game setting options.txt content
+     * 
+     * @param str the options.txt content 
+     * @param strict strictly follow the current version of options format (outdate version might cause problem. If your options.txt is new one with new fields, don't turn on this)
+     */
     export function parseFrame(str: string, strict?: boolean): GameSetting.Frame | undefined {
         const lines = str.split('\n');
         const intPattern = /^\d+$/;
         const floatPattern = /^[-+]?[0-9]*\.[0-9]+$/;
         const booleanPattern = /(true)|(false)/;
-        if (!lines) return undefined;
+        if (!lines || lines.length === 0) return undefined;
         const setting = lines.map(line => line.trim().split(':'))
             .filter(pair => pair[0].length != 0)
             .map(pair => {
@@ -490,7 +496,7 @@ export namespace GameSetting {
 
                 return { [pair[0]]: value };
             })
-            .reduce((prev, current) => Object.assign(prev, current));
+            .reduce((prev, current) => Object.assign(prev, current), {});
         if (!strict) return setting as GameSetting.Frame;
         const source: any = defaultFrame;
         const target: any = {};
