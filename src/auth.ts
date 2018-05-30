@@ -39,7 +39,7 @@ export namespace Auth {
             readonly invalidate: string;
             readonly signout: string;
         }
-        export const API_MOJANG = {
+        export const API_MOJANG: API = {
             hostName: 'authserver.mojang.com',
             authenticate: '/authenticate',
             refresh: '/refresh',

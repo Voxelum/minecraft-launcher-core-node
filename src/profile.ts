@@ -51,7 +51,7 @@ export namespace ProfileService {
          */
         publicKey?: string
     }
-    export const mojang: API = {
+    export const API_MOJANG: API = {
         profile: (uuid: string) => `https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`,
         profileByName: (name: string) => `https://api.mojang.com/users/profiles/minecraft/${name}`,
         texture: (uuid, type) => `https://api.mojang.com/user/profile/${uuid}/${type}`,
@@ -70,6 +70,10 @@ O5QwSFP4OEcyLAUgDdUgyW36Z5mB285uKW/ighzZsOTevVUG2QwDItObIV6i8RCx
 FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
 -----END PUBLIC KEY-----`
     }
+    /**
+     * @deprecated
+     */
+    export const mojang: API = API_MOJANG
 
     async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
         if (texture.data) return texture;
@@ -130,7 +134,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
      * @param option the options for this function
      */
     export function fetch(uuid: string, option: { api?: API } = {}) {
-        const api = option.api || mojang;
+        const api = option.api || API_MOJANG;
         return fetchProfile(api.profile(uuid) + '?' + queryString.stringify({
             unsigned: false,
         }), api.publicKey);
@@ -141,7 +145,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
      * @param option the options of this function
      */
     export function lookup(name: string, option: { api?: API, timestamp?: number } = {}) {
-        const api = option.api || mojang;
+        const api = option.api || API_MOJANG;
         const time: number = option.timestamp || 0;
         let target;
         if (!time)
@@ -156,13 +160,13 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
      * Set texture by access token and uuid. If the texture is undefined, it will clear the texture to default steve.
      * 
      * @param option 
-     * @param provider 
+     * @param api 
      */
     export async function setTexture(option: {
         accessToken: string, uuid: string, type: 'skin' | 'cape' | 'elytra',
         texture?: GameProfile.Texture
-    }, provider: API = mojang): Promise<void> {
-        const textUrl = url.parse(provider.texture(option.uuid, option.type));
+    }, api: API = API_MOJANG): Promise<void> {
+        const textUrl = url.parse(api.texture(option.uuid, option.type));
         const headers: any = { Authorization: `Bearer: ${option.accessToken}` }
         const requireEmpty = (_option: https.RequestOptions, content?: string | Buffer) =>
             new Promise<void>((resolve, reject) => {
