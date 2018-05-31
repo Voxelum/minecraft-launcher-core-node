@@ -127,55 +127,60 @@ export namespace Version {
     export function parse(minecraftPath: MinecraftLocation, version: string): Promise<Version> {
         return resolveDependency(minecraftPath, version).then(parseVersionHierarchy)
     }
+
     /**
-     * @deprecated
+     * Simply mixin the version (actaully mixin)
+     * 
+     * This function won't handle the lib version conflict 
+     * 
+     * @param parent 
+     * @param extra 
      */
-    function mixinArgument(hi: LaunchArgument[], lo: LaunchArgument[]): LaunchArgument[] {
-        const args: { [key: string]: Array<string | object> } = {};
-        const out: LaunchArgument[] = [];
-
-        for (let i = 0; i < hi.length; i++) {
-            const e = hi[i];
-            if (typeof e === 'string') {
-                if (!args[e]) { args[e] = []; }
-                args[e].push(hi[i + 1]);
-                ++i;
-            } else {
-
-            }
+    export function mixinVersion(id: string, parent: Version, extra: Version): Version.Raw {
+        const libMap: { [name: string]: Library } = {};
+        parent.libraries.forEach(l => libMap[l.name] = l);
+        const extraLibs = extra.libraries.filter(l => libMap[l.name] === undefined);
+        const raw: Version.Raw = {
+            id,
+            time: new Date().toString(),
+            releaseTime: new Date().toString(),
+            type: extra.type,
+            libraries: extraLibs,
+            mainClass: extra.mainClass,
+            inheritsFrom: parent.id,
         }
-
-        return out;
+        return raw;
     }
     /**
      * Mixin the string arguments
-     * @deprecated
-     * @param hi 
-     * @param lo 
+     * @beta
+     * @param hi Higher priority argument
+     * @param lo Lower priority argument
      */
     export function mixinArgumentString(hi: string, lo: string): string {
-        const arrA = lo.split(' ');
-        const arrB = hi.split(' ');
+        const arrA = hi.split(' ');
+        const arrB = lo.split(' ');
         const args: { [key: string]: Array<string> } = {};
-        for (let i = 0; i < arrA.length; i++) {
+        for (let i = 0; i < arrA.length; i++) { // collection higher priority argument
             const element = arrA[i];
             if (!args[element]) { args[element] = []; }
-            if (arrA[i + 1]) args[element].push(arrA[i + 1]);
+            if (arrA[i + 1]) args[element].push(arrA[i += 1]);
         }
-        for (let i = 0; i < arrB.length; i++) {
+        for (let i = 0; i < arrB.length; i++) { // collect lower priority argument
             const element = arrB[i];
             if (!args[element]) { args[element] = []; }
-            if (arrB[i + 1]) args[element].push(arrB[i + 1]);
+            if (arrB[i + 1]) args[element].push(arrB[i += 1]);
         }
-        let out = []
+        const out: string[] = []
         for (const k of Object.keys(args)) {
             switch (k) {
                 case '--tweakClass':
-                    for (const val of args[k])
-                        if (val) out.push(k, val);
+                    const set: { [arg: string]: 0 } = {};
+                    for (const v of args[k]) set[v] = 0;
+                    Object.keys(set).forEach(v => out.push(k, v))
                     break;
                 default:
-                    if (args[0]) out.push(k, args[0]);
+                    if (args[k][0]) out.push(k, args[k][0]); // use higher priority argument in common 
                     break;
             }
         }

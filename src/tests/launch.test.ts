@@ -44,11 +44,11 @@ describe('Launch', () => {
     describe('Launching Game', function () {
         let javaPath: string;
         before(function () {
-            // if (process.env.JAVA_HOME) {
-                // javaPath = `${process.env.JAVA_HOME}/bin/java`
-            // } else {
+            if (process.env.JAVA_HOME) {
+                javaPath = `${process.env.JAVA_HOME}/bin/java`
+            } else {
                 this.skip()
-            // }
+            }
         })
 
         it('should launch normal minecraft', async () => {

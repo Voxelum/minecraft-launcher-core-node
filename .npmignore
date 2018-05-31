@@ -1,7 +1,7 @@
 /node_modules
 /.vscode
-/tests
+/assets
 /package-lock.json
+/src/tests
 /dist/tests
-/tests/assets/temp
 *.log

@@ -1,4 +1,4 @@
-import { Forge } from "../src/forge";
+import { Forge } from "..";
 import * as assert from 'assert'
 import { MinecraftFolder, Launcher } from "../index";
 import * as fs from 'fs'

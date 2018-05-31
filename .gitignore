@@ -2,6 +2,6 @@
 /dist
 /.vscode
 /package-lock.json
-/tests/assets/temp
+/assets/temp
 *.log
 yarn.lock

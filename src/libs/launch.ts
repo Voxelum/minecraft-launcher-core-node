@@ -10,6 +10,7 @@ import { MinecraftFolder } from './utils/folder';
 import format from './utils/format'
 import { GameProfile } from './profile';
 
+
 export namespace Launcher {
     export interface Option {
         /**
@@ -183,30 +184,6 @@ export namespace Launcher {
                 await fs.writeFile(filePath, await entry.async('nodebuffer'))
             }
         }))
-    }
-    interface CompletedOption extends Option {
-        auth: Auth,
-        launcherName: string,
-        launcherBrand: string,
-        resourcePath: string
-        minMemory: number
-        maxMemory: number
-        version: Version,
-
-        server?: { ip: string, port?: number }
-        resolution?: { width?: number, height?: number, fullscreen: false }
-        extraJVMArgs?: string[]
-        extraMCArgs?: string[]
-        isDemo?: boolean,
-
-        yggdrasilAgent?: {
-            jar: string,
-            server: string,
-        },
-        extraExecOption?: ExecOptions,
-
-        ignoreInvalidMinecraftCertificates: boolean
-        ignorePatchDiscrepancies: boolean
     }
 }
 
