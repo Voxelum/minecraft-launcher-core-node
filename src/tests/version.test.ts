@@ -12,5 +12,6 @@ describe('Version', function () {
         const ver2 = await Version.parse(this['gameDirectory'], '1.12.2-forge1.12.2-14.23.2.2611')
 
         const out = Version.extendsVersion('test', ver, ver2);
+        assert(out);
     })
 })

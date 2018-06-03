@@ -3,16 +3,16 @@ import { Version, MinecraftFolder, Launcher, WorldInfo, NBT, Forge, LiteLoader }
 import * as fs from 'fs-extra'
 
 
-describe('Install', () => {
+describe('Install', function () {
     let version: Version.MetaContainer;
-    const loc = new MinecraftFolder('./tests/assets/temp');
     it('should fetch minecraft version', () => Version.updateVersionMeta()).timeout(100000)
     it('should not fetch duplicate version', async () => {
         const first = await Version.updateVersionMeta();
         const sec = await Version.updateVersionMeta({ fallback: first })
         assert.equal(first, sec);
     })
-    it('should intall minecraft 1.12.2', async () => {
+    it('should install minecraft 1.12.2', async function () {
+        const loc = new MinecraftFolder(this.gameDirectory);
         const meta = {
             id: '1.12.2',
             type: 'release',
@@ -21,16 +21,16 @@ describe('Install', () => {
             url: 'https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json'
         };
         const v = await Version.installTask('client', meta, loc, { checksum: true }).execute();
-        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.jar'));
-        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2/1.12.2.json'));
-        const ver = await Version.parse(new MinecraftFolder('./tests/assets/temp'), '1.12.2')
+        assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2/1.12.2.jar`));
+        assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2/1.12.2.json`));
+        const ver = await Version.parse(new MinecraftFolder(this.gameDirectory), '1.12.2')
         const missing = ver.libraries.filter(lib => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
         if (missing.length !== 0) {
             console.error(missing);
             throw new Error('Missing Libs')
         }
     }).timeout(1000000)
-    it('should install forge version', async () => {
+    it('should install forge version', async function () {
         const meta: Forge.VersionMeta = {
             branch: null,
             build: 2611,
@@ -45,21 +45,22 @@ describe('Install', () => {
             modified: 1517630820,
             version: '14.23.2.2611'
         };
-        const ver = await Forge.installAndCheck(meta, new MinecraftFolder('./tests/assets/temp'));
-        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611'), 'no such folder')
-        assert(fs.existsSync('./tests/assets/temp/versions/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2611.json'), 'no json')
+        const ver = await Forge.installAndCheck(meta, new MinecraftFolder(this.gameDirectory));
+        assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.2.2611`), 'no such folder')
+        assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2611.json`), 'no json')
     }).timeout(10000000)
 
-    it('should be able to install Liteloader', async () => {
+    it('should be able to install Liteloader', async function () {
         const meta: LiteLoader.VersionMeta = { "url": "http://repo.mumfrey.com/content/repositories/snapshots/", "type": "SNAPSHOT", "file": "liteloader-1.12.2-SNAPSHOT.jar", "version": "1.12.2-SNAPSHOT", "md5": "1420785ecbfed5aff4a586c5c9dd97eb", "timestamp": "1511880271", "mcversion": "1.12.2", "tweakClass": "com.mumfrey.liteloader.launch.LiteLoaderTweaker", "libraries": [{ "name": "net.minecraft:launchwrapper:1.12" }, { "name": "org.ow2.asm:asm-all:5.2" }] };
-        return LiteLoader.installAndCheck(meta, new MinecraftFolder('./tests/assets/temp'));
+        return LiteLoader.installAndCheck(meta, new MinecraftFolder(this.gameDirectory));
     }).timeout(1000000)
-    it('should be able to install Liteloader to forge', async () => {
+    it('should be able to install Liteloader to forge', async function () {
         const meta: LiteLoader.VersionMeta = { "url": "http://repo.mumfrey.com/content/repositories/snapshots/", "type": "SNAPSHOT", "file": "liteloader-1.12.2-SNAPSHOT.jar", "version": "1.12.2-SNAPSHOT", "md5": "1420785ecbfed5aff4a586c5c9dd97eb", "timestamp": "1511880271", "mcversion": "1.12.2", "tweakClass": "com.mumfrey.liteloader.launch.LiteLoaderTweaker", "libraries": [{ "name": "net.minecraft:launchwrapper:1.12" }, { "name": "org.ow2.asm:asm-all:5.2" }] };
-        return LiteLoader.installAndCheck(meta, new MinecraftFolder('./tests/assets/temp'), '1.12.2-forge1.12.2-14.23.2.2611');
+        return LiteLoader.installAndCheck(meta, new MinecraftFolder(this.gameDirectory), '1.12.2-forge1.12.2-14.23.2.2611');
     }).timeout(10000000)
 
-    it('should install new minecraft', async () => {
+    it('should install new minecraft', async function () {
+        const loc = new MinecraftFolder(this.gameDirectory);
         const nMc = {
             id: '17w43b',
             type: 'snapshot',
@@ -68,9 +69,9 @@ describe('Install', () => {
             url: 'https://launchermeta.mojang.com/mc/game/0383e8585ef976baa88e2dc3357e6b9899bf263e/17w43b.json'
         }
         const v = await Version.install('client', nMc, loc, { checksum: true })
-        assert(fs.existsSync('./tests/assets/temp/versions/17w43b/17w43b.jar'));
-        assert(fs.existsSync('./tests/assets/temp/versions/17w43b/17w43b.json'));
-        const ver = await Version.parse(new MinecraftFolder('./tests/assets/temp'), '17w43b')
+        assert(fs.existsSync(`${this.gameDirectory}/versions/17w43b/17w43b.jar`));
+        assert(fs.existsSync(`${this.gameDirectory}/versions/17w43b/17w43b.json`));
+        const ver = await Version.parse(new MinecraftFolder(this.gameDirectory), '17w43b')
         const missing = ver.libraries.filter(lib => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
         if (missing.length !== 0) {
             console.error(missing);

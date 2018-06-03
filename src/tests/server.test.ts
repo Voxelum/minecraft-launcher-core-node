@@ -4,8 +4,8 @@ import * as fs from 'fs-extra';
 import * as assert from 'assert';
 
 describe('Server', () => {
-    it('should read server.dat file', () => {
-        let data = fs.readFileSync('./tests/assets/servers.dat')
+    it('should read server.dat file', function () {
+        let data = fs.readFileSync(`${this.assets}/servers.dat`)
         let infos = Server.readInfo(data);
         assert.equal(infos[0].name, 'nyaacat')
         assert.equal(infos[1].name, 'himajin')

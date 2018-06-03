@@ -5,10 +5,10 @@ import { spawn } from 'child_process'
 
 describe('Launch', () => {
     describe('Generate Command', function () {
-        it('should generate correct command', async () => {
+        it('should generate correct command', async function () {
             const javaPath = '/test/java';
             const version = '1.12.2';
-            const gamePath = './tests/assets/temp';
+            const gamePath = this.gameDirectory;
             const auth = Auth.offline('tester');
             const args = await Launcher.generateArguments({
                 version, gamePath, javaPath, auth,
@@ -21,21 +21,21 @@ describe('Launch', () => {
             assert.equal(args[args.indexOf('--gameDir') + 1], path.resolve(gamePath));
             assert.equal(args[args.indexOf('--assetsDir') + 1], path.resolve(gamePath, 'assets'));
         })
-        it('should generate default user', async () => {
+        it('should generate default user', async function () {
             const args = await Launcher.generateArguments({
-                version: '1.12.2', gamePath: './tests/assets/temp', javaPath: '/test/java',
+                version: '1.12.2', gamePath: this.gameDirectory, javaPath: '/test/java',
             })
             assert(args.indexOf('net.minecraft.client.main.Main') !== -1);
             assert.equal(args[args.indexOf('--username') + 1], 'Steve');
             assert(args[args.indexOf('--uuid') + 1]);
         })
-        it('should generate correct command with server', async () => {
+        it('should generate correct command with server', async function () {
             const server = {
                 ip: '127.0.0.1',
                 port: 25565,
             }
             const args = await Launcher.generateArguments({
-                version: '1.12.2', gamePath: './tests/assets/temp', javaPath: '/test/java', server,
+                version: '1.12.2', gamePath: this.gameDirectory, javaPath: '/test/java', server,
             })
             assert.equal(args[args.indexOf('--server') + 1], server.ip);
             assert.equal(args[args.indexOf('--port') + 1], server.port.toString());
@@ -51,8 +51,8 @@ describe('Launch', () => {
             }
         })
 
-        it('should launch normal minecraft', async () => {
-            const option = { version: '1.12.2', gamePath: './tests/assets/temp', javaPath };
+        it('should launch normal minecraft', async function () {
+            const option = { version: '1.12.2', gamePath: this.gameDirectory, javaPath };
             const proc = await Launcher.launch(option)
             await new Promise((resol, rej) => {
                 proc.stdout.on('data', (chunk) => {
@@ -71,9 +71,9 @@ describe('Launch', () => {
                 })
             })
         }).timeout(100000)
-        it('should launch server', async () => {
+        it('should launch server', async function () {
             const option: Launcher.Option = {
-                version: '1.12.2', gamePath: './tests/assets/temp', javaPath, server: {
+                version: '1.12.2', gamePath: this.gameDirectory, javaPath, server: {
                     ip: '127.0.0.1',
                     port: 25565,
                 }
@@ -96,8 +96,8 @@ describe('Launch', () => {
                 })
             })
         }).timeout(100000)
-        it('should launch forge minecraft', async () => {
-            const option = { version: '1.12.2-forge1.12.2-14.23.2.2611', gamePath: './tests/assets/temp', javaPath };
+        it('should launch forge minecraft', async function () {
+            const option = { version: '1.12.2-forge1.12.2-14.23.2.2611', gamePath: this.gameDirectory, javaPath };
             const proc = await Launcher.launch(option)
             await new Promise((resol, rej) => {
                 proc.stdout.on('data', (chunk) => {
@@ -117,8 +117,8 @@ describe('Launch', () => {
                 })
             })
         }).timeout(100000)
-        it('should launch liteloader minecraft', async () => {
-            const option = { version: '1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT', gamePath: './tests/assets/temp', javaPath };
+        it('should launch liteloader minecraft', async function () {
+            const option = { version: '1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT', gamePath: this.gameDirectory, javaPath };
             const proc = await Launcher.launch(option)
             await new Promise((resol, rej) => {
                 const out: string[] = []
@@ -140,8 +140,8 @@ describe('Launch', () => {
             })
         }).timeout(100000)
 
-        it('should launch forge liteloader minecraft', async () => {
-            const option = { version: '1.12.2-forge1.12.2-14.23.2.2611-Liteloader1.12.2-1.12.2-SNAPSHOT', gamePath: './tests/assets/temp', javaPath };
+        it('should launch forge liteloader minecraft', async function () {
+            const option = { version: '1.12.2-forge1.12.2-14.23.2.2611-Liteloader1.12.2-1.12.2-SNAPSHOT', gamePath: this.gameDirectory, javaPath };
             const proc = await Launcher.launch(option)
             await new Promise((resol, rej) => {
                 let foundLite = false;

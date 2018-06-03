@@ -204,7 +204,7 @@ export namespace Version {
         if (parent.assets !== extra.assets) throw new Error('Cannot extends to the different minecraft version')
 
         const libMap: { [name: string]: Library } = {};
-        parent.libraries.forEach(l => { libMap[name] = l; });
+        parent.libraries.forEach(l => { libMap[l.name] = l; });
 
         const extraLibs = extra.libraries.filter(l => libMap[l.name] === undefined).map(lib => {
             const alib: any = Object.assign({}, lib);
