@@ -14,6 +14,9 @@ import { decompressXZ, unpack200 } from './utils/decompress';
 
 type LibraryHost = (libId: string) => string | undefined;
 declare module './version' {
+    /**
+     * Version metadata about download
+     */
     interface VersionMeta {
         id: string
         type: string
@@ -33,8 +36,18 @@ declare module './version' {
     namespace Version {
         type MetaContainer = { list: VersionMetaList, date: string }
 
+        /**
+         * get/refresh a version metadata 
+         */
         function updateVersionMeta(option?: {
-            fallback?: MetaContainer, remote?: string
+            /**
+             * fallback meta container if there is no internet
+             */
+            fallback?: MetaContainer, 
+            /**
+             * remote url of this request
+             */
+            remote?: string
         }): Promise<MetaContainer>;
 
         /**
@@ -158,22 +171,26 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
         const filePath = path.join(folder.libraries, rawPath);
         const exist = fs.existsSync(filePath);
         let downloadURL: string;
-        if (libraryHost) {
+
+        const isCompressed = (lib.checksums) ? lib.checksums.length > 1 ? true : false : false
+        const canDecompress = decompressXZ !== undefined;
+        const compressed = isCompressed && canDecompress;
+
+        if (libraryHost) { 
             const url = libraryHost(lib.name);
-            if (url) downloadURL = url;
-            else downloadURL = lib.download.url;
+            downloadURL = url ? url : lib.download.url; // handle external host 
         } else {
-            if (lib.name.startsWith('com.typesafe:config:') || lib.name.startsWith('com.typesafe.akka:akka-actor_2.11'))
-                downloadURL = `http://central.maven.org/maven2/${lib.download.path}`;
-            else
-                downloadURL = lib.download.url;
+            // if there is no external host, and we cannot decompress, then we need to swap this two lib src... forge src is missing
+            downloadURL = (lib.name.startsWith('com.typesafe:config:') || lib.name.startsWith('com.typesafe.akka:akka-actor_2.11')) && !canDecompress ?
+                `http://central.maven.org/maven2/${lib.download.path}` :
+                lib.download.url;
         }
-        if (lib.download.compressed) {
+        if (compressed) {
             downloadURL += '.pack.xz';
         }
         const _download = async () => {
             await fs.ensureDir(path.dirname(filePath));
-            if (lib.download.compressed) {
+            if (compressed) {
                 if (!decompressXZ || !unpack200) throw new Error('Require external support for unpack compressed library!');
                 const decompressed = await context.execute('decompress',
                     async () => decompressXZ(await context.execute('downloadLib', downloadTask(downloadURL)) as Buffer));

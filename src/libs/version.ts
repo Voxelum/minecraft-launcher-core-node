@@ -1,5 +1,6 @@
 import * as paths from 'path'
 import * as fs from 'fs-extra'
+import * as semver from 'semver'
 import { decompressXZ, unpack200 } from './utils/decompress'
 
 import { MinecraftLocation } from '../index';
@@ -33,7 +34,6 @@ export interface AssetIndex extends Download {
 }
 export interface Artifact extends Download {
     readonly path: string;
-    readonly compressed: boolean;
 }
 export interface LoggingFile extends Download {
     readonly id: string
@@ -129,26 +129,112 @@ export namespace Version {
     }
 
     /**
-     * Simply mixin the version (actaully mixin)
+     * Mixin the versions libs and game arguments. If two version has same lib in different version, this function will take higher version
      * 
-     * This function won't handle the lib version conflict 
-     * 
-     * @param parent 
-     * @param extra 
+     * @param src The src version
+     * @param extra The extra version which will overlap most of the src version 
      */
-    export function mixinVersion(id: string, parent: Version, extra: Version): Version.Raw {
+    export function mixinVersion(src: Version, extra: Version): Version {
+        if (src.assets !== extra.assets) throw new Error('Cannot mixin to the different minecraft version')
+
         const libMap: { [name: string]: Library } = {};
-        parent.libraries.forEach(l => libMap[l.name] = l);
-        const extraLibs = extra.libraries.filter(l => libMap[l.name] === undefined);
+        src.libraries.forEach(l => { libMap[name] = l; });
+        extra.libraries.forEach(l => {
+            const splited = l.name.split(':')
+            const name = `${splited[0]}:${splited[1]}`
+            const version = splited[2];
+            if (!libMap[name]) {
+                libMap[name] = l;
+            } else {
+                const otherVersion = libMap[name].name.substring(libMap[name].name.lastIndexOf(':') + 1, libMap[name].name.length);
+                if (semver.gt(version, otherVersion)) {
+                    libMap[name] = l;
+                }
+            }
+        })
+        let gameArgs = [...extra.arguments.game];
+        const eTweak = gameArgs.indexOf('--tweakClass');
+        const sTweak = src.arguments.game.indexOf('--tweakClass');
+        if (eTweak !== -1) {
+            if (sTweak !== -1 && gameArgs[eTweak + 1] !== src.arguments.game[sTweak + 1]) {
+                gameArgs.push('--tweakClass', src.arguments.game[sTweak + 1]);
+            }
+        } else if (sTweak !== -1) {
+            gameArgs.push('--tweakClass', src.arguments.game[sTweak + 1]);
+        }
+        return {
+            id: `${src.id}-${extra.id}`,
+            time: new Date().toISOString(),
+            releaseTime: new Date().toISOString(),
+
+            client: extra.client,
+            server: extra.server,
+
+            type: extra.type,
+            assets: extra.assets,
+            assetIndex: extra.assetIndex,
+            downloads: extra.downloads,
+            libraries: Object.keys(libMap).map(k => libMap[k]),
+            arguments: {
+                jvm: extra.arguments.jvm,
+                game: gameArgs,
+            },
+            mainClass: extra.mainClass,
+            minimumLauncherVersion: Math.max(src.minimumLauncherVersion, extra.minimumLauncherVersion),
+        }
+    }
+
+    /**
+     * Simply extends the version (actaully mixin)
+     * 
+     * The result version will have the union of two version's libs. If one lib in two versions has different version, it will take the extra version one. 
+     * It will also mixin the launchArgument if it could.
+     * 
+     * This function can be used for mixin forge and liteloader version.
+     * 
+     * This function will throw an Error if two version have different assets. It doesn't care about the detail version though.
+     * 
+     * @beta
+     * @param id The new version id
+     * @param parent The parent version will be inherited
+     * @param extra The extra version info which will overlap some parent information
+     * @return The raw version json could be save to the version json file
+     */
+    export function extendsVersion(id: string, parent: Version, extra: Version): Version.Raw {
+        if (parent.assets !== extra.assets) throw new Error('Cannot extends to the different minecraft version')
+
+        const libMap: { [name: string]: Library } = {};
+        parent.libraries.forEach(l => { libMap[name] = l; });
+
+        const extraLibs = extra.libraries.filter(l => libMap[l.name] === undefined).map(lib => {
+            const alib: any = Object.assign({}, lib);
+            delete alib.download;
+            if (lib.download.sha1 === '') {
+                const url = lib.download.url.substring(0, lib.download.url.length - lib.download.path.length);
+                if (url !== 'https://libraries.minecraft.net/') alib.url = url;
+            }
+            return alib;
+        });
+        const launcherVersion = Math.max(parent.minimumLauncherVersion, extra.minimumLauncherVersion);
+
         const raw: Version.Raw = {
             id,
-            time: new Date().toString(),
-            releaseTime: new Date().toString(),
+            time: new Date().toISOString(),
+            releaseTime: new Date().toISOString(),
             type: extra.type,
             libraries: extraLibs,
             mainClass: extra.mainClass,
             inheritsFrom: parent.id,
+            minimumLauncherVersion: launcherVersion,
         }
+
+        if (launcherVersion < 21) {
+            raw.minecraftArguments = mixinArgumentString(parent.arguments.game.filter(arg => typeof arg === 'string').join(' '),
+                extra.arguments.game.filter(arg => typeof arg === 'string').join(' '))
+        } else {
+            // not really know how new forge will do
+        }
+
         return raw;
     }
     /**
@@ -186,9 +272,19 @@ export namespace Version {
         }
         return out.join(' ');
     }
+
+    function mixinArgument(hi: {
+        game: LaunchArgument[],
+        jvm: LaunchArgument[],
+    }, lo: {
+        game: LaunchArgument[],
+        jvm: LaunchArgument[],
+    }) {
+
+    }
 }
 export class Library {
-    constructor(readonly name: string, readonly download: Artifact) { }
+    constructor(readonly name: string, readonly download: Artifact, readonly checksums?: string[], readonly serverreq?: boolean, readonly clientreq?: boolean) { }
 }
 export class Native extends Library {
     constructor(name: string, download: Artifact, readonly extractExclude?: string[]) {
@@ -232,7 +328,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
 
     let mainClass: string
     let args: any;
-    let minimumLauncherVersion: number = hierarchy[0].minimumLauncherVersion;
+    let minimumLauncherVersion: number = 0;
     let releaseTime: string = hierarchy[0].releaseTime;
     let time: string = hierarchy[0].time;
     let type: string
@@ -242,6 +338,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     let json: Version;
     do {
         json = hierarchy.pop() as Version;
+        minimumLauncherVersion = Math.max(json.minimumLauncherVersion || 0, minimumLauncherVersion);
 
         client = (json as any).jar || client || json.id;
 
@@ -312,7 +409,7 @@ function parseVersionJson(versionString: string): Version {
         return allow;
     }
     const parseLibs = (libs: Array<any>) => {
-        const empty = new Library('', { path: '', sha1: '', size: 0, url: '', compressed: false })
+        const empty = new Library('', { path: '', sha1: '', size: 0, url: '' })
         return libs.map(lib => {
             if (lib.rules && !checkAllowed(lib.rules)) return empty;
             if (lib.natives) {
@@ -322,8 +419,8 @@ function parseVersionJson(versionString: string): Version {
                 if (!nativArt) return empty;
                 return new Native(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
             } else {
-                if (lib.downloads)
-                    return new Library(lib.name, lib.downloads.artifact);
+                if (lib.downloads) return new Library(lib.name, lib.downloads.artifact);
+
                 const url = lib.url || 'https://libraries.minecraft.net/';
                 const pathArr = lib.name.split(':');
                 const groupPath = pathArr[0].replace(/\./g, '/')
@@ -333,31 +430,13 @@ function parseVersionJson(versionString: string): Version {
 
                 const path = !isSnapshot ? `${groupPath}/${id}/${version}/${id}-${version}.jar` : `${groupPath}/${id}/${version}/${version}.jar`
 
-                /**
-                 * we have to check if our module support decompression or not
-                 */
-                const shouldCompressed = (lib.checksums) ? lib.checksums.length > 1 ? true : false : false
-                const compressed = shouldCompressed && decompressXZ !== undefined;
-
-                let actualUrl = `${url}${path}`;
-                /**
-                 * if we just cannot compress... maybe change source
-                 */
-                // if (shouldCompressed && !compressed) {
-                //     /**
-                //      * use maven central
-                //      */
-                //     actualUrl = `http://central.maven.org/maven2/${path}`;
-                // }
-
                 const artifact: Artifact = {
                     size: -1,
-                    sha1: lib.checksums,
+                    sha1: '',
                     path,
-                    compressed,
-                    url: actualUrl
+                    url: `${url}${path}`
                 }
-                return new Library(lib.name, artifact);
+                return new Library(lib.name, artifact, lib.checksums, lib.serverreq, lib.clientreq);
             }
         }).filter(l => l !== empty)
     }
