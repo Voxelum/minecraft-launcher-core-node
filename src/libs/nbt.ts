@@ -435,7 +435,7 @@ export namespace NBT {
             } as IOHandler<TagInt>,
             [TagType.Long]: {
                 read(buf) { return TagScalar.newLong(buf.readInt64()); },
-                write(buf, tag) { buf.writeInt64(tag.value); }
+                write(buf, tag) { buf.writeInt64(tag.value as any); }
             } as IOHandler<TagLong>,
             [TagType.Float]: {
                 read(buf) { return TagScalar.newFloat(buf.readFloat32()); },
