@@ -3,8 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/ts-minecraft.svg?style=flat-square)](https://www.npmjs.com/package/ts-minecraft)
 [![npm](https://img.shields.io/npm/l/ts-minecraft.svg?style=flat-square)](https://github.com/InfinityStudio/ts-minecraft/blob/3.0/LICENSE)
 
-Provide several useful function for Minecraft in typescript
-
+Provide several useful functions for Minecraft
 
 ## Usage
 
@@ -12,20 +11,25 @@ Provide several useful function for Minecraft in typescript
 
 ## Getting Started
 
-- [NBT](#nbt)
-- [WorldInfo](#worldinfo)
-- [Server](#server)
-- [Minecraft Install](#minecraft-install)
-- [GameSetting](#gamesetting)
-- [Language](#language)
-- [ResourcePack](#resourcepack)
-- [Game Profile](#game-profile)
-- [Mojang Account Info](#mojang-account-info)
-- [Forge](#forge)
-- [TextComponent](#textcomponent)
-- [Auth](#auth)
-- [Version](#version)
-- [Launch](#launch)
+- [ts-minecraft](#ts-minecraft)
+    - [Usage](#usage)
+    - [Getting Started](#getting-started)
+        - [NBT](#nbt)
+        - [WorldInfo](#worldinfo)
+        - [Server](#server)
+        - [Minecraft Install](#minecraft-install)
+        - [GameSetting](#gamesetting)
+        - [Language](#language)
+        - [ResourcePack](#resourcepack)
+        - [Game Profile](#game-profile)
+        - [Mojang Account Info](#mojang-account-info)
+        - [Forge](#forge)
+        - [TextComponent](#textcomponent)
+        - [Auth](#auth)
+        - [Version](#version)
+        - [Launch](#launch)
+    - [Issue](#issue)
+    - [Credit](#credit)
 
 ### NBT
 
