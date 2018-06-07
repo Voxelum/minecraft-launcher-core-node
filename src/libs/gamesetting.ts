@@ -112,7 +112,7 @@ const defaultFrame: GameSetting.Frame = {
     modelPart_hat: true,
 }
 
-export class GameSetting {
+export class GameSetting implements Required<GameSetting> {
     readonly version = 1139 // for 1.12
     public invertYMouse = false
     public mouseSensitivity = 0.5
@@ -301,7 +301,7 @@ export namespace GameSetting {
         fboEnable?: boolean,
         fancyGraphics?: boolean,
         ao?: number,
-        renderClouds?: boolean,
+        renderClouds?: boolean | 'fast',
         enableVsync?: boolean,
         useVbo?: boolean,
         mipmapLevels?: number,
@@ -467,6 +467,14 @@ export namespace GameSetting {
         Decreased = 1,
         All = 0
     };
+    export enum Difficulty {
+        Peaceful = 0,
+        Easy = 1,
+        Normal = 2,
+        Hard = 3,
+    }
+    export const Graphic = Object.freeze({ Fast: false, Fancy: true })
+    export const RenderCloud = Object.freeze({ Off: false, Fast: 'fast', Fancy: true })
 
     /**
      * Parse raw game setting options.txt content
