@@ -206,7 +206,7 @@ export namespace Forge {
         readonly url?: string,
         readonly logoFile?: string,
         readonly authorList?: string[],
-        readonly credit?: string,
+        readonly credits?: string,
         readonly parent?: string,
         readonly screenShots?: string[],
         readonly fingerprint?: string,
