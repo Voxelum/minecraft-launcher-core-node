@@ -50,11 +50,11 @@ describe('Install', function () {
         assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2611.json`), 'no json')
     }).timeout(10000000)
 
-    it('should be able to install Liteloader', async function () {
+    it('should be able to install liteloader', async function () {
         const meta: LiteLoader.VersionMeta = { "url": "http://repo.mumfrey.com/content/repositories/snapshots/", "type": "SNAPSHOT", "file": "liteloader-1.12.2-SNAPSHOT.jar", "version": "1.12.2-SNAPSHOT", "md5": "1420785ecbfed5aff4a586c5c9dd97eb", "timestamp": "1511880271", "mcversion": "1.12.2", "tweakClass": "com.mumfrey.liteloader.launch.LiteLoaderTweaker", "libraries": [{ "name": "net.minecraft:launchwrapper:1.12" }, { "name": "org.ow2.asm:asm-all:5.2" }] };
         return LiteLoader.installAndCheck(meta, new MinecraftFolder(this.gameDirectory));
     }).timeout(1000000)
-    it('should be able to install Liteloader to forge', async function () {
+    it('should be able to install liteloader to forge', async function () {
         const meta: LiteLoader.VersionMeta = { "url": "http://repo.mumfrey.com/content/repositories/snapshots/", "type": "SNAPSHOT", "file": "liteloader-1.12.2-SNAPSHOT.jar", "version": "1.12.2-SNAPSHOT", "md5": "1420785ecbfed5aff4a586c5c9dd97eb", "timestamp": "1511880271", "mcversion": "1.12.2", "tweakClass": "com.mumfrey.liteloader.launch.LiteLoaderTweaker", "libraries": [{ "name": "net.minecraft:launchwrapper:1.12" }, { "name": "org.ow2.asm:asm-all:5.2" }] };
         return LiteLoader.installAndCheck(meta, new MinecraftFolder(this.gameDirectory), '1.12.2-forge1.12.2-14.23.2.2611');
     }).timeout(10000000)
