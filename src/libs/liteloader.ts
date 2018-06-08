@@ -109,15 +109,22 @@ export namespace LiteLoader {
             zip = mod;
         else if (mod instanceof Buffer)
             zip = await new Zip().loadAsync(mod);
-        else if (typeof mod === 'string')
+        else if (typeof mod === 'string' && fs.existsSync(mod))
             zip = await new Zip().loadAsync(await fs.readFile(mod));
-        else
-            throw ('Illegal input type! Expect Buffer or string (filePath)')
-        return zip.file('litemod.json').async('nodebuffer').then(data => JSON.parse(data.toString().trim(), (key, value) =>{
-            if (key === 'revision') return Number.parseInt(value);
-            return value;
-        }) as MetaData)
-            .then(m => {
+        else throw {
+            type: 'IllegalInputType',
+            message: 'Illegal input type! Expect Buffer or string (filePath)',
+            mod,
+        }
+        const json = zip.file('litemod.json')
+        if (json == null) throw {
+            type: 'IllegalInputType',
+            message: 'Illegal input type! Expect a jar file contains litemod.json',
+            mod,
+        };
+        return json.async('nodebuffer')
+            .then(data => JSON.parse(data.toString().trim(), (key, value) => key === 'revision' ? Number.parseInt(value) : value) as MetaData)
+            .then((m) => {
                 if (!m.version) (m as any).version = `${m.name}:${m.version ? m.version : m.mcversion ? m.mcversion + '_' + m.revision || '0' : m.revision || '0'}`
                 return m;
             })
