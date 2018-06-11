@@ -14,7 +14,7 @@
     "@types/semver": "^5.5.0",
     "@types/uuid": "^3.4.3",
     "mocha": "^3.4.2",
-    "typescript": "^2.3.4"
+    "typescript": "^2.9.1"
   },
   "scripts": {
     "test": "npm run build && node ./node_modules/mocha/bin/mocha dist/tests --timeout 10000",
