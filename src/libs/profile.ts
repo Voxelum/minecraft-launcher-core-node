@@ -5,12 +5,19 @@ import { download as get } from './utils/download'
 import * as ByteBuffer from 'bytebuffer'
 import * as crypto from 'crypto'
 
+/**
+ * The data structure holds the user game profile
+ */
 export interface GameProfile {
     readonly id: string,
     readonly name: string,
     readonly properties?: { [name: string]: string }
 }
 
+/**
+ * The module handle the game profile things
+ * @see class:GameProfile
+ */
 export namespace GameProfile {
     export interface Textures {
         timestamp: number,
@@ -22,10 +29,23 @@ export namespace GameProfile {
             elytra?: Texture,
         }
     }
+    /**
+     * The data structure that hold the texture, it 
+     */
     export interface Texture {
-        metadata: { model: 'slim' | 'steve', [key: string]: any },
         url: string,
+        metadata?: { model?: 'slim' | 'steve', [key: string]: any },
         data?: Buffer,
+    }
+
+    export namespace Texture {
+        export function isSlim(texture: Texture) {
+            return texture.metadata ? texture.metadata.model === 'slim' : false;
+        }
+
+        export function getModelType(texture: Texture) {
+            return isSlim(texture) ? 'slim' : 'steve';
+        }
     }
 
     export function parseTexturesInfo(profile: GameProfile): Textures | undefined {
@@ -37,6 +57,7 @@ export namespace GameProfile {
         delete obj.textures.SKIN;
         delete obj.textures.CAPE;
         delete obj.textures.ELYTRA;
+
         return obj;
     }
 }
@@ -220,10 +241,11 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
                 buff.writeUTF8String(`--${boundary}--\r\n`)
             }
 
-            for (const key in option.texture.metadata) {
-                diposition('name', key)
-                content(option.texture.metadata[key])
-            }
+            if (option.texture.metadata)
+                for (const key in option.texture.metadata) {
+                    diposition('name', key)
+                    content(option.texture.metadata[key])
+                }
             diposition('name', 'file')
             header('Content-Type', 'image/png')
             content(option.texture.data)
