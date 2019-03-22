@@ -8,13 +8,11 @@ export class ResourcePack {
 
 export namespace ResourcePack {
     async function readZip(fileName: string, zipFile: Zip) {
-        let { description, pack_format } = await zipFile.file('pack.mcmeta').async('nodebuffer')
+        const { description, pack_format } = await zipFile.file('pack.mcmeta').async('nodebuffer')
             .then(data => JSON.parse(data.toString('utf-8').trim()).pack);
-        let icon = ''
-        try {
-            icon = await zipFile.file('pack.png').async('nodebuffer')
-                .then(data => 'data:image/png;base64, ' + data.toString('base64'));
-        } catch (e) { }
+        const icon = await zipFile.file('pack.png').async('nodebuffer')
+            .then(data => 'data:image/png;base64, ' + data.toString('base64'))
+            .catch(_ => '');
         return new ResourcePack(fileName, description, pack_format, icon)
     }
     async function readDirectory(filePath: string) {
@@ -22,14 +20,15 @@ export namespace ResourcePack {
         const iconPath = `${filePath}/pack.png`;
 
         if (!fs.existsSync(metaPath)) throw Error('Illegal Resourcepack')
-        const metadata = await fs.readFile(metaPath)
+        const metadata = await fs.readFile(metaPath);
+
         const { description, pack_format } = JSON.parse(metadata.toString('utf-8').trim()).pack;
-        let icon = ''
-        try {
-            icon = await fs.readFile(iconPath)
-                .then(data => 'data:image/png;base64, ' + data.toString('base64'));
-        } catch (e) { }
-        return new ResourcePack(filePath, description, pack_format, icon)
+        const icon = await fs.readFile(iconPath)
+            .then(data => 'data:image/png;base64, ' + data.toString('base64'))
+            .catch(_ => '');
+        const name = path.basename(filePath);
+        
+        return new ResourcePack(name, description, pack_format, icon)
     }
     /**
      * Read the resource pack metadata from zip file or directory. 

@@ -38,6 +38,7 @@
     "jszip": "^3.1.5",
     "long": "^3.2.0",
     "treelike-task": "0.0.7",
+    "fast-html-parser": "^1.0.1",
     "uuid": "^3.2.1"
   },
   "bugs": {
