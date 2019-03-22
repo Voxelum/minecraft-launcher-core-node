@@ -1,16 +1,15 @@
-import { downloadTask, download } from './utils/download';
-import CHECKSUM from './utils/checksum';
-import UPDATE, { getIfUpdate, UpdatedObject } from './utils/update';
-import Task from 'treelike-task';
-import * as path from 'path';
-import * as Zip from 'jszip';
-import * as fs from 'fs-extra';
-import { Version, Download } from './version';
-import { MinecraftLocation, MinecraftFolder } from './utils/folder';
-import { ClassVisitor, Opcodes, AnnotationVisitor, ClassReader, FieldVisitor, Attribute } from 'java-asm'
 import * as crypto from 'crypto';
+import * as fs from 'fs-extra';
+import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from 'java-asm';
+import * as Zip from 'jszip';
+import * as path from 'path';
+import Task from 'treelike-task';
 
-import Mod from './mod';
+import { Mod } from './mod';
+import { Version } from './version';
+import { downloadTask } from './utils/download';
+import { MinecraftFolder, MinecraftLocation } from './utils/folder';
+
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
         constructor(readonly map: { [key: string]: any }) { super(Opcodes.ASM5); }
@@ -218,106 +217,6 @@ export namespace Forge {
         readonly isServerOnly?: boolean
     }
 
-    const parser = require('fast-html-parser');
-
-    export interface ForgeWebPageVersion {
-
-        timestamp: string,
-
-        version: string,
-        date: string,
-        changelog: Download,
-        installer: Download,
-        mdk: Download,
-        universal: Download,
-        type: 'buggy' | 'recommend' | 'common'
-    }
-
-    export namespace ForgeWebPageVersion {
-        export interface Download {
-            md5: string,
-            sha1: string,
-            path: string
-        }
-    }
-
-
-    export interface VersionMetaList {
-        adfocus: string,
-        artifact: string,
-        branches: { [key: string]: number[] }, //sort by github branch
-        mcversion: { [key: string]: number[] }, //sort by mcversion
-        homepage: string,
-        webpath: string,
-        name: string,
-        promos: { [key: string]: number }, //list all latest
-        number: { [key: string]: VersionMeta } //search by number
-    }
-
-    export namespace VersionMetaList {
-        export async function update(option?: {
-            fallback?: {
-                list: VersionMetaList, date: string
-            },
-            remote?: string
-        }): Promise<{ list: VersionMetaList, date: string }> {
-            if (!option) option = {}
-            return UPDATE({
-                fallback: option.fallback,
-                remote: option.remote || 'http://files.minecraftforge.net/maven/net/minecraftforge/forge/json'
-            }).then(result => result as { list: VersionMetaList, date: string })
-        }
-
-        function parseWebPage(content: string) {
-            return parser.parse(content).querySelector('.download-list').querySelector('tbody').querySelectorAll('tr')
-                .map((e: any) => {
-                    const links = e.querySelector('.download-links').childNodes
-                        .filter((e: any) => e.tagName == 'li')
-                        .map((e: any) => {
-                            const tt = e.querySelector('.info-tooltip');
-                            const url = tt.querySelector('a') || e.querySelector('a');
-                            return {
-                                md5: tt.childNodes[2].text.trim(),
-                                sha1: tt.childNodes[6].text.trim(),
-                                path: url.attributes['href']
-                            };
-                        });
-                    return {
-                        version: e.querySelector('.download-version').text.trim(),
-                        date: e.querySelector('.download-time').text.trim(),
-                        changelog: links[0],
-                        installer: links[1],
-                        'installer-win': links[2],
-                        mdk: links[3],
-                        universal: links[4],
-                    }
-                });
-        }
-        
-        export async function getWebPage(mcversion: string = '', oldObject?: UpdatedObject): Promise<ForgeWebPageVersion | undefined> {
-            const url = mcversion == '' ? `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html` : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`
-            return getIfUpdate(url, parseWebPage, oldObject) as Promise<ForgeWebPageVersion | undefined>;
-        }
-
-        export function mcversions(list: VersionMetaList) {
-            return Object.keys(list.mcversion);
-        }
-        export function metasByVersion(list: VersionMetaList, version: string) {
-            return list.mcversion[version].map(n => list.number[n]);
-        }
-        export function recommendedsVersions(list: VersionMetaList) {
-            return Object.keys(list.promos);
-        }
-        export function metaByRecommended(list: VersionMetaList, recommendedsVersion: string) {
-            return list.number[list.promos[recommendedsVersion]];
-        }
-    }
-
-    export interface VersionMetaList0 {
-        mcversion: { [key: string]: VersionMeta },
-        latest: { [key: string]: VersionMeta },
-    }
-
     export interface VersionMeta {
         checksum: { [key: string]: string | undefined }
         universal: string,
@@ -393,6 +292,7 @@ export namespace Forge {
         return modids.map(k => modidTree[k] as Forge.MetaData)
             .filter(m => m.modid !== undefined)
     }
+
     export async function meta(mod: Buffer | string | Zip, asmOnly: boolean = false) {
         return readModMetaData(mod, asmOnly);
     }
@@ -400,8 +300,7 @@ export namespace Forge {
     function validateCheckSum(data: Buffer, algorithm: string, expectValue: string) {
         try {
             return expectValue == crypto.createHash(algorithm).update(data).digest('hex')
-        }
-        catch (e) {
+        } catch (e) {
             return false;
         }
     }

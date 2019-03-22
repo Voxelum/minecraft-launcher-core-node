@@ -1,8 +1,3 @@
-
-import Forge from "./forge";
-import * as Zip from 'jszip'
-import * as fs from 'fs-extra'
-
 export class Mod<Meta> {
     constructor(readonly id: string, readonly meta: Meta) { }
 }
