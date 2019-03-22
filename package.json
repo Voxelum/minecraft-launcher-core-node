@@ -13,12 +13,12 @@
     "@types/node": "^8.9.3",
     "@types/semver": "^5.5.0",
     "@types/uuid": "^3.4.3",
-    "mocha": "^3.4.2",
+    "mocha": "^6.0.2",
     "typescript": "^2.9.1"
   },
   "scripts": {
     "test": "npm run build && node ./node_modules/mocha/bin/mocha dist/tests --timeout 10000",
-    "build": "rm -rf ./dist && tsc"
+    "build": "node clean.js && tsc"
   },
   "repository": {
     "type": "git",
