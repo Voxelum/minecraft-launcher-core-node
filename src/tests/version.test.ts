@@ -10,7 +10,7 @@ describe("Version", function () {
     });
     it("should be able to mixin the version", async function () {
         const ver = await Version.parse(this.gameDirectory, "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT");
-        const ver2 = await Version.parse(this.gameDirectory, "1.12.2-forge1.12.2-14.23.2.2611");
+        const ver2 = await Version.parse(this.gameDirectory, "1.12.2-forge1.12.2-14.23.5.2823");
 
         const out = Version.extendsVersion("test", ver, ver2);
         assert(out);

@@ -1,11 +1,24 @@
 import * as assert from "assert";
-import { spawn } from "child_process";
+import { exec } from "child_process";
+import { EOL } from "os";
 import * as path from "path";
 import { Auth, Launcher, Version } from "../index";
 
+function getJavaVersion(javaPath: string) {
+    return new Promise<string>((resolve, reject) => {
+        exec(`"${javaPath}" --version`, { encoding: "utf8" }, (e, out, err) => {
+            if (e) {
+                reject(e);
+            } else {
+                resolve(out);
+            }
+        });
+    });
+}
+
 describe("Launch", () => {
-    describe("Generate Command", function() {
-        it("should generate correct command", async function() {
+    describe("Generate Command", function () {
+        it("should generate correct command", async function () {
             const javaPath = "/test/java";
             const version = "1.12.2";
             const gamePath = this.gameDirectory;
@@ -21,7 +34,7 @@ describe("Launch", () => {
             assert.equal(args[args.indexOf("--gameDir") + 1], path.resolve(gamePath));
             assert.equal(args[args.indexOf("--assetsDir") + 1], path.resolve(gamePath, "assets"));
         });
-        it("should generate default user", async function() {
+        it("should generate default user", async function () {
             const args = await Launcher.generateArguments({
                 version: "1.12.2", gamePath: this.gameDirectory, javaPath: "/test/java",
             });
@@ -29,7 +42,7 @@ describe("Launch", () => {
             assert.equal(args[args.indexOf("--username") + 1], "Steve");
             assert(args[args.indexOf("--uuid") + 1]);
         });
-        it("should generate correct command with server", async function() {
+        it("should generate correct command with server", async function () {
             const server = {
                 ip: "127.0.0.1",
                 port: 25565,
@@ -41,17 +54,20 @@ describe("Launch", () => {
             assert.equal(args[args.indexOf("--port") + 1], server.port.toString());
         });
     });
-    describe("Launching Game", function() {
+    describe("Launching Game", function () {
         let javaPath: string;
-        before(function() {
+        let javaVersion: number;
+        before(async function () {
             if (process.env.JAVA_HOME) {
                 javaPath = `${process.env.JAVA_HOME}/bin/java`;
+                const javaVersionStr = await getJavaVersion(javaPath);
+                javaVersion = Number.parseFloat(javaVersionStr.split(EOL)[0].split(" ")[1].split(".")[0]);
             } else {
                 this.skip();
             }
         });
 
-        it("should launch normal minecraft", async function() {
+        it("should launch normal minecraft", async function () {
             const option = { version: "1.12.2", gamePath: this.gameDirectory, javaPath };
             const proc = await Launcher.launch(option);
             await new Promise((resol, rej) => {
@@ -71,7 +87,7 @@ describe("Launch", () => {
                 });
             });
         }).timeout(100000);
-        it("should launch server", async function() {
+        it("should launch server", async function () {
             const option: Launcher.Option = {
                 version: "1.12.2", gamePath: this.gameDirectory, javaPath, server: {
                     ip: "127.0.0.1",
@@ -96,8 +112,9 @@ describe("Launch", () => {
                 });
             });
         }).timeout(100000);
-        it("should launch forge minecraft", async function() {
-            const option = { version: "1.12.2-forge1.12.2-14.23.2.2611", gamePath: this.gameDirectory, javaPath };
+        it("should launch forge minecraft", async function () {
+            if (javaVersion > 8) { this.skip(); }
+            const option = { version: "1.12.2-forge1.12.2-14.23.5.2823", gamePath: this.gameDirectory, javaPath };
             const proc = await Launcher.launch(option);
             await new Promise((resol, rej) => {
                 proc.stdout.on("data", (chunk) => {
@@ -117,7 +134,8 @@ describe("Launch", () => {
                 });
             });
         }).timeout(100000);
-        it("should launch liteloader minecraft", async function() {
+        it("should launch liteloader minecraft", async function () {
+            if (javaVersion > 8) { this.skip(); }
             const option = { version: "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: this.gameDirectory, javaPath };
             const proc = await Launcher.launch(option);
             await new Promise((resol, rej) => {
@@ -140,8 +158,9 @@ describe("Launch", () => {
             });
         }).timeout(100000);
 
-        it("should launch forge liteloader minecraft", async function() {
-            const option = { version: "1.12.2-forge1.12.2-14.23.2.2611-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: this.gameDirectory, javaPath };
+        it("should launch forge liteloader minecraft", async function () {
+            if (javaVersion > 8) { this.skip(); }
+            const option = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: this.gameDirectory, javaPath };
             const proc = await Launcher.launch(option);
             await new Promise((resol, rej) => {
                 let foundLite = false;
