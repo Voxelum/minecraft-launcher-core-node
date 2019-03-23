@@ -319,29 +319,36 @@ export namespace Forge {
         }
     }
 
-    function installTask0(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false, maven: string = "http://files.minecraftforge.net/maven") {
+    function installTask0(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false, maven: string = "http://files.minecraftforge.net") {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const versionPath = `${version.mcversion}-${version.version}`;
-            // const universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
-            // const installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
+            const universalURLFallback = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`;
+            const installerURLFallback = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`;
             const universalURL = `${maven}${version.universal}`;
             const installerURL = `${maven}${version.installer}`;
 
-            let universalBuffer: any;
-            try {
-                universalBuffer = await context.execute("downloadJar", downloadTask(universalURL));
-            } catch (e) {
-                universalBuffer = await context.execute("redownloadJar", downloadTask(installerURL));
-                universalBuffer = await context.execute("extractJar", async () =>
-                    (await Zip().loadAsync(universalBuffer))
-                        .file(`forge-${versionPath}-universal.jar`)
-                        .async("nodebuffer"));
+            async function downloadForge(universal: string, installer: string) {
+                let buffer: any;
+                try {
+                    buffer = await context.execute("downloadJar", downloadTask(universal));
+                } catch (e) {
+                    buffer = await context.execute("redownloadJar", downloadTask(installer));
+                    buffer = await context.execute("extractJar", async () =>
+                        (await Zip().loadAsync(buffer))
+                            .file(`forge-${versionPath}-universal.jar`)
+                            .async("nodebuffer"));
+                }
+                return buffer;
             }
+
+            const universalBuffer = await downloadForge(universalURL, installerURL)
+                .catch((_) => downloadForge(universalURLFallback, installerURLFallback));
 
             const buff: Buffer = await context.execute("extraVersionJson",
                 async () => (await Zip().loadAsync(universalBuffer)).file("version.json").async("nodebuffer"));
             const versionJSON = JSON.parse(buff.toString());
+
 
             const localForgePath = versionJSON.id;
             const libForgePath = mc.getLibraryByPath(`net/minecraftforge/forge/${versionPath}/forge-${versionPath}.jar`);
@@ -362,6 +369,7 @@ export namespace Forge {
                     }
                 }
             }
+
             return versionJSON.id as string;
         };
     }

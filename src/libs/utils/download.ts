@@ -37,14 +37,16 @@ function nodeJsDownload(options: http.RequestOptions | string): Promise<http.Inc
     return new Promise((resolve, reject) => {
         get(option, (res) => {
             if (!res.statusCode) {
-                reject();
+                reject("Illegal Status Code");
                 return;
             }
             if (res.statusCode >= 200 && res.statusCode < 300) {
                 resolve(res);
             } else if (res.headers.location) {
                 resolve(nodeJsDownload(res.headers.location as string));
- } else { reject(); }
+            } else {
+                reject(`${res.statusCode}: ${res.statusMessage}`);
+            }
         }).on("error", reject).end();
     });
 }

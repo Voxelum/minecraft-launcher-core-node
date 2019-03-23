@@ -3,14 +3,14 @@ import * as fs from "fs-extra";
 import { Forge, Launcher, LiteLoader, MinecraftFolder, NBT, Version, WorldInfo } from "../index";
 
 
-describe("Install", function() {
+describe("Install", function () {
     it("should fetch minecraft version", () => Version.updateVersionMeta()).timeout(100000);
     it("should not fetch duplicate version", async () => {
         const first = await Version.updateVersionMeta();
         const sec = await Version.updateVersionMeta({ fallback: first });
         assert.equal(first, sec);
     });
-    it("should install minecraft 1.12.2", async function() {
+    it("should install minecraft 1.12.2", async function () {
         const loc = new MinecraftFolder(this.gameDirectory);
         const meta = {
             id: "1.12.2",
@@ -29,30 +29,34 @@ describe("Install", function() {
             throw new Error("Missing Libs");
         }
     }).timeout(1000000);
-    it("should install forge version", async function() {
+    it("should install forge version", async function () {
         const meta: Forge.VersionMeta = {
             mcversion: "1.12.2",
-            version: "14.23.2.2611",
-            checksum: {},
-            universal: "",
+            version: "14.23.5.2823",
+            checksum: {
+                md5: "61e0e4606c3443eb834d9ddcbc6457a3",
+                sha1: "cec39eddde28eb6f7ac921c8d82d6a5b7916e81b",
+            },
+            universal: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-universal.jar",
+            installer: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-installer.jar",
         };
         const ver = await Forge.installAndCheck(meta, new MinecraftFolder(this.gameDirectory));
-        assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.2.2611`), "no such folder");
-        assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.2.2611/1.12.2-forge1.12.2-14.23.2.2611.json`), "no json");
+        assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823`), "no such folder");
+        assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`), "no json");
     }).timeout(10000000);
 
-    it("should be able to install liteloader", async function() {
+    it("should be able to install liteloader", async function () {
         // tslint:disable-next-line:max-line-length
         const meta: LiteLoader.VersionMeta = { url: "http://repo.mumfrey.com/content/repositories/snapshots/", type: "SNAPSHOT", file: "liteloader-1.12.2-SNAPSHOT.jar", version: "1.12.2-SNAPSHOT", md5: "1420785ecbfed5aff4a586c5c9dd97eb", timestamp: "1511880271", mcversion: "1.12.2", tweakClass: "com.mumfrey.liteloader.launch.LiteLoaderTweaker", libraries: [{ name: "net.minecraft:launchwrapper:1.12" }, { name: "org.ow2.asm:asm-all:5.2" }] };
         return LiteLoader.installAndCheck(meta, new MinecraftFolder(this.gameDirectory));
     }).timeout(1000000);
-    it("should be able to install liteloader to forge", async function() {
+    it("should be able to install liteloader to forge", async function () {
         // tslint:disable-next-line:max-line-length
         const meta: LiteLoader.VersionMeta = { url: "http://repo.mumfrey.com/content/repositories/snapshots/", type: "SNAPSHOT", file: "liteloader-1.12.2-SNAPSHOT.jar", version: "1.12.2-SNAPSHOT", md5: "1420785ecbfed5aff4a586c5c9dd97eb", timestamp: "1511880271", mcversion: "1.12.2", tweakClass: "com.mumfrey.liteloader.launch.LiteLoaderTweaker", libraries: [{ name: "net.minecraft:launchwrapper:1.12" }, { name: "org.ow2.asm:asm-all:5.2" }] };
-        return LiteLoader.installAndCheck(meta, new MinecraftFolder(this.gameDirectory), "1.12.2-forge1.12.2-14.23.2.2611");
+        return LiteLoader.installAndCheck(meta, new MinecraftFolder(this.gameDirectory), "1.12.2-forge1.12.2-14.23.5.2823");
     }).timeout(10000000);
 
-    it("should install new minecraft", async function() {
+    it("should install new minecraft", async function () {
         const loc = new MinecraftFolder(this.gameDirectory);
         const nMc = {
             id: "17w43b",

@@ -222,6 +222,7 @@ function downloadLibraries(version: Version, minecraft: MinecraftLocation, optio
                 }));
             await Promise.all(promises);
         } catch (e) {
+            console.error("Fail to download libraries.");
             throw e;
         }
         return version;
