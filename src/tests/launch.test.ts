@@ -60,8 +60,12 @@ describe("Launch", () => {
         before(async function () {
             if (process.env.JAVA_HOME) {
                 javaPath = `${process.env.JAVA_HOME}/bin/java`;
-                const javaVersionStr = await getJavaVersion(javaPath);
-                javaVersion = Number.parseFloat(javaVersionStr.split(EOL)[0].split(" ")[1].split(".")[0]);
+                if (process.env.ENV && process.env.ENV === "TRAVIS") {
+                    javaVersion = 8;
+                } else {
+                    const javaVersionStr = await getJavaVersion(javaPath);
+                    javaVersion = Number.parseFloat(javaVersionStr.split(EOL)[0].split(" ")[1].split(".")[0]);
+                }
             } else {
                 this.skip();
             }
