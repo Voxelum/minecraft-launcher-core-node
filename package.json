@@ -14,11 +14,12 @@
     "@types/semver": "^5.5.0",
     "@types/uuid": "^3.4.3",
     "mocha": "^6.0.2",
-    "typescript": "^2.9.1"
+    "tslint": "^5.14.0",
+    "typescript": "^3.3.4"
   },
   "scripts": {
     "test": "npm run build && node ./node_modules/mocha/bin/mocha dist/tests --timeout 10000",
-    "build": "node clean.js && tsc"
+    "build": "node clean.js && tslint -c tslint.json 'src/**/*.ts' && tsc"
   },
   "repository": {
     "type": "git",

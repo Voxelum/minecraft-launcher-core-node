@@ -1,6 +1,6 @@
-import { MinecraftLocation, MinecraftFolder } from './utils/folder';
-import * as path from 'path'
-import * as fs from 'fs-extra'
+import * as fs from "fs-extra";
+import * as path from "path";
+import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 
 export class Language {
     constructor(readonly id: string, readonly name: string, readonly region: string, readonly bidirectional: boolean) { }
@@ -9,28 +9,31 @@ export class Language {
 export namespace Language {
     /**
      * Read all Minecraft supported languages from a version of Minecraft game asset. This requires a installed Minecraft assets.
-     *  
+     *
      * @param location The location of Minecraft game, .minecraft folder
      * @param version The version you want to read
      */
     export async function read(location: MinecraftLocation, version: string): Promise<Language[]> {
-        const loca: MinecraftFolder = typeof location === 'string' ? new MinecraftFolder(location) : location;;
-        let json = path.join(loca.assets, 'indexes', version + '.json');
-        if (!fs.existsSync(json))
-            throw { type: 'MissingVersionIndex', location: loca.root }
-        let obj = await fs.readJson(json);
-        let meta = obj.objects['pack.mcmeta'];
-        let hash = meta.hash;
-        let head = hash.substring(0, 2);
-        let loc = path.join(loca.assets, 'objects', head, hash);
-        if (!fs.existsSync(loc))
-            throw { type: 'PackMcmetaNotExist', hash, location: loca.root };
-        let langs = await fs.readJson(loc);
-        if (!langs.language)
-            throw { type: 'IllegalPackMcmetaStructure', location: loca.root };
-        let arr = [];
-        for (let langKey in langs.language) {
-            let langObj = langs.language[langKey];
+        const loca: MinecraftFolder = typeof location === "string" ? new MinecraftFolder(location) : location;
+        const json = path.join(loca.assets, "indexes", version + ".json");
+        if (!fs.existsSync(json)) {
+            throw { type: "MissingVersionIndex", location: loca.root };
+        }
+        const obj = await fs.readJson(json);
+        const meta = obj.objects["pack.mcmeta"];
+        const hash = meta.hash;
+        const head = hash.substring(0, 2);
+        const loc = path.join(loca.assets, "objects", head, hash);
+        if (!fs.existsSync(loc)) {
+            throw { type: "PackMcmetaNotExist", hash, location: loca.root };
+        }
+        const langs = await fs.readJson(loc);
+        if (!langs.language) {
+            throw { type: "IllegalPackMcmetaStructure", location: loca.root };
+        }
+        const arr = [];
+        for (const langKey in langs.language) {
+            const langObj = langs.language[langKey];
             arr.push(new Language(langKey, langObj.name, langObj.region, langObj.bidirectional));
         }
         return arr;

@@ -1,14 +1,14 @@
-import * as ByteBuffer from 'bytebuffer'
+import * as ByteBuffer from "bytebuffer";
 
 export function writeUTF8(out: ByteBuffer, str: string) {
-    let strlen = str.length;
+    const strlen = str.length;
     let utflen = 0;
     let c: number;
     let count: number = 0;
 
     /* use charAt instead of copying String to char array */
-    for (let i = 0; i < strlen; i++) {
-        c = str.charCodeAt(i);
+    for (let idx = 0; idx < strlen; idx++) {
+        c = str.charCodeAt(idx);
         if ((c >= 0x0001) && (c <= 0x007F)) {
             utflen++;
         } else if (c > 0x07FF) {
@@ -18,11 +18,12 @@ export function writeUTF8(out: ByteBuffer, str: string) {
         }
     }
 
-    if (utflen > 65535)
+    if (utflen > 65535) {
         throw new Error(
             "encoded string too long: " + utflen + " bytes");
+    }
 
-    let bytearr = new Uint8Array(utflen + 2);
+    const bytearr = new Uint8Array(utflen + 2);
 
     bytearr[count++] = ((utflen >>> 8) & 0xFF);
     bytearr[count++] = ((utflen >>> 0) & 0xFF);
@@ -30,7 +31,7 @@ export function writeUTF8(out: ByteBuffer, str: string) {
     let i = 0;
     for (i = 0; i < strlen; i++) {
         c = str.charCodeAt(i);
-        if (!((c >= 0x0001) && (c <= 0x007F))) break;
+        if (!((c >= 0x0001) && (c <= 0x007F))) { break; }
         bytearr[count++] = c;
     }
 
@@ -48,28 +49,29 @@ export function writeUTF8(out: ByteBuffer, str: string) {
             bytearr[count++] = (0x80 | ((c >> 0) & 0x3F));
         }
     }
-    out.append(bytearr)
+    out.append(bytearr);
     // out.write(bytearr, 0, utflen + 2);
     return utflen + 2;
 }
 
 export function readUTF8(buff: ByteBuffer) {
-    let utflen = buff.readUint16()
-    let bytearr: number[] = new Array<number>(utflen);
-    let chararr = new Array<number>(utflen);
+    const utflen = buff.readUint16();
+    const bytearr: number[] = new Array<number>(utflen);
+    const chararr = new Array<number>(utflen);
 
     let c, char2, char3;
     let count = 0;
-    let chararr_count = 0;
+    let chararrCount = 0;
 
-    for (let i = 0; i < utflen; i++)
-        bytearr[i] = (buff.readByte())
+    for (let i = 0; i < utflen; i++) {
+        bytearr[i] = (buff.readByte());
+    }
 
     while (count < utflen) {
         c = bytearr[count] & 0xff;
-        if (c > 127) break;
+        if (c > 127) { break; }
         count++;
-        chararr[chararr_count++] = c;
+        chararr[chararrCount++] = c;
     }
 
     while (count < utflen) {
@@ -78,33 +80,37 @@ export function readUTF8(buff: ByteBuffer) {
             case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
                 /* 0xxxxxxx*/
                 count++;
-                chararr[chararr_count++] = c;
+                chararr[chararrCount++] = c;
                 break;
             case 12: case 13:
                 /* 110x xxxx   10xx xxxx*/
                 count += 2;
-                if (count > utflen)
+                if (count > utflen) {
                     throw new Error(
                         "malformed input: partial character at end");
+                }
                 char2 = bytearr[count - 1];
-                if ((char2 & 0xC0) != 0x80)
+                if ((char2 & 0xC0) !== 0x80) {
                     throw new Error(
                         "malformed input around byte " + count);
-                chararr[chararr_count++] = (((c & 0x1F) << 6) |
+                }
+                chararr[chararrCount++] = (((c & 0x1F) << 6) |
                     (char2 & 0x3F));
                 break;
             case 14:
                 /* 1110 xxxx  10xx xxxx  10xx xxxx */
                 count += 3;
-                if (count > utflen)
+                if (count > utflen) {
                     throw new Error(
                         "malformed input: partial character at end");
+                }
                 char2 = bytearr[count - 2];
                 char3 = bytearr[count - 1];
-                if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80))
+                if (((char2 & 0xC0) !== 0x80) || ((char3 & 0xC0) !== 0x80)) {
                     throw new Error(
                         "malformed input around byte " + (count - 1));
-                chararr[chararr_count++] = (((c & 0x0F) << 12) |
+                }
+                chararr[chararrCount++] = (((c & 0x0F) << 12) |
                     ((char2 & 0x3F) << 6) |
                     ((char3 & 0x3F) << 0));
                 break;
@@ -115,5 +121,5 @@ export function readUTF8(buff: ByteBuffer) {
         }
     }
     // The number of chars produced may be less than utflen
-    return chararr.map(i => String.fromCharCode(i)).join('')
+    return chararr.map((i) => String.fromCharCode(i)).join("");
 }

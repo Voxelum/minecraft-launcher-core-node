@@ -1,8 +1,8 @@
-import { GameSetting } from '..'
-import * as assert from 'assert';
+import * as assert from "assert";
+import { GameSetting } from "..";
 
-describe("GameSetting", function () {
-    it('should parse all options', function () {
+describe("GameSetting", function() {
+    it("should parse all options", function() {
         // const s = fs.readFileSync(`${this.assets}/options.txt`).toString()
         const s = `
 version:512
@@ -105,35 +105,35 @@ modelPart_right_sleeve:true
 modelPart_left_pants_leg:true
 modelPart_right_pants_leg:true
 modelPart_hat:true
-`
-        const set = GameSetting.parse(s)
+`;
+        const set = GameSetting.parse(s);
         assert(set);
-        assert.equal(set.ao, GameSetting.AmbientOcclusion.Minimum, 'ao')
-        assert.equal(set.fov, 0, 'fov')
-        assert.equal(set.mipmapLevels, 4, 'mipmap')
-        assert.equal(set.difficulty, GameSetting.Difficulty.Easy, 'difficulty')
-        assert.equal(set.renderClouds, GameSetting.RenderCloud.Off, 'cloud')
-        assert.equal(set.fancyGraphics, GameSetting.Graphic.Fast, 'graphic')
-        assert.equal(set.lastServer, 'play.mcndsj.com', 'lastServer')
-        assert.equal(set.particles, GameSetting.Particles.Decreased, 'particles')
-        assert.deepEqual(set.resourcePacks, ['Xray Ultimate 1.12 v2.2.1.zip'], 'resourcepacks')
-        assert.equal(set.lang, 'en_US', 'language')
-    })
-    it('should not parse illegal option', () => {
-        const set = GameSetting.parse('undefined:undefined\n')
+        assert.equal(set.ao, GameSetting.AmbientOcclusion.Minimum, "ao");
+        assert.equal(set.fov, 0, "fov");
+        assert.equal(set.mipmapLevels, 4, "mipmap");
+        assert.equal(set.difficulty, GameSetting.Difficulty.Easy, "difficulty");
+        assert.equal(set.renderClouds, GameSetting.RenderCloud.Off, "cloud");
+        assert.equal(set.fancyGraphics, GameSetting.Graphic.Fast, "graphic");
+        assert.equal(set.lastServer, "play.mcndsj.com", "lastServer");
+        assert.equal(set.particles, GameSetting.Particles.Decreased, "particles");
+        assert.deepEqual(set.resourcePacks, ["Xray Ultimate 1.12 v2.2.1.zip"], "resourcepacks");
+        assert.equal(set.lang, "en_US", "language");
+    });
+    it("should not parse illegal option", () => {
+        const set = GameSetting.parse("undefined:undefined\n");
         assert(set);
-        assert.equal((set as any)['undefined'], undefined)
-    })
-    it('should parse output even if input string is empty', () => {
-        const set = GameSetting.parse('')
+        assert.equal((set as any).undefined, undefined);
+    });
+    it("should parse output even if input string is empty", () => {
+        const set = GameSetting.parse("");
         assert(set);
-        assert.equal(set.ao, 2)
-        assert.equal(set.fov, 0)
-        assert.equal(set.mipmapLevels, 4)
-        assert.deepEqual(set.resourcePacks, [])
-        assert.equal(set.lang, 'en_us')
-    })
-    it('should write all options from frame', () => {
+        assert.equal(set.ao, 2);
+        assert.equal(set.fov, 0);
+        assert.equal(set.mipmapLevels, 4);
+        assert.deepEqual(set.resourcePacks, []);
+        assert.equal(set.lang, "en_us");
+    });
+    it("should write all options from frame", () => {
         const setting: GameSetting.Frame = {
             useVbo: false,
             fboEnable: false,
@@ -149,16 +149,16 @@ modelPart_hat:true
             maxFps: 0,
             particles: 0,
             renderDistance: 0,
-            resourcePacks: ['asb']
-        }
-        const string = GameSetting.stringify(setting);
-        assert.notEqual(string.indexOf('maxFps:0'), -1);
-        assert.notEqual(string.indexOf('fboEnable:false'), -1);
-        assert.notEqual(string.indexOf('enableVsync:false'), - 1);
-        assert.notEqual(string.indexOf('fancyGraphics:false'), - 1);
-        assert.notEqual(string.indexOf('resourcePacks:["asb"]'), -1);
-    })
-    it('should write all options from instance', () => {
+            resourcePacks: ["asb"],
+        };
+        const str = GameSetting.stringify(setting);
+        assert.notEqual(str.indexOf("maxFps:0"), -1);
+        assert.notEqual(str.indexOf("fboEnable:false"), -1);
+        assert.notEqual(str.indexOf("enableVsync:false"), - 1);
+        assert.notEqual(str.indexOf("fancyGraphics:false"), - 1);
+        assert.notEqual(str.indexOf('resourcePacks:["asb"]'), -1);
+    });
+    it("should write all options from instance", () => {
         const setting: GameSetting.Frame = {
             useVbo: false,
             fboEnable: false,
@@ -174,21 +174,21 @@ modelPart_hat:true
             maxFps: 0,
             particles: 0,
             renderDistance: 0,
-            resourcePacks: []
-        }
+            resourcePacks: [],
+        };
         const inst = new GameSetting(setting);
-        const string = GameSetting.stringify(inst);
-        assert.notEqual(string.indexOf('maxFps:0'), -1);
-        assert.notEqual(string.indexOf('fboEnable:false'), -1);
-        assert.notEqual(string.indexOf('enableVsync:false'), - 1);
-        assert.notEqual(string.indexOf('fancyGraphics:false'), - 1);
-        assert.notEqual(string.indexOf('resourcePacks:[]'), -1);
-    })
-    it('should not write undefined', () => {
+        const str = GameSetting.stringify(inst);
+        assert.notEqual(str.indexOf("maxFps:0"), -1);
+        assert.notEqual(str.indexOf("fboEnable:false"), -1);
+        assert.notEqual(str.indexOf("enableVsync:false"), - 1);
+        assert.notEqual(str.indexOf("fancyGraphics:false"), - 1);
+        assert.notEqual(str.indexOf("resourcePacks:[]"), -1);
+    });
+    it("should not write undefined", () => {
         const setting = {
-            undefined: undefined,
-        }
-        const string = GameSetting.stringify(setting);
-        assert.equal(string.indexOf('undefined:undefined'), -1);
-    })
-})
+            undefined,
+        };
+        const str = GameSetting.stringify(setting);
+        assert.equal(str.indexOf("undefined:undefined"), -1);
+    });
+});
