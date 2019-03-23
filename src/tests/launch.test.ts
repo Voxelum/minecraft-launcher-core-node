@@ -6,7 +6,7 @@ import { Auth, Launcher, Version } from "../index";
 
 function getJavaVersion(javaPath: string) {
     return new Promise<string>((resolve, reject) => {
-        exec(`"${javaPath}" --version`, { encoding: "utf8" }, (e, out, err) => {
+        exec(`"${javaPath}" -version`, { encoding: "utf8" }, (e, out, err) => {
             if (e) {
                 reject(e);
             } else {

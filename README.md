@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/ts-minecraft.svg?style=flat-square)](https://www.npmjs.com/package/ts-minecraft)
 [![npm](https://img.shields.io/npm/l/ts-minecraft.svg?style=flat-square)](https://github.com/InfinityStudio/ts-minecraft/blob/3.0/LICENSE)
-[![Build Status](https://travis-ci.org/InfinityStudio/ts-minecraft.svg?branch=3.0)](https://travis-ci.org/InfinityStudio/ts-minecraft)
+[![Build Status](https://travis-ci.org/InfinityStudio/ts-minecraft.svg?branch=4.0)](https://travis-ci.org/InfinityStudio/ts-minecraft)
 
 Provide several useful functions for Minecraft
 
