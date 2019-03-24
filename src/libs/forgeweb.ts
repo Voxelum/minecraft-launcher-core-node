@@ -61,6 +61,14 @@ export namespace ForgeWebPage {
         };
     }
 
+    /**
+     * Query the webpage content from files.minecraftforge.net.
+     *
+     * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
+     * It will request a new page only when the fallback option is outdated.
+     *
+     * @param option The option can control querying minecraft version, and page caching.
+     */
     export async function getWebPage(option: {
         mcversion?: string,
         fallback?: ForgeWebPage,
