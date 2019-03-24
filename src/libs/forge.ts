@@ -4,11 +4,12 @@ import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from "java-asm"
 import * as Zip from "jszip";
 import * as path from "path";
 import Task from "treelike-task";
-
 import { Mod } from "./mod";
 import { downloadTask } from "./utils/download";
+import { missing } from "./utils/exists";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { Version } from "./version";
+
 
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
@@ -356,7 +357,7 @@ export namespace Forge {
             const jsonPath = path.join(rootPath, `${localForgePath}.json`);
 
             await context.execute("ensureRoot", () => fs.ensureDir(rootPath));
-            if (!fs.existsSync(libForgePath) || !fs.existsSync(jsonPath)) {
+            if (await missing(libForgePath) || await missing(jsonPath)) {
                 await context.execute("writeJar", async () => fs.outputFile(libForgePath, universalBuffer));
                 await context.execute("writeJson", async () => fs.writeJSON(jsonPath, versionJSON));
 

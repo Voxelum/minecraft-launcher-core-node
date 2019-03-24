@@ -1,5 +1,6 @@
 import * as fs from "fs-extra";
 import * as path from "path";
+import { missing } from "./utils/exists";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 
 export class Language {
@@ -16,7 +17,7 @@ export namespace Language {
     export async function read(location: MinecraftLocation, version: string): Promise<Language[]> {
         const loca: MinecraftFolder = typeof location === "string" ? new MinecraftFolder(location) : location;
         const json = path.join(loca.assets, "indexes", version + ".json");
-        if (!fs.existsSync(json)) {
+        if (await missing(json)) {
             throw { type: "MissingVersionIndex", location: loca.root };
         }
         const obj = await fs.readJson(json);
@@ -24,7 +25,7 @@ export namespace Language {
         const hash = meta.hash;
         const head = hash.substring(0, 2);
         const loc = path.join(loca.assets, "objects", head, hash);
-        if (!fs.existsSync(loc)) {
+        if (await missing(loc)) {
             throw { type: "PackMcmetaNotExist", hash, location: loca.root };
         }
         const langs = await fs.readJson(loc);

@@ -5,9 +5,10 @@ import * as os from "os";
 import * as path from "path";
 import { v4 } from "uuid";
 import { Auth, UserType } from "./auth";
+import { missing } from "./utils/exists";
 import { MinecraftFolder } from "./utils/folder";
 import format from "./utils/format";
-import { Artifact, Library, Native, Version } from "./version";
+import { Library, Native, Version } from "./version";
 
 
 export namespace Launcher {
@@ -67,13 +68,14 @@ export namespace Launcher {
         const version = options.version as Version;
         const minecraftFolder = new MinecraftFolder(options.resourcePath as string);
 
-        const missing = ensureLibraries(minecraftFolder, version);
-        if (missing.length > 0) { throw {
-            type: "MissingLibs",
-            libs: missing,
-        };
+        const missingLibs = await ensureLibraries(minecraftFolder, version);
+        if (missingLibs.length > 0) {
+            throw {
+                type: "MissingLibs",
+                libs: missingLibs,
+            };
         }
-        await extractNative(minecraftFolder, version);
+        await ensureNative(minecraftFolder, version);
 
         return spawn(args[0], args.slice(1), { cwd: options.gamePath });
     }
@@ -170,13 +172,15 @@ export namespace Launcher {
         return cmd;
     }
 
-    function ensureLibraries(resourcePath: MinecraftFolder, version: Version): Library[] {
-        return version.libraries.filter((lib) => !fs.existsSync(resourcePath.getLibraryByPath(lib.download.path)));
+    async function ensureLibraries(resourcePath: MinecraftFolder, version: Version): Promise<Library[]> {
+        const missingMask = await Promise.all(version.libraries.map((lib) => missing(resourcePath.getLibraryByPath(lib.download.path))));
+        return version.libraries.filter((_, index) => missingMask[index]);
     }
 
-    async function extractNative(mc: MinecraftFolder, version: Version) {
+    async function ensureNative(mc: MinecraftFolder, version: Version) {
         const native = mc.getNativesRoot(version.id);
         await fs.ensureDir(native);
+        await fs.emptyDir(native);
         const natives = version.libraries.filter((lib) => lib instanceof Native) as Native[];
         return Promise.all(natives.map(async (n) => {
             const excluded: string[] = n.extractExclude ? n.extractExclude : [];
@@ -185,8 +189,12 @@ export namespace Launcher {
             const zip = await Zip().loadAsync(await fs.readFile(from));
             for (const entry of zip.filter(containsExcludes)) {
                 const filePath = path.join(native, entry.name);
-                await fs.ensureFile(filePath);
-                await fs.writeFile(filePath, await entry.async("nodebuffer"));
+                if (entry.dir) {
+                    await fs.ensureDir(filePath);
+                } else {
+                    await fs.ensureFile(filePath);
+                    await fs.writeFile(filePath, await entry.async("nodebuffer"));
+                }
             }
         }));
     }

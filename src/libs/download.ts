@@ -6,6 +6,7 @@ import Task from "treelike-task";
 import CHECKSUM from "./utils/checksum";
 import { decompressXZ, unpack200 } from "./utils/decompress";
 import { downloadTask } from "./utils/download";
+import { exists } from "./utils/exists";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { getIfUpdate, UpdatedObject } from "./utils/update";
 import { Library, Version, VersionMeta } from "./version";
@@ -32,7 +33,7 @@ declare module "./version" {
     type LibraryHost = (libId: string) => string | undefined;
 
     namespace Version {
-        type MetaContainer = { list: VersionMetaList, date: string } & UpdatedObject;
+        type MetaContainer = VersionMetaList & UpdatedObject;
 
         /**
          * get/refresh a version metadata
@@ -126,7 +127,7 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const json = folder.getVersionJson(version.id);
         await context.execute("ensureVersionRoot", () => fs.ensureDir(folder.getVersionRoot(version.id)));
-        if (!fs.existsSync(json)) { await context.execute("getJson", downloadTask(version.url, json)); }
+        if (!exists(json)) { await context.execute("getJson", downloadTask(version.url, json)); }
         return Version.parse(minecraft, version.id);
     };
 }
@@ -137,7 +138,7 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
         await context.execute("ensureRootDir", () => fs.ensureDir(folder.getVersionRoot(version.id)));
         const filename = type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar";
         const jar = path.join(folder.getVersionRoot(version.id), filename);
-        const exist = fs.existsSync(jar);
+        const exist = await exists(jar);
         if (!exist) {
             await context.execute("downloadJar", downloadTask(version.downloads[type].url, jar));
         }
@@ -167,7 +168,7 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
     return async (context: Task.Context) => {
         const rawPath = lib.download.path;
         const filePath = path.join(folder.libraries, rawPath);
-        const exist = fs.existsSync(filePath);
+        const exist = await exists(filePath);
         let downloadURL: string;
 
         const isCompressed = (lib.checksums) ? lib.checksums.length > 1 ? true : false : false;
@@ -238,7 +239,7 @@ function downloadAsset(content: any, key: string, folder: MinecraftFolder, asset
         const dir = folder.getPath("assets", "objects", head);
         await fs.ensureDir(dir);
         const file = path.join(dir, hash);
-        const exist = fs.existsSync(file);
+        const exist = await exists(file);
         if (!exist) {
             await downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
         } else {
@@ -256,7 +257,7 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option?:
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
-        if (!fs.existsSync(jsonPath)) {
+        if (!(await exists(jsonPath))) {
             await fs.ensureDir(path.join(folder.assets, "indexes"));
             await context.execute("downloadAssetsJson", downloadTask(version.assetIndex.url, jsonPath));
         }

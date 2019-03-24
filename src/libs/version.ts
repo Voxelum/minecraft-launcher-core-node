@@ -275,7 +275,7 @@ export namespace Version {
     function mixinArgument(hi: {
         game: LaunchArgument[],
         jvm: LaunchArgument[],
-    },                     lo: {
+    }, lo: {
         game: LaunchArgument[],
         jvm: LaunchArgument[],
     }) {
@@ -296,10 +296,11 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
     return new Promise<Version[]>((res, rej) => {
         const stack: Version[] = [];
         const fullPath = paths.join(folderLoc, "versions", version, version + ".json");
-        if (!fs.existsSync(fullPath)) { rej({
-            type: "MissingVersionJson",
-            version,
-        });
+        if (!fs.existsSync(fullPath)) {
+            rej({
+                type: "MissingVersionJson",
+                version,
+            });
         }
         function interal(fPath: string): Promise<Version[]> {
             return fs.readFile(fPath).then((value) => {
