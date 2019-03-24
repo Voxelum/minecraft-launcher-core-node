@@ -1,8 +1,9 @@
 # ts-minecraft
 
-[![npm version](https://img.shields.io/npm/v/ts-minecraft.svg?style=flat-square)](https://www.npmjs.com/package/ts-minecraft)
-[![npm](https://img.shields.io/npm/l/ts-minecraft.svg?style=flat-square)](https://github.com/InfinityStudio/ts-minecraft/blob/3.0/LICENSE)
+[![npm version](https://img.shields.io/npm/v/ts-minecraft.svg)](https://www.npmjs.com/package/ts-minecraft)
+[![npm](https://img.shields.io/npm/l/ts-minecraft.svg)](https://github.com/InfinityStudio/ts-minecraft/blob/3.0/LICENSE)
 [![Build Status](https://travis-ci.org/InfinityStudio/ts-minecraft.svg?branch=4.0)](https://travis-ci.org/InfinityStudio/ts-minecraft)
+[![Coverage Status](https://coveralls.io/repos/github/InfinityStudio/ts-minecraft/badge.svg?branch=4.0)](https://coveralls.io/github/InfinityStudio/ts-minecraft?branch=4.0)
 
 Provide several useful functions for Minecraft
 
@@ -29,6 +30,7 @@ Provide several useful functions for Minecraft
     - [Auth](#auth)
     - [Version](#version)
     - [Launch](#launch)
+  - [Caching Request](#caching-request)
   - [Issue](#issue)
   - [Credit](#credit)
 
@@ -118,7 +120,7 @@ Read sever info and fetch its status.
     import { VersionMeta, VersionMetaList, Version, MetaContainer, MinecraftLocation } from 'ts-minecraft'
     const minecraft: MinecraftLocation;
     const versionPromise: Promise<Version> = Version.updateVersionMeta()
-        .then((metas: MetaContainer) => metas.list.versions[0])
+        .then((metas: MetaContainer) => metas.list.versions[0]) // i just pick the first version in list here 
         .then((meta: VersionMeta) => Version.install('client', meta, minecraft))
 
 Fully install vanilla minecraft client including assets and libs.
@@ -146,8 +148,13 @@ Read language info from version
     import { ResourcePack } from 'ts-minecraft'
     const fileFullPath;
     Promise<ResourcePack> packPromise = ResourcePack.read(fileFullPath);
-    // or you want read from folder
-    Promise<ResourcePack> fromFolder = ResourcePack.readFolder(fileFullPath);
+    // or you want read from folder, same function call
+    Promise<ResourcePack> fromFolder = ResourcePack.read(fileFullPath);
+
+    // if you have already read the file, don't want to reopen the file
+    // the file path will be only used for resource pack name
+    const fileContentBuffer: Buffer;
+    Promise<ResourcePack> packPromise = ResourcePack.read(fileFullPath, fileContentBuffer);
 
 Read ResourcePack from filePath
 
@@ -180,13 +187,25 @@ Fetch the user game profile by uuid. This could also be used for get skin.
     const forgeModJarBuff: Buffer;
     Promise<Forge.MetaData[]> metasPromise = Forge.meta(forgeModJarBuff);
 
-Read the forge mod metadata
+Read the forge mod metadata, including @Mod annotation and mcmod json data
 
     const modConfigString: string;
     const config: Forge.Config = Forge.Config.parse(modConfigString);
     const serializedBack = Forge.Config.stringify(config);
 
 Read the forge mod config
+
+    import { ForgeWebPage } from 'ts-minecraft'
+    const pagePromise = ForgeWebPage.getWebPage(); 
+    const minecraftLocation: MinecraftLocation;
+    pagePromise.then((page) => {
+        const mcversion = page.mcversion;
+        const firstVersionOnPage = page.versions[0];
+        const forgeVersionMeta = Forge.VersionMeta.from(firstVersionOnPage);
+        return Forge.install(forgeVersionMeta, minecraftLocation);
+    });
+
+Get the forge version info and install forge from it.
 
 ### TextComponent
 
@@ -225,6 +244,30 @@ Parse existed version.
     const proc: Promise<ChildProcess> = Launcher.launch({gamePath, javaPath, version});
 
 Launch minecraft from a version
+
+## Caching Request
+
+The functions that request minecraft version manifest, forge version webpage, or liteload version manifest can have cache option.
+
+You should save the old result from those functions and pass it as the fallback option. These function will check if your old manifest is outdated or not, and it will only request a new one when your fallback option is outdated.
+
+For Minecraft:
+
+    const forceGetTheVersionMeta = Version.updateVersionMeta();
+    const result = Version.updateVersionMeta({ fallback: forceGetTheVersionMeta }); // this should not request the manifest url again, since the forceGetTheVersionMeta is not outdated.
+
+Normally you will load the last version manifest from file:
+
+    const oldManifest = JSON.parse(fs.readFileSync("manifest-whatevername-cache.json").toString());
+    const result = Version.updateVersionMeta({ fallback: oldManifest }); // the result should up-to-date.
+
+For Forge, it's the same:
+
+    const forgeGet = ForgeWebPage.getWebPage(); // force get
+
+    const oldWebPageCache = JSON.parse(fs.readFileSync("forge-anyname-cache.json").toString());
+    const updated = ForgeWebPage.getWebPage({ fallback: oldWebPageCache }); // this should be up-to-date
+
 
 ## Issue
 
