@@ -127,7 +127,9 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const json = folder.getVersionJson(version.id);
         await context.execute("ensureVersionRoot", () => fs.ensureDir(folder.getVersionRoot(version.id)));
-        if (!exists(json)) { await context.execute("getJson", downloadTask(version.url, json)); }
+        if (!await exists(json)) {
+            await context.execute("getJson", downloadTask(version.url, json));
+        }
         return Version.parse(minecraft, version.id);
     };
 }
