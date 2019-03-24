@@ -21,12 +21,14 @@ describe("Resourcepack", function() {
         const buff = fs.readFileSync(`${this.assets}/sample-resourcepack.zip`);
         const pack = await ResourcePack.read(`${this.assets}/sample-resourcepack.zip`, buff);
         if (!pack) { throw new Error("Pack cannot be null"); }
+        assert.equal(pack.packName, "sample-resourcepack");
         assert.equal(pack.description, "Vattic\u0027s Faithful 32x32 pack");
         assert.equal(pack.format, 1);
     });
     it("should read resource pack folder", async function() {
-        const pack = await ResourcePack.readFolder(`${this.assets}/sample-resourcepack`);
+        const pack = await ResourcePack.read(`${this.assets}/sample-resourcepack`);
         if (!pack) { throw new Error("Pack cannot be null"); }
+        assert.equal(pack.packName, "sample-resourcepack");
         assert.equal(pack.description, "Vattic\u0027s Faithful 32x32 pack");
         assert.equal(pack.format, 1);
     });

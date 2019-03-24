@@ -42,7 +42,7 @@ export namespace ResourcePack {
         const stat = await fs.stat(filePath);
         if (stat.isDirectory()) { return readDirectory(filePath); }
         const zip = await new Zip().loadAsync(buffer ? buffer : await fs.readFile(filePath));
-        const base = path.basename(filePath);
+        const base = path.basename(filePath, ".zip");
         return readZip(base, zip);
     }
     /**
