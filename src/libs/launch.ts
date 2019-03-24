@@ -5,10 +5,11 @@ import * as os from "os";
 import * as path from "path";
 import { v4 } from "uuid";
 import { Auth, UserType } from "./auth";
+import checksum from "./utils/checksum";
 import { missing } from "./utils/exists";
 import { MinecraftFolder } from "./utils/folder";
 import format from "./utils/format";
-import { Library, Native, Version } from "./version";
+import { Native, Version } from "./version";
 
 
 export namespace Launcher {
@@ -68,13 +69,7 @@ export namespace Launcher {
         const version = options.version as Version;
         const minecraftFolder = new MinecraftFolder(options.resourcePath as string);
 
-        const missingLibs = await ensureLibraries(minecraftFolder, version);
-        if (missingLibs.length > 0) {
-            throw {
-                type: "MissingLibs",
-                libs: missingLibs,
-            };
-        }
+        await ensureLibraries(minecraftFolder, version);
         await ensureNative(minecraftFolder, version);
 
         return spawn(args[0], args.slice(1), { cwd: options.gamePath });
@@ -172,14 +167,32 @@ export namespace Launcher {
         return cmd;
     }
 
-    async function ensureLibraries(resourcePath: MinecraftFolder, version: Version): Promise<Library[]> {
+    async function ensureLibraries(resourcePath: MinecraftFolder, version: Version) {
         const missingMask = await Promise.all(version.libraries.map((lib) => missing(resourcePath.getLibraryByPath(lib.download.path))));
-        return version.libraries.filter((_, index) => missingMask[index]);
+        const missingLibs = version.libraries.filter((_, index) => missingMask[index]);
+
+        if (missingLibs.length > 0) {
+            throw {
+                type: "MissingLibs",
+                libs: missingLibs,
+            };
+        }
+        const corruptedMask = await Promise.all(version.libraries
+            .map((lib) => checksum(resourcePath.getLibraryByPath(lib.download.path))
+                .then((sum) => lib.download.sha1 !== "" && sum !== lib.download.sha1)),
+        );
+        const corruptedLibs = version.libraries.filter((_, index) => corruptedMask[index]);
+
+        if (corruptedLibs.length > 0) {
+            throw {
+                type: "CorruptedLibs",
+                libs: corruptedLibs,
+            };
+        }
     }
 
     async function ensureNative(mc: MinecraftFolder, version: Version) {
         const native = mc.getNativesRoot(version.id);
-        await fs.ensureDir(native);
         await fs.emptyDir(native);
         const natives = version.libraries.filter((lib) => lib instanceof Native) as Native[];
         return Promise.all(natives.map(async (n) => {
@@ -187,14 +200,10 @@ export namespace Launcher {
             const containsExcludes = (p: string) => excluded.filter((s) => p.startsWith(s)).length === 0;
             const from = mc.getLibraryByPath(n.download.path);
             const zip = await Zip().loadAsync(await fs.readFile(from));
-            for (const entry of zip.filter(containsExcludes)) {
+            for (const entry of zip.filter(containsExcludes).filter((p) => !p.dir)) {
                 const filePath = path.join(native, entry.name);
-                if (entry.dir) {
-                    await fs.ensureDir(filePath);
-                } else {
-                    await fs.ensureFile(filePath);
-                    await fs.writeFile(filePath, await entry.async("nodebuffer"));
-                }
+                await fs.ensureFile(filePath);
+                await fs.writeFile(filePath, await entry.async("nodebuffer"));
             }
         }));
     }

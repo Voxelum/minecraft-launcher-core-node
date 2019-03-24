@@ -157,7 +157,7 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
 }
 
 
-function checkDependency(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
+function checkDependency(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string } = {}) {
     return async (context: Task.Context) => {
         return context.execute("downloadAssets", downloadAssets(version, minecraft, option))
             .then((ver) => context.execute("downloadLibraries", downloadLibraries(ver, minecraft, option)));
@@ -253,7 +253,7 @@ function downloadAsset(content: any, key: string, folder: MinecraftFolder, asset
 
 const cores = os.cpus.length || 4;
 
-function downloadAssets(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, assetsHost?: string }) {
+function downloadAssets(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, assetsHost?: string }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
@@ -263,8 +263,8 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option?:
         }
         const content: any = (await fs.readJson(jsonPath)).objects;
         await fs.ensureDir(folder.getPath("assets", "objects"));
-        const assetsHost = option ? option.assetsHost || "https://resources.download.minecraft.net" : "https://resources.download.minecraft.net";
-        const checksum = option ? option.checksum ? option.checksum : false : false;
+        const assetsHost = option.assetsHost || "https://resources.download.minecraft.net";
+        const checksum = option.checksum ? option.checksum : false;
         try {
             const keys = Object.keys(content);
             for (let i = 0; i < keys.length; i += cores) {

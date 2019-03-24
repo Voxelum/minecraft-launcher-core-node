@@ -283,7 +283,8 @@ export namespace Version {
     }
 }
 export class Library {
-    constructor(readonly name: string, readonly download: Artifact, readonly checksums?: string[], readonly serverreq?: boolean, readonly clientreq?: boolean) { }
+    constructor(readonly name: string, readonly download: Artifact,
+        readonly checksums?: string[], readonly serverreq?: boolean, readonly clientreq?: boolean) { }
 }
 export class Native extends Library {
     constructor(name: string, download: Artifact, readonly extractExclude?: string[]) {
@@ -439,7 +440,7 @@ function parseVersionJson(versionString: string): Version {
 
                 const artifact: Artifact = {
                     size: -1,
-                    sha1: "",
+                    sha1: lib.checksums ? lib.checksums[0] : "",
                     path,
                     url: `${url}${path}`,
                 };
