@@ -1,8 +1,8 @@
 {
   "name": "ts-minecraft",
-  "version": "3.2.0",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "version": "4.0.1",
+  "main": "./dest/index.js",
+  "types": "./dest/index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
   "devDependencies": {
     "@types/bytebuffer": "^5.0.37",
@@ -18,7 +18,7 @@
     "typescript": "^3.3.4"
   },
   "scripts": {
-    "test": "npm run build && node ./node_modules/mocha/bin/mocha dist/tests --timeout 10000",
+    "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
     "build": "node clean.js && tslint -c tslint.json 'src/**/*.ts' && tsc"
   },
   "repository": {

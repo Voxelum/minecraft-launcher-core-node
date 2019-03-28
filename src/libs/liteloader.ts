@@ -2,12 +2,12 @@ import * as fs from "fs-extra";
 import * as Zip from "jszip";
 import * as path from "path";
 import Task from "treelike-task";
-import Mod from "./mod";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { getIfUpdate, UpdatedObject } from "./utils/update";
 import { Version } from "./version";
 
 export namespace LiteLoader {
+    export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
     export interface MetaData {
         readonly mcversion: string;
         readonly name: string;
@@ -78,7 +78,7 @@ export namespace LiteLoader {
             return metalist;
         }
         export function update(option: { fallback?: VersionMetaList, remote?: string } = {}): Promise<VersionMetaList> {
-            return getIfUpdate(option.remote || "http://dl.liteloader.com/versions/versions.json",
+            return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST,
                 parse, option.fallback,
             );
         }
@@ -129,7 +129,6 @@ export namespace LiteLoader {
 
     const snapshotRoot = "http://dl.liteloader.com/versions/";
     const releaseRoot = "http://repo.mumfrey.com/content/repositories/liteloader/";
-
 
     function buildVersionInfo(versionMeta: VersionMeta, mountedJSON: any) {
         const id = `${mountedJSON.id}-Liteloader${versionMeta.mcversion}-${versionMeta.version}`;
@@ -209,9 +208,5 @@ export namespace LiteLoader {
         });
     }
 }
-
-Mod.register("liteloader", (option) =>
-    LiteLoader.meta(option)
-        .then((m) => [new Mod<LiteLoader.MetaData>(`${m.name}:${m.version}`, m)]));
 
 export default LiteLoader;

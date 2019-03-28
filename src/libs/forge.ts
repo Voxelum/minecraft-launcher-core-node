@@ -4,7 +4,6 @@ import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from "java-asm"
 import * as Zip from "jszip";
 import * as path from "path";
 import Task from "treelike-task";
-import { Mod } from "./mod";
 import { downloadTask } from "./utils/download";
 import { missing } from "./utils/exists";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
@@ -409,13 +408,5 @@ export namespace Forge {
         return installAndCheckTask(version, minecraft, checksum, maven).execute();
     }
 }
-
-Mod.register("forge", (option) => Forge.readModMetaData(option).then((mods) => mods.map((m) => new Mod<Forge.MetaData>(`${m.modid}:${m.version ? m.mcversion : "0.0.0"}`, m))));
-
-// declare module './mod' {
-//     namespace Mod {
-//         function parse(data: string | Buffer, type: 'forge'): Promise<Mod.File<Forge.MetaData>>
-//     }
-// }
 
 export default Forge;

@@ -33,6 +33,15 @@ declare module "./version" {
     type LibraryHost = (libId: string) => string | undefined;
 
     namespace Version {
+        /**
+         * Default minecraft version manifest url.
+         */
+        const DEFAULT_VERSION_MANIFEST_URL = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+        /**
+         * Default resource/assets url root
+         */
+        const DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.net";
+
         type MetaContainer = VersionMetaList & UpdatedObject;
 
         /**
@@ -85,11 +94,14 @@ declare module "./version" {
     }
 }
 
+(Version as any).DEFAULT_VERSION_MANIFEST_URL = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+(Version as any).DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.net";
+
 Version.updateVersionMeta = (option: {
     fallback?: Version.MetaContainer,
     remote?: string,
 } = {}) => {
-    return getIfUpdate(option.remote || "https://launchermeta.mojang.com/mc/game/version_manifest.json",
+    return getIfUpdate(option.remote || Version.DEFAULT_VERSION_MANIFEST_URL,
         JSON.parse, option.fallback);
 };
 
@@ -265,7 +277,7 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
         }
         const content: any = (await fs.readJson(jsonPath)).objects;
         await fs.ensureDir(folder.getPath("assets", "objects"));
-        const assetsHost = option.assetsHost || "https://resources.download.minecraft.net";
+        const assetsHost = option.assetsHost || Version.DEFAULT_RESOURCE_ROOT_URL;
         const checksum = option.checksum ? option.checksum : false;
         try {
             const keys = Object.keys(content);

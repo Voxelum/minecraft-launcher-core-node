@@ -2,5 +2,5 @@
 /.vscode
 /assets
 /src/tests
-/dist/tests
+/dest/tests
 *.log

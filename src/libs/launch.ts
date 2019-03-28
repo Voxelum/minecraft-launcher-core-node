@@ -4,7 +4,7 @@ import * as Zip from "jszip";
 import * as os from "os";
 import * as path from "path";
 import { v4 } from "uuid";
-import { Auth, UserType } from "./auth";
+import { Auth } from "./auth";
 import checksum from "./utils/checksum";
 import { missing } from "./utils/exists";
 import { MinecraftFolder } from "./utils/folder";
@@ -13,12 +13,12 @@ import { Native, Version } from "./version";
 
 
 export namespace Launcher {
+    export type PartialAuth = Pick<Auth, "selectedProfile" | "accessToken" | "userType" | "properties">;
     export interface Option {
         /**
          * The auth information
          */
-        auth?: Auth;
-        accessToken?: string;
+        auth?: PartialAuth;
         launcherName?: string;
         launcherBrand?: string;
 
@@ -137,8 +137,8 @@ export namespace Launcher {
             auth_player_name: options.auth.selectedProfile ? options.auth.selectedProfile.name || "Steve" : "Steve",
             auth_uuid: options.auth.selectedProfile.id.replace(/-/g, ""),
             auth_access_token: options.auth.accessToken || v4(),
-            user_properties: JSON.stringify(options.auth.properties),
-            user_type: UserType.toString(options.auth.userType),
+            user_properties: JSON.stringify(options.auth.properties || {}),
+            user_type: options.auth.userType || "mojang",
             resolution_width: resolution.width || 850,
             resolution_height: resolution.height || 470,
         };

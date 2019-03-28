@@ -16,7 +16,6 @@ export * from "./libs/gamesetting";
 export * from "./libs/resourcepacks";
 export * from "./libs/forge";
 export * from "./libs/liteloader";
-export * from "./libs/mod";
 export * from "./libs/utils/location";
 export * from "./libs/forgeweb";
 
