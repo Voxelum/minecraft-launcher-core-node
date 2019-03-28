@@ -1,1 +1,1 @@
-require('fs-extra').removeSync('./dist');
+require('fs-extra').removeSync('./dest');
