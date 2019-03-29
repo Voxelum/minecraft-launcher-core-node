@@ -168,17 +168,18 @@ export namespace LiteLoader {
             const mc: MinecraftFolder = typeof location === "string" ? new MinecraftFolder(location) : location;
             const mountVersion = version || versionMeta.mcversion;
 
-            if (!fs.existsSync(mc.getVersionJson(mountVersion))) { throw { type: "MissingVersionJson", version: mountVersion, location: mc.root }; }
-            const mountedJSON: any = await fs.readJson(mc.getVersionJson(mountVersion));
-            const versionInf = buildVersionInfo(versionMeta, mountedJSON);
-            const versionPath = mc.getVersionRoot(versionInf.id);
+            const mountedJSON: any = await context.execute("resolveMinecraftVersionJson", async () => {
+                if (!fs.existsSync(mc.getVersionJson(mountVersion))) { throw { type: "MissingVersionJson", version: mountVersion, location: mc.root }; }
+                return fs.readJson(mc.getVersionJson(mountVersion));
+            });
 
-            await fs.ensureDir(versionPath);
-            await context.execute("writeJson", () => fs.writeFile(path.join(versionPath, versionInf.id + ".json"), JSON.stringify(versionInf, undefined, 4)));
+            await context.execute("generateLiteloaderJson", async () => {
+                const versionInf = buildVersionInfo(versionMeta, mountedJSON);
+                const versionPath = mc.getVersionRoot(versionInf.id);
 
-            if (!fs.existsSync(versionPath)) {
                 await fs.ensureDir(versionPath);
-            }
+                await fs.writeFile(path.join(versionPath, versionInf.id + ".json"), JSON.stringify(versionInf, undefined, 4));
+            });
         });
     }
 
@@ -191,20 +192,25 @@ export namespace LiteLoader {
             const mc: MinecraftFolder = typeof location === "string" ? new MinecraftFolder(location) : location;
             const mountVersion = version || versionMeta.mcversion;
 
-            if (!fs.existsSync(mc.getVersionJson(mountVersion))) { throw { type: "MissingVersionJson", version: mountVersion, location: mc.root }; }
-            const mountedJSON: any = await fs.readJson(mc.getVersionJson(mountVersion));
-            const versionInf = buildVersionInfo(versionMeta, mountedJSON);
-            const versionPath = mc.getVersionRoot(versionInf.id);
+            const mountedJSON: any = await context.execute("resolveMinecraftVersionJson", async () => {
+                if (!fs.existsSync(mc.getVersionJson(mountVersion))) { throw { type: "MissingVersionJson", version: mountVersion, location: mc.root }; }
+                return fs.readJson(mc.getVersionJson(mountVersion));
+            });
 
-            await fs.ensureDir(versionPath);
-            await context.execute("writeJson", () => fs.writeFile(path.join(versionPath, versionInf.id + ".json"), JSON.stringify(versionInf, undefined, 4)));
+            const versionInf = await context.execute("generateLiteloaderJson", async () => {
+                const inf = buildVersionInfo(versionMeta, mountedJSON);
+                const versionPath = mc.getVersionRoot(inf.id);
 
-            if (!fs.existsSync(versionPath)) {
                 await fs.ensureDir(versionPath);
-            }
+                await fs.writeFile(path.join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
 
-            const resolved = await Version.parse(mc, versionInf.id);
-            await context.execute("checkDependency", Version.checkDependenciesTask(resolved, mc).work);
+                return inf;
+            });
+
+            await context.execute("checkDependency", async (ctx) => {
+                const resolved = await Version.parse(mc, versionInf.id);
+                Version.checkDependenciesTask(resolved, mc).work(ctx);
+            });
         });
     }
 }

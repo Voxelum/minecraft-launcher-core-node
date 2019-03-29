@@ -5,7 +5,7 @@ import * as Zip from "jszip";
 import * as path from "path";
 import Task from "treelike-task";
 import { downloadTask } from "./utils/download";
-import { missing } from "./utils/exists";
+import { exists } from "./utils/exists";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { Version } from "./version";
 
@@ -311,6 +311,8 @@ export namespace Forge {
         return readModMetaData(mod, asmOnly);
     }
 
+    export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
+
     function validateCheckSum(data: Buffer, algorithm: string, expectValue: string) {
         try {
             return expectValue === crypto.createHash(algorithm).update(data).digest("hex");
@@ -319,7 +321,7 @@ export namespace Forge {
         }
     }
 
-    function installTask0(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false, maven: string = "http://files.minecraftforge.net") {
+    function installTask0(version: VersionMeta, minecraft: MinecraftLocation, maven: string) {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const versionPath = `${version.mcversion}-${version.version}`;
@@ -327,6 +329,11 @@ export namespace Forge {
             const installerURLFallback = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`;
             const universalURL = `${maven}${version.universal}`;
             const installerURL = `${maven}${version.installer}`;
+            const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${versionPath}/forge-${versionPath}.jar`);
+            const forgeId = `${version.mcversion}-forge${version.mcversion}-${version.version}`;
+            const rootPath = mc.getVersionRoot(forgeId);
+            const jsonPath = path.join(rootPath, `${forgeId}.json`);
+
 
             async function downloadForge(universal: string, installer: string) {
                 let buffer: any;
@@ -342,35 +349,45 @@ export namespace Forge {
                 return buffer;
             }
 
-            const universalBuffer = await downloadForge(universalURL, installerURL)
-                .catch((_) => downloadForge(universalURLFallback, installerURLFallback));
-
-            const buff: Buffer = await context.execute("extraVersionJson",
-                async () => (await Zip().loadAsync(universalBuffer)).file("version.json").async("nodebuffer"));
-            const versionJSON = JSON.parse(buff.toString());
-
-
-            const localForgePath = versionJSON.id;
-            const libForgePath = mc.getLibraryByPath(`net/minecraftforge/forge/${versionPath}/forge-${versionPath}.jar`);
-            const rootPath = mc.getVersionRoot(localForgePath);
-            const jsonPath = path.join(rootPath, `${localForgePath}.json`);
-
-            await context.execute("ensureRoot", () => fs.ensureDir(rootPath));
-            if (await missing(libForgePath) || await missing(jsonPath)) {
-                await context.execute("writeJar", async () => fs.outputFile(libForgePath, universalBuffer));
-                await context.execute("writeJson", async () => fs.writeJSON(jsonPath, versionJSON));
-
-                if (checksum) {
-                    const data = await fs.readFile(libForgePath);
+            const universalBuffer = await context.execute("ensureForgeJar", async () => {
+                if (await exists(jarPath)) {
+                    let needDownload = false;
+                    const data = await fs.readFile(jarPath);
                     for (const key in version.checksum) {
                         if (!validateCheckSum(data, key, version.checksum[key] as string)) {
-                            throw new Error("Checksum not matched! Probably caused by incompleted file or illegal file source.");
+                            needDownload = true;
+                            break;
                         }
                     }
+                    if (!needDownload) {
+                        return data;
+                    }
                 }
-            }
+                const jarBuff = await downloadForge(universalURL, installerURL)
+                    .catch((_) => downloadForge(universalURLFallback, installerURLFallback));
+                await context.execute("writeJar", async () => fs.outputFile(jarPath, jarBuff));
+                return jarBuff;
+            });
 
-            return versionJSON.id as string;
+            await context.execute("ensureForgeJson", async () => {
+                if (await exists(jsonPath)) {
+                    return;
+                }
+                const buff: Buffer = await context.execute("extraVersionJson",
+                    async () => (await Zip().loadAsync(universalBuffer)).file("version.json").async("nodebuffer"));
+
+                const versionJSON = JSON.parse(buff.toString());
+
+                const realForgeId = versionJSON.id;
+                if (realForgeId !== forgeId) {
+                    versionJSON.id = forgeId;
+                }
+
+                await context.execute("ensureRoot", () => fs.ensureDir(rootPath));
+                await context.execute("writeJson", async () => fs.writeJSON(jsonPath, versionJSON));
+            });
+
+            return forgeId;
         };
     }
 
@@ -393,12 +410,12 @@ export namespace Forge {
         id?: string,
     }): Task<string> {
         const op = option || {};
-        return Task.create("installForge", installTask0(version, minecraft, op.checksum || false, op.maven || "http://files.minecraftforge.net/maven"));
+        return Task.create("installForge", installTask0(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN));
     }
 
-    export function installAndCheckTask(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false, maven?: string): Task<Version> {
+    export function installAndCheckTask(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false, maven: string = DEFAULT_FORGE_MAVEN): Task<Version> {
         return Task.create("installForgeAndCheck", async (context) => {
-            const id = await context.execute("install", installTask0(version, minecraft, checksum, maven));
+            const id = await context.execute("install", installTask0(version, minecraft, maven));
             const ver = await context.execute("versionParse", () => Version.parse(minecraft, id));
             return context.execute("checkDependencies", Version.checkDependenciesTask(ver, minecraft).work);
         });

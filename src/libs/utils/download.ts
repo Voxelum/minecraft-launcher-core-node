@@ -13,8 +13,10 @@ function pipeTo<T extends NodeJS.WritableStream>(context: Task.Context, readable
     return new Promise((resolve, reject) => {
         readable.on("error", (e) => { reject(e); });
         let len = 0;
-        context.update(-1, total);
-        readable.on("data", (buf) => { context.update(len += buf.length, total); });
+        context.update(0, total);
+        readable.on("data", (buf) => {
+            context.update(len += buf.length, total);
+        });
         readable.pipe(writable);
         writable.on("finish", () => { resolve(); });
     });

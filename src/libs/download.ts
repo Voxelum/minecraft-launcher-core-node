@@ -128,9 +128,10 @@ function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLoc
 }
 
 function downloadVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean) {
-    return (context: Task.Context) => {
-        return context.execute("downloadVersionJson", downloadVersionJson(versionMeta, minecraft))
-            .then((version) => context.execute("downloadVersionJar", downloadVersionJar(type, version, minecraft, checksum)));
+    return async (context: Task.Context) => {
+        const ver = await context.execute("downloadVersionJson", downloadVersionJson(versionMeta, minecraft));
+        await context.execute("downloadVersionJar", downloadVersionJar(type, ver, minecraft, checksum));
+        return ver;
     };
 }
 
@@ -140,9 +141,9 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
         const json = folder.getVersionJson(version.id);
         await context.execute("ensureVersionRoot", () => fs.ensureDir(folder.getVersionRoot(version.id)));
         if (!await exists(json)) {
-            await context.execute("getJson", downloadTask(version.url, json));
+            await context.execute("downloadJson", downloadTask(version.url, json));
         }
-        return Version.parse(minecraft, version.id);
+        return context.execute("resolveJson", () => Version.parse(minecraft, version.id));
     };
 }
 
@@ -173,8 +174,9 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
 
 function checkDependency(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string } = {}) {
     return async (context: Task.Context) => {
-        return context.execute("downloadAssets", downloadAssets(version, minecraft, option))
-            .then((ver) => context.execute("downloadLibraries", downloadLibraries(ver, minecraft, option)));
+        await context.execute("downloadAssets", downloadAssets(version, minecraft, option));
+        await context.execute("downloadLibraries", downloadLibraries(version, minecraft, option));
+        return version;
     };
 }
 
@@ -205,8 +207,8 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
             await fs.ensureDir(path.dirname(filePath));
             if (compressed) {
                 if (!decompressXZ || !unpack200) { throw new Error("Require external support for unpack compressed library!"); }
-                const decompressed = await context.execute("decompress",
-                    async () => decompressXZ(await context.execute("downloadLib", downloadTask(downloadURL)) as Buffer));
+                const buff = await context.execute("downloadLib", downloadTask(downloadURL)) as Buffer;
+                const decompressed = await context.execute("decompress", async () => decompressXZ(buff));
                 await context.execute("unpack", () => unpack200(decompressed).then((buf) => fs.writeFile(filePath, buf)));
             } else {
                 await downloadTask(downloadURL, filePath)(context);
@@ -225,13 +227,11 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
 function downloadLibraries(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
-        const all = [];
-        const op = option || {};
-        const libraryHost: LibraryHost | undefined = op.libraryHost;
-        const checksum = option ? option.checksum : true;
+        const fullOption = option || {};
+        const libraryHost: LibraryHost | undefined = fullOption.libraryHost;
         try {
             const promises = version.libraries.map((lib) =>
-                context.execute(lib.name, downloadLib(lib, folder, libraryHost, checksum)).catch((e) => {
+                context.execute({ name: "ensureLibrary", arguments: { lib: lib.name } }, downloadLib(lib, folder, libraryHost)).catch((e) => {
                     console.error(`Error occured during: ${lib.name}`);
                     console.error(e);
                 }));
@@ -244,7 +244,7 @@ function downloadLibraries(version: Version, minecraft: MinecraftLocation, optio
     };
 }
 
-function downloadAsset(content: any, key: string, folder: MinecraftFolder, assetsHost: string, checksum: boolean) {
+function downloadAsset(content: any, key: string, folder: MinecraftFolder, assetsHost: string) {
     return async (context: Task.Context) => {
         if (!content.hasOwnProperty(key)) { return; }
         const element = content[key];
@@ -278,7 +278,6 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
         const content: any = (await fs.readJson(jsonPath)).objects;
         await fs.ensureDir(folder.getPath("assets", "objects"));
         const assetsHost = option.assetsHost || Version.DEFAULT_RESOURCE_ROOT_URL;
-        const checksum = option.checksum ? option.checksum : false;
         try {
             const keys = Object.keys(content);
             for (let i = 0; i < keys.length; i += cores) {
@@ -286,7 +285,7 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
                 for (let j = 0; j < cores; j++) {
                     const hash = keys[j + i];
                     if (hash === undefined) { break; }
-                    all.push(context.execute(`${hash}`, downloadAsset(content, hash, folder, assetsHost, checksum)));
+                    all.push(context.execute({ name: "downloadAsset", arguments: { hash } }, downloadAsset(content, hash, folder, assetsHost)));
                 }
                 await Promise.all(all);
             }
