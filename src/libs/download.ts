@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import Task from "treelike-task";
 
-import CHECKSUM from "./utils/checksum";
+import computeChecksum from "./utils/checksum";
 import { decompressXZ, unpack200 } from "./utils/decompress";
 import { downloadTask } from "./utils/download";
 import { exists } from "./utils/exists";
@@ -93,6 +93,11 @@ declare module "./version" {
         function installTask(type: "client", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
         function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
 
+        function diagnose(version: string, minecraft: MinecraftLocation): Promise<Diagnosis>;
+        function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<Diagnosis>;
+        function fix(diagnose: Diagnosis): Promise<void>;
+        function fixTask(diagnose: Diagnosis): Task<void>;
+
         /**
          * Check the completeness of the Minecraft game assets and libraries.
          *
@@ -130,16 +135,7 @@ Version.checkDependenciesTask = function (version: Version, minecraft: Minecraft
     return Task.create('checkDependency', checkDependency(version, minecraft, option));
 }
 
-function exists(p: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-        fs.access(p, (e) => {
-            if (e) resolve(false);
-            else resolve(true);
-        })
-    });
-}
-
-function diagnose(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<Diagnosis> {
+function diagnose(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<Version.Diagnosis> {
     return async (context: Task.Context) => {
         const jarPath = minecraft.getVersionJar(version);
         const missingJar = await exists(jarPath);
@@ -164,7 +160,7 @@ function diagnose(version: string, minecraft: MinecraftFolder): (context: Task.C
             const libPath = minecraft.getLibraryByPath(lib.download.path);
             if (await exists(libPath)) {
                 if (lib.download.sha1) {
-                    return checksum(libPath).then(c => c === lib.download.sha1);
+                    return computeChecksum(libPath).then(c => c === lib.download.sha1);
                 }
                 return true;
             }
@@ -180,7 +176,7 @@ function diagnose(version: string, minecraft: MinecraftFolder): (context: Task.C
                 const { hash } = objects[object];
                 const hashPath = minecraft.getAsset(hash);
                 if (await exists(hashPath)) {
-                    return (await checksum(hashPath)) === hash;
+                    return (await computeChecksum(hashPath)) === hash;
                 }
                 return false;
             }));
@@ -238,10 +234,10 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
             await context.execute("downloadJar", downloadTask(version.downloads[type].url, jar));
         }
         if (checksum) {
-            let hash = await context.execute("checksumJar", () => CHECKSUM(jar));
+            let hash = await context.execute("checksumJar", () => computeChecksum(jar));
             if (hash !== version.downloads[type].sha1 && exist) {
                 await context.execute("redownloadJar", downloadTask(version.downloads[type].url, jar));
-                hash = await context.execute("rechecksumJar", () => CHECKSUM(jar));
+                hash = await context.execute("rechecksumJar", () => computeChecksum(jar));
             }
             if (hash !== version.downloads[type].sha1) {
                 throw new Error("SHA1 not matched! Probably caused by the incompleted file or illegal file source!");
@@ -297,7 +293,7 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
         if (!exist) {
             await doDownload();
         } else if (lib.download.sha1 && typeof lib.download.sha1 === "string") {
-            if (await CHECKSUM(filePath) !== lib.download.sha1) {
+            if (await computeChecksum(filePath) !== lib.download.sha1) {
                 await doDownload();
             }
         }
@@ -337,7 +333,7 @@ function downloadAsset(content: any, key: string, folder: MinecraftFolder, asset
         if (!exist) {
             await downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
         } else {
-            const sum = await CHECKSUM(file);
+            const sum = await computeChecksum(file);
             if (sum !== hash) {
                 await downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
             }

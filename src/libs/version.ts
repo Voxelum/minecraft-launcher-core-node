@@ -295,27 +295,24 @@ export class Native extends Library {
 export function resolveDependency(path: MinecraftLocation, version: string): Promise<Version[]> {
     const folderLoc = typeof path === "string" ? path : path.root;
     return new Promise<Version[]>((res, rej) => {
-        const stack: Version[] = [];
-        const fullPath = paths.join(folderLoc, "versions", version, version + ".json");
-        if (!fs.existsSync(fullPath)) {
-            rej({
+        let stack: Version[] = []
+        let fullPath = paths.join(folderLoc, 'versions', version, version + '.json')
+        function interal(fullPath: string, versionName: string): Promise<Version[]> {
+            if (!fs.existsSync(fullPath)) return Promise.reject({
                 type: "MissingVersionJson",
-                version,
+                version: versionName,
             });
-        }
-        function interal(fPath: string): Promise<Version[]> {
-            return fs.readFile(fPath).then((value) => {
-                const ver = parseVersionJson(value.toString());
+            return fs.readFile(fullPath).then((value) => {
+                let ver = parseVersionJson(value.toString());
                 stack.push(ver);
-                if (ver.inheritsFrom) {
-                    return interal(paths.join(folderLoc, "versions", ver.inheritsFrom, ver.inheritsFrom + ".json"));
-                } else {
-                    return stack;
-                }
-            });
+                if (ver.inheritsFrom)
+                    return interal(paths.join(folderLoc, 'versions', ver.inheritsFrom, ver.inheritsFrom + '.json'), ver.inheritsFrom)
+                else
+                    return stack
+            })
         }
-        interal(fullPath).then((r) => res(r), (e) => rej(e));
-    });
+        interal(fullPath, version).then(r => res(r), e => rej(e))
+    })
 }
 
 
