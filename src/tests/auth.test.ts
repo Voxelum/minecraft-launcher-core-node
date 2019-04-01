@@ -1,5 +1,5 @@
-import { Auth, MojangService } from '../index'
-import * as assert from 'assert'
+import * as assert from 'assert';
+import { Auth } from '../index';
 describe('Auth', () => {
     it('should reject invalid username password', () =>
         Auth.Yggdrasil.login({ username: '18211378@163.com', password: 'asd-x' })

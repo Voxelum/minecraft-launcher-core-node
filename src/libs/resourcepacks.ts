@@ -2,21 +2,47 @@ import * as Zip from 'jszip'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 
+/**
+ * The class containing Minecraft resource pack information.
+ * @see https://minecraft.gamepedia.com/Resource_pack
+ */
 export class ResourcePack {
-    constructor(readonly packName: string, readonly description: string, readonly format: number, readonly icon?: string) { }
+    constructor(
+        /**
+         * Usually the file name of the resource pack. Can be customized during creation
+         */
+        readonly packName: string, 
+        readonly description: string, 
+        /**
+         * The format of the resource pack
+         * @see 
+         */
+        readonly format: number,
+        /**
+         * The icon of the resourcepack in base64 encoding. If there is no icon, this will be undefined.
+         */
+        readonly icon?: string) { }
 }
 
 export namespace ResourcePack {
+    /**
+     * Read the resource pack from a zip file
+     * 
+     * @param fileName The file name which will be assign to the {@link Resourcepack#packName}
+     * @param zipFile The zip file object 
+     */
     async function readZip(fileName: string, zipFile: Zip) {
-        let { description, pack_format } = await zipFile.file('pack.mcmeta').async('nodebuffer')
+        const { description, pack_format } = await zipFile.file('pack.mcmeta').async('nodebuffer')
             .then(data => JSON.parse(data.toString('utf-8').trim()).pack);
-        let icon = ''
-        try {
-            icon = await zipFile.file('pack.png').async('nodebuffer')
-                .then(data => 'data:image/png;base64, ' + data.toString('base64'));
-        } catch (e) { }
+        const icon = await zipFile.file('pack.png').async('nodebuffer')
+            .then(data => 'data:image/png;base64, ' + data.toString('base64'))
+            .catch(() => '');
         return new ResourcePack(fileName, description, pack_format, icon)
     }
+    /**
+     * Read the resource pack from a directory
+     * @param filePath The directory path
+     */
     async function readDirectory(filePath: string) {
         const metaPath = `${filePath}/pack.mcmeta`;
         const iconPath = `${filePath}/pack.png`;
@@ -24,11 +50,9 @@ export namespace ResourcePack {
         if (!fs.existsSync(metaPath)) throw Error('Illegal Resourcepack')
         const metadata = await fs.readFile(metaPath)
         const { description, pack_format } = JSON.parse(metadata.toString('utf-8').trim()).pack;
-        let icon = ''
-        try {
-            icon = await fs.readFile(iconPath)
-                .then(data => 'data:image/png;base64, ' + data.toString('base64'));
-        } catch (e) { }
+        const icon = await fs.readFile(iconPath)
+            .then(data => 'data:image/png;base64, ' + data.toString('base64'))
+            .catch(() => '');
         return new ResourcePack(filePath, description, pack_format, icon)
     }
     /**

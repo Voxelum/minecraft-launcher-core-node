@@ -33,6 +33,16 @@ declare module './version' {
     }
     type LibraryHost = (libId: string) => string | undefined;
 
+    interface Diagnosis {
+        minecraftLocation: MinecraftFolder;
+
+        missingLibraries: Library[];
+        missingAssets: string[];
+
+        missingVersionJson: string;
+        missingVersionJars: boolean;
+    }
+
     namespace Version {
         type MetaContainer = { list: VersionMetaList, date: string }
 
@@ -43,7 +53,7 @@ declare module './version' {
             /**
              * fallback meta container if there is no internet
              */
-            fallback?: MetaContainer, 
+            fallback?: MetaContainer,
             /**
              * remote url of this request
              */
@@ -73,6 +83,11 @@ declare module './version' {
         function installTask(type: 'server', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
         function installTask(type: 'client', versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
         function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
+
+        function diagnose(version: string, minecraft: MinecraftLocation): Promise<Diagnosis>;
+        function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<Diagnosis>;
+        function fix(diagnose: Diagnosis): Promise<void>;
+        function fixTask(diagnose: Diagnosis): Task<void>;
 
         /**
          * Check the completeness of the Minecraft game assets and libraries.
@@ -110,6 +125,37 @@ Version.checkDependenciesTask = function (version: Version, minecraft: Minecraft
     return Task.create('checkDependency', checkDependency(version, minecraft, option));
 }
 
+function exists(p: string) {
+    return new Promise((resolve, reject) => {
+        fs.access(p, (e) => {
+            if (e) resolve(false);
+            else resolve(true);
+        })
+    });
+}
+
+function diagnose(version: string, minecraft: MinecraftFolder) {
+    return async (context: Task.Context) => {
+        const jarPath = minecraft.getVersionJar(version);
+        const missingJar = await exists(jarPath);
+        let resolvedVersion;
+        try {
+            resolvedVersion = await Version.parse(minecraft, version);
+        } catch (e) {
+            return {
+                minecraftLocation: minecraft,
+                missingVersionJson: e.version,
+                missingVersionJar: missingJar,
+                missingLibraries: [],
+                missingAssets: [],
+            }
+        }
+        for (const lib of resolvedVersion.libraries) {
+            minecraft.getLibraryByPath()
+        }
+
+    }
+}
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return (context: Task.Context) => {
@@ -169,14 +215,14 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
     return async (context: Task.Context) => {
         const rawPath = lib.download.path;
         const filePath = path.join(folder.libraries, rawPath);
-        const exist = fs.existsSync(filePath);
+        const exist = fs.pathExists(filePath);
         let downloadURL: string;
 
         const isCompressed = (lib.checksums) ? lib.checksums.length > 1 ? true : false : false
         const canDecompress = decompressXZ !== undefined;
         const compressed = isCompressed && canDecompress;
 
-        if (libraryHost) { 
+        if (libraryHost) {
             const url = libraryHost(lib.name);
             downloadURL = url ? url : lib.download.url; // handle external host 
         } else {

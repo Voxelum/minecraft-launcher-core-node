@@ -1,7 +1,7 @@
 import { Launcher, Version, Auth } from '../index'
 import * as path from 'path'
 import * as assert from 'assert'
-import { spawn } from 'child_process'
+import * as childProcess from 'child_process'
 
 describe('Launch', () => {
     describe('Generate Command', function () {
@@ -47,13 +47,40 @@ describe('Launch', () => {
             if (process.env.JAVA_HOME) {
                 javaPath = `${process.env.JAVA_HOME}/bin/java`
             } else {
-                this.skip()
+                try {
+                    const p = childProcess.execSync('java --version').toString();
+                    if (!p.startsWith('java') || !p.match(/.*Java(TM) SE Runtime Environment.*/)) {
+                        this.skip()
+                    }
+                } catch (e) {
+                    this.skip()
+                }
             }
         })
 
         it('should launch normal minecraft', async function () {
             const option = { version: '1.12.2', gamePath: this.gameDirectory, javaPath };
             const proc = await Launcher.launch(option)
+            await new Promise((resol, rej) => {
+                proc.stdout.on('data', (chunk) => {
+                    const str = chunk.toString();
+                    if (str.indexOf('[Client thread/INFO]: Created: 1024x512 textures-atlas') !== -1) {
+                        proc.kill('SIGINT');
+                    }
+                })
+                proc.stderr.on('data', (chunk) => {
+                    console.log(chunk.toString())
+                })
+                proc.on('exit', (code, signal) => {
+                    if (signal === 'SIGINT')
+                        resol();
+                    else rej({ code, signal })
+                })
+            })
+        }).timeout(100000)
+        it('should be able to launch using exec', async function () {
+            const option = { version: '1.12.2', gamePath: this.gameDirectory, javaPath };
+            const proc = await Launcher.launch({ ...option, execution: 'exec' })
             await new Promise((resol, rej) => {
                 proc.stdout.on('data', (chunk) => {
                     const str = chunk.toString();

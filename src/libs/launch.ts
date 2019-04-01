@@ -1,6 +1,6 @@
 import { Version, Library, Native, Artifact } from './version'
 import { Auth, UserType } from './auth';
-import { ChildProcess, ExecOptions, spawn } from 'child_process'
+import { ChildProcess, ExecOptions, spawn, exec } from 'child_process'
 import { v4 } from 'uuid'
 import * as fs from 'fs-extra'
 import * as path from 'path'
@@ -8,7 +8,6 @@ import * as os from 'os'
 import * as Zip from 'jszip'
 import { MinecraftFolder } from './utils/folder';
 import format from './utils/format'
-import { GameProfile } from './profile';
 
 
 export namespace Launcher {
@@ -49,6 +48,8 @@ export namespace Launcher {
             server: string,
         },
 
+        execution?: 'spawn' | 'exec'
+
         ignoreInvalidMinecraftCertificates?: boolean
         ignorePatchDiscrepancies?: boolean
     }
@@ -66,6 +67,7 @@ export namespace Launcher {
     export async function launch(options: Option): Promise<ChildProcess> {
         const args = await generateArguments(options);
         const version = options.version as Version;
+        const execution = options.execution;
         const minecraftFolder = new MinecraftFolder(options.resourcePath as string)
 
         let missing = ensureLibraries(minecraftFolder, version)
@@ -75,6 +77,7 @@ export namespace Launcher {
         }
         await extractNative(minecraftFolder, version)
 
+        // if (execution === 'exec') return exec(args.map(s => `"${s}"`).join(' '))
         return spawn(args[0], args.slice(1), { cwd: options.gamePath })
     }
 

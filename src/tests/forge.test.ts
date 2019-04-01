@@ -1,7 +1,5 @@
+import * as assert from 'assert';
 import { Forge } from "..";
-import * as assert from 'assert'
-import { MinecraftFolder, Launcher } from "../index";
-import * as fs from 'fs'
 
 describe('Forge', () => {
     it('should fetch the forge remote json list', async () => {
@@ -51,8 +49,6 @@ describe('Forge', () => {
         assert.equal(metadata[1].mcversion, '1.12.1');
         assert.equal(metadata[1].url, 'https://optifine.net');
     })
-
-
 
     describe('Config', () => {
         const cfg1 = `

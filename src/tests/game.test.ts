@@ -1,9 +1,6 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
-import {
-    GameSetting, TextComponent,
-    Language, Mod, ResourcePack, WorldInfo,
-} from '../index';
+import { Language, ResourcePack, TextComponent } from '../index';
 
 describe('TextComponent', () => {
     it('normal text converting', () => {
