@@ -32,6 +32,17 @@ declare module "./version" {
     }
     type LibraryHost = (libId: string) => string | undefined;
 
+    interface Diagnosis {
+        minecraftLocation: MinecraftFolder;
+
+        missingVersionJson: string;
+        missingVersionJar: boolean;
+        missingAssetsIndex: boolean;
+
+        missingLibraries: Library[];
+        missingAssets: { [file: string]: string };
+    }
+
     namespace Version {
         /**
          * Default minecraft version manifest url.
@@ -113,12 +124,81 @@ Version.installTask = (type: string, versionMeta: VersionMeta, minecraft: Minecr
 
 Version.checkDependencies = (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) => {
     return Version.checkDependenciesTask(version, minecraft, option).execute();
-};
+}
 
-Version.checkDependenciesTask = (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> => {
-    return Task.create("checkDependency", checkDependency(version, minecraft, option));
-};
+Version.checkDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
+    return Task.create('checkDependency', checkDependency(version, minecraft, option));
+}
 
+function exists(p: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+        fs.access(p, (e) => {
+            if (e) resolve(false);
+            else resolve(true);
+        })
+    });
+}
+
+function diagnose(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<Diagnosis> {
+    return async (context: Task.Context) => {
+        const jarPath = minecraft.getVersionJar(version);
+        const missingJar = await exists(jarPath);
+        let resolvedVersion;
+        try {
+            resolvedVersion = await Version.parse(minecraft, version);
+        } catch (e) {
+            return {
+                minecraftLocation: minecraft,
+
+                missingVersionJson: e.version,
+                missingVersionJar: missingJar,
+                missingAssetsIndex: false,
+
+                missingLibraries: [],
+                missingAssets: {},
+            }
+        }
+        const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
+        const missingAssetsIndex = await exists(assetsIndexPath);
+        const libMask = await Promise.all(resolvedVersion.libraries.map(async (lib) => {
+            const libPath = minecraft.getLibraryByPath(lib.download.path);
+            if (await exists(libPath)) {
+                if (lib.download.sha1) {
+                    return checksum(libPath).then(c => c === lib.download.sha1);
+                }
+                return true;
+            }
+            return false;
+        }));
+        const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
+        const missingAssets: { [object: string]: string } = {};
+
+        if (!missingAssetsIndex) {
+            const objects = (await fs.readJson(assetsIndexPath)).objects;
+            const files = Object.keys(objects);
+            const assetsMask = await Promise.all(files.map(async (object) => {
+                const { hash } = objects[object];
+                const hashPath = minecraft.getAsset(hash);
+                if (await exists(hashPath)) {
+                    return (await checksum(hashPath)) === hash;
+                }
+                return false;
+            }));
+            files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
+        }
+
+        return {
+            minecraftLocation: minecraft,
+
+            missingVersionJson: '',
+            missingVersionJar: missingJar,
+            missingAssetsIndex,
+
+            missingLibraries,
+            missingAssets,
+        }
+    }
+}
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return (context: Task.Context) => {

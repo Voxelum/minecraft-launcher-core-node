@@ -28,6 +28,8 @@ export class MinecraftFolder {
     getLibraryByPath(libraryPath: string): string {
         return paths.join(this.libraries, libraryPath);
     }
+    getAssetsIndex(versionAssets: string): string { return this.getPath('assets', 'indexes', versionAssets + '.json') }
+    getAsset(hash: string): string { return this.getPath('assets', 'objects', hash.substring(0, 2), hash) }
     getPath(...path: string[]) {
         return paths.join(this.root, ...path);
     }
