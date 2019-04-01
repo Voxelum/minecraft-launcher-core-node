@@ -8,9 +8,10 @@ import Task from 'treelike-task'
 import UPDATE from './utils/update';
 import { downloadTask } from './utils/download';
 import CHECKSUM from './utils/checksum';
-import { Library, Version, VersionMeta, VersionMetaList } from './version';
+import { Library, Version, VersionMeta, VersionMetaList, Diagnosis } from './version';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import { decompressXZ, unpack200 } from './utils/decompress';
+import checksum from './utils/checksum';
 
 type LibraryHost = (libId: string) => string | undefined;
 declare module './version' {
@@ -36,11 +37,12 @@ declare module './version' {
     interface Diagnosis {
         minecraftLocation: MinecraftFolder;
 
-        missingLibraries: Library[];
-        missingAssets: string[];
-
         missingVersionJson: string;
-        missingVersionJars: boolean;
+        missingVersionJar: boolean;
+        missingAssetsIndex: boolean;
+
+        missingLibraries: Library[];
+        missingAssets: { [file: string]: string };
     }
 
     namespace Version {
@@ -125,7 +127,7 @@ Version.checkDependenciesTask = function (version: Version, minecraft: Minecraft
     return Task.create('checkDependency', checkDependency(version, minecraft, option));
 }
 
-function exists(p: string) {
+function exists(p: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
         fs.access(p, (e) => {
             if (e) resolve(false);
@@ -134,7 +136,7 @@ function exists(p: string) {
     });
 }
 
-function diagnose(version: string, minecraft: MinecraftFolder) {
+function diagnose(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<Diagnosis> {
     return async (context: Task.Context) => {
         const jarPath = minecraft.getVersionJar(version);
         const missingJar = await exists(jarPath);
@@ -144,16 +146,54 @@ function diagnose(version: string, minecraft: MinecraftFolder) {
         } catch (e) {
             return {
                 minecraftLocation: minecraft,
+
                 missingVersionJson: e.version,
                 missingVersionJar: missingJar,
+                missingAssetsIndex: false,
+
                 missingLibraries: [],
-                missingAssets: [],
+                missingAssets: {},
             }
         }
-        for (const lib of resolvedVersion.libraries) {
-            minecraft.getLibraryByPath()
+        const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
+        const missingAssetsIndex = await exists(assetsIndexPath);
+        const libMask = await Promise.all(resolvedVersion.libraries.map(async (lib) => {
+            const libPath = minecraft.getLibraryByPath(lib.download.path);
+            if (await exists(libPath)) {
+                if (lib.download.sha1) {
+                    return checksum(libPath).then(c => c === lib.download.sha1);
+                }
+                return true;
+            }
+            return false;
+        }));
+        const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
+        const missingAssets: { [object: string]: string } = {};
+
+        if (!missingAssetsIndex) {
+            const objects = (await fs.readJson(assetsIndexPath)).objects;
+            const files = Object.keys(objects);
+            const assetsMask = await Promise.all(files.map(async (object) => {
+                const { hash } = objects[object];
+                const hashPath = minecraft.getAsset(hash);
+                if (await exists(hashPath)) {
+                    return (await checksum(hashPath)) === hash;
+                }
+                return false;
+            }));
+            files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
         }
 
+        return {
+            minecraftLocation: minecraft,
+
+            missingVersionJson: '',
+            missingVersionJar: missingJar,
+            missingAssetsIndex,
+
+            missingLibraries,
+            missingAssets,
+        }
     }
 }
 
@@ -215,7 +255,7 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
     return async (context: Task.Context) => {
         const rawPath = lib.download.path;
         const filePath = path.join(folder.libraries, rawPath);
-        const exist = fs.pathExists(filePath);
+        const exist = await exists(filePath);
         let downloadURL: string;
 
         const isCompressed = (lib.checksums) ? lib.checksums.length > 1 ? true : false : false
@@ -285,7 +325,7 @@ function downloadAsset(content: any, key: string, folder: MinecraftFolder, asset
         const dir = folder.getPath('assets', 'objects', head);
         await fs.ensureDir(dir);
         const file = path.join(dir, hash);
-        const exist = fs.existsSync(file);
+        const exist = await exists(file);
         if (!exist) {
             await downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
         } else {
@@ -302,7 +342,7 @@ const cores = os.cpus.length || 4;
 function downloadAssets(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, assetsHost?: string }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft
-        const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
+        const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json');
         if (!fs.existsSync(jsonPath)) {
             await fs.ensureDir(path.join(folder.assets, 'indexes'))
             await context.execute('downloadAssetsJson', downloadTask(version.assetIndex.url, jsonPath))
