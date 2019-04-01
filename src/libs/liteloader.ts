@@ -48,13 +48,13 @@ export namespace LiteLoader {
                 fallback: option.fallback,
                 remote: option.remote || 'http://dl.liteloader.com/versions/versions.json'
             }).then(result => {
-                let metalist = { meta: result.list.meta, versions: {} };
-                for (let mcversion in result.list.versions) {
+                let metalist = { meta: result.object.meta, versions: {} };
+                for (let mcversion in result.object.versions) {
                     const versions: { release?: VersionMeta, snapshot?: VersionMeta }
                         = (metalist.versions as any)[mcversion] = {}
-                    const snapshots = result.list.versions[mcversion].snapshots;
-                    const artifacts = result.list.versions[mcversion].artefacts; //that's right, artefact
-                    const url = result.list.versions[mcversion].repo.url;
+                    const snapshots = result.object.versions[mcversion].snapshots;
+                    const artifacts = result.object.versions[mcversion].artefacts; //that's right, artefact
+                    const url = result.object.versions[mcversion].repo.url;
                     if (snapshots) {
                         const { stream, file, version, md5, timestamp, tweakClass, libraries } = snapshots['com.mumfrey:liteloader'].latest;
                         const type = (stream === 'RELEASE' ? 'RELEASE' : 'SNAPSHOT');

@@ -13,12 +13,12 @@
     "@types/node": "^8.9.3",
     "@types/semver": "^5.5.0",
     "@types/uuid": "^3.4.3",
-    "mocha": "^3.4.2",
+    "mocha": "^6.0.2",
     "typescript": "^2.9.1"
   },
   "scripts": {
     "test": "npm run build && node ./node_modules/mocha/bin/mocha dist/tests --timeout 10000",
-    "build": "rm -rf ./dist && tsc"
+    "build": "node clean.js && tsc"
   },
   "repository": {
     "type": "git",
@@ -38,6 +38,7 @@
     "jszip": "^3.1.5",
     "long": "^3.2.0",
     "treelike-task": "0.0.7",
+    "fast-html-parser": "^1.0.1",
     "uuid": "^3.2.1"
   },
   "bugs": {

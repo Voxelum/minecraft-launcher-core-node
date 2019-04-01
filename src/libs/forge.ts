@@ -1,13 +1,14 @@
-import { downloadTask } from './utils/download';
+import { downloadTask, download } from './utils/download';
 import CHECKSUM from './utils/checksum';
-import UPDATE from './utils/update';
+import UPDATE, { getIfUpdate, UpdatedObject } from './utils/update';
 import Task from 'treelike-task';
 import * as path from 'path';
 import * as Zip from 'jszip';
 import * as fs from 'fs-extra';
-import { Version } from './version';
+import { Version, Download } from './version';
 import { MinecraftLocation, MinecraftFolder } from './utils/folder';
 import { ClassVisitor, Opcodes, AnnotationVisitor, ClassReader, FieldVisitor, Attribute } from 'java-asm'
+import * as crypto from 'crypto';
 
 import Mod from './mod';
 export namespace Forge {
@@ -217,6 +218,30 @@ export namespace Forge {
         readonly isServerOnly?: boolean
     }
 
+    const parser = require('fast-html-parser');
+
+    export interface ForgeWebPageVersion {
+
+        timestamp: string,
+
+        version: string,
+        date: string,
+        changelog: Download,
+        installer: Download,
+        mdk: Download,
+        universal: Download,
+        type: 'buggy' | 'recommend' | 'common'
+    }
+
+    export namespace ForgeWebPageVersion {
+        export interface Download {
+            md5: string,
+            sha1: string,
+            path: string
+        }
+    }
+
+
     export interface VersionMetaList {
         adfocus: string,
         artifact: string,
@@ -242,9 +267,38 @@ export namespace Forge {
                 remote: option.remote || 'http://files.minecraftforge.net/maven/net/minecraftforge/forge/json'
             }).then(result => result as { list: VersionMetaList, date: string })
         }
-    }
 
-    export namespace VersionMetaList {
+        function parseWebPage(content: string) {
+            return parser.parse(content).querySelector('.download-list').querySelector('tbody').querySelectorAll('tr')
+                .map((e: any) => {
+                    const links = e.querySelector('.download-links').childNodes
+                        .filter((e: any) => e.tagName == 'li')
+                        .map((e: any) => {
+                            const tt = e.querySelector('.info-tooltip');
+                            const url = tt.querySelector('a') || e.querySelector('a');
+                            return {
+                                md5: tt.childNodes[2].text.trim(),
+                                sha1: tt.childNodes[6].text.trim(),
+                                path: url.attributes['href']
+                            };
+                        });
+                    return {
+                        version: e.querySelector('.download-version').text.trim(),
+                        date: e.querySelector('.download-time').text.trim(),
+                        changelog: links[0],
+                        installer: links[1],
+                        'installer-win': links[2],
+                        mdk: links[3],
+                        universal: links[4],
+                    }
+                });
+        }
+        
+        export async function getWebPage(mcversion: string = '', oldObject?: UpdatedObject): Promise<ForgeWebPageVersion | undefined> {
+            const url = mcversion == '' ? `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html` : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`
+            return getIfUpdate(url, parseWebPage, oldObject) as Promise<ForgeWebPageVersion | undefined>;
+        }
+
         export function mcversions(list: VersionMetaList) {
             return Object.keys(list.mcversion);
         }
@@ -265,13 +319,13 @@ export namespace Forge {
     }
 
     export interface VersionMeta {
-        branch: string | null,
-        build: number,
-        files: [string, string, string][],
+        checksum: { [key: string]: string | undefined }
+        universal: string,
+        installer?: string,
         mcversion: string,
-        modified: number,
         version: string
     }
+
     async function asmMetaData(zip: Zip, modidTree: any) {
         for (const key in zip.files) {
             if (key.endsWith('.class')) {
@@ -342,19 +396,30 @@ export namespace Forge {
     export async function meta(mod: Buffer | string | Zip, asmOnly: boolean = false) {
         return readModMetaData(mod, asmOnly);
     }
+
+    function validateCheckSum(data: Buffer, algorithm: string, expectValue: string) {
+        try {
+            return expectValue == crypto.createHash(algorithm).update(data).digest('hex')
+        }
+        catch (e) {
+            return false;
+        }
+    }
+
     function installTask0(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false,
         maven: string = 'http://files.minecraftforge.net/maven') {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === 'string' ? new MinecraftFolder(minecraft) : minecraft;
             const versionPath = `${version.mcversion}-${version.version}`
-            const universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
-            const installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
+            // const universalURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`
+            // const installerURL = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`
+            const universalURL = `${maven}${version.universal}`;
+            const installerURL = `${maven}${version.installer}`;
 
             let universalBuffer: any;
             try {
                 universalBuffer = await context.execute('downloadJar', downloadTask(universalURL));
-            }
-            catch (e) {
+            } catch (e) {
                 universalBuffer = await context.execute('redownloadJar', downloadTask(installerURL));
                 universalBuffer = await context.execute('extractJar', async () =>
                     (await Zip().loadAsync(universalBuffer))
@@ -368,27 +433,21 @@ export namespace Forge {
 
             const localForgePath = versionJSON.id;
             const libForgePath = mc.getLibraryByPath(`net/minecraftforge/forge/${versionPath}/forge-${versionPath}.jar`);
+            const rootPath = mc.getVersionRoot(localForgePath);
+            const jsonPath = path.join(rootPath, `${localForgePath}.json`);
 
-            const root = mc.getVersionRoot(localForgePath);
-            const jsonPath = path.join(root, `${localForgePath}.json`);
-
-            await context.execute('ensureRoot', () => fs.ensureDir(root))
+            await context.execute('ensureRoot', () => fs.ensureDir(rootPath))
             if (!fs.existsSync(libForgePath) || !fs.existsSync(jsonPath)) {
                 await context.execute('writeJar', async () => fs.outputFile(libForgePath, universalBuffer));
                 await context.execute('writeJson', async () => fs.writeJSON(jsonPath, versionJSON));
 
                 if (checksum) {
-                    let sum;
-                    if (version.files[2] &&
-                        version.files[2][1] == 'universal' &&
-                        version.files[2][2] &&
-                        (await context.execute('checksum', () => CHECKSUM(libForgePath))) != version.files[2][2])
-                        throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
-                    else
-                        for (let arr of version.files)
-                            if (arr[1] == 'universal')
-                                if ((await context.execute('checksum', () => CHECKSUM(libForgePath))) != arr[2])
-                                    throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
+                    const data = await fs.readFile(libForgePath);
+                    for (const key in version.checksum) {
+                        if (!validateCheckSum(data, key, version.checksum[key] as string)) {
+                            throw new Error('Checksum not matched! Probably caused by incompleted file or illegal file source.')
+                        }
+                    }
                 }
             }
             return versionJSON.id;
