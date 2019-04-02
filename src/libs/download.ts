@@ -2,7 +2,6 @@ import * as fs from "fs-extra";
 import * as os from "os";
 import * as path from "path";
 import Task from "treelike-task";
-
 import computeChecksum from "./utils/checksum";
 import { decompressXZ, unpack200 } from "./utils/decompress";
 import { downloadTask } from "./utils/download";
@@ -10,6 +9,7 @@ import { exists } from "./utils/exists";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { getIfUpdate, UpdatedObject } from "./utils/update";
 import { Library, Version, VersionMeta } from "./version";
+
 
 type LibraryHost = (libId: string) => string | undefined;
 declare module "./version" {
@@ -31,17 +31,6 @@ declare module "./version" {
         versions: VersionMeta[];
     }
     type LibraryHost = (libId: string) => string | undefined;
-
-    interface Diagnosis {
-        minecraftLocation: MinecraftFolder;
-
-        missingVersionJson: string;
-        missingVersionJar: boolean;
-        missingAssetsIndex: boolean;
-
-        missingLibraries: Library[];
-        missingAssets: { [file: string]: string };
-    }
 
     namespace Version {
         /**
@@ -93,11 +82,6 @@ declare module "./version" {
         function installTask(type: "client", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
         function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
 
-        function diagnose(version: string, minecraft: MinecraftLocation): Promise<Diagnosis>;
-        function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<Diagnosis>;
-        function fix(diagnose: Diagnosis): Promise<void>;
-        function fixTask(diagnose: Diagnosis): Task<void>;
-
         /**
          * Check the completeness of the Minecraft game assets and libraries.
          *
@@ -129,72 +113,12 @@ Version.installTask = (type: string, versionMeta: VersionMeta, minecraft: Minecr
 
 Version.checkDependencies = (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) => {
     return Version.checkDependenciesTask(version, minecraft, option).execute();
-}
+};
 
 Version.checkDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
-    return Task.create('checkDependency', checkDependency(version, minecraft, option));
-}
+    return Task.create("checkDependency", checkDependency(version, minecraft, option));
+};
 
-function diagnose(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<Version.Diagnosis> {
-    return async (context: Task.Context) => {
-        const jarPath = minecraft.getVersionJar(version);
-        const missingJar = await exists(jarPath);
-        let resolvedVersion;
-        try {
-            resolvedVersion = await Version.parse(minecraft, version);
-        } catch (e) {
-            return {
-                minecraftLocation: minecraft,
-
-                missingVersionJson: e.version,
-                missingVersionJar: missingJar,
-                missingAssetsIndex: false,
-
-                missingLibraries: [],
-                missingAssets: {},
-            }
-        }
-        const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
-        const missingAssetsIndex = await exists(assetsIndexPath);
-        const libMask = await Promise.all(resolvedVersion.libraries.map(async (lib) => {
-            const libPath = minecraft.getLibraryByPath(lib.download.path);
-            if (await exists(libPath)) {
-                if (lib.download.sha1) {
-                    return computeChecksum(libPath).then(c => c === lib.download.sha1);
-                }
-                return true;
-            }
-            return false;
-        }));
-        const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
-        const missingAssets: { [object: string]: string } = {};
-
-        if (!missingAssetsIndex) {
-            const objects = (await fs.readJson(assetsIndexPath)).objects;
-            const files = Object.keys(objects);
-            const assetsMask = await Promise.all(files.map(async (object) => {
-                const { hash } = objects[object];
-                const hashPath = minecraft.getAsset(hash);
-                if (await exists(hashPath)) {
-                    return (await computeChecksum(hashPath)) === hash;
-                }
-                return false;
-            }));
-            files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
-        }
-
-        return {
-            minecraftLocation: minecraft,
-
-            missingVersionJson: '',
-            missingVersionJar: missingJar,
-            missingAssetsIndex,
-
-            missingLibraries,
-            missingAssets,
-        }
-    }
-}
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return (context: Task.Context) => {

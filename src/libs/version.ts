@@ -2,7 +2,11 @@ import * as fs from "fs-extra";
 import * as paths from "path";
 import * as semver from "semver";
 
-import { MinecraftLocation } from "../index";
+import computeChecksum from "./utils/checksum";
+
+import Task from "treelike-task";
+import { MinecraftFolder, MinecraftLocation } from "../index";
+import { exists } from "./utils/exists";
 
 function getPlatform() {
     const os = require("os");
@@ -72,6 +76,19 @@ export interface Version {
 
 
 export namespace Version {
+
+    export interface Diagnosis {
+        minecraftLocation: MinecraftFolder;
+        version: string;
+
+        missingVersionJson: string;
+        missingVersionJar: boolean;
+        missingAssetsIndex: boolean;
+
+        missingLibraries: Library[];
+        missingAssets: { [file: string]: string };
+    }
+
     export interface Raw {
         id: string;
         time: string;
@@ -272,6 +289,26 @@ export namespace Version {
         return out.join(" ");
     }
 
+    /**
+     * Diagnose the version. It will check the version json/jar, libraries and assets.
+     *
+     * @param version The version id string
+     * @param minecraft The minecraft location
+     */
+    export function diagnose(version: string, minecraft: MinecraftLocation): Promise<Diagnosis> {
+        return diagnoseTask(version, minecraft).execute();
+    }
+
+    /**
+     * Diagnose the version. It will check the version json/jar, libraries and assets.
+     *
+     * @param version The version id string
+     * @param minecraft The minecraft location
+     */
+    export function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<Diagnosis> {
+        return Task.create("Diagnose", diagnoseSkeleton(version, typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft));
+    }
+
     function mixinArgument(hi: {
         game: LaunchArgument[],
         jvm: LaunchArgument[],
@@ -282,6 +319,70 @@ export namespace Version {
 
     }
 }
+
+function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<Version.Diagnosis> {
+    return async (context: Task.Context) => {
+        const jarPath = minecraft.getVersionJar(version);
+        const missingJar = await context.execute("checkJar", () => exists(jarPath));
+        let resolvedVersion: Version;
+        try {
+            resolvedVersion = await context.execute("checkVersionJson", () => Version.parse(minecraft, version));
+        } catch (e) {
+            return {
+                minecraftLocation: minecraft,
+                version,
+
+                missingVersionJson: e.version,
+                missingVersionJar: missingJar,
+                missingAssetsIndex: false,
+
+                missingLibraries: [],
+                missingAssets: {},
+            };
+        }
+        const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
+        const missingAssetsIndex = await context.execute("checkAssetIndex", async () => exists(assetsIndexPath) && await computeChecksum(assetsIndexPath) === resolvedVersion.assetIndex.sha1);
+        const libMask = await context.execute("checkLibraries", () => Promise.all(resolvedVersion.libraries.map(async (lib) => {
+            const libPath = minecraft.getLibraryByPath(lib.download.path);
+            if (await exists(libPath)) {
+                if (lib.download.sha1) {
+                    return computeChecksum(libPath).then((c) => c === lib.download.sha1);
+                }
+                return true;
+            }
+            return false;
+        })));
+        const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
+        const missingAssets: { [object: string]: string } = {};
+
+        if (!missingAssetsIndex) {
+            const objects = (await fs.readJson(assetsIndexPath)).objects;
+            const files = Object.keys(objects);
+            const assetsMask = await context.execute("checkAssets", () => Promise.all(files.map(async (object) => {
+                const { hash } = objects[object];
+                const hashPath = minecraft.getAsset(hash);
+                if (await exists(hashPath)) {
+                    return (await computeChecksum(hashPath)) === hash;
+                }
+                return false;
+            })));
+            files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
+        }
+
+        return {
+            minecraftLocation: minecraft,
+            version,
+
+            missingVersionJson: "",
+            missingVersionJar: missingJar,
+            missingAssetsIndex,
+
+            missingLibraries,
+            missingAssets,
+        };
+    };
+}
+
 export class Library {
     constructor(readonly name: string, readonly download: Artifact,
         readonly checksums?: string[], readonly serverreq?: boolean, readonly clientreq?: boolean) { }
@@ -295,24 +396,27 @@ export class Native extends Library {
 export function resolveDependency(path: MinecraftLocation, version: string): Promise<Version[]> {
     const folderLoc = typeof path === "string" ? path : path.root;
     return new Promise<Version[]>((res, rej) => {
-        let stack: Version[] = []
-        let fullPath = paths.join(folderLoc, 'versions', version, version + '.json')
+        const stack: Version[] = [];
+        const fullPath = paths.join(folderLoc, "versions", version, version + ".json");
         function interal(fullPath: string, versionName: string): Promise<Version[]> {
-            if (!fs.existsSync(fullPath)) return Promise.reject({
-                type: "MissingVersionJson",
-                version: versionName,
-            });
+            if (!fs.existsSync(fullPath)) {
+                return Promise.reject({
+                    type: "MissingVersionJson",
+                    version: versionName,
+                });
+            }
             return fs.readFile(fullPath).then((value) => {
-                let ver = parseVersionJson(value.toString());
+                const ver = parseVersionJson(value.toString());
                 stack.push(ver);
-                if (ver.inheritsFrom)
-                    return interal(paths.join(folderLoc, 'versions', ver.inheritsFrom, ver.inheritsFrom + '.json'), ver.inheritsFrom)
-                else
-                    return stack
-            })
+                if (ver.inheritsFrom) {
+                    return interal(paths.join(folderLoc, "versions", ver.inheritsFrom, ver.inheritsFrom + ".json"), ver.inheritsFrom);
+                } else {
+                    return stack;
+                }
+            });
         }
-        interal(fullPath, version).then(r => res(r), e => rej(e))
-    })
+        interal(fullPath, version).then((r) => res(r), (e) => rej(e));
+    });
 }
 
 
