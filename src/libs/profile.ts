@@ -68,13 +68,25 @@ export namespace ProfileService {
          * The PEM public key
          */
         publicKey?: string;
-        profile(uuid: string): string;
-        profileByName(name: string): string;
-        texture(uuid: string, type: "skin" | "cape" | "elytra"): string;
+        profile: string;
+        profileByName: string;
+        texture: string;
+    }
+
+    export namespace API {
+        export function getProfileUrl(api: API, uuid: string) {
+            return api.profile.replace("${uuid}", uuid);
+        }
+
+        export function getProfileByNameUrl(api: API, name: string) {
+            return api.profile.replace("${name}", name);
+        }
+
+        export function getTextureUrl(api: API, uuid: string, type: string) {
+            return api.profile.replace("${uuid}", uuid).replace("${type}", type);
+        }
     }
     export const API_MOJANG: API = {
-        profile: (uuid: string) => `https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`,
-        profileByName: (name: string) => `https://api.mojang.com/users/profiles/minecraft/${name}`,
         publicKey: `-----BEGIN PUBLIC KEY-----
 MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAylB4B6m5lz7jwrcFz6Fd
 /fnfUhcvlxsTSn5kIK/2aGG1C3kMy4VjhwlxF6BFUSnfxhNswPjh3ZitkBxEAFY2
@@ -89,12 +101,10 @@ kNHpJX2ygojFZ9n5Fnj7R9ZnOM+L8nyIjPu3aePvtcrXlyLhH/hvOfIOjPxOlqW+
 O5QwSFP4OEcyLAUgDdUgyW36Z5mB285uKW/ighzZsOTevVUG2QwDItObIV6i8RCx
 FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
 -----END PUBLIC KEY-----`,
-        texture: (uuid, type) => `https://api.mojang.com/user/profile/${uuid}/${type}`,
+        texture: "https://api.mojang.com/user/profile/${uuid}/${type}",
+        profile: "https://sessionserver.mojang.com/session/minecraft/profile/${uuid}",
+        profileByName: "https://api.mojang.com/users/profiles/minecraft/${name}",
     };
-    /**
-     * @deprecated
-     */
-    export const mojang: API = API_MOJANG;
 
     async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
         if (texture.data) { return texture; }
@@ -160,7 +170,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
      */
     export function fetch(uuid: string, option: { api?: API } = {}) {
         const api = option.api || API_MOJANG;
-        return fetchProfile(api.profile(uuid) + "?" + queryString.stringify({
+        return fetchProfile(API.getProfileUrl(api, uuid) + "?" + queryString.stringify({
             unsigned: false,
         }), api.publicKey);
     }
@@ -172,13 +182,11 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     export function lookup(name: string, option: { api?: API, timestamp?: number } = {}) {
         const api = option.api || API_MOJANG;
         const time: number = option.timestamp || 0;
-        let target;
-        if (!time) {
-            target = (api.profileByName(name));
-        } else {
-            target = (api.profileByName(name) + "?" + queryString.stringify({
+        let target = API.getProfileByNameUrl(api, name);
+        if (time) {
+            target += "?" + queryString.stringify({
                 at: (time / 1000),
-            }));
+            });
         }
         return fetchProfile(target, api.publicKey);
     }
@@ -195,7 +203,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         type: "skin" | "cape" | "elytra",
         texture?: GameProfile.Texture,
     }, api: API = API_MOJANG): Promise<void> {
-        const textUrl = url.parse(api.texture(option.uuid, option.type));
+        const textUrl = url.parse(API.getTextureUrl(api, option.uuid, option.type));
         const headers: any = { Authorization: `Bearer: ${option.accessToken}` };
         const requireEmpty = (httpOption: https.RequestOptions, content?: string | Buffer) =>
             new Promise<void>((resolve, reject) => {
