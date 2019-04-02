@@ -398,14 +398,14 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
     return new Promise<Version[]>((res, rej) => {
         const stack: Version[] = [];
         const fullPath = paths.join(folderLoc, "versions", version, version + ".json");
-        function interal(fullPath: string, versionName: string): Promise<Version[]> {
-            if (!fs.existsSync(fullPath)) {
+        function interal(jsonPath: string, versionName: string): Promise<Version[]> {
+            if (!fs.existsSync(jsonPath)) {
                 return Promise.reject({
                     type: "MissingVersionJson",
                     version: versionName,
                 });
             }
-            return fs.readFile(fullPath).then((value) => {
+            return fs.readFile(jsonPath).then((value) => {
                 const ver = parseVersionJson(value.toString());
                 stack.push(ver);
                 if (ver.inheritsFrom) {
