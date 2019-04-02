@@ -79,11 +79,11 @@ export namespace ProfileService {
         }
 
         export function getProfileByNameUrl(api: API, name: string) {
-            return api.profile.replace("${name}", name);
+            return api.profileByName.replace("${name}", name);
         }
 
         export function getTextureUrl(api: API, uuid: string, type: string) {
-            return api.profile.replace("${uuid}", uuid).replace("${type}", type);
+            return api.texture.replace("${uuid}", uuid).replace("${type}", type);
         }
     }
     export const API_MOJANG: API = {
@@ -120,8 +120,13 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     }
 
     async function fetchProfile(target: string, pemPubKey?: string) {
-        const buf = await get(target) as Buffer;
-        const obj = JSON.parse(buf.toString());
+        const tex = (await get(target) as Buffer).toString();
+        let obj;
+        try {
+            obj = JSON.parse(tex);
+        } catch (e) {
+            throw new Error(`Unable to parse json response of fetch user profile: ${target}\n ${tex}`);
+        }
         if (obj.properties) {
             const properties = obj.properties;
             const to: any = {};
