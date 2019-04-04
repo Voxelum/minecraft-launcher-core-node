@@ -6,7 +6,7 @@ import computeChecksum from "./utils/checksum";
 
 import Task from "treelike-task";
 import { MinecraftFolder, MinecraftLocation } from "../index";
-import { exists } from "./utils/exists";
+import { exists, missing } from "./utils/exists";
 
 function getPlatform() {
     const os = require("os");
@@ -323,7 +323,7 @@ export namespace Version {
 function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<Version.Diagnosis> {
     return async (context: Task.Context) => {
         const jarPath = minecraft.getVersionJar(version);
-        const missingJar = await context.execute("checkJar", () => exists(jarPath));
+        const missingJar = await context.execute("checkJar", () => missing(jarPath));
         let resolvedVersion: Version;
         try {
             resolvedVersion = await context.execute("checkVersionJson", () => Version.parse(minecraft, version));
@@ -341,7 +341,7 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
             };
         }
         const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
-        const missingAssetsIndex = await context.execute("checkAssetIndex", async () => exists(assetsIndexPath) && await computeChecksum(assetsIndexPath) === resolvedVersion.assetIndex.sha1);
+        const missingAssetsIndex = await context.execute("checkAssetIndex", async () => await missing(assetsIndexPath) || await computeChecksum(assetsIndexPath) !== resolvedVersion.assetIndex.sha1);
         const libMask = await context.execute("checkLibraries", () => Promise.all(resolvedVersion.libraries.map(async (lib) => {
             const libPath = minecraft.getLibraryByPath(lib.download.path);
             if (await exists(libPath)) {
