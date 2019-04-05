@@ -1,7 +1,14 @@
 /node_modules
 /dest
+/dest.es2018/libs
+/dest.es2018/tests
+/dest.es2018/index.js
+/dest.es2018/index.d.ts
+/dest.es2018/index.js.map
+
 /.vscode
 /package-lock.json
 /assets/temp
 *.log
 yarn.lock
+*.tsbuildinfo

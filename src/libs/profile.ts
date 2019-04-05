@@ -3,7 +3,8 @@ import * as crypto from "crypto";
 import * as https from "https";
 import * as queryString from "querystring";
 import * as url from "url";
-import { download as get } from "./utils/download";
+
+import { DownloadService } from "./services";
 
 /**
  * The data structure holds the user game profile
@@ -108,9 +109,10 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
 
     async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
         if (texture.data) { return texture; }
+        const service = DownloadService.get();
         return {
             ...texture,
-            data: await get(texture.url).then((buf) => (buf as Buffer)),
+            data: await service.download(texture.url).then((buf) => (buf as Buffer)),
         };
     }
 
@@ -120,7 +122,8 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     }
 
     async function fetchProfile(target: string, pemPubKey?: string) {
-        const tex = (await get(target) as Buffer).toString();
+        const service = DownloadService.get();
+        const tex = (await service.download(target) as Buffer).toString();
         let obj;
         try {
             obj = JSON.parse(tex);

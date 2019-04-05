@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "4.0.3",
+  "version": "4.1.0-beta",
   "main": "./dest/index.js",
   "types": "./dest/index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
@@ -19,7 +19,9 @@
   },
   "scripts": {
     "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
-    "build": "node clean.js && tslint -c tslint.json 'src/**/*.ts' && tsc"
+    "build": "tslint -c tslint.json 'src/**/*.ts' && tsc",
+    "build:es2018": "tslint -c tslint.json 'src/**/*.ts' && tsc -p tsconfig.es2018.json",
+    "build:all": "tslint -c tslint.json 'src/**/*.ts' && tsc && tsc -p tsconfig.es2018.json"
   },
   "repository": {
     "type": "git",

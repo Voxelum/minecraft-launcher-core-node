@@ -4,7 +4,7 @@ import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from "java-asm"
 import * as Zip from "jszip";
 import * as path from "path";
 import Task from "treelike-task";
-import { downloadTask } from "./utils/download";
+import { DownloadService } from "./services";
 import { exists } from "./utils/exists";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { Version } from "./version";
@@ -337,10 +337,11 @@ export namespace Forge {
 
             async function downloadForge(universal: string, installer: string) {
                 let buffer: any;
+                const service = DownloadService.get();
                 try {
-                    buffer = await context.execute("downloadJar", downloadTask(universal));
+                    buffer = await context.execute("downloadJar", service.downloadTask(universal));
                 } catch (e) {
-                    buffer = await context.execute("redownloadJar", downloadTask(installer));
+                    buffer = await context.execute("redownloadJar", service.downloadTask(installer));
                     buffer = await context.execute("extractJar", async () =>
                         (await Zip().loadAsync(buffer))
                             .file(`forge-${versionPath}-universal.jar`)

@@ -1,6 +1,7 @@
 import * as https from "https";
 import * as url from "url";
-import { download as request } from "./utils/download";
+import { DownloadService } from "./services";
+
 
 export interface MojangAccount {
     readonly id: string;
@@ -47,7 +48,8 @@ export namespace MojangService {
      * @param provider
      */
     export function getServiceStatus(provider: Provider = defaultProvider): Promise<Array<{ [server: string]: Status }>> {
-        return request(provider.apiStatus)
+        const service = DownloadService.get();
+        return service.download(provider.apiStatus)
             .then((b) => JSON.parse((b as Buffer).toString()))
             .then((arr) => arr.reduce((a: any, b: any) => Object.assign(a, b), {}));
     }
