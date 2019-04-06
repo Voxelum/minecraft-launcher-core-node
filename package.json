@@ -4,6 +4,9 @@
   "main": "./dest/index.js",
   "types": "./dest/index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
+  "engines": {
+    "node": ">=10.0"
+  },
   "devDependencies": {
     "@types/bytebuffer": "^5.0.37",
     "@types/fs-extra": "^4.0.0",
@@ -19,9 +22,7 @@
   },
   "scripts": {
     "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
-    "build": "tslint -c tslint.json 'src/**/*.ts' && tsc",
-    "build:es2018": "tslint -c tslint.json 'src/**/*.ts' && tsc -p tsconfig.es2018.json",
-    "build:all": "tslint -c tslint.json 'src/**/*.ts' && tsc && tsc -p tsconfig.es2018.json"
+    "build": "tslint -c tslint.json 'src/**/*.ts' && tsc"
   },
   "repository": {
     "type": "git",
@@ -36,7 +37,6 @@
   "dependencies": {
     "bytebuffer": "^5.0.1",
     "fs-extra": "^4.0.1",
-    "semver": "^5.5.0",
     "java-asm": "0.0.4",
     "jszip": "^3.1.5",
     "long": "^3.2.0",

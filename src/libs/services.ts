@@ -16,7 +16,9 @@ export namespace DownloadService {
             algorithm: string,
             hash: string,
         };
-        method?: string; headers?: { [key: string]: string }; timeout?: number;
+        method?: string;
+        headers?: { [key: string]: string };
+        timeout?: number;
     }
 }
 

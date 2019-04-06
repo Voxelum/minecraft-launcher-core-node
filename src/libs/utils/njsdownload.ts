@@ -54,7 +54,7 @@ function nodeJsRequest(url: string, option: DownloadService.Option): Promise<{ m
     };
     const get: GET = httpOption.protocol === "https:" ? https.get : http.get;
     return new Promise((resolve, reject) => {
-        get(option, (message) => {
+        get(httpOption, (message) => {
             if (!message.statusCode) {
                 reject("Illegal Status Code");
             } else {
@@ -94,6 +94,7 @@ export function apply() {
         },
         downloadTask(option: DownloadService.Option | string, destination?: string) {
             return async (context: Task.Context) => {
+
                 const realOption = typeof option === "string" ? { url: option } : option;
                 const writable: Writable = typeof destination === "string" ? fs.createWriteStream(destination) :
                     destination === undefined ? new WriteableBuffer() : destination;
@@ -101,6 +102,7 @@ export function apply() {
                     const { message, url } = await nodeJsRequest(realOption.url, realOption);
 
                     const total = Number.parseInt(message.headers["content-length"] as string, 10);
+
                     const written = await pipeTo(context, message, writable, total, realOption.checksum);
                     if (written !== total) {
                         throw new Error("Fail to download the url, please retry");
