@@ -36,6 +36,7 @@ Provide several useful functions for Minecraft
 
 ### NBT
 
+```ts
     import { NBT } from 'ts-minecraft'
     const fileData: Buffer;
     const compressed: boolean;
@@ -50,9 +51,11 @@ Provide several useful functions for Minecraft
         });
     const serverInfo;
     const serialized: Buffer = serial.serialize(serverInfo, 'server');
+```
 
 Serialize/deserialize NBT.
 
+```ts
     import { NBT } from 'ts-minecraft'
     // First create NBT tag like this.
     let rootTag: NBT.TagCompound = NBT.TagCompound.newCompound();
@@ -91,19 +94,23 @@ Serialize/deserialize NBT.
     let buffer: Buffer = NBT.Persistence.writeRoot(rootTag, { compressed: true } );
     let ourTag: NBT.TagCompound = NBT.Persistence.readRoot(buffer, { compressed: true } );
     console.log(checkExists(ourTag.get('TheEnd')).asTagString().value); // print That's all
+```
 
 Typed NBT API for structured NBT manipulation.
 
 ### WorldInfo
 
+```ts
     import { WorldInfo } from 'ts-minecraft'
     const levelDatBuffer: Buffer;
     const info: WorldInfo = WorldInfo.parse(levelDatBuffer);
+```
 
 Read a WorldInfo from buffer.
 
 ### Server
 
+```ts
     import { Server } from 'ts-minecraft'
     const seversDatBuffer: Buffer;
     const infos: Server.Info[] = Server.parseNBT(seversDatBuffer);
@@ -112,39 +119,47 @@ Read a WorldInfo from buffer.
     const promise: Promise<Server.Status> = Server.fetchStatus(info);
     // or you want the raw json
     const rawJsonPromise: Promise<Server.StatusFrame> = Server.fetchStatusFrame(info);
+```
 
 Read sever info and fetch its status.
 
 ### Minecraft Install
 
+```ts
     import { VersionMeta, VersionMetaList, Version, MetaContainer, MinecraftLocation } from 'ts-minecraft'
     const minecraft: MinecraftLocation;
     const versionPromise: Promise<Version> = Version.updateVersionMeta()
         .then((metas: MetaContainer) => metas.list.versions[0]) // i just pick the first version in list here 
         .then((meta: VersionMeta) => Version.install('client', meta, minecraft))
+```
 
 Fully install vanilla minecraft client including assets and libs.
 
 ### GameSetting
 
+```ts
     import { GameSetting } from 'ts-minecraft'
     const settingString;
     const setting: GameSetting = GameSetting.parse(settingString);
     const string: string = GameSetting.stringify(setting);
+```
 
 Serialize/Deserialize the minecraft game setting string.
 
 ### Language
 
+```ts
     import { Language, MinecraftLocation } from 'ts-minecraft'
     const location: MinecraftLocation;
     const version: string;
     const langs: Promise<Language[]> = Language.read(location, version)
+```
 
 Read language info from version
 
 ### ResourcePack
 
+```ts
     import { ResourcePack } from 'ts-minecraft'
     const fileFullPath;
     Promise<ResourcePack> packPromise = ResourcePack.read(fileFullPath);
@@ -155,46 +170,59 @@ Read language info from version
     // the file path will be only used for resource pack name
     const fileContentBuffer: Buffer;
     Promise<ResourcePack> packPromise = ResourcePack.read(fileFullPath, fileContentBuffer);
+```
 
 Read ResourcePack from filePath
 
 ### Game Profile 
 
+```ts
     import { ProfileService, GameProfile } from 'ts-minecraft'
     const userUUID: string;
     const gameProfilePromise: Promise<GameProfile> = ProfileService.fetch(userUUID);
+```
 
 Or lookup profile by name.
 
+```ts
     const username: string;
     const gameProfilePromise: Promise<GameProfile> = ProfileService.lookup(username);
-    
+```
 
 Fetch the user game profile by uuid. This could also be used for get skin.
 
+```ts
     const gameProfile: GameProfile;
     const texturesPromise: Promise<GameProfile.Textures> = ProfileService.fetchProfileTexture(gameProfile);
+```
 
 ### Mojang Account Info
 
+```ts
     import { MojangService } from 'ts-minecraft'
     const accessToken: string;
     const info: Promise<MojangAccount> = MojangService.getAccountInfo(accessToken); 
+```
 
 ### Forge
 
+```ts
     import { Forge } from 'ts-minecraft'
     const forgeModJarBuff: Buffer;
     Promise<Forge.MetaData[]> metasPromise = Forge.meta(forgeModJarBuff);
+```
 
 Read the forge mod metadata, including @Mod annotation and mcmod json data
 
+```ts
     const modConfigString: string;
     const config: Forge.Config = Forge.Config.parse(modConfigString);
     const serializedBack = Forge.Config.stringify(config);
+```
 
 Read the forge mod config
 
+```ts
     import { ForgeWebPage } from 'ts-minecraft'
     const pagePromise = ForgeWebPage.getWebPage(); 
     const minecraftLocation: MinecraftLocation;
@@ -204,44 +232,53 @@ Read the forge mod config
         const forgeVersionMeta = Forge.VersionMeta.from(firstVersionOnPage);
         return Forge.install(forgeVersionMeta, minecraftLocation);
     });
+```
 
 Get the forge version info and install forge from it.
 
 ### TextComponent
 
+```ts
     import { TextComponent } from 'ts-minecraft'
     const fromString: TextComponent = TextComponent.str('from string');
     const formattedString: string;
     const fromFormatted: TextComponent = TextComponent.from(formattedString);
+```
 
 Create TextComponent from string OR Minecraft's formatted string, like '§cThis is red'
 
 ### Auth
 
+```ts
     import { Auth } from 'ts-minecraft'
     const username: string;
     const password: string;
     const authFromMojang: Promise<Auth> = Auth.Yggdrasil.login({username, password});
     const authOffline = Auth.offline(username);
+```
 
 Using AuthService to online/offline auth
 
 ### Version
 
+```ts
     import { Version } from 'ts-minecraft'
     const location: MinecraftLocation;
     const versionId: string;
     const version: Version = Version.parse(location, versionId);
+```
 
 Parse existed version.
 
 ### Launch
 
+```ts
     import { Launcher } from 'ts-minecraft'
     const version: string;
     const javaPath: string;
     const gamePath: string;
     const proc: Promise<ChildProcess> = Launcher.launch({gamePath, javaPath, version});
+```
 
 Launch minecraft from a version
 
@@ -253,21 +290,26 @@ You should save the old result from those functions and pass it as the fallback 
 
 For Minecraft:
 
+```ts
     const forceGetTheVersionMeta = Version.updateVersionMeta();
     const result = Version.updateVersionMeta({ fallback: forceGetTheVersionMeta }); // this should not request the manifest url again, since the forceGetTheVersionMeta is not outdated.
+```
 
 Normally you will load the last version manifest from file:
 
+```ts
     const oldManifest = JSON.parse(fs.readFileSync("manifest-whatevername-cache.json").toString());
     const result = Version.updateVersionMeta({ fallback: oldManifest }); // the result should up-to-date.
+```
 
 For Forge, it's the same:
 
+```ts
     const forgeGet = ForgeWebPage.getWebPage(); // force get
 
     const oldWebPageCache = JSON.parse(fs.readFileSync("forge-anyname-cache.json").toString());
     const updated = ForgeWebPage.getWebPage({ fallback: oldWebPageCache }); // this should be up-to-date
-
+```
 
 ## Issue
 

@@ -5,6 +5,5 @@
 /dest/tests
 *.log
 /temp
-/dest.es2018
 *.tsbuildinfo
 tslint.json
