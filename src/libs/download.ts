@@ -141,7 +141,7 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
         const json = folder.getVersionJson(version.id);
         await context.execute("ensureVersionRoot", () => fs.ensureDir(folder.getVersionRoot(version.id)));
         if (!await exists(json)) {
-            await context.execute("downloadJson", DownloadService.get().downloadTask(version.url, json));
+            await context.execute("downloadJson", DownloadService.downloadTask(version.url, json));
         }
         return context.execute("resolveJson", () => Version.parse(minecraft, version.id));
     };
@@ -155,12 +155,12 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
         const jar = path.join(folder.getVersionRoot(version.id), filename);
         const exist = await exists(jar);
         if (!exist) {
-            await context.execute("downloadJar", DownloadService.get().downloadTask(version.downloads[type].url, jar));
+            await context.execute("downloadJar", DownloadService.downloadTask(version.downloads[type].url, jar));
         }
         if (checksum) {
             let hash = await context.execute("checksumJar", () => computeChecksum(jar));
             if (hash !== version.downloads[type].sha1 && exist) {
-                await context.execute("redownloadJar", DownloadService.get().downloadTask(version.downloads[type].url, jar));
+                await context.execute("redownloadJar", DownloadService.downloadTask(version.downloads[type].url, jar));
                 hash = await context.execute("rechecksumJar", () => computeChecksum(jar));
             }
             if (hash !== version.downloads[type].sha1) {
@@ -207,11 +207,11 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
             await fs.ensureDir(path.dirname(filePath));
             if (compressed) {
                 if (!decompressXZ || !unpack200) { throw new Error("Require external support for unpack compressed library!"); }
-                const buff = await context.execute("downloadLib", DownloadService.get().downloadTask(downloadURL)) as Buffer;
+                const buff = await context.execute("downloadLib", DownloadService.downloadTask(downloadURL)) as Buffer;
                 const decompressed = await context.execute("decompress", async () => decompressXZ(buff));
                 await context.execute("unpack", () => unpack200(decompressed).then((buf) => fs.writeFile(filePath, buf)));
             } else {
-                await DownloadService.get().downloadTask(downloadURL, filePath)(context);
+                await DownloadService.downloadTask(downloadURL, filePath)(context);
             }
         };
         if (!exist) {
@@ -255,11 +255,11 @@ function downloadAsset(content: any, key: string, folder: MinecraftFolder, asset
         const file = path.join(dir, hash);
         const exist = await exists(file);
         if (!exist) {
-            await DownloadService.get().downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
+            await DownloadService.downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
         } else {
             const sum = await computeChecksum(file);
             if (sum !== hash) {
-                await DownloadService.get().downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
+                await DownloadService.downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
             }
         }
     };
@@ -273,7 +273,7 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
         if (!(await exists(jsonPath))) {
             await fs.ensureDir(path.join(folder.assets, "indexes"));
-            await context.execute("downloadAssetsJson", DownloadService.get().downloadTask(version.assetIndex.url, jsonPath));
+            await context.execute("downloadAssetsJson", DownloadService.downloadTask(version.assetIndex.url, jsonPath));
         }
         const content: any = (await fs.readJson(jsonPath)).objects;
         await fs.ensureDir(folder.getPath("assets", "objects"));

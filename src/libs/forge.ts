@@ -337,11 +337,10 @@ export namespace Forge {
 
             async function downloadForge(universal: string, installer: string) {
                 let buffer: any;
-                const service = DownloadService.get();
                 try {
-                    buffer = await context.execute("downloadJar", service.downloadTask(universal));
+                    buffer = await context.execute("downloadJar", DownloadService.downloadTask(universal));
                 } catch (e) {
-                    buffer = await context.execute("redownloadJar", service.downloadTask(installer));
+                    buffer = await context.execute("redownloadJar", DownloadService.downloadTask(installer));
                     buffer = await context.execute("extractJar", async () =>
                         (await Zip().loadAsync(buffer))
                             .file(`forge-${versionPath}-universal.jar`)
