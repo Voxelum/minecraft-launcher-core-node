@@ -19,14 +19,12 @@ export namespace DownloadService {
         method?: string;
         headers?: { [key: string]: string };
         timeout?: number;
+        progress?: (written: number, total: number) => void;
     }
 }
 
 export interface DownloadService {
     download(option: DownloadService.Option | string): Promise<Buffer>;
     download(option: DownloadService.Option | string, destination: string): Promise<void>;
-
-    downloadTask(option: DownloadService.Option | string): (context: Task.Context) => Promise<Buffer>;
-    downloadTask(option: DownloadService.Option | string, destination: string): (context: Task.Context) => Promise<undefined>;
 }
 

@@ -9,12 +9,12 @@ import { DownloadService } from "../services";
 
 type GET = (options: http.RequestOptions, callback?: (res: http.IncomingMessage) => void) => http.ClientRequest;
 
-function pipeTo<T extends NodeJS.WritableStream>(context: Task.Context, readable: Readable, writable: T, total: number, checksum?: {
+function pipeTo<T extends NodeJS.WritableStream>(progressCallback: (written: number, total: number) => void, readable: Readable, writable: T, total: number, checksum?: {
     algorithm: string, hash: string,
 }) {
     return new Promise((resolve, reject) => {
         let written = 0;
-        context.update(0, total);
+        progressCallback(0, total);
         let hasher: Hash;
         if (checksum) {
             hasher = createHash(checksum.algorithm);
@@ -24,7 +24,7 @@ function pipeTo<T extends NodeJS.WritableStream>(context: Task.Context, readable
                 resolve(written);
             })
             .on("data", (buf) => {
-                context.update(written += buf.length, total);
+                progressCallback(written += buf.length, total);
                 if (hasher) {
                     hasher.update(buf);
                 }
@@ -87,36 +87,40 @@ class WriteableBuffer extends Writable {
     }
 }
 
+async function download(option: DownloadService.Option | string, destination?: string) {
+    const realOption = typeof option === "string" ? { url: option } : option;
+    const callback = realOption.progress || (() => { });
+    const writable: Writable = typeof destination === "string" ? fs.createWriteStream(destination) :
+        destination === undefined ? new WriteableBuffer() : destination;
+    try {
+        const { message, url } = await nodeJsRequest(realOption.url, realOption);
+
+        const total = Number.parseInt(message.headers["content-length"] as string, 10);
+
+        const written = await pipeTo(callback, message, writable, total, realOption.checksum);
+        if (written !== total) {
+            throw {
+                message: "Fail to download the url, please retry",
+                url,
+                written,
+                total,
+            };
+        }
+    } catch (e) {
+        if (typeof destination === "string") {
+            await fs.unlink(destination).catch((_) => _);
+        }
+        throw { error: e, option };
+    }
+    if (!destination) {
+        return (writable as WriteableBuffer).toBuffer();
+    }
+}
+
 export function apply() {
     DownloadService.set({
         download(option: DownloadService.Option | string, destination?: string) {
-            return Task.create("", this.downloadTask(option, destination as string)).execute();
-        },
-        downloadTask(option: DownloadService.Option | string, destination?: string) {
-            return async (context: Task.Context) => {
-
-                const realOption = typeof option === "string" ? { url: option } : option;
-                const writable: Writable = typeof destination === "string" ? fs.createWriteStream(destination) :
-                    destination === undefined ? new WriteableBuffer() : destination;
-                try {
-                    const { message, url } = await nodeJsRequest(realOption.url, realOption);
-
-                    const total = Number.parseInt(message.headers["content-length"] as string, 10);
-
-                    const written = await pipeTo(context, message, writable, total, realOption.checksum);
-                    if (written !== total) {
-                        throw new Error("Fail to download the url, please retry");
-                    }
-                } catch (e) {
-                    if (typeof destination === "string") {
-                        await fs.unlink(destination).catch((_) => _);
-                    }
-                    throw { error: e, option };
-                }
-                if (!destination) {
-                    return (writable as WriteableBuffer).toBuffer();
-                }
-            };
+            return download(option, destination);
         },
     } as DownloadService);
 }
