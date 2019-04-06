@@ -50,7 +50,7 @@ DownloadService.downloadTask = function (option: DownloadService.Option | string
                 context.update(prog, total);
             };
         }
-        defaultDownloadService.download(option, destination as string);
+        return defaultDownloadService.download(option, destination as string);
     };
 } as any;
 
