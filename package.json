@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "4.1.0-beta",
+  "version": "4.1.1-beta",
   "main": "./dest/index.js",
   "types": "./dest/index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
