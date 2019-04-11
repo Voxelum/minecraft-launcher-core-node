@@ -29,6 +29,8 @@ export function getIfUpdate<T extends UpdatedObject = UpdatedObject>(url: string
                 });
             } else if (res.statusCode === 304) {
                 resolve(lastObj);
+            } else {
+                resolve(lastObj);
             }
         });
         req.on("error", (e: any) => reject(e));
