@@ -1,118 +1,5 @@
 import * as os from "os";
 
-const defaultFrame: GameSetting.Frame = {
-    "version": 1139, // for 1.12
-    // tslint:disable-next-line:object-literal-sort-keys
-    "invertYMouse": false,
-    "mouseSensitivity": 0.5,
-    "difficulty": 2,
-
-    // critical performance video settings
-    "renderDistance": 12,
-    "particles": 0,
-    "fboEnable": true,
-    "fancyGraphics": true,
-    "ao": 2,
-    "renderClouds": true,
-    "enableVsync": true,
-    "useVbo": true,
-    "mipmapLevels": 4,
-    "anaglyph3d": false,
-
-    "fov": 0,
-    "gamma": 0,
-    "saturation": 0,
-    "guiScale": 0,
-    "bobView": true,
-    "maxFps": 120,
-    "fullscreen": false,
-
-    "resourcePacks": [],
-    "incompatibleResourcePacks": [],
-    "lastServer": "",
-    "lang": "en_us",
-    "chatVisibility": 0,
-    "chatColors": true,
-    "chatLinks": true,
-    "chatLinksPrompt": true,
-    "chatOpacity": 1,
-    "snooperEnabled": true,
-
-    "hideServerAddress": false,
-    "advancedItemTooltips": false,
-    "pauseOnLostFocus": true,
-    "touchscreen": false,
-    "overrideWidth": 0,
-    "overrideHeight": 0,
-    "heldItemTooltips": true,
-    "chatHeightFocused": 1,
-    "chatHeightUnfocused": 0.44366196,
-    "chatScale": 1,
-    "chatWidth": 1,
-    "forceUnicodeFont": false,
-    "reducedDebugInfo": false,
-    "useNativeTransport": true,
-    "entityShadows": true,
-    "mainHand": "right",
-    "attackIndicator": 1,
-    "showSubtitles": false,
-    "realmsNotifications": true,
-    "enableWeakAttacks": false,
-    "autoJump": true,
-    "narrator": 0,
-    "tutorialStep": "movement",
-    "key_key.attack": -100,
-    "key_key.use": -99,
-    "key_key.forward": 17,
-    "key_key.left": 30,
-    "key_key.back": 31,
-    "key_key.right": 32,
-    "key_key.jump": 57,
-    "key_key.sneak": 42,
-    "key_key.sprint": 29,
-    "key_key.drop": 16,
-    "key_key.inventory": 18,
-    "key_key.chat": 20,
-    "key_key.playerlist": 15,
-    "key_key.pickItem": -98,
-    "key_key.command": 53,
-    "key_key.screenshot": 60,
-    "key_key.togglePerspective": 63,
-    "key_key.smoothCamera": 0,
-    "key_key.fullscreen": 87,
-    "key_key.spectatorOutlines": 0,
-    "key_key.swapHands": 33,
-    "key_key.saveToolbarActivator": 46,
-    "key_key.loadToolbarActivator": 45,
-    "key_key.advancements": 38,
-    "key_key.hotbar.1": 2,
-    "key_key.hotbar.2": 3,
-    "key_key.hotbar.3": 4,
-    "key_key.hotbar.4": 5,
-    "key_key.hotbar.5": 6,
-    "key_key.hotbar.6": 7,
-    "key_key.hotbar.7": 8,
-    "key_key.hotbar.8": 9,
-    "key_key.hotbar.9": 10,
-    "soundCategory_master": 1,
-    "soundCategory_music": 1,
-    "soundCategory_record": 1,
-    "soundCategory_weather": 1,
-    "soundCategory_block": 1,
-    "soundCategory_hostile": 1,
-    "soundCategory_neutral": 1,
-    "soundCategory_player": 1,
-    "soundCategory_ambient": 1,
-    "soundCategory_voice": 1,
-    "modelPart_cape": true,
-    "modelPart_jacket": true,
-    "modelPart_left_sleeve": true,
-    "modelPart_right_sleeve": true,
-    "modelPart_left_pants_leg": true,
-    "modelPart_right_pants_leg": true,
-    "modelPart_hat": true,
-};
-
 export class GameSetting implements Required<GameSetting> {
 
     get language() { return this.lang; }
@@ -291,119 +178,268 @@ export class GameSetting implements Required<GameSetting> {
 }
 
 export namespace GameSetting {
+    export enum AmbientOcclusion {
+        Off = 0,
+        Minimum = 1,
+        Maximum = 2,
+    }
+    export enum Particles {
+        Minimum = 2,
+        Decreased = 1,
+        All = 0,
+    }
+    export enum Difficulty {
+        Peaceful = 0,
+        Easy = 1,
+        Normal = 2,
+        Hard = 3,
+    }
+    export type MipmapLevel = 0 | 1 | 2 | 3 | 4;
+    export type RenderDistance = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 |23 | 24| 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32;
+    export const RenderDistance = Object.freeze({ Tiny: 2, Short: 4, Normal: 8, Far: 16, Extreme: 32 });
+    export const Graphic = Object.freeze({ Fast: false, Fancy: true });
+    export type Graphic = boolean;
+    export const RenderCloud = Object.freeze({ Off: false, Fast: "fast", Fancy: true });
+    export type RenderCloud = true | false | "fast";
 
-    export interface Frame {
-        version?: number; // for number.12
-        invertYMouse?: boolean;
-        mouseSensitivity?: number;
-        difficulty?: number;
+    export enum KeyCode {
+        "Escape" = 1,
+        "Digit1" = 2,
+        "Digit2" = 3,
+        "Digit3" = 4,
+        "Digit4" = 5,
+        "Digit5" = 6,
+        "Digit6" = 7,
+        "Digit7" = 8,
+        "Digit8" = 9,
+        "Digit9" = 10,
+        "Digit0" = 11,
+        "Minus" = 12,
+        "Equal" = 13,
+        "Backspace" = 14,
+        "Tab" = 15,
 
-        // critical performance video settings
-        renderDistance?: number;
-        particles?: number;
-        fboEnable?: boolean;
-        fancyGraphics?: boolean;
-        ao?: number;
-        renderClouds?: boolean | "fast";
-        enableVsync?: boolean;
-        useVbo?: boolean;
-        mipmapLevels?: number;
-        anaglyph3d?: boolean;
+        "KeyQ" = 16,
+        "KeyW" = 17,
+        "KeyE" = 18,
+        "KeyR" = 19,
+        "KeyT" = 20,
+        "KeyY" = 21,
+        "KeyU" = 22,
+        "KeyI" = 23,
+        "KeyO" = 24,
+        "KeyP" = 25,
 
-        fov?: number;
-        gamma?: number;
-        saturation?: number;
-        guiScale?: number;
-        bobView?: boolean;
-        maxFps?: number;
-        fullscreen?: boolean;
+        "BracketLeft" = 26,
+        "BracketRight" = 27,
+        "Enter" = 28,
+        "ControlLeft" = 29,
 
-        resourcePacks?: string[];
-        incompatibleResourcePacks?: string[];
-        lastServer?: string;
-        lang?: string;
-        chatVisibility?: number;
-        chatColors?: boolean;
-        chatLinks?: boolean;
-        chatLinksPrompt?: boolean;
-        chatOpacity?: number;
-        snooperEnabled?: boolean;
+        "KeyA" = 30,
+        "KeyS" = 31,
+        "KeyD" = 32,
+        "KeyF" = 33,
+        "KeyG" = 34,
+        "KeyH" = 35,
+        "KeyJ" = 36,
+        "KeyK" = 37,
+        "KeyL" = 38,
 
-        hideServerAddress?: boolean;
-        advancedItemTooltips?: boolean;
-        pauseOnLostFocus?: boolean;
-        touchscreen?: boolean;
-        overrideWidth?: number;
-        overrideHeight?: number;
-        heldItemTooltips?: boolean;
-        chatHeightFocused?: number;
-        chatHeightUnfocused?: number;
-        chatScale?: number;
-        chatWidth?: number;
-        forceUnicodeFont?: boolean;
-        reducedDebugInfo?: boolean;
-        useNativeTransport?: boolean;
-        entityShadows?: boolean;
-        mainHand?: "left" | "right";
-        attackIndicator?: number;
-        showSubtitles?: boolean;
-        realmsNotifications?: boolean;
-        enableWeakAttacks?: boolean;
-        autoJump?: boolean;
-        narrator?: number;
-        tutorialStep?: "movement";
-        "key_key.attack"?: number;
-        "key_key.use"?: number;
-        "key_key.forward"?: number;
-        "key_key.left"?: number;
-        "key_key.back"?: number;
-        "key_key.right"?: number;
-        "key_key.jump"?: number;
-        "key_key.sneak"?: number;
-        "key_key.sprint"?: number;
-        "key_key.drop"?: number;
-        "key_key.inventory"?: number;
-        "key_key.chat"?: number;
-        "key_key.playerlist"?: number;
-        "key_key.pickItem"?: number;
-        "key_key.command"?: number;
-        "key_key.screenshot"?: number;
-        "key_key.togglePerspective"?: number;
-        "key_key.smoothCamera"?: number;
-        "key_key.fullscreen"?: number;
-        "key_key.spectatorOutlines"?: number;
-        "key_key.swapHands"?: number;
-        "key_key.saveToolbarActivator"?: number;
-        "key_key.loadToolbarActivator"?: number;
-        "key_key.advancements"?: number;
-        "key_key.hotbar.1"?: number;
-        "key_key.hotbar.2"?: number;
-        "key_key.hotbar.3"?: number;
-        "key_key.hotbar.4"?: number;
-        "key_key.hotbar.5"?: number;
-        "key_key.hotbar.6"?: number;
-        "key_key.hotbar.7"?: number;
-        "key_key.hotbar.8"?: number;
-        "key_key.hotbar.9"?: number;
-        soundCategory_master?: number;
-        soundCategory_music?: number;
-        soundCategory_record?: number;
-        soundCategory_weather?: number;
-        soundCategory_block?: number;
-        soundCategory_hostile?: number;
-        soundCategory_neutral?: number;
-        soundCategory_player?: number;
-        soundCategory_ambient?: number;
-        soundCategory_voice?: number;
-        modelPart_cape?: boolean;
-        modelPart_jacket?: boolean;
-        modelPart_left_sleeve?: boolean;
-        modelPart_right_sleeve?: boolean;
-        modelPart_left_pants_leg?: boolean;
-        modelPart_right_pants_leg?: boolean;
-        modelPart_hat?: boolean;
+        "Semicolon" = 39,
+        "Quote" = 40,
+        "Backquote" = 41,
+        "ShiftLeft" = 42,
+        "Backslash" = 43,
+
+        "KeyZ" = 44,
+        "KeyX" = 45,
+        "KeyC" = 46,
+        "KeyV" = 47,
+        "KeyB" = 48,
+        "KeyN" = 49,
+        "KeyM" = 50,
+
+        "Comma" = 51,
+        "Period" = 52,
+        "Slash" = 53,
+        "ShiftRight" = 54,
+
+        "Space" = 57,
+        "CapsLock" = 58,
+
+        "F1" = 59,
+        "F2" = 60,
+        "F3" = 61,
+        "F4" = 62,
+        "F5" = 63,
+        "F6" = 64,
+        "F7" = 65,
+        "F8" = 66,
+        "F9" = 67,
+        "F10" = 68,
+
+        "NumLock" = 69,
+        "ScrollLock" = 70,
+        "Numpad7" = 71,
+        "Numpad8" = 72,
+        "Numpad9" = 73,
+        "NumpadSubtract" = 74,
+        "Numpad4" = 75,
+        "Numpad5" = 76,
+        "Numpad6" = 77,
+        "NumpadAdd" = 78,
+        "Numpad1" = 79,
+        "Numpad2" = 80,
+        "Numpad3" = 81,
+        "Numpad0" = 82,
+        "NumpadDecimal" = 83,
+        "F11" = 87,
+        "F12" = 88,
+        "F13" = 100,
+        "F14" = 101,
+        "F15" = 102,
+        "F16" = 103,
+        "F17" = 104,
+        "F18" = 105,
+
+        "ControlRight" = 157,
+
+        "ArrowUp" = 200,
+        "ArrowLeft" = 203,
+        "ArrowRight" = 205,
+        "ArrowDown" = 208,
+
+        "MULTIPLY" = 55,
+        "Left Menu/Alt" = 56,
+
+        "NumpadEnter" = 156,
+        "NumpadComma" = 179,
+
+        "Home" = 199,
+        "PageUp" = 201,
+        "End" = 207,
+        "PageDown" = 209,
+        "Insert" = 210,
+        "Delete" = 211,
+
+        "MouseLeft" = -100,
+        "MouseRight" = -99,
+        "MouseMiddle" = -98,
     }
 
+    const DEFAULT_FRAME = {
+        "version": 1139, // for 1.12
+        "invertYMouse": false,
+        "mouseSensitivity": 0.5,
+        "difficulty": Difficulty.Normal,
+
+        // critical performance video settings
+        "renderDistance": 12 as RenderDistance,
+        "particles": Particles.Decreased,
+        "fboEnable": true,
+        "fancyGraphics": Graphic.Fancy as Graphic,
+        "ao": AmbientOcclusion.Maximum,
+        "renderClouds": RenderCloud.Fancy as RenderCloud,
+        "enableVsync": true,
+        "useVbo": true,
+        "mipmapLevels": 4 as MipmapLevel,
+        "anaglyph3d": false,
+
+        "fov": 0,
+        "gamma": 0,
+        "saturation": 0,
+        "guiScale": 0,
+        "bobView": true,
+        "maxFps": 120,
+        "fullscreen": false,
+
+        "resourcePacks": [] as string[],
+        "incompatibleResourcePacks": [] as string[],
+        "lastServer": "",
+        "lang": "en_us",
+        "chatVisibility": 0,
+        "chatColors": true,
+        "chatLinks": true,
+        "chatLinksPrompt": true,
+        "chatOpacity": 1,
+        "snooperEnabled": true,
+
+        "hideServerAddress": false,
+        "advancedItemTooltips": false,
+        "pauseOnLostFocus": true,
+        "touchscreen": false,
+        "overrideWidth": 0,
+        "overrideHeight": 0,
+        "heldItemTooltips": true,
+        "chatHeightFocused": 1,
+        "chatHeightUnfocused": 0.44366196,
+        "chatScale": 1,
+        "chatWidth": 1,
+        "forceUnicodeFont": false,
+        "reducedDebugInfo": false,
+        "useNativeTransport": true,
+        "entityShadows": true,
+        "mainHand": "right",
+        "attackIndicator": 1,
+        "showSubtitles": false,
+        "realmsNotifications": true,
+        "enableWeakAttacks": false,
+        "autoJump": true,
+        "narrator": 0,
+        "tutorialStep": "movement",
+        "key_key.attack": -100 as KeyCode,
+        "key_key.use": -99 as KeyCode,
+        "key_key.forward": 17 as KeyCode,
+        "key_key.left": 30 as KeyCode,
+        "key_key.back": 31 as KeyCode,
+        "key_key.right": 32 as KeyCode,
+        "key_key.jump": 57 as KeyCode,
+        "key_key.sneak": 42 as KeyCode,
+        "key_key.sprint": 29 as KeyCode,
+        "key_key.drop": 16 as KeyCode,
+        "key_key.inventory": 18 as KeyCode,
+        "key_key.chat": 20 as KeyCode,
+        "key_key.playerlist": 15 as KeyCode,
+        "key_key.pickItem": -98 as KeyCode,
+        "key_key.command": 53 as KeyCode,
+        "key_key.screenshot": 60 as KeyCode,
+        "key_key.togglePerspective": 63 as KeyCode,
+        "key_key.smoothCamera": 0 as KeyCode,
+        "key_key.fullscreen": 87 as KeyCode,
+        "key_key.spectatorOutlines": 0 as KeyCode,
+        "key_key.swapHands": 33 as KeyCode,
+        "key_key.saveToolbarActivator": 46 as KeyCode,
+        "key_key.loadToolbarActivator": 45 as KeyCode,
+        "key_key.advancements": 38 as KeyCode,
+        "key_key.hotbar.1": 2 as KeyCode,
+        "key_key.hotbar.2": 3 as KeyCode,
+        "key_key.hotbar.3": 4 as KeyCode,
+        "key_key.hotbar.4": 5 as KeyCode,
+        "key_key.hotbar.5": 6 as KeyCode,
+        "key_key.hotbar.6": 7 as KeyCode,
+        "key_key.hotbar.7": 8 as KeyCode,
+        "key_key.hotbar.8": 9 as KeyCode,
+        "key_key.hotbar.9": 10 as KeyCode,
+        "soundCategory_master": 1 as KeyCode,
+        "soundCategory_music": 1 as KeyCode,
+        "soundCategory_record": 1 as KeyCode,
+        "soundCategory_weather": 1 as KeyCode,
+        "soundCategory_block": 1 as KeyCode,
+        "soundCategory_hostile": 1 as KeyCode,
+        "soundCategory_neutral": 1 as KeyCode,
+        "soundCategory_player": 1 as KeyCode,
+        "soundCategory_ambient": 1 as KeyCode,
+        "soundCategory_voice": 1 as KeyCode,
+        "modelPart_cape": true,
+        "modelPart_jacket": true,
+        "modelPart_left_sleeve": true,
+        "modelPart_right_sleeve": true,
+        "modelPart_left_pants_leg": true,
+        "modelPart_right_pants_leg": true,
+        "modelPart_hat": true,
+    };
+
+    export type Frame = Partial<typeof DEFAULT_FRAME>;
 
     export type ModelPart =
         "cape" |
@@ -460,24 +496,6 @@ export namespace GameSetting {
         "hotbar.8" |
         "hotbar.9";
 
-    export enum AmbientOcclusion {
-        Off = 0,
-        Minimum = 1,
-        Maximum = 2,
-    }
-    export enum Particles {
-        Minimum = 2,
-        Decreased = 1,
-        All = 0,
-    }
-    export enum Difficulty {
-        Peaceful = 0,
-        Easy = 1,
-        Normal = 2,
-        Hard = 3,
-    }
-    export const Graphic = Object.freeze({ Fast: false, Fancy: true });
-    export const RenderCloud = Object.freeze({ Off: false, Fast: "fast", Fancy: true });
 
     /**
      * Parse raw game setting options.txt content
@@ -509,9 +527,9 @@ export namespace GameSetting {
             })
             .reduce((prev, current) => Object.assign(prev, current), {});
         if (!strict) { return setting as GameSetting.Frame; }
-        const source: any = defaultFrame;
+        const source: any = DEFAULT_FRAME;
         const target: any = {};
-        Object.keys(defaultFrame).forEach((key) => {
+        Object.keys(DEFAULT_FRAME).forEach((key) => {
             target[key] = typeof setting[key] === typeof source[key] ? setting[key] : source[key];
             delete setting.key;
         });
