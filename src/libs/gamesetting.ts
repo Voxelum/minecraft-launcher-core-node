@@ -1,7 +1,6 @@
 import * as os from "os";
 
-export class GameSetting implements Required<GameSetting> {
-
+export class GameSetting implements GameSetting.FullFrame {
     get language() { return this.lang; }
     set language(lang: string) { this.lang = lang; }
 
@@ -14,31 +13,31 @@ export class GameSetting implements Required<GameSetting> {
     get ambientOcclusion() { return this.ao; }
     set ambientOcclusion(ao) { this.ao = ao; }
     readonly version = 1139; // for 1.12
-    public invertYMouse = false;
-    public mouseSensitivity = 0.5;
-    public difficulty = 2;
+    invertYMouse = false;
+    mouseSensitivity = 0.5;
+    difficulty = 2;
 
     // critical performance video settings
-    public renderDistance = 12;
-    public particles = 0;
+    renderDistance: GameSetting.RenderDistance = 12;
+    particles = 0;
     fboEnable = true;
-    public fancyGraphics = true;
+    fancyGraphics = true;
     ao = 2;
-    public renderClouds = true;
-    public enableVsync = true;
+    renderClouds = true;
+    enableVsync = true;
     useVbo = true;
-    public mipmapLevels = 4;
-    public anaglyph3d = false;
+    mipmapLevels: GameSetting.MipmapLevel = 4;
+    anaglyph3d = false;
 
-    public fov = 0;
-    public gamma = 0;
-    public saturation = 0;
-    public guiScale = 0;
-    public bobView = true;
-    public maxFps = 120;
-    public fullscreen = false;
+    fov = 0;
+    gamma = 0;
+    saturation = 0;
+    guiScale = 0;
+    bobView = true;
+    maxFps = 120;
+    fullscreen = false;
 
-    public resourcePacks = [];
+    resourcePacks = [];
     incompatibleResourcePacks = [];
     lastServer = "";
     lang = "en_us";
@@ -73,57 +72,57 @@ export class GameSetting implements Required<GameSetting> {
     narrator = 0;
     tutorialStep = "movement";
 
-    private "key_key.attack" = -100;
-    private "key_key.use" = -99;
-    private "key_key.forward" = 17;
-    private "key_key.left" = 30;
-    private "key_key.back" = 31;
-    private "key_key.right" = 32;
-    private "key_key.jump" = 57;
-    private "key_key.sneak" = 42;
-    private "key_key.sprint" = 29;
-    private "key_key.drop" = 16;
-    private "key_key.inventory" = 18;
-    private "key_key.chat" = 20;
-    private "key_key.playerlist" = 15;
-    private "key_key.pickItem" = -98;
-    private "key_key.command" = 53;
-    private "key_key.screenshot" = 60;
-    private "key_key.togglePerspective" = 63;
-    private "key_key.smoothCamera" = 0;
-    private "key_key.fullscreen" = 87;
-    private "key_key.spectatorOutlines" = 0;
-    private "key_key.swapHands" = 33;
-    private "key_key.saveToolbarActivator" = 46;
-    private "key_key.loadToolbarActivator" = 45;
-    private "key_key.advancements" = 38;
-    private "key_key.hotbar.1" = 2;
-    private "key_key.hotbar.2" = 3;
-    private "key_key.hotbar.3" = 4;
-    private "key_key.hotbar.4" = 5;
-    private "key_key.hotbar.5" = 6;
-    private "key_key.hotbar.6" = 7;
-    private "key_key.hotbar.7" = 8;
-    private "key_key.hotbar.8" = 9;
-    private "key_key.hotbar.9" = 10;
+    "key_key.attack" = -100;
+    "key_key.use" = -99;
+    "key_key.forward" = 17;
+    "key_key.left" = 30;
+    "key_key.back" = 31;
+    "key_key.right" = 32;
+    "key_key.jump" = 57;
+    "key_key.sneak" = 42;
+    "key_key.sprint" = 29;
+    "key_key.drop" = 16;
+    "key_key.inventory" = 18;
+    "key_key.chat" = 20;
+    "key_key.playerlist" = 15;
+    "key_key.pickItem" = -98;
+    "key_key.command" = 53;
+    "key_key.screenshot" = 60;
+    "key_key.togglePerspective" = 63;
+    "key_key.smoothCamera" = 0;
+    "key_key.fullscreen" = 87;
+    "key_key.spectatorOutlines" = 0;
+    "key_key.swapHands" = 33;
+    "key_key.saveToolbarActivator" = 46;
+    "key_key.loadToolbarActivator" = 45;
+    "key_key.advancements" = 38;
+    "key_key.hotbar.1" = 2;
+    "key_key.hotbar.2" = 3;
+    "key_key.hotbar.3" = 4;
+    "key_key.hotbar.4" = 5;
+    "key_key.hotbar.5" = 6;
+    "key_key.hotbar.6" = 7;
+    "key_key.hotbar.7" = 8;
+    "key_key.hotbar.8" = 9;
+    "key_key.hotbar.9" = 10;
     // tslint:disable:variable-name
-    private soundCategory_master = 1;
-    private soundCategory_music = 1;
-    private soundCategory_record = 1;
-    private soundCategory_weather = 1;
-    private soundCategory_block = 1;
-    private soundCategory_hostile = 1;
-    private soundCategory_neutral = 1;
-    private soundCategory_player = 1;
-    private soundCategory_ambient = 1;
-    private soundCategory_voice = 1;
-    private modelPart_cape = true;
-    private modelPart_jacket = true;
-    private modelPart_left_sleeve = true;
-    private modelPart_right_sleeve = true;
-    private modelPart_left_pants_leg = true;
-    private modelPart_right_pants_leg = true;
-    private modelPart_hat = true;
+    soundCategory_master = 1;
+    soundCategory_music = 1;
+    soundCategory_record = 1;
+    soundCategory_weather = 1;
+    soundCategory_block = 1;
+    soundCategory_hostile = 1;
+    soundCategory_neutral = 1;
+    soundCategory_player = 1;
+    soundCategory_ambient = 1;
+    soundCategory_voice = 1;
+    modelPart_cape = true;
+    modelPart_jacket = true;
+    modelPart_left_sleeve = true;
+    modelPart_right_sleeve = true;
+    modelPart_left_pants_leg = true;
+    modelPart_right_pants_leg = true;
+    modelPart_hat = true;
     // tslint:enable:variable-name
 
     constructor(frame?: GameSetting.Frame) {
@@ -195,7 +194,7 @@ export namespace GameSetting {
         Hard = 3,
     }
     export type MipmapLevel = 0 | 1 | 2 | 3 | 4;
-    export type RenderDistance = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 |23 | 24| 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32;
+    export type RenderDistance = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32;
     export const RenderDistance = Object.freeze({ Tiny: 2, Short: 4, Normal: 8, Far: 16, Extreme: 32 });
     export const Graphic = Object.freeze({ Fast: false, Fancy: true });
     export type Graphic = boolean;
@@ -439,7 +438,12 @@ export namespace GameSetting {
         "modelPart_hat": true,
     };
 
-    export type Frame = Partial<typeof DEFAULT_FRAME>;
+    export type FullFrame = typeof DEFAULT_FRAME;
+    export type Frame = Partial<FullFrame>;
+
+    export function getDefaultFrame(): FullFrame {
+        return Object.assign({}, DEFAULT_FRAME);
+    }
 
     export type ModelPart =
         "cape" |
@@ -565,9 +569,7 @@ export namespace GameSetting {
             .filter((key) => key !== undefined && key !== "undefined")
             .map((key) => {
                 const val = model[key];
-                if (typeof val !== "string") {
-                    return `${key}:${JSON.stringify(val)}`;
-                } else { return `${key}:${val}`; }
+                return typeof val !== "string" ? `${key}:${JSON.stringify(val)}` : `${key}:${val}`;
             }).join(os.EOL);
     }
 }
