@@ -442,7 +442,10 @@ export namespace GameSetting {
     export type Frame = Partial<FullFrame>;
 
     export function getDefaultFrame(): FullFrame {
-        return Object.assign({}, DEFAULT_FRAME);
+        return Object.assign({}, DEFAULT_FRAME, {
+            resourcePacks: [] as string[],
+            incompatibleResourcePacks: [] as string[],
+        });
     }
 
     export type ModelPart =
