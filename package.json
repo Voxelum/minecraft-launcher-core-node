@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "4.1.0-beta",
+  "version": "4.1.1-beta",
   "main": "./dest/index.js",
   "types": "./dest/index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
@@ -14,7 +14,6 @@
     "@types/long": "^3.0.31",
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.9.3",
-    "@types/semver": "^5.5.0",
     "@types/uuid": "^3.4.3",
     "mocha": "^6.0.2",
     "tslint": "^5.14.0",
