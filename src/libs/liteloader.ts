@@ -2,8 +2,9 @@ import * as fs from "fs-extra";
 import * as Zip from "jszip";
 import * as path from "path";
 import Task from "treelike-task";
+import { DownloadService } from "./services";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
-import { getIfUpdate, UpdatedObject } from "./utils/update";
+import { UpdatedObject } from "./utils/update";
 import { Version } from "./version";
 
 export namespace LiteLoader {
@@ -77,10 +78,19 @@ export namespace LiteLoader {
             }
             return metalist;
         }
-        export function update(option: { fallback?: VersionMetaList, remote?: string } = {}): Promise<VersionMetaList> {
-            return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST,
-                parse, option.fallback,
-            );
+        export async function update(option: { fallback?: VersionMetaList, remote?: string } = {}): Promise<VersionMetaList> {
+            const fallback = option.fallback || { timestamp: "" };
+            const result = await DownloadService.download({
+                url: option.remote || DEFAULT_VERSION_MANIFEST,
+                cache: { timestamp: fallback.timestamp },
+            });
+            if (result.value) {
+                return {
+                    timestamp: result.timestamp,
+                    ...parse(result.value.toString()),
+                };
+            }
+            return fallback as VersionMetaList;
         }
     }
 

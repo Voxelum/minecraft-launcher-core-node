@@ -148,7 +148,7 @@ modelPart_hat:true
             mipmapLevels: 0,
             maxFps: 0,
             particles: 0,
-            renderDistance: 0,
+            renderDistance: 2,
             resourcePacks: ["asb"],
         };
         const str = GameSetting.stringify(setting);
@@ -170,10 +170,10 @@ modelPart_hat:true
             entityShadows: false,
             ao: 0,
             fov: 0,
-            mipmapLevels: 0,
+            mipmapLevels: 1,
             maxFps: 0,
             particles: 0,
-            renderDistance: 0,
+            renderDistance: 2,
             resourcePacks: [],
         };
         const inst = new GameSetting(setting);

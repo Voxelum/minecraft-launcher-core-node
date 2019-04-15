@@ -39,8 +39,19 @@ function pipeTo<T extends NodeJS.WritableStream>(progressCallback: (written: num
     });
 }
 
-function nodeJsRequest(url: string, option: DownloadService.Option): Promise<{ message: http.IncomingMessage, url: string }> {
+function nodeJsRequest(url: string, option: DownloadService.Option | DownloadService.CacheOption): Promise<{ message: http.IncomingMessage, url: string }> {
     const parsed = urls.parse(url);
+    interface Full { timestamp: string; eTag: string; }
+    const asCache = (option as DownloadService.CacheOption);
+    const headers = { ...(option.headers || {}) };
+    if (asCache.cache) {
+        const cache = asCache.cache as Full;
+        if (cache.timestamp) {
+            headers["If-Modified-Since"] = cache.timestamp;
+        } else if (cache.eTag) {
+            headers["If-None-Match"] = cache.eTag;
+        }
+    }
     const httpOption: http.RequestOptions = {
         protocol: parsed.protocol,
         host: parsed.host,
@@ -48,7 +59,7 @@ function nodeJsRequest(url: string, option: DownloadService.Option): Promise<{ m
         port: parsed.port ? Number.parseInt(parsed.port, 10) : undefined,
         path: parsed.path,
         auth: parsed.auth,
-        headers: option.headers,
+        headers,
         method: option.method,
         timeout: option.timeout,
     };
@@ -59,6 +70,8 @@ function nodeJsRequest(url: string, option: DownloadService.Option): Promise<{ m
                 reject("Illegal Status Code");
             } else {
                 if (message.statusCode >= 200 && message.statusCode < 300) {
+                    resolve({ message, url });
+                } else if (message.statusCode === 304) {
                     resolve({ message, url });
                 } else if (message.headers.location) {
                     nodeJsRequest(message.headers.location as string, option)
@@ -87,7 +100,7 @@ class WriteableBuffer extends Writable {
     }
 }
 
-async function download(option: DownloadService.Option | string, destination?: string) {
+async function download(option: DownloadService.Option | DownloadService.CacheOption | string, destination?: string) {
     const realOption = typeof option === "string" ? { url: option } : option;
     const callback = realOption.progress || (() => { });
     const writable: Writable = typeof destination === "string" ? fs.createWriteStream(destination) :
@@ -97,14 +110,31 @@ async function download(option: DownloadService.Option | string, destination?: s
 
         const total = Number.parseInt(message.headers["content-length"] as string, 10);
 
-        const written = await pipeTo(callback, message, writable, total, realOption.checksum);
-        if (written !== total) {
-            throw {
-                message: "Fail to download the url, please retry",
-                url,
-                written,
-                total,
+        if (message.statusCode === 304) {
+            if (!destination) {
+                return {
+                    timestamp: message.headers["last-modified"],
+                    eTag: message.headers.ETag,
+                    value: undefined,
+                };
+            }
+            return {
+                timestamp: message.headers["last-modified"],
+                eTag: message.headers.ETag,
             };
+        } else {
+            const written = await pipeTo(callback, message, writable, total, realOption.checksum);
+            if (written !== total) {
+                throw {
+                    message: "Fail to download the url, please retry",
+                    url,
+                    written,
+                    total,
+                };
+            }
+            if (!destination) {
+                return (writable as WriteableBuffer).toBuffer();
+            }
         }
     } catch (e) {
         if (typeof destination === "string") {
@@ -112,14 +142,11 @@ async function download(option: DownloadService.Option | string, destination?: s
         }
         throw { error: e, option };
     }
-    if (!destination) {
-        return (writable as WriteableBuffer).toBuffer();
-    }
 }
 
 export function apply() {
     DownloadService.set({
-        download(option: DownloadService.Option | string, destination?: string) {
+        download(option: DownloadService.Option | DownloadService.CacheOption | string, destination?: string) {
             return download(option, destination);
         },
     } as DownloadService);
