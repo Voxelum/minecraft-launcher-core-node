@@ -72,7 +72,6 @@ export namespace Auth {
                 req.write(payload);
                 req.end();
             });
-
         }
 
         function requestAndHandleResponse(api: API, payload: any, path: string): Promise<Auth> {
@@ -103,7 +102,7 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export function login(option: { username: string, password?: string, clientToken?: string | undefined },
-                              api: API = API_MOJANG): Promise<Auth> {
+            api: API = API_MOJANG): Promise<Auth> {
             return requestAndHandleResponse(api, Object.assign({
                 agent: "Minecraft",
                 requestUser: true,
@@ -120,7 +119,7 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export function refresh(option: { clientToken: string, accessToken: string, profile?: string },
-                                api: API = API_MOJANG): Promise<Auth> {
+            api: API = API_MOJANG): Promise<Auth> {
             const payloadObj: any = {
                 // agent: 'Minecraft',
                 clientToken: option.clientToken,
@@ -150,8 +149,8 @@ export namespace Auth {
          * @param option The tokens
          * @param api The API of the auth server
          */
-        export function invalide(option: { accessToken: string, clientToken: string }, api: API = API_MOJANG): void {
-            request(api, option, api.invalidate);
+        export function invalide(option: { accessToken: string, clientToken: string }, api: API = API_MOJANG): Promise<void> {
+            return request(api, option, api.invalidate).then(() => undefined);
         }
         /**
          * Signout user by username and password
