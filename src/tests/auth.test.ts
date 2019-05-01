@@ -1,6 +1,49 @@
 import * as assert from "assert";
 import { Auth, MojangService } from "../index";
+
+const USERNAME = process.env.USERNAME;
+const PASSWORD = process.env.PASSWORD;
+const clientToken = "afa8ef8c3f734db18a1509fede562123";
+
 describe("Auth", () => {
+    let auth: Auth;
+    it("should be able to login", async function () {
+        if (!USERNAME || !PASSWORD) {
+            this.skip();
+        } else {
+            auth = await Auth.Yggdrasil.login({ username: USERNAME, password: PASSWORD, clientToken });
+            assert.equal(auth.userId, "c7e1f7260fd040e89121f4e9a9ce8d6f");
+            assert.equal(auth.userType, "legacy");
+        }
+    });
+    it("should be able to valid accessToken", async function () {
+        if (!USERNAME || !PASSWORD) {
+            this.skip();
+        } else {
+            const valid = await Auth.Yggdrasil.validate({ accessToken: auth.accessToken, clientToken: auth.clientToken });
+            assert(valid);
+        }
+    });
+    it("should be able to refresh accessToken", async function () {
+        if (!USERNAME || !PASSWORD) {
+            this.skip();
+        } else {
+            const old = auth.accessToken;
+            auth = await Auth.Yggdrasil.refresh({ accessToken: auth.accessToken, clientToken: auth.clientToken });
+            assert.notEqual(old, auth.accessToken);
+            assert.equal(auth.userId, "c7e1f7260fd040e89121f4e9a9ce8d6f");
+            assert.equal(auth.userType, "legacy");
+        }
+    });
+    it("should be able to invalidate accessToken", async function () {
+        if (!USERNAME || !PASSWORD) {
+            this.skip();
+        } else {
+            await Auth.Yggdrasil.invalide({ accessToken: auth.accessToken, clientToken: auth.clientToken });
+            const valid = await Auth.Yggdrasil.validate({ accessToken: auth.accessToken, clientToken: auth.clientToken });
+            assert(!valid);
+        }
+    });
     it("should reject invalid username password", () =>
         Auth.Yggdrasil.login({ username: "18211378@163.com", password: "asd-x" })
             .then((suc) => {
@@ -16,7 +59,7 @@ describe("Auth", () => {
     }).timeout(10000);
     it("should throw error when refresh an invalid access token", async () => {
         try {
-            const auth = await Auth.Yggdrasil.refresh({ accessToken: "abc", clientToken: "bvd" });
+            await Auth.Yggdrasil.refresh({ accessToken: "abc", clientToken: "bvd" });
         } catch (e) {
             assert(e);
         }
