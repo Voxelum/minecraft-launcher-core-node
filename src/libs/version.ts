@@ -1,6 +1,5 @@
 import * as fs from "fs-extra";
 import * as paths from "path";
-import * as semver from "semver";
 
 import computeChecksum from "./utils/checksum";
 
@@ -163,9 +162,9 @@ export namespace Version {
                 libMap[name] = l;
             } else {
                 const otherVersion = libMap[name].name.substring(libMap[name].name.lastIndexOf(":") + 1, libMap[name].name.length);
-                if (semver.gt(version, otherVersion)) {
-                    libMap[name] = l;
-                }
+                // if (semver.gt(version, otherVersion)) {
+                //     libMap[name] = l;
+                // }
             }
         });
         const gameArgs = [...extra.arguments.game];
