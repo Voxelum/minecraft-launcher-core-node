@@ -1,8 +1,4 @@
-import * as https from "https";
-import * as url from "url";
-import { DownloadService } from "./services";
-
-
+import * as got from "got";
 export interface MojangAccount {
     readonly id: string;
     readonly email: string;
@@ -23,20 +19,25 @@ export interface MojangAccount {
     readonly hashed: boolean;
 }
 
+export interface MojangChallenge {
+    readonly answer: { id: number };
+    readonly question: { id: number; question: string; };
+}
+
+export interface MojangChallengeResponse {
+    id: number;
+    answer: string;
+}
+
 export namespace MojangService {
-    export interface Provider {
-        readonly apiStatus: string;
-        readonly userInfo: string;
-        readonly blockedServers: string;
-        readonly salesStatistics: string;
-        nameHistory(uuid: string): string;
-    }
-    const defaultProvider: Provider = {
+    const defaultProvider = {
         apiStatus: "https://status.mojang.com/check",
         blockedServers: "https://sessionserver.mojang.com/blockedservers",
-        nameHistory: (uuid) => `https://api.mojang.com/user/profiles/${uuid}/names`,
+        nameHistory: (uuid: string) => `https://api.mojang.com/user/profiles/${uuid}/names`,
         salesStatistics: "https://api.mojang.com/orders/statistics",
         userInfo: "https://api.mojang.com/user",
+        userChallenges: "https://api.mojang.com/user/security/challenges",
+        userLocation: "https://api.mojang.com/user/security/location",
     };
 
     export enum Status {
@@ -47,38 +48,56 @@ export namespace MojangService {
      *
      * @param provider
      */
-    export function getServiceStatus(provider: Provider = defaultProvider): Promise<Array<{ [server: string]: Status }>> {
-        const service = DownloadService.get();
-        return service.download(provider.apiStatus)
-            .then((b) => JSON.parse((b as Buffer).toString()))
-            .then((arr) => arr.reduce((a: any, b: any) => Object.assign(a, b), {}));
+    export function getServiceStatus(): Promise<{ [server: string]: Status }> {
+        return got("https://status.mojang.com/check", { json: true }).then((resp) => resp.body.reduce((a: any, b: any) => Object.assign(a, b), {}));
+    }
+    export async function checkLocation(accessToken: string): Promise<boolean> {
+        // "ForbiddenOperationException";
+        // "Current IP is not secured";
+        try {
+            const { statusCode } = await got("/user/security/location", {
+                baseUrl: "https://api.mojang.com",
+                method: "GET",
+                json: true,
+                headers: { Authorization: `Bearer: ${accessToken}` },
+            });
+            return statusCode === 204;
+        } catch (e) {
+            throw { statusCode: e.statusCode, statusMessage: e.statusMessage, ...e.body };
+        }
+    }
+    export async function getChallenges(accessToken: string): Promise<MojangChallenge[]> {
+        return got("/user/security/challenges", {
+            baseUrl: "https://api.mojang.com",
+            method: "GET",
+            json: true,
+            headers: { Authorization: `Bearer: ${accessToken}` },
+        }).then((resp) => resp.body as MojangChallenge[])
+            .catch((resp) => { throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, ...resp.body }; });
+    }
+    export async function responseChallenges(accessToken: string, responses: MojangChallengeResponse[]) {
+        return got("/user/security/location", {
+            baseUrl: "https://api.mojang.com",
+            method: "POST",
+            json: true,
+            body: responses,
+            headers: { Authorization: `Bearer: ${accessToken}` },
+        }).catch((resp) => { throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, ...resp.body }; });
     }
     /**
      * Get Mojang account information by user access token, which is given by the mojang ygg auth.
      *
      * @param accessToken The user access token
-     * @param provider
      */
-    export function getAccountInfo(accessToken: string, provider: Provider = defaultProvider): Promise<MojangAccount> {
-        return new Promise((resolve, reject) => {
-            const userInfUrl = url.parse(provider.userInfo);
-            const req = https.get({
-                headers: { Authorization: `Bearer: ${accessToken}` },
-                host: userInfUrl.host, path: userInfUrl.path,
-            }, (res) => {
-                let data = "";
-                res.on("data", (d) => { data += d.toString(); });
-                res.on("end", () => { resolve(JSON.parse(data)); });
-                res.on("error", (e) => { reject(e); });
-            });
-            req.on("error", (e) => { reject(e); });
-            req.end();
-        }).then((obj) => {
-            if ((obj as any).error) {
-                throw obj;
-            } else {
-                return (obj as MojangAccount);
-            }
+    export async function getAccountInfo(accessToken: string): Promise<MojangAccount> {
+        return got("/user", {
+            baseUrl: "https://api.mojang.com",
+            json: true,
+            headers: { Authorization: `Bearer: ${accessToken}` },
+        }).then((resp) => {
+            return resp.body;
+        }).catch((e) => {
+            throw { statusCode: e.statusCode, statusMessage: e.statusMessage, ...e.body };
         });
     }
 }

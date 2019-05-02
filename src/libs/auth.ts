@@ -1,8 +1,7 @@
 import { v4 } from "uuid";
 import { GameProfile } from "./profile";
 
-import * as http from "http";
-import * as https from "https";
+import * as got from "got";
 
 export enum UserType {
     Legacy = "mojang", Mojang = "legacy",
@@ -38,7 +37,7 @@ export namespace Auth {
             readonly signout: string;
         }
         export const API_MOJANG: API = {
-            hostName: "authserver.mojang.com",
+            hostName: "https://authserver.mojang.com",
             authenticate: "/authenticate",
             refresh: "/refresh",
             validate: "/validate",
@@ -46,52 +45,33 @@ export namespace Auth {
             signout: "/signout",
         };
 
-        function request(api: API, payload: any, path: string): Promise<string> {
-            return new Promise((resolve, reject) => {
-                payload = JSON.stringify(payload);
-                const responseHandler = (response: http.IncomingMessage) => {
-                    let buffer = "";
-                    response.setEncoding("utf8");
-                    response.on("data", (chunk) => {
-                        if (typeof (chunk) === "string") { buffer += chunk; }
-                    });
-                    response.on("end", () => { resolve(buffer); });
-                };
-                const req = https.request({
-                    hostname: api.hostName,
-                    path,
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Content-Length": payload.length,
-                    },
-                }, responseHandler);
-                req.on("error", (e) => {
-                    reject(e);
-                });
-                req.write(payload);
-                req.end();
+        function request(baseUrl: string, path: string, payload: object) {
+            return got(path, {
+                baseUrl,
+                method: "POST",
+                json: true,
+                body: payload,
+                encoding: "utf-8",
             });
         }
 
-        function requestAndHandleResponse(api: API, payload: any, path: string): Promise<Auth> {
-            return request(api, payload, path).then((s) => {
-                const obj = JSON.parse(s);
-                if (obj.error) {
-                    throw { type: obj.error, message: obj.errorMessage };
-                }
-                const userId = obj.user ? obj.user.id ? obj.user.id : "" : "";
-                const prop = obj.user ? obj.user.properties ? obj.user.properties : {} : {};
-                return {
-                    accessToken: obj.accessToken as string,
-                    clientToken: obj.clientToken as string,
-                    selectedProfile: obj.selectedProfile as GameProfile,
-                    profiles: obj.availableProfiles as GameProfile[],
-                    userId,
-                    properties: prop,
-                    userType: UserType.Mojang,
-                };
-            });
+        function parseResponse(resp: got.Response<any>) {
+            const body = resp.body;
+            const obj = JSON.parse(body);
+            if (obj.error) {
+                throw { type: obj.error, message: obj.errorMessage };
+            }
+            const userId = obj.user ? obj.user.id ? obj.user.id : "" : "";
+            const prop = obj.user ? obj.user.properties ? obj.user.properties : {} : {};
+            return {
+                accessToken: obj.accessToken as string,
+                clientToken: obj.clientToken as string,
+                selectedProfile: obj.selectedProfile as GameProfile,
+                profiles: obj.availableProfiles as GameProfile[],
+                userId,
+                properties: prop,
+                userType: UserType.Mojang,
+            };
         }
 
         /**
@@ -103,10 +83,19 @@ export namespace Auth {
          */
         export function login(option: { username: string, password?: string, clientToken?: string | undefined },
             api: API = API_MOJANG): Promise<Auth> {
-            return requestAndHandleResponse(api, Object.assign({
-                agent: "Minecraft",
-                requestUser: true,
-            }, option), api.authenticate);
+            return got(api.authenticate, {
+                baseUrl: api.hostName,
+                method: "POST",
+                json: true,
+                body: {
+                    agent: "Minecraft",
+                    requestUser: true,
+                    ...option,
+                },
+            }).then(parseResponse).catch((resp) => {
+                const body = resp.body;
+                throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, type: body.error, message: body.errorMessage };
+            });
         }
 
         /**
@@ -120,18 +109,14 @@ export namespace Auth {
          */
         export function refresh(option: { clientToken: string, accessToken: string, profile?: string },
             api: API = API_MOJANG): Promise<Auth> {
-            const payloadObj: any = {
-                // agent: 'Minecraft',
+            return request(api.hostName, api.refresh, {
                 clientToken: option.clientToken,
                 accessToken: option.accessToken,
                 requestUser: true,
-            };
-            if (option.profile) {
-                payloadObj.selectedProfile = {
+                selectedProfile: option.profile ? {
                     id: option.profile,
-                };
-            }
-            return requestAndHandleResponse(api, payloadObj, api.refresh);
+                } : undefined,
+            }).then(parseResponse);
         }
         /**
          * Determine whether the access/client token pair is valid.
@@ -140,17 +125,26 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export function validate(option: { accessToken: string, clientToken?: string }, api: API = API_MOJANG): Promise<boolean> {
-            return request(api, Object.assign({}, option), api.validate)
-                .then((s) => s === "" || JSON.parse(s).error === undefined, (fail) => false);
+            return request(api.hostName, api.validate, Object.assign({}, option))
+                .then((s) => s.body.error === undefined, (fail) => false);
         }
+        /**
+         * Invalidate an access/client token pair
+         *
+         * @deprecated
+         * @param option The tokens
+         * @param api The API of the auth server
+         */
+        export const invalide = invalidate;
+
         /**
          * Invalidate an access/client token pair
          *
          * @param option The tokens
          * @param api The API of the auth server
          */
-        export function invalide(option: { accessToken: string, clientToken: string }, api: API = API_MOJANG): Promise<void> {
-            return request(api, option, api.invalidate).then(() => undefined);
+        export function invalidate(option: { accessToken: string, clientToken: string }, api: API = API_MOJANG): Promise<void> {
+            return request(api.hostName, api.invalidate, option).then(() => undefined);
         }
         /**
          * Signout user by username and password
@@ -159,7 +153,7 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export function signout(option: { username: string, password: string }, api: API = API_MOJANG): void {
-            request(api, option, api.signout);
+            request(api.hostName, api.signout, option);
         }
     }
 

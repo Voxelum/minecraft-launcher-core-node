@@ -4,7 +4,7 @@ import * as https from "https";
 import * as queryString from "querystring";
 import * as url from "url";
 
-import { DownloadService } from "./services";
+import got = require("got");
 
 /**
  * The data structure holds the user game profile
@@ -107,29 +107,15 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         profileByName: "https://api.mojang.com/users/profiles/minecraft/${name}",
     };
 
-    async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
-        if (texture.data) { return texture; }
-        const service = DownloadService.get();
-        return {
-            ...texture,
-            data: await service.download(texture.url).then((buf) => (buf as Buffer)),
-        };
-    }
 
     function checkSign(value: string, signature: string, pemKey: string) {
-        return crypto.createVerify("SHA1").update(value, "utf8")
-            .verify(pemKey, signature, "base64");
+        return crypto.createVerify("SHA1").update(value, "utf8").verify(pemKey, signature, "base64");
     }
 
     async function fetchProfile(target: string, pemPubKey?: string) {
-        const service = DownloadService.get();
-        const tex = (await service.download(target) as Buffer).toString();
-        let obj;
-        try {
-            obj = JSON.parse(tex);
-        } catch (e) {
-            throw new Error(`Unable to parse json response of fetch user profile: ${target}\n ${tex}`);
-        }
+        const { body: obj } = await got(target, {
+            json: true,
+        });
         if (obj.properties) {
             const properties = obj.properties;
             const to: any = {};
@@ -146,6 +132,14 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
 
     export async function cacheTextures(tex: GameProfile.Textures) {
         if (!tex) { return Promise.reject("No textures"); }
+
+        async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
+            if (texture.data) { return texture; }
+            return {
+                ...texture,
+                data: await got.get(texture.url, { encoding: null }).then((resp) => resp.body),
+            };
+        }
         if (tex.textures.skin) {
             tex.textures.skin = await cache(tex.textures.skin);
         }
