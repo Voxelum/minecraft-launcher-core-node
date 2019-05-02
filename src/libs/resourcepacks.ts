@@ -8,7 +8,11 @@ export class ResourcePack {
 
 export namespace ResourcePack {
     async function readZip(fileName: string, zipFile: Zip) {
-        const { description, pack_format } = await zipFile.file("pack.mcmeta").async("nodebuffer")
+        const entry = zipFile.file("pack.mcmeta");
+        if (entry === null || entry === undefined) {
+            throw new Error("Cannot find pack.mcmeta");
+        }
+        const { description, pack_format } = await entry.async("nodebuffer")
             .then((data) => JSON.parse(data.toString("utf-8").trim()).pack);
         const icon = await zipFile.file("pack.png").async("nodebuffer")
             .then((data) => "data:image/png;base64, " + data.toString("base64"))
