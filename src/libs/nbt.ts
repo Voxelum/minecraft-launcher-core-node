@@ -637,7 +637,7 @@ export namespace NBT {
         export function readRoot(buffer: Buffer, options?: ReadOptions): TagCompound {
             if (options !== undefined) {
                 if (options.compressed !== undefined && options.compressed) {
-                    buffer = gzip.gunzipSync(buffer);
+                    buffer = gzip.unzipSync(buffer);
                 }
             }
             const byteBuffer = ByteBuffer.wrap(buffer);
