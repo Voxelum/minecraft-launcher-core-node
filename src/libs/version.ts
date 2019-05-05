@@ -1,11 +1,11 @@
-import * as fs from "fs-extra";
+import * as fs from "fs";
 import * as paths from "path";
 
 import computeChecksum from "./utils/checksum";
 
 import Task from "treelike-task";
 import { MinecraftFolder, MinecraftLocation } from "../index";
-import { exists, missing } from "./utils/exists";
+import { exists, missing } from "./utils/files";
 
 function getPlatform() {
     const os = require("os");
@@ -355,7 +355,7 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
         const missingAssets: { [object: string]: string } = {};
 
         if (!missingAssetsIndex) {
-            const objects = (await fs.readJson(assetsIndexPath)).objects;
+            const objects = (await fs.promises.readFile(assetsIndexPath).then((b) => b.toString()).then(JSON.parse)).objects;
             const files = Object.keys(objects);
             const assetsMask = await context.execute("checkAssets", () => Promise.all(files.map(async (object) => {
                 const { hash } = objects[object];
@@ -404,7 +404,7 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
                     version: versionName,
                 });
             }
-            return fs.readFile(jsonPath).then((value) => {
+            return fs.promises.readFile(jsonPath).then((value) => {
                 const ver = parseVersionJson(value.toString());
                 stack.push(ver);
                 if (ver.inheritsFrom) {

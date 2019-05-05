@@ -1,11 +1,11 @@
-import * as fs from "fs-extra";
+import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import Task from "treelike-task";
 import { DownloadService } from "./services";
 import computeChecksum from "./utils/checksum";
 import { decompressXZ, unpack200 } from "./utils/decompress";
-import { exists } from "./utils/exists";
+import { ensureDir, exists } from "./utils/files";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { getIfUpdate, UpdatedObject } from "./utils/update";
 import { Library, Version, VersionMeta } from "./version";
@@ -139,7 +139,7 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const json = folder.getVersionJson(version.id);
-        await context.execute("ensureVersionRoot", () => fs.ensureDir(folder.getVersionRoot(version.id)));
+        await context.execute("ensureVersionRoot", () => ensureDir(folder.getVersionRoot(version.id)));
         if (!await exists(json)) {
             await context.execute("downloadJson", DownloadService.downloadTask(version.url, json));
         }
@@ -150,7 +150,7 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
 function downloadVersionJar(type: string, version: Version, minecraft: MinecraftLocation, checksum?: boolean) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
-        await context.execute("ensureRootDir", () => fs.ensureDir(folder.getVersionRoot(version.id)));
+        await context.execute("ensureRootDir", () => ensureDir(folder.getVersionRoot(version.id)));
         const filename = type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar";
         const jar = path.join(folder.getVersionRoot(version.id), filename);
         const exist = await exists(jar);
@@ -204,12 +204,12 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
             downloadURL += ".pack.xz";
         }
         const doDownload = async () => {
-            await fs.ensureDir(path.dirname(filePath));
+            await ensureDir(path.dirname(filePath));
             if (compressed) {
                 if (!decompressXZ || !unpack200) { throw new Error("Require external support for unpack compressed library!"); }
                 const buff = await context.execute("downloadLib", DownloadService.downloadTask(downloadURL)) as Buffer;
                 const decompressed = await context.execute("decompress", async () => decompressXZ(buff));
-                await context.execute("unpack", () => unpack200(decompressed).then((buf) => fs.writeFile(filePath, buf)));
+                await context.execute("unpack", () => unpack200(decompressed).then((buf) => fs.promises.writeFile(filePath, buf)));
             } else {
                 await DownloadService.downloadTask(downloadURL, filePath)(context);
             }
@@ -251,7 +251,7 @@ function downloadAsset(content: any, key: string, folder: MinecraftFolder, asset
         const hash: string = element.hash;
         const head = hash.substring(0, 2);
         const dir = folder.getPath("assets", "objects", head);
-        await fs.ensureDir(dir);
+        await ensureDir(dir);
         const file = path.join(dir, hash);
         const exist = await exists(file);
         if (!exist) {
@@ -272,11 +272,11 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
         if (!(await exists(jsonPath))) {
-            await fs.ensureDir(path.join(folder.assets, "indexes"));
+            await ensureDir(path.join(folder.assets, "indexes"));
             await context.execute("downloadAssetsJson", DownloadService.downloadTask(version.assetIndex.url, jsonPath));
         }
-        const content: any = (await fs.readJson(jsonPath)).objects;
-        await fs.ensureDir(folder.getPath("assets", "objects"));
+        const content: any = JSON.parse(await fs.promises.readFile(jsonPath).then((b) => b.toString())).objects;
+        await ensureDir(folder.getPath("assets", "objects"));
         const assetsHost = option.assetsHost || Version.DEFAULT_RESOURCE_ROOT_URL;
         try {
             const keys = Object.keys(content);

@@ -1,14 +1,16 @@
 import * as crypto from "crypto";
-import * as fs from "fs-extra";
+import * as fs from "fs";
+import got = require("got");
 import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from "java-asm";
-import * as Zip from "jszip";
 import * as path from "path";
 import Task from "treelike-task";
+import { Entry, ZipFile } from "yauzl";
+import { bufferEntry, createExtractStream, createParseEntriesStream, open, openEntryReadStream, parseEntries, walkEntries } from "yauzlw";
 import { DownloadService } from "./services";
-import { exists } from "./utils/exists";
+import { multiChecksum } from "./utils/checksum";
+import { ensureDir, exists } from "./utils/files";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { Version } from "./version";
-
 
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
@@ -236,57 +238,52 @@ export namespace Forge {
         version: string;
     }
 
-    async function asmMetaData(zip: Zip, modidTree: any) {
-        for (const key in zip.files) {
-            if (key.endsWith(".class")) {
-                const data = await zip.files[key].async("nodebuffer");
-                const metaContainer: any = {};
-                const visitor = new KVisitor(metaContainer);
-                new ClassReader(data).accept(visitor);
-                if (Object.keys(metaContainer).length === 0) {
-                    if (visitor.fields && visitor.fields.OF_NAME) {
-                        metaContainer.modid = visitor.fields.OF_NAME;
-                        metaContainer.name = visitor.fields.OF_NAME;
-                        metaContainer.mcversion = visitor.fields.MC_VERSION;
-                        metaContainer.version = `${visitor.fields.OF_EDITION}_${visitor.fields.OF_RELEASE}`;
-                        metaContainer.description = "OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.";
-                        metaContainer.authorList = ["sp614x"];
-                        metaContainer.url = "https://optifine.net";
-                        metaContainer.isClientOnly = true;
-                    }
-                }
-                const modid = metaContainer.modid;
-                let modMeta = modidTree[modid];
-                if (!modMeta) {
-                    modMeta = {};
-                    modidTree[modid] = modMeta;
-                }
-
-                for (const propKey in metaContainer) {
-                    modMeta[propKey] = metaContainer[propKey];
-                }
+    async function asmMetaData(zip: ZipFile, entry: Entry, modidTree: any) {
+        const data = await bufferEntry(zip, entry);
+        const metaContainer: any = {};
+        const visitor = new KVisitor(metaContainer);
+        new ClassReader(data).accept(visitor);
+        if (Object.keys(metaContainer).length === 0) {
+            if (visitor.fields && visitor.fields.OF_NAME) {
+                metaContainer.modid = visitor.fields.OF_NAME;
+                metaContainer.name = visitor.fields.OF_NAME;
+                metaContainer.mcversion = visitor.fields.MC_VERSION;
+                metaContainer.version = `${visitor.fields.OF_EDITION}_${visitor.fields.OF_RELEASE}`;
+                metaContainer.description = "OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.";
+                metaContainer.authorList = ["sp614x"];
+                metaContainer.url = "https://optifine.net";
+                metaContainer.isClientOnly = true;
             }
+        }
+        const modid = metaContainer.modid;
+        let modMeta = modidTree[modid];
+        if (!modMeta) {
+            modMeta = {};
+            modidTree[modid] = modMeta;
+        }
+
+        for (const propKey in metaContainer) {
+            modMeta[propKey] = metaContainer[propKey];
         }
     }
 
-    async function jsonMetaData(zip: Zip, modidTree: any) {
+    async function jsonMetaData(zip: ZipFile, entry: Entry, modidTree: any) {
         try {
-            for (const m of await zip.file("mcmod.info").async("nodebuffer").then((buf) => JSON.parse(buf.toString().trim()))) {
-                modidTree[m.modid] = m;
+            const json = JSON.parse(await bufferEntry(zip, entry).then((b) => b.toString("utf-8")));
+            if (json instanceof Array) {
+                for (const m of json) { modidTree[m.modid] = m; }
+            } else if (json.modid) {
+                modidTree[json.modid] = json;
             }
         } catch (e) { }
     }
 
-    async function regulize(mod: Buffer | string | Zip) {
+    async function regulize(mod: Buffer | string | ZipFile) {
         let zip;
-        if (mod instanceof Zip) {
-            zip = mod;
-        } else if (mod instanceof Buffer) {
-            zip = await new Zip().loadAsync(mod);
-        } else if (typeof mod === "string") {
-            zip = await new Zip().loadAsync(await fs.readFile(mod));
+        if (mod instanceof Buffer || typeof mod === "string") {
+            zip = await open(mod, { lazyEntries: true, autoClose: false });
         } else {
-            throw new Error("Illegal input! Expect Buffer or string (filePath)");
+            zip = mod;
         }
         return zip;
     }
@@ -296,18 +293,25 @@ export namespace Forge {
      * @param mod The mod path or data
      * @param asmOnly True for only reading the metadata from java bytecode, ignoring the mcmod.info
      */
-    export async function readModMetaData(mod: Buffer | string | Zip, asmOnly: boolean = false) {
+    export async function readModMetaData(mod: Buffer | string | ZipFile, asmOnly: boolean = false) {
         const zip = await regulize(mod);
         const modidTree: any = {};
-        if (!asmOnly) { await jsonMetaData(zip, modidTree); }
-        await asmMetaData(zip, modidTree);
+        const promise = [];
+        await walkEntries(zip, (entry) => {
+            if (!asmOnly && entry.fileName === "mcmod.info") {
+                promise.push(jsonMetaData(zip, entry, modidTree));
+            } else if (entry.fileName.endsWith(".class")) {
+                promise.push(asmMetaData(zip, entry, modidTree));
+            }
+            return false;
+        });
         const modids = Object.keys(modidTree);
         if (modids.length === 0) { throw { type: "NonmodTypeFile" }; }
         return modids.map((k) => modidTree[k] as Forge.MetaData)
             .filter((m) => m.modid !== undefined);
     }
 
-    export async function meta(mod: Buffer | string | Zip, asmOnly: boolean = false) {
+    export async function meta(mod: Buffer | string | ZipFile, asmOnly: boolean = false) {
         return readModMetaData(mod, asmOnly);
     }
 
@@ -334,57 +338,41 @@ export namespace Forge {
             const rootPath = mc.getVersionRoot(forgeId);
             const jsonPath = path.join(rootPath, `${forgeId}.json`);
 
-
-            async function downloadForge(universal: string, installer: string) {
-                let buffer: any;
+            async function download(universal: string, installer: string) {
                 try {
-                    buffer = await context.execute("downloadJar", DownloadService.downloadTask(universal));
+                    await context.execute("downloadJar", DownloadService.downloadTask(universal, jarPath));
                 } catch (e) {
-                    buffer = await context.execute("redownloadJar", DownloadService.downloadTask(installer));
-                    buffer = await context.execute("extractJar", async () =>
-                        (await Zip().loadAsync(buffer))
-                            .file(`forge-${versionPath}-universal.jar`)
-                            .async("nodebuffer"));
+                    await context.execute("downloadInstaller", (ctx) => new Promise((resolve, reject) => {
+                        got.stream(installer, {
+                            method: "GET",
+                            headers: {
+                                connection: "keep-alive",
+                            },
+                        }).on("error", reject)
+                            .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); })
+                            .pipe(createExtractStream(path.dirname(jarPath), [`forge-${versionPath}-universal.jar`]))
+                            .promise()
+                            .then(() => resolve());
+                    }));
                 }
-                return buffer;
             }
 
-            const universalBuffer = await context.execute("ensureForgeJar", async () => {
+            await context.execute("ensureForgeJar", async () => {
                 if (await exists(jarPath)) {
-                    let needDownload = false;
-                    const data = await fs.readFile(jarPath);
-                    for (const key in version.checksum) {
-                        if (!validateCheckSum(data, key, version.checksum[key] as string)) {
-                            needDownload = true;
-                            break;
-                        }
-                    }
-                    if (!needDownload) {
-                        return data;
-                    }
+                    const keys = Object.keys(version.checksum);
+                    const checksums = await multiChecksum(jarPath, keys);
+                    if (checksums.every((v, i) => v === version.checksum[keys[i]])) { return; }
                 }
-                const jarBuff = await downloadForge(universalURL, installerURL)
-                    .catch((_) => downloadForge(universalURLFallback, installerURLFallback));
-                await context.execute("writeJar", async () => fs.outputFile(jarPath, jarBuff));
-                return jarBuff;
+                await download(universalURL, installerURL)
+                    .catch(() => download(universalURLFallback, installerURLFallback));
             });
 
             await context.execute("ensureForgeJson", async () => {
-                if (await exists(jsonPath)) {
-                    return;
-                }
-                const buff: Buffer = await context.execute("extraVersionJson",
-                    async () => (await Zip().loadAsync(universalBuffer)).file("version.json").async("nodebuffer"));
+                if (await exists(jsonPath)) { return; }
 
-                const versionJSON = JSON.parse(buff.toString());
-
-                const realForgeId = versionJSON.id;
-                if (realForgeId !== forgeId) {
-                    versionJSON.id = forgeId;
-                }
-
-                await context.execute("ensureRoot", () => fs.ensureDir(rootPath));
-                await context.execute("writeJson", async () => fs.writeJSON(jsonPath, versionJSON));
+                await context.execute("ensureRoot", () => ensureDir(rootPath));
+                await context.execute("extraVersionJson", () => fs.createReadStream(jarPath)
+                    .pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])));
             });
 
             return forgeId;

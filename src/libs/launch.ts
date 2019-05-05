@@ -1,12 +1,12 @@
 import { ChildProcess, ExecOptions, spawn } from "child_process";
-import * as fs from "fs-extra";
-import * as Zip from "jszip";
+import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { v4 } from "uuid";
+import { createExtractStream } from "yauzlw";
 import { Auth } from "./auth";
 import checksum from "./utils/checksum";
-import { missing } from "./utils/exists";
+import { ensureDir, missing } from "./utils/files";
 import { MinecraftFolder } from "./utils/folder";
 import format from "./utils/format";
 import { Native, Version } from "./version";
@@ -193,18 +193,15 @@ export namespace Launcher {
 
     async function ensureNative(mc: MinecraftFolder, version: Version) {
         const native = mc.getNativesRoot(version.id);
-        await fs.emptyDir(native);
+        await ensureDir(native);
         const natives = version.libraries.filter((lib) => lib instanceof Native) as Native[];
         return Promise.all(natives.map(async (n) => {
             const excluded: string[] = n.extractExclude ? n.extractExclude : [];
             const containsExcludes = (p: string) => excluded.filter((s) => p.startsWith(s)).length === 0;
             const from = mc.getLibraryByPath(n.download.path);
-            const zip = await Zip().loadAsync(await fs.readFile(from));
-            for (const entry of zip.filter(containsExcludes).filter((p) => !p.dir)) {
-                const filePath = path.join(native, entry.name);
-                await fs.ensureFile(filePath);
-                await fs.writeFile(filePath, await entry.async("nodebuffer"));
-            }
+            await fs.createReadStream(from)
+                .pipe(createExtractStream(native, (entry) => containsExcludes(entry.fileName)))
+                .promise();
         }));
     }
 }

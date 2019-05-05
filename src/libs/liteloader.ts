@@ -1,7 +1,8 @@
-import * as fs from "fs-extra";
-import * as Zip from "jszip";
+import * as fs from "fs";
 import * as path from "path";
 import Task from "treelike-task";
+import { bufferEntry, open, parseEntries, ZipFile } from "yauzlw";
+import { ensureDir } from "./utils/files";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { getIfUpdate, UpdatedObject } from "./utils/update";
 import { Version } from "./version";
@@ -99,14 +100,14 @@ export namespace LiteLoader {
         tweakClass: string;
     }
 
-    export async function meta(mod: string | Buffer | Zip) {
-        let zip;
-        if (mod instanceof Zip) {
+    export async function meta(mod: string | Buffer | ZipFile) {
+        let zip: ZipFile;
+        if (mod instanceof ZipFile) {
             zip = mod;
         } else if (mod instanceof Buffer) {
-            zip = await new Zip().loadAsync(mod);
+            zip = await open(mod);
         } else if (typeof mod === "string" && fs.existsSync(mod)) {
-            zip = await new Zip().loadAsync(await fs.readFile(mod));
+            zip = await open(mod);
         } else {
             throw {
                 type: "IllegalInputType",
@@ -114,20 +115,21 @@ export namespace LiteLoader {
                 mod,
             };
         }
-        const json = zip.file("litemod.json");
-        if (json == null) {
+        const { "litemod.json": entry } = await parseEntries(zip, ["litemod.json"]);
+        if (entry == null) {
             throw {
                 type: "IllegalInputType",
                 message: "Illegal input type! Expect a jar file contains litemod.json",
                 mod,
             };
         }
-        return json.async("nodebuffer")
-            .then((data) => JSON.parse(data.toString().trim(), (key, value) => key === "revision" ? Number.parseInt(value, 10) : value) as MetaData)
-            .then((m) => {
-                if (!m.version) { (m as any).version = `${m.name}:${m.version ? m.version : m.mcversion ? m.mcversion + "_" + m.revision || "0" : m.revision || "0"}`; }
-                return m;
-            });
+        const data = await bufferEntry(zip, entry);
+        zip.close();
+        const metadata = JSON.parse(data.toString().trim(), (key, value) => key === "revision" ? Number.parseInt(value, 10) : value) as MetaData;
+        if (!metadata.version) {
+            (metadata as any).version = `${metadata.name}:${metadata.version ? metadata.version : metadata.mcversion ? metadata.mcversion + "_" + metadata.revision || "0" : metadata.revision || "0"}`;
+        }
+        return metadata;
     }
 
     const snapshotRoot = "http://dl.liteloader.com/versions/";
@@ -173,15 +175,15 @@ export namespace LiteLoader {
 
             const mountedJSON: any = await context.execute("resolveMinecraftVersionJson", async () => {
                 if (!fs.existsSync(mc.getVersionJson(mountVersion))) { throw { type: "MissingVersionJson", version: mountVersion, location: mc.root }; }
-                return fs.readJson(mc.getVersionJson(mountVersion));
+                return fs.promises.readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
             });
 
             await context.execute("generateLiteloaderJson", async () => {
                 const versionInf = buildVersionInfo(versionMeta, mountedJSON);
                 const versionPath = mc.getVersionRoot(versionInf.id);
 
-                await fs.ensureDir(versionPath);
-                await fs.writeFile(path.join(versionPath, versionInf.id + ".json"), JSON.stringify(versionInf, undefined, 4));
+                await ensureDir(versionPath);
+                await fs.promises.writeFile(path.join(versionPath, versionInf.id + ".json"), JSON.stringify(versionInf, undefined, 4));
             });
         });
     }
@@ -197,15 +199,15 @@ export namespace LiteLoader {
 
             const mountedJSON: any = await context.execute("resolveMinecraftVersionJson", async () => {
                 if (!fs.existsSync(mc.getVersionJson(mountVersion))) { throw { type: "MissingVersionJson", version: mountVersion, location: mc.root }; }
-                return fs.readJson(mc.getVersionJson(mountVersion));
+                return fs.promises.readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
             });
 
             const versionInf = await context.execute("generateLiteloaderJson", async () => {
                 const inf = buildVersionInfo(versionMeta, mountedJSON);
                 const versionPath = mc.getVersionRoot(inf.id);
 
-                await fs.ensureDir(versionPath);
-                await fs.writeFile(path.join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
+                await ensureDir(versionPath);
+                await fs.promises.writeFile(path.join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
 
                 return inf;
             });

@@ -1,9 +1,9 @@
 import { createHash, Hash } from "crypto";
-import * as fs from "fs-extra";
+import * as fs from "fs";
+import got = require("got");
 import * as http from "http";
 import * as https from "https";
 import { Readable, Writable } from "stream";
-import Task from "treelike-task";
 import * as urls from "url";
 import { DownloadService } from "../services";
 
@@ -108,6 +108,20 @@ async function download(option: DownloadService.Option | DownloadService.CacheOp
     try {
         const { message, url } = await nodeJsRequest(realOption.url, realOption);
 
+        const stream = got.stream(realOption.url, {
+            method: realOption.method,
+            headers: realOption.headers,
+            timeout: realOption.timeout,
+            followRedirect: true,
+        }).on("response", (resp) => {
+
+        }).on("redirect", (res, next) => {
+
+        }).on("data", (data) => {
+
+        }).on("downloadProgress", (progress) => {
+
+        });
         const total = Number.parseInt(message.headers["content-length"] as string, 10);
 
         if (message.statusCode === 304) {
@@ -138,7 +152,7 @@ async function download(option: DownloadService.Option | DownloadService.CacheOp
         }
     } catch (e) {
         if (typeof destination === "string") {
-            await fs.unlink(destination).catch((_) => _);
+            await fs.promises.unlink(destination).catch((_) => _);
         }
         throw { error: e, option };
     }

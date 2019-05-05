@@ -35,6 +35,21 @@ describe("Auth", () => {
             assert.equal(auth.userType, "legacy");
         }
     });
+
+    describe("MojangService", function () {
+        it("should be able to get user challenges", async function () {
+            if (!USERNAME || !PASSWORD) {
+                this.skip();
+            } else {
+                const challenges = await MojangService.getChallenges(auth.accessToken);
+                const set = new Set();
+                for (const cha of challenges) {
+                    assert(set.has(cha.question.question));
+                }
+            }
+        });
+    });
+
     it("should be able to invalidate accessToken", async function () {
         if (!USERNAME || !PASSWORD) {
             this.skip();

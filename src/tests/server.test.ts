@@ -1,6 +1,6 @@
 
 import * as assert from "assert";
-import * as fs from "fs-extra";
+import * as fs from "fs";
 import { Server } from "../index";
 
 describe("Server", () => {

@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import * as fs from "fs-extra";
+import * as fs from "fs";
 import { Forge, Launcher, LiteLoader, MinecraftFolder, NBT, Version, WorldInfo } from "../index";
 
 

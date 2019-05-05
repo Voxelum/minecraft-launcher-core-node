@@ -1,6 +1,6 @@
-import * as fs from "fs-extra";
+import * as fs from "fs";
 import * as path from "path";
-import { missing } from "./utils/exists";
+import { missing } from "./utils/files";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 
 export class Language {
@@ -20,7 +20,7 @@ export namespace Language {
         if (await missing(json)) {
             throw { type: "MissingVersionIndex", location: loca.root };
         }
-        const obj = await fs.readJson(json);
+        const obj = await fs.promises.readFile(json).then((b) => b.toString()).then(JSON.parse);
         const meta = obj.objects["pack.mcmeta"];
         const hash = meta.hash;
         const head = hash.substring(0, 2);
@@ -28,7 +28,7 @@ export namespace Language {
         if (await missing(loc)) {
             throw { type: "PackMcmetaNotExist", hash, location: loca.root };
         }
-        const langs = await fs.readJson(loc);
+        const langs = await fs.promises.readFile(loc).then((b) => b.toString()).then(JSON.parse);
         if (!langs.language) {
             throw { type: "IllegalPackMcmetaStructure", location: loca.root };
         }

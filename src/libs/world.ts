@@ -1,6 +1,7 @@
-import * as fs from "fs-extra";
-import * as Zip from "jszip";
+import * as fs from "fs";
 import * as path from "path";
+import { ZipFile } from "yauzl";
+import { bufferEntry, Entry, open, walkEntries } from "yauzlw";
 import { GameRule, GameType, Pos2, Pos3 } from "./game";
 import { NBT } from "./nbt";
 
@@ -35,17 +36,24 @@ export namespace WorldInfo {
      *
      * @param map the file path or the zip data of the map
      */
-    export async function valid(map: string | Zip): Promise<boolean> {
+    export async function valid(map: string | ZipFile): Promise<boolean> {
         return findEntry(map).then(() => true).catch(() => false);
     }
-    async function findEntryZip(zip: Zip) {
-        if (zip.file("level.dat")) {
-            return "level.dat";
-        }
-        for (const key in zip.files) {
-            if (key.endsWith("/level.dat")) {
-                return key;
+
+    async function findEntryZip(zip: ZipFile) {
+        let result: Entry | undefined;
+        await walkEntries(zip, (entry) => {
+            if (entry.fileName.endsWith("level.dat")) {
+                result = entry;
+                return true;
             }
+        });
+        return result;
+    }
+
+    function findEntryFolder(map: string) {
+        if (fs.existsSync(path.join(map, "level.dat"))) {
+            return path.resolve(map, "level.dat");
         }
         return undefined;
     }
@@ -56,33 +64,42 @@ export namespace WorldInfo {
      *
      * @param map the file path or the zip data of the map
      */
-    export async function findEntry(map: string | Zip): Promise<string> {
+    async function findEntry(map: string | ZipFile): Promise<string | Entry> {
         if (typeof map === "string") {
-            if (!(await fs.stat(map)).isDirectory()) {
-                const zip = await new Zip().loadAsync(await fs.readFile(map));
-                const entry = await findEntryZip(zip);
-                if (entry) { return entry; }
-            } else if (fs.existsSync(path.join(map, "level.dat"))) {
-                return "level.dat";
- }
-        } else {
-            const entry = await findEntryZip(map);
-            if (entry) { return entry; }
+            const entry = findEntryFolder(map);
+            if (entry) { return entry; } else { throw new Error("Illegal Map"); }
         }
-        throw {
-            type: "InvalidWorldEntry",
-            world: map,
-        };
+        const zip = typeof map === "string" ? await open(map) : map;
+        const zipEntry = await findEntryZip(zip);
+        zip.close();
+        if (zipEntry) {
+            return zipEntry;
+        } else {
+            throw new Error("Illegal Map");
+        }
     }
     /**
      * Read the map file to worldinfo
      *
      * @param map the file path or the zip data of the map
      */
-    export async function read(map: string | Zip): Promise<WorldInfo> {
-        const entry = await findEntry(map);
-        const buf = await fs.readFile(entry);
-        return parse(buf);
+    export async function read(map: string | ZipFile): Promise<WorldInfo> {
+        if (typeof map === "string") {
+            const entry = findEntryFolder(map);
+            if (entry) {
+                return fs.promises.readFile(entry).then(parse);
+            } else {
+                throw new Error("Illegal Map");
+            }
+        }
+        const zip = typeof map === "string" ? await open(map) : map;
+        const zipEntry = await findEntryZip(zip);
+        zip.close();
+        if (zipEntry) {
+            return bufferEntry(zip, zipEntry).then(parse);
+        } else {
+            throw new Error("Illegal Map");
+        }
     }
 
     /**
