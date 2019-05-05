@@ -1,9 +1,8 @@
 import fileType = require("file-type");
 import * as fs from "fs";
 import * as path from "path";
-import { ZipFile } from "yauzl";
-import { bufferEntry, Entry, open, walkEntries } from "yauzlw";
-import { deflate, inflate, inflateSync, unzip, unzipSync } from "zlib";
+import { bufferEntry, Entry, open, walkEntries, ZipFile } from "yauzlw";
+import { inflateSync } from "zlib";
 import { GameRule, GameType, Pos2, Pos3 } from "./game";
 import { NBT } from "./nbt";
 
@@ -365,7 +364,7 @@ export namespace WorldInfo {
     }
 
     export async function load<K extends string & keyof World & ("players" | "advancements" | "level")>(location: string, entries: K[]): Promise<Pick<World, K | "path">> {
-        const isDir = await fs.stat(location).then((s) => s.isDirectory());
+        const isDir = await fs.promises.stat(location).then((s) => s.isDirectory());
         const enabledFunction = entries.reduce((o, v) => { o[v] = true; return o; }, {} as { [k: string]: boolean });
         const result: Partial<World> & Pick<World, "players" | "advancements"> = {
             path: path.resolve(location),
@@ -373,41 +372,41 @@ export namespace WorldInfo {
             advancements: [],
         };
         if (!isDir) {
-            const buffer = await fs.readFile(location);
+            const buffer = await fs.promises.readFile(location);
             const ft = fileType(buffer);
             if (!ft || ft.ext !== "zip") { throw new Error("IllgalMapFormat"); }
 
-            const zip = await yauzl.open(buffer);
-            await yauzl.walkEntries(zip, (e) => {
+            const zip = await open(buffer);
+            await walkEntries(zip, (e) => {
                 if (enabledFunction.level && e.fileName === "level.dat") {
-                    return yauzl.bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((l) => { result.level = l as any; });
+                    return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((l) => { result.level = l as any; });
                 }
                 if (enabledFunction.players && e.fileName.match(/^playerdata\/[0-9a-z\-]+\.dat$/)) {
-                    return yauzl.bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((r) => { result.players.push(r as any); });
+                    return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((r) => { result.players.push(r as any); });
                 }
                 if (enabledFunction.advancements && e.fileName.match(/^advancements\/[0-9a-z\-]+\.json$/)) {
-                    return yauzl.bufferEntry(zip, e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); });
+                    return bufferEntry(zip, e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); });
                 }
                 return undefined;
             });
         } else {
             const promises: Array<Promise<any>> = [];
             if (enabledFunction.level) {
-                promises.push(fs.readFile("level.dat").then(NBT.Serializer.deserialize).then((l) => { result.level = l as any; }));
+                promises.push(fs.promises.readFile("level.dat").then(NBT.Serializer.deserialize).then((l) => { result.level = l as any; }));
             }
             if (enabledFunction.players) {
-                promises.push(fs.readdir(path.resolve(location, "playerdata")).then(
+                promises.push(fs.promises.readdir(path.resolve(location, "playerdata")).then(
                     (files) => Promise.all(files.map((f) => path.resolve(location, "playerdata", f))
-                        .map((p) => fs.readFile(p)
+                        .map((p) => fs.promises.readFile(p)
                             .then(NBT.Serializer.deserialize).then((r) => { result.players.push(r as any); }),
                         )),
                     () => { },
                 ));
             }
             if (enabledFunction.advancements) {
-                promises.push(fs.readdir(path.resolve(location, "advancements")).then(
+                promises.push(fs.promises.readdir(path.resolve(location, "advancements")).then(
                     (files) => Promise.all(files.map((f) => path.resolve(location, "advancements", f))
-                        .map((p) => fs.readFile(p)
+                        .map((p) => fs.promises.readFile(p)
                             .then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); }),
                         )),
                     () => { },
