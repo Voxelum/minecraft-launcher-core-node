@@ -1,10 +1,9 @@
 import * as ByteBuffer from "bytebuffer";
-import * as fileType from "file-type";
 import * as Long from "long";
-import * as gzip from "zlib";
+import * as zlib from "zlib";
+import { NBT } from "./nbt";
 import { readUTF8, writeUTF8 } from "./utils/utf8";
 
-import { NBT } from "./nbt";
 
 type Finder = (schema: CompoundSchema) => string | undefined;
 
@@ -55,9 +54,8 @@ NBT.Serializer = class Serializer {
         return new Serializer();
     }
     static deserialize(fileData: Buffer, compressed?: boolean): NBT.TypedObject {
-        const fType = fileType(fileData);
-        if (fType && fType.ext === "gz") {
-            const { value, type } = readRootTag(ByteBuffer.wrap(gzip.gunzipSync(fileData)));
+        if (compressed) {
+            const { value, type } = readRootTag(ByteBuffer.wrap(zlib.unzipSync(fileData)));
             deepFreeze(type);
             Object.defineProperty(value, "__nbtPrototype__", { value: type });
             return value;
@@ -87,9 +85,8 @@ NBT.Serializer = class Serializer {
         return writeRootTag(object, compressed, schema, (id) => this.registry[id]);
     }
     deserialize(fileData: Buffer, compressed: boolean = false): { value: any, type: any | string } {
-        const fType = fileType(fileData);
-        if (fType && fType.ext === "gz") {
-            const zip = gzip.gunzipSync(fileData);
+        if (compressed) {
+            const zip = zlib.unzipSync(fileData);
             const bytebuffer = ByteBuffer.wrap(zip);
             return readRootTag(bytebuffer, (shape) => this.reversedRegistry[JSON.stringify(shape)]);
         } else {
@@ -106,7 +103,7 @@ function writeRootTag(value: any, compressed: boolean, scope?: Scope, find?: (id
     visitors[NBT.TagType.Compound].write(buffer, value, scope, find);
 
     if (compressed) {
-        return gzip.gzipSync(Buffer.from(buffer.flip().toArrayBuffer()));
+        return zlib.gzipSync(Buffer.from(buffer.flip().toArrayBuffer()));
     } else {
         return Buffer.from(buffer.flip().toArrayBuffer());
     }
@@ -115,7 +112,7 @@ function writeRootTag(value: any, compressed: boolean, scope?: Scope, find?: (id
 function readRootTag(buffer: ByteBuffer, find?: Finder) {
     const rootType = buffer.readByte();
     if (rootType === 0) { throw new Error("NBTEnd"); }
-    if (rootType !== 10) { throw new Error("Root tag must be a named compound tag."); }
+    if (rootType !== 10) { throw new Error("Root tag must be a named compound tag. " + rootType); }
     readUTF8(buffer); // I think this is the nameProperty of the file...
     return visitors[NBT.TagType.Compound].read(buffer, find) as { type: CompoundSchema | string, value: any };
 }
@@ -144,7 +141,7 @@ const visitors: IO[] = [
     { read: (buf) => val(NBT.TagType.Double, buf.readDouble()), write(buf, v) { buf.writeDouble(v ? v : 0); } }, // double
     { // byte array
         read(buf) {
-            const arr = new Array<number>(buf.readInt());
+            const arr = new Int8Array(buf.readInt());
             for (let i = 0; i < arr.length; i++) { arr[i] = buf.readByte(); }
             return val(NBT.TagType.ByteArray, arr);
         },
@@ -268,7 +265,7 @@ const visitors: IO[] = [
     },
     { // int array
         read(buf) {
-            const arr: number[] = new Array(buf.readInt());
+            const arr = new Int32Array(buf.readInt());
             for (let i = 0; i < arr.length; i++) { arr[i] = buf.readInt(); }
             return val(NBT.TagType.IntArray, arr);
         },
