@@ -1,4 +1,5 @@
 import * as ByteBuffer from "bytebuffer";
+import * as fileType from "file-type";
 import * as Long from "long";
 import * as gzip from "zlib";
 import { readUTF8, writeUTF8 } from "./utils/utf8";
@@ -54,7 +55,8 @@ NBT.Serializer = class Serializer {
         return new Serializer();
     }
     static deserialize(fileData: Buffer, compressed?: boolean): NBT.TypedObject {
-        if (compressed) {
+        const fType = fileType(fileData);
+        if (fType && fType.ext === "gz") {
             const { value, type } = readRootTag(ByteBuffer.wrap(gzip.gunzipSync(fileData)));
             deepFreeze(type);
             Object.defineProperty(value, "__nbtPrototype__", { value: type });
@@ -73,7 +75,7 @@ NBT.Serializer = class Serializer {
     private registry: { [id: string]: CompoundSchema } = {};
     private reversedRegistry: { [shape: string]: string } = {};
     register(type: string, schema: CompoundSchema): this {
-        if (schema === undefined) { throw new Error(); }
+        if (typeof schema !== "object" || schema === null) { throw new Error(); }
         this.registry[type] = schema;
         this.reversedRegistry[JSON.stringify(schema)] = type;
         return this;
@@ -85,7 +87,8 @@ NBT.Serializer = class Serializer {
         return writeRootTag(object, compressed, schema, (id) => this.registry[id]);
     }
     deserialize(fileData: Buffer, compressed: boolean = false): { value: any, type: any | string } {
-        if (compressed) {
+        const fType = fileType(fileData);
+        if (fType && fType.ext === "gz") {
             const zip = gzip.gunzipSync(fileData);
             const bytebuffer = ByteBuffer.wrap(zip);
             return readRootTag(bytebuffer, (shape) => this.reversedRegistry[JSON.stringify(shape)]);
@@ -133,12 +136,12 @@ function ensureType(type: string, v: any) {
 
 const visitors: IO[] = [
     { read: (buf) => val(NBT.TagType.End, undefined), write(buf, v) { } }, // end
-    { read: (buf) => val(NBT.TagType.Byte, buf.readByte()), write(buf, v) { buf.writeByte(v); } }, // byte
-    { read: (buf) => val(NBT.TagType.Short, buf.readShort()), write(buf, v) { buf.writeShort(v); } }, // short
-    { read: (buf) => val(NBT.TagType.Int, buf.readInt()), write(buf, v) { buf.writeInt(v); } }, // int
-    { read: (buf) => val(NBT.TagType.Long, buf.readLong()), write(buf, v) { buf.writeInt64(v); } }, // long
-    { read: (buf) => val(NBT.TagType.Float, buf.readFloat()), write(buf, v) { buf.writeFloat(v); } }, // float
-    { read: (buf) => val(NBT.TagType.Double, buf.readDouble()), write(buf, v) { buf.writeDouble(v); } }, // double
+    { read: (buf) => val(NBT.TagType.Byte, buf.readByte()), write(buf, v) { buf.writeByte(v ? v : 0); } }, // byte
+    { read: (buf) => val(NBT.TagType.Short, buf.readShort()), write(buf, v) { buf.writeShort(v ? v : 0); } }, // short
+    { read: (buf) => val(NBT.TagType.Int, buf.readInt()), write(buf, v) { buf.writeInt(v ? v : 0); } }, // int
+    { read: (buf) => val(NBT.TagType.Long, buf.readLong()), write(buf, v) { buf.writeInt64(v ? v : 0); } }, // long
+    { read: (buf) => val(NBT.TagType.Float, buf.readFloat()), write(buf, v) { buf.writeFloat(v ? v : 0); } }, // float
+    { read: (buf) => val(NBT.TagType.Double, buf.readDouble()), write(buf, v) { buf.writeDouble(v ? v : 0); } }, // double
     { // byte array
         read(buf) {
             const arr = new Array<number>(buf.readInt());
@@ -146,13 +149,16 @@ const visitors: IO[] = [
             return val(NBT.TagType.ByteArray, arr);
         },
         write(buf, arr) {
+            if (arr === null || arr === undefined) {
+                arr = [];
+            }
             buf.writeInt(arr.length);
             for (let i = 0; i < arr.length; i++) { buf.writeByte(arr[i]); }
         },
     },
     { // string
         read(buf) { return val(NBT.TagType.String, readUTF8(buf)); },
-        write(buf, v) { writeUTF8(buf, v); },
+        write(buf, v) { writeUTF8(buf, v ? v : ""); },
     },
     { // list
         read(buf, find) {
@@ -169,21 +175,24 @@ const visitors: IO[] = [
         },
         write(buf, value: any[], scope, find) {
             if (!scope || !find) { throw new Error("Missing list scope!"); }
+            if (value === null || value === undefined) {
+                value = [];
+            }
             const type = (scope as ArraySchema)[0];
             switch (typeof type) {
-                case "number":
+                case "number": // type enum
                     buf.writeByte(type as number);
                     buf.writeInt(value.length);
                     for (const v of value) { visitors[type as number].write(buf, v); }
                     break;
-                case "string":
+                case "string": // custom registered type
                     const customScope = find(type as string);
                     if (!customScope) { throw new Error(`Unknown custom type [${type}]`); }
                     buf.writeByte(NBT.TagType.Compound);
                     buf.writeInt(value.length);
                     for (const v of value) { visitors[NBT.TagType.Compound].write(buf, v, customScope, find); }
                     break;
-                case "object":
+                case "object": // custom type
                     buf.writeByte(NBT.TagType.Compound);
                     buf.writeInt(value.length);
                     for (const v of value) { visitors[NBT.TagType.Compound].write(buf, v, type as CompoundSchema, find); }
@@ -201,7 +210,6 @@ const visitors: IO[] = [
         read(buf, find) {
             const object: any = {};
             const scope: CompoundSchema = {};
-            const a: ArraySchema = [2];
             for (let tag = 0; (tag = buf.readByte()) !== 0;) {
                 const name = readUTF8(buf);
                 const visitor = visitors[tag];
@@ -215,23 +223,25 @@ const visitors: IO[] = [
         },
         write(buf, object, scope, find) {
             if (!scope || !find) { throw new Error(); }
+            if (object === null || object === undefined) {
+                object = {};
+            }
             Object.keys(object).forEach((key) => {
                 const value = object[key];
-                if (!value) { return; }
                 const type = (scope as CompoundSchema)[key];
                 let nextScope: Scope | undefined;
                 let nextType = type;
 
-                if (typeof type === "number") {
+                if (typeof type === "number") { // common enum type
                     nextType = type;
-                } else if (type instanceof Array) {
-                    nextScope = type as ArraySchema;
+                } else if (type instanceof Array) { // array type
                     nextType = NBT.TagType.List;
-                } else if (typeof type === "string") {
+                    nextScope = type as ArraySchema;
+                } else if (typeof type === "string") { // custom type
                     nextType = NBT.TagType.Compound;
-                    nextScope = find(type);  // support custom type
+                    nextScope = find(type);
                     if (!nextScope) { throw new Error(`Unknown custom type [${type}]`); }
-                } else if (typeof type === "object") {
+                } else if (typeof type === "object") { // tagged compund type
                     nextType = NBT.TagType.Compound;
                     nextScope = type;
                 } else {
@@ -263,6 +273,9 @@ const visitors: IO[] = [
             return val(NBT.TagType.IntArray, arr);
         },
         write(buf, v) {
+            if (v === null || v === undefined) {
+                v = [];
+            }
             buf.writeInt(v.length);
             for (let i = 0; i < v.length; i++) { buf.writeInt(v[i]); }
         },
@@ -275,6 +288,9 @@ const visitors: IO[] = [
             return val(NBT.TagType.LongArray, arr);
         },
         write(buf, v) {
+            if (v === null || v === undefined) {
+                v = [];
+            }
             buf.writeInt(v.length);
             for (let i = 0; i < v.length; i++) { buf.writeInt64(v[i]); }
         },
