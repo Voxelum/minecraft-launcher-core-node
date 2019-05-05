@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import {
     GameSetting, Language,
-    ResourcePack, TextComponent, WorldInfo,
+    ResourcePack, TextComponent, World,
 } from "../index";
 
 describe("TextComponent", () => {

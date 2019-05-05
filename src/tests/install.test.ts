@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as fs from "fs";
-import { Forge, Launcher, LiteLoader, MinecraftFolder, NBT, Version, WorldInfo } from "../index";
+import { Forge, LiteLoader, MinecraftFolder, NBT, Version, World } from "../index";
 
 
 describe("Install", function () {

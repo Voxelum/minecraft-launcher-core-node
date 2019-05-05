@@ -1,7 +1,7 @@
 import * as ByteBuffer from "bytebuffer";
 import * as Long from "long";
 import * as gzip from "zlib";
-import { readUTF8, writeUTF8 } from "./utils/utf8";
+import { readUTF8, writeUTF8 } from "./utils/common";
 
 /**
  * @author yuxuanchiadm

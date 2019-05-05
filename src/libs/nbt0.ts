@@ -2,7 +2,7 @@ import * as ByteBuffer from "bytebuffer";
 import * as Long from "long";
 import * as zlib from "zlib";
 import { NBT } from "./nbt";
-import { readUTF8, writeUTF8 } from "./utils/utf8";
+import { readUTF8, writeUTF8 } from "./utils/common";
 
 
 type Finder = (schema: CompoundSchema) => string | undefined;

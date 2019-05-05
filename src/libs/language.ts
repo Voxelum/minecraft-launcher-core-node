@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { missing } from "./utils/files";
+import { missing } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 
 export class Language {

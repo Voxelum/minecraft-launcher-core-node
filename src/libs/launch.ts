@@ -5,10 +5,8 @@ import * as path from "path";
 import { v4 } from "uuid";
 import { createExtractStream } from "yauzlw";
 import { Auth } from "./auth";
-import checksum from "./utils/checksum";
-import { ensureDir, missing } from "./utils/files";
+import { computeChecksum, ensureDir, format, missing } from "./utils/common";
 import { MinecraftFolder } from "./utils/folder";
-import format from "./utils/format";
 import { Native, Version } from "./version";
 
 
@@ -178,7 +176,7 @@ export namespace Launcher {
             };
         }
         const corruptedMask = await Promise.all(version.libraries
-            .map((lib) => checksum(resourcePath.getLibraryByPath(lib.download.path))
+            .map((lib) => computeChecksum(resourcePath.getLibraryByPath(lib.download.path))
                 .then((sum) => lib.download.sha1 !== "" && sum !== lib.download.sha1)),
         );
         const corruptedLibs = version.libraries.filter((_, index) => corruptedMask[index]);

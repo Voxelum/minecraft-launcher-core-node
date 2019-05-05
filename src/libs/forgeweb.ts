@@ -1,5 +1,5 @@
 import Forge from "./forge";
-import { getIfUpdate, UpdatedObject } from "./utils/update";
+import { getIfUpdate, UpdatedObject } from "./utils/network";
 
 export namespace ForgeWebPage {
     const parser = require("fast-html-parser");

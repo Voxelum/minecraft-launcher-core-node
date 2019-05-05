@@ -1,14 +1,12 @@
-import * as crypto from "crypto";
 import * as fs from "fs";
-import got = require("got");
+import got from "got";
 import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from "java-asm";
 import * as path from "path";
 import Task from "treelike-task";
 import { Entry, ZipFile } from "yauzl";
-import { bufferEntry, createExtractStream, createParseEntriesStream, open, openEntryReadStream, parseEntries, walkEntries } from "yauzlw";
+import { bufferEntry, createExtractStream, open, walkEntries } from "yauzlw";
 import { DownloadService } from "./services";
-import { multiChecksum } from "./utils/checksum";
-import { ensureDir, exists } from "./utils/files";
+import { ensureDir, exists, multiChecksum } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { Version } from "./version";
 
@@ -316,14 +314,6 @@ export namespace Forge {
     }
 
     export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
-
-    function validateCheckSum(data: Buffer, algorithm: string, expectValue: string) {
-        try {
-            return expectValue === crypto.createHash(algorithm).update(data).digest("hex");
-        } catch (e) {
-            return false;
-        }
-    }
 
     function installTask0(version: VersionMeta, minecraft: MinecraftLocation, maven: string) {
         return async (context: Task.Context) => {

@@ -1,178 +1,160 @@
 import fileType = require("file-type");
 import * as fs from "fs";
 import * as path from "path";
-import { bufferEntry, Entry, open, walkEntries, ZipFile } from "yauzlw";
+import { bufferEntry, open, walkEntries } from "yauzlw";
 import { inflateSync } from "zlib";
-import { GameRule, GameType, Pos2, Pos3 } from "./game";
+import { GameType } from "./game";
 import { NBT } from "./nbt";
+export interface PlayerDataFrame {
+    UUIDLeast: Long;
+    UUIDMost: Long;
+    DataVersion: number;
 
-export class WorldInfo {
-    constructor(
-        // readonly filename: string,
-        readonly sizeOnDisk: Long,
-        readonly lastPlayed: Long,
-        readonly gameRule: GameRule,
-        readonly dataVersion: number,
-        readonly version: { snapshot?: number, id: number, name: string },
-        readonly generatorName: string,
+    Pos: [
+        number, number, number
+    ];
+    Rotation: [
+        number, number, number
+    ];
+    Motion: [
+        number, number, number
+    ];
+    Dimension: number;
 
-        public displayName: string,
-        public difficulty: number,
-        public gameType: GameType,
-        public isHardCore: boolean,
-        public enabledCheat: boolean,
-        public spawnPoint: Pos3,
+    SpawnX: number;
+    SpawnY: number;
+    SpawnZ: number;
 
-        public borderCenter: Pos2,
-        public borderDamagePerBlock: number,
-        public borderWarningBlocks: number,
-        public BorderSizeLerpTarget: number,
-    ) { }
-}
+    playerGameType: number;
 
-interface PlayerDataFrame {
-    "HurtByTimestamp": number;
-    "SleepTimer": number;
-    "SpawnForced": number;
-    "Attributes": Array<{
-        "Base": number,
-        "Name": string,
+    Attributes: Array<{
+        Base: number,
+        Name: string,
     }>;
-    "Invulnerable": number;
-    "FallFlying": number;
-    "PortalCooldown": number;
-    "AbsorptionAmount": number;
-    "abilities": {
-        "invulnerable": number,
-        "mayfly": number,
-        "instabuild": number,
-        "walkSpeed": number,
-        "mayBuild": number,
-        "flying": number,
-        "flySpeed": number,
+
+    HurtTime: number;
+    DeathTime: number;
+    HurtByTimestamp: number;
+    SleepTimer: number;
+    SpawnForced: number;
+    FallDistance: number;
+    SelectedItemSlot: number;
+    seenCredits: number;
+
+    Air: number;
+    AbsorptionAmount: number;
+    Invulnerable: number;
+    FallFlying: number;
+    PortalCooldown: number;
+    Health: number;
+    OnGround: number;
+    XpLevel: number;
+    Score: number;
+    Sleeping: number;
+    Fire: number;
+    XpP: number;
+    XpSeed: number;
+    XpTotal: number;
+
+    foodLevel: number;
+    foodExhaustionLevel: number;
+    foodTickTimer: number;
+    foodSaturationLevel: number;
+
+    recipeBook: {
+        isFilteringCraftable: number,
+        isGuiOpen: number,
     };
-    "FallDistance": number;
-    "recipeBook": {
-        "isFilteringCraftable": number,
-        "isGuiOpen": number,
+    abilities: {
+        invulnerable: number,
+        mayfly: number,
+        instabuild: number,
+        walkSpeed: number,
+        mayBuild: number,
+        flying: number,
+        flySpeed: number,
     };
-    "DeathTime": number;
-    "XpSeed": number;
-    "XpTotal": number;
-    "playerGameType": number;
-    "seenCredits": number;
-    "Motion": [
-        number, number, number
-    ];
-    "SpawnY": number;
-    "UUIDLeast": Long;
-    "Health": number;
-    "SpawnZ": number;
-    "foodSaturationLevel": number;
-    "SpawnX": number;
-    "Air": number;
-    "OnGround": number;
-    "Dimension": number;
-    "XpLevel": number;
-    "Score": number;
-    "UUIDMost": Long;
-    "Sleeping": number;
-    "Fire": number;
-    "XpP": number;
-    "DataVersion": number;
-    "foodLevel": number;
-    "foodExhaustionLevel": number;
-    "HurtTime": number;
-    "SelectedItemSlot": number;
-    "foodTickTimer": number;
-    "Rotation": [
-        number, number, number
-    ];
-    "Pos": [
-        number, number, number
-    ];
 }
 
 type StringBoolean = "true" | "false";
 export interface LevelDataFrame {
-    "BorderCenterX": number;
-    "BorderCenterZ": number;
-    "BorderDamagePerBlock": number;
-    "BorderSafeZone": number;
-    "BorderSize": number;
-    "BorderSizeLerpTarget": number;
-    "BorderSizeLerpTime": Long;
-    "BorderWarningBlocks": number;
-    "BorderWarningTime": number;
-    "DataVersion": number;
-    "DayTime": Long;
-    "Difficulty": number;
-    "DifficultyLocked": number;
-    "DimensionData": {
-        "1": {
-            "DragonFight": {
-                "Gateways": [
-                    number
-                ],
-                "DragonKilled": number,
-                "PreviouslyKilled": number,
+    BorderCenterX: number;
+    BorderCenterZ: number;
+    BorderDamagePerBlock: number;
+    BorderSafeZone: number;
+    BorderSize: number;
+    BorderSizeLerpTarget: number;
+    BorderSizeLerpTime: Long;
+    BorderWarningBlocks: number;
+    BorderWarningTime: number;
+    DataVersion: number;
+    DayTime: Long;
+    Difficulty: number;
+    DifficultyLocked: number;
+    DimensionData: {
+        [dimension: number]: {
+            DragonFight: {
+                Gateways: number[],
+                DragonKilled: number,
+                PreviouslyKilled: number,
+                ExitPortalLocation?: [number, number, number],
             },
         },
     };
-    "GameRules": {
-        "doTileDrops": StringBoolean,
-        "doFireTick": StringBoolean,
-        "gameLoopFunction": string,
-        "maxCommandChainLength": string,
-        "reducedDebugInfo": string,
-        "naturalRegeneration": string,
-        "disableElytraMovementCheck": string,
-        "doMobLoot": StringBoolean,
-        "announceAdvancements": string,
-        "keepInventory": StringBoolean,
-        "doEntityDrops": StringBoolean,
-        "doLimitedCrafting": StringBoolean,
-        "mobGriefing": StringBoolean,
-        "randomTickSpeed": string,
-        "commandBlockOutput": string,
-        "spawnRadius": string,
-        "doMobSpawning": StringBoolean,
-        "maxEntityCramming": string,
-        "logAdminCommands": string,
-        "spectatorsGenerateChunks": string,
-        "doWeatherCycle": StringBoolean,
-        "sendCommandFeedback": string,
-        "doDaylightCycle": StringBoolean,
-        "showDeathMessages": StringBoolean,
+    GameRules: {
+        doTileDrops: StringBoolean,
+        doFireTick: StringBoolean,
+        gameLoopFunction: string,
+        maxCommandChainLength: string,
+        reducedDebugInfo: string,
+        naturalRegeneration: string,
+        disableElytraMovementCheck: string,
+        doMobLoot: StringBoolean,
+        announceAdvancements: string,
+        keepInventory: StringBoolean,
+        doEntityDrops: StringBoolean,
+        doLimitedCrafting: StringBoolean,
+        mobGriefing: StringBoolean,
+        randomTickSpeed: string,
+        commandBlockOutput: string,
+        spawnRadius: string,
+        doMobSpawning: StringBoolean,
+        maxEntityCramming: string,
+        logAdminCommands: string,
+        spectatorsGenerateChunks: string,
+        doWeatherCycle: StringBoolean,
+        sendCommandFeedback: string,
+        doDaylightCycle: StringBoolean,
+        showDeathMessages: StringBoolean,
     };
-    "GameType": GameType;
-    "LastPlayed": Long;
-    "LevelName": string;
-    "MapFeatures": number;
-    "Player": PlayerDataFrame;
-    "RandomSeed": Long;
-    readonly "SizeOnDisk": Long;
-    "SpawnX": number;
-    "SpawnY": number;
-    "SpawnZ": number;
-    "Time": Long;
-    "Version": {
-        "Snapshot": number,
-        "Id": number,
-        "Name": string,
+    GameType: GameType;
+    LastPlayed: Long;
+    LevelName: string;
+    MapFeatures: number;
+    Player: PlayerDataFrame;
+    RandomSeed: Long;
+    readonly SizeOnDisk: Long;
+    SpawnX: number;
+    SpawnY: number;
+    SpawnZ: number;
+    Time: Long;
+    Version: {
+        Snapshot: number,
+        Id: number,
+        Name: string,
     };
-    "allowCommands": number;
-    "clearWeatherTime": number;
-    "generatorName": "default" | "flat" | "largeBiomes" | "amplified" | "buffet" | "debug_all_block_states" | string;
-    "generatorOptions": string;
-    "generatorVersion": number;
-    "hardcore": number;
-    "initialized": number;
-    "rainTime": number;
-    "raining": number;
-    "thunderTime": number;
-    "thundering": number;
-    "version": number;
+    allowCommands: number;
+    clearWeatherTime: number;
+    generatorName: "default" | "flat" | "largeBiomes" | "amplified" | "buffet" | "debug_all_block_states" | string;
+    generatorOptions: string;
+    generatorVersion: number;
+    hardcore: number;
+    initialized: number;
+    rainTime: number;
+    raining: number;
+    thunderTime: number;
+    thundering: number;
+    version: number;
 }
 export interface World {
     path: string;
@@ -200,6 +182,52 @@ export interface ItemStackDataFrame {
     id: string;
     Count: number;
     Damage: number;
+    tag?: {
+        // general tags
+        Unbreakable: number,
+        CanDestroy: string[],
+
+        // block tags
+        CanPlaceOn: string[],
+        BlockEntityTag: {
+            // entity format
+        },
+
+        // enchantments
+        ench: Array<{ id: number, lvl: number }>,
+        StoredEnchantments: Array<{ id: number, lvl: number }>,
+        RepairCost: number,
+
+        // attribute modifiers
+        AttributeModifiers: Array<{ AttributeName: string, Name: string, Slot: string, Operation: number, Amount: number, UUIDMost: Long, UUIDLeast: Long }>,
+
+        // potion effects
+        CustomPotionEffects: Array<{ Id: number, Amplifier: number, Duration: number, Ambient: number, ShowParticles: number }>,
+        Potion: string,
+        CustomPotionColor: number,
+
+        // display properties
+        display: Array<{ color: number, Name: string, LocName: string, Lore: string[] }>,
+        HideFlags: number,
+
+        // written books
+        resolved: number,
+        /**
+         * The copy tier of the book. 0 = original, number = copy of original, number = copy of copy, number = tattered.
+         * If the value is greater than number, the book cannot be copied. Does not exist for original books.
+         * If this tag is missing, it is assumed the book is an original. 'Tattered' is unused in normal gameplay, and functions identically to the 'copy of copy' tier.
+         */
+        generation: number,
+        author: string,
+        title: string,
+        /**
+         * A single page in the book. If generated by writing in a book and quill in-game, each page is a string in double quotes and uses the escape sequences \" for a double quote,
+         * for a line break and \\ for a backslash. If created by commands or external tools, a page can be a serialized JSON object or an array of strings and/or objects (see Commands#Raw JSON text) or an unescaped string.
+         */
+        pages: string[],
+
+        // player heads
+    };
 }
 export interface TileEntityDataFrame {
     x: number;
@@ -210,7 +238,7 @@ export interface TileEntityDataFrame {
     [key: string]: any;
 }
 
-export interface ChunkDataFrame {
+export interface RegionDataFrame {
     Level: {
         xPos: number;
         zPos: number;
@@ -230,110 +258,11 @@ export interface ChunkDataFrame {
             SkyLight: number[],
             Y: number,
         }>;
-    }; DataVersion: number;
+    };
+    DataVersion: number;
 }
 
-export namespace WorldInfo {
-    /**
-     * Validate the map. (if the level.dat exist)
-     *
-     * This Promise will not reject but always get true or false to determine if the map is valid
-     *
-     * @param map the file path or the zip data of the map
-     */
-    export async function valid(map: string | ZipFile): Promise<boolean> {
-        return findEntry(map).then(() => true).catch(() => false);
-    }
-
-    async function findEntryZip(zip: ZipFile) {
-        let result: Entry | undefined;
-        await walkEntries(zip, (entry) => {
-            if (entry.fileName.endsWith("level.dat")) {
-                result = entry;
-                return true;
-            }
-        });
-        return result;
-    }
-
-    function findEntryFolder(map: string) {
-        if (fs.existsSync(path.join(map, "level.dat"))) {
-            return path.resolve(map, "level.dat");
-        }
-        return undefined;
-    }
-    /**
-     * Find the entry (level.dat) of the map.
-     * The map could be file or zip.
-     * The promise will reject when the map is invalid!
-     *
-     * @param map the file path or the zip data of the map
-     */
-    async function findEntry(map: string | ZipFile): Promise<string | Entry> {
-        if (typeof map === "string") {
-            const entry = findEntryFolder(map);
-            if (entry) { return entry; } else { throw new Error("Illegal Map"); }
-        }
-        const zip = typeof map === "string" ? await open(map) : map;
-        const zipEntry = await findEntryZip(zip);
-        zip.close();
-        if (zipEntry) {
-            return zipEntry;
-        } else {
-            throw new Error("Illegal Map");
-        }
-    }
-    /**
-     * Read the map file to worldinfo
-     *
-     * @param map the file path or the zip data of the map
-     */
-    export async function read(map: string | ZipFile): Promise<WorldInfo> {
-        if (typeof map === "string") {
-            const entry = findEntryFolder(map);
-            if (entry) {
-                return fs.promises.readFile(entry).then(parse);
-            } else {
-                throw new Error("Illegal Map");
-            }
-        }
-        const zip = typeof map === "string" ? await open(map) : map;
-        const zipEntry = await findEntryZip(zip);
-        zip.close();
-        if (zipEntry) {
-            return bufferEntry(zip, zipEntry).then(parse);
-        } else {
-            throw new Error("Illegal Map");
-        }
-    }
-
-    /**
-     * Parse the buf as world info
-     *
-     * @param buf
-     */
-    export function parse(buf: Buffer): WorldInfo {
-        const nbt = NBT.Serializer.deserialize(buf, true);
-        const root = nbt.Data;
-        return new WorldInfo(root.LevelName, root.SizeOnDisk, root.LastPlayed, root.GameRules,
-            root.DataVersion, root.Version, root.generatorName,
-            root.Difficulty, root.GameType, root.hardcore === 1, root.allowCommands === 1,
-            { x: root.SpawnX, y: root.SpawnY, z: root.SpawnZ },
-            { x: root.BorderCenterX, z: root.BorderCenterZ },
-            root.BorderDamagePerBlock, root.BorderWarningBlocks, root.BorderSizeLerpTarget);
-    }
-    // export function manipulate(buf: Buffer, info: WorldInfo): Buffer {
-    //     const nbt = NBT.Persistence.readRoot(buf, { compressed: true });
-    //     let data = nbt.asTagCompound().get('Data');
-    //     if (data) {
-    //         data = data.asTagCompound();
-    //         const Tag = NBT.TagScalar;
-    //         data.set('LevelName', Tag.newString(info.displayName));
-    //         data.set('Difficulty', Tag.newInt(info.difficulty));
-    //     }
-    //     return NBT.Persistence.writeRoot(nbt, { compressed: true });
-    // }
-
+export namespace World {
     function getChunkOffset(buffer: Buffer, x: number, z: number) {
         x = Math.abs(((x % 32) + 32) % 32);
         z = Math.abs(((z % 32) + 32) % 32);
@@ -348,7 +277,7 @@ export namespace WorldInfo {
         }
     }
 
-    export function loadChunkFromBuffer(buffer: Buffer, x: number, z: number): ChunkDataFrame {
+    export function loadRegionFromBuffer(buffer: Buffer, x: number, z: number): RegionDataFrame {
         const off = getChunkOffset(buffer, x, z);
         const length = buffer.readInt32BE(off);
         const format = buffer.readUInt8(off + 4);
@@ -356,7 +285,7 @@ export namespace WorldInfo {
             throw new Error(`Cannot resolve chunk with format ${format}.`);
         }
         const chunkData = buffer.slice(off + 5, off + 5 + length);
-        return NBT.Serializer.deserialize(inflateSync(chunkData), false) as any as ChunkDataFrame;
+        return NBT.Serializer.deserialize(inflateSync(chunkData), false) as any as RegionDataFrame;
     }
 
     export function getRegionFile(location: string, x: number, z: number) {
@@ -415,7 +344,6 @@ export namespace WorldInfo {
             await Promise.all(promises);
         }
         return result as any;
-
     }
 
     export function parseLevelData(buffer: Buffer) {
@@ -426,4 +354,4 @@ export namespace WorldInfo {
     }
 }
 
-export default WorldInfo;
+export default World;

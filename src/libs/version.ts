@@ -1,11 +1,10 @@
 import * as fs from "fs";
 import * as paths from "path";
 
-import computeChecksum from "./utils/checksum";
 
 import Task from "treelike-task";
 import { MinecraftFolder, MinecraftLocation } from "../index";
-import { exists, missing } from "./utils/files";
+import { computeChecksum, exists, missing } from "./utils/common";
 
 function getPlatform() {
     const os = require("os");

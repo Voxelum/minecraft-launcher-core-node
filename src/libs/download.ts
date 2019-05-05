@@ -3,11 +3,10 @@ import * as os from "os";
 import * as path from "path";
 import Task from "treelike-task";
 import { DownloadService } from "./services";
-import computeChecksum from "./utils/checksum";
+import { computeChecksum as computeChecksum, ensureDir, exists } from "./utils/common";
 import { decompressXZ, unpack200 } from "./utils/decompress";
-import { ensureDir, exists } from "./utils/files";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
-import { getIfUpdate, UpdatedObject } from "./utils/update";
+import { getIfUpdate, UpdatedObject } from "./utils/network";
 import { Library, Version, VersionMeta } from "./version";
 
 
