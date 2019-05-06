@@ -5,7 +5,7 @@ import { basename, resolve } from "path";
 import { finished as wait } from "stream";
 import Task from "treelike-task";
 import { promisify } from "util";
-import { computeChecksum, exists } from "./common";
+import { computeChecksum, ensureFile, exists } from "./common";
 
 const IS_ELECTRON = process.versions.hasOwnProperty("electron");
 
@@ -60,13 +60,14 @@ export async function downloadIfAbsent(option: DownloadOption) {
     const onProgress = option.progress || (() => { });
     let onData: (chunk: any) => void = () => { };
     const checksum = option.checksum;
-    const isDir = await promises.stat(option.destination).then((s) => s.isDirectory());
+    await ensureFile(option.destination);
+    const isDir = await promises.stat(option.destination).then((s) => s.isDirectory(), (_) => false);
 
     async function isFileValid(file: string) {
         if (checksum !== undefined) {
             return await exists(file) && checksum.hash === await computeChecksum(file, checksum.algorithm);
         } else {
-            return true;
+            return false;
         }
     }
 
