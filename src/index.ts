@@ -1,5 +1,5 @@
-export * from "./libs/services";
-import "./libs/utils/njsdownload";
+import * as Utils from "./libs/utils/network";
+export { Utils };
 export * from "./libs/auth";
 export * from "./libs/game";
 export * from "./libs/server";

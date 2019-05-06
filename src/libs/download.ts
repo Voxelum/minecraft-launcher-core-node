@@ -2,11 +2,10 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import Task from "treelike-task";
-import { DownloadService } from "./services";
 import { computeChecksum as computeChecksum, ensureDir, exists } from "./utils/common";
 import { decompressXZ, unpack200 } from "./utils/decompress";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
-import { getIfUpdate, UpdatedObject } from "./utils/network";
+import { createDownloadWork, fetchBuffer, getIfUpdate, UpdatedObject } from "./utils/network";
 import { Library, Version, VersionMeta } from "./version";
 
 
@@ -140,7 +139,7 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
         const json = folder.getVersionJson(version.id);
         await context.execute("ensureVersionRoot", () => ensureDir(folder.getVersionRoot(version.id)));
         if (!await exists(json)) {
-            await context.execute("downloadJson", DownloadService.downloadTask(version.url, json));
+            await context.execute("downloadJson", createDownloadWork(version.url, json));
         }
         return context.execute("resolveJson", () => Version.parse(minecraft, version.id));
     };
@@ -154,12 +153,12 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
         const jar = path.join(folder.getVersionRoot(version.id), filename);
         const exist = await exists(jar);
         if (!exist) {
-            await context.execute("downloadJar", DownloadService.downloadTask(version.downloads[type].url, jar));
+            await context.execute("downloadJar", createDownloadWork(version.downloads[type].url, jar));
         }
         if (checksum) {
             let hash = await context.execute("checksumJar", () => computeChecksum(jar));
             if (hash !== version.downloads[type].sha1 && exist) {
-                await context.execute("redownloadJar", DownloadService.downloadTask(version.downloads[type].url, jar));
+                await context.execute("redownloadJar", createDownloadWork(version.downloads[type].url, jar));
                 hash = await context.execute("rechecksumJar", () => computeChecksum(jar));
             }
             if (hash !== version.downloads[type].sha1) {
@@ -206,11 +205,11 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
             await ensureDir(path.dirname(filePath));
             if (compressed) {
                 if (!decompressXZ || !unpack200) { throw new Error("Require external support for unpack compressed library!"); }
-                const buff = await context.execute("downloadLib", DownloadService.downloadTask(downloadURL)) as Buffer;
+                const buff = await context.execute("downloadLib", () => fetchBuffer(downloadURL).then((r) => r.body));
                 const decompressed = await context.execute("decompress", async () => decompressXZ(buff));
                 await context.execute("unpack", () => unpack200(decompressed).then((buf) => fs.promises.writeFile(filePath, buf)));
             } else {
-                await DownloadService.downloadTask(downloadURL, filePath)(context);
+                await createDownloadWork(downloadURL, filePath)(context);
             }
         };
         if (!exist) {
@@ -254,11 +253,11 @@ function downloadAsset(content: any, key: string, folder: MinecraftFolder, asset
         const file = path.join(dir, hash);
         const exist = await exists(file);
         if (!exist) {
-            await DownloadService.downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
+            await createDownloadWork(`${assetsHost}/${head}/${hash}`, file)(context);
         } else {
             const sum = await computeChecksum(file);
             if (sum !== hash) {
-                await DownloadService.downloadTask(`${assetsHost}/${head}/${hash}`, file)(context);
+                await createDownloadWork(`${assetsHost}/${head}/${hash}`, file)(context);
             }
         }
     };
@@ -272,7 +271,7 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
         if (!(await exists(jsonPath))) {
             await ensureDir(path.join(folder.assets, "indexes"));
-            await context.execute("downloadAssetsJson", DownloadService.downloadTask(version.assetIndex.url, jsonPath));
+            await context.execute("downloadAssetsJson", createDownloadWork(version.assetIndex.url, jsonPath));
         }
         const content: any = JSON.parse(await fs.promises.readFile(jsonPath).then((b) => b.toString())).objects;
         await ensureDir(folder.getPath("assets", "objects"));

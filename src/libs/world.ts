@@ -307,13 +307,13 @@ export namespace World {
 
             const zip = await open(buffer);
             await walkEntries(zip, (e) => {
-                if (enabledFunction.level && e.fileName === "level.dat") {
+                if (enabledFunction.level && e.fileName.endsWith("/level.dat")) {
                     return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((l) => { result.level = l as any; });
                 }
-                if (enabledFunction.players && e.fileName.match(/^playerdata\/[0-9a-z\-]+\.dat$/)) {
+                if (enabledFunction.players && e.fileName.match(/\/playerdata\/[0-9a-z\-]+\.dat$/)) {
                     return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((r) => { result.players.push(r as any); });
                 }
-                if (enabledFunction.advancements && e.fileName.match(/^advancements\/[0-9a-z\-]+\.json$/)) {
+                if (enabledFunction.advancements && e.fileName.match(/\/advancements\/[0-9a-z\-]+\.json$/)) {
                     return bufferEntry(zip, e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); });
                 }
                 return undefined;
@@ -321,7 +321,7 @@ export namespace World {
         } else {
             const promises: Array<Promise<any>> = [];
             if (enabledFunction.level) {
-                promises.push(fs.promises.readFile("level.dat").then(NBT.Serializer.deserialize).then((l) => { result.level = l as any; }));
+                promises.push(fs.promises.readFile(path.resolve(location, "level.dat")).then(NBT.Serializer.deserialize).then((l) => { result.level = l as any; }));
             }
             if (enabledFunction.players) {
                 promises.push(fs.promises.readdir(path.resolve(location, "playerdata")).then(

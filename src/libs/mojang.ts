@@ -1,4 +1,5 @@
-import * as got from "got";
+import { fetchJson } from "./utils/network";
+
 export interface MojangAccount {
     readonly id: string;
     readonly email: string;
@@ -49,16 +50,15 @@ export namespace MojangService {
      * @param provider
      */
     export function getServiceStatus(): Promise<{ [server: string]: Status }> {
-        return got("https://status.mojang.com/check", { json: true }).then((resp) => resp.body.reduce((a: any, b: any) => Object.assign(a, b), {}));
+        return fetchJson("https://status.mojang.com/check", { json: true }).then((resp) => resp.body.reduce((a: any, b: any) => Object.assign(a, b), {}));
     }
     export async function checkLocation(accessToken: string): Promise<boolean> {
         // "ForbiddenOperationException";
         // "Current IP is not secured";
         try {
-            const { statusCode } = await got("/user/security/location", {
+            const { statusCode } = await fetchJson("/user/security/location", {
                 baseUrl: "https://api.mojang.com",
                 method: "GET",
-                json: true,
                 headers: { Authorization: `Bearer: ${accessToken}` },
             });
             return statusCode === 204;
@@ -67,19 +67,17 @@ export namespace MojangService {
         }
     }
     export async function getChallenges(accessToken: string): Promise<MojangChallenge[]> {
-        return got("/user/security/challenges", {
+        return fetchJson("/user/security/challenges", {
             baseUrl: "https://api.mojang.com",
             method: "GET",
-            json: true,
             headers: { Authorization: `Bearer: ${accessToken}` },
         }).then((resp) => resp.body as MojangChallenge[])
             .catch((resp) => { throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, ...resp.body }; });
     }
     export async function responseChallenges(accessToken: string, responses: MojangChallengeResponse[]) {
-        return got("/user/security/location", {
+        return fetchJson("/user/security/location", {
             baseUrl: "https://api.mojang.com",
             method: "POST",
-            json: true,
             body: responses,
             headers: { Authorization: `Bearer: ${accessToken}` },
         }).catch((resp) => { throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, ...resp.body }; });
@@ -90,9 +88,8 @@ export namespace MojangService {
      * @param accessToken The user access token
      */
     export async function getAccountInfo(accessToken: string): Promise<MojangAccount> {
-        return got("/user", {
+        return fetchJson("/user", {
             baseUrl: "https://api.mojang.com",
-            json: true,
             headers: { Authorization: `Bearer: ${accessToken}` },
         }).then((resp) => {
             return resp.body;

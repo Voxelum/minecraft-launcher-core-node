@@ -1,13 +1,13 @@
 import * as fs from "fs";
-import got from "got";
 import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from "java-asm";
 import * as path from "path";
 import Task from "treelike-task";
 import { Entry, ZipFile } from "yauzl";
 import { bufferEntry, createExtractStream, open, walkEntries } from "yauzlw";
-import { DownloadService } from "./services";
 import { ensureDir, exists, multiChecksum } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
+import { got } from "./utils/network";
+import { createDownloadWork } from "./utils/network";
 import { Version } from "./version";
 
 export namespace Forge {
@@ -330,7 +330,7 @@ export namespace Forge {
 
             async function download(universal: string, installer: string) {
                 try {
-                    await context.execute("downloadJar", DownloadService.downloadTask(universal, jarPath));
+                    await context.execute("downloadJar", createDownloadWork(universal, jarPath));
                 } catch (e) {
                     await context.execute("downloadInstaller", (ctx) => new Promise((resolve, reject) => {
                         got.stream(installer, {

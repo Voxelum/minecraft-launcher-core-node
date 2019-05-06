@@ -3,8 +3,8 @@ import * as crypto from "crypto";
 import * as https from "https";
 import * as queryString from "querystring";
 import * as url from "url";
+import { fetchBuffer, fetchJson } from "./utils/network";
 
-import got = require("got");
 
 /**
  * The data structure holds the user game profile
@@ -113,9 +113,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     }
 
     async function fetchProfile(target: string, pemPubKey?: string) {
-        const { body: obj } = await got(target, {
-            json: true,
-        });
+        const { body: obj } = await fetchJson(target, {});
         if (obj.properties) {
             const properties = obj.properties;
             const to: any = {};
@@ -137,7 +135,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
             if (texture.data) { return texture; }
             return {
                 ...texture,
-                data: await got.get(texture.url, { encoding: null }).then((resp) => resp.body),
+                data: await fetchBuffer(texture.url).then((resp) => resp.body),
             };
         }
         if (tex.textures.skin) {

@@ -1,23 +1,23 @@
 import * as ByteBuffer from "bytebuffer";
 import { createHash } from "crypto";
-import { access, constants, createReadStream, mkdir } from "fs";
+import { constants, createReadStream, promises } from "fs";
 import { arch as getArch, platform as getPlatform, release } from "os";
 import { dirname } from "path";
 
 export function exists(target: string) {
-    return access.__promisify__(target, constants.F_OK).then(() => true).catch(() => false);
+    return promises.access(target, constants.F_OK).then(() => true).catch(() => false);
 }
 
 export function missing(target: string) {
-    return access.__promisify__(target, constants.F_OK).then(() => false).catch(() => true);
+    return promises.access(target, constants.F_OK).then(() => false).catch(() => true);
 }
 
 export function ensureDir(target: string) {
-    return mkdir.__promisify__(target, { recursive: true }).catch(() => { });
+    return promises.mkdir(target, { recursive: true }).catch(() => { });
 }
 
 export function ensureFile(target: string) {
-    return mkdir.__promisify__(dirname(target), { recursive: true }).catch(() => { });
+    return promises.mkdir(dirname(target), { recursive: true }).catch(() => { });
 }
 
 export function computeChecksum(path: string, algorithm: string = "sha1"): Promise<string> {

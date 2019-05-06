@@ -1,7 +1,8 @@
 import { v4 } from "uuid";
 import { GameProfile } from "./profile";
 
-import * as got from "got";
+import { Response } from "got";
+import { fetchJson } from "./utils/network";
 
 export enum UserType {
     Legacy = "mojang", Mojang = "legacy",
@@ -46,16 +47,15 @@ export namespace Auth {
         };
 
         function request(baseUrl: string, path: string, payload: object) {
-            return got(path, {
+            return fetchJson(path, {
                 baseUrl,
                 method: "POST",
-                json: true,
                 body: payload,
                 encoding: "utf-8",
             });
         }
 
-        function parseResponse(resp: got.Response<any>) {
+        function parseResponse(resp: Response<any>) {
             const body = resp.body;
             const obj = JSON.parse(body);
             if (obj.error) {
@@ -83,10 +83,9 @@ export namespace Auth {
          */
         export function login(option: { username: string, password?: string, clientToken?: string | undefined },
             api: API = API_MOJANG): Promise<Auth> {
-            return got(api.authenticate, {
+            return fetchJson(api.authenticate, {
                 baseUrl: api.hostName,
                 method: "POST",
-                json: true,
                 body: {
                     agent: "Minecraft",
                     requestUser: true,

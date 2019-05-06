@@ -1,13 +1,31 @@
 import { createHash, Hash } from "crypto";
 import { createWriteStream, promises } from "fs";
-import got = require("got");
+import * as gotDefault from "got";
 import { basename, resolve } from "path";
-import { finished } from "stream";
+import { finished as wait } from "stream";
+import Task from "treelike-task";
+import { promisify } from "util";
 import { computeChecksum, exists } from "./common";
+
+const IS_ELECTRON = process.versions.hasOwnProperty("electron");
 
 export interface UpdatedObject {
     timestamp: string;
 }
+
+export const got = gotDefault.extend({
+    useElectronNet: IS_ELECTRON,
+});
+
+export const fetchJson = gotDefault.extend({
+    json: true,
+    useElectronNet: IS_ELECTRON,
+});
+
+export const fetchBuffer = gotDefault.extend({
+    encoding: null,
+    useElectronNet: IS_ELECTRON,
+});
 
 export function getIfUpdate<T extends UpdatedObject = UpdatedObject>(url: string, parser: (s: string) => any, lastObj?: T): Promise<T> {
     const lastModified = lastObj ? lastObj.timestamp : undefined;
@@ -36,6 +54,8 @@ export interface DownloadOption {
     progress?: (written: number, total: number) => void;
 }
 
+const finished = promisify(wait);
+
 export async function downloadIfAbsent(option: DownloadOption) {
     const onProgress = option.progress || (() => { });
     let onData: (chunk: any) => void = () => { };
@@ -43,18 +63,17 @@ export async function downloadIfAbsent(option: DownloadOption) {
     const isDir = await promises.stat(option.destination).then((s) => s.isDirectory());
 
     async function isFileValid(file: string) {
-        if (await exists(file)) {
-            if (checksum) {
-                const hash = await computeChecksum(file, checksum.algorithm);
-                if (hash === checksum.hash) { return true; }
-            } else {
-                return true;
-            }
+        if (checksum !== undefined) {
+            return await exists(file) && checksum.hash === await computeChecksum(file, checksum.algorithm);
+        } else {
+            return true;
         }
     }
 
     if (isDir) {
-        let filePath: string = resolve(option.destination, "Unknown");
+        const tempFilePath: string = resolve(option.destination, decodeURI(basename(option.url)));
+        let realFilePath = tempFilePath;
+        let valid: boolean = false;
         const downstream = got.stream(option.url, {
             method: option.method,
             headers: option.headers,
@@ -62,22 +81,28 @@ export async function downloadIfAbsent(option: DownloadOption) {
             followRedirect: true,
             retry: option.retry,
         }).on("response", (resp) => {
-            const filename = basename(resp.url as string);
-            filePath = resolve(option.destination, filename);
-            resp.pause();
-            isFileValid(filePath).then((valid) => {
-                if (valid) {
+            realFilePath = resolve(option.destination, decodeURI(basename(resp.url as string)));
+            isFileValid(realFilePath).then((v) => {
+                valid = v;
+                if (v) {
                     resp.destroy();
+                    downstream.close();
                     return;
                 }
-                downstream.pipe(createWriteStream(filePath));
-                resp.resume();
             });
-        }).on("data", onData).on("downloadProgress", (progress) => {
+        }).on("downloadProgress", (progress) => {
             onProgress(progress.transferred, progress.total || -1);
-        });
-        await finished.__promisify__(downstream);
-        return filePath;
+        }).pipe(createWriteStream(tempFilePath));
+        await finished(downstream);
+        if (valid) {
+            await promises.unlink(tempFilePath);
+        } else {
+            await promises.rename(tempFilePath, realFilePath);
+            if (!isFileValid(realFilePath) && checksum !== undefined) {
+                throw new Error(`Correpted download! The chunksum mismatched! Expected: ${checksum.hash}.`);
+            }
+        }
+        return realFilePath;
     } else {
         if (await isFileValid(option.destination)) {
             return option.destination;
@@ -87,7 +112,7 @@ export async function downloadIfAbsent(option: DownloadOption) {
             hasher = createHash(checksum.algorithm);
             onData = (data) => { hasher!.update(data); };
         }
-        await finished.__promisify__(got.stream(option.url, {
+        await finished(got.stream(option.url, {
             method: option.method,
             headers: option.headers,
             timeout: option.timeout,
@@ -107,6 +132,6 @@ export async function downloadIfAbsent(option: DownloadOption) {
     }
 }
 
-export function createDownloadTask(option: Pick<DownloadOption, "url" | "checksum" | "method" | "headers" | "timeout">) {
-
+export function createDownloadWork(url: string, destination: string, option: Pick<DownloadOption, "checksum" | "method" | "headers" | "timeout" | "retry"> = {}): Task.Work<string> {
+    return (context) => downloadIfAbsent({ url, destination, ...option, progress: context.update });
 }

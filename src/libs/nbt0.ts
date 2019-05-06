@@ -1,4 +1,5 @@
 import * as ByteBuffer from "bytebuffer";
+import fileType = require("file-type");
 import * as Long from "long";
 import * as zlib from "zlib";
 import { NBT } from "./nbt";
@@ -54,7 +55,14 @@ NBT.Serializer = class Serializer {
         return new Serializer();
     }
     static deserialize(fileData: Buffer, compressed?: boolean): NBT.TypedObject {
-        if (compressed) {
+        let doUnzip: boolean;
+        if (typeof compressed === "undefined") {
+            const ft = fileType(fileData);
+            doUnzip = ft !== undefined && ft.ext === "gz";
+        } else {
+            doUnzip = compressed;
+        }
+        if (doUnzip) {
             const { value, type } = readRootTag(ByteBuffer.wrap(zlib.unzipSync(fileData)));
             deepFreeze(type);
             Object.defineProperty(value, "__nbtPrototype__", { value: type });
@@ -85,7 +93,14 @@ NBT.Serializer = class Serializer {
         return writeRootTag(object, compressed, schema, (id) => this.registry[id]);
     }
     deserialize(fileData: Buffer, compressed: boolean = false): { value: any, type: any | string } {
-        if (compressed) {
+        let doUnzip: boolean;
+        if (typeof compressed === "undefined") {
+            const ft = fileType(fileData);
+            doUnzip = ft !== undefined && ft.ext === "gz";
+        } else {
+            doUnzip = compressed;
+        }
+        if (doUnzip) {
             const zip = zlib.unzipSync(fileData);
             const bytebuffer = ByteBuffer.wrap(zip);
             return readRootTag(bytebuffer, (shape) => this.reversedRegistry[JSON.stringify(shape)]);
