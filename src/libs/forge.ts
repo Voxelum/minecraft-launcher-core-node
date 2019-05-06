@@ -345,6 +345,7 @@ export namespace Forge {
                             .promise()
                             .then(() => resolve());
                     }));
+                    await fs.promises.rename(path.resolve(path.dirname(jarPath), `forge-${versionPath}-universal.jar`), jarPath);
                 }
             }
 
@@ -352,7 +353,9 @@ export namespace Forge {
                 if (await exists(jarPath)) {
                     const keys = Object.keys(version.checksum);
                     const checksums = await multiChecksum(jarPath, keys);
-                    if (checksums.every((v, i) => v === version.checksum[keys[i]])) { return; }
+                    if (checksums.every((v, i) => v === version.checksum[keys[i]])) {
+                        return;
+                    }
                 }
                 await download(universalURL, installerURL)
                     .catch(() => download(universalURLFallback, installerURLFallback));
@@ -363,7 +366,8 @@ export namespace Forge {
 
                 await context.execute("ensureRoot", () => ensureDir(rootPath));
                 await context.execute("extraVersionJson", () => fs.createReadStream(jarPath)
-                    .pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])));
+                    .pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise());
+                await fs.promises.rename(path.resolve(path.dirname(jsonPath), "version.json"), jsonPath);
             });
 
             return forgeId;
