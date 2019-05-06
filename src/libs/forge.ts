@@ -294,7 +294,7 @@ export namespace Forge {
     export async function readModMetaData(mod: Buffer | string | ZipFile, asmOnly: boolean = false) {
         const zip = await regulize(mod);
         const modidTree: any = {};
-        const promise = [];
+        const promise: Array<Promise<void>> = [];
         await walkEntries(zip, (entry) => {
             if (!asmOnly && entry.fileName === "mcmod.info") {
                 promise.push(jsonMetaData(zip, entry, modidTree));
@@ -303,6 +303,7 @@ export namespace Forge {
             }
             return false;
         });
+        await Promise.all(promise);
         const modids = Object.keys(modidTree);
         if (modids.length === 0) { throw { type: "NonmodTypeFile" }; }
         return modids.map((k) => modidTree[k] as Forge.MetaData)
