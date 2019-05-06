@@ -25,16 +25,18 @@ export function computeChecksum(path: string, algorithm: string = "sha1"): Promi
         const hash = createHash(algorithm).setEncoding("hex");
         createReadStream(path)
             .pipe(hash)
+            .on("error", (e) => { reject(new Error(e)); })
             .once("finish", () => { resolve(hash.read() as string); });
     });
 }
 
 export function multiChecksum(path: string, algorithms: string[]): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
-        const hashes = algorithms.map((name) => createHash(name).setEncoding("hex"));
+        const hashes = algorithms.map((name) => createHash(name));
         createReadStream(path)
             .on("data", (chunk) => { hashes.forEach((h) => h.update(chunk)); })
-            .once("finish", () => { resolve(hashes.map((h) => h.digest().toString())); });
+            .on("error", (e) => { reject(new Error(e)); })
+            .once("close", () => { resolve(hashes.map((h) => h.digest("hex"))); });
     });
 }
 
