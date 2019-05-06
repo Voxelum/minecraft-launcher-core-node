@@ -314,14 +314,14 @@ export namespace Forge {
         return readModMetaData(mod, asmOnly);
     }
 
-    export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
+    export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
 
     function installTask0(version: VersionMeta, minecraft: MinecraftLocation, maven: string) {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const versionPath = `${version.mcversion}-${version.version}`;
-            const universalURLFallback = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`;
-            const installerURLFallback = `${maven}/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`;
+            const universalURLFallback = `${maven}/maven/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`;
+            const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`;
             const universalURL = `${maven}${version.universal}`;
             const installerURL = `${maven}${version.installer}`;
             const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${versionPath}/forge-${versionPath}.jar`);
@@ -336,9 +336,7 @@ export namespace Forge {
                     await context.execute("downloadInstaller", (ctx) => new Promise((resolve, reject) => {
                         got.stream(installer, {
                             method: "GET",
-                            headers: {
-                                connection: "keep-alive",
-                            },
+                            headers: { connection: "keep-alive" },
                         }).on("error", reject)
                             .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); })
                             .pipe(createExtractStream(path.dirname(jarPath), [`forge-${versionPath}-universal.jar`]))

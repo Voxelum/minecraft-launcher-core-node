@@ -2,9 +2,7 @@ import { createHash, Hash } from "crypto";
 import { createWriteStream, promises } from "fs";
 import * as gotDefault from "got";
 import { basename, resolve } from "path";
-import { finished as wait } from "stream";
 import Task from "treelike-task";
-import { promisify } from "util";
 import { computeChecksum, ensureFile, exists } from "./common";
 
 const IS_ELECTRON = process.versions.hasOwnProperty("electron");
@@ -54,8 +52,6 @@ export interface DownloadOption {
     progress?: (written: number, total: number) => void;
 }
 
-const finished = promisify(wait);
-
 export async function downloadIfAbsent(option: DownloadOption) {
     const onProgress = option.progress || (() => { });
     let onData: (chunk: any) => void = () => { };
@@ -75,26 +71,29 @@ export async function downloadIfAbsent(option: DownloadOption) {
         const tempFilePath: string = resolve(option.destination, decodeURI(basename(option.url)));
         let realFilePath = tempFilePath;
         let valid: boolean = false;
-        const downstream = got.stream(option.url, {
-            method: option.method,
-            headers: option.headers,
-            timeout: option.timeout,
-            followRedirect: true,
-            retry: option.retry,
-        }).on("response", (resp) => {
-            realFilePath = resolve(option.destination, decodeURI(basename(resp.url as string)));
-            isFileValid(realFilePath).then((v) => {
-                valid = v;
-                if (v) {
-                    resp.destroy();
-                    downstream.close();
-                    return;
-                }
-            });
-        }).on("downloadProgress", (progress) => {
-            onProgress(progress.transferred, progress.total || -1);
-        }).pipe(createWriteStream(tempFilePath));
-        await finished(downstream);
+        await new Promise((resolv, reject) => {
+            const downstream = got.stream(option.url, {
+                method: option.method,
+                headers: option.headers,
+                timeout: option.timeout,
+                followRedirect: true,
+                retry: option.retry,
+            }).on("response", (resp) => {
+                realFilePath = resolve(option.destination, decodeURI(basename(resp.url as string)));
+                isFileValid(realFilePath).then((v) => {
+                    valid = v;
+                    if (v) {
+                        resp.destroy();
+                        downstream.close();
+                        return;
+                    }
+                });
+            }).on("downloadProgress", (progress) => {
+                onProgress(progress.transferred, progress.total || -1);
+            }).pipe(createWriteStream(tempFilePath))
+                .on("close", () => resolv())
+                .on("error", reject);
+        });
         if (valid) {
             await promises.unlink(tempFilePath);
         } else {
@@ -113,15 +112,21 @@ export async function downloadIfAbsent(option: DownloadOption) {
             hasher = createHash(checksum.algorithm);
             onData = (data) => { hasher!.update(data); };
         }
-        await finished(got.stream(option.url, {
-            method: option.method,
-            headers: option.headers,
-            timeout: option.timeout,
-            followRedirect: true,
-            retry: option.retry,
-        }).on("data", onData).on("downloadProgress", (progress) => {
-            onProgress(progress.transferred, progress.total || -1);
-        }).pipe(createWriteStream(option.destination)));
+        await new Promise((resolv, rej) => {
+            got.stream(option.url, {
+                method: option.method,
+                headers: option.headers,
+                timeout: option.timeout,
+                followRedirect: true,
+                retry: option.retry,
+            }).on("error", (error) => {
+                console.error(`Unable to download ${option.url}.`);
+                rej(error);
+            }).on("data", onData).on("downloadProgress", (progress) => {
+                onProgress(progress.transferred, progress.total || -1);
+            }).pipe(createWriteStream(option.destination))
+                .on("close", () => resolv());
+        });
 
         if (hasher && checksum) {
             const hash = hasher.digest("hex");
