@@ -127,7 +127,7 @@ export namespace LiteLoader {
         zip.close();
         const metadata = JSON.parse(data.toString().trim(), (key, value) => key === "revision" ? Number.parseInt(value, 10) : value) as MetaData;
         if (!metadata.version) {
-            (metadata as any).version = `${metadata.name}:${metadata.version ? metadata.version : metadata.mcversion ? metadata.mcversion + "_" + metadata.revision || "0" : metadata.revision || "0"}`;
+            (metadata as any).version = `${metadata.mcversion}:${metadata.revision || 0}`;
         }
         return metadata;
     }

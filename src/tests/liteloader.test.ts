@@ -11,7 +11,7 @@ describe("Liteloader", () => {
                 this.skip();
             }
         });
-    });
+    }).timeout(1000000);
     it("should not be able to read other file", async function () {
         try {
             const metadata = await LiteLoader.meta(`${this.assets}/sample-mod.jar`);
@@ -41,11 +41,9 @@ describe("Liteloader", () => {
     it("should be able to parse liteloader info", async function () {
         const metadata = await LiteLoader.meta(`${this.assets}/sample-mod.litemod`);
         if (!metadata) { throw new Error("Should not happen"); }
-        assert.equal(metadata.name, "Autofish");
-        assert.equal(metadata.mcversion, "1.7.10");
-        assert.deepEqual(metadata.revision, 39);
-        assert.equal(metadata.author, "troyboy50");
-        assert.equal(metadata.classTransformerClasses, "troy.autofish.PacketEntityVelocityTransformer");
-        assert.equal(metadata.version, "Autofish:1.7.10_39");
+        assert.equal(metadata.name, "ArmorsHUDRevived");
+        assert.equal(metadata.mcversion, "1.12.r2");
+        assert.deepEqual(metadata.revision, 143);
+        assert.equal(metadata.author, "Shadow_Hawk");
     });
 });
