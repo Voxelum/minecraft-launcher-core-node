@@ -1,13 +1,14 @@
-export interface Handshake {
-    protocol: number;
-    host: string;
-    port: number;
-    nextState: Handshake.State;
-}
+import Coders from "../utils/coders";
+import { Field, Packet, PacketBase } from "../utils/packet";
 
-export namespace Handshake {
-    export enum State {
-        Status = 1, Loign = 2,
-    }
+@Packet(0x00, "handshake")
+export class Handshake extends PacketBase {
+    @Field(Coders.VarInt)
+    protocolVersion!: number;
+    @Field(Coders.String)
+    serverAddress!: string;
+    @Field(Coders.Short)
+    serverPort!: number;
+    @Field(Coders.VarInt)
+    nextState!: number;
 }
-
