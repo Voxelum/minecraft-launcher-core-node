@@ -4,7 +4,10 @@ import { World } from "..";
 describe("World", () => {
     it("should load level of a simple map", async function () {
         const { level } = await World.load(`${this.assets}/sample-map`, ["level"]);
-        assert(level, "dir fail");
+        console.log(level);
+        assert.equal(level.DataVersion, 512);
+        assert.equal(level.LevelName, "Testa");
+        assert.equal(level.Difficulty, 2);
     });
 
     it("should load level of a simple map from zip", async function () {
