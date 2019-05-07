@@ -308,7 +308,16 @@ export namespace World {
             const zip = await open(buffer);
             await walkEntries(zip, (e) => {
                 if (enabledFunction.level && e.fileName.endsWith("/level.dat")) {
-                    return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((l) => { result.level = l.Data as any; });
+                    return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((l) => {
+                        result.level = l.Data as any;
+                        if (result.level === undefined || result.level === null) {
+                            throw {
+                                error: "Corrupted Map",
+                                entry: e,
+                                result: l,
+                            };
+                        }
+                    });
                 }
                 if (enabledFunction.players && e.fileName.match(/\/playerdata\/[0-9a-z\-]+\.dat$/)) {
                     return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((r) => { result.players.push(r as any); });
@@ -321,7 +330,16 @@ export namespace World {
         } else {
             const promises: Array<Promise<any>> = [];
             if (enabledFunction.level) {
-                promises.push(fs.promises.readFile(path.resolve(location, "level.dat")).then(NBT.Serializer.deserialize).then((l) => { result.level = l.Data as any; }));
+                promises.push(fs.promises.readFile(path.resolve(location, "level.dat")).then(NBT.Serializer.deserialize).then((l) => {
+                    result.level = l.Data as any;
+                    if (result.level === undefined || result.level === null) {
+                        throw {
+                            error: "Corrupted Map",
+                            entry: e,
+                            result: l,
+                        };
+                    }
+                }));
             }
             if (enabledFunction.players) {
                 promises.push(fs.promises.readdir(path.resolve(location, "playerdata")).then(
