@@ -335,7 +335,7 @@ export namespace World {
                     if (result.level === undefined || result.level === null) {
                         throw {
                             error: "Corrupted Map",
-                            entry: e,
+                            entry: path.resolve(location, "level.dat"),
                             result: l,
                         };
                     }
