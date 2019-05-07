@@ -305,7 +305,7 @@ export namespace World {
             const ft = fileType(buffer);
             if (!ft || ft.ext !== "zip") { throw new Error("IllgalMapFormat"); }
 
-            const zip = await open(buffer);
+            const zip = await open(buffer, { lazyEntries: true });
             await walkEntries(zip, (e) => {
                 if (enabledFunction.level && e.fileName.endsWith("/level.dat")) {
                     return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((l) => {
@@ -313,7 +313,11 @@ export namespace World {
                         if (result.level === undefined || result.level === null) {
                             throw {
                                 error: "Corrupted Map",
-                                entry: e,
+                                entry: path.resolve(location, "level.dat"),
+                                enabledFunctions: enabledFunction,
+                                params: {
+                                    entries,
+                                },
                                 result: l,
                             };
                         }
@@ -336,6 +340,10 @@ export namespace World {
                         throw {
                             error: "Corrupted Map",
                             entry: path.resolve(location, "level.dat"),
+                            enabledFunctions: enabledFunction,
+                            params: {
+                                entries,
+                            },
                             result: l,
                         };
                     }

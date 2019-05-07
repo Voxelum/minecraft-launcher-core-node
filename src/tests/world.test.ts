@@ -10,9 +10,7 @@ describe("World", () => {
     });
 
     it("should load level of a simple map from zip", async function () {
-        const result = await World.load(`${this.assets}/sample-map.zip`, ["level"]);
-        const level = result.level;
-        console.log(result);
+        const { level } = await World.load(`${this.assets}/sample-map.zip`, ["level"]);
         assert.equal(level.DataVersion, 512, JSON.stringify(level, null, 4));
         assert.equal(level.LevelName, "Testa", JSON.stringify(level, null, 4));
         assert.equal(level.Difficulty, 2, JSON.stringify(level, null, 4));
