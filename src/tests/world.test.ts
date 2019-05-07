@@ -4,17 +4,16 @@ import { World } from "..";
 describe("World", () => {
     it("should load level of a simple map", async function () {
         const { level } = await World.load(`${this.assets}/sample-map`, ["level"]);
-        console.log(level);
-        assert.equal(level.DataVersion, 512);
-        assert.equal(level.LevelName, "Testa");
-        assert.equal(level.Difficulty, 2);
+        assert.equal(level.DataVersion, 512, JSON.stringify(level, null, 4));
+        assert.equal(level.LevelName, "Testa", JSON.stringify(level, null, 4));
+        assert.equal(level.Difficulty, 2, JSON.stringify(level, null, 4));
     });
 
     it("should load level of a simple map from zip", async function () {
         const { level } = await World.load(`${this.assets}/sample-map.zip`, ["level"]);
-        assert.equal(level.DataVersion, 512);
-        assert.equal(level.LevelName, "Testa");
-        assert.equal(level.Difficulty, 2);
+        assert.equal(level.DataVersion, 512, JSON.stringify(level, null, 4));
+        assert.equal(level.LevelName, "Testa", JSON.stringify(level, null, 4));
+        assert.equal(level.Difficulty, 2, JSON.stringify(level, null, 4));
     });
 
     it("should not load a non-map directory", async function () {
