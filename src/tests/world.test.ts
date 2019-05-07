@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import { World } from "..";
 
-describe("WorldInfo", () => {
+describe("World", () => {
     it("should load level of a simple map", async function () {
         const { level } = await World.load(`${this.assets}/sample-map`, ["level"]);
         assert(level, "dir fail");
@@ -9,7 +9,9 @@ describe("WorldInfo", () => {
 
     it("should load level of a simple map from zip", async function () {
         const { level } = await World.load(`${this.assets}/sample-map.zip`, ["level"]);
-        assert(level, "zip fail");
+        assert.equal(level.DataVersion, 512);
+        assert.equal(level.LevelName, "Testa");
+        assert.equal(level.Difficulty, 2);
     });
 
     it("should not load a non-map directory", async function () {
