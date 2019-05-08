@@ -5,11 +5,6 @@ import { createStatusClient } from "./net/status-client";
 import { GameProfile } from "./profile";
 import { TextComponent, TextComponentFrame } from "./text";
 
-function writeString(buff: ByteBuffer, s: string) {
-    buff.writeVarint32(s.length);
-    buff.writeUTF8String(s);
-}
-
 export namespace Server {
     /**
      * The servers.dat format server information, contains known host displayed in "Multipler" page.

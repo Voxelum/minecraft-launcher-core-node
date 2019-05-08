@@ -13,6 +13,7 @@
     "@types/long": "^3.0.31",
     "@types/mocha": "^2.2.41",
     "@types/node": "^10.0.0",
+    "@types/semver": "^6.0.0",
     "@types/uuid": "^3.4.3",
     "@types/yauzl": "^2.9.1",
     "mocha": "^6.1.4",
@@ -37,10 +38,11 @@
   "dependencies": {
     "bytebuffer": "^5.0.1",
     "fast-html-parser": "^1.0.1",
-    "got": "^9.6.0",
     "file-type": "^11.0.0",
+    "got": "^9.6.0",
     "java-asm": "0.0.4",
     "long": "^3.2.0",
+    "semver": "^6.0.0",
     "treelike-task": "^0.0.13",
     "uuid": "^3.2.1",
     "yauzlw": "0.0.2"

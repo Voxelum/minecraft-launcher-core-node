@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as paths from "path";
 
 
+import { gt } from "semver";
 import Task from "treelike-task";
 import { MinecraftFolder, MinecraftLocation } from "../index";
 import { computeChecksum, exists, missing } from "./utils/common";
@@ -161,9 +162,9 @@ export namespace Version {
                 libMap[name] = l;
             } else {
                 const otherVersion = libMap[name].name.substring(libMap[name].name.lastIndexOf(":") + 1, libMap[name].name.length);
-                // if (semver.gt(version, otherVersion)) {
-                //     libMap[name] = l;
-                // }
+                if (gt(version, otherVersion)) {
+                    libMap[name] = l;
+                }
             }
         });
         const gameArgs = [...extra.arguments.game];
