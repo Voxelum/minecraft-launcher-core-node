@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as paths from "path";
 
+import Task from "treelike-task";
 import { MinecraftFolder, MinecraftLocation } from "../index";
 import { computeChecksum, exists, missing } from "./utils/common";
 
