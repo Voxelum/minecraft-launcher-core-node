@@ -1,8 +1,7 @@
-import * as buf from "bytebuffer";
-import * as net from "net";
 import Forge from "./forge";
 import { ResourceMode } from "./game";
 import NBT from "./nbt";
+import { createStatusClient } from "./net/status-client";
 import { GameProfile } from "./profile";
 import { TextComponent, TextComponentFrame } from "./text";
 
@@ -175,80 +174,6 @@ export namespace Server {
         return NBT.Serializer.serialize(object);
     }
 
-    function ping(ip: string, port: number, connection: net.Socket): Promise<number> {
-        return new Promise((resolve, reject) => {
-            if (!ip || ip === "") { throw new Error("The server info's host name is empty!"); }
-            const byteBuffer = buf.allocate(16);
-            const currentMill = () => {
-                const time = process.hrtime();
-                return time[0] * 1000 + time[1] * 1e-6;
-            };
-            byteBuffer.writeByte(9);
-            byteBuffer.writeByte(0x01);
-            byteBuffer.writeInt64(currentMill());
-            byteBuffer.flip();
-            connection.write(Buffer.from(byteBuffer.toArrayBuffer()));
-            connection.on("data", (data) => {
-                const incoming = buf.wrap(data);
-                incoming.readByte(); // length
-                incoming.readByte(); // id
-                resolve(currentMill() - incoming.readLong().toNumber());
-            });
-            connection.once("error", (err) => {
-                reject(err);
-            });
-            connection.on("timeout", () => {
-                reject(new Error(`timeout`));
-            });
-        });
-    }
-    function handshake(host: string, port: number, protocol: number, connection: net.Socket) {
-        return new Promise<string>((resolve, reject) => {
-            const buffer = buf.allocate(256);
-            // packet id
-            buffer.writeByte(0x00);
-            // protocol version
-            buffer.writeVarint32(protocol);
-            writeString(buffer, host);
-
-            buffer.writeShort(port & 0xffff);
-            buffer.writeVarint32(1);
-            buffer.flip();
-            const handshakeBuf = buf.allocate(buffer.limit + 8);
-            handshakeBuf.writeVarint32(buffer.limit);
-            handshakeBuf.append(buffer);
-            handshakeBuf.flip();
-            connection.write(Buffer.from(handshakeBuf.toArrayBuffer()));
-            connection.write(Buffer.from([0x01, 0x00]));
-            let remain: number | undefined;
-            let msg: buf;
-            const listener = (incoming: Buffer) => {
-                const inbuf = buf.wrap(incoming);
-                if (remain === undefined) {
-                    remain = inbuf.readVarint32();
-                    msg = buf.allocate(remain);
-                    remain -= inbuf.remaining();
-                    msg.append(inbuf.slice(inbuf.offset));
-                } else {
-                    msg.append(inbuf);
-                    remain -= inbuf.limit;
-                    if (remain <= 0) {
-                        connection.removeListener("data", listener);
-                        msg.flip();
-                        const id = msg.readVarint32();
-                        const length = msg.readVarint32();
-                        const u8 = msg.slice(msg.offset).toUTF8();
-                        resolve(u8);
-                    }
-                }
-            };
-            connection.on("data", listener);
-            connection.once("error", (error) => {
-                reject(error);
-            });
-        });
-    }
-
     export interface FetchOptions {
         /**
          * see http://wiki.vg/Protocol_version_numbers
@@ -258,21 +183,6 @@ export namespace Server {
         retryTimes?: number;
     }
 
-    async function fetchFrame(host: string, port: number, timeout: number, protocol: number) {
-        const connection = await new Promise<net.Socket>((resolve, reject) => {
-            const conn = net.createConnection(port, host, () => {
-                resolve(conn);
-            });
-            conn.setTimeout(timeout);
-            conn.once("error", (e) => { reject(e); });
-            conn.once("timeout", () => { reject(new Error(`Connection timeout ${timeout}`)); });
-        });
-
-        const frame = await handshake(host, port, protocol, connection).then(JSON.parse);
-        frame.ping = await ping(host, port, connection);
-        connection.end();
-        return frame;
-    }
     /**
      * Fetch the server status in raw JSON format.
      *
@@ -288,9 +198,11 @@ export namespace Server {
 
         let result: StatusFrame | undefined;
         let error: Error | undefined;
+
+        const client = createStatusClient(protocol, timeout);
         for (let retryTimes = retry; retryTimes > 0; retryTimes--) {
             try {
-                result = await fetchFrame(host, port, timeout, protocol);
+                result = await client.query(host, port);
                 break;
             } catch (e) {
                 error = e;

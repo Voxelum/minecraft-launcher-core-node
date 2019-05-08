@@ -2,7 +2,8 @@
 
 import * as Long from "long";
 import "uuid";
-import { NBT } from "../../index";
+import { NBT } from "../nbt";
+import "../nbt0";
 
 export interface SlotData {
     blockId: number;
@@ -129,8 +130,9 @@ const VarLong: Coder<Long> = {
 
 const _String: Coder<string> = {
     decode: (buffer) => {
-        const len = buffer.readByte();
-        return buffer.readUTF8String(len).toString();
+        const length = buffer.readVarint32();
+        const u8 = buffer.slice(buffer.offset, buffer.offset + length).toUTF8();
+        return u8;
     },
     encode: (buffer, inst) => {
         buffer.writeByte(inst.length);
