@@ -1,18 +1,16 @@
 const fs = require("fs");
 const { resolve } = require("path");
 
-function clean(f) {
+async function clean(f) {
     if (!fs.existsSync(f)) {
         return;
     }
-    const stat = fs.statSync(f);
+    const stat = await fs.promises.stat(f);
     if (stat.isDirectory()) {
-        const children = fs.readdirSync(f);
-        for (const child of children) {
-            clean(resolve(f, child));
-        }
+        const children = await fs.promises.readdir(f);
+        await Promise.all(children.map(child => clean(resolve(f, child))));
     } else {
-        fs.unlinkSync(f);
+        await fs.promises.unlink(f);
     }
 }
 
