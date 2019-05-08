@@ -189,13 +189,13 @@ export namespace Server {
         const port = server.port || 25565;
         const timeout = options.timeout || 4000;
         const protocol = options.protocol || 210;
-        const retry = (options.retryTimes || 1) + 1;
+        const retry = typeof options.retryTimes === "number" ? options.retryTimes : 0;
 
         let result: StatusFrame | undefined;
         let error: Error | undefined;
 
         const client = createStatusClient(protocol, timeout);
-        for (let retryTimes = retry; retryTimes > 0; retryTimes--) {
+        for (let retryTimes = retry + 1; retryTimes > 0; retryTimes--) {
             try {
                 result = await client.query(host, port);
                 break;

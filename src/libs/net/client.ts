@@ -226,12 +226,13 @@ export class Channel extends EventEmitter {
             this.connection.connect(option, () => {
                 resolve();
             });
+            if (option.timeout) {
+                this.connection.setTimeout(option.timeout);
+            }
             this.connection.once("error", (e) => { reject(e); });
             this.connection.once("timeout", () => { reject(new Error(`Connection timeout.`)); });
         });
-        if (option.timeout) {
-            this.connection.setTimeout(option.timeout);
-        }
+
         this.emit("listen");
     }
 
