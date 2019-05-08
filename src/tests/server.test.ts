@@ -4,7 +4,7 @@ import * as fs from "fs";
 import { Server } from "../index";
 
 describe("Server", () => {
-    it("should read server.dat file", function() {
+    it("should read server.dat file", function () {
         const data = fs.readFileSync(`${this.assets}/servers.dat`);
         const infos = Server.readInfo(data);
         assert.equal(infos[0].name, "nyaacat");
@@ -22,7 +22,8 @@ describe("Server", () => {
         assert.equal(readBack[0].name, "abc");
         assert.equal(readBack[0].host, "ip!");
     });
-    describe("Ping", () => {
+    describe("Ping", function () {
+        this.slow(3000);
         it("should fetch server frame", async () => {
             const frame = await Server.fetchStatusFrame({ host: "mc.hypixel.net" });
             assert(frame);

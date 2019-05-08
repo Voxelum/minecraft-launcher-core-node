@@ -169,7 +169,7 @@ export class Channel extends EventEmitter {
             play: new PacketCoders(),
         },
     };
-    private connection: Socket = new Socket();
+    private connection: Socket = new Socket({ allowHalfOpen: false });
 
     private outbound: Writable;
     private inbound: Writable;
@@ -200,6 +200,10 @@ export class Channel extends EventEmitter {
         this.connection.pipe(this.inbound);
     }
 
+    get ready() {
+        return this.connection.readable && this.connection.writable;
+    }
+
     findCoderById(packetId: number, side: Side): Coder<any> {
         const all = this.states[side][this.state];
         return all.packetIdCoders[packetId];
@@ -218,8 +222,8 @@ export class Channel extends EventEmitter {
         coders.packetNameToId[name] = id;
     }
 
-    async listen(option: NetConnectOpts) {
-        if (this.connection.connecting) {
+    async listen(option: NetConnectOpts & { keepalive?: boolean | number }) {
+        if (this.ready) {
             this.connection.destroy();
         }
         await new Promise<void>((resolve, reject) => {
@@ -229,6 +233,9 @@ export class Channel extends EventEmitter {
             if (option.timeout) {
                 this.connection.setTimeout(option.timeout);
             }
+            if (option.keepalive) {
+                this.connection.setKeepAlive(true, typeof option.keepalive === "boolean" ? 3500 : option.keepalive);
+            }
             this.connection.once("error", (e) => { reject(e); });
             this.connection.once("timeout", () => { reject(new Error(`Connection timeout.`)); });
         });
@@ -237,13 +244,23 @@ export class Channel extends EventEmitter {
     }
 
     disconnect() {
-        if (this.connection.connecting) {
-            this.connection.end();
-            this.connection.destroy();
+        if (!this.ready) {
+            return Promise.resolve();
         }
+        return new Promise<void>((resolve, reject) => {
+            this.connection.once("close", (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+            this.connection.end();
+        });
     }
 
     send<T>(message: T, skeleton?: Partial<T>) {
+        if (!this.connection.writable) { throw new Error("Cannot write if the connection isn't writable!"); }
         if (skeleton) { Object.assign(message, skeleton); }
         this.outbound.write(message);
         this.emit("send", message);

@@ -38,7 +38,7 @@ export class StatusClient {
         });
         status.ping = Date.now() - ping.toNumber();
 
-        this.channel.disconnect();
+        await this.channel.disconnect();
 
         return status;
     }
