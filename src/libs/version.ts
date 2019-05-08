@@ -1,9 +1,6 @@
 import * as fs from "fs";
 import * as paths from "path";
 
-
-import { gt } from "semver";
-import Task from "treelike-task";
 import { MinecraftFolder, MinecraftLocation } from "../index";
 import { computeChecksum, exists, missing } from "./utils/common";
 
@@ -141,62 +138,6 @@ export namespace Version {
      */
     export function parse(minecraftPath: MinecraftLocation, version: string): Promise<Version> {
         return resolveDependency(minecraftPath, version).then(parseVersionHierarchy);
-    }
-
-    /**
-     * Mixin the versions libs and game arguments. If two version has same lib in different version, this function will take higher version
-     *
-     * @param src The src version
-     * @param extra The extra version which will overlap most of the src version
-     */
-    export function mixinVersion(src: Version, extra: Version): Version {
-        if (src.assets !== extra.assets) { throw new Error("Cannot mixin to the different minecraft version"); }
-
-        const libMap: { [name: string]: Library } = {};
-        src.libraries.forEach((l) => { libMap[name] = l; });
-        extra.libraries.forEach((l) => {
-            const splited = l.name.split(":");
-            const name = `${splited[0]}:${splited[1]}`;
-            const version = splited[2];
-            if (!libMap[name]) {
-                libMap[name] = l;
-            } else {
-                const otherVersion = libMap[name].name.substring(libMap[name].name.lastIndexOf(":") + 1, libMap[name].name.length);
-                if (gt(version, otherVersion)) {
-                    libMap[name] = l;
-                }
-            }
-        });
-        const gameArgs = [...extra.arguments.game];
-        const eTweak = gameArgs.indexOf("--tweakClass");
-        const sTweak = src.arguments.game.indexOf("--tweakClass");
-        if (eTweak !== -1) {
-            if (sTweak !== -1 && gameArgs[eTweak + 1] !== src.arguments.game[sTweak + 1]) {
-                gameArgs.push("--tweakClass", src.arguments.game[sTweak + 1]);
-            }
-        } else if (sTweak !== -1) {
-            gameArgs.push("--tweakClass", src.arguments.game[sTweak + 1]);
-        }
-        return {
-            id: `${src.id}-${extra.id}`,
-            time: new Date().toISOString(),
-            releaseTime: new Date().toISOString(),
-
-            client: extra.client,
-            server: extra.server,
-
-            type: extra.type,
-            assets: extra.assets,
-            assetIndex: extra.assetIndex,
-            downloads: extra.downloads,
-            libraries: Object.keys(libMap).map((k) => libMap[k]),
-            arguments: {
-                jvm: extra.arguments.jvm,
-                game: gameArgs,
-            },
-            mainClass: extra.mainClass,
-            minimumLauncherVersion: Math.max(src.minimumLauncherVersion, extra.minimumLauncherVersion),
-        };
     }
 
     /**
