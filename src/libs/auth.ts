@@ -56,8 +56,7 @@ export namespace Auth {
         }
 
         function parseResponse(resp: Response<any>) {
-            const body = resp.body;
-            const obj = JSON.parse(body);
+            const obj = resp.body;
             if (obj.error) {
                 throw { type: obj.error, message: obj.errorMessage };
             }
