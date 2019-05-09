@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import { Version } from "..";
+import { MinecraftFolder } from "../libs/utils/folder";
 
 
 describe("Version", function () {
@@ -14,5 +15,15 @@ describe("Version", function () {
 
         const out = Version.extendsVersion("test", ver, ver2);
         assert(out);
+    });
+
+    it("should be able to parse version chain", async function () {
+        const ver = await Version.parse(this.gameDirectory, "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT");
+        assert(ver);
+        assert(ver.pathChain);
+        const mc = new MinecraftFolder(this.gameDirectory);
+        assert.equal(ver.pathChain.length, 2);
+        assert.equal(ver.pathChain[0], mc.getVersionRoot("1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT"));
+        assert.equal(ver.pathChain[1], mc.getVersionRoot("1.12.2"));
     });
 });

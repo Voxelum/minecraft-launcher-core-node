@@ -69,8 +69,9 @@ export interface Version {
             type: string,
         },
     };
-}
 
+    pathChain: string[];
+}
 
 export namespace Version {
 
@@ -335,10 +336,10 @@ export class Native extends Library {
 }
 
 export function resolveDependency(path: MinecraftLocation, version: string): Promise<Version[]> {
-    const folderLoc = typeof path === "string" ? path : path.root;
+    const folder = typeof path === "string" ? new MinecraftFolder(path) : path;
     return new Promise<Version[]>((res, rej) => {
         const stack: Version[] = [];
-        const fullPath = paths.join(folderLoc, "versions", version, version + ".json");
+        const versionJsonPath = folder.getVersionJson(version);
         function interal(jsonPath: string, versionName: string): Promise<Version[]> {
             if (!fs.existsSync(jsonPath)) {
                 return Promise.reject({
@@ -347,16 +348,17 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
                 });
             }
             return fs.promises.readFile(jsonPath).then((value) => {
-                const ver = parseVersionJson(value.toString());
-                stack.push(ver);
-                if (ver.inheritsFrom) {
-                    return interal(paths.join(folderLoc, "versions", ver.inheritsFrom, ver.inheritsFrom + ".json"), ver.inheritsFrom);
+                const versionInst = parseVersionJson(value.toString());
+                Object.defineProperty(versionInst, "_path", { value: paths.dirname(jsonPath) });
+                stack.push(versionInst);
+                if (versionInst.inheritsFrom) {
+                    return interal(folder.getVersionJson(versionInst.inheritsFrom), versionInst.inheritsFrom);
                 } else {
                     return stack;
                 }
             });
         }
-        interal(fullPath, version).then((r) => res(r), (e) => rej(e));
+        interal(versionJsonPath, version).then((r) => res(r), (e) => rej(e));
     });
 }
 
@@ -379,6 +381,8 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     let type: string;
     let logging: any;
     let client: string | undefined;
+
+    const chains: string[] = hierarchy.map((j) => Reflect.get(j, "_path"));
 
     let json: Version;
     do {
@@ -431,6 +435,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
         downloads: downloadsMap,
         libraries: Object.keys(librariesMap).map((k) => librariesMap[k]).concat(Object.keys(nativesMap).map((k) => nativesMap[k])),
         mainClass, minimumLauncherVersion, releaseTime, time, type, logging,
+        pathChain: chains,
     } as Version;
 }
 
