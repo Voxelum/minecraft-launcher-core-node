@@ -56,18 +56,17 @@ export namespace Auth {
         }
 
         function parseResponse(resp: Response<any>) {
-            const body = resp.body;
-            const obj = JSON.parse(body);
-            if (obj.error) {
-                throw { type: obj.error, message: obj.errorMessage };
+            const { body } = resp;
+            if (body.error) {
+                throw { type: body.error, message: body.errorMessage };
             }
-            const userId = obj.user ? obj.user.id ? obj.user.id : "" : "";
-            const prop = obj.user ? obj.user.properties ? obj.user.properties : {} : {};
+            const userId = body.user ? body.user.id ? body.user.id : "" : "";
+            const prop = body.user ? body.user.properties ? body.user.properties : {} : {};
             return {
-                accessToken: obj.accessToken as string,
-                clientToken: obj.clientToken as string,
-                selectedProfile: obj.selectedProfile as GameProfile,
-                profiles: obj.availableProfiles as GameProfile[],
+                accessToken: body.accessToken as string,
+                clientToken: body.clientToken as string,
+                selectedProfile: body.selectedProfile as GameProfile,
+                profiles: body.availableProfiles as GameProfile[],
                 userId,
                 properties: prop,
                 userType: UserType.Mojang,
@@ -91,7 +90,7 @@ export namespace Auth {
                     requestUser: true,
                     ...option,
                 },
-            }).then(parseResponse).catch((resp) => {
+            }).then(parseResponse, (resp) => {
                 const body = resp.body;
                 throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, type: body.error, message: body.errorMessage };
             });
