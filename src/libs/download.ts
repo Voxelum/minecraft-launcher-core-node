@@ -81,6 +81,16 @@ declare module "./version" {
         function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
 
         /**
+         * Only install the json/jar. Do not check dependencies;
+         */
+        function downloadVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
+
+        function downloadVersion(type: "client", versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
+        function downloadVersion(type: "server", versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
+
+        function downloadVersionTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Task<Version>;
+
+        /**
          * Check the completeness of the Minecraft game assets and libraries.
          *
          * @param version
@@ -106,6 +116,7 @@ Version.updateVersionMeta = (option: {
 Version.install = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) => {
     return Version.installTask(type, versionMeta, minecraft, option).execute();
 };
+
 Version.installTask = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) =>
     Task.create("install", install(type, versionMeta, minecraft, option));
 
@@ -117,6 +128,13 @@ Version.checkDependenciesTask = function (version: Version, minecraft: Minecraft
     return Task.create("checkDependency", checkDependency(version, minecraft, option));
 };
 
+Version.downloadVersion = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
+    return Task.create("downloadVersion", downloadVersion(type, meta, minecraft, true)).execute();
+};
+
+Version.downloadVersionTask = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
+    return Task.create("downloadVersion", downloadVersion(type, meta, minecraft, true));
+};
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return (context: Task.Context) => {
