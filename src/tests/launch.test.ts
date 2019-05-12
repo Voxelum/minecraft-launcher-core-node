@@ -3,6 +3,7 @@ import { exec } from "child_process";
 import { EOL } from "os";
 import * as path from "path";
 import { Auth, Launcher, Version } from "../index";
+import { MinecraftFolder } from "../libs/utils/folder";
 
 function getJavaVersion(javaPath: string) {
     return new Promise<string>((resolve, reject) => {
@@ -53,6 +54,11 @@ describe("Launch", () => {
             assert.equal(args[args.indexOf("--server") + 1], server.ip);
             assert.equal(args[args.indexOf("--port") + 1], server.port.toString());
         });
+    });
+    it("should be able to extract natives", async function () {
+        const loc = new MinecraftFolder(this.gameDirectory);
+        const ver = await Version.parse(loc, "1.13.2");
+        await Launcher.ensureNative(loc, ver);
     });
     describe("Launching Game", function () {
         let javaPath: string;

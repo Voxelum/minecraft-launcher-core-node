@@ -189,18 +189,20 @@ export namespace Launcher {
         }
     }
 
-    async function ensureNative(mc: MinecraftFolder, version: Version) {
+    export async function ensureNative(mc: MinecraftFolder, version: Version) {
         const native = mc.getNativesRoot(version.id);
         await ensureDir(native);
         const natives = version.libraries.filter((lib) => lib instanceof Native) as Native[];
         return Promise.all(natives.map(async (n) => {
             const excluded: string[] = n.extractExclude ? n.extractExclude : [];
             const containsExcludes = (p: string) => excluded.filter((s) => p.startsWith(s)).length === 0;
-            const notInMetaInf = (p: string) => p.indexOf("/META-INF") === -1;
+            const notInMetaInf = (p: string) => p.indexOf("META-INF/") === -1;
             const notSha1AndNotGit = (p: string) => !(p.endsWith(".sha1") || p.endsWith(".git"));
             const from = mc.getLibraryByPath(n.download.path);
             await fs.createReadStream(from)
-                .pipe(createExtractStream(native, (entry) => containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ))
+                .pipe(createExtractStream(native, (entry) =>
+                    containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName),
+                ))
                 .promise();
         }));
     }
