@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import Task from "treelike-task";
-import { computeChecksum as computeChecksum, ensureDir, exists } from "./utils/common";
+import { computeChecksum as computeChecksum, ensureDir, exists, missing } from "./utils/common";
 import { decompressXZ, unpack200 } from "./utils/decompress";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { createDownloadWork, fetchBuffer, getIfUpdate, UpdatedObject } from "./utils/network";
@@ -248,7 +248,7 @@ function downloadLibraries(version: Version, minecraft: MinecraftLocation, optio
         try {
             const promises = version.libraries.map((lib) =>
                 context.execute({ name: "ensureLibrary", arguments: { lib: lib.name } }, downloadLib(lib, folder, libraryHost)).catch((e) => {
-                    console.error(`Error occured during: ${lib.name}`);
+                    console.error(`Error occured during downloading lib: ${lib.name}`);
                     console.error(e);
                 }));
             await Promise.all(promises);
@@ -287,26 +287,22 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
-        if (!(await exists(jsonPath))) {
+        if (await missing(jsonPath)) {
             await ensureDir(path.join(folder.assets, "indexes"));
             await context.execute("downloadAssetsJson", createDownloadWork(version.assetIndex.url, jsonPath));
         }
         const content: any = JSON.parse(await fs.promises.readFile(jsonPath).then((b) => b.toString())).objects;
         await ensureDir(folder.getPath("assets", "objects"));
         const assetsHost = option.assetsHost || Version.DEFAULT_RESOURCE_ROOT_URL;
-        try {
-            const keys = Object.keys(content);
-            for (let i = 0; i < keys.length; i += cores) {
-                const all = [];
-                for (let j = 0; j < cores; j++) {
-                    const hash = keys[j + i];
-                    if (hash === undefined) { break; }
-                    all.push(context.execute({ name: "downloadAsset", arguments: { hash } }, downloadAsset(content, hash, folder, assetsHost)));
-                }
-                await Promise.all(all);
+        const keys = Object.keys(content);
+        for (let i = 0; i < keys.length; i += cores) {
+            const all = [];
+            for (let j = 0; j < cores; j++) {
+                const hash = keys[j + i];
+                if (hash === undefined) { break; }
+                all.push(context.execute({ name: "downloadAsset", arguments: { hash } }, downloadAsset(content, hash, folder, assetsHost)));
             }
-        } catch (e) {
-            throw e;
+            await Promise.all(all);
         }
         return version;
     };
