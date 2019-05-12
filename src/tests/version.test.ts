@@ -17,6 +17,17 @@ describe("Version", function () {
         assert(out);
     });
 
+    it("should be able to parse version asset index", async function () {
+        const ver = await Version.parse(this.gameDirectory, "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT");
+        assert(ver);
+        assert(ver.assetIndex);
+        assert.equal(ver.assetIndex.id, "1.12");
+        assert(ver.assetIndex.url);
+        assert(ver.assetIndex.sha1);
+        assert(ver.assetIndex.size);
+        assert(ver.assetIndex.totalSize);
+    });
+
     it("should be able to parse version chain", async function () {
         const ver = await Version.parse(this.gameDirectory, "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT");
         assert(ver);
