@@ -273,7 +273,7 @@ interface Objects {
 
 const cores = os.cpus.length || 4;
 
-function downloadAssetsByCluster(objects: Array<{ hash: string, size: number }>, folder: MinecraftFolder, assetsHost: string) {
+function downloadAssetsByCluster(objects: Array<{ name: string, hash: string, size: number }>, folder: MinecraftFolder, assetsHost: string) {
     return async (context: Task.Context) => {
         const totalSize = objects.map((c) => c.size).reduce((a, b) => a + b, 0);
         context.update(0, totalSize);
@@ -281,6 +281,9 @@ function downloadAssetsByCluster(objects: Array<{ hash: string, size: number }>,
 
         for (const o of objects) {
             const { hash, size } = o;
+
+            context.update(lastProgress, undefined, name);
+
             const head = hash.substring(0, 2);
             const dir = folder.getPath("assets", "objects", head);
             await ensureDir(dir);
@@ -315,12 +318,12 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
         const { objects } = JSON.parse(await fs.promises.readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
         await ensureDir(folder.getPath("assets", "objects"));
         const assetsHost = option.assetsHost || Version.DEFAULT_RESOURCE_ROOT_URL;
-        const objectArray = Object.keys(objects).map((k) => objects[k]);
+        const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
 
         const all = [];
         const avg = Math.round(objectArray.length / cores);
         for (let i = 0; i < cores; i++) {
-            all.push(downloadAssetsByCluster(objectArray.slice(i * avg, (i + 1) * avg), folder, assetsHost));
+            all.push(context.execute({ name: "downloadAsset", arguments: { version: version.id } }, downloadAssetsByCluster(objectArray.slice(i * avg, (i + 1) * avg), folder, assetsHost)));
         }
         await Promise.all(all);
 
