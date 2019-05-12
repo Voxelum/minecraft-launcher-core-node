@@ -197,9 +197,10 @@ export namespace Launcher {
             const excluded: string[] = n.extractExclude ? n.extractExclude : [];
             const containsExcludes = (p: string) => excluded.filter((s) => p.startsWith(s)).length === 0;
             const notInMetaInf = (p: string) => p.indexOf("/META-INF") === -1;
+            const notSha1AndNotGit = (p: string) => !(p.endsWith(".sha1") || p.endsWith(".git"));
             const from = mc.getLibraryByPath(n.download.path);
             await fs.createReadStream(from)
-                .pipe(createExtractStream(native, (entry) => containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) ))
+                .pipe(createExtractStream(native, (entry) => containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ))
                 .promise();
         }));
     }
