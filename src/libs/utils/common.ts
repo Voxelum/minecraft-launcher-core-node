@@ -12,12 +12,22 @@ export function missing(target: string) {
     return promises.access(target, constants.F_OK).then(() => false).catch(() => true);
 }
 
-export function ensureDir(target: string) {
-    return promises.mkdir(target, { recursive: true }).catch(() => { });
+export async function ensureDir(target: string) {
+    try {
+        await promises.mkdir(target, { recursive: true });
+    } catch (e) {
+        if (e.code === "EEXIST") { return; }
+        if (e.code === "ENOENT") {
+            await ensureDir(dirname(target));
+            await promises.mkdir(target, { recursive: true });
+            return;
+        }
+        throw e;
+    }
 }
 
 export function ensureFile(target: string) {
-    return promises.mkdir(dirname(target), { recursive: true }).catch(() => { });
+    return ensureDir(dirname(target));
 }
 
 export function computeChecksum(path: string, algorithm: string = "sha1"): Promise<string> {

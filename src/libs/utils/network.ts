@@ -125,6 +125,7 @@ export async function downloadIfAbsent(option: DownloadOption) {
             }).on("data", onData).on("downloadProgress", (progress) => {
                 onProgress(progress.transferred, progress.total || -1);
             }).pipe(createWriteStream(option.destination))
+                .on("error", rej)
                 .on("close", () => resolv());
         });
 
