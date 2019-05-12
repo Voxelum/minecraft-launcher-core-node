@@ -321,7 +321,7 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
         const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
 
         const all = [];
-        const avg = Math.round(objectArray.length / cores);
+        const avg = Math.ceil(objectArray.length / cores);
         for (let i = 0; i < cores; i++) {
             all.push(context.execute({ name: "downloadAsset", arguments: { version: version.id } }, downloadAssetsByCluster(objectArray.slice(i * avg, (i + 1) * avg), folder, assetsHost)));
         }
