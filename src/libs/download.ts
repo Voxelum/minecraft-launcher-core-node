@@ -261,15 +261,15 @@ function downloadLibraries(version: Version, minecraft: MinecraftLocation, optio
 }
 
 interface AssetIndex {
-    objects: Objects;
-}
-
-interface Objects {
-    [key: string]: {
-        hash: string,
-        size: number,
+    objects: {
+        [key: string]: {
+            hash: string,
+            size: number,
+        };
     };
 }
+
+type Objects = AssetIndex["objects"];
 
 const cores = os.cpus.length || 4;
 
@@ -280,7 +280,7 @@ function downloadAssetsByCluster(objects: Array<{ name: string, hash: string, si
         let lastProgress = 0;
 
         for (const o of objects) {
-            const { hash, size } = o;
+            const { hash, size, name } = o;
 
             context.update(lastProgress, undefined, name);
 
