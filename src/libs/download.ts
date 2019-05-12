@@ -260,28 +260,49 @@ function downloadLibraries(version: Version, minecraft: MinecraftLocation, optio
     };
 }
 
-function downloadAsset(content: any, key: string, folder: MinecraftFolder, assetsHost: string) {
-    return async (context: Task.Context) => {
-        if (!content.hasOwnProperty(key)) { return; }
-        const element = content[key];
-        const hash: string = element.hash;
-        const head = hash.substring(0, 2);
-        const dir = folder.getPath("assets", "objects", head);
-        await ensureDir(dir);
-        const file = path.join(dir, hash);
-        const exist = await exists(file);
-        if (!exist) {
-            await createDownloadWork(`${assetsHost}/${head}/${hash}`, file)(context);
-        } else {
-            const sum = await computeChecksum(file);
-            if (sum !== hash) {
-                await createDownloadWork(`${assetsHost}/${head}/${hash}`, file)(context);
-            }
-        }
+interface AssetIndex {
+    objects: Objects;
+}
+
+interface Objects {
+    [key: string]: {
+        hash: string,
+        size: number,
     };
 }
 
 const cores = os.cpus.length || 4;
+
+function downloadAssetsByCluster(objects: Array<{ hash: string, size: number }>, folder: MinecraftFolder, assetsHost: string) {
+    return async (context: Task.Context) => {
+        const totalSize = objects.map((c) => c.size).reduce((a, b) => a + b, 0);
+        context.update(0, totalSize);
+        let lastProgress = 0;
+
+        for (const o of objects) {
+            const { hash, size } = o;
+            const head = hash.substring(0, 2);
+            const dir = folder.getPath("assets", "objects", head);
+            await ensureDir(dir);
+            const file = path.join(dir, hash);
+            const exist = await exists(file);
+            if (!exist) {
+                await Task.create("", createDownloadWork(`${assetsHost}/${head}/${hash}`, file)).onUpdate(({ progress }) => {
+                    context.update(lastProgress + progress);
+                }).execute();
+            } else {
+                const sum = await computeChecksum(file);
+                if (sum !== hash) {
+                    await Task.create("", createDownloadWork(`${assetsHost}/${head}/${hash}`, file)).onUpdate(({ progress }) => {
+                        context.update(lastProgress + progress);
+                    }).execute();
+                }
+            }
+            lastProgress += size;
+            context.update(lastProgress);
+        }
+    };
+}
 
 function downloadAssets(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, assetsHost?: string }) {
     return async (context: Task.Context) => {
@@ -291,19 +312,18 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
             await ensureDir(path.join(folder.assets, "indexes"));
             await context.execute("downloadAssetsJson", createDownloadWork(version.assetIndex.url, jsonPath));
         }
-        const content: any = JSON.parse(await fs.promises.readFile(jsonPath).then((b) => b.toString())).objects;
+        const { objects } = JSON.parse(await fs.promises.readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
         await ensureDir(folder.getPath("assets", "objects"));
         const assetsHost = option.assetsHost || Version.DEFAULT_RESOURCE_ROOT_URL;
-        const keys = Object.keys(content);
-        for (let i = 0; i < keys.length; i += cores) {
-            const all = [];
-            for (let j = 0; j < cores; j++) {
-                const hash = keys[j + i];
-                if (hash === undefined) { break; }
-                all.push(context.execute({ name: "downloadAsset", arguments: { hash } }, downloadAsset(content, hash, folder, assetsHost)));
-            }
-            await Promise.all(all);
+        const objectArray = Object.keys(objects).map((k) => objects[k]);
+
+        const all = [];
+        const avg = Math.round(objectArray.length / cores);
+        for (let i = 0; i < cores; i++) {
+            all.push(downloadAssetsByCluster(objectArray.slice(i * avg, (i + 1) * avg), folder, assetsHost));
         }
+        await Promise.all(all);
+
         return version;
     };
 }
