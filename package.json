@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "5.0.9-beta",
+  "version": "5.0.10-beta",
   "main": "./dest/index.js",
   "types": "./dest/index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher.",
@@ -43,7 +43,7 @@
     "long": "^3.2.0",
     "treelike-task": "^0.0.13",
     "uuid": "^3.2.1",
-    "yauzlw": "0.0.2"
+    "yauzlw": "0.0.3"
   },
   "bugs": {
     "url": "https://github.com/InfinityStudio/ts-minecraft/issues"
