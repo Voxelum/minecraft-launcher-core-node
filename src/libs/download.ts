@@ -157,12 +157,16 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
         const json = folder.getVersionJson(version.id);
         await context.execute("ensureVersionRoot", () => ensureDir(folder.getVersionRoot(version.id)));
 
-        const actualSha1 = await computeChecksum(json, "sha1");
-        const expectSha1 = version.url.split("/")[5];
-
-        if (!await exists(json) || expectSha1 !== actualSha1) {
+        if (await exists(json)) {
+            const actualSha1 = await computeChecksum(json, "sha1");
+            const expectSha1 = version.url.split("/")[5];
+            if (expectSha1 !== actualSha1) {
+                await context.execute("downloadJson", createDownloadWork(version.url, json));
+            }
+        } else {
             await context.execute("downloadJson", createDownloadWork(version.url, json));
         }
+
         return context.execute("resolveJson", () => Version.parse(minecraft, version.id));
     };
 }
