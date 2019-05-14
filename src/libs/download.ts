@@ -118,28 +118,28 @@ Version.install = (type: string, versionMeta: VersionMeta, minecraft: MinecraftL
 };
 
 Version.installTask = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) =>
-    Task.create("install", install(type, versionMeta, minecraft, option));
+    Task.create({ name: "install", arguments: { version: versionMeta.id, type } }, install(type, versionMeta, minecraft, option));
 
 Version.checkDependencies = (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) => {
     return Version.checkDependenciesTask(version, minecraft, option).execute();
 };
 
 Version.checkDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
-    return Task.create("checkDependency", checkDependency(version, minecraft, option));
+    return Task.create({ name: "checkDependency", arguments: { version: version.id } }, checkDependency(version, minecraft, option));
 };
 
 Version.downloadVersion = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
-    return Task.create("downloadVersion", downloadVersion(type, meta, minecraft, true)).execute();
+    return Version.downloadVersionTask(type, meta, minecraft).execute();
 };
 
 Version.downloadVersionTask = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
-    return Task.create("downloadVersion", downloadVersion(type, meta, minecraft, true));
+    return Task.create({ name: "downloadVersion", arguments: { type, version: meta.id } }, downloadVersion(type, meta, minecraft, true));
 };
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
-    return (context: Task.Context) => {
-        return context.execute("downloadVersion", downloadVersion(type, versionMeta, minecraft, option ? option.checksum : undefined))
-            .then((ver) => type === "client" ? context.execute("checkDependencies", checkDependency(ver, minecraft, option)) : ver);
+    return async (context: Task.Context) => {
+        const ver = await context.execute("downloadVersion", downloadVersion(type, versionMeta, minecraft, option ? option.checksum : undefined));
+        return type === "client" ? context.execute("checkDependencies", checkDependency(ver, minecraft, option)) : ver;
     };
 }
 
@@ -156,7 +156,11 @@ function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation)
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const json = folder.getVersionJson(version.id);
         await context.execute("ensureVersionRoot", () => ensureDir(folder.getVersionRoot(version.id)));
-        if (!await exists(json)) {
+
+        const actualSha1 = await computeChecksum(json, "sha1");
+        const expectSha1 = version.url.split("/")[5];
+
+        if (!await exists(json) || expectSha1 !== actualSha1) {
             await context.execute("downloadJson", createDownloadWork(version.url, json));
         }
         return context.execute("resolveJson", () => Version.parse(minecraft, version.id));
