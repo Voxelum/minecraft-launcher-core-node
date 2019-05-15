@@ -270,6 +270,8 @@ export namespace Forge {
             const json = JSON.parse(await bufferEntry(zip, entry).then((b) => b.toString("utf-8")));
             if (json instanceof Array) {
                 for (const m of json) { modidTree[m.modid] = m; }
+            } else if (json.modList instanceof Array) {
+                for (const m of json.modList) { modidTree[m.modid] = m; }
             } else if (json.modid) {
                 modidTree[json.modid] = json;
             }
