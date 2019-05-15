@@ -319,7 +319,7 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
-        if (await missing(jsonPath)) {
+        if (await missing(jsonPath) || await computeChecksum(jsonPath, "sha1") !== version.assetIndex.sha1) {
             await ensureDir(path.join(folder.assets, "indexes"));
             await context.execute("downloadAssetsJson", createDownloadWork(version.assetIndex.url, jsonPath));
         }
