@@ -4,7 +4,7 @@ import * as path from "path";
 import Task from "treelike-task";
 import { Entry, ZipFile } from "yauzl";
 import { bufferEntry, createExtractStream, open, walkEntries } from "yauzlw";
-import { ensureDir, exists, missing, multiChecksum } from "./utils/common";
+import { ensureDir, ensureFile, exists, missing, multiChecksum } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { got } from "./utils/network";
 import { Version } from "./version";
@@ -351,8 +351,10 @@ export namespace Forge {
                     }
                 }
                 await context.execute("downloadInstaller", () => download(installerURL).catch(() => download(installerURLFallback)));
-                await fs.promises.rename(path.resolve(rootPath, `forge-${versionPath}-universal.jar`), jarPath).catch((e) => {
-                    console.warn("Cannot found forge version jar " + path.resolve(rootPath, `forge-${versionPath}-universal.jar`) + ". Please use version json file to install forge after.");
+                const cacheForgePath = path.resolve(rootPath, `forge-${versionPath}-universal.jar`);
+                await ensureFile(jarPath);
+                await fs.promises.rename(cacheForgePath, jarPath).catch((e) => {
+                    console.warn("Cannot found forge version jar " + cacheForgePath + ". Please use version json file to install forge after.");
                 });
                 return true;
             });
@@ -365,7 +367,7 @@ export namespace Forge {
                 const cacheVersionPath = path.resolve(rootPath, "version.json");
                 if (await missing(cacheVersionPath)) { // either not download installer, or downloaded not extract from universal
                     if (await exists(jarPath)) { // try extract json from universal jar
-                        await fs.createReadStream(jarPath).pipe(createExtractStream(cacheVersionPath)).promise();
+                        await fs.createReadStream(jarPath).pipe(createExtractStream(rootPath, ["version.json"])).promise();
                     }
 
                     if (await missing(cacheVersionPath)) { // if universal jar dont have json, try extract from installer
