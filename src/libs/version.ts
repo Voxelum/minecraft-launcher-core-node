@@ -264,8 +264,6 @@ export namespace Version {
 
 function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<Version.Diagnosis> {
     return async (context: Task.Context) => {
-        const jarPath = minecraft.getVersionJar(version);
-        const missingJar = await context.execute("checkJar", () => missing(jarPath));
         let resolvedVersion: Version;
         try {
             resolvedVersion = await context.execute("checkVersionJson", () => Version.parse(minecraft, version));
@@ -275,13 +273,15 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
                 version,
 
                 missingVersionJson: e.version,
-                missingVersionJar: missingJar,
+                missingVersionJar: false,
                 missingAssetsIndex: false,
 
                 missingLibraries: [],
                 missingAssets: {},
             };
         }
+        const jarPath = minecraft.getVersionJar(resolvedVersion.client);
+        const missingJar = await context.execute("checkJar", () => missing(jarPath));
         const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
         const missingAssetsIndex = await context.execute("checkAssetIndex", async () => await missing(assetsIndexPath) || await computeChecksum(assetsIndexPath) !== resolvedVersion.assetIndex.sha1);
         const libMask = await context.execute("checkLibraries", () => Promise.all(resolvedVersion.libraries.map(async (lib) => {
