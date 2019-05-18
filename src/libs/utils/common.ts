@@ -16,10 +16,16 @@ export async function ensureDir(target: string) {
     try {
         await promises.mkdir(target, { recursive: true });
     } catch (e) {
+        if (await exists(target)) { return; }
         if (e.code === "EEXIST") { return; }
         if (e.code === "ENOENT") {
-            await ensureDir(dirname(target));
-            await promises.mkdir(target, { recursive: true });
+            try {
+                await ensureDir(dirname(target));
+                await promises.mkdir(target, { recursive: true });
+            } catch {
+                if (await exists(target)) { return; }
+                throw e;
+            }
             return;
         }
         throw e;
