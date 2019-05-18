@@ -4,10 +4,9 @@ import * as path from "path";
 import Task from "treelike-task";
 import { Entry, ZipFile } from "yauzl";
 import { bufferEntry, createExtractStream, open, walkEntries } from "yauzlw";
-import { ensureDir, exists, multiChecksum } from "./utils/common";
+import { ensureDir, exists, missing, multiChecksum } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { got } from "./utils/network";
-import { createDownloadWork } from "./utils/network";
 import { Version } from "./version";
 
 export namespace Forge {
@@ -318,56 +317,55 @@ export namespace Forge {
 
     export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
 
-    function installTask0(version: VersionMeta, minecraft: MinecraftLocation, maven: string) {
+    function installTaskInternal(version: VersionMeta, minecraft: MinecraftLocation, maven: string) {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const versionPath = `${version.mcversion}-${version.version}`;
-            const universalURLFallback = `${maven}/maven/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-universal.jar`;
             const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${versionPath}/forge-${versionPath}-installer.jar`;
-            const universalURL = `${maven}${version.universal}`;
             const installerURL = `${maven}${version.installer}`;
             const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${versionPath}/forge-${versionPath}.jar`);
             const forgeId = `${version.mcversion}-forge${version.mcversion}-${version.version}`;
             const rootPath = mc.getVersionRoot(forgeId);
             const jsonPath = path.join(rootPath, `${forgeId}.json`);
 
-            async function download(universal: string, installer: string) {
-                try {
-                    await context.execute("downloadJar", createDownloadWork(universal, jarPath));
-                } catch (e) {
-                    await context.execute("downloadInstaller", (ctx) => new Promise((resolve, reject) => {
-                        got.stream(installer, {
-                            method: "GET",
-                            headers: { connection: "keep-alive" },
-                        }).on("error", reject)
-                            .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); })
-                            .pipe(createExtractStream(path.dirname(jarPath), [`forge-${versionPath}-universal.jar`]))
-                            .promise()
-                            .then(() => resolve());
-                    }));
-                    await fs.promises.rename(path.resolve(path.dirname(jarPath), `forge-${versionPath}-universal.jar`), jarPath);
-                }
+            async function download(installer: string) {
+                await context.execute("downloadInstaller", (ctx) => new Promise((resolve, reject) => {
+                    got.stream(installer, {
+                        method: "GET",
+                        headers: { connection: "keep-alive" },
+                    }).on("error", reject)
+                        .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); })
+                        .pipe(createExtractStream(rootPath, [`forge-${versionPath}-universal.jar`, "version.json"]))
+                        .promise()
+                        .then(() => resolve());
+                }));
             }
 
-            await context.execute("ensureForgeJar", async () => {
+
+            const downloaded = await context.execute("ensureForgeJar", async () => {
                 if (await exists(jarPath)) {
                     const keys = Object.keys(version.checksum);
                     const checksums = await multiChecksum(jarPath, keys);
                     if (checksums.every((v, i) => v === version.checksum[keys[i]])) {
-                        return;
+                        return false;
                     }
                 }
-                await download(universalURL, installerURL)
-                    .catch(() => download(universalURLFallback, installerURLFallback));
+                await context.execute("downloadInstaller", () => download(installerURL).catch(() => download(installerURLFallback)));
+                await fs.promises.rename(path.resolve(rootPath, `forge-${versionPath}-universal.jar`), jarPath);
+                return true;
             });
 
             await context.execute("ensureForgeJson", async () => {
                 if (await exists(jsonPath)) { return; }
 
-                await context.execute("ensureRoot", () => ensureDir(rootPath));
-                await context.execute("extraVersionJson", () => fs.createReadStream(jarPath)
-                    .pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise());
-                await fs.promises.rename(path.resolve(path.dirname(jsonPath), "version.json"), jsonPath);
+                await ensureDir(rootPath);
+                await fs.createReadStream(jarPath).pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise();
+
+                if (await missing(path.join(rootPath, "version.json")) && !downloaded) {
+                    await context.execute("downloadInstaller", () => download(installerURL).catch(() => download(installerURLFallback)));
+                }
+
+                await fs.promises.rename(path.resolve(rootPath, "version.json"), jsonPath);
             });
 
             return forgeId;
@@ -393,12 +391,12 @@ export namespace Forge {
         id?: string,
     }): Task<string> {
         const op = option || {};
-        return Task.create("installForge", installTask0(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN));
+        return Task.create("installForge", installTaskInternal(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN));
     }
 
     export function installAndCheckTask(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false, maven: string = DEFAULT_FORGE_MAVEN): Task<Version> {
         return Task.create("installForgeAndCheck", async (context) => {
-            const id = await context.execute("install", installTask0(version, minecraft, maven));
+            const id = await context.execute("install", installTaskInternal(version, minecraft, maven));
             const ver = await context.execute("versionParse", () => Version.parse(minecraft, id));
             return context.execute("checkDependencies", Version.checkDependenciesTask(ver, minecraft).work);
         });

@@ -70,7 +70,7 @@ export namespace Launcher {
         await ensureLibraries(minecraftFolder, version);
         await ensureNative(minecraftFolder, version);
 
-        return spawn(args[0], args.slice(1), { cwd: options.gamePath });
+        return spawn(args[0], args.slice(1), { cwd: options.gamePath, env: process.env });
     }
 
     /**

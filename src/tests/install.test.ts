@@ -33,6 +33,11 @@ describe("Install", function () {
             }
         }).timeout(1000000);
         it("should install forge version", async function () {
+            before(() => {
+                if (fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`)) {
+                    fs.unlinkSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`);
+                }
+            });
             const meta: Forge.VersionMeta = {
                 mcversion: "1.12.2",
                 version: "14.23.5.2823",
