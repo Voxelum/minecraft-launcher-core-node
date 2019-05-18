@@ -361,13 +361,25 @@ export namespace Forge {
                 if (await exists(jsonPath)) { return; }
 
                 await ensureDir(rootPath);
-                await fs.createReadStream(jarPath).pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise();
 
-                if (await missing(path.join(rootPath, "version.json")) && !downloaded) {
-                    await context.execute("downloadInstaller", () => download(installerURL).catch(() => download(installerURLFallback)));
+                const cacheVersionPath = path.resolve(rootPath, "version.json");
+                if (await missing(cacheVersionPath)) { // either not download installer, or downloaded not extract from universal
+                    if (await exists(jarPath)) { // try extract json from universal jar
+                        await fs.createReadStream(jarPath).pipe(createExtractStream(cacheVersionPath)).promise();
+                    }
+
+                    if (await missing(cacheVersionPath)) { // if universal jar dont have json, try extract from installer
+                        if (!downloaded) { // if we did not download installer, download
+                            await context.execute("downloadInstaller", () => download(installerURL).catch(() => download(installerURLFallback)));
+                        }
+                    }
                 }
 
-                await fs.promises.rename(path.resolve(rootPath, "version.json"), jsonPath);
+                if (await missing(cacheVersionPath)) {
+                    throw new Error("Cannot find version json of forge");
+                }
+
+                await fs.promises.rename(cacheVersionPath, jsonPath);
             });
 
             return forgeId;
