@@ -351,7 +351,9 @@ export namespace Forge {
                     }
                 }
                 await context.execute("downloadInstaller", () => download(installerURL).catch(() => download(installerURLFallback)));
-                await fs.promises.rename(path.resolve(rootPath, `forge-${versionPath}-universal.jar`), jarPath);
+                await fs.promises.rename(path.resolve(rootPath, `forge-${versionPath}-universal.jar`), jarPath).catch((e) => {
+                    console.warn("Cannot found forge version jar " + path.resolve(rootPath, `forge-${versionPath}-universal.jar`) + ". Please use version json file to install forge after.");
+                });
                 return true;
             });
 

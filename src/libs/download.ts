@@ -198,8 +198,8 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
 
 function checkDependency(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string } = {}) {
     return async (context: Task.Context) => {
-        await context.execute("downloadAssets", downloadAssets(version, minecraft, option));
-        await context.execute("downloadLibraries", downloadLibraries(version, minecraft, option));
+        await Promise.all([context.execute("downloadAssets", downloadAssets(version, minecraft, option)),
+        context.execute("downloadLibraries", downloadLibraries(version, minecraft, option))]);
         return version;
     };
 }
@@ -223,6 +223,13 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
             downloadURL = (lib.name.startsWith("com.typesafe:config:") || lib.name.startsWith("com.typesafe.akka:akka-actor_2.11")) && !canDecompress ?
                 `http://central.maven.org/maven2/${lib.download.path}` :
                 lib.download.url;
+        }
+        if (downloadURL === "") {
+            if (lib.download.path.startsWith("net/minecraftforge/")) {
+                downloadURL = "https://files.minecraftforge.net/maven/" + lib.download.path;
+            } else {
+                downloadURL = "https://libraries.minecraft.net/" + lib.download.path;
+            }
         }
         if (compressed) {
             downloadURL += ".pack.xz";
