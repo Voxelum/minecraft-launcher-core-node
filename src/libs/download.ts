@@ -224,13 +224,6 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
                 `http://central.maven.org/maven2/${lib.download.path}` :
                 lib.download.url;
         }
-        if (downloadURL === "") {
-            if (lib.download.path.startsWith("net/minecraftforge/")) {
-                downloadURL = "https://files.minecraftforge.net/maven/" + lib.download.path;
-            } else {
-                downloadURL = "https://libraries.minecraft.net/" + lib.download.path;
-            }
-        }
         if (compressed) {
             downloadURL += ".pack.xz";
         }

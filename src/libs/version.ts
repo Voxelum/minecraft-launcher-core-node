@@ -476,8 +476,12 @@ function parseVersionJson(versionString: string): Version {
             } else {
                 if (lib.downloads) { return new Library(lib.name, lib.downloads.artifact); }
 
-                const url = lib.url || "https://libraries.minecraft.net/";
                 const pathArr = lib.name.split(":");
+                const url = (lib.url === "" || lib.url === undefined) ?
+                    pathArr[0] === "net.minecraftforge" ?
+                        "https://files.minecraftforge.net/maven/"
+                        : "https://libraries.minecraft.net/"
+                    : "https://libraries.minecraft.net/";
                 const groupPath = pathArr[0].replace(/\./g, "/");
                 const id = pathArr[1];
                 const version = pathArr[2];
