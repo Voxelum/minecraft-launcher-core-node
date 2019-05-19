@@ -248,7 +248,7 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
     };
 }
 
-function downloadLibraries(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost }) {
+export function downloadLibraries(version: Pick<Version, "libraries">, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const fullOption = option || {};
@@ -258,6 +258,7 @@ function downloadLibraries(version: Version, minecraft: MinecraftLocation, optio
                 context.execute({ name: "ensureLibrary", arguments: { lib: lib.name } }, downloadLib(lib, folder, libraryHost)).catch((e) => {
                     console.error(`Error occured during downloading lib: ${lib.name}`);
                     console.error(e);
+                    throw e;
                 }));
             await Promise.all(promises);
         } catch (e) {

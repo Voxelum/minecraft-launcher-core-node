@@ -1,8 +1,8 @@
 import * as ByteBuffer from "bytebuffer";
 import { createHash } from "crypto";
-import { constants, createReadStream, promises } from "fs";
+import { constants, createReadStream, existsSync, promises } from "fs";
 import { arch as getArch, platform as getPlatform, release } from "os";
-import { dirname } from "path";
+import { dirname, resolve as presolve } from "path";
 
 export function exists(target: string) {
     return promises.access(target, constants.F_OK).then(() => true).catch(() => false);
@@ -34,6 +34,20 @@ export async function ensureDir(target: string) {
 
 export function ensureFile(target: string) {
     return ensureDir(dirname(target));
+}
+
+export async function remove(f: string) {
+    try {
+        const stat = await promises.stat(f);
+        if (stat.isDirectory()) {
+            const children = await promises.readdir(f);
+            await Promise.all(children.map((child) => remove(presolve(f, child))));
+        } else {
+            await promises.unlink(f);
+        }
+    } catch {
+        return;
+    }
 }
 
 export function computeChecksum(path: string, algorithm: string = "sha1"): Promise<string> {

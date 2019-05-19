@@ -5,6 +5,25 @@ import Task from "treelike-task";
 import { MinecraftFolder, MinecraftLocation } from "../index";
 import { computeChecksum, exists, missing } from "./utils/common";
 
+export function parseLibPath(name: string) {
+    const pathArr = name.split(":");
+
+    const groupPath = pathArr[0].replace(/\./g, "/");
+    const id = pathArr[1];
+    const versionIdentifier = pathArr[2];
+    let version;
+    let ext;
+    if (versionIdentifier.indexOf("@") !== -1) {
+        [version, ext] = versionIdentifier.split("@");
+    } else {
+        version = versionIdentifier;
+        ext = "jar";
+    }
+    const isSnapshot = version.endsWith("-SNAPSHOT");
+
+    return !isSnapshot ? `${groupPath}/${id}/${version}/${id}-${version}.${ext}` : `${groupPath}/${id}/${version}/${version}.${ext}`;
+}
+
 function getPlatform() {
     const os = require("os");
     let arch = os.arch();
@@ -474,26 +493,24 @@ function parseVersionJson(versionString: string): Version {
                 if (!nativArt) { return empty; }
                 return new Native(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
             } else {
-                if (lib.downloads) { return new Library(lib.name, lib.downloads.artifact); }
+                const ensureUrl = (u: string, name: string, p: string) =>
+                    (u === "" || u === undefined) ?
+                        name.split(":")[0] === "net.minecraftforge" ?
+                            "https://files.minecraftforge.net/maven/" + p
+                            : "https://libraries.minecraft.net/" + p
+                        : "https://libraries.minecraft.net/" + p;
 
-                const pathArr = lib.name.split(":");
-                const url = (lib.url === "" || lib.url === undefined) ?
-                    pathArr[0] === "net.minecraftforge" ?
-                        "https://files.minecraftforge.net/maven/"
-                        : "https://libraries.minecraft.net/"
-                    : "https://libraries.minecraft.net/";
-                const groupPath = pathArr[0].replace(/\./g, "/");
-                const id = pathArr[1];
-                const version = pathArr[2];
-                const isSnapshot = version.endsWith("-SNAPSHOT");
+                if (lib.downloads) {
+                    lib.downloads.artifact.url = ensureUrl(lib.downloads.artifact.url, lib.name, lib.downloads.artifact.path);
+                    return new Library(lib.name, lib.downloads.artifact);
+                }
 
-                const path = !isSnapshot ? `${groupPath}/${id}/${version}/${id}-${version}.jar` : `${groupPath}/${id}/${version}/${version}.jar`;
-
+                const path = parseLibPath(lib.name);
                 const artifact: Artifact = {
                     size: -1,
                     sha1: lib.checksums ? lib.checksums[0] : "",
                     path,
-                    url: `${url}${path}`,
+                    url: ensureUrl(lib.url, lib.name, path),
                 };
                 return new Library(lib.name, artifact, lib.checksums, lib.serverreq, lib.clientreq);
             }

@@ -43,7 +43,7 @@
     "long": "^3.2.0",
     "treelike-task": "0.0.15",
     "uuid": "^3.2.1",
-    "yauzlw": "0.0.6"
+    "yauzlw": "0.0.7"
   },
   "bugs": {
     "url": "https://github.com/InfinityStudio/ts-minecraft/issues"
