@@ -11,7 +11,7 @@ import { downloadLibraries } from "./download";
 import { computeChecksum, ensureDir, ensureFile, exists, missing, multiChecksum, remove } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { createDownloadWork, got } from "./utils/network";
-import { parseLibPath as parseLibPath, Version } from "./version";
+import { parseLibPath as parseLibPath, parseLibraries, Version } from "./version";
 
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
@@ -358,11 +358,12 @@ export namespace Forge {
                     }).on("error", reject)
                         .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); })
                         .pipe(createParseStream({ autoClose: false, lazyEntries: true }))
-                        .promise();
+                        .promise()
+                        .then(resolve, reject);
                 });
             }
 
-            const tempDir = await fs.promises.mkdtemp(mc.root + "/");
+            const tempDir = await fs.promises.mkdtemp(mc.root + path.sep);
             const installJar = path.join(tempDir, "forge-installer.jar");
 
             function processValue(v: string) {
@@ -381,103 +382,123 @@ export namespace Forge {
                 return m;
             }
             async function processBin(s: Readable) {
-                await ensureDir(path.join(tempDir, "data"));
-                await promisify(finished)(s.pipe(fs.createWriteStream("client.lzma")));
+                const file = path.join(tempDir, "data", "client.lzma");
+                await ensureFile(file);
+                await promisify(finished)(s.pipe(fs.createWriteStream(file)));
             }
             async function processVersionJson(s: Readable) {
                 await ensureFile(jsonPath);
                 await promisify(finished)(s.pipe(fs.createWriteStream(jsonPath)));
             }
-            let zip: ZipFile;
             try {
-                zip = await context.execute("downloadInstaller", downloadInstallerTask(installerURL, installJar));
-            } catch {
-                zip = await context.execute("downloadInstaller", downloadInstallerTask(installerURLFallback, installJar));
-            }
-            const profile = await new Promise<LaunchProfile>((resolve, reject) => {
-                let foundProfile = false, foundBin = false, foundVersion = false;
-                let launchProf: LaunchProfile;
-
-                zip.on("end", () => {
-                    resolve(launchProf);
-                });
-                zip.on("entry", (entry: Entry) => {
-                    function shouldContinue() {
-                        if (!foundProfile || !foundBin || !foundVersion) {
-                            zip.readEntry();
-                        } else {
-                            zip.close();
-                        }
-                    }
-                    if (entry.fileName === "launcher_profile.json") {
-                        bufferEntry(zip, entry).then((b) => b.toString()).then(JSON.parse).then((obj) => {
-                            foundProfile = true;
-                            launchProf = obj;
-                            shouldContinue();
-                        });
-                    } else if (entry.fileName === "data/client.lzma") {
-                        openEntryReadStream(zip, entry).then(processBin).then(() => {
-                            foundBin = true;
-                            shouldContinue();
-                        });
-                    } else if (entry.fileName === "version.json") {
-                        openEntryReadStream(zip, entry).then(processVersionJson).then(() => {
-                            foundVersion = true;
-                            shouldContinue();
-                        });
-                    } else {
-                        zip.readEntry();
-                    }
-                });
-            });
-
-            for (const key in profile.data) {
-                const value = profile.data[key];
-                value.client = processValue(value.client);
-                value.server = processValue(value.server);
-            }
-            for (const proc of profile.processors) {
-                proc.args = proc.args.map((a) => processMapping(profile.data, a));
-                if (proc.outputs) {
-                    const replacedOutput: LaunchProfile["processors"][0]["outputs"] = {};
-                    for (const key in proc.outputs) {
-                        replacedOutput[processMapping(profile.data, key)] = processMapping(profile.data, proc.outputs[key]);
-                    }
-                    proc.outputs = replacedOutput;
+                let zip: ZipFile;
+                try {
+                    zip = await context.execute("downloadInstaller", downloadInstallerTask(installerURL, installJar));
+                } catch {
+                    zip = await context.execute("downloadInstaller", downloadInstallerTask(installerURLFallback, installJar));
                 }
-            }
-            await context.execute("downloadLibraries", downloadLibraries(profile, mc));
+                const profile = await new Promise<LaunchProfile>((resolve, reject) => {
+                    let foundProfile = false, foundBin = false, foundVersion = false;
+                    let launchProf: LaunchProfile;
 
-            await context.execute("postProcessing", async (ctx) => {
-                ctx.update(0, profile.processors.length);
-                let i = 0;
-                for (const proc of profile.processors) {
-                    await new Promise<void>((resolve, reject) => {
-                        exec([java, "-cp", `"${proc.classpath.map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter)}"`, "-jar", proc.jar, ...proc.args].join(" "), { cwd: tempDir }, (error, stdout, stderror) => {
-                            if (error) { reject(error); } else { resolve(); }
-                        });
+                    zip.once("end", () => {
+                        if (!foundProfile || !foundBin || !foundVersion) {
+                            reject(new Error());
+                        } else {
+                            resolve(launchProf);
+                        }
                     });
-                    i += 1;
-                    ctx.update(i, profile.processors.length);
+                    zip.on("entry", (entry: Entry) => {
+                        function shouldContinue() {
+                            if (!foundProfile || !foundBin || !foundVersion) {
+                                zip.readEntry();
+                            } else {
+                                zip.close();
+                                resolve(launchProf);
+                            }
+                        }
+                        if (entry.fileName === "install_profile.json") {
+                            bufferEntry(zip, entry).then((b) => b.toString()).then(JSON.parse).then((obj) => {
+                                foundProfile = true;
+                                launchProf = obj;
+                                shouldContinue();
+                            });
+                        } else if (entry.fileName === "data/client.lzma") {
+                            openEntryReadStream(zip, entry).then(processBin).then(() => {
+                                foundBin = true;
+                                shouldContinue();
+                            });
+                        } else if (entry.fileName === "version.json") {
+                            openEntryReadStream(zip, entry).then(processVersionJson).then(() => {
+                                foundVersion = true;
+                                shouldContinue();
+                            });
+                        } else {
+                            zip.readEntry();
+                        }
+                    });
+                    zip.readEntry();
+                });
+
+                profile.data.MINECRAFT_JAR = {
+                    client: mc.getVersionJar(version.mcversion),
+                    server: "",
+                };
+                for (const key in profile.data) {
+                    const value = profile.data[key];
+                    value.client = processValue(value.client);
+                    value.server = processValue(value.server);
+                }
+                for (const proc of profile.processors) {
+                    proc.args = proc.args.map((a) => processMapping(profile.data, a));
                     if (proc.outputs) {
-                        for (const file in proc.outputs) {
-                            const sha1 = await computeChecksum(file, "sha1");
-                            if (sha1 !== proc.outputs[file]) {
-                                throw new Error(`Fail to download ${proc.jar} since its validation process failed.`);
+                        const replacedOutput: LaunchProfile["processors"][0]["outputs"] = {};
+                        for (const key in proc.outputs) {
+                            replacedOutput[processMapping(profile.data, key)] = processMapping(profile.data, proc.outputs[key]);
+                        }
+                        proc.outputs = replacedOutput;
+                    }
+                }
+
+                parseLibraries(profile.libraries as any);
+                await context.execute("downloadLibraries", downloadLibraries({ libraries: parseLibraries(profile.libraries as any) }, mc));
+
+
+                await context.execute("postProcessing", async (ctx) => {
+                    ctx.update(0, profile.processors.length);
+                    let i = 0;
+                    for (const proc of profile.processors) {
+                        await new Promise<void>((resolve, reject) => {
+                            exec([java, "-cp", `"${proc.classpath.map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter)}"`, "-jar", proc.jar, ...proc.args].join(" "), { cwd: tempDir }, (error, stdout, stderror) => {
+                                if (error) { reject(error); } else { resolve(); }
+                            });
+                        });
+                        i += 1;
+                        ctx.update(i, profile.processors.length);
+                        if (proc.outputs) {
+                            for (const file in proc.outputs) {
+                                const sha1 = await computeChecksum(file, "sha1");
+                                if (sha1 !== proc.outputs[file]) {
+                                    throw new Error(`Fail to process ${proc.jar} since its validation failed.`);
+                                }
                             }
                         }
                     }
-                }
 
+                    await remove(tempDir);
+
+                    i += 1;
+                    ctx.update(i, profile.processors.length);
+                });
+                return fullVersion;
+            } catch (e) {
                 await remove(tempDir);
-
-                i += 1;
-                ctx.update(i, profile.processors.length);
-            });
+                throw e;
+            }
         };
     }
 
-    function installByUniversalTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string) {
+    function installByUniversalTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string, checkDependecies: boolean) {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const forgeVersion = `${version.mcversion}-${version.version}`;
@@ -514,75 +535,10 @@ export namespace Forge {
                 await fs.promises.rename(path.resolve(path.dirname(jsonPath), "version.json"), jsonPath);
             });
 
-            return fullVersion;
-        };
-    }
-
-    function installTaskLegacy(version: VersionMeta, minecraft: MinecraftLocation, maven: string) {
-        return async (context: Task.Context) => {
-            const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
-            const forgeVersion = `${version.mcversion}-${version.version}`;
-            const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
-            const installerURL = `${maven}${version.installer}`;
-            const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`);
-            const fullVersion = `${version.mcversion}-forge${version.mcversion}-${version.version}`;
-            const rootPath = mc.getVersionRoot(fullVersion);
-            const jsonPath = path.join(rootPath, `${fullVersion}.json`);
-
-            async function download(installer: string) {
-                await context.execute("downloadInstaller", (ctx) => new Promise((resolve, reject) => {
-                    got.stream(installer, {
-                        method: "GET",
-                        headers: { connection: "keep-alive" },
-                    }).on("error", reject)
-                        .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); })
-                        .pipe(createExtractStream(rootPath, [`forge-${forgeVersion}-universal.jar`, "version.json"]))
-                        .promise()
-                        .then(() => resolve());
-                }));
+            if (checkDependecies) {
+                const resolvedVersion = await Version.parse(minecraft, fullVersion);
+                context.execute("checkDependencies", Version.checkDependenciesTask(resolvedVersion, minecraft).work);
             }
-
-            const downloaded = await context.execute("ensureForgeJar", async () => {
-                if (await exists(jarPath)) {
-                    const keys = Object.keys(version.checksum);
-                    const checksums = await multiChecksum(jarPath, keys);
-                    if (checksums.every((v, i) => v === version.checksum[keys[i]])) {
-                        return false;
-                    }
-                }
-                await context.execute("downloadInstaller", () => download(installerURL).catch(() => download(installerURLFallback)));
-                const cacheForgePath = path.resolve(rootPath, `forge-${forgeVersion}-universal.jar`);
-                await ensureFile(jarPath);
-                await fs.promises.rename(cacheForgePath, jarPath).catch((e) => {
-                    console.warn("Cannot found forge version jar " + cacheForgePath + ". Please use version json file to install forge after.");
-                });
-                return true;
-            });
-
-            await context.execute("ensureForgeJson", async () => {
-                if (await exists(jsonPath)) { return; }
-
-                await ensureDir(rootPath);
-
-                const cacheVersionPath = path.resolve(rootPath, "version.json");
-                if (await missing(cacheVersionPath)) { // either not download installer, or downloaded not extract from universal
-                    if (await exists(jarPath)) { // try extract json from universal jar
-                        await fs.createReadStream(jarPath).pipe(createExtractStream(rootPath, ["version.json"])).promise();
-                    }
-
-                    if (await missing(cacheVersionPath)) { // if universal jar dont have json, try extract from installer
-                        if (!downloaded) { // if we did not download installer, download
-                            await context.execute("downloadInstaller", () => download(installerURL).catch(() => download(installerURLFallback)));
-                        }
-                    }
-                }
-
-                if (await missing(cacheVersionPath)) {
-                    throw new Error("Cannot find version json of forge");
-                }
-
-                await fs.promises.rename(cacheVersionPath, jsonPath);
-            });
 
             return fullVersion;
         };
@@ -597,7 +553,7 @@ export namespace Forge {
         maven?: string,
         java?: string,
     }) {
-        return installTask(version, minecraft, option);
+        return installTask(version, minecraft, option).execute();
     }
 
     /**
@@ -607,33 +563,14 @@ export namespace Forge {
      */
     export function installTask(version: VersionMeta, minecraft: MinecraftLocation, option?: {
         maven?: string,
+        forceCheckDependencies?: boolean,
         java?: string,
     }): Task<string> {
         const op = option || {};
-        const requireJava = version.mcversion.startsWith("1.13");
-        const work = requireJava ? installTaskJava(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN, op.java || "java")
-            : installTaskLegacy(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN);
+        const byInstaller = version.mcversion.startsWith("1.13");
+        const work = byInstaller ? installByInstallerTask(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN, op.java || "java")
+            : installByUniversalTask(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN, op.forceCheckDependencies === true);
         return Task.create("installForge", work);
-    }
-
-    /**
-     * Install forge to target location.
-     * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
-     * @param version The forge version meta
-     */
-    export function installAndCheckTask(version: VersionMeta, minecraft: MinecraftLocation, option: {
-        maven?: string,
-        java?: string,
-    } = {}): Task<Version> {
-        return Task.create("installForgeAndCheck", async (context) => {
-            const id = await context.execute("install", installTaskLegacy(version, minecraft, option.maven || DEFAULT_FORGE_MAVEN, option.java || "java"));
-            const ver = await context.execute("versionParse", () => Version.parse(minecraft, id));
-            return context.execute("checkDependencies", Version.checkDependenciesTask(ver, minecraft).work);
-        });
-    }
-
-    export async function installAndCheck(version: VersionMeta, minecraft: MinecraftLocation, checksum: boolean = false, maven?: string): Promise<Version> {
-        return installAndCheckTask(version, minecraft, checksum, maven).execute();
     }
 }
 

@@ -29,12 +29,11 @@ function getPlatform() {
     let arch = os.arch();
     if (arch.startsWith("x")) { arch = arch.substring(1); }
     const version = os.release();
-    const name: string = "unknown";
     switch (os.platform()) {
         case "darwin":
             return { name: "osx", version, arch };
         case "linux":
-            return { name, version, arch };
+            return { name: "linux", version, arch };
         case "win32":
             return { name: "windows", version, arch };
         default:
@@ -56,6 +55,36 @@ export interface Artifact extends Download {
 }
 export interface LoggingFile extends Download {
     readonly id: string;
+}
+
+
+export interface RawArtifact {
+    path: string;
+    url: string;
+    sha1: string;
+    size: number;
+}
+
+
+export interface RawLib {
+    name: string;
+    rules?: Array<{ action: "allow" | "disallow", os?: { name: string } }>;
+    extract?: {
+        exclude: string[],
+    };
+    natives: {
+        [os: string]: string,
+    };
+    downloads: {
+        classifiers: {
+            [os: string]: RawArtifact,
+        },
+        artifact: RawArtifact,
+    };
+    url?: string;
+    checksums?: string[];
+    serverreq?: boolean;
+    clientreq?: boolean;
 }
 
 export type LaunchArgument = string | { rules: Array<{ action: string, features?: any, os?: { name?: string, version?: string } }>, value: string | string[] };
@@ -106,6 +135,7 @@ export namespace Version {
         missingAssets: { [file: string]: string };
     }
 
+
     export interface Raw {
         id: string;
         time: string;
@@ -121,7 +151,7 @@ export namespace Version {
         };
 
         mainClass: string;
-        libraries: Library[];
+        libraries: RawLib[];
 
         jar?: string;
 
@@ -458,68 +488,70 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     } as Version;
 }
 
+function checkAllowed(rules: Array<{ action?: string, os?: any }>, platform: ReturnType<typeof getPlatform>) {
+    // by default it's allowed
+    if (!rules) { return true; }
+    // else it's disallow by default
+    let allow = false;
+    for (const rule of rules) {
+        const action = rule.action === "allow";
+        // apply by default
+        let apply = true;
+        if (rule.os) {
+            // don't apply by default if has os rule
+            apply = false;
+            const osRule = rule.os;
+            if (platform.name === osRule.name
+                && (!osRule.version || platform.version.match(osRule.version))) {
+                apply = true;
+            }
+        }
+        if (apply) { allow = action; }
+    }
+    return allow;
+}
+
+export function parseLibraries(libs: Version.Raw["libraries"], platform: ReturnType<typeof getPlatform> = getPlatform()) {
+    const empty = new Library("", { path: "", sha1: "", size: 0, url: "" });
+    return libs.map((lib) => {
+        if (lib.rules && !checkAllowed(lib.rules, platform)) { return empty; }
+        if (lib.natives) {
+            if (!lib.natives[platform.name]) { return empty; }
+            const classifier = (lib.natives[platform.name] as string).replace("${arch}", platform.arch);
+            const nativArt = lib.downloads.classifiers[classifier];
+            if (!nativArt) { return empty; }
+            return new Native(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
+        } else {
+            const ensureUrl = (u: string, name: string, p: string) =>
+                (u === "" || u === undefined) ?
+                    name.split(":")[0] === "net.minecraftforge" ?
+                        "https://files.minecraftforge.net/maven/" + p
+                        : "https://libraries.minecraft.net/" + p
+                    : u;
+
+            if (lib.downloads) {
+                lib.downloads.artifact.url = ensureUrl(lib.downloads.artifact.url, lib.name, lib.downloads.artifact.path);
+                return new Library(lib.name, lib.downloads.artifact);
+            }
+
+            const path = parseLibPath(lib.name);
+            const artifact: Artifact = {
+                size: -1,
+                sha1: lib.checksums ? lib.checksums[0] : "",
+                path,
+                url: ensureUrl(lib.url!, lib.name, path),
+            };
+            return new Library(lib.name, artifact, lib.checksums, lib.serverreq, lib.clientreq);
+        }
+    }).filter((l) => l !== empty);
+}
+
 function parseVersionJson(versionString: string): Version {
     const platform = getPlatform();
-    const checkAllowed = (rules: Array<{ action?: string, os?: any }>) => {
-        // by default it's allowed
-        if (!rules) { return true; }
-        // else it's disallow by default
-        let allow = false;
-        for (const rule of rules) {
-            const action = rule.action === "allow";
-            // apply by default
-            let apply = true;
-            if (rule.os) {
-                // don't apply by default if has os rule
-                apply = false;
-                const osRule = rule.os;
-                if (platform.name === osRule.name
-                    && (!osRule.version || platform.version.match(osRule.version))) {
-                    apply = true;
-                }
-            }
-            if (apply) { allow = action; }
-        }
-        return allow;
-    };
-    const parseLibs = (libs: any[]) => {
-        const empty = new Library("", { path: "", sha1: "", size: 0, url: "" });
-        return libs.map((lib) => {
-            if (lib.rules && !checkAllowed(lib.rules)) { return empty; }
-            if (lib.natives) {
-                if (!lib.natives[platform.name]) { return empty; }
-                const classifier = (lib.natives[platform.name] as string).replace("${arch}", platform.arch);
-                const nativArt = lib.downloads.classifiers[classifier];
-                if (!nativArt) { return empty; }
-                return new Native(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
-            } else {
-                const ensureUrl = (u: string, name: string, p: string) =>
-                    (u === "" || u === undefined) ?
-                        name.split(":")[0] === "net.minecraftforge" ?
-                            "https://files.minecraftforge.net/maven/" + p
-                            : "https://libraries.minecraft.net/" + p
-                        : "https://libraries.minecraft.net/" + p;
-
-                if (lib.downloads) {
-                    lib.downloads.artifact.url = ensureUrl(lib.downloads.artifact.url, lib.name, lib.downloads.artifact.path);
-                    return new Library(lib.name, lib.downloads.artifact);
-                }
-
-                const path = parseLibPath(lib.name);
-                const artifact: Artifact = {
-                    size: -1,
-                    sha1: lib.checksums ? lib.checksums[0] : "",
-                    path,
-                    url: ensureUrl(lib.url, lib.name, path),
-                };
-                return new Library(lib.name, artifact, lib.checksums, lib.serverreq, lib.clientreq);
-            }
-        }).filter((l) => l !== empty);
-    };
     const parseArgs = (args: any) => {
         if (args.jvm) {
             args.jvm = args.jvm.map((a: string | any) => {
-                if (typeof a === "object") { return checkAllowed(a.rules) ? a.value : undefined; }
+                if (typeof a === "object") { return checkAllowed(a.rules, platform) ? a.value : undefined; }
                 return a;
             }).filter((a: any) => a !== undefined).reduce((a: string[], b: string | string[]) => {
                 if (b instanceof Array) { a.push(...b); } else { a.push(b); }
@@ -532,7 +564,7 @@ function parseVersionJson(versionString: string): Version {
         return args;
     };
     const parsed = JSON.parse(versionString, (key, value) => {
-        if (key === "libraries") { return parseLibs(value); }
+        if (key === "libraries") { return parseLibraries(value, platform); }
         if (key === "arguments") { return parseArgs(value); }
         return value;
     });
@@ -588,7 +620,7 @@ function parseVersionJson(versionString: string): Version {
         };
         const jvms: string[] = [];
         parsed.arguments.jvm
-            .filter((arg: LaunchArgument) => typeof arg === "string" ? true : checkAllowed(arg.rules) ? true : false)
+            .filter((arg: LaunchArgument) => typeof arg === "string" ? true : checkAllowed(arg.rules, platform) ? true : false)
             .forEach((arg: LaunchArgument) => typeof arg === "string" ? jvms.push(arg) : arg.value instanceof Array ? jvms.push(...arg.value) : jvms.push(arg.value as string));
         parsed.arguments.jvm = jvms;
     }
