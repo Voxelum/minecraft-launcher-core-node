@@ -367,9 +367,9 @@ export namespace Forge {
             const installJar = path.join(tempDir, "forge-installer.jar");
 
             function processValue(v: string) {
-                if (v.match(/^[.+]$/g)) {
+                if (v.match(/^\[.+\]$/g)) {
                     const targetId = v.substring(1, v.length - 1);
-                    return parseLibPath(targetId);
+                    return `"${mc.getLibraryByPath(parseLibPath(targetId))}"`;
                 }
                 return v;
             }
@@ -463,15 +463,19 @@ export namespace Forge {
                 parseLibraries(profile.libraries as any);
                 await context.execute("downloadLibraries", downloadLibraries({ libraries: parseLibraries(profile.libraries as any) }, mc));
 
-
                 await context.execute("postProcessing", async (ctx) => {
                     ctx.update(0, profile.processors.length);
                     let i = 0;
                     for (const proc of profile.processors) {
+                        const jarRealPath = mc.getLibraryByPath(parseLibPath(proc.jar));
                         await new Promise<void>((resolve, reject) => {
-                            exec([java, "-cp", `"${proc.classpath.map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter)}"`, "-jar", proc.jar, ...proc.args].join(" "), { cwd: tempDir }, (error, stdout, stderror) => {
-                                if (error) { reject(error); } else { resolve(); }
-                            });
+                            exec([java, "-classpath", `".${path.delimiter}${proc.classpath.map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter)}"`,
+                                "-jar", `"${jarRealPath}"`, ...proc.args].join(" "), { cwd: tempDir }, (error, stdout, stderror) => {
+                                    if (error) {
+                                        console.error(stderror);
+                                        reject(error);
+                                    } else { resolve(); }
+                                });
                         });
                         i += 1;
                         ctx.update(i, profile.processors.length);
