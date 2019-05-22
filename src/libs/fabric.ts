@@ -5,7 +5,7 @@ import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { fetchJson, getIfUpdate, UpdatedObject } from "./utils/network";
 
 export namespace Fabric {
-    export interface VersionMetaList extends UpdatedObject {
+    export interface VersionList extends UpdatedObject {
         yarnVersions: string[];
         loaderVersions: string[];
     }
@@ -23,7 +23,7 @@ export namespace Fabric {
         };
     }
 
-    export async function updateVersionList(versionList?: VersionMetaList) {
+    export async function updateVersionList(versionList?: VersionList) {
         return getIfUpdate("https://fabricmc.net/use/", parseWebPage, versionList);
     }
 
