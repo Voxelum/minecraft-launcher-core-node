@@ -485,8 +485,8 @@ export namespace Forge {
                         const jarRealPath = mc.getLibraryByPath(parseLibPath(proc.jar));
                         const mainClass = await findMainClass(jarRealPath);
                         if (!mainClass) { throw new Error(`Cannot find main class for processor ${proc.jar}.`); }
-                        const cmd = [java, "-classpath", `".${path.delimiter}${[proc.jar, ...proc.classpath].map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter)}"`,
-                            mainClass, ...proc.args].join(" ");
+                        const cp = [...proc.classpath, proc.jar].map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter);
+                        const cmd = [java, "-classpath", `"${cp}"`, mainClass, ...proc.args].join(" ");
                         await new Promise<void>((resolve, reject) => {
                             exec(cmd, { cwd: tempDir }, (error, stdout, stderror) => {
                                 if (error) {
