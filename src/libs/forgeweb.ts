@@ -1,8 +1,8 @@
+import * as parser from "fast-html-parser";
 import Forge from "./forge";
 import { getIfUpdate, UpdatedObject } from "./utils/network";
 
 export namespace ForgeWebPage {
-    const parser = require("fast-html-parser");
 
     export interface Download {
         md5: string;
@@ -32,7 +32,7 @@ export namespace ForgeWebPage {
                         });
                     const downloadVersionElem = e.querySelector(".download-version");
                     let version;
-                    let type = "common";
+                    let type: ForgeWebPage.Version["type"] = "common";
                     const icon = downloadVersionElem.querySelector("i");
                     if (icon) {
                         if (icon.classNames.indexOf("promo-recommended") !== -1) {
