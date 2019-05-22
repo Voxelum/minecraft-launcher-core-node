@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as fs from "fs";
 import { Forge, LiteLoader, MinecraftFolder, NBT, Version, World } from "../index";
+import { Fabric } from "../libs/fabric";
 
 
 describe("Install", function () {
@@ -117,6 +118,12 @@ describe("Install", function () {
         }).timeout(1000000);
     });
 
+
+    describe("Fabric", function () {
+        it("should be able to install fabric", async function () {
+            await Fabric.install("1.14.1+build.10", "0.4.7+build.147", this.gameDirectory);
+        }).timeout(1000000);;
+    });
 
     //     it("should be able to install liteloader", async function () {
     //         // tslint:disable-next-line:max-line-length
