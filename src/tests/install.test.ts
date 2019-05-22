@@ -122,7 +122,8 @@ describe("Install", function () {
     describe("Fabric", function () {
         it("should be able to install fabric", async function () {
             await Fabric.install("1.14.1+build.10", "0.4.7+build.147", this.gameDirectory);
-        }).timeout(1000000);;
+            assert(fs.existsSync(new MinecraftFolder(this.gameDirectory).getVersionJson("1.14.1-fabric1.14.1+build.10-0.4.7+build.147")));
+        }).timeout(1000000);
     });
 
     //     it("should be able to install liteloader", async function () {
