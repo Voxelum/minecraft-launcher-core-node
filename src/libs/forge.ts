@@ -6,12 +6,27 @@ import { finished, Readable } from "stream";
 import Task from "treelike-task";
 import { promisify } from "util";
 import { Entry, ZipFile } from "yauzl";
-import { bufferEntry, createExtractStream, createParseStream, open, openEntryReadStream, walkEntries } from "yauzlw";
+import { bufferEntry, createExtractStream, createParseStream, open, openEntryReadStream, parseEntries, walkEntries } from "yauzlw";
 import { downloadLibraries } from "./download";
 import { computeChecksum, ensureDir, ensureFile, exists, missing, multiChecksum, remove } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { createDownloadWork, got } from "./utils/network";
 import { parseLibPath as parseLibPath, parseLibraries, Version } from "./version";
+
+async function findMainClass(lib: string) {
+    const zip = await open(lib, { lazyEntries: true, autoClose: false });
+    const { "META-INF/MANIFEST.MF": manifest } = await parseEntries(zip, ["META-INF/MANIFEST.MF"]);
+    let mainClass: string | undefined;
+    if (manifest) {
+        const content = await bufferEntry(zip, manifest).then((b) => b.toString());
+        const mainClassPair = content.split("\n").map((l) => l.split(": ")).filter((arr) => arr[0] === "Main-Class")[0];
+        if (mainClassPair) {
+            mainClass = mainClassPair[1];
+        }
+    }
+    zip.close();
+    return mainClass;
+}
 
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
@@ -468,9 +483,10 @@ export namespace Forge {
                     let i = 0;
                     for (const proc of profile.processors) {
                         const jarRealPath = mc.getLibraryByPath(parseLibPath(proc.jar));
+                        const mainClass = await findMainClass(jarRealPath);
                         await new Promise<void>((resolve, reject) => {
                             exec([java, "-classpath", `".${path.delimiter}${[proc.jar, ...proc.classpath].map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter)}"`,
-                                "-jar", `"${jarRealPath}"`, ...proc.args].join(" "), { cwd: tempDir }, (error, stdout, stderror) => {
+                                `${mainClass}`, ...proc.args].join(" "), { cwd: tempDir }, (error, stdout, stderror) => {
                                     if (error) {
                                         console.error(stderror);
                                         reject(error);
