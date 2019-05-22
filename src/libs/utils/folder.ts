@@ -1,6 +1,5 @@
 import * as paths from "path";
 export class MinecraftFolder {
-    constructor(readonly root: string) { }
     get mods(): string { return paths.join(this.root, "mods"); }
     get resourcepacks(): string { return paths.join(this.root, "resourcepacks"); }
     get assets(): string { return paths.join(this.root, "assets"); }
@@ -11,6 +10,11 @@ export class MinecraftFolder {
     get launcherProfile(): string { return this.getPath("launcher_profiles.json"); }
     get lastestLog(): string { return this.getPath("logs", "latest.log"); }
     get maps(): string { return this.getPath("saves"); }
+
+    static from(location: MinecraftLocation) {
+        return typeof location === "string" ? new MinecraftFolder(location) : location;
+    }
+    constructor(readonly root: string) { }
 
     getNativesRoot(version: string) { return paths.join(this.getVersionRoot(version), version + "-natives"); }
     getVersionRoot(version: string) { return paths.join(this.versions, version); }
