@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+import { spawn } from "child_process";
 import * as fs from "fs";
 import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from "java-asm";
 import * as path from "path";
@@ -8,7 +8,7 @@ import { promisify } from "util";
 import { Entry, ZipFile } from "yauzl";
 import { bufferEntry, createExtractStream, createParseStream, open, openEntryReadStream, parseEntries, walkEntries } from "yauzlw";
 import { downloadLibraries } from "./download";
-import { computeChecksum, ensureDir, ensureFile, exists, missing, multiChecksum, remove } from "./utils/common";
+import { computeChecksum, ensureDir, ensureFile, exists, multiChecksum, remove } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { createDownloadWork, got } from "./utils/network";
 import { parseLibPath as parseLibPath, parseLibraries, Version } from "./version";
@@ -21,7 +21,7 @@ async function findMainClass(lib: string) {
         const content = await bufferEntry(zip, manifest).then((b) => b.toString());
         const mainClassPair = content.split("\n").map((l) => l.split(": ")).filter((arr) => arr[0] === "Main-Class")[0];
         if (mainClassPair) {
-            mainClass = mainClassPair[1];
+            mainClass = mainClassPair[1].trim();
         }
     }
     zip.close();
@@ -384,7 +384,7 @@ export namespace Forge {
             function processValue(v: string) {
                 if (v.match(/^\[.+\]$/g)) {
                     const targetId = v.substring(1, v.length - 1);
-                    return `"${mc.getLibraryByPath(parseLibPath(targetId))}"`;
+                    return mc.getLibraryByPath(parseLibPath(targetId));
                 }
                 return v;
             }
@@ -463,6 +463,11 @@ export namespace Forge {
                     const value = profile.data[key];
                     value.client = processValue(value.client);
                     value.server = processValue(value.server);
+
+                    if (key === "BINPATCH") {
+                        value.client = path.join(tempDir, value.client);
+                        value.server = path.join(tempDir, value.server);
+                    }
                 }
                 for (const proc of profile.processors) {
                     proc.args = proc.args.map((a) => processMapping(profile.data, a));
@@ -486,15 +491,34 @@ export namespace Forge {
                         const mainClass = await findMainClass(jarRealPath);
                         if (!mainClass) { throw new Error(`Cannot find main class for processor ${proc.jar}.`); }
                         const cp = [...proc.classpath, proc.jar].map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter);
-                        const cmd = [java, "-classpath", `"${cp}"`, mainClass, ...proc.args].join(" ");
+                        const cmd = ["-cp", cp, mainClass, ...proc.args];
+
                         await new Promise<void>((resolve, reject) => {
-                            exec(cmd, { cwd: tempDir }, (error, stdout, stderror) => {
-                                if (error) {
-                                    console.error("Error during java execution:");
-                                    console.error(cmd);
-                                    console.error(stderror);
-                                    reject(error);
-                                } else { resolve(); }
+                            const process = spawn(java, cmd, { cwd: tempDir });
+                            process.on("error", (error) => {
+                                reject(error);
+                            });
+                            process.on("close", (code, signal) => {
+                                if (code !== 0) {
+                                    reject();
+                                } else {
+                                    resolve();
+                                }
+                            });
+                            process.on("exit", (code, signal) => {
+                                if (code !== 0) {
+                                    reject();
+                                } else {
+                                    resolve();
+                                }
+                            });
+                            process.stdout.setEncoding("utf-8");
+                            process.stdout.on("data", (buf) => {
+                                // console.error(buf.toString("utf-8"));
+                            });
+                            process.stderr.setEncoding("utf-8");
+                            process.stderr.on("data", (buf) => {
+                                console.error(buf.toString("utf-8"));
                             });
                         });
                         i += 1;
@@ -502,8 +526,9 @@ export namespace Forge {
                         if (proc.outputs) {
                             for (const file in proc.outputs) {
                                 const sha1 = await computeChecksum(file, "sha1");
-                                if (sha1 !== proc.outputs[file]) {
-                                    throw new Error(`Fail to process ${proc.jar} since its validation failed.`);
+                                const expected = proc.outputs[file].replace(/\'/g, "");
+                                if (sha1 !== expected) {
+                                    throw new Error(`Fail to process ${proc.jar} @ ${file} since its validation failed. ${sha1} vs ${expected}`);
                                 }
                             }
                         }

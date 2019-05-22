@@ -21,7 +21,12 @@ export function parseLibPath(name: string) {
     }
     const isSnapshot = version.endsWith("-SNAPSHOT");
 
-    return !isSnapshot ? `${groupPath}/${id}/${version}/${id}-${version}.${ext}` : `${groupPath}/${id}/${version}/${version}.${ext}`;
+    let base = !isSnapshot ? `${groupPath}/${id}/${version}/${id}-${version}` : `${groupPath}/${id}/${version}/${version}`;
+    if (pathArr[3]) {
+        base += `-${pathArr[3]}`;
+    }
+
+    return `${base}.${ext}`;
 }
 
 function getPlatform() {
