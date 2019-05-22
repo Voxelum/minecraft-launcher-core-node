@@ -469,7 +469,7 @@ export namespace Forge {
                     for (const proc of profile.processors) {
                         const jarRealPath = mc.getLibraryByPath(parseLibPath(proc.jar));
                         await new Promise<void>((resolve, reject) => {
-                            exec([java, "-classpath", `".${path.delimiter}${proc.classpath.map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter)}"`,
+                            exec([java, "-classpath", `".${path.delimiter}${[proc.jar, ...proc.classpath].map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter)}"`,
                                 "-jar", `"${jarRealPath}"`, ...proc.args].join(" "), { cwd: tempDir }, (error, stdout, stderror) => {
                                     if (error) {
                                         console.error(stderror);
