@@ -42,6 +42,7 @@ export async function remove(f: string) {
         if (stat.isDirectory()) {
             const children = await promises.readdir(f);
             await Promise.all(children.map((child) => remove(presolve(f, child))));
+            await promises.rmdir(f);
         } else {
             await promises.unlink(f);
         }
