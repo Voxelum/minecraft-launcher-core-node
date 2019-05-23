@@ -38,7 +38,7 @@ export namespace LiteLoader {
     function processLibraries(lib: { name: string, url?: string }) {
         if (Object.keys(lib).length === 1 && lib.name) {
             if (lib.name.startsWith("org.ow2.asm")) {
-                lib.url = "https://files.minecraftforge.net/maven";
+                lib.url = "https://files.minecraftforge.net/maven/";
             }
         }
         return lib;
