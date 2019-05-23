@@ -527,24 +527,21 @@ export function parseLibraries(libs: Version.Raw["libraries"], platform: ReturnT
             if (!nativArt) { return empty; }
             return new Native(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
         } else {
-            const ensureUrl = (u: string, name: string, p: string) =>
-                (u === "" || u === undefined) ?
-                    name.split(":")[0] === "net.minecraftforge" ?
-                        "https://files.minecraftforge.net/maven/" + p
-                        : "https://libraries.minecraft.net/" + p
-                    : u;
-
             if (lib.downloads) {
-                lib.downloads.artifact.url = ensureUrl(lib.downloads.artifact.url, lib.name, lib.downloads.artifact.path);
+                if (!lib.downloads.artifact.url) {
+                    lib.downloads.artifact.url = lib.name.split(":")[0] === "net.minecraftforge" ?
+                        "https://files.minecraftforge.net/maven/" + lib.downloads.artifact.path
+                        : "https://libraries.minecraft.net/" + lib.downloads.artifact.path;
+                }
                 return new Library(lib.name, lib.downloads.artifact);
             }
-
+            const maven = lib.url || "https://libraries.minecraft.net/";
             const path = parseLibPath(lib.name);
             const artifact: Artifact = {
                 size: -1,
                 sha1: lib.checksums ? lib.checksums[0] : "",
                 path,
-                url: ensureUrl(lib.url!, lib.name, path),
+                url: maven + path,
             };
             return new Library(lib.name, artifact, lib.checksums, lib.serverreq, lib.clientreq);
         }
