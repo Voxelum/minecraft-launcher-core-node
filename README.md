@@ -1,9 +1,9 @@
 # ts-minecraft
 
 [![npm version](https://img.shields.io/npm/v/ts-minecraft.svg)](https://www.npmjs.com/package/ts-minecraft)
-[![npm](https://img.shields.io/npm/l/ts-minecraft.svg)](https://github.com/InfinityStudio/ts-minecraft/blob/3.0/LICENSE)
-[![Build Status](https://travis-ci.org/InfinityStudio/ts-minecraft.svg?branch=4.0)](https://travis-ci.org/InfinityStudio/ts-minecraft)
-[![Coverage Status](https://coveralls.io/repos/github/InfinityStudio/ts-minecraft/badge.svg?branch=4.0)](https://coveralls.io/github/InfinityStudio/ts-minecraft?branch=4.0)
+[![npm](https://img.shields.io/npm/l/ts-minecraft.svg)](https://github.com/ci010/ts-minecraft/blob/3.0/LICENSE)
+[![Build Status](https://travis-ci.org/ci010/ts-minecraft.svg?branch=4.0)](https://travis-ci.org/ci010/ts-minecraft)
+[![Coverage Status](https://coveralls.io/repos/github/ci010/ts-minecraft/badge.svg?branch=4.0)](https://coveralls.io/github/ci010/ts-minecraft?branch=4.0)
 
 Provide several useful functions for Minecraft
 
@@ -26,6 +26,7 @@ Provide several useful functions for Minecraft
     - [Game Profile](#game-profile)
     - [Mojang Account Info](#mojang-account-info)
     - [Forge](#forge)
+    - [Fabric](#fabric)
     - [TextComponent](#textcomponent)
     - [Auth](#auth)
     - [Version](#version)
@@ -234,7 +235,41 @@ Read the forge mod config
     });
 ```
 
-Get the forge version info and install forge from it.
+Get the forge version info and install forge from it. 
+
+Notice that this installation doesn't ensure full libraries installation.
+Please run `Version.checkDependencies` afther that.
+
+The new 1.13 forge installation process requires java to run. 
+Either you have `java` executable in your environment variable PATH,
+or you can assign java location by `Forge.install(forgeVersionMeta, minecraftLocation, { java: yourJavaExecutablePath });`.
+
+If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
+Consider support him to maintains forge.
+
+### Fabric 
+
+```ts
+    import { Fabric } from 'ts-minecraft'
+    const versionList: Fabric.VersionList = await Fabric.updateVersionList();
+    const latestYarnVersion = versionList.yarnVersions[0]; // yarn version is combined by mcversion+yarn build number
+    const latestLoaderVersion = versionList.loaderVersions[0];
+```
+
+Fetch the new fabric version list.
+
+
+```ts
+    import { Fabric } from 'ts-minecraft'
+    const minecraftLocation: MinecraftLocation;
+    const yarnVersion: string; // e.g. "1.14.1+build.10"
+    const loaderVersion: string; // e.g. "0.4.7+build.147"
+    const installPromise: Promise<void> = Fabric.install(yarnVersion, loaderVersion, minecraftLocation)
+```
+
+Install fabric to the client. This installation process doesn't ensure the minecraft libraries.
+
+Please run `Version.checkDependencies` after that to install fully.
 
 ### TextComponent
 
