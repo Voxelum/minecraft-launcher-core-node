@@ -35,7 +35,16 @@ export namespace LiteLoader {
         };
         versions: { [version: string]: { snapshot?: VersionMeta, release?: VersionMeta } };
     }
+    function processLibraries(lib: { name: string, url?: string }) {
+        if (Object.keys(lib).length === 1 && lib.name) {
+            if (lib.name.startsWith("org.ow2.asm")) {
+                lib.url = "https://files.minecraftforge.net/maven";
+            }
+        }
+        return lib;
+    }
     export namespace VersionMetaList {
+
         function parse(content: string) {
             const result = JSON.parse(content);
             const metalist = { meta: result.meta, versions: {} };
@@ -57,7 +66,7 @@ export namespace LiteLoader {
                         timestamp,
                         mcversion,
                         tweakClass,
-                        libraries,
+                        libraries: libraries.map(processLibraries),
                     };
                 }
                 if (artifacts) {
@@ -72,7 +81,7 @@ export namespace LiteLoader {
                         timestamp,
                         mcversion,
                         tweakClass,
-                        libraries,
+                        libraries: libraries.map(processLibraries),
                     };
                 }
             }
@@ -144,7 +153,7 @@ export namespace LiteLoader {
         const libraries = [{
             name: `com.mumfrey:liteloader:${versionMeta.version}`,
             url: type === "SNAPSHOT" ? snapshotRoot : releaseRoot,
-        }, ...versionMeta.libraries];
+        }, ...versionMeta.libraries.map(processLibraries)];
         const mainClass = "net.minecraft.launchwrapper.Launch";
         const inheritsFrom = mountedJSON.id;
         const jar = mountedJSON.jar || mountedJSON.id;
