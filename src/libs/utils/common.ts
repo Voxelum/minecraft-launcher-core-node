@@ -14,16 +14,19 @@ export function missing(target: string) {
 
 export async function ensureDir(target: string) {
     try {
-        await promises.mkdir(target, { recursive: true });
+        await promises.mkdir(target);
     } catch (e) {
-        if (await exists(target)) { return; }
+        if (await promises.stat(target).then((s) => s.isDirectory()).catch((e) => false)) { return; }
         if (e.code === "EEXIST") { return; }
         if (e.code === "ENOENT") {
+            if (dirname(target) === target) {
+                throw e;
+            }
             try {
                 await ensureDir(dirname(target));
-                await promises.mkdir(target, { recursive: true });
+                await promises.mkdir(target);
             } catch {
-                if (await exists(target)) { return; }
+                if (await promises.stat(target).then((s) => s.isDirectory()).catch((e) => false)) { return; }
                 throw e;
             }
             return;
