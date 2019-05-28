@@ -280,7 +280,7 @@ interface AssetIndex {
 
 type Objects = AssetIndex["objects"];
 
-const cores = os.cpus.length || 4;
+const cores = os.cpus().length || 4;
 
 function downloadAssetsByCluster(objects: Array<{ name: string, hash: string, size: number }>, folder: MinecraftFolder, assetsHost: string) {
     return async (context: Task.Context) => {
@@ -329,11 +329,29 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
         const assetsHost = option.assetsHost || Version.DEFAULT_RESOURCE_ROOT_URL;
         const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
 
+        const totalSize = objectArray.reduce((p, v) => p + v.size, 0);
+        const averageSize = totalSize / cores;
+
         const all = [];
-        const avg = Math.ceil(objectArray.length / cores);
-        for (let i = 0; i < cores; i++) {
-            all.push(context.execute({ name: "downloadAsset", arguments: { version: version.id } }, downloadAssetsByCluster(objectArray.slice(i * avg, (i + 1) * avg), folder, assetsHost)));
+        let accumSize = 0;
+        let startIndex = 0;
+        for (let i = 0; i < objectArray.length; ++i) {
+            const obj = objectArray[i];
+            accumSize += obj.size;
+            if (accumSize > averageSize) {
+                all.push(context.execute({ name: "downloadAsset", arguments: { version: version.id } },
+                    downloadAssetsByCluster(objectArray.slice(startIndex, i + 1), folder, assetsHost)));
+                startIndex = i + 1;
+            }
         }
+        if (startIndex < objectArray.length) {
+            all.push(context.execute({ name: "downloadAsset", arguments: { version: version.id } },
+                downloadAssetsByCluster(objectArray.slice(startIndex, objectArray.length), folder, assetsHost)));
+        }
+        // const avg = Math.ceil(objectArray.length / cores);
+        // for (let i = 0; i < cores; i++) {
+        //     all.push(context.execute({ name: "downloadAsset", arguments: { version: version.id } }, downloadAssetsByCluster(objectArray.slice(i * avg, (i + 1) * avg), folder, assetsHost)));
+        // }
         await Promise.all(all);
 
         return version;
