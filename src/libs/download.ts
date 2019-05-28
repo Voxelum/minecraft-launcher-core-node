@@ -206,6 +206,7 @@ function checkDependency(version: Version, minecraft: MinecraftLocation, option:
 
 function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: LibraryHost, checksum?: boolean) {
     return async (context: Task.Context) => {
+        context.update(0, -1, lib.name);
         const rawPath = lib.download.path;
         const filePath = path.join(folder.libraries, rawPath);
         const exist = await exists(filePath);
