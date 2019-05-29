@@ -112,20 +112,27 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         return crypto.createVerify("SHA1").update(value, "utf8").verify(pemKey, signature, "base64");
     }
 
-    async function fetchProfile(target: string, pemPubKey?: string) {
-        const { body: obj } = await fetchJson(target, {});
-        if (obj.properties) {
-            const properties = obj.properties;
-            const to: any = {};
-            for (const prop of properties) {
-                if (prop.signature && pemPubKey && !checkSign(prop.value, prop.signature, pemPubKey)) {
-                    throw { type: "SignatureMissMatch" };
+    async function fetchProfile(target: string, pemPubKey?: string, payload?: object) {
+        const { body: obj } = await fetchJson(target, { body: payload });
+        function parseProfile(o: any) {
+            if (o.properties) {
+                const properties = o.properties;
+                const to: any = {};
+                for (const prop of properties) {
+                    if (prop.signature && pemPubKey && !checkSign(prop.value, prop.signature, pemPubKey)) {
+                        throw { type: "SignatureMissMatch" };
+                    }
+                    to[prop.name] = prop.value;
                 }
-                to[prop.name] = prop.value;
+                o.properties = to;
             }
-            obj.properties = to;
+            return o as GameProfile;
         }
-        return obj as GameProfile;
+        if (obj instanceof Array) {
+            return obj.map(parseProfile);
+        } else {
+            return parseProfile(obj);
+        }
     }
 
     export async function cacheTextures(tex: GameProfile.Textures) {
@@ -172,7 +179,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         const api = option.api || API_MOJANG;
         return fetchProfile(API.getProfileUrl(api, uuid) + "?" + queryString.stringify({
             unsigned: false,
-        }), api.publicKey);
+        }), api.publicKey).then((p) => p as GameProfile);
     }
     /**
      * Look up the GameProfile by username in game.
@@ -188,7 +195,14 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
                 at: (time / 1000),
             });
         }
-        return fetchProfile(target, api.publicKey);
+        return fetchProfile(target, api.publicKey).then((p) => p as GameProfile);
+    }
+
+    export function lookUpAll(names: string[], option: { api?: API } = {}) {
+        const api = option.api || API_MOJANG;
+        let target = API.getProfileByNameUrl(api, "");
+        target = target.substring(0, target.length - 1);
+        return fetchProfile(target, api.publicKey, names).then((r) => r as Array<GameProfile | undefined>);
     }
 
     /**
