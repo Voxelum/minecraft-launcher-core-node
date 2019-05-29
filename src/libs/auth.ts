@@ -92,7 +92,11 @@ export namespace Auth {
                 },
             }).then(parseResponse, (resp) => {
                 const body = resp.body;
-                throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, type: body.error, message: body.errorMessage };
+                if (body) {
+                    throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, type: body.error, message: body.errorMessage };
+                } else {
+                    throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage };
+                }
             });
         }
 
@@ -124,7 +128,15 @@ export namespace Auth {
          */
         export function validate(option: { accessToken: string, clientToken?: string }, api: API = API_MOJANG): Promise<boolean> {
             return request(api.hostName, api.validate, Object.assign({}, option))
-                .then((s) => s.body.error === undefined, (fail) => false);
+                .then((s) => s.body.error === undefined, (error) => {
+                    if (error.body) {
+                        if (error.body.errorMessage === "Invalid token.") {
+                            return false;
+                        }
+                        throw error.body;
+                    }
+                    throw error;
+                });
         }
         /**
          * Invalidate an access/client token pair
@@ -150,8 +162,8 @@ export namespace Auth {
          * @param option The username and password
          * @param api The API of the auth server
          */
-        export function signout(option: { username: string, password: string }, api: API = API_MOJANG): void {
-            request(api.hostName, api.signout, option);
+        export function signout(option: { username: string, password: string }, api: API = API_MOJANG): Promise<void> {
+            return request(api.hostName, api.signout, option).then(() => undefined);
         }
     }
 
