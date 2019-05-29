@@ -1,16 +1,66 @@
 import * as assert from "assert";
+import { ChildProcess, spawn } from "child_process";
 import { GameProfile, MojangService, ProfileService } from "../index";
 
+function sleep(time: number) {
+    return new Promise<void>((resolve, reject) => {
+        setTimeout(() => { resolve(); }, time);
+    });
+}
+
 describe("ProfileService", () => {
+    let proc: ChildProcess;
+    const MOCK: ProfileService.API = {
+        texture: "http://localhost:25566/user/profile/${uuid}/${type}",
+        profile: "http://localhost:25566/sessionserver/session/minecraft/profile/${uuid}",
+        profileByName: "http://localhost:25566/api/profiles/minecraft/${name}",
+    };
+    const RATE = 1000;
+    const WAIT = 1500;
+
+    before(async function () {
+        this.timeout(100000);
+        await new Promise((resolve, reject) => {
+            proc = spawn("java", ["-jar", "yggdrasil-mock-server-0.0.1-SNAPSHOT.jar"]);
+            proc.stdout.on("data", (b) => {
+                if (b.toString().indexOf("moe.yushi.yggdrasil.mockserver.Main") !== -1 &&
+                    b.toString().indexOf("Started Main") !== -1) {
+                    resolve();
+                }
+            });
+        });
+        await sleep(1000);
+    });
+    after(() => { proc.kill(); });
+    afterEach(() => sleep(RATE));
+
+    describe("#lookup", () => {
+        it("should fetch profile by name", async function () {
+            this.slow(RATE + WAIT);
+            const [s] = await ProfileService.lookUpAll(["character1"], { api: MOCK });
+            assert(s);
+            if (s) {
+                assert.equal(s.name, "character1");
+                assert.equal("00000000000000000000000000000000", s.id);
+            }
+        }).timeout(10000);
+        it("should return undefined if profile doesn't exist", async function () {
+            this.slow(RATE + WAIT);
+            const [a, b] = await ProfileService.lookUpAll(["character1", "characterX"], { api: MOCK });
+            assert(a);
+            assert.equal(undefined, b);
+        });
+    });
+
     describe("#fetch", () => {
         let profilePromise: Promise<GameProfile>;
         before(() => {
-            profilePromise = ProfileService.fetch("abf81fe99f0d4948a9097721a8198ac4");
+            profilePromise = ProfileService.fetch("00000000000000000000000000000000", { api: MOCK });
         });
         it("should fetch the correct username and uuid", async () => {
             const s = await profilePromise;
-            assert.equal(s.name, "CI010");
-            assert.equal("abf81fe99f0d4948a9097721a8198ac4", s.id);
+            assert.equal(s.name, "character1");
+            assert.equal("00000000000000000000000000000000", s.id);
         }).timeout(10000);
         it("the game profile properties should be correct format", async () => {
             const s = await profilePromise;
@@ -19,6 +69,13 @@ describe("ProfileService", () => {
                     assert(typeof key === "string");
                     assert(typeof s.properties[key] === "string");
                 }
+            }
+        });
+        it("should catch error if the profile doesn't exists", async function () {
+            try {
+                await ProfileService.fetch("asd", { api: MOCK });
+            } catch (e) {
+                assert(e);
             }
         });
     });
@@ -63,11 +120,5 @@ describe("ProfileService", () => {
         }).timeout(10000);
     });
 
-    describe("#lookup", () => {
-        it("should fetch profile by name", async () => {
-            const s = await ProfileService.lookup("ci010");
-            assert.equal(s.name, "CI010");
-            assert.equal("abf81fe99f0d4948a9097721a8198ac4", s.id);
-        }).timeout(10000);
-    });
+
 });

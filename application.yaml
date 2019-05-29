@@ -9,6 +9,7 @@ yggdrasil:
       password: 222222
       characters:
       - name: character1
+        uuid: 00000000-0000-0000-0000-000000000000
         model: steve
         textures-locations:
           skin: classpath:textures/eromanga/masamune_lzumi.png
@@ -35,6 +36,6 @@ yggdrasil:
     skin-domains:
     - localhost
   rate-limit:
-    limit-duration: 100ms
+    limit-duration: 1ms
   session:
     auth-expire-time: 15s
