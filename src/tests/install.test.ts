@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import { Forge, LiteLoader, MinecraftFolder, Version } from "../index";
 import { Fabric } from "../libs/fabric";
+import Launcher from "../libs/launch";
 
 
 describe("Install", function () {
@@ -70,6 +71,20 @@ describe("Install", function () {
                 throw new Error("Missing Libs");
             }
         }).timeout(1000000);
+    });
+
+    describe("MinecraftServer", function () {
+        it("should be able to install minecraft server on 1.12.2", async function () {
+            const meta = {
+                id: "1.12.2",
+                type: "release",
+                time: "2018-02-15T16:26:45+00:00",
+                releaseTime: "2017-09-18T08:39:46+00:00",
+                url: "https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json",
+            };
+            const version = await Version.install("server", meta, this.gameDirectory);
+            await Launcher.ensureLibraries(new MinecraftFolder(this.gameDirectory), version);
+        }).timeout(100000000);
     });
 
     describe("Forge", function () {

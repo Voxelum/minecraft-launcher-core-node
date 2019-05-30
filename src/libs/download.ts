@@ -125,7 +125,7 @@ Version.checkDependencies = (version: Version, minecraft: MinecraftLocation, opt
 };
 
 Version.checkDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
-    return Task.create({ name: "checkDependency", arguments: { version: version.id } }, checkDependency(version, minecraft, option));
+    return Task.create({ name: "checkDependency", arguments: { version: version.id } }, checkDependencies(version, minecraft, option));
 };
 
 Version.downloadVersion = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
@@ -139,7 +139,12 @@ Version.downloadVersionTask = function (type: string, meta: VersionMeta, minecra
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return async (context: Task.Context) => {
         const ver = await context.execute("downloadVersion", downloadVersion(type, versionMeta, minecraft, option ? option.checksum : undefined));
-        return type === "client" ? context.execute("checkDependencies", checkDependency(ver, minecraft, option)) : ver;
+        if (type === "client") {
+            await context.execute("checkDependencies", checkDependencies(ver, minecraft, option));
+        } else {
+            await context.execute("downloadLibraries", downloadLibraries(ver, minecraft, option));
+        }
+        return ver;
     };
 }
 
@@ -196,7 +201,7 @@ function downloadVersionJar(type: string, version: Version, minecraft: Minecraft
 }
 
 
-function checkDependency(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string } = {}) {
+function checkDependencies(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string } = {}) {
     return async (context: Task.Context) => {
         await Promise.all([context.execute("downloadAssets", downloadAssets(version, minecraft, option)),
         context.execute("downloadLibraries", downloadLibraries(version, minecraft, option))]);

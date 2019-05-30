@@ -52,6 +52,37 @@ export namespace Launcher {
         ignorePatchDiscrepancies?: boolean;
     }
 
+    export interface ServerOptions {
+        javaPath: string;
+        /**
+         * Minecraft location
+         */
+        path: string;
+        /**
+         * Current working directory. Default is the same with the path.
+         */
+        cwd?: string;
+        version: string | Version;
+
+        nogui?: boolean;
+
+        minMemory?: number;
+        maxMemory?: number;
+        extraJVMArgs?: string[];
+        extraMCArgs?: string[];
+        extraExecOption?: ExecOptions;
+    }
+
+    export async function launchServer(options: ServerOptions) {
+        const args = await generateArgumentsServer(options);
+        const version = options.version as Version;
+        const minecraftFolder = new MinecraftFolder(options.path);
+
+        await ensureLibraries(minecraftFolder, version);
+
+        return spawn(args[0], args.slice(1), { cwd: options.cwd || options.path, env: process.env });
+    }
+
     /**
      * Launch the minecraft as a child process. This function use spawn to create child process. To use an alternative way, see function generateArguments.
      *
@@ -71,6 +102,24 @@ export namespace Launcher {
         await ensureNative(minecraftFolder, version);
 
         return spawn(args[0], args.slice(1), { cwd: options.gamePath, env: process.env });
+    }
+
+    export async function generateArgumentsServer(options: ServerOptions) {
+        const { javaPath, path: gamePath, version, minMemory = 1024, maxMemory = 1024, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options;
+        const mc = new MinecraftFolder(gamePath);
+        const resolvedVersion = typeof version === "string" ? await Version.parse(mc, version) : version;
+        const cmd = [
+            javaPath, `-Xms${(minMemory)}M`, `-Xmx${(maxMemory)}M`, ...extraJVMArgs,
+            "-jar",
+            mc.getVersionJar(resolvedVersion.client, "server"),
+            ...extraMCArgs,
+        ];
+        if (options.nogui) {
+            cmd.push("nogui");
+        }
+        options.version = resolvedVersion;
+
+        return cmd;
     }
 
     /**
@@ -96,8 +145,8 @@ export namespace Launcher {
         const cmd: string[] = [];
         cmd.push(options.javaPath);
 
-        cmd.push(`-Xmn${(options.minMemory)}M`);
-        cmd.push(`-Xms${(options.maxMemory)}M`);
+        cmd.push(`-Xms${(options.minMemory)}M`);
+        cmd.push(`-Xmx${(options.maxMemory)}M`);
 
         if (options.ignoreInvalidMinecraftCertificates) {
             cmd.push("-Dfml.ignoreInvalidMinecraftCertificates=true");
@@ -165,7 +214,7 @@ export namespace Launcher {
         return cmd;
     }
 
-    async function ensureLibraries(resourcePath: MinecraftFolder, version: Version) {
+    export async function ensureLibraries(resourcePath: MinecraftFolder, version: Version) {
         const missingMask = await Promise.all(version.libraries.map((lib) => missing(resourcePath.getLibraryByPath(lib.download.path))));
         const missingLibs = version.libraries.filter((_, index) => missingMask[index]);
 

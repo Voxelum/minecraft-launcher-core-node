@@ -19,7 +19,7 @@ export class MinecraftFolder {
     getNativesRoot(version: string) { return paths.join(this.getVersionRoot(version), version + "-natives"); }
     getVersionRoot(version: string) { return paths.join(this.versions, version); }
     getVersionJson(version: string) { return paths.join(this.getVersionRoot(version), version + ".json"); }
-    getVersionJar(version: string) { return paths.join(this.getVersionRoot(version), version + ".jar"); }
+    getVersionJar(version: string, type?: string) { return type === "client" || type === undefined ? paths.join(this.getVersionRoot(version), version + ".jar") : paths.join(this.getVersionRoot(version), `${version}-${type}.jar`); }
     getVersionAll(version: string) {
         return [paths.join(this.versions, version), paths.join(this.versions, version, version + ".json"),
         paths.join(this.versions, version, version + ".jar")];

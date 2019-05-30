@@ -17,8 +17,53 @@ function getJavaVersion(javaPath: string) {
     });
 }
 
-describe("Launch", () => {
-    describe("Generate Command", function () {
+describe("Launcher", () => {
+    describe("#generateArgumentsServer", function () {
+        it("should generate command arguments", async function () {
+            const args = await Launcher.generateArgumentsServer({
+                javaPath: "/test/java",
+                path: this.gameDirectory,
+                version: "1.12.2",
+            });
+            assert(args);
+            assert.equal(args[0], "/test/java");
+        });
+    });
+    describe("#launchServer", function () {
+        let javaPath: string;
+        let javaVersion;
+        before(async function () {
+            if (process.env.JAVA_HOME) {
+                javaPath = `${process.env.JAVA_HOME}/bin/java`;
+                if (process.env.ENV && process.env.ENV === "TRAVIS") {
+                    this.skip();
+                } else {
+                    const javaVersionStr = await getJavaVersion(javaPath);
+                    javaVersion = Number.parseFloat(javaVersionStr.split(EOL)[0].split(" ")[1].split(".")[0]);
+                }
+            } else {
+                this.skip();
+            }
+        });
+        it("should launch server", async function () {
+            const proc = await Launcher.launchServer({
+                javaPath,
+                path: this.gameDirectory,
+                version: "1.12.2",
+            });
+            await new Promise((resolve, reject) => {
+                proc.stdout.on("data", (buf) => {
+                    const str = buf.toString();
+                    if (str.indexOf("Starting minecraft server version 1.12.2") !== -1) {
+                        resolve();
+                    }
+                });
+            });
+            proc.kill();
+        }).timeout(10000000);
+    });
+
+    describe("#generateArguments", function () {
         it("should generate correct command", async function () {
             const javaPath = "/test/java";
             const version = "1.12.2";
@@ -60,7 +105,7 @@ describe("Launch", () => {
         const ver = await Version.parse(loc, "1.13.2");
         await Launcher.ensureNative(loc, ver);
     });
-    describe("Launching Game", function () {
+    describe("#launch", function () {
         let javaPath: string;
         let javaVersion: number;
         before(async function () {
