@@ -445,7 +445,15 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
 
         client = (json as any).jar || client || json.id;
 
-        args = json.arguments;
+        if (!args) {
+            args = json.arguments;
+        } else {
+            if (json.arguments.game) {
+                args.game.push(...json.arguments.game);
+            } else if (json.arguments.jvm) {
+                args.jvm.push(...json.arguments.jvm);
+            }
+        }
 
         logging = json.logging || logging;
         assets = json.assets || assets;
