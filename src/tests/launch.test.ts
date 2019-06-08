@@ -1,17 +1,57 @@
 import * as assert from "assert";
-import { exec } from "child_process";
+import { ChildProcess, exec } from "child_process";
 import { EOL } from "os";
 import * as path from "path";
 import { Auth, Launcher, Version } from "../index";
 import { MinecraftFolder } from "../libs/utils/folder";
 
 function getJavaVersion(javaPath: string) {
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<number>((resolve, reject) => {
         exec(`"${javaPath}" -version`, { encoding: "utf8" }, (e, out, err) => {
             if (e) {
                 reject(e);
             } else {
-                resolve(out || err);
+                if (err) {
+                    const line = err.split(EOL)[0];
+                    console.log(line);
+                    if (err.startsWith("java version")) {
+                        const strNumber = line.split(" ")[2].split(".")[0];
+                        resolve(Number.parseInt(strNumber.replace(/[^0-9]/g, ""), 10));
+                    } else {
+                        resolve(Number.parseInt(line.split(" ")[1].split(".")[0], 10));
+                    }
+                } else {
+                    reject(out);
+                }
+            }
+        });
+    });
+}
+
+function waitGameProcess(process: ChildProcess, ...hints: string[]) {
+    const found = new Array<boolean>(hints.length);
+    found.fill(false);
+    return new Promise((resolve, reject) => {
+        process.stdout.on("data", (chunk) => {
+            const content = chunk.toString();
+            console.log(content);
+            for (let i = 0; i < hints.length; i++) {
+                if (content.indexOf(hints[i]) !== -1) {
+                    found[i] = true;
+                }
+            }
+            if (found.every((f) => f)) {
+                process.kill("SIGINT");
+            }
+        });
+        process.stderr.on("data", (chunk) => {
+            console.log(chunk.toString());
+        });
+        process.on("exit", (code, signal) => {
+            if (signal === "SIGINT" || code === 130) {
+                resolve();
+            } else {
+                reject({ code, signal });
             }
         });
     });
@@ -38,11 +78,15 @@ describe("Launcher", () => {
                 if (process.env.ENV && process.env.ENV === "TRAVIS") {
                     this.skip();
                 } else {
-                    const javaVersionStr = await getJavaVersion(javaPath);
-                    javaVersion = Number.parseFloat(javaVersionStr.split(EOL)[0].split(" ")[1].split(".")[0]);
+                    javaVersion = await getJavaVersion(javaPath);
                 }
             } else {
-                this.skip();
+                try {
+                    javaPath = "java";
+                    javaVersion = await getJavaVersion(javaPath);
+                } catch {
+                    this.skip();
+                }
             }
         });
         it("should launch server", async function () {
@@ -54,6 +98,7 @@ describe("Launcher", () => {
             await new Promise((resolve, reject) => {
                 proc.stdout.on("data", (buf) => {
                     const str = buf.toString();
+                    console.log(str);
                     if (str.indexOf("Starting minecraft server version 1.12.2") !== -1) {
                         resolve();
                     }
@@ -120,153 +165,61 @@ describe("Launcher", () => {
                 if (process.env.ENV && process.env.ENV === "TRAVIS") {
                     this.skip();
                 } else {
-                    const javaVersionStr = await getJavaVersion(javaPath);
-                    javaVersion = Number.parseFloat(javaVersionStr.split(EOL)[0].split(" ")[1].split(".")[0]);
+                    javaVersion = await getJavaVersion(javaPath);
                 }
             } else {
-                this.skip();
+                try {
+                    javaPath = "java";
+                    javaVersion = await getJavaVersion(javaPath);
+                } catch {
+                    this.skip();
+                }
             }
+            console.log(javaPath, javaVersion);
         });
 
-        it("should launch normal minecraft", async function () {
-            const option = { version: "1.12.2", gamePath: this.gameDirectory, javaPath };
-            const proc = await Launcher.launch(option);
-            await new Promise((resol, rej) => {
-                proc.stdout.on("data", (chunk) => {
-                    const str = chunk.toString();
-                    if (str.indexOf("[Client thread/INFO]: Created: 1024x512 textures-atlas") !== -1) {
-                        proc.kill("SIGINT");
-                    }
-                });
-                proc.stderr.on("data", (chunk) => {
-                    console.log(chunk.toString());
-                });
-                proc.on("exit", (code, signal) => {
-                    if (signal === "SIGINT") {
-                        resol();
-                    } else { rej({ code, signal }); }
-                });
-            });
-        }).timeout(100000);
-        it("should launch server", async function () {
-            const option: Launcher.Option = {
-                version: "1.12.2", gamePath: this.gameDirectory, javaPath, server: {
-                    ip: "127.0.0.1",
-                    port: 25565,
-                },
-            };
-            const proc = await Launcher.launch(option);
-            await new Promise((resol, rej) => {
-                proc.stdout.on("data", (chunk) => {
-                    const str = chunk.toString();
-                    if (str.indexOf("[Client thread/INFO]: Connecting to 127.0.0.1, 25565") !== -1) {
-                        proc.kill("SIGINT");
-                    }
-                });
-                proc.stderr.on("data", (chunk) => {
-                    console.log(chunk.toString());
-                });
-                proc.on("exit", (code, signal) => {
-                    if (signal === "SIGINT") {
-                        resol();
-                    } else { rej({ code, signal }); }
-                });
-            });
-        }).timeout(100000);
-        it("should launch forge minecraft", async function () {
-            if (javaVersion > 8) { this.skip(); }
-            const option = { version: "1.12.2-forge1.12.2-14.23.5.2823", gamePath: this.gameDirectory, javaPath };
-            const proc = await Launcher.launch(option);
-            await new Promise((resol, rej) => {
-                proc.stdout.on("data", (chunk) => {
-                    const str = chunk.toString();
-                    if (str.indexOf("[main/INFO] [FML]: Itemstack injection complete") !== -1) {
-                        proc.kill("SIGINT");
-                    }
-                    // console.log(chunk.toString())
-                });
-                proc.stderr.on("data", (chunk) => {
-                    console.log(chunk.toString());
-                });
-                proc.on("exit", (code, signal) => {
-                    if (signal === "SIGINT") {
-                        resol();
-                    } else { rej({ code, signal }); }
-                });
-            });
-        }).timeout(100000);
-        it("should launch liteloader minecraft", async function () {
-            if (javaVersion > 8) { this.skip(); }
-            const option = { version: "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: this.gameDirectory, javaPath };
-            const proc = await Launcher.launch(option);
-            await new Promise((resol, rej) => {
-                const out: string[] = [];
-                proc.stdout.on("data", (chunk) => {
-                    const str = chunk.toString();
-                    out.push(str);
-                    if (str.indexOf("LiteLoader begin POSTINIT") !== -1) {
-                        proc.kill("SIGINT");
-                    }
-                });
-                proc.stderr.on("data", (chunk) => {
-                    out.push(chunk.toString());
-                });
-                proc.on("exit", (code, signal) => {
-                    if (signal === "SIGINT") {
-                        resol();
-                    } else { rej({ code, signal, output: out.join("\n") }); }
-                });
-            });
-        }).timeout(100000);
+        describe("1.12.2", function () {
+            it("should launch normal minecraft", async function () {
+                const option = { version: "1.12.2", gamePath: this.gameDirectory, javaPath };
+                await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Created: 1024x512 textures-atlas");
+            }).timeout(100000);
+            it("should launch server", async function () {
+                const option: Launcher.Option = {
+                    version: "1.12.2", gamePath: this.gameDirectory, javaPath, server: {
+                        ip: "127.0.0.1",
+                        port: 25565,
+                    },
+                };
+                await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Connecting to 127.0.0.1, 25565");
+            }).timeout(100000);
+            it("should launch forge minecraft", async function () {
+                if (javaVersion > 8) { this.skip(); }
+                const option = { version: "1.12.2-forge1.12.2-14.23.5.2823", gamePath: this.gameDirectory, javaPath };
+                await waitGameProcess(await Launcher.launch(option), "[main/INFO] [FML]: Itemstack injection complete");
+            }).timeout(100000);
+            it("should launch liteloader minecraft", async function () {
+                if (javaVersion > 8) { this.skip(); }
+                const option = { version: "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: this.gameDirectory, javaPath };
+                await waitGameProcess(await Launcher.launch(option), "LiteLoader begin POSTINIT");
+            }).timeout(100000);
 
-        it("should launch forge liteloader minecraft", async function () {
-            if (javaVersion > 8) { this.skip(); }
-            const option = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: this.gameDirectory, javaPath };
-            const proc = await Launcher.launch(option);
-            await new Promise((resol, rej) => {
-                let foundLite = false;
-                let foundForge = false;
-                const out: string[] = [];
-                proc.stdout.on("data", (chunk) => {
-                    const str = chunk.toString();
-                    out.push(str);
-                    if (str.indexOf("LiteLoader begin POSTINIT") !== -1) { foundLite = true; }
-                    if (str.indexOf("[main/INFO] [FML]: Itemstack injection complete") !== -1) { foundForge = true; }
-                    if (foundForge && foundLite) {
-                        proc.kill("SIGINT");
-                    }
-                });
-                proc.stderr.on("data", (chunk) => {
-                    out.push(chunk.toString());
-                });
-                proc.on("exit", (code, signal) => {
-                    if (signal === "SIGINT") {
-                        resol();
-                    } else { rej({ code, signal, output: out.join("\n") }); }
-                });
-            });
-        }).timeout(100000);
+            it("should launch forge liteloader minecraft", async function () {
+                if (javaVersion > 8) { this.skip(); }
+                const option = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: this.gameDirectory, javaPath };
+                await waitGameProcess(await Launcher.launch(option), "LiteLoader begin POSTINIT", "[main/INFO] [FML]: Itemstack injection complete");
+            }).timeout(100000);
+        });
 
         describe("1.13.2", function () {
             it("should launch normal minecraft", async function () {
                 const option = { version: "1.13.2", gamePath: this.gameDirectory, javaPath };
-                const proc = await Launcher.launch(option);
-                await new Promise((resol, rej) => {
-                    proc.stdout.on("data", (chunk) => {
-                        const str = chunk.toString();
-                        if (str.indexOf("[Client thread/INFO]: Created: 1024x512 textures-atlas") !== -1) {
-                            proc.kill("SIGINT");
-                        }
-                    });
-                    proc.stderr.on("data", (chunk) => {
-                        console.log(chunk.toString());
-                    });
-                    proc.on("exit", (code, signal) => {
-                        if (signal === "SIGINT") {
-                            resol();
-                        } else { rej({ code, signal }); }
-                    });
-                });
+                await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Created: 1024x512 textures-atlas");
+            }).timeout(100000);
+        });
+        describe("1.14.2", function () {
+            it("should launch normal minecraft", async function () {
+                const option = { version: "1.14.2", gamePath: this.gameDirectory, javaPath };
+                await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Built for minecraft version 1.14.2");
             }).timeout(100000);
         });
     });
