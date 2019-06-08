@@ -230,7 +230,7 @@ export namespace Forge {
         readonly description?: string;
         readonly version: string;
         readonly mcversion?: string;
-        readonly acceptMinecraftVersion?: string;
+        readonly acceptedMinecraftVersions?: string;
         readonly updateJSON?: string;
         readonly url?: string;
         readonly logoFile?: string;
