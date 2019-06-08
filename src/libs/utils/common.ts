@@ -12,6 +12,10 @@ export function missing(target: string) {
     return promises.access(target, constants.F_OK).then(() => false).catch(() => true);
 }
 
+export async function validate(target: string, sha1: string) {
+    return await exists(target) && await computeChecksum(target, "sha1") === sha1;
+}
+
 export async function ensureDir(target: string) {
     try {
         await promises.mkdir(target);
