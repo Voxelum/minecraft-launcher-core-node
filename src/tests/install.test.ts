@@ -3,10 +3,23 @@ import * as fs from "fs";
 import { Forge, LiteLoader, MinecraftFolder, Version } from "../index";
 import { Fabric } from "../libs/fabric";
 import Launcher from "../libs/launch";
+import { VersionMeta } from "../libs/version";
 
 
 describe("Install", function () {
-    describe("Minecraft", () => {
+    describe("MinecraftClient", () => {
+        async function installVersionClient(version: VersionMeta, gameDirectory: string) {
+            const loc = new MinecraftFolder(gameDirectory);
+            await Version.installTask("client", version, loc, { checksum: true }).execute();
+            assert(fs.existsSync(loc.getVersionJar(version.id)));
+            assert(fs.existsSync(loc.getVersionJson(version.id)));
+            const ver = await Version.parse(loc, "1.13.2");
+            const missing = ver.libraries.filter((lib) => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
+            if (missing.length !== 0) {
+                console.error(missing);
+                throw new Error("Missing Libs");
+            }
+        }
         it("should fetch minecraft version", () => Version.updateVersionMeta()).timeout(100000);
         it("should not fetch duplicate version", async () => {
             const first = await Version.updateVersionMeta();
@@ -15,62 +28,41 @@ describe("Install", function () {
             assert.equal(first.timestamp, sec.timestamp);
         });
         it("should be able to install 1.12.2", async function () {
-            const loc = new MinecraftFolder(this.gameDirectory);
-            const meta = {
+            await installVersionClient({
                 id: "1.12.2",
                 type: "release",
                 time: "2018-02-15T16:26:45+00:00",
                 releaseTime: "2017-09-18T08:39:46+00:00",
                 url: "https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json",
-            };
-            const v = await Version.installTask("client", meta, loc, { checksum: true }).execute();
-            assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2/1.12.2.jar`));
-            assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2/1.12.2.json`));
-            const ver = await Version.parse(new MinecraftFolder(this.gameDirectory), "1.12.2");
-            const missing = ver.libraries.filter((lib) => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
-            if (missing.length !== 0) {
-                console.error(missing);
-                throw new Error("Missing Libs");
-            }
+            }, this.gameDirectory);
         }).timeout(1000000);
         it("should install 17w43b", async function () {
-            const loc = new MinecraftFolder(this.gameDirectory);
-            const nMc = {
+            await installVersionClient({
                 id: "17w43b",
                 type: "snapshot",
                 time: "2018-01-15T11:09:31+00:00",
                 releaseTime: "2017-10-26T13:36:22+00:00",
                 url: "https://launchermeta.mojang.com/mc/game/0383e8585ef976baa88e2dc3357e6b9899bf263e/17w43b.json",
-            };
-            const v = await Version.install("client", nMc, loc, { checksum: true });
-            assert(fs.existsSync(`${this.gameDirectory}/versions/17w43b/17w43b.jar`));
-            assert(fs.existsSync(`${this.gameDirectory}/versions/17w43b/17w43b.json`));
-            const ver = await Version.parse(new MinecraftFolder(this.gameDirectory), "17w43b");
-            const missing = ver.libraries.filter((lib) => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
-            if (missing.length !== 0) {
-                console.error(missing);
-                throw new Error("Missing Libs");
-            }
+            }, this.gameDirectory);
         }).timeout(1000000);
         it("should be able to install 1.13.2", async function () {
-            const loc = new MinecraftFolder(this.gameDirectory);
-            const meta = {
+            await installVersionClient({
                 id: "1.13.2",
                 type: "release",
                 time: "2019-01-30T15:15:25+00:00",
                 releaseTime: "2018-10-22T11:41:07+00:00",
                 url: "https://launchermeta.mojang.com/v1/packages/26ec75fc9a8b990fa976100a211475d18bd97de0/1.13.2.json",
-            };
-            const v = await Version.installTask("client", meta, loc, { checksum: true }).execute();
-            assert(fs.existsSync(`${this.gameDirectory}/versions/1.13.2/1.13.2.jar`));
-            assert(fs.existsSync(`${this.gameDirectory}/versions/1.13.2/1.13.2.json`));
-            const ver = await Version.parse(new MinecraftFolder(this.gameDirectory), "1.13.2");
-            const missing = ver.libraries.filter((lib) => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
-            if (missing.length !== 0) {
-                console.error(missing);
-                throw new Error("Missing Libs");
-            }
+            }, this.gameDirectory);
         }).timeout(1000000);
+        it("should be able to install 1.14.2", async function () {
+            await installVersionClient({
+                id: "1.14.2",
+                type: "release",
+                url: "https://launchermeta.mojang.com/v1/packages/bc3ada07878913436f1333ba7af7f77115427ccc/1.14.2.json",
+                time: "2019-06-07T09:06:32+00:00",
+                releaseTime: "2019-05-27T11:48:25+00:00",
+            }, this.gameDirectory);
+        }).timeout(10000000);
     });
 
     describe("MinecraftServer", function () {
@@ -132,7 +124,6 @@ describe("Install", function () {
             assert(fs.existsSync(mc.getLibraryByPath("/net/minecraftforge/forge/1.13.2-25.0.209/forge-1.13.2-25.0.209-client.jar")), "no client jar");
         }).timeout(1000000);
     });
-
 
     describe("Fabric", function () {
         it("should be able to install fabric", async function () {
