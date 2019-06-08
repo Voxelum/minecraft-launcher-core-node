@@ -98,6 +98,20 @@ export namespace Launcher {
         const version = options.version as Version;
         const minecraftFolder = new MinecraftFolder(options.resourcePath as string);
 
+        const jarPath = minecraftFolder.getVersionJar(version.client);
+        if (!fs.existsSync(jarPath)) {
+            throw {
+                type: "MissingVersionJar",
+                version: version.client,
+            };
+        }
+        if (await computeChecksum(jarPath, "sha1") !== version.downloads.client.sha1) {
+            throw {
+                type: "CorruptedVersionJar",
+                version: version.client,
+            };
+        }
+
         await ensureLibraries(minecraftFolder, version);
         await ensureNative(minecraftFolder, version);
 
