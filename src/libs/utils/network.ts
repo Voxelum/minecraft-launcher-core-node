@@ -120,7 +120,7 @@ export async function downloadIfAbsent(option: DownloadOption) {
                 followRedirect: true,
                 retry: option.retry,
             }).on("error", (error) => {
-                console.error(`Unable to download ${option.url}.`);
+                console.error(`Unable to download ${option.url}`);
                 rej(error);
             }).on("data", onData).on("downloadProgress", (progress) => {
                 onProgress(progress.transferred, progress.total || -1);
