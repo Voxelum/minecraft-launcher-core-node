@@ -170,7 +170,7 @@ export namespace Launcher {
         }
 
         if (options.yggdrasilAgent) {
-            cmd.push(`-javaagent:${options.yggdrasilAgent.jar}=@${options.yggdrasilAgent.server}`);
+            cmd.push(`-javaagent:${options.yggdrasilAgent.jar}=${options.yggdrasilAgent.server}`);
         }
         // add extra jvm args
         if (options.extraJVMArgs) { cmd.push(...options.extraJVMArgs); }
