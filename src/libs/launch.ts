@@ -181,7 +181,7 @@ export namespace Launcher {
             launcher_version: options.launcherBrand,
             classpath: `${[...version.libraries.map((lib) => mc.getLibraryByPath(lib.download.path)),
             mc.getVersionJar(version.client)]
-                .join(os.platform() === "darwin" ? ":" : ";")}`,
+                .join(os.platform() === "linux" || os.platform() === "darwin" ? ":" : ";")}`,
         };
         cmd.push(...version.arguments.jvm.map((arg) => format(arg as string, jvmOptions)));
 
