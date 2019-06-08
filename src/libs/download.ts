@@ -129,8 +129,8 @@ declare module "./version" {
         function installLibraries(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<Version>;
         function installLibrariesTask(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<Version>;
 
-        function downloadLibraries(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<void>;
-        function downloadLibrariesTask(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<void>;
+        function installLibrariesDirect(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<void>;
+        function installLibrariesDirectTask(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<void>;
     }
 }
 
@@ -186,12 +186,12 @@ Version.installAssets = function (version: Version, minecraft: MinecraftLocation
     return Version.installAssetsTask(version, minecraft, option).execute();
 };
 
-Version.downloadLibraries = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Version.downloadLibrariesTask(libraries, minecraft, option).execute();
+Version.installLibrariesDirect = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+    return Version.installLibrariesDirectTask(libraries, minecraft, option).execute();
 };
 
-Version.downloadLibrariesTask = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Task.create({ name: "downloadLibiraries", arguments: {} }, (ctx) => { installLibraries({ libraries }, minecraft, option)(ctx); });
+Version.installLibrariesDirectTask = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+    return Task.create({ name: "installLibiraries", arguments: {} }, (ctx) => { installLibraries({ libraries }, minecraft, option)(ctx); });
 };
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
