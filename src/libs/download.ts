@@ -5,7 +5,7 @@ import Task from "treelike-task";
 import { computeChecksum as computeChecksum, ensureDir, exists, validate } from "./utils/common";
 import { decompressXZ, unpack200 } from "./utils/decompress";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
-import { createDownloadWork, fetchBuffer, getIfUpdate, UpdatedObject } from "./utils/network";
+import { createDownloadWork, downloadIfAbsent, fetchBuffer, getIfUpdate, UpdatedObject } from "./utils/network";
 import { Library, Version, VersionMeta } from "./version";
 
 type LibraryHost = (libId: string) => string | undefined;
@@ -329,19 +329,16 @@ function downloadAssetsByCluster(objects: Array<{ name: string, hash: string, si
             const head = hash.substring(0, 2);
             const dir = folder.getPath("assets", "objects", head);
             await ensureDir(dir);
+
             const file = path.join(dir, hash);
-            const exist = await exists(file);
-            if (!exist) {
-                await Task.create("", createDownloadWork(`${assetsHost}/${head}/${hash}`, file)).onUpdate(({ progress }) => {
-                    context.update(lastProgress + progress);
-                }).execute();
-            } else {
-                const sum = await computeChecksum(file);
-                if (sum !== hash) {
-                    await Task.create("", createDownloadWork(`${assetsHost}/${head}/${hash}`, file)).onUpdate(({ progress }) => {
-                        context.update(lastProgress + progress);
-                    }).execute();
-                }
+            if (!await validate(file, hash)) {
+                await downloadIfAbsent({
+                    url: `${assetsHost}/${head}/${hash}`,
+                    destination: file,
+                    progress(written) {
+                        context.update(lastProgress + written);
+                    },
+                });
             }
             lastProgress += size;
             context.update(lastProgress);
