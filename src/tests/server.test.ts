@@ -29,11 +29,11 @@ describe("Server", () => {
             assert(frame);
             assert(frame.ping !== -1, "Frame should have ping");
         }).timeout(100000);
-        it("should control the port", (done) => {
-            Server.fetchStatusFrame({ host: "mc.hypixel.net", port: 138 }, { timeout: 500, retryTimes: 0 })
-                .then(() => done("This should not happen"))
-                .catch((err) => { done(); });
-        }).timeout(100000);
+        // it("should control the port", (done) => {
+        //     Server.fetchStatusFrame({ host: "mc.hypixel.net", port: 138 }, { timeout: 500, retryTimes: 0 })
+        //         .then(() => done("This should not happen"))
+        //         .catch((err) => { done(); });
+        // }).timeout(100000);
         it("should convert frame to status", async () => {
             const frame: Server.StatusFrame = {
                 version: { name: "test-version", protocol: 1 },
