@@ -8,7 +8,6 @@ import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { createDownloadWork, fetchBuffer, getIfUpdate, UpdatedObject } from "./utils/network";
 import { Library, Version, VersionMeta } from "./version";
 
-
 type LibraryHost = (libId: string) => string | undefined;
 declare module "./version" {
     /**
@@ -99,19 +98,23 @@ declare module "./version" {
          */
         function checkDependencies(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version>;
         function checkDependenciesTask(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
+
+        function checkAssets(version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }): Promise<Version>;
+        function checkAssetsTask(version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }): Task<Version>;
+
+        function checkLibraries(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<Version>;
+        function checkLibrariesTask(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<Version>;
+
+        function downloadLibraries(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<void>;
+        function downloadLibrariesTask(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<void>;
     }
 }
 
 (Version as any).DEFAULT_VERSION_MANIFEST_URL = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
 (Version as any).DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.net";
 
-Version.updateVersionMeta = (option: {
-    fallback?: Version.MetaContainer,
-    remote?: string,
-} = {}) => {
-    return getIfUpdate(option.remote || Version.DEFAULT_VERSION_MANIFEST_URL,
-        JSON.parse, option.fallback);
-};
+Version.updateVersionMeta = (option: { fallback?: Version.MetaContainer, remote?: string } = {}) =>
+    getIfUpdate(option.remote || Version.DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.fallback);
 
 Version.install = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) => {
     return Version.installTask(type, versionMeta, minecraft, option).execute();
@@ -134,6 +137,30 @@ Version.downloadVersion = function (type: string, meta: VersionMeta, minecraft: 
 
 Version.downloadVersionTask = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
     return Task.create({ name: "downloadVersion", arguments: { type, version: meta.id } }, downloadVersion(type, meta, minecraft, true));
+};
+
+Version.checkLibrariesTask = function (version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+    return Task.create({ name: "checkLibraries", arguments: { version: version.id } }, downloadLibraries(version, minecraft, option));
+};
+
+Version.checkLibraries = function (version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+    return Version.checkLibrariesTask(version, minecraft, option).execute();
+};
+
+Version.checkAssetsTask = function (version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }) {
+    return Task.create({ name: "checkAssets", arguments: { version: version.id } }, downloadAssets(version, minecraft, option || {}));
+};
+
+Version.checkAssets = function (version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }) {
+    return Version.checkAssetsTask(version, minecraft, option).execute();
+};
+
+Version.downloadLibraries = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+    return Version.downloadLibrariesTask(libraries, minecraft, option).execute();
+};
+
+Version.downloadLibrariesTask = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+    return Task.create({ name: "downloadLibiraries", arguments: {} }, (ctx) => { downloadLibraries({ libraries }, minecraft, option)(ctx); });
 };
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
@@ -254,7 +281,7 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
     };
 }
 
-export function downloadLibraries(version: Pick<Version, "libraries">, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+export function downloadLibraries<T extends Pick<Version, "libraries">>(version: T, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const fullOption = option || {};
@@ -322,7 +349,7 @@ function downloadAssetsByCluster(objects: Array<{ name: string, hash: string, si
     };
 }
 
-function downloadAssets(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, assetsHost?: string }) {
+function downloadAssets(version: Version, minecraft: MinecraftLocation, option: { assetsHost?: string }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
