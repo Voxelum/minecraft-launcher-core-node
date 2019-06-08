@@ -5,7 +5,7 @@ import Task from "treelike-task";
 import { computeChecksum as computeChecksum, ensureDir, exists, validate } from "./utils/common";
 import { decompressXZ, unpack200 } from "./utils/decompress";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
-import { createDownloadWork, downloadIfAbsent, fetchBuffer, getIfUpdate, UpdatedObject } from "./utils/network";
+import { downloadFile, downloadFileIfAbsentWork, downloadFileWork, fetchBuffer, getIfUpdate, UpdatedObject } from "./utils/network";
 import { Library, Version, VersionMeta } from "./version";
 
 type LibraryHost = (libId: string) => string | undefined;
@@ -80,30 +80,54 @@ declare module "./version" {
         function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
 
         /**
-         * Only install the json/jar. Do not check dependencies;
+         * @deprecated
+         * alias for installVersion
          */
         function downloadVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
 
-        function downloadVersion(type: "client", versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
-        function downloadVersion(type: "server", versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
-
+        /**
+         * @deprecated
+         * alias for installVersionTask
+         */
         function downloadVersionTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Task<Version>;
 
         /**
-         * Check the completeness of the Minecraft game assets and libraries.
+         * Only install the json/jar. Do not check dependencies;
          *
-         * @param version
-         * @param minecraft
-         * @param option
+         * @param type client or server
+         * @param versionMeta the version metadata; get from updateVersionMeta
+         * @param minecraft minecraft location
+         */
+        function installVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
+
+        function installVersion(type: "client", versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
+        function installVersion(type: "server", versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
+
+        function installVersionTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Task<Version>;
+
+        /**
+         * Check the completeness of the Minecraft game assets and libraries.
+         * @deprecated
+         * use installDependencies
          */
         function checkDependencies(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version>;
         function checkDependenciesTask(version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
 
-        function checkAssets(version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }): Promise<Version>;
-        function checkAssetsTask(version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }): Task<Version>;
 
-        function checkLibraries(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<Version>;
-        function checkLibrariesTask(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<Version>;
+        /**
+         * Install the completeness of the Minecraft game assets and libraries.
+         *
+         * @param version The resolved version produced by Version.parse
+         * @param minecraft The minecraft location
+         */
+        function installDependencies(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version>;
+        function installDependenciesTask(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
+
+        function installAssets(version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }): Promise<Version>;
+        function installAssetsTask(version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }): Task<Version>;
+
+        function installLibraries(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<Version>;
+        function installLibrariesTask(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<Version>;
 
         function downloadLibraries(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<void>;
         function downloadLibrariesTask(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<void>;
@@ -116,43 +140,50 @@ declare module "./version" {
 Version.updateVersionMeta = (option: { fallback?: Version.MetaContainer, remote?: string } = {}) =>
     getIfUpdate(option.remote || Version.DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.fallback);
 
-Version.install = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) => {
+Version.install = function (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return Version.installTask(type, versionMeta, minecraft, option).execute();
 };
 
-Version.installTask = (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) =>
-    Task.create({ name: "install", arguments: { version: versionMeta.id, type } }, install(type, versionMeta, minecraft, option));
-
-Version.checkDependencies = (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) => {
-    return Version.checkDependenciesTask(version, minecraft, option).execute();
+Version.installTask = function (type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
+    return Task.create({ name: "install", arguments: { version: versionMeta.id, type } }, install(type, versionMeta, minecraft, option));
 };
 
-Version.checkDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
-    return Task.create({ name: "checkDependency", arguments: { version: version.id } }, checkDependencies(version, minecraft, option));
+Version.installDependencies = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
+    return Version.installDependenciesTask(version, minecraft, option).execute();
 };
 
-Version.downloadVersion = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
-    return Version.downloadVersionTask(type, meta, minecraft).execute();
+Version.installDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
+    return Task.create({ name: "checkDependencies", arguments: { version: version.id } }, installDependencies(version, minecraft, option));
 };
 
-Version.downloadVersionTask = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
-    return Task.create({ name: "downloadVersion", arguments: { type, version: meta.id } }, downloadVersion(type, meta, minecraft, true));
+Version.checkDependencies = Version.installDependencies;
+Version.checkDependenciesTask = Version.installDependenciesTask;
+
+Version.installVersion = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
+    return Version.installVersionTask(type, meta, minecraft).execute();
 };
 
-Version.checkLibrariesTask = function (version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Task.create({ name: "checkLibraries", arguments: { version: version.id } }, downloadLibraries(version, minecraft, option));
+Version.installVersionTask = function (type: string, meta: VersionMeta, minecraft: MinecraftLocation) {
+    return Task.create({ name: "installVersion", arguments: { type, version: meta.id } }, installVersion(type, meta, minecraft));
 };
 
-Version.checkLibraries = function (version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Version.checkLibrariesTask(version, minecraft, option).execute();
+Version.downloadVersion = Version.installVersion;
+Version.downloadVersionTask = Version.installVersionTask;
+
+Version.installLibrariesTask = function (version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+    return Task.create({ name: "installLibraries", arguments: { version: version.id } }, installLibraries(version, minecraft, option));
 };
 
-Version.checkAssetsTask = function (version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }) {
-    return Task.create({ name: "checkAssets", arguments: { version: version.id } }, downloadAssets(version, minecraft, option || {}));
+Version.installLibraries = function (version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+    return Version.installLibrariesTask(version, minecraft, option).execute();
 };
 
-Version.checkAssets = function (version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }) {
-    return Version.checkAssetsTask(version, minecraft, option).execute();
+Version.installAssetsTask = function (version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }) {
+    return Task.create({ name: "installAssets", arguments: { version: version.id } }, installAssets(version, minecraft, option || {}));
+};
+
+Version.installAssets = function (version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }) {
+    return Version.installAssetsTask(version, minecraft, option).execute();
 };
 
 Version.downloadLibraries = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
@@ -160,83 +191,68 @@ Version.downloadLibraries = function (libraries: Library[], minecraft: Minecraft
 };
 
 Version.downloadLibrariesTask = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Task.create({ name: "downloadLibiraries", arguments: {} }, (ctx) => { downloadLibraries({ libraries }, minecraft, option)(ctx); });
+    return Task.create({ name: "downloadLibiraries", arguments: {} }, (ctx) => { installLibraries({ libraries }, minecraft, option)(ctx); });
 };
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return async (context: Task.Context) => {
-        const ver = await context.execute("downloadVersion", downloadVersion(type, versionMeta, minecraft, option ? option.checksum : undefined));
+        const version = await context.execute("installVersion", installVersion(type, versionMeta, minecraft));
         if (type === "client") {
-            await context.execute("checkDependencies", checkDependencies(ver, minecraft, option));
+            await context.execute("installDependencies", installDependencies(version, minecraft, option));
         } else {
-            await context.execute("downloadLibraries", downloadLibraries(ver, minecraft, option));
+            await context.execute("installLibraries", installLibraries(version, minecraft, option));
         }
-        return ver;
+        return version;
     };
 }
 
-function downloadVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, checksum?: boolean) {
+function installVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation) {
     return async (context: Task.Context) => {
-        const ver = await context.execute("downloadVersionJson", downloadVersionJson(versionMeta, minecraft));
-        await context.execute("downloadVersionJar", downloadVersionJar(type, ver, minecraft, checksum));
-        return ver;
+        await context.execute("json", installVersionJson(versionMeta, minecraft));
+        const version = await Version.parse(minecraft, versionMeta.id);
+        await context.execute("jar", installVersionJar(type, version, minecraft));
+        return version;
     };
 }
 
-function downloadVersionJson(version: VersionMeta, minecraft: MinecraftLocation) {
+function installVersionJson(version: VersionMeta, minecraft: MinecraftLocation) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
+        await ensureDir(folder.getVersionRoot(version.id));
+
         const json = folder.getVersionJson(version.id);
-        await context.execute("ensureVersionRoot", () => ensureDir(folder.getVersionRoot(version.id)));
-
-        if (await exists(json)) {
-            const actualSha1 = await computeChecksum(json, "sha1");
-            const expectSha1 = version.url.split("/")[5];
-            if (expectSha1 !== actualSha1) {
-                await context.execute("downloadJson", createDownloadWork(version.url, json));
-            }
-        } else {
-            await context.execute("downloadJson", createDownloadWork(version.url, json));
-        }
-
-        return context.execute("resolveJson", () => Version.parse(minecraft, version.id));
+        const expectSha1 = version.url.split("/")[5];
+        await downloadFileIfAbsentWork({ url: version.url, destination: json, checksum: { algorithm: "sha1", hash: expectSha1 } })(context);
     };
 }
 
-function downloadVersionJar(type: string, version: Version, minecraft: MinecraftLocation, checksum?: boolean) {
+function installVersionJar(type: string, version: Version, minecraft: MinecraftLocation) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
-        await context.execute("ensureRootDir", () => ensureDir(folder.getVersionRoot(version.id)));
+        await ensureDir(folder.getVersionRoot(version.id));
+
         const filename = type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar";
         const jar = path.join(folder.getVersionRoot(version.id), filename);
-        const exist = await exists(jar);
-        if (!exist) {
-            await context.execute("downloadJar", createDownloadWork(version.downloads[type].url, jar));
-        }
-        if (checksum) {
-            let hash = await context.execute("checksumJar", () => computeChecksum(jar));
-            if (hash !== version.downloads[type].sha1 && exist) {
-                await context.execute("redownloadJar", createDownloadWork(version.downloads[type].url, jar));
-                hash = await context.execute("rechecksumJar", () => computeChecksum(jar));
-            }
-            if (hash !== version.downloads[type].sha1) {
-                throw new Error("SHA1 not matched! Probably caused by the incompleted file or illegal file source!");
-            }
+
+        await downloadFileIfAbsentWork({ url: version.downloads[type].url, destination: jar, checksum: { algorithm: "sha1", hash: version.downloads[type].sha1 } })(context);
+
+        if (await computeChecksum(jar) !== version.downloads[type].sha1) {
+            throw new Error("SHA1 not matched! Probably caused by the incompleted file or illegal file source!");
         }
         return version;
     };
 }
 
-
-function checkDependencies(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string } = {}) {
+function installDependencies(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string } = {}) {
     return async (context: Task.Context) => {
-        await Promise.all([context.execute("downloadAssets", downloadAssets(version, minecraft, option)),
-        context.execute("downloadLibraries", downloadLibraries(version, minecraft, option))]);
+        await Promise.all([
+            context.execute("installAssets", installAssets(version, minecraft, option)),
+            context.execute("installLibraries", installLibraries(version, minecraft, option))]);
         return version;
     };
 }
 
-function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: LibraryHost, checksum?: boolean) {
+function installLibrary(lib: Library, folder: MinecraftFolder, libraryHost?: LibraryHost, checksum?: boolean) {
     return async (context: Task.Context) => {
         context.update(0, -1, lib.name);
         const rawPath = lib.download.path;
@@ -268,7 +284,7 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
                 const decompressed = await context.execute("decompress", async () => decompressXZ(buff));
                 await context.execute("unpack", () => unpack200(decompressed).then((buf) => fs.promises.writeFile(filePath, buf)));
             } else {
-                await createDownloadWork(downloadURL, filePath)(context);
+                await downloadFileWork({ url: downloadURL, destination: filePath })(context);
             }
         };
         if (!exist) {
@@ -281,14 +297,14 @@ function downloadLib(lib: Library, folder: MinecraftFolder, libraryHost?: Librar
     };
 }
 
-export function downloadLibraries<T extends Pick<Version, "libraries">>(version: T, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+export function installLibraries<T extends Pick<Version, "libraries">>(version: T, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const fullOption = option || {};
         const libraryHost: LibraryHost | undefined = fullOption.libraryHost;
         try {
             const promises = version.libraries.map((lib) =>
-                context.execute({ name: "ensureLibrary", arguments: { lib: lib.name } }, downloadLib(lib, folder, libraryHost)).catch((e) => {
+                context.execute({ name: "library", arguments: { lib: lib.name } }, installLibrary(lib, folder, libraryHost)).catch((e) => {
                     console.error(`Error occured during downloading lib: ${lib.name}`);
                     console.error(e);
                     throw e;
@@ -311,11 +327,9 @@ interface AssetIndex {
     };
 }
 
-type Objects = AssetIndex["objects"];
-
 const cores = os.cpus().length || 4;
 
-function downloadAssetsByCluster(objects: Array<{ name: string, hash: string, size: number }>, folder: MinecraftFolder, assetsHost: string) {
+function installAssetsByCluster(objects: Array<{ name: string, hash: string, size: number }>, folder: MinecraftFolder, assetsHost: string) {
     return async (context: Task.Context) => {
         const totalSize = objects.map((c) => c.size).reduce((a, b) => a + b, 0);
         context.update(0, totalSize);
@@ -332,7 +346,7 @@ function downloadAssetsByCluster(objects: Array<{ name: string, hash: string, si
 
             const file = path.join(dir, hash);
             if (!await validate(file, hash)) {
-                await downloadIfAbsent({
+                await downloadFile({
                     url: `${assetsHost}/${head}/${hash}`,
                     destination: file,
                     progress(written) {
@@ -346,14 +360,20 @@ function downloadAssetsByCluster(objects: Array<{ name: string, hash: string, si
     };
 }
 
-function downloadAssets(version: Version, minecraft: MinecraftLocation, option: { assetsHost?: string }) {
+function installAssets(version: Version, minecraft: MinecraftLocation, option: { assetsHost?: string }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
-        if (!await validate(jsonPath, version.assetIndex.sha1)) {
-            await ensureDir(path.join(folder.assets, "indexes"));
-            await context.execute("downloadAssetsJson", createDownloadWork(version.assetIndex.url, jsonPath));
-        }
+
+        await context.execute("assetsJson", downloadFileIfAbsentWork({
+            url: version.assetIndex.url,
+            destination: jsonPath,
+            checksum: {
+                algorithm: "sha1",
+                hash: version.assetIndex.sha1,
+            },
+        }));
+
         const { objects } = JSON.parse(await fs.promises.readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
         await ensureDir(folder.getPath("assets", "objects"));
         const assetsHost = option.assetsHost || Version.DEFAULT_RESOURCE_ROOT_URL;
@@ -369,19 +389,15 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
             const obj = objectArray[i];
             accumSize += obj.size;
             if (accumSize > averageSize) {
-                all.push(context.execute({ name: "downloadAsset", arguments: { version: version.id } },
-                    downloadAssetsByCluster(objectArray.slice(startIndex, i + 1), folder, assetsHost)));
+                all.push(context.execute({ name: "assets", arguments: { version: version.id } },
+                    installAssetsByCluster(objectArray.slice(startIndex, i + 1), folder, assetsHost)));
                 startIndex = i + 1;
             }
         }
         if (startIndex < objectArray.length) {
-            all.push(context.execute({ name: "downloadAsset", arguments: { version: version.id } },
-                downloadAssetsByCluster(objectArray.slice(startIndex, objectArray.length), folder, assetsHost)));
+            all.push(context.execute({ name: "assets", arguments: { version: version.id } },
+                installAssetsByCluster(objectArray.slice(startIndex, objectArray.length), folder, assetsHost)));
         }
-        // const avg = Math.ceil(objectArray.length / cores);
-        // for (let i = 0; i < cores; i++) {
-        //     all.push(context.execute({ name: "downloadAsset", arguments: { version: version.id } }, downloadAssetsByCluster(objectArray.slice(i * avg, (i + 1) * avg), folder, assetsHost)));
-        // }
         await Promise.all(all);
 
         return version;

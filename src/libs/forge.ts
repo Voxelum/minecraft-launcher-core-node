@@ -7,10 +7,10 @@ import Task from "treelike-task";
 import { promisify } from "util";
 import { Entry, ZipFile } from "yauzl";
 import { bufferEntry, createExtractStream, createParseStream, open, openEntryReadStream, parseEntries, walkEntries } from "yauzlw";
-import { downloadLibraries } from "./download";
+import { installLibraries } from "./download";
 import { computeChecksum, ensureDir, ensureFile, exists, multiChecksum, remove } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
-import { createDownloadWork, got } from "./utils/network";
+import { downloadFileWork, got } from "./utils/network";
 import { parseLibPath as parseLibPath, parseLibraries, Version } from "./version";
 
 async function findMainClass(lib: string) {
@@ -481,7 +481,7 @@ export namespace Forge {
                 }
 
                 parseLibraries(profile.libraries as any);
-                await context.execute("downloadLibraries", downloadLibraries({ libraries: parseLibraries(profile.libraries as any) }, mc));
+                await context.execute("downloadLibraries", installLibraries({ libraries: parseLibraries(profile.libraries as any) }, mc));
 
                 await context.execute("postProcessing", async (ctx) => {
                     ctx.update(0, profile.processors.length);
@@ -569,9 +569,9 @@ export namespace Forge {
                 }
 
                 try {
-                    await context.execute("downloadJar", createDownloadWork(universalURL, jarPath));
+                    await context.execute("downloadJar", downloadFileWork({ url: universalURL, destination: jarPath }));
                 } catch  {
-                    await context.execute("redownloadJar", createDownloadWork(universalURLFallback, jarPath));
+                    await context.execute("redownloadJar", downloadFileWork({ url: universalURLFallback, destination: jarPath }));
                 }
             });
 

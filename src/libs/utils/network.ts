@@ -1,9 +1,8 @@
-import { createHash, Hash } from "crypto";
 import { createWriteStream, promises } from "fs";
 import * as gotDefault from "got";
-import { basename, resolve } from "path";
+import { basename, resolve as pathResolve } from "path";
 import Task from "treelike-task";
-import { computeChecksum, ensureFile, exists } from "./common";
+import { ensureFile, validate } from "./common";
 
 const IS_ELECTRON = process.versions.hasOwnProperty("electron");
 
@@ -40,11 +39,6 @@ export function getIfUpdate<T extends UpdatedObject = UpdatedObject>(url: string
 
 export interface DownloadOption {
     url: string;
-    destination: string;
-    checksum?: {
-        algorithm: string,
-        hash: string,
-    };
     retry?: number;
     method?: string;
     headers?: { [key: string]: string };
@@ -52,93 +46,87 @@ export interface DownloadOption {
     progress?: (written: number, total: number) => void;
 }
 
-export async function downloadIfAbsent(option: DownloadOption) {
+export interface DownloadToOption extends DownloadOption {
+    destination: string;
+}
+
+export interface DownloadAndCheckOption extends DownloadOption {
+    checksum: {
+        algorithm: string,
+        hash: string,
+    };
+}
+
+export function openDownloadStream(option: DownloadOption) {
     const onProgress = option.progress || (() => { });
-    let onData: (chunk: any) => void = () => { };
-    const checksum = option.checksum;
+    return got.stream(option.url, {
+        method: option.method,
+        headers: option.headers,
+        timeout: option.timeout,
+        followRedirect: true,
+        retry: option.retry,
+    }).on("error", () => {
+        console.error(`Unable to download ${option.url}`);
+    }).on("downloadProgress", (progress) => {
+        onProgress(progress.transferred, progress.total || -1);
+    });
+}
+
+export async function downloadBuffer(option: DownloadOption) {
+    return fetchBuffer(option.url, {
+        method: option.method,
+        headers: option.headers,
+        timeout: option.timeout,
+        followRedirect: true,
+        retry: option.retry,
+    }).then((r) => r.body);
+}
+
+export async function downloadFile(option: DownloadToOption) {
     await ensureFile(option.destination);
-    const isDir = await promises.stat(option.destination).then((s) => s.isDirectory(), (_) => false);
+    return new Promise<string>((resolve, reject) => {
+        openDownloadStream(option)
+            .on("error", reject)
+            .pipe(createWriteStream(option.destination))
+            .on("error", reject)
+            .on("close", () => resolve(option.destination));
+    });
+}
 
-    async function isFileValid(file: string) {
-        if (checksum !== undefined) {
-            return await exists(file) && checksum.hash === await computeChecksum(file, checksum.algorithm);
-        } else {
-            return false;
-        }
-    }
-
-    if (isDir) {
-        const tempFilePath: string = resolve(option.destination, decodeURI(basename(option.url)));
-        let realFilePath = tempFilePath;
-        let valid: boolean = false;
-        await new Promise((resolv, reject) => {
-            const downstream = got.stream(option.url, {
-                method: option.method,
-                headers: option.headers,
-                timeout: option.timeout,
-                followRedirect: true,
-                retry: option.retry,
-            }).on("response", (resp) => {
-                realFilePath = resolve(option.destination, decodeURI(basename(resp.url as string)));
-                isFileValid(realFilePath).then((v) => {
-                    valid = v;
-                    if (v) {
-                        resp.destroy();
-                        downstream.close();
-                        return;
-                    }
-                });
-            }).on("downloadProgress", (progress) => {
-                onProgress(progress.transferred, progress.total || -1);
-            }).pipe(createWriteStream(tempFilePath))
-                .on("close", () => resolv())
-                .on("error", reject);
-        });
-        if (valid) {
-            await promises.unlink(tempFilePath);
-        } else {
-            await promises.rename(tempFilePath, realFilePath);
-            if (!isFileValid(realFilePath) && checksum !== undefined) {
-                throw new Error(`Correpted download! The chunksum mismatched! Expected: ${checksum.hash}.`);
-            }
-        }
-        return realFilePath;
-    } else {
-        if (await isFileValid(option.destination)) {
-            return option.destination;
-        }
-        let hasher: Hash | undefined;
-        if (checksum) {
-            hasher = createHash(checksum.algorithm);
-            onData = (data) => { hasher!.update(data); };
-        }
-        await new Promise((resolv, rej) => {
-            got.stream(option.url, {
-                method: option.method,
-                headers: option.headers,
-                timeout: option.timeout,
-                followRedirect: true,
-                retry: option.retry,
-            }).on("error", (error) => {
-                console.error(`Unable to download ${option.url}`);
-                rej(error);
-            }).on("data", onData).on("downloadProgress", (progress) => {
-                onProgress(progress.transferred, progress.total || -1);
-            }).pipe(createWriteStream(option.destination))
-                .on("error", rej)
-                .on("close", () => resolv());
-        });
-
-        if (hasher && checksum) {
-            const hash = hasher.digest("hex");
-            if (hash !== checksum.hash) {
-                throw new Error("File Corrupted!");
-            }
-        }
+export async function downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption) {
+    if (await validate(option.destination, option.checksum.hash, option.checksum.algorithm)) {
         return option.destination;
     }
+    return downloadFile(option);
 }
 
-export function createDownloadWork(url: string, destination: string, option: Pick<DownloadOption, "checksum" | "method" | "headers" | "timeout" | "retry"> = {}): Task.Work<string> {
-    return (context) => downloadIfAbsent({ url, destination, ...option, progress: context.update });
+function wrapToWork<T, O extends DownloadOption>(f: (option: O) => Promise<T>): (option: O) => (ctx: Task.Context) => Promise<T> {
+    return (o) => (ctx) => f({
+        ...o,
+        progress: (p, t) => { ctx.update(p, t, o.url); },
+    });
 }
+
+export const downloadFileWork = wrapToWork(downloadFile);
+export const downloadFileIfAbsentWork = wrapToWork(downloadFileIfAbsent);
+
+export async function downloadToFolder(option: DownloadToOption) {
+    const isDir = await promises.stat(option.destination).then((s) => s.isDirectory(), (_) => false);
+    if (!isDir) { throw new Error("Require destination is a directory!"); }
+    const tempFilePath: string = pathResolve(option.destination, decodeURI(basename(option.url)));
+    let realFilePath = tempFilePath;
+    await new Promise((resolve, reject) => {
+        openDownloadStream(option)
+            .on("response", (resp) => {
+                realFilePath = pathResolve(option.destination, decodeURI(basename(resp.url as string)));
+            })
+            .pipe(createWriteStream(tempFilePath))
+            .on("close", () => resolve())
+            .on("error", reject);
+    });
+    if (realFilePath !== tempFilePath) {
+        await promises.rename(tempFilePath, realFilePath);
+    }
+    return realFilePath;
+}
+
