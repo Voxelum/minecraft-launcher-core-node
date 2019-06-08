@@ -71,6 +71,8 @@ describe("Launcher", () => {
             const auth = Auth.offline("tester");
             const args = await Launcher.generateArguments({
                 version, gamePath, javaPath, auth,
+                launcherBrand: "launcherVersion",
+                launcherName: "launcherName",
             });
             assert.equal(args[0], javaPath);
             assert(args.indexOf("net.minecraft.client.main.Main") !== -1);
@@ -79,6 +81,10 @@ describe("Launcher", () => {
             assert.equal(args[args.indexOf("--version") + 1], version);
             assert.equal(args[args.indexOf("--gameDir") + 1], path.resolve(gamePath));
             assert.equal(args[args.indexOf("--assetsDir") + 1], path.resolve(gamePath, "assets"));
+            const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
+            assert.equal(lversion, `-Dminecraft.launcher.version=launcherVersion`);
+            const lname = args.find((a) => a.startsWith("-Dminecraft.launcher.brand"));
+            assert.equal(lname, "-Dminecraft.launcher.brand=launcherName");
         });
         it("should generate default user", async function () {
             const args = await Launcher.generateArguments({
