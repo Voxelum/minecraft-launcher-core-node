@@ -13,7 +13,7 @@ describe("Install", function () {
             await Version.installTask("client", version, loc, { checksum: true }).execute();
             assert(fs.existsSync(loc.getVersionJar(version.id)));
             assert(fs.existsSync(loc.getVersionJson(version.id)));
-            const ver = await Version.parse(loc, "1.13.2");
+            const ver = await Version.parse(loc, version.id);
             const missing = ver.libraries.filter((lib) => !fs.existsSync(loc.getLibraryByPath(lib.download.path)));
             if (missing.length !== 0) {
                 console.error(missing);
