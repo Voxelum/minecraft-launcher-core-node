@@ -135,8 +135,8 @@ export namespace Launcher {
         if (!options.resourcePath) { options.resourcePath = options.gamePath; }
         if (!options.minMemory) { options.minMemory = 512; }
         if (!options.maxMemory) { options.maxMemory = options.minMemory; }
-        if (!options.launcherName) { options.launcherName = ""; }
-        if (!options.launcherBrand) { options.launcherBrand = ""; }
+        if (!options.launcherName) { options.launcherName = "Launcher"; }
+        if (!options.launcherBrand) { options.launcherBrand = "0.0.1"; }
         if (!options.isDemo) { options.isDemo = false; }
         options.version = typeof options.version === "string" ? await Version.parse(options.resourcePath, options.version) : options.version;
 
