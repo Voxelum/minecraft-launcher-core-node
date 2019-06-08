@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import Task from "treelike-task";
-import { computeChecksum as computeChecksum, ensureDir, exists, missing } from "./utils/common";
+import { computeChecksum as computeChecksum, ensureDir, exists, validate } from "./utils/common";
 import { decompressXZ, unpack200 } from "./utils/decompress";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { createDownloadWork, fetchBuffer, getIfUpdate, UpdatedObject } from "./utils/network";
@@ -353,7 +353,7 @@ function downloadAssets(version: Version, minecraft: MinecraftLocation, option: 
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
-        if (await missing(jsonPath) || await computeChecksum(jsonPath, "sha1") !== version.assetIndex.sha1) {
+        if (!await validate(jsonPath, version.assetIndex.sha1)) {
             await ensureDir(path.join(folder.assets, "indexes"));
             await context.execute("downloadAssetsJson", createDownloadWork(version.assetIndex.url, jsonPath));
         }
