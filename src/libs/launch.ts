@@ -1,6 +1,5 @@
 import { ChildProcess, ExecOptions, spawn } from "child_process";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import { v4 } from "uuid";
 import { createExtractStream } from "yauzlw";
@@ -181,7 +180,7 @@ export namespace Launcher {
             launcher_version: options.launcherBrand,
             classpath: `${[...version.libraries.map((lib) => mc.getLibraryByPath(lib.download.path)),
             mc.getVersionJar(version.client)]
-                .join(os.platform() === "darwin" ? ":" : ";")}`,
+                .join(path.delimiter)}`,
         };
         cmd.push(...version.arguments.jvm.map((arg) => format(arg as string, jvmOptions)));
 
