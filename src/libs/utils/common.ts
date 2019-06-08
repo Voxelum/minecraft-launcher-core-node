@@ -12,8 +12,8 @@ export function missing(target: string) {
     return promises.access(target, constants.F_OK).then(() => false).catch(() => true);
 }
 
-export async function validate(target: string, sha1: string) {
-    return await exists(target) && await computeChecksum(target, "sha1") === sha1;
+export async function validate(target: string, hash: string, algorithm: string = "sha1") {
+    return await exists(target) && await computeChecksum(target, algorithm) === hash;
 }
 
 export async function ensureDir(target: string) {
