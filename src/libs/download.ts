@@ -153,7 +153,7 @@ Version.installDependencies = function (version: Version, minecraft: MinecraftLo
 };
 
 Version.installDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
-    return Task.create({ name: "checkDependencies", arguments: { version: version.id } }, installDependencies(version, minecraft, option));
+    return Task.create({ name: "installDependencies", arguments: { version: version.id } }, installDependencies(version, minecraft, option));
 };
 
 Version.checkDependencies = Version.installDependencies;
@@ -392,6 +392,7 @@ function installAssets(version: Version, minecraft: MinecraftLocation, option: {
                 all.push(context.execute({ name: "assets", arguments: { version: version.id } },
                     installAssetsByCluster(objectArray.slice(startIndex, i + 1), folder, assetsHost)));
                 startIndex = i + 1;
+                accumSize = 0;
             }
         }
         if (startIndex < objectArray.length) {
