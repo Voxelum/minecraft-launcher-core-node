@@ -340,7 +340,7 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
         const jarPath = minecraft.getVersionJar(resolvedVersion.client);
         const missingJar = !await context.execute("checkJar", () => validate(jarPath, resolvedVersion.downloads.client.sha1));
         const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
-        const missingAssetsIndex = await context.execute("checkAssetIndex", async () => validate(assetsIndexPath, resolvedVersion.assetIndex.sha1));
+        const missingAssetsIndex = !await context.execute("checkAssetIndex", async () => validate(assetsIndexPath, resolvedVersion.assetIndex.sha1));
         const libMask = await context.execute("checkLibraries", () => Promise.all(resolvedVersion.libraries.map(async (lib) => {
             const libPath = minecraft.getLibraryByPath(lib.download.path);
             if (await exists(libPath)) {
