@@ -605,7 +605,7 @@ export namespace Forge {
             const jsonPath = path.join(rootPath, `${fullVersion}.json`);
 
             const universalURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`;
-            const universalURL = `${maven}${version.universal}`;
+            const universalURL = `${maven}${version.universal.path}`;
 
             await context.execute("installForgeJar", async () => {
                 if (await exists(jarPath)) {
@@ -646,6 +646,7 @@ export namespace Forge {
      */
     export function install(version: VersionMeta, minecraft: MinecraftLocation, option?: {
         maven?: string,
+        forceCheckDependencies?: boolean,
         java?: string,
         tempDir?: string,
         clearTempDirAfterInstall?: boolean,
