@@ -3,7 +3,7 @@
   "version": "5.2.0",
   "main": "./dest/index.js",
   "types": "./dest/index.d.ts",
-  "description": "Propabaliy all the things I want for a minecraft launcher.",
+  "description": "Propabaliy all the things I want for a minecraft launcher. Targeting ElectronJs environment!",
   "engines": {
     "node": ">=10.0"
   },
@@ -31,7 +31,10 @@
   "author": "cijhn@hotmail.com",
   "keywords": [
     "minecraft",
-    "typescript"
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
   ],
   "license": "MIT",
   "dependencies": {
