@@ -364,10 +364,7 @@ export namespace Forge {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const forgeVersion = `${version.mcversion}-${version.version}`;
-            const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`);
             const fullVersion = `${version.mcversion}-forge${version.mcversion}-${version.version}`;
-            const rootPath = mc.getVersionRoot(fullVersion);
-            const jsonPath = path.join(rootPath, `${fullVersion}.json`);
 
             const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
             const installerURL = `${maven}${version.installer.path}`;
@@ -418,6 +415,8 @@ export namespace Forge {
                 return m;
             }
             async function processVersionJson(s: Version.Raw) {
+                const rootPath = mc.getVersionRoot(s.id);
+                const jsonPath = path.join(rootPath, `${s.id}.json`);
                 await ensureFile(jsonPath);
                 await fs.promises.writeFile(jsonPath, JSON.stringify(s));
             }
