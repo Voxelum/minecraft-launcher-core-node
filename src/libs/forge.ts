@@ -578,9 +578,8 @@ export namespace Forge {
             await context.execute("ensureForgeJson", async () => {
                 if (await exists(jsonPath)) { return; }
 
-                await context.execute("ensureRoot", () => ensureDir(rootPath));
-                await context.execute("extraVersionJson", () => fs.createReadStream(jarPath)
-                    .pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise());
+                await ensureDir(rootPath);
+                await fs.createReadStream(jarPath).pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise();
                 await fs.promises.rename(path.resolve(path.dirname(jsonPath), "version.json"), jsonPath);
             });
 
