@@ -3,8 +3,8 @@ import { Forge, ForgeWebPage } from "..";
 
 describe("Forge", () => {
     describe("Webpage", function () {
-        it("should get the webpage infomation", async () => {
-            const page = await ForgeWebPage.getWebPage();
+        it("should get the webpage infomation for 1.12.2", async () => {
+            const page = await ForgeWebPage.getWebPage({ mcversion: "1.12.2" });
             assert(page);
 
             const vers = new Set<string>();
@@ -12,6 +12,20 @@ describe("Forge", () => {
                 assert(v.changelog);
                 assert(v.universal);
                 assert(v.mdk);
+                assert(v.installer);
+                assert.equal(page.mcversion, v.mcversion);
+                if (vers.has(v.version)) { throw new Error("Should not have duplicated version"); }
+                vers.add(v.version);
+            }
+        }).timeout(100000);
+
+        it("should get the webpage infomation for 1.13.2", async () => {
+            const page = await ForgeWebPage.getWebPage({ mcversion: "1.13.2" });
+            assert(page);
+
+            const vers = new Set<string>();
+            for (const v of page.versions) {
+                assert(v.universal);
                 assert(v.installer);
                 assert.equal(page.mcversion, v.mcversion);
                 if (vers.has(v.version)) { throw new Error("Should not have duplicated version"); }
@@ -112,4 +126,4 @@ describe("Forge", () => {
             assert.equal(config.versioncheck.properties[2].type, "B");
         });
     });
-})
+});
