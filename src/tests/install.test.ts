@@ -104,9 +104,10 @@ describe("Install", function () {
                     path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-installer.jar",
                 },
             };
-            await Forge.install(meta, new MinecraftFolder(this.gameDirectory), {
+            const result = await Forge.install(meta, new MinecraftFolder(this.gameDirectory), {
                 tempDir: `${this.gameDirectory}/`,
             });
+            await Version.installDependencies(await Version.parse(this.gameDirectory, result), this.gameDirectory);
             assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823`), "no such folder");
             assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`), "no json");
             await assertNoError("1.12.2-forge1.12.2-14.23.5.2823", this.gameDirectory);
@@ -135,10 +136,11 @@ describe("Install", function () {
                     path: "/maven/net/minecraftforge/forge/1.13.2-25.0.209/forge-1.13.2-25.0.209-installer.jar",
                 },
             };
-            await Forge.install(meta, new MinecraftFolder(this.gameDirectory), {
+            const result = await Forge.install(meta, new MinecraftFolder(this.gameDirectory), {
                 tempDir: `${this.gameDirectory}/temps`,
                 clearTempDirAfterInstall: false,
             });
+            await Version.installDependencies(await Version.parse(this.gameDirectory, result), this.gameDirectory);
             assert(fs.existsSync(`${this.gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209`), "no folder");
             assert(fs.existsSync(`${this.gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`), "no json");
             assert(fs.existsSync(mc.getLibraryByPath("/net/minecraftforge/forge/1.13.2-25.0.209/forge-1.13.2-25.0.209-universal.jar")), "no universal jar");
