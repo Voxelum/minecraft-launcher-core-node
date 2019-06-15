@@ -397,6 +397,9 @@ export namespace Forge {
             }
 
             const temp = tempDir || await fs.promises.mkdtemp(mc.root + path.sep);
+            if (!fs.existsSync(temp)) {
+                await ensureDir(temp);
+            }
             const installJar = path.join(temp, "forge-installer.jar");
 
             function processValue(v: string) {
