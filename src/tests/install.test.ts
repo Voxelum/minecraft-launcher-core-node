@@ -84,33 +84,33 @@ describe("Install", function () {
     });
 
     describe("Forge", function () {
-        // it("should install forge on 1.12.2", async function () {
-        //     before(() => {
-        //         if (fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`)) {
-        //             fs.unlinkSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`);
-        //         }
-        //     });
-        //     const meta: Forge.VersionMeta = {
-        //         mcversion: "1.12.2",
-        //         version: "14.23.5.2823",
-        //         universal: {
-        //             md5: "61e0e4606c3443eb834d9ddcbc6457a3",
-        //             sha1: "cec39eddde28eb6f7ac921c8d82d6a5b7916e81b",
-        //             path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-universal.jar",
-        //         },
-        //         installer: {
-        //             md5: "181ccfb55847f31368503746a1ae7e40",
-        //             sha1: "3dd9ecd967edbdb0993c9c7e6b8c55cca294f447",
-        //             path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-installer.jar",
-        //         },
-        //     };
-        //     await Forge.install(meta, new MinecraftFolder(this.gameDirectory), {
-        //         tempDir: `${this.gameDirectory}/`,
-        //     });
-        //     assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823`), "no such folder");
-        //     assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`), "no json");
-        //     await assertNoError("1.12.2-forge1.12.2-14.23.5.2823", this.gameDirectory);
-        // }).timeout(10000000);
+        it("should install forge on 1.12.2", async function () {
+            before(() => {
+                if (fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`)) {
+                    fs.unlinkSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`);
+                }
+            });
+            const meta: Forge.VersionMeta = {
+                mcversion: "1.12.2",
+                version: "14.23.5.2823",
+                universal: {
+                    md5: "61e0e4606c3443eb834d9ddcbc6457a3",
+                    sha1: "cec39eddde28eb6f7ac921c8d82d6a5b7916e81b",
+                    path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-universal.jar",
+                },
+                installer: {
+                    md5: "181ccfb55847f31368503746a1ae7e40",
+                    sha1: "3dd9ecd967edbdb0993c9c7e6b8c55cca294f447",
+                    path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-installer.jar",
+                },
+            };
+            await Forge.install(meta, new MinecraftFolder(this.gameDirectory), {
+                tempDir: `${this.gameDirectory}/`,
+            });
+            assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823`), "no such folder");
+            assert(fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`), "no json");
+            await assertNoError("1.12.2-forge1.12.2-14.23.5.2823", this.gameDirectory);
+        }).timeout(10000000);
         it("should install forge 1.13.2-25.0.209", async function () {
             before(() => {
                 if (fs.existsSync(`${this.gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`)) {
