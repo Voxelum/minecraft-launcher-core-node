@@ -616,7 +616,11 @@ export namespace Forge {
         java?: string,
     }): Task<string> {
         const op = option || {};
-        const byInstaller = version.mcversion.startsWith("1.13");
+        let byInstaller = true;
+        try {
+            const minorVersion = Number.parseInt(version.mcversion.split(".")[1], 10);
+            byInstaller = minorVersion >= 13;
+        } catch { }
         const work = byInstaller ? installByInstallerTask(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN, op.java || "java")
             : installByUniversalTask(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN, op.forceCheckDependencies === true);
         return Task.create("installForge", work);
