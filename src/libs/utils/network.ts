@@ -1,7 +1,8 @@
-import { createWriteStream, promises } from "fs";
+import { createReadStream, createWriteStream, promises } from "fs";
 import * as gotDefault from "got";
 import { basename, resolve as pathResolve } from "path";
 import Task from "treelike-task";
+import { fileURLToPath, parse } from "url";
 import { ensureFile, validate } from "./common";
 
 const IS_ELECTRON = process.versions.hasOwnProperty("electron");
@@ -34,7 +35,10 @@ export function getIfUpdate<T extends UpdatedObject = UpdatedObject>(url: string
             ...parser(resp.body),
             timestamp: resp.headers["last-modified"] as string,
         };
-    }).catch((e) => lastObj);
+    }).catch((e) => {
+        if (lastObj) { return lastObj; }
+        throw e;
+    });
 }
 
 export interface DownloadOption {
@@ -84,6 +88,14 @@ export async function downloadBuffer(option: DownloadOption) {
 
 export async function downloadFile(option: DownloadToOption) {
     await ensureFile(option.destination);
+    const url = parse(option.url);
+    if (url.protocol === "file:") {
+        return new Promise<string>((resolve, reject) => {
+            createReadStream(fileURLToPath(option.url))
+                .pipe(createWriteStream(option.destination))
+                .on("close", () => resolve(option.destination));
+        });
+    }
     return new Promise<string>((resolve, reject) => {
         openDownloadStream(option)
             .on("error", reject)
