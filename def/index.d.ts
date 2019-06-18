@@ -2,33 +2,33 @@
 
 declare module "fast-html-parser" {
     interface Node {
-        text: string
-        rawText: string
-        structuredText: string
+        text: string;
+        rawText: string;
+        structuredText: string;
 
-        firstChild: Node
-        lastChild: Node
-        childNodes: Node[]
+        firstChild: Node;
+        lastChild: Node;
+        childNodes: Node[];
 
-        removeWhitespace(): Node
-        trimRight(): Node
+        removeWhitespace(): Node;
+        trimRight(): Node;
 
-        attributes: { [key: string]: string }
-        rawAttributes: string
-        rawAttrs: string
-        tagName: string
-        id: string
-        classNames: string[]
+        attributes: { [key: string]: string };
+        rawAttributes: string;
+        rawAttrs: string;
+        tagName: string;
+        id: string;
+        classNames: string[];
 
-        querySelectorAll(selector: string): Node[]
-        querySelector(selector: string): Node
+        querySelectorAll(selector: string): Node[];
+        querySelector(selector: string): Node;
     }
     interface HTMLElement extends Node {
-        querySelectorAll(selector: string): Node[]
-        querySelector(selector: string): Node
+        querySelectorAll(selector: string): Node[];
+        querySelector(selector: string): Node;
 
-        removeWhitespace(): HTMLElement
-        trimRight(): HTMLElement
+        removeWhitespace(): HTMLElement;
+        trimRight(): HTMLElement;
     }
 
     function parse(raw: string, options?: {
@@ -39,7 +39,7 @@ declare module "fast-html-parser" {
     }): HTMLElement;
 }
 
-declare module 'lzma-native' {
+declare module "lzma-native" {
     import * as stream from "stream"
 
     export const CHECK_CRC32: number;
@@ -72,7 +72,7 @@ declare module 'lzma-native' {
     export function easyDecoderMemusage(preset: number): number;
     export function isXZ(buffer: string | Buffer): boolean;
 
-    export type Coder = 'easyEncoder' | 'autoDecoder' | 'aloneEncoder' | 'aloneDecoder' | 'rawEncoder' | 'rawDecoder' | 'streamEncoder' | 'streamDecoder';
+    export type Coder = "easyEncoder" | "autoDecoder" | "aloneEncoder" | "aloneDecoder" | "rawEncoder" | "rawDecoder" | "streamEncoder" | "streamDecoder";
 
     export function LZMA(): Lzma;
 

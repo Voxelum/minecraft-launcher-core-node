@@ -11,7 +11,7 @@ import { installLibraries } from "./download";
 import { computeChecksum, ensureDir, ensureFile, exists, multiChecksum, remove } from "./utils/common";
 import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { downloadFileWork, got } from "./utils/network";
-import { parseLibPath as parseLibPath, parseLibraries, Version } from "./version";
+import { Library, parseLibPath as parseLibPath, parseLibraries, Version } from "./version";
 
 async function findMainClass(lib: string) {
     const zip = await open(lib, { lazyEntries: true, autoClose: false });
@@ -247,9 +247,16 @@ export namespace Forge {
     }
 
     export interface VersionMeta {
-        checksum: { [key: string]: string | undefined };
-        universal: string;
-        installer?: string;
+        installer: {
+            md5: string;
+            sha1: string;
+            path: string;
+        };
+        universal: {
+            md5: string;
+            sha1: string;
+            path: string;
+        };
         mcversion: string;
         version: string;
     }
@@ -353,33 +360,44 @@ export namespace Forge {
         }>;
     }
 
-    function installByInstallerTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string, java: string) {
+    function installByInstallerTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string, java: string, tempDir?: string, clearTempDir: boolean = true) {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const forgeVersion = `${version.mcversion}-${version.version}`;
-            const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`);
             const fullVersion = `${version.mcversion}-forge${version.mcversion}-${version.version}`;
-            const rootPath = mc.getVersionRoot(fullVersion);
-            const jsonPath = path.join(rootPath, `${fullVersion}.json`);
 
             const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
-            const installerURL = `${maven}${version.installer}`;
+            const installerURL = `${maven}${version.installer.path}`;
 
             function downloadInstallerTask(installer: string, dest: string) {
-                return async (ctx: Task.Context) => new Promise<ZipFile>((resolve, reject) => {
-                    got.stream(installer, {
-                        method: "GET",
-                        headers: { connection: "keep-alive" },
-                    }).on("error", reject)
-                        .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); })
-                        .pipe(createParseStream({ autoClose: false, lazyEntries: true }))
-                        .promise()
-                        .then(resolve, reject);
-                });
+                return async (ctx: Task.Context) => {
+                    let inStream;
+                    if (fs.existsSync(dest)) {
+                        const [md5, sha1] = await multiChecksum(dest, ["md5", "sha1"]);
+                        if (md5 === version.installer.md5 && sha1 === version.installer.sha1) {
+                            inStream = fs.createReadStream(dest);
+                        }
+                    }
+                    if (!inStream) {
+                        inStream = got.stream(installer, {
+                            method: "GET",
+                            headers: { connection: "keep-alive" },
+                        }).on("error", () => { })
+                            .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); });
+
+                        inStream.pipe(fs.createWriteStream(dest));
+                    }
+
+                    return inStream.pipe(createParseStream({ autoClose: false, lazyEntries: true }))
+                        .promise();
+                };
             }
 
-            const tempDir = await fs.promises.mkdtemp(mc.root + path.sep);
-            const installJar = path.join(tempDir, "forge-installer.jar");
+            const temp = tempDir || await fs.promises.mkdtemp(mc.root + path.sep);
+            if (!fs.existsSync(temp)) {
+                await ensureDir(temp);
+            }
+            const installJar = path.join(temp, "forge-installer.jar");
 
             function processValue(v: string) {
                 if (v.match(/^\[.+\]$/g)) {
@@ -396,14 +414,16 @@ export namespace Forge {
                 }
                 return m;
             }
-            async function processBin(s: Readable) {
-                const file = path.join(tempDir, "data", "client.lzma");
+            async function processVersionJson(s: Version.Raw) {
+                const rootPath = mc.getVersionRoot(s.id);
+                const jsonPath = path.join(rootPath, `${s.id}.json`);
+                await ensureFile(jsonPath);
+                await fs.promises.writeFile(jsonPath, JSON.stringify(s));
+            }
+            async function processExtract(s: Readable, p: string) {
+                const file = path.join(temp, p);
                 await ensureFile(file);
                 await promisify(finished)(s.pipe(fs.createWriteStream(file)));
-            }
-            async function processVersionJson(s: Readable) {
-                await ensureFile(jsonPath);
-                await promisify(finished)(s.pipe(fs.createWriteStream(jsonPath)));
             }
             try {
                 let zip: ZipFile;
@@ -412,40 +432,56 @@ export namespace Forge {
                 } catch {
                     zip = await context.execute("downloadInstaller", downloadInstallerTask(installerURLFallback, installJar));
                 }
-                const profile = await new Promise<LaunchProfile>((resolve, reject) => {
-                    let foundProfile = false, foundBin = false, foundVersion = false;
-                    let launchProf: LaunchProfile;
-
+                let profile!: LaunchProfile;
+                let versionJson!: Version.Raw;
+                await new Promise<void>((resolve, reject) => {
+                    let foundProfile = false, foundBin = false, foundVersion = false, foundUniversal = false, foundForge = false;
+                    const forgeEntry = `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`;
+                    const forgeUniversalEntry = `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`;
+                    const binEntry = "data/client.lzma";
                     zip.once("end", () => {
-                        if (!foundProfile || !foundBin || !foundVersion) {
-                            reject(new Error());
+                        if (!foundProfile || !foundBin || !foundVersion || !foundUniversal || !foundForge) {
+                            reject({ foundProfile, foundBin, foundVersion, foundUniversal, foundForge });
                         } else {
-                            resolve(launchProf);
+                            resolve();
                         }
                     });
                     zip.on("entry", (entry: Entry) => {
                         function shouldContinue() {
-                            if (!foundProfile || !foundBin || !foundVersion) {
+                            if (!foundProfile || !foundBin || !foundVersion || !foundUniversal || !foundForge) {
                                 zip.readEntry();
                             } else {
                                 zip.close();
-                                resolve(launchProf);
+                                resolve();
                             }
                         }
                         if (entry.fileName === "install_profile.json") {
                             bufferEntry(zip, entry).then((b) => b.toString()).then(JSON.parse).then((obj) => {
                                 foundProfile = true;
-                                launchProf = obj;
-                                shouldContinue();
-                            });
-                        } else if (entry.fileName === "data/client.lzma") {
-                            openEntryReadStream(zip, entry).then(processBin).then(() => {
-                                foundBin = true;
+                                profile = obj;
                                 shouldContinue();
                             });
                         } else if (entry.fileName === "version.json") {
-                            openEntryReadStream(zip, entry).then(processVersionJson).then(() => {
+                            bufferEntry(zip, entry).then((b) => b.toString()).then(JSON.parse).then((obj) => {
                                 foundVersion = true;
+                                versionJson = obj;
+                                return processVersionJson(versionJson);
+                            }).then(() => {
+                                shouldContinue();
+                            });
+                        } else if (entry.fileName === binEntry) {
+                            openEntryReadStream(zip, entry).then((s) => processExtract(s, binEntry)).then(() => {
+                                foundBin = true;
+                                shouldContinue();
+                            });
+                        } else if (entry.fileName === forgeEntry) {
+                            openEntryReadStream(zip, entry).then((s) => processExtract(s, forgeEntry)).then(() => {
+                                foundForge = true;
+                                shouldContinue();
+                            });
+                        } else if (entry.fileName === forgeUniversalEntry) {
+                            openEntryReadStream(zip, entry).then((s) => processExtract(s, forgeUniversalEntry)).then(() => {
+                                foundUniversal = true;
                                 shouldContinue();
                             });
                         } else {
@@ -465,8 +501,8 @@ export namespace Forge {
                     value.server = processValue(value.server);
 
                     if (key === "BINPATCH") {
-                        value.client = path.join(tempDir, value.client);
-                        value.server = path.join(tempDir, value.server);
+                        value.client = path.join(temp, value.client);
+                        value.server = path.join(temp, value.server);
                     }
                 }
                 for (const proc of profile.processors) {
@@ -480,8 +516,16 @@ export namespace Forge {
                     }
                 }
 
-                parseLibraries(profile.libraries as any);
-                await context.execute("downloadLibraries", installLibraries({ libraries: parseLibraries(profile.libraries as any) }, mc));
+                function libRedirect(lib: Library) {
+                    if (lib.name.startsWith("net.minecraftforge:forge:")) {
+                        return `file://${path.join(temp, "maven", lib.download.path)}`;
+                    }
+                    return undefined;
+                }
+
+                await context.execute("downloadLibraries", installLibraries({
+                    libraries: parseLibraries([...profile.libraries, ...versionJson.libraries]),
+                }, mc, { libraryHost: libRedirect }));
 
                 await context.execute("postProcessing", async (ctx) => {
                     ctx.update(0, profile.processors.length);
@@ -534,14 +578,17 @@ export namespace Forge {
                         }
                     }
 
-                    await remove(tempDir);
-
+                    if (clearTempDir) {
+                        await remove(temp);
+                    }
                     i += 1;
                     ctx.update(i, profile.processors.length);
                 });
                 return fullVersion;
             } catch (e) {
-                await remove(tempDir);
+                if (clearTempDir) {
+                    await remove(temp);
+                }
                 throw e;
             }
         };
@@ -557,13 +604,12 @@ export namespace Forge {
             const jsonPath = path.join(rootPath, `${fullVersion}.json`);
 
             const universalURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`;
-            const universalURL = `${maven}${version.universal}`;
+            const universalURL = `${maven}${version.universal.path}`;
 
-            await context.execute("ensureForgeJar", async () => {
+            await context.execute("installForgeJar", async () => {
                 if (await exists(jarPath)) {
-                    const keys = Object.keys(version.checksum);
-                    const checksums = await multiChecksum(jarPath, keys);
-                    if (checksums.every((v, i) => v === version.checksum[keys[i]])) {
+                    const [md5, sha1] = await multiChecksum(jarPath, ["md5", "sha1"]);
+                    if (version.universal.md5 === md5 && version.universal.sha1 === sha1) {
                         return;
                     }
                 }
@@ -575,12 +621,11 @@ export namespace Forge {
                 }
             });
 
-            await context.execute("ensureForgeJson", async () => {
+            await context.execute("installForgeJson", async () => {
                 if (await exists(jsonPath)) { return; }
 
-                await context.execute("ensureRoot", () => ensureDir(rootPath));
-                await context.execute("extraVersionJson", () => fs.createReadStream(jarPath)
-                    .pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise());
+                await ensureDir(rootPath);
+                await fs.createReadStream(jarPath).pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise();
                 await fs.promises.rename(path.resolve(path.dirname(jsonPath), "version.json"), jsonPath);
             });
 
@@ -600,7 +645,10 @@ export namespace Forge {
      */
     export function install(version: VersionMeta, minecraft: MinecraftLocation, option?: {
         maven?: string,
+        forceCheckDependencies?: boolean,
         java?: string,
+        tempDir?: string,
+        clearTempDirAfterInstall?: boolean,
     }) {
         return installTask(version, minecraft, option).execute();
     }
@@ -610,15 +658,20 @@ export namespace Forge {
      * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
      * @param version The forge version meta
      */
-    export function installTask(version: VersionMeta, minecraft: MinecraftLocation, option?: {
+    export function installTask(version: VersionMeta, minecraft: MinecraftLocation, option: {
         maven?: string,
         forceCheckDependencies?: boolean,
         java?: string,
-    }): Task<string> {
-        const op = option || {};
-        const byInstaller = version.mcversion.startsWith("1.13");
-        const work = byInstaller ? installByInstallerTask(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN, op.java || "java")
-            : installByUniversalTask(version, minecraft, op.maven || DEFAULT_FORGE_MAVEN, op.forceCheckDependencies === true);
+        tempDir?: string,
+        clearTempDirAfterInstall?: boolean,
+    } = {}): Task<string> {
+        let byInstaller = true;
+        try {
+            const minorVersion = Number.parseInt(version.mcversion.split(".")[1], 10);
+            byInstaller = minorVersion >= 13;
+        } catch { }
+        const work = byInstaller ? installByInstallerTask(version, minecraft, option.maven || DEFAULT_FORGE_MAVEN, option.java || "java", option.tempDir, option.clearTempDirAfterInstall)
+            : installByUniversalTask(version, minecraft, option.maven || DEFAULT_FORGE_MAVEN, option.forceCheckDependencies === true);
         return Task.create("installForge", work);
     }
 }

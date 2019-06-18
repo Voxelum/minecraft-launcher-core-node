@@ -1,4 +1,4 @@
-import { ChildProcess, ExecOptions, spawn } from "child_process";
+import { ChildProcess, spawn, SpawnOptions } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { v4 } from "uuid";
@@ -36,7 +36,7 @@ export namespace Launcher {
         resolution?: { width?: number, height?: number, fullscreen: false };
         extraJVMArgs?: string[];
         extraMCArgs?: string[];
-        extraExecOption?: ExecOptions;
+        extraExecOption?: SpawnOptions;
         isDemo?: boolean;
 
         /**
@@ -69,7 +69,7 @@ export namespace Launcher {
         maxMemory?: number;
         extraJVMArgs?: string[];
         extraMCArgs?: string[];
-        extraExecOption?: ExecOptions;
+        extraExecOption?: SpawnOptions;
     }
 
     export async function launchServer(options: ServerOptions) {
@@ -79,7 +79,9 @@ export namespace Launcher {
 
         await ensureLibraries(minecraftFolder, version);
 
-        return spawn(args[0], args.slice(1), { cwd: options.cwd || options.path, env: process.env });
+        const spawnOption = options.extraExecOption || { cwd: options.path, env: process.env };
+
+        return spawn(args[0], args.slice(1), spawnOption);
     }
 
     /**
@@ -114,7 +116,9 @@ export namespace Launcher {
         await ensureLibraries(minecraftFolder, version);
         await ensureNative(minecraftFolder, version);
 
-        return spawn(args[0], args.slice(1), { cwd: options.gamePath, env: process.env });
+        const spawnOption = options.extraExecOption || { cwd: options.gamePath, env: process.env };
+
+        return spawn(args[0], args.slice(1), spawnOption);
     }
 
     export async function generateArgumentsServer(options: ServerOptions) {

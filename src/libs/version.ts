@@ -126,6 +126,8 @@ export interface Version {
         },
     };
 
+    minecraftDirectory: string;
+
     pathChain: string[];
 }
 
@@ -338,9 +340,9 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
             };
         }
         const jarPath = minecraft.getVersionJar(resolvedVersion.client);
-        const missingJar = await context.execute("checkJar", () => validate(jarPath, resolvedVersion.downloads.client.sha1));
+        const missingJar = !await context.execute("checkJar", () => validate(jarPath, resolvedVersion.downloads.client.sha1));
         const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
-        const missingAssetsIndex = await context.execute("checkAssetIndex", async () => validate(assetsIndexPath, resolvedVersion.assetIndex.sha1));
+        const missingAssetsIndex = !await context.execute("checkAssetIndex", async () => validate(assetsIndexPath, resolvedVersion.assetIndex.sha1));
         const libMask = await context.execute("checkLibraries", () => Promise.all(resolvedVersion.libraries.map(async (lib) => {
             const libPath = minecraft.getLibraryByPath(lib.download.path);
             if (await exists(libPath)) {
@@ -407,6 +409,7 @@ export function resolveDependency(path: MinecraftLocation, version: string): Pro
             return fs.promises.readFile(jsonPath).then((value) => {
                 const versionInst = parseVersionJson(value.toString());
                 Object.defineProperty(versionInst, "_path", { value: paths.dirname(jsonPath) });
+                versionInst.minecraftDirectory = folder.root;
                 stack.push(versionInst);
                 if (versionInst.inheritsFrom) {
                     return interal(folder.getVersionJson(versionInst.inheritsFrom), versionInst.inheritsFrom);
@@ -438,6 +441,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     let type: string;
     let logging: any;
     let client: string | undefined;
+    let location: string;
 
     const chains: string[] = hierarchy.map((j) => Reflect.get(j, "_path"));
 
@@ -445,6 +449,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     do {
         json = hierarchy.pop() as Version;
         minimumLauncherVersion = Math.max(json.minimumLauncherVersion || 0, minimumLauncherVersion);
+        location = json.minecraftDirectory;
 
         client = (json as any).jar || client || json.id;
 
@@ -501,6 +506,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
         libraries: Object.keys(librariesMap).map((k) => librariesMap[k]).concat(Object.keys(nativesMap).map((k) => nativesMap[k])),
         mainClass, minimumLauncherVersion, releaseTime, time, type, logging,
         pathChain: chains,
+        minecraftDirectory: location,
     } as Version;
 }
 

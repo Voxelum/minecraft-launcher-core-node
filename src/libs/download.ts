@@ -8,7 +8,7 @@ import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
 import { downloadFile, downloadFileIfAbsentWork, downloadFileWork, fetchBuffer, getIfUpdate, UpdatedObject } from "./utils/network";
 import { Library, Version, VersionMeta } from "./version";
 
-type LibraryHost = (libId: string) => string | undefined;
+type LibraryHost = (libId: Library) => string | undefined;
 declare module "./version" {
     /**
      * Version metadata about download
@@ -27,7 +27,6 @@ declare module "./version" {
         };
         versions: VersionMeta[];
     }
-    type LibraryHost = (libId: string) => string | undefined;
 
     namespace Version {
         /**
@@ -153,7 +152,7 @@ Version.installDependencies = function (version: Version, minecraft: MinecraftLo
 };
 
 Version.installDependenciesTask = function (version: Version, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
-    return Task.create({ name: "checkDependencies", arguments: { version: version.id } }, installDependencies(version, minecraft, option));
+    return Task.create({ name: "installDependencies", arguments: { version: version.id } }, installDependencies(version, minecraft, option));
 };
 
 Version.checkDependencies = Version.installDependencies;
@@ -265,7 +264,7 @@ function installLibrary(lib: Library, folder: MinecraftFolder, libraryHost?: Lib
         const compressed = isCompressed && canDecompress;
 
         if (libraryHost) {
-            const url = libraryHost(lib.name);
+            const url = libraryHost(lib);
             downloadURL = url ? url : lib.download.url; // handle external host
         } else {
             // if there is no external host, and we cannot decompress, then we need to swap this two lib src... forge src is missing
@@ -392,6 +391,7 @@ function installAssets(version: Version, minecraft: MinecraftLocation, option: {
                 all.push(context.execute({ name: "assets", arguments: { version: version.id } },
                     installAssetsByCluster(objectArray.slice(startIndex, i + 1), folder, assetsHost)));
                 startIndex = i + 1;
+                accumSize = 0;
             }
         }
         if (startIndex < objectArray.length) {

@@ -18,13 +18,14 @@ export namespace ForgeWebPage {
             timestamp: "",
             mcversion,
             versions: dom.querySelector(".download-list").querySelector("tbody").querySelectorAll("tr")
-                .map((e: any) => {
+                .map((e) => {
                     const links = e.querySelector(".download-links").childNodes
-                        .filter((elem: any) => elem.tagName === "li")
-                        .map((elem: any) => {
+                        .filter((elem) => elem.tagName === "li")
+                        .map((elem) => {
                             const tt = elem.querySelector(".info-tooltip");
                             const url = tt.querySelector("a") || elem.querySelector("a");
                             return {
+                                name: url.childNodes[2].rawText.trim(),
                                 md5: tt.childNodes[2].text.trim(),
                                 sha1: tt.childNodes[6].text.trim(),
                                 path: url.attributes.href,
@@ -46,17 +47,25 @@ export namespace ForgeWebPage {
                     } else {
                         version = downloadVersionElem.text.trim();
                     }
-                    return {
+                    const installer = links.find((l) => l.name === "Installer");
+                    const universal = links.find((l) => l.name === "Universal");
+
+                    if (installer === undefined || universal === undefined) {
+                        throw new Error(`Cannot parse forge web since it missing installer and universal jar info.`);
+                    }
+                    const result = {
                         version,
                         "date": e.querySelector(".download-time").text.trim(),
                         "changelog": links[0],
-                        "installer": links[1],
-                        "installer-win": links[2],
-                        "mdk": links[3],
-                        "universal": links[4],
+                        installer,
+                        "installer-win": links.find((l) => l.name === "Installer-win"),
+                        "mdk": links.find((l) => l.name === "Mdk"),
+                        universal,
                         "mcversion": mcversion,
                         type,
                     };
+
+                    return result;
                 }),
         };
     }
@@ -85,21 +94,16 @@ export namespace ForgeWebPage {
         date: string;
         changelog: ForgeWebPage.Download;
         installer: ForgeWebPage.Download;
-        mdk: ForgeWebPage.Download;
+        mdk?: ForgeWebPage.Download;
         universal: ForgeWebPage.Download;
         type: "buggy" | "recommended" | "common" | "latest";
     }
 
     export namespace Version {
         export function to(webPageVersion: ForgeWebPage.Version): Forge.VersionMeta {
-            const checksum = {
-                md5: webPageVersion.universal.md5,
-                sha1: webPageVersion.universal.sha1,
-            };
             return {
-                checksum,
-                universal: webPageVersion.universal.path,
-                installer: webPageVersion.installer.path,
+                universal: webPageVersion.universal,
+                installer: webPageVersion.installer,
                 mcversion: webPageVersion.mcversion,
                 version: webPageVersion.version,
             };

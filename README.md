@@ -5,7 +5,9 @@
 [![Build Status](https://travis-ci.org/ci010/ts-minecraft.svg?branch=5.0)](https://travis-ci.org/ci010/ts-minecraft)
 [![Coverage Status](https://coveralls.io/repos/github/ci010/ts-minecraft/badge.svg?branch=5.0)](https://coveralls.io/github/ci010/ts-minecraft?branch=5.0)
 
-Provide several useful functions for Minecraft
+Provide several useful functions for Minecraft.
+
+This package is targeting the [Electron](https://electronjs.org) environment. Feel free to report issues related to it.
 
 ## Usage
 
@@ -259,7 +261,6 @@ Consider support him to maintains forge.
 ```
 
 Fetch the new fabric version list.
-
 
 ```ts
     import { Fabric } from 'ts-minecraft'
