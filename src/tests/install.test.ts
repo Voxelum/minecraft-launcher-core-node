@@ -112,9 +112,6 @@ describe("Install", function () {
         }).timeout(100000000);
         it("should install forge 1.13.2-25.0.209", async function () {
             before(() => {
-                if (fs.existsSync(`${this.gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`)) {
-                    fs.unlinkSync(`${this.gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`);
-                }
                 if (!fs.existsSync(`${this.gameDirectory}/temps`)) {
                     fs.mkdirSync(`${this.gameDirectory}/temps`);
                 }
