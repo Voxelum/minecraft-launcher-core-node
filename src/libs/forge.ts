@@ -639,7 +639,7 @@ export namespace Forge {
 
             if (checkDependecies) {
                 const resolvedVersion = await Version.parse(minecraft, fullVersion!);
-                await context.execute("installDependencies", Version.installDependencies(resolvedVersion, minecraft).work);
+                await context.execute("installDependencies", Version.installDependenciesTask(resolvedVersion, minecraft).work);
             }
 
             return fullVersion!;
