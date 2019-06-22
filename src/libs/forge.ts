@@ -364,7 +364,7 @@ export namespace Forge {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const forgeVersion = `${version.mcversion}-${version.version}`;
-            const fullVersion = `${version.mcversion}-forge${version.mcversion}-${version.version}`;
+            let versionId: string;
 
             const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
             const installerURL = `${maven}${version.installer.path}`;
@@ -417,6 +417,7 @@ export namespace Forge {
             async function processVersionJson(s: Version.Raw) {
                 const rootPath = mc.getVersionRoot(s.id);
                 const jsonPath = path.join(rootPath, `${s.id}.json`);
+                versionId = s.id;
                 await ensureFile(jsonPath);
                 await fs.promises.writeFile(jsonPath, JSON.stringify(s));
             }
@@ -584,7 +585,7 @@ export namespace Forge {
                     i += 1;
                     ctx.update(i, profile.processors.length);
                 });
-                return fullVersion;
+                return versionId!;
             } catch (e) {
                 if (clearTempDir) {
                     await remove(temp);
@@ -599,9 +600,7 @@ export namespace Forge {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const forgeVersion = `${version.mcversion}-${version.version}`;
             const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`);
-            const fullVersion = `${version.mcversion}-forge${version.mcversion}-${version.version}`;
-            const rootPath = mc.getVersionRoot(fullVersion);
-            const jsonPath = path.join(rootPath, `${fullVersion}.json`);
+            let fullVersion: string;
 
             const universalURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`;
             const universalURL = `${maven}${version.universal.path}`;
@@ -622,19 +621,28 @@ export namespace Forge {
             });
 
             await context.execute("installForgeJson", async () => {
-                if (await exists(jsonPath)) { return; }
+                const zip = await open(jarPath, { lazyEntries: true, autoClose: false });
+                const { "version.json": versionEntry } = await parseEntries(zip, ["version.json"]);
+                if (versionEntry) {
+                    const buf = await bufferEntry(zip, versionEntry);
+                    const raw = JSON.parse(buf.toString());
+                    const id = raw.id;
+                    fullVersion = id;
+                    const rootPath = mc.getVersionRoot(fullVersion);
 
-                await ensureDir(rootPath);
-                await fs.createReadStream(jarPath).pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise();
-                await fs.promises.rename(path.resolve(path.dirname(jsonPath), "version.json"), jsonPath);
+                    await ensureDir(rootPath);
+                    await fs.promises.writeFile(path.join(rootPath, `${id}.json`), buf);
+                } else {
+                    throw new Error(`Cannot install forge json for ${version.version} since the version json is missing!`);
+                }
             });
 
             if (checkDependecies) {
-                const resolvedVersion = await Version.parse(minecraft, fullVersion);
-                context.execute("checkDependencies", Version.checkDependenciesTask(resolvedVersion, minecraft).work);
+                const resolvedVersion = await Version.parse(minecraft, fullVersion!);
+                await context.execute("installDependencies", Version.installDependencies(resolvedVersion, minecraft).work);
             }
 
-            return fullVersion;
+            return fullVersion!;
         };
     }
 
