@@ -131,6 +131,47 @@ describe("Launcher", () => {
             const lname = args.find((a) => a.startsWith("-Dminecraft.launcher.brand"));
             assert.equal(lname, "-Dminecraft.launcher.brand=launcherName");
         });
+        it("should generate correct argument with forge", async function () {
+            const javaPath = "/test/java";
+            const version = "1.12.2-forge1.12.2-14.23.5.2823";
+            const gamePath = this.gameDirectory;
+            const auth = Auth.offline("tester");
+            const args = await Launcher.generateArguments({
+                version, gamePath, javaPath, auth,
+                launcherBrand: "launcherVersion",
+                launcherName: "launcherName",
+            });
+            assert.equal(args.filter((a) => a === "--gameDir").length, 1);
+            assert.equal(args.filter((a) => a === "--assetsDir").length, 1);
+            assert.equal(args.filter((a) => a === "--tweakClass").length, 1);
+        });
+        it("should generate correct argument with forge & liteloader", async function () {
+            const javaPath = "/test/java";
+            const version = "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT";
+            const gamePath = this.gameDirectory;
+            const auth = Auth.offline("tester");
+            const args = await Launcher.generateArguments({
+                version, gamePath, javaPath, auth,
+                launcherBrand: "launcherVersion",
+                launcherName: "launcherName",
+            });
+            assert.equal(args.filter((a) => a === "--gameDir").length, 1);
+            assert.equal(args.filter((a) => a === "--assetsDir").length, 1);
+            assert.equal(args.filter((a) => a === "--tweakClass").length, 2);
+        });
+        it("should generate correct argument with new forge", async function () {
+            const javaPath = "/test/java";
+            const version = "1.13.2-forge-25.0.209";
+            const gamePath = this.gameDirectory;
+            const auth = Auth.offline("tester");
+            const args = await Launcher.generateArguments({
+                version, gamePath, javaPath, auth,
+                launcherBrand: "launcherVersion",
+                launcherName: "launcherName",
+            });
+            assert.equal(args.filter((a) => a === "--gameDir").length, 1);
+            assert.equal(args.filter((a) => a === "--assetsDir").length, 1);
+        });
         it("should generate default user", async function () {
             const args = await Launcher.generateArguments({
                 version: "1.12.2", gamePath: this.gameDirectory, javaPath: "/test/java",
