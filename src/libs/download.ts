@@ -190,7 +190,7 @@ Version.installLibrariesDirect = function (libraries: Library[], minecraft: Mine
 };
 
 Version.installLibrariesDirectTask = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Task.create({ name: "installLibiraries", arguments: {} }, (ctx) => { installLibraries({ libraries }, minecraft, option)(ctx); });
+    return Task.create({ name: "installLibraries", arguments: {} }, async (ctx) => { await installLibraries({ libraries }, minecraft, option)(ctx); });
 };
 
 function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
