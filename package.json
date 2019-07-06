@@ -1,6 +1,6 @@
 {
   "name": "ts-minecraft",
-  "version": "5.2.3",
+  "version": "5.2.4",
   "main": "./dest/index.js",
   "types": "./dest/index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher. Targeting ElectronJs environment!",
