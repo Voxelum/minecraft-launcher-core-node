@@ -33,6 +33,8 @@ This package is targeting the [Electron](https://electronjs.org) environment. Fe
     - [Auth](#auth)
     - [Version](#version)
     - [Launch](#launch)
+  - [Experiental Features](#experiental-features)
+    - [Monitor download progress](#monitor-download-progress)
   - [Caching Request](#caching-request)
   - [Issue](#issue)
   - [Credit](#credit)
@@ -317,6 +319,21 @@ Parse existed version.
 ```
 
 Launch minecraft from a version
+
+## Experiental Features
+
+They might be not stable.
+
+### Monitor download progress
+
+```ts
+    import { Version } from 'ts-minecraft';
+
+    const expectedVersion: string;
+    const expectedMcLoc: MinecraftLocation;
+    const resolvedVersion: Version = await Version.parse(expectedMcLoc, expectedVersion);
+    const task: Task<Version> = Version.checkDependenciesTask(resolvedVersion, expectedMcLoc);
+```
 
 ## Caching Request
 

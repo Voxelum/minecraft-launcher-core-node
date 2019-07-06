@@ -442,6 +442,7 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
     let logging: any;
     let client: string | undefined;
     let location: string;
+    const doReplace = (hierarchy[0] as any).argumentsPolicy === "replace";
 
     const chains: string[] = hierarchy.map((j) => Reflect.get(j, "_path"));
 
@@ -456,11 +457,17 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
         if (!args) {
             args = json.arguments;
         } else {
-            if (json.arguments.game) {
-                args.game.push(...json.arguments.game);
-            } else if (json.arguments.jvm) {
-                args.jvm.push(...json.arguments.jvm);
+            if (doReplace) {
+                args = json.arguments;
+            } else {
+                if (json.arguments.game) {
+                    args.game.push(...json.arguments.game);
+                }
+                if (json.arguments.jvm) {
+                    args.jvm.push(...json.arguments.jvm);
+                }
             }
+
         }
 
         logging = json.logging || logging;
@@ -587,7 +594,9 @@ function parseVersionJson(versionString: string): Version {
         if (key === "arguments") { return parseArgs(value); }
         return value;
     });
+    parsed.argumentsPolicy = "merge";
     if (!parsed.arguments) {
+        parsed.argumentsPolicy = "replace";
         parsed.arguments = {
             game: parsed.minecraftArguments.split(" "),
             jvm: [
