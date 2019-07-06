@@ -150,8 +150,6 @@ export namespace Launcher {
         if (!options.auth) { options.auth = Auth.offline("Steve"); }
         if (!path.isAbsolute(options.gamePath)) { options.gamePath = path.resolve(options.gamePath); }
         if (!options.resourcePath) { options.resourcePath = options.gamePath; }
-        if (!options.minMemory) { options.minMemory = 512; }
-        if (!options.maxMemory) { options.maxMemory = options.minMemory; }
         if (!options.launcherName) { options.launcherName = "Launcher"; }
         if (!options.launcherBrand) { options.launcherBrand = "0.0.1"; }
         if (!options.isDemo) { options.isDemo = false; }
@@ -162,8 +160,12 @@ export namespace Launcher {
         const cmd: string[] = [];
         cmd.push(options.javaPath);
 
-        cmd.push(`-Xms${(options.minMemory)}M`);
-        cmd.push(`-Xmx${(options.maxMemory)}M`);
+        if (options.minMemory) {
+            cmd.push(`-Xms${(options.minMemory)}M`);
+        }
+        if (options.maxMemory) {
+            cmd.push(`-Xmx${(options.maxMemory)}M`);
+        }
 
         if (options.ignoreInvalidMinecraftCertificates) {
             cmd.push("-Dfml.ignoreInvalidMinecraftCertificates=true");
