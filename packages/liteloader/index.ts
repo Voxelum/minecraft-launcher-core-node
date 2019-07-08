@@ -1,3 +1,4 @@
+import { Installer } from "@xmcl/installer";
 import Task from "@xmcl/task";
 import { ensureDir, getIfUpdate, MinecraftFolder, MinecraftLocation, UpdatedObject } from "@xmcl/util";
 import { Version } from "@xmcl/version";
@@ -221,7 +222,7 @@ export namespace LiteLoader {
 
             await context.execute("checkDependency", async (ctx) => {
                 const resolved = await Version.parse(mc, versionInf.id);
-                Version.checkDependenciesTask(resolved, mc).work(ctx);
+                await Installer.installDependenciesTask(resolved).work(ctx);
             });
         });
     }

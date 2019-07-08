@@ -86,8 +86,8 @@ export namespace Server {
      *
      * @param buff The binary data of .minecraft/server.dat
      */
-    export function readInfo(buff: Buffer): ServerInfoFrame[] {
-        const value = NBT.Serializer.deserialize(buff);
+    export async function readInfo(buff: Buffer): Promise<ServerInfoFrame[]> {
+        const value = await NBT.Persistence.deserialize(buff);
         if (!value.servers) {
             throw {
                 type: "InvalidServerSyntext",
@@ -105,7 +105,7 @@ export namespace Server {
      *
      * @param infos The array of server information.
      */
-    export function writeInfo(infos: ServerInfoFrame[]): Buffer {
+    export function writeInfo(infos: ServerInfoFrame[]): Promise<Buffer> {
         const object = {
             servers: infos.map((i) => ({
                 ip: i.host,
@@ -118,15 +118,15 @@ export namespace Server {
             __nbtPrototype__: {
                 servers: [
                     {
-                        icon: 8,
-                        ip: 8,
-                        name: 8,
-                        acceptTextures: 1,
+                        icon: 8 as const,
+                        ip: 8 as const,
+                        name: 8 as const,
+                        acceptTextures: 1 as const,
                     },
                 ],
             },
         };
-        return NBT.Serializer.serialize(object);
+        return NBT.Persistence.serialize(object);
     }
 
     export interface FetchOptions {

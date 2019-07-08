@@ -1,6 +1,6 @@
 import { Auth } from "@xmcl/auth";
 import { computeChecksum, ensureDir, format, MinecraftFolder, missing } from "@xmcl/util";
-import { Native, ResolvedVersion, Version } from "@xmcl/version";
+import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
 
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
 import * as fs from "fs";
@@ -258,7 +258,7 @@ export namespace Launcher {
     export async function ensureNative(mc: MinecraftFolder, version: ResolvedVersion) {
         const native = mc.getNativesRoot(version.id);
         await ensureDir(native);
-        const natives = version.libraries.filter((lib) => lib instanceof Native) as Native[];
+        const natives = version.libraries.filter((lib) => lib instanceof ResolvedNative) as ResolvedNative[];
         return Promise.all(natives.map(async (n) => {
             const excluded: string[] = n.extractExclude ? n.extractExclude : [];
             const containsExcludes = (p: string) => excluded.filter((s) => p.startsWith(s)).length === 0;

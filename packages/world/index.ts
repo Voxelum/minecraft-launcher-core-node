@@ -10,10 +10,10 @@ type StringBoolean = "true" | "false";
 
 declare module "@xmcl/common/world" {
     namespace World {
-        function loadRegionFromBuffer(buffer: Buffer, x: number, z: number): RegionDataFrame;
+        function loadRegionFromBuffer(buffer: Buffer, x: number, z: number): Promise<RegionDataFrame>;
         function getRegionFile(location: string, x: number, z: number): string;
         function load<K extends string & keyof World & ("players" | "advancements" | "level")>(location: string, entries: K[]): Promise<Pick<World, K | "path">>;
-        function parseLevelData(buffer: Buffer): LevelDataFrame;
+        function parseLevelData(buffer: Buffer): Promise<LevelDataFrame>;
     }
 }
 
@@ -22,7 +22,7 @@ World.load = load;
 World.loadRegionFromBuffer = loadRegionFromBuffer;
 World.parseLevelData = parseLevelData;
 
-function loadRegionFromBuffer(buffer: Buffer, x: number, z: number): RegionDataFrame {
+async function loadRegionFromBuffer(buffer: Buffer, x: number, z: number) {
     const off = getChunkOffset(buffer, x, z);
     const length = buffer.readInt32BE(off);
     const format = buffer.readUInt8(off + 4);
@@ -30,7 +30,8 @@ function loadRegionFromBuffer(buffer: Buffer, x: number, z: number): RegionDataF
         throw new Error(`Cannot resolve chunk with format ${format}.`);
     }
     const chunkData = buffer.slice(off + 5, off + 5 + length);
-    return NBT.Serializer.deserialize(inflateSync(chunkData), false) as any as RegionDataFrame;
+    const data = await NBT.Persistence.deserialize(inflateSync(chunkData), false);
+    return data as unknown as RegionDataFrame;
 }
 
 function getRegionFile(location: string, x: number, z: number) {
@@ -53,7 +54,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
         const zip = await open(buffer, { lazyEntries: true });
         await walkEntries(zip, (e) => {
             if (enabledFunction.level && e.fileName.endsWith("/level.dat")) {
-                return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((l) => {
+                return bufferEntry(zip, e).then(NBT.Persistence.deserialize).then((l) => {
                     result.level = l.Data as any;
                     if (result.level === undefined || result.level === null) {
                         throw {
@@ -69,7 +70,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
                 });
             }
             if (enabledFunction.players && e.fileName.match(/\/playerdata\/[0-9a-z\-]+\.dat$/)) {
-                return bufferEntry(zip, e).then(NBT.Serializer.deserialize).then((r) => { result.players.push(r as any); });
+                return bufferEntry(zip, e).then(NBT.Persistence.deserialize).then((r) => { result.players.push(r as any); });
             }
             if (enabledFunction.advancements && e.fileName.match(/\/advancements\/[0-9a-z\-]+\.json$/)) {
                 return bufferEntry(zip, e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); });
@@ -79,7 +80,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
     } else {
         const promises: Array<Promise<any>> = [];
         if (enabledFunction.level) {
-            promises.push(fs.promises.readFile(path.resolve(location, "level.dat")).then(NBT.Serializer.deserialize).then((l) => {
+            promises.push(fs.promises.readFile(path.resolve(location, "level.dat")).then(NBT.Persistence.deserialize).then((l) => {
                 result.level = l.Data as any;
                 if (result.level === undefined || result.level === null) {
                     throw {
@@ -98,7 +99,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
             promises.push(fs.promises.readdir(path.resolve(location, "playerdata")).then(
                 (files) => Promise.all(files.map((f) => path.resolve(location, "playerdata", f))
                     .map((p) => fs.promises.readFile(p)
-                        .then(NBT.Serializer.deserialize).then((r) => { result.players.push(r as any); }),
+                        .then(NBT.Persistence.deserialize).then((r) => { result.players.push(r as any); }),
                     )),
                 () => { },
             ));
@@ -117,8 +118,8 @@ async function load<K extends string & keyof World & ("players" | "advancements"
     return result as any;
 }
 
-function parseLevelData(buffer: Buffer): LevelDataFrame {
-    const nbt = NBT.Serializer.deserialize(buffer, true);
+async function parseLevelData(buffer: Buffer): Promise<LevelDataFrame> {
+    const nbt = await NBT.Persistence.deserialize(buffer, true);
     const data = nbt.Data;
     if (!data) { throw new Error("Illegal Level Data Content"); }
     return Object.keys(data).sort().reduce((r: any, k: any) => (r[k] = data[k], r), {});

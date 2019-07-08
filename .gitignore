@@ -67,3 +67,7 @@ temp
 # Rush files
 common/temp/**
 package-deps.json
+
+packages/**/*.js
+packages/**/*.d.ts
+packages/**/*.js.map

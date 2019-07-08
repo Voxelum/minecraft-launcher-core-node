@@ -1,6 +1,6 @@
 import { getIfUpdate, UpdatedObject } from "@xmcl/util";
 import * as parser from "fast-html-parser";
-import Forge from "../forge";
+import Forge from "./index";
 
 export namespace ForgeWebPage {
 
@@ -111,7 +111,7 @@ export namespace ForgeWebPage {
     }
 }
 
-declare module "./forge" {
+declare module "./index" {
     export namespace VersionMeta {
         export function from(webPageVersion: ForgeWebPage.Version): Forge.VersionMeta;
     }

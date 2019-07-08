@@ -1,23 +1,12 @@
-import { computeChecksum as computeChecksum, downloadFile, downloadFileIfAbsentWork, downloadFileWork, ensureDir, exists, fetchBuffer, getIfUpdate, MinecraftFolder, MinecraftLocation, UpdatedObject, validate } from "@xmcl/common";
-import { Library, Version } from "@xmcl/version";
+import Task from "@xmcl/task";
+import { computeChecksum as computeChecksum, downloadFile, downloadFileIfAbsentWork, downloadFileWork, ensureDir, exists, fetchBuffer, getIfUpdate, MinecraftFolder, MinecraftLocation, UpdatedObject, validate } from "@xmcl/util";
+import { ResolvedLibrary, ResolvedVersion, Version } from "@xmcl/version";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import Task from "treelike-task";
-import { decompressXZ, unpack200 } from "./utils/decompress";
+import { decompressXZ, unpack200 } from "./decompress";
 
-/**
- * Default minecraft version manifest url.
- */
-const DEFAULT_VERSION_MANIFEST_URL = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
-/**
- * Default resource/assets url root
- */
-const DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.net";
-
-type MetaContainer = VersionMetaList & UpdatedObject;
-
-type LibraryHost = (libId: Library) => string | undefined;
+type LibraryHost = (libId: ResolvedLibrary) => string | undefined;
 interface VersionMeta {
     id: string;
     type: string;
@@ -33,34 +22,42 @@ interface VersionMetaList {
     versions: VersionMeta[];
 }
 
-
-/**
- * get/refresh a version metadata
- */
-export function updateVersionMeta(option: {
-    /**
-     * fallback meta container if there is no internet
-     */
-    fallback?: MetaContainer,
-    /**
-     * remote url of this request
-     */
-    remote?: string,
-} = {}): Promise<MetaContainer> {
-    return getIfUpdate(option.remote || Version.DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.fallback);
-}
-
-// /**
-//  * Install the server to a location by version metadata
-//  */
-// function install(type: "server", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version>;
-
-// /**
-//  * Install the client to a location by version metadata
-//  */
-// function install(type: "client", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version>;
-
 export namespace Installer {
+    /**
+     * Default minecraft version manifest url.
+     */
+    export const DEFAULT_VERSION_MANIFEST_URL = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+    /**
+     * Default resource/assets url root
+     */
+    export const DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.net";
+
+
+    export type MetaContainer = VersionMetaList & UpdatedObject;
+
+    /**
+     * get/refresh a version metadata
+     */
+    export function updateVersionMeta(option: {
+        /**
+         * fallback meta container if there is no internet
+         */
+        fallback?: MetaContainer,
+        /**
+         * remote url of this request
+         */
+        remote?: string,
+    } = {}): Promise<MetaContainer> {
+        return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.fallback);
+    }
+
+    export interface LibraryOption {
+        libraryHost?: LibraryHost;
+    }
+    export interface AssetsOption {
+        assetsHost?: string;
+    }
+    export type Option = AssetsOption & AssetsOption;
 
     /**
      * Install the Minecraft game to a location by version metadata
@@ -70,14 +67,12 @@ export namespace Installer {
      * @param minecraft The Minecraft location
      * @param option
      */
-    export function install(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Promise<Version> {
+    export function install(type: "server" | "client", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion> {
         return installTask(type, versionMeta, minecraft, option).execute();
     }
 
-    // function installTask(type: "server", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
-    // function installTask(type: "client", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version>;
-    export function installTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }): Task<Version> {
-        return Task.create({ name: "install", arguments: { version: versionMeta.id, type } }, install0(type, versionMeta, minecraft, option));
+    export function installTask(type: "server" | "client", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: Option): Task<ResolvedVersion> {
+        return Task.create({ name: "install", arguments: { version: versionMeta.id, type } }, installWork(type, versionMeta, minecraft, option));
     }
 
     /**
@@ -87,79 +82,71 @@ export namespace Installer {
      * @param versionMeta the version metadata; get from updateVersionMeta
      * @param minecraft minecraft location
      */
-    export function installVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version> {
+    export function installVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<ResolvedVersion> {
         return installVersionTask(type, versionMeta, minecraft).execute();
     }
 
-    // function installVersion(type: "client", versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
-    // function installVersion(type: "server", versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<Version>;
-
-    export function installVersionTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Task<Version> {
-        return Task.create({ name: "installVersion", arguments: { type, version: meta.id } }, installVersion0(type, meta, minecraft));
+    export function installVersionTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Task<ResolvedVersion> {
+        return Task.create({ name: "installVersion", arguments: { type, version: versionMeta.id } }, installVersionWork(type, versionMeta, minecraft));
     }
 
-    export function installAssets(version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }): Promise<Version> { }
-    export function installAssetsTask(version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }): Task<Version> { }
-    export function installLibraries(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<Version> { }
-    export function installLibrariesTask(version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<Version> { }
-    export function installLibrariesDirect(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<void> { }
-    export function installLibrariesDirectTask(libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<void> { }
+    /**
+     * Install the completeness of the Minecraft game assets and libraries.
+     *
+     * @param version The resolved version produced by Version.parse
+     * @param minecraft The minecraft location
+     */
+    export function installDependencies(version: ResolvedVersion, option?: Option): Promise<ResolvedVersion> {
+        return installDependenciesTask(version, option).execute();
+    }
+    export function installDependenciesTask(version: ResolvedVersion, option?: Option): Task<ResolvedVersion> {
+        return Task.create({ name: "installDependencies", arguments: { version: version.id } }, installDependenciesWork(version, option));
+    }
+
+    export function installAssets(version: ResolvedVersion, option?: { assetsHost?: string }): Promise<ResolvedVersion> {
+        return installAssetsTask(version, option).execute();
+    }
+    export function installAssetsTask(version: ResolvedVersion, option?: { assetsHost?: string }): Task<ResolvedVersion> {
+        return Task.create({ name: "installAssets", arguments: { version: version.id } }, installAssets0(version, option || {}));
+    }
+
+    export function installLibraries(version: ResolvedVersion, option?: { libraryHost?: LibraryHost }): Promise<ResolvedVersion> {
+        return installLibrariesTask(version, option).execute();
+    }
+    export function installLibrariesTask(version: ResolvedVersion, option?: { libraryHost?: LibraryHost }): Task<ResolvedVersion> {
+        return Task.create({ name: "installLibraries", arguments: { version: version.id } }, installLibrariesWork(version, option));
+    }
+
+    export function installLibrariesDirect(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<void> {
+        return installLibrariesDirectTask(libraries, minecraft, option).execute();
+    }
+    export function installLibrariesDirectTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<void> {
+        return Task.create({ name: "installLibraries", arguments: {} }, async (ctx) => { await installLibrariesWork({ libraries, minecraftDirectory: typeof minecraft === "string" ? minecraft : minecraft.root }, option)(ctx); });
+    }
 }
-Version.installLibrariesTask = function (version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Task.create({ name: "installLibraries", arguments: { version: version.id } }, installLibraries(version, minecraft, option));
-};
 
-Version.installLibraries = function (version: Version, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Version.installLibrariesTask(version, minecraft, option).execute();
-};
-
-Version.installAssetsTask = function (version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }) {
-    return Task.create({ name: "installAssets", arguments: { version: version.id } }, installAssets(version, minecraft, option || {}));
-};
-
-Version.installAssets = function (version: Version, minecraft: MinecraftLocation, option?: { assetsHost?: string }) {
-    return Version.installAssetsTask(version, minecraft, option).execute();
-};
-
-Version.installLibrariesDirect = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Version.installLibrariesDirectTask(libraries, minecraft, option).execute();
-};
-
-Version.installLibrariesDirectTask = function (libraries: Library[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
-    return Task.create({ name: "installLibiraries", arguments: {} }, (ctx) => { installLibraries({ libraries }, minecraft, option)(ctx); });
-};
-
-function install0(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
+function installWork(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string }) {
     return async (context: Task.Context) => {
-        const version = await context.execute("installVersion", installVersion(type, versionMeta, minecraft));
+        const version = await context.execute("installVersion", installVersionWork(type, versionMeta, minecraft));
         if (type === "client") {
-            await context.execute("installDependencies", installDependencies(version, minecraft, option));
+            await context.execute("installDependencies", installDependenciesWork(version, option));
         } else {
-            await context.execute("installLibraries", installLibraries(version, minecraft, option));
+            await context.execute("installLibraries", installLibrariesWork(version, option));
         }
         return version;
     };
 }
 
-function installVersion0(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation) {
+function installVersionWork(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation) {
     return async (context: Task.Context) => {
-        await context.execute("json", installVersionJson(versionMeta, minecraft));
+        await context.execute("json", installVersionJsonWork(versionMeta, minecraft));
         const version = await Version.parse(minecraft, versionMeta.id);
-        await context.execute("jar", installVersionJar(type, version, minecraft));
+        await context.execute("jar", installVersionJarWork(type, version, minecraft));
         return version;
     };
 }
 
-function installDependencies0(version: Version, minecraft: MinecraftLocation, option: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string } = {}) {
-    return async (context: Task.Context) => {
-        await Promise.all([
-            context.execute("installAssets", installAssets(version, minecraft, option)),
-            context.execute("installLibraries", installLibraries(version, minecraft, option))]);
-        return version;
-    };
-}
-
-function installVersionJson(version: VersionMeta, minecraft: MinecraftLocation) {
+function installVersionJsonWork(version: VersionMeta, minecraft: MinecraftLocation) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         await ensureDir(folder.getVersionRoot(version.id));
@@ -170,7 +157,7 @@ function installVersionJson(version: VersionMeta, minecraft: MinecraftLocation) 
     };
 }
 
-function installVersionJar(type: string, version: Version, minecraft: MinecraftLocation) {
+function installVersionJarWork(type: string, version: ResolvedVersion, minecraft: MinecraftLocation) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         await ensureDir(folder.getVersionRoot(version.id));
@@ -187,8 +174,16 @@ function installVersionJar(type: string, version: Version, minecraft: MinecraftL
     };
 }
 
+function installDependenciesWork(version: ResolvedVersion, option: { checksum?: boolean, libraryHost?: LibraryHost, assetsHost?: string } = {}) {
+    return async (context: Task.Context) => {
+        await Promise.all([
+            context.execute("installAssets", installAssets0(version, option)),
+            context.execute("installLibraries", installLibrariesWork(version, option))]);
+        return version;
+    };
+}
 
-function installLibrary(lib: Library, folder: MinecraftFolder, libraryHost?: LibraryHost, checksum?: boolean) {
+function installLibraryWork(lib: ResolvedLibrary, folder: MinecraftFolder, libraryHost?: LibraryHost) {
     return async (context: Task.Context) => {
         context.update(0, -1, lib.name);
         const rawPath = lib.download.path;
@@ -233,14 +228,14 @@ function installLibrary(lib: Library, folder: MinecraftFolder, libraryHost?: Lib
     };
 }
 
-export function installLibraries<T extends Pick<Version, "libraries">>(version: T, minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }) {
+export function installLibrariesWork<T extends Pick<ResolvedVersion, "libraries" | "minecraftDirectory">>(version: T, option?: { libraryHost?: LibraryHost }) {
     return async (context: Task.Context) => {
-        const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
+        const folder: MinecraftFolder = new MinecraftFolder(version.minecraftDirectory);
         const fullOption = option || {};
         const libraryHost: LibraryHost | undefined = fullOption.libraryHost;
         try {
             const promises = version.libraries.map((lib) =>
-                context.execute({ name: "library", arguments: { lib: lib.name } }, installLibrary(lib, folder, libraryHost)).catch((e) => {
+                context.execute({ name: "library", arguments: { lib: lib.name } }, installLibraryWork(lib, folder, libraryHost)).catch((e) => {
                     console.error(`Error occured during downloading lib: ${lib.name}`);
                     console.error(e);
                     throw e;
@@ -296,9 +291,9 @@ function installAssetsByCluster(objects: Array<{ name: string, hash: string, siz
     };
 }
 
-function installAssets(version: Version, minecraft: MinecraftLocation, option: { assetsHost?: string }) {
+function installAssets0(version: ResolvedVersion, option: { assetsHost?: string }) {
     return async (context: Task.Context) => {
-        const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
+        const folder: MinecraftFolder = new MinecraftFolder(version.minecraftDirectory);
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
         await context.execute("assetsJson", downloadFileIfAbsentWork({
@@ -312,7 +307,7 @@ function installAssets(version: Version, minecraft: MinecraftLocation, option: {
 
         const { objects } = JSON.parse(await fs.promises.readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
         await ensureDir(folder.getPath("assets", "objects"));
-        const assetsHost = option.assetsHost || Version.DEFAULT_RESOURCE_ROOT_URL;
+        const assetsHost = option.assetsHost || Installer.DEFAULT_RESOURCE_ROOT_URL;
         const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
 
         const totalSize = objectArray.reduce((p, v) => p + v.size, 0);

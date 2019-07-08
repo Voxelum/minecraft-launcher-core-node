@@ -15,8 +15,7 @@
   "scripts": {
     "update": "rush update",
     "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
-    "build": "npm run clean && tslint -c tslint.json 'src/libs/*.ts' && tslint -c src/tests/tslint.json 'src/test/*.ts' && tsc",
-    "clean": "node clean.js"
+    "build": "tslint -c tslint.json 'package/**/*.ts' && rush build"
   },
   "repository": {
     "type": "git",

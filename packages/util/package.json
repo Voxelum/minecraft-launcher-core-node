@@ -15,11 +15,12 @@
         "typescript": "^3.4.1"
     },
     "dependencies": {
-        "got": "^9.6.0"
+        "got": "^9.6.0",
+        "@xmcl/task": "^0.0.1"
     },
     "scripts": {
         "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
-        "build": "tslint -c tslint.json 'src/libs/*.ts' && tslint -c src/tests/tslint.json 'src/test/*.ts' && tsc"
+        "build": "tsc"
     },
     "repository": {
         "type": "git",

@@ -27,11 +27,11 @@ dependencies:
   fast-html-parser: 1.0.1
   file-type: 11.1.0
   got: 9.6.0
+  java-asm: 0.0.4
   long: 3.2.0
   mocha: 6.1.4
   tslint: 5.18.0
   typescript-optional: 2.0.1
-  yauzlw: 0.0.7
 packages:
   /@babel/code-frame/7.0.0:
     dependencies:
@@ -80,6 +80,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-QcAKpaO6nhHLlxWBvpc4WeLrTvPqlHOvaj0s5GriKkA1zq+bsFBPpfYCvQhLqLgYlIko8A9YrPdaMHCo5mBcpg==
+  /@types/node/7.10.6:
+    dev: false
+    resolution:
+      integrity: sha512-d0BOAicT0tEdbdVQlLGOVul1kvg6YvbaADRCThGCz5NJ0e9r00SofcR1x69hmlCyrHuB6jd4cKzL9bMLjPnpAA==
   /@types/node/9.6.49:
     dev: false
     resolution:
@@ -577,6 +581,14 @@ packages:
     dev: false
     resolution:
       integrity: sha1-6PvzdNxVb/iUehDcsFctYz8s+hA=
+  /java-asm/0.0.4:
+    dependencies:
+      '@types/long': 3.0.32
+      '@types/node': 7.10.6
+      long: 3.2.0
+    dev: false
+    resolution:
+      integrity: sha1-DB+T9VAr74klbDbox3zqxp2Qhes=
   /js-tokens/4.0.0:
     dev: false
     resolution:
@@ -1272,7 +1284,7 @@ packages:
     dev: false
     name: '@rush-temp/client'
     resolution:
-      integrity: sha512-fm5cQU2eUbZ0AeKgwROakCaG7D8n8wyjMrV+GOU5ZpB6pZmv1+innqKcM4IOoKOHKzlrUOVePLp1yZ+ABpKuqA==
+      integrity: sha512-9o32T8A9Egt3tvF3058+RPWF6w0rNic+VME94X3qhJCRRLHdtCWv1ZQkeWI26RvApHqwu5fbyUFxROMNmKpZjg==
       tarball: 'file:projects/client.tgz'
     version: 0.0.0
   'file:projects/common.tgz':
@@ -1322,15 +1334,18 @@ packages:
     dependencies:
       '@types/mocha': 2.2.48
       '@types/node': 10.14.12
+      '@types/yauzl': 2.9.1
       got: 9.6.0
+      java-asm: 0.0.4
       mocha: 6.1.4
       treelike-task: 0.0.15
       tslint: /tslint/5.18.0/typescript@3.5.2
       typescript: 3.5.2
+      yauzlw: 0.0.7
     dev: false
     name: '@rush-temp/forge'
     resolution:
-      integrity: sha512-Cjstim3mRaMla8Y9B95XcCKRVuIsGD+7D/R9bFQEfZjONEIpnNveluir9vU/nGK/kZCyV3Uy8tPt64A9La0OUg==
+      integrity: sha512-wUTUto1XfUhKjNbXuV9gIC36kSnJfLqIIab0pdF5CYUDzf9WjrSHq4GhaHrCeYQOmAH8b86wHP/0Mk3+Y1sh3Q==
       tarball: 'file:projects/forge.tgz'
     version: 0.0.0
   'file:projects/gamesetting.tgz':
@@ -1561,8 +1576,8 @@ specifiers:
   fast-html-parser: ^1.0.1
   file-type: ^11.0.0
   got: ^9.6.0
+  java-asm: ^0.0.4
   long: ^3.2.0
   mocha: ^6.1.4
   tslint: ^5.14.0
   typescript-optional: ^2.0.1
-  yauzlw: 0.0.7

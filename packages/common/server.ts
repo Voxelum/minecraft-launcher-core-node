@@ -1,3 +1,5 @@
+import { Forge, TextComponentFrame } from "./game";
+
 export enum ResourceMode {
     ENABLED,
     DISABLED,

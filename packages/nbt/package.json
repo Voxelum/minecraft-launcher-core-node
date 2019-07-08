@@ -18,7 +18,7 @@
     },
     "scripts": {
         "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
-        "build": "tslint -c tslint.json 'src/libs/*.ts' && tslint -c src/tests/tslint.json 'src/test/*.ts' && tsc"
+        "build": "tsc"
     },
     "repository": {
         "type": "git",

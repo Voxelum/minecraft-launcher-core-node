@@ -1,11 +1,11 @@
-import { Installer, installLibraries } from "@xmcl/installer";
+import { Installer } from "@xmcl/installer";
+import Task from "@xmcl/task";
 import { computeChecksum, downloadFileWork, ensureDir, ensureFile, exists, got, MinecraftFolder, MinecraftLocation, multiChecksum, remove } from "@xmcl/util";
-import { Library, parseLibPath, parseLibraries, Version } from "@xmcl/version";
+import { ResolvedLibrary, parseLibPath, resolveLibraries, Version } from "@xmcl/version";
 import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { finished, Readable } from "stream";
-import Task from "treelike-task";
 import { promisify } from "util";
 import { Entry, ZipFile } from "yauzl";
 import { bufferEntry, createExtractStream, createParseStream, open, openEntryReadStream, parseEntries } from "yauzlw";
@@ -216,16 +216,16 @@ export namespace ForgeInstaller {
                     }
                 }
 
-                function libRedirect(lib: Library) {
+                function libRedirect(lib: ResolvedLibrary) {
                     if (lib.name.startsWith("net.minecraftforge:forge:")) {
                         return `file://${path.join(temp, "maven", lib.download.path)}`;
                     }
                     return undefined;
                 }
 
-                await context.execute("downloadLibraries", installLibraries({
-                    libraries: parseLibraries([...profile.libraries, ...versionJson.libraries]),
-                }, mc, { libraryHost: libRedirect }));
+                const parsedLibs = resolveLibraries([...profile.libraries, ...versionJson.libraries]);
+
+                await context.execute("downloadLibraries", Installer.installLibrariesDirectTask(parsedLibs, mc, { libraryHost: libRedirect }).work);
 
                 await context.execute("postProcessing", async (ctx) => {
                     ctx.update(0, profile.processors.length);
@@ -331,7 +331,7 @@ export namespace ForgeInstaller {
 
             if (checkDependecies) {
                 const resolvedVersion = await Version.parse(minecraft, fullVersion);
-                context.execute("checkDependencies", Installer.installTask(resolvedVersion, minecraft).work);
+                context.execute("installDependencies", Installer.installDependenciesTask(resolvedVersion).work);
             }
 
             return fullVersion;

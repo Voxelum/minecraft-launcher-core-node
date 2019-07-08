@@ -2,8 +2,8 @@ import * as fs from "fs";
 import * as paths from "path";
 
 import { Version } from "@xmcl/common";
+import Task from "@xmcl/task";
 import { computeChecksum, exists, MinecraftFolder, MinecraftLocation, validate } from "@xmcl/util";
-import Task from "treelike-task";
 
 export function parseLibPath(name: string) {
     const pathArr = name.split(":");
@@ -38,7 +38,7 @@ export interface ResolvedVersion {
         server: Version.Download,
         [key: string]: Version.Download,
     };
-    libraries: Library[];
+    libraries: ResolvedLibrary[];
     id: string;
     arguments: {
         game: Version.LaunchArgument[],
@@ -92,7 +92,7 @@ export interface VersionDiagnosis {
     missingVersionJar: boolean;
     missingAssetsIndex: boolean;
 
-    missingLibraries: Library[];
+    missingLibraries: ResolvedLibrary[];
     missingAssets: { [file: string]: string };
 }
 
@@ -160,7 +160,7 @@ function parse(minecraftPath: MinecraftLocation, version: string): Promise<Resol
 function extendsVersion(id: string, parent: ResolvedVersion, extra: ResolvedVersion): Version {
     if (parent.assets !== extra.assets) { throw new Error("Cannot extends to the different minecraft version"); }
 
-    const libMap: { [name: string]: Library } = {};
+    const libMap: { [name: string]: ResolvedLibrary } = {};
     parent.libraries.forEach((l) => { libMap[l.name] = l; });
 
     const extraLibs = extra.libraries.filter((l) => libMap[l.name] === undefined).map((lib) => {
@@ -313,11 +313,11 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
     };
 }
 
-export class Library {
+export class ResolvedLibrary {
     constructor(readonly name: string, readonly download: Version.Artifact,
         readonly checksums?: string[], readonly serverreq?: boolean, readonly clientreq?: boolean) { }
 }
-export class Native extends Library {
+export class ResolvedNative extends ResolvedLibrary {
     constructor(name: string, download: Version.Artifact, readonly extractExclude?: string[]) {
         super(name, download);
     }
@@ -359,8 +359,8 @@ function parseVersionHierarchy(hierarchy: ResolvedVersion[]): ResolvedVersion {
     let assets: string = "";
 
     const downloadsMap: { [key: string]: Version.Download } = {};
-    const librariesMap: { [key: string]: Library } = {};
-    const nativesMap: { [key: string]: Native } = {};
+    const librariesMap: { [key: string]: ResolvedLibrary } = {};
+    const nativesMap: { [key: string]: ResolvedNative } = {};
 
     let mainClass: string;
     let args: any;
@@ -399,7 +399,7 @@ function parseVersionHierarchy(hierarchy: ResolvedVersion[]): ResolvedVersion {
         if (json.assetIndex) { assetIndex = json.assetIndex; }
         if (json.libraries) {
             json.libraries.forEach((lib) => {
-                if (lib instanceof Native) {
+                if (lib instanceof ResolvedNative) {
                     nativesMap[lib.name] = lib;
                 } else {
                     librariesMap[lib.name] = lib;
@@ -462,8 +462,8 @@ function checkAllowed(rules: Array<{ action?: string, os?: any }>, platform: Ret
     return allow;
 }
 
-export function parseLibraries(libs: Version["libraries"], platform: ReturnType<typeof getPlatform> = getPlatform()) {
-    const empty = new Library("", { path: "", sha1: "", size: 0, url: "" });
+export function resolveLibraries(libs: Version["libraries"], platform: ReturnType<typeof getPlatform> = getPlatform()) {
+    const empty = new ResolvedLibrary("", { path: "", sha1: "", size: 0, url: "" });
     return libs.map((lib) => {
         if (lib.rules && !checkAllowed(lib.rules, platform)) { return empty; }
         if (lib.natives) {
@@ -471,7 +471,7 @@ export function parseLibraries(libs: Version["libraries"], platform: ReturnType<
             const classifier = (lib.natives[platform.name] as string).replace("${arch}", platform.arch);
             const nativArt = lib.downloads.classifiers[classifier];
             if (!nativArt) { return empty; }
-            return new Native(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
+            return new ResolvedNative(lib.name, lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
         } else {
             if (lib.downloads) {
                 if (!lib.downloads.artifact.url) {
@@ -479,7 +479,7 @@ export function parseLibraries(libs: Version["libraries"], platform: ReturnType<
                         "https://files.minecraftforge.net/maven/" + lib.downloads.artifact.path
                         : "https://libraries.minecraft.net/" + lib.downloads.artifact.path;
                 }
-                return new Library(lib.name, lib.downloads.artifact);
+                return new ResolvedLibrary(lib.name, lib.downloads.artifact);
             }
             const maven = lib.url || "https://libraries.minecraft.net/";
             const path = parseLibPath(lib.name);
@@ -489,7 +489,7 @@ export function parseLibraries(libs: Version["libraries"], platform: ReturnType<
                 path,
                 url: maven + path,
             };
-            return new Library(lib.name, artifact, lib.checksums, lib.serverreq, lib.clientreq);
+            return new ResolvedLibrary(lib.name, artifact, lib.checksums, lib.serverreq, lib.clientreq);
         }
     }).filter((l) => l !== empty);
 }
@@ -512,7 +512,7 @@ function parseVersionJson(versionString: string): ResolvedVersion {
         return args;
     };
     const parsed = JSON.parse(versionString, (key, value) => {
-        if (key === "libraries") { return parseLibraries(value, platform); }
+        if (key === "libraries") { return resolveLibraries(value, platform); }
         if (key === "arguments") { return parseArgs(value); }
         return value;
     });

@@ -59,7 +59,7 @@ function parse(str: string, strict?: boolean): GameSetting.Frame | undefined {
 export function stringify(setting: GameSetting | GameSetting.Frame | any, original?: string, eol: string = "\n"): string {
     let model: any;
     if (original) {
-        model = parseFrame(original) as any;
+        model = parse(original) as any;
         for (const key in model) {
             if (model.hasOwnProperty(key) && setting.hasOwnProperty(key)) {
                 model[key] = setting[key];

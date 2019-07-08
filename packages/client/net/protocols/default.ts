@@ -1,5 +1,5 @@
 import * as Long from "long";
-import { Server } from "../../server";
+import { Server, ServerStatusFrame } from "../../index";
 import Coders from "../coders";
 import { Field, Packet } from "../packet";
 
@@ -19,7 +19,7 @@ export class Handshake {
 export class ServerQuery { }
 
 @Packet("server", 0x00, "status")
-export class ServerStatus { @Field(Coders.Json) status!: Server.StatusFrame; }
+export class ServerStatus { @Field(Coders.Json) status!: ServerStatusFrame; }
 
 @Packet("client", 0x01, "status")
 export class Ping { @Field(Coders.Long) time = Long.fromNumber(Date.now()); }

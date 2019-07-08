@@ -1,9 +1,8 @@
 // tslint:disable: variable-name
 
+import NBT from "@xmcl/nbt";
 import * as Long from "long";
 import "uuid";
-import { NBT } from "../nbt";
-import "../nbt0";
 
 export interface SlotData {
     blockId: number;
@@ -167,7 +166,7 @@ const Slot: Coder<SlotData> = {
             blockId,
             itemCount,
             itemDamage,
-            nbt: NBT.Persistence.readRoot(Buffer.from(buffer.buffer)),
+            nbt: NBT.Persistence.readTagSync(Buffer.from(buffer.buffer)),
         };
     },
     encode: (buffer, inst) => {
