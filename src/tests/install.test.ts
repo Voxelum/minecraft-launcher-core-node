@@ -31,6 +31,15 @@ describe("Install", function () {
             assert.equal(first, sec);
             assert.equal(first.timestamp, sec.timestamp);
         });
+        it("should be able to install 1.7.10", async function () {
+            await installVersionClient({
+                id: "1.7.10",
+                type: "release",
+                time: "",
+                releaseTime: "",
+                url: "https://launchermeta.mojang.com/v1/packages/2e818dc89e364c7efcfa54bec7e873c5f00b3840/1.7.10.json",
+            }, this.gameDirectory);
+        });
         it("should be able to install 1.12.2", async function () {
             await installVersionClient({
                 id: "1.12.2",
@@ -84,6 +93,27 @@ describe("Install", function () {
     });
 
     describe("Forge", function () {
+        it("should install forge on 1.7.10", async function () {
+            const meta: Forge.VersionMeta = {
+                version: "10.13.3.1400",
+                installer: {
+                    md5: "fb37fa073dce193f798ecf8987c25dba",
+                    sha1: "925d171aa9db651ae430967775a48038c180858a",
+                    path: "/maven/net/minecraftforge/forge/1.7.10-10.13.3.1400-1.7.10/forge-1.7.10-10.13.3.1400-1.7.10-installer.jar",
+                },
+                universal: {
+                    md5: "3cc321afc2c8a641b4f070f7905c2d6e",
+                    sha1: "d96b5933bee1d07fd3e9e4f51e8fd0a1b3f9fd68",
+                    path: "/maven/net/minecraftforge/forge/1.7.10-10.13.3.1400-1.7.10/forge-1.7.10-10.13.3.1400-1.7.10-universal.jar",
+                },
+                mcversion: "1.7.10",
+            };
+            const result = await Forge.install(meta, new MinecraftFolder(this.gameDirectory), {
+                tempDir: `${this.gameDirectory}/`,
+            });
+            await Version.installDependencies(await Version.parse(this.gameDirectory, result), this.gameDirectory);
+            await assertNoError(result, this.gameDirectory);
+        });
         it("should install forge on 1.12.2", async function () {
             before(() => {
                 if (fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`)) {
