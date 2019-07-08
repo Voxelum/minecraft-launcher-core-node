@@ -1,5 +1,5 @@
 {
-  "name": "task",
+  "name": "@xmcl/task",
   "main": "index.js",
   "types": "index.d.ts",
   "author": {
@@ -14,5 +14,5 @@
   "scripts": {
     "build": "tsc"
   },
-  "version": "0.0.15"
+  "version": "0.0.1"
 }

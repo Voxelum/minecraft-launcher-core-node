@@ -1,16 +1,20 @@
 dependencies:
   '@rush-temp/auth': 'file:projects/auth.tgz'
+  '@rush-temp/client': 'file:projects/client.tgz'
   '@rush-temp/common': 'file:projects/common.tgz'
   '@rush-temp/fabric': 'file:projects/fabric.tgz'
   '@rush-temp/forge': 'file:projects/forge.tgz'
   '@rush-temp/forge-installer': 'file:projects/forge-installer.tgz'
   '@rush-temp/gamesetting': 'file:projects/gamesetting.tgz'
   '@rush-temp/installer': 'file:projects/installer.tgz'
+  '@rush-temp/language': 'file:projects/language.tgz'
   '@rush-temp/launch': 'file:projects/launch.tgz'
+  '@rush-temp/liteloader': 'file:projects/liteloader.tgz'
   '@rush-temp/mojang': 'file:projects/mojang.tgz'
   '@rush-temp/nbt': 'file:projects/nbt.tgz'
   '@rush-temp/profile-service': 'file:projects/profile-service.tgz'
   '@rush-temp/resourcepack': 'file:projects/resourcepack.tgz'
+  '@rush-temp/task': 'file:projects/task.tgz'
   '@rush-temp/text-component': 'file:projects/text-component.tgz'
   '@rush-temp/util': 'file:projects/util.tgz'
   '@rush-temp/version': 'file:projects/version.tgz'
@@ -18,7 +22,6 @@ dependencies:
   '@types/bytebuffer': 5.0.40
   '@types/long': 3.0.32
   '@types/mocha': 2.2.48
-  '@types/node': 10.14.12
   '@types/yauzl': 2.9.1
   bytebuffer: 5.0.1
   fast-html-parser: 1.0.1
@@ -27,7 +30,6 @@ dependencies:
   long: 3.2.0
   mocha: 6.1.4
   tslint: 5.18.0
-  typescript: 3.5.2
   typescript-optional: 2.0.1
   yauzlw: 0.0.7
 packages:
@@ -78,6 +80,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-QcAKpaO6nhHLlxWBvpc4WeLrTvPqlHOvaj0s5GriKkA1zq+bsFBPpfYCvQhLqLgYlIko8A9YrPdaMHCo5mBcpg==
+  /@types/node/9.6.49:
+    dev: false
+    resolution:
+      integrity: sha512-YY0Okyn4QXC4ugJI+Kng5iWjK8A6eIHiQVaGIhJkyn0YL6Iqo0E0tBC8BuhvYcBK87vykBijM5FtMnCqaa5anA==
   /@types/yauzl/2.9.1:
     dependencies:
       '@types/node': 10.14.12
@@ -1106,6 +1112,13 @@ packages:
     dev: false
     resolution:
       integrity: sha512-xuwmqsCjE4OeeMKxbNX3jjNcISGzYh5Q9R1rM5OyxEVNIr94CB5llCkfKW+1nZTKbbUV0axN3QAUuX2fus/DhQ==
+  /typescript/2.9.2:
+    dev: false
+    engines:
+      node: '>=4.2.0'
+    hasBin: true
+    resolution:
+      integrity: sha512-Gr4p6nFNaoufRIY4NMdpQRNmgxVIGMs4Fcu/ujdYk3nAZqk7supzBE9idmvfZIlH/Cuj//dvi+019qEue9lV0w==
   /typescript/3.5.2:
     dev: false
     engines:
@@ -1248,6 +1261,20 @@ packages:
       integrity: sha512-CeugdwhfuYSCEFB5FfHz2Bx1qjNn8aVLOjn8FvkUVhZr+LSYSENmZ6A2wbipqiYrGqhbJygUuxJqrOfZg2s9ZA==
       tarball: 'file:projects/auth.tgz'
     version: 0.0.0
+  'file:projects/client.tgz':
+    dependencies:
+      '@types/mocha': 2.2.48
+      '@types/node': 10.14.12
+      got: 9.6.0
+      mocha: 6.1.4
+      tslint: /tslint/5.18.0/typescript@3.5.2
+      typescript: 3.5.2
+    dev: false
+    name: '@rush-temp/client'
+    resolution:
+      integrity: sha512-fm5cQU2eUbZ0AeKgwROakCaG7D8n8wyjMrV+GOU5ZpB6pZmv1+innqKcM4IOoKOHKzlrUOVePLp1yZ+ABpKuqA==
+      tarball: 'file:projects/client.tgz'
+    version: 0.0.0
   'file:projects/common.tgz':
     dependencies:
       '@types/mocha': 2.2.48
@@ -1316,7 +1343,7 @@ packages:
     dev: false
     name: '@rush-temp/gamesetting'
     resolution:
-      integrity: sha512-SxPZ0H9xSNIVxlxFXGC4KDODNoFdYB8Fjpsx1pAYzoiAeOB36EQ5Te0ATGkmAtk83zaHZm57kQBQHdWx6qaPmg==
+      integrity: sha512-QrIDCBQMRnypHVc+GXUlclfV8/Yyhluk9SuHcmqK/p3DUCEAc74TTlRcwgddY6JxMkbI8ejvhluuX+/sxF0Yfg==
       tarball: 'file:projects/gamesetting.tgz'
     version: 0.0.0
   'file:projects/installer.tgz':
@@ -1331,8 +1358,21 @@ packages:
     dev: false
     name: '@rush-temp/installer'
     resolution:
-      integrity: sha512-37ekiDqdN4rhClcxKnO4G+MZ9j6b9TTsCdXU+OuZ38OARwPo9ZjvLiKR5GP8Mlyvye7Y43NFpW7WSgkFjF6EtA==
+      integrity: sha512-c0SBEbZk+jUeN0I0Ve8kXK66BBXHkcLvYN+TlSQ6bsCA+GU79tR/tGX2Vvx5fiGuL4qPRM35q0M0pirCMK8jmQ==
       tarball: 'file:projects/installer.tgz'
+    version: 0.0.0
+  'file:projects/language.tgz':
+    dependencies:
+      '@types/mocha': 2.2.48
+      '@types/node': 10.14.12
+      mocha: 6.1.4
+      tslint: /tslint/5.18.0/typescript@3.5.2
+      typescript: 3.5.2
+    dev: false
+    name: '@rush-temp/language'
+    resolution:
+      integrity: sha512-u94O/RcGm8dzxLKEUr2zuh8wlhIlPPf1Llok+xiTR3dkyB6irMbcWreo5EEqHj1kO/EDbjr6BUw1M4uj8eBDqw==
+      tarball: 'file:projects/language.tgz'
     version: 0.0.0
   'file:projects/launch.tgz':
     dependencies:
@@ -1348,6 +1388,20 @@ packages:
       integrity: sha512-fRC7TFPLjred5LkHurtXmL/XsDYwQ6VQBR6GkmCXnwvNPmxC1w1TBx+jV+Vih2HsEorNP54l64zDi7N25Xp/0A==
       tarball: 'file:projects/launch.tgz'
     version: 0.0.0
+  'file:projects/liteloader.tgz':
+    dependencies:
+      '@types/mocha': 2.2.48
+      '@types/node': 10.14.12
+      got: 9.6.0
+      mocha: 6.1.4
+      tslint: /tslint/5.18.0/typescript@3.5.2
+      typescript: 3.5.2
+    dev: false
+    name: '@rush-temp/liteloader'
+    resolution:
+      integrity: sha512-5/LOF2Lo27RsqGqdBxZcbimLZcpK3GNBjNjCGcmpjTs03gm3/H7k1T8bbBiFJpFkEA784Yyvjez0T6+XSCmO0w==
+      tarball: 'file:projects/liteloader.tgz'
+    version: 0.0.0
   'file:projects/mojang.tgz':
     dependencies:
       '@types/mocha': 2.2.48
@@ -1358,7 +1412,7 @@ packages:
     dev: false
     name: '@rush-temp/mojang'
     resolution:
-      integrity: sha512-UWDY/Sh54Zzjyno+QKgku3xaJUc1d6hIPIIPiqTGAuAo+KqYO2U8iQN4OUgVXOEz8qjvfvg8AE062Qf0Wx0/kA==
+      integrity: sha512-RpTrxUFXsIQtvAHwqBfrMeuuB9mu7srz2+8LFMVWY0Eic2B6H7kwPGRFmfB4ldoU6EfX+wHlJYmKVFGDQfNzgw==
       tarball: 'file:projects/mojang.tgz'
     version: 0.0.0
   'file:projects/nbt.tgz':
@@ -1409,6 +1463,16 @@ packages:
       integrity: sha512-GEboKwjkdguj9hOt2IWT3KD8gb0pdkAsIywx9B4WPWnntMjsccj2/os6WyFewck18ng+cPVg29bskSek08kbyw==
       tarball: 'file:projects/resourcepack.tgz'
     version: 0.0.0
+  'file:projects/task.tgz':
+    dependencies:
+      '@types/node': 9.6.49
+      typescript: 2.9.2
+    dev: false
+    name: '@rush-temp/task'
+    resolution:
+      integrity: sha512-hRgdiHsbMNkJpE8S8IugbVICZ/FMRomVJtvM/OEZCZux5K5o/dhAm+PE1uBlOzngyXvnf5BKjN3yFA2jdmdUFA==
+      tarball: 'file:projects/task.tgz'
+    version: 0.0.0
   'file:projects/text-component.tgz':
     dependencies:
       '@types/mocha': 2.2.48
@@ -1447,7 +1511,7 @@ packages:
     dev: false
     name: '@rush-temp/version'
     resolution:
-      integrity: sha512-+Y0VKWVISleB6JDkhQO+PyfdoaI8ybEytlkRid2BDk/gxXm59jQPBrOtgKfgIMXwVRhRsrCIXUGUDWDzi9IvWg==
+      integrity: sha512-ukaWna7ceOz2cIVuTScQNSuQP0UdHX8g6+phrCbw9SJ2ipWnSWRr1aySO25pwpAja6lgwAIa6TVYeQTYVOERLg==
       tarball: 'file:projects/version.tgz'
     version: 0.0.0
   'file:projects/world.tgz':
@@ -1462,7 +1526,7 @@ packages:
     dev: false
     name: '@rush-temp/world'
     resolution:
-      integrity: sha512-L3Fr8IiiakqNDWaCarp+auRwlSwfFeLqiBYwdKfB20rlobTgiKnVEu3rakDUNjIi/JVBaUzXdPm+81gh+p0mjw==
+      integrity: sha512-9ZEUQ4WsDlKR3pwYWLmSwqRGycPWtBO+B0Q3F6pDyaVxr/D8RI+6ATEm0a9AwTY/ynz7JQ/1e94D3ZxXgzYNvQ==
       tarball: 'file:projects/world.tgz'
     version: 0.0.0
 registry: 'https://registry.npmjs.org/'
@@ -1470,17 +1534,21 @@ shrinkwrapMinorVersion: 9
 shrinkwrapVersion: 3
 specifiers:
   '@rush-temp/auth': 'file:./projects/auth.tgz'
+  '@rush-temp/client': 'file:./projects/client.tgz'
   '@rush-temp/common': 'file:./projects/common.tgz'
   '@rush-temp/fabric': 'file:./projects/fabric.tgz'
   '@rush-temp/forge': 'file:./projects/forge.tgz'
   '@rush-temp/forge-installer': 'file:./projects/forge-installer.tgz'
   '@rush-temp/gamesetting': 'file:./projects/gamesetting.tgz'
   '@rush-temp/installer': 'file:./projects/installer.tgz'
+  '@rush-temp/language': 'file:./projects/language.tgz'
   '@rush-temp/launch': 'file:./projects/launch.tgz'
+  '@rush-temp/liteloader': 'file:./projects/liteloader.tgz'
   '@rush-temp/mojang': 'file:./projects/mojang.tgz'
   '@rush-temp/nbt': 'file:./projects/nbt.tgz'
   '@rush-temp/profile-service': 'file:./projects/profile-service.tgz'
   '@rush-temp/resourcepack': 'file:./projects/resourcepack.tgz'
+  '@rush-temp/task': 'file:./projects/task.tgz'
   '@rush-temp/text-component': 'file:./projects/text-component.tgz'
   '@rush-temp/util': 'file:./projects/util.tgz'
   '@rush-temp/version': 'file:./projects/version.tgz'
@@ -1488,7 +1556,6 @@ specifiers:
   '@types/bytebuffer': ^5.0.37
   '@types/long': ^3.0.31
   '@types/mocha': ^2.2.41
-  '@types/node': ^10.0.0
   '@types/yauzl': ^2.9.1
   bytebuffer: ^5.0.1
   fast-html-parser: ^1.0.1
@@ -1497,6 +1564,5 @@ specifiers:
   long: ^3.2.0
   mocha: ^6.1.4
   tslint: ^5.14.0
-  typescript: ^3.4.1
   typescript-optional: ^2.0.1
   yauzlw: 0.0.7

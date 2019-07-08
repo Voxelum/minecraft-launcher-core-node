@@ -1,53 +1,13 @@
-import { GameProfile } from "../../packages/profile-service";
-import Forge from "./forge";
-import { ResourceMode } from "./game";
-import NBT from "./nbt";
+import { Forge, GameProfile, ResourceMode, ServerInfoFrame, ServerStatusFrame } from "@xmcl/common";
+import NBT from "@xmcl/nbt";
+import { TextComponent } from "@xmcl/text-component";
 import { createStatusClient } from "./net/status-client";
-import { TextComponent, TextComponentFrame } from "./text";
 
 export namespace Server {
-    /**
-     * The servers.dat format server information, contains known host displayed in "Multipler" page.
-     */
-    export interface Info {
-        name?: string;
-        host: string;
-        port?: number;
-        icon?: string;
-        isLanServer?: boolean;
-        resourceMode?: ResourceMode;
-    }
-
-    /**
-     * The JSON format of server status.
-     */
-    export interface StatusFrame {
-        version: {
-            name: string,
-            protocol: number,
-        };
-        players: {
-            max: number,
-            online: number,
-            sample?: Array<{ id: string, name: string }>,
-        };
-        /**
-         * The motd of server, which might be the raw TextComponent string or structurelized TextComponent JSON
-         */
-        description: TextComponentFrame | string;
-        favicon: string | "";
-        modinfo?: {
-            type: string | "FML",
-            modList: Forge.ModIndentity[],
-        };
-        ping: number;
-    }
-
-
     export class Status {
         static pinging() { return new Status(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
         static error() { return new Status(TextComponent.str("Error"), TextComponent.str("Error"), -1, -1, -1); }
-        static from(obj: StatusFrame | Status): Status {
+        static from(obj: ServerStatusFrame | Status): Status {
             if (obj instanceof Status) {
                 return obj;
             }
@@ -126,7 +86,7 @@ export namespace Server {
      *
      * @param buff The binary data of .minecraft/server.dat
      */
-    export function readInfo(buff: Buffer): Info[] {
+    export function readInfo(buff: Buffer): ServerInfoFrame[] {
         const value = NBT.Serializer.deserialize(buff);
         if (!value.servers) {
             throw {
@@ -145,7 +105,7 @@ export namespace Server {
      *
      * @param infos The array of server information.
      */
-    export function writeInfo(infos: Info[]): Buffer {
+    export function writeInfo(infos: ServerInfoFrame[]): Buffer {
         const object = {
             servers: infos.map((i) => ({
                 ip: i.host,
@@ -184,14 +144,14 @@ export namespace Server {
      * @param server The server information
      * @param options The fetch options
      */
-    export async function fetchStatusFrame(server: Info, options: FetchOptions = {}): Promise<StatusFrame> {
+    export async function fetchStatusFrame(server: { host: string, port?: number }, options: FetchOptions = {}): Promise<ServerStatusFrame> {
         const host = server.host;
         const port = server.port || 25565;
         const timeout = options.timeout || 4000;
         const protocol = options.protocol || 210;
         const retry = typeof options.retryTimes === "number" ? options.retryTimes : 0;
 
-        let result: StatusFrame | undefined;
+        let result: ServerStatusFrame | undefined;
         let error: Error | undefined;
 
         const client = createStatusClient(protocol, timeout);
@@ -214,8 +174,13 @@ export namespace Server {
      * @param server The server information
      * @param options The fetch options
      */
-    export function fetchStatus(server: Info, options: FetchOptions = {}): Promise<Status> {
+    export function fetchStatus(server: { host: string, port?: number }, options: FetchOptions = {}): Promise<Status> {
         return fetchStatusFrame(server, options).then(Status.from);
     }
 }
 
+export * from "./net/coders";
+export * from "./net/packet";
+export * from "./net/status-client";
+export * from "./net/client";
+export * from "@xmcl/common/server";

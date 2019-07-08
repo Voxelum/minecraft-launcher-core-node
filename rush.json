@@ -268,6 +268,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@xmcl/client",
+      "projectFolder": "packages/client",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@xmcl/common",
       "projectFolder": "packages/common",
       "shouldPublish": true
@@ -298,8 +303,18 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@xmcl/language",
+      "projectFolder": "packages/language",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@xmcl/launch",
       "projectFolder": "packages/launch",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@xmcl/liteloader",
+      "projectFolder": "packages/liteloader",
       "shouldPublish": true
     },
     {
@@ -325,6 +340,11 @@
     {
       "packageName": "@xmcl/text-component",
       "projectFolder": "packages/text-component",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@xmcl/task",
+      "projectFolder": "packages/task",
       "shouldPublish": true
     },
     {

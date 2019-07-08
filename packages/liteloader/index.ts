@@ -1,11 +1,9 @@
+import Task from "@xmcl/task";
+import { ensureDir, getIfUpdate, MinecraftFolder, MinecraftLocation, UpdatedObject } from "@xmcl/util";
+import { Version } from "@xmcl/version";
 import * as fs from "fs";
 import * as path from "path";
-import Task from "treelike-task";
 import { bufferEntry, open, parseEntries, ZipFile } from "yauzlw";
-import { MinecraftFolder, MinecraftLocation } from "../../packages/util/folder";
-import { ensureDir } from "../../packages/util/fs";
-import { getIfUpdate, UpdatedObject } from "../../packages/util/network";
-import { Version } from "./version";
 
 export namespace LiteLoader {
     export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
