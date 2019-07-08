@@ -1,0 +1,44 @@
+{
+    "name": "@xmcl/world",
+    "version": "0.0.1",
+    "main": "./index.js",
+    "types": "./index.d.ts",
+    "description": "Minecraft text component parsing",
+    "engines": {
+        "node": ">=10.0"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.41",
+        "@types/node": "^10.0.0",
+        "mocha": "^6.1.4",
+        "tslint": "^5.14.0",
+        "typescript": "^3.4.1"
+    },
+    "dependencies": {
+        "file-type": "^11.0.0",
+        "yauzlw": "0.0.7",
+        "@xmcl/nbt": "^0.0.1",
+        "@xmcl/common": "^0.0.1"
+    },
+    "scripts": {
+        "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
+        "build": "tslint -c tslint.json 'src/libs/*.ts' && tslint -c src/tests/tslint.json 'src/test/*.ts' && tsc"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ci010/ts-minecraft.git"
+    },
+    "author": "cijhn@hotmail.com",
+    "keywords": [
+        "minecraft",
+        "typescript",
+        "minecraft-launcher",
+        "nodejs",
+        "electron"
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ci010/ts-minecraft/issues"
+    },
+    "homepage": "https://github.com/ci010/ts-minecraft#readme"
+}

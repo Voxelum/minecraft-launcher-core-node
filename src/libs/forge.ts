@@ -7,10 +7,10 @@ import Task from "treelike-task";
 import { promisify } from "util";
 import { Entry, ZipFile } from "yauzl";
 import { bufferEntry, createExtractStream, createParseStream, open, openEntryReadStream, parseEntries, walkEntries } from "yauzlw";
+import { MinecraftFolder, MinecraftLocation } from "../../packages/util/folder";
+import { computeChecksum, ensureDir, ensureFile, exists, multiChecksum, remove } from "../../packages/util/fs";
+import { downloadFileWork, got } from "../../packages/util/network";
 import { installLibraries } from "./download";
-import { computeChecksum, ensureDir, ensureFile, exists, multiChecksum, remove } from "./utils/common";
-import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
-import { downloadFileWork, got } from "./utils/network";
 import { Library, parseLibPath as parseLibPath, parseLibraries, Version } from "./version";
 
 async function findMainClass(lib: string) {

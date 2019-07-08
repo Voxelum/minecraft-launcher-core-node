@@ -2,9 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import Task from "treelike-task";
 import { bufferEntry, open, parseEntries, ZipFile } from "yauzlw";
-import { ensureDir } from "./utils/common";
-import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
-import { getIfUpdate, UpdatedObject } from "./utils/network";
+import { MinecraftFolder, MinecraftLocation } from "../../packages/util/folder";
+import { ensureDir } from "../../packages/util/fs";
+import { getIfUpdate, UpdatedObject } from "../../packages/util/network";
 import { Version } from "./version";
 
 export namespace LiteLoader {

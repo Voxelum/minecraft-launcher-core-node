@@ -2,8 +2,8 @@ import * as assert from "assert";
 import { ChildProcess, exec } from "child_process";
 import { EOL } from "os";
 import * as path from "path";
+import { MinecraftFolder } from "../../packages/util/folder";
 import { Auth, Launcher, Version } from "../index";
-import { MinecraftFolder } from "../libs/utils/folder";
 
 function getJavaVersion(javaPath: string) {
     return new Promise<number>((resolve, reject) => {

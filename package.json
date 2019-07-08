@@ -8,18 +8,12 @@
     "node": ">=10.0"
   },
   "devDependencies": {
-    "@types/bytebuffer": "^5.0.37",
-    "@types/got": "^9.4.4",
-    "@types/long": "^3.0.31",
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^10.0.0",
-    "@types/uuid": "^3.4.3",
-    "@types/yauzl": "^2.9.1",
-    "mocha": "^6.1.4",
+    "@microsoft/rush": "^5.10.0",
     "tslint": "^5.14.0",
     "typescript": "^3.4.1"
   },
   "scripts": {
+    "update": "rush update",
     "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
     "build": "npm run clean && tslint -c tslint.json 'src/libs/*.ts' && tslint -c src/tests/tslint.json 'src/test/*.ts' && tsc",
     "clean": "node clean.js"
@@ -37,17 +31,6 @@
     "electron"
   ],
   "license": "MIT",
-  "dependencies": {
-    "bytebuffer": "^5.0.1",
-    "fast-html-parser": "^1.0.1",
-    "file-type": "^11.0.0",
-    "got": "^9.6.0",
-    "java-asm": "0.0.4",
-    "long": "^3.2.0",
-    "treelike-task": "0.0.15",
-    "uuid": "^3.2.1",
-    "yauzlw": "0.0.7"
-  },
   "bugs": {
     "url": "https://github.com/ci010/ts-minecraft/issues"
   },

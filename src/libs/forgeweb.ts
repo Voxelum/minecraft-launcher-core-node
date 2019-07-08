@@ -1,6 +1,6 @@
 import * as parser from "fast-html-parser";
+import { getIfUpdate, UpdatedObject } from "../../packages/util/network";
 import Forge from "./forge";
-import { getIfUpdate, UpdatedObject } from "./utils/network";
 
 export namespace ForgeWebPage {
 

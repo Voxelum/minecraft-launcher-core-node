@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { missing } from "./utils/common";
-import { MinecraftFolder, MinecraftLocation } from "./utils/folder";
+import { MinecraftFolder, MinecraftLocation } from "../../packages/util/folder";
+import { missing } from "../../packages/util/fs";
 
 export class Language {
     constructor(readonly id: string, readonly name: string, readonly region: string, readonly bidirectional: boolean) { }

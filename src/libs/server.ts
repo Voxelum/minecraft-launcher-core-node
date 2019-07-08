@@ -1,8 +1,8 @@
+import { GameProfile } from "../../packages/profile-service";
 import Forge from "./forge";
 import { ResourceMode } from "./game";
 import NBT from "./nbt";
 import { createStatusClient } from "./net/status-client";
-import { GameProfile } from "./profile";
 import { TextComponent, TextComponentFrame } from "./text";
 
 export namespace Server {

@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { Version } from "..";
-import { MinecraftFolder } from "../libs/utils/folder";
+import { MinecraftFolder } from "../../packages/util/folder";
 
 
 describe("Version", function () {

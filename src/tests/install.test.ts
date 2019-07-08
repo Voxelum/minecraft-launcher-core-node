@@ -1,9 +1,9 @@
 import * as assert from "assert";
 import * as fs from "fs";
+import Launcher from "../../packages/launch";
+import { MinecraftLocation } from "../../packages/util/folder";
 import { Forge, LiteLoader, MinecraftFolder, Version } from "../index";
 import { Fabric } from "../libs/fabric";
-import Launcher from "../libs/launch";
-import { MinecraftLocation } from "../libs/utils/folder";
 import { VersionMeta } from "../libs/version";
 
 
