@@ -6,6 +6,8 @@ import * as https from "https";
 import * as queryString from "querystring";
 import * as url from "url";
 
+export { GameProfile } from "@xmcl/common";
+
 export interface Textures {
     timestamp: number;
     profileName: string;

@@ -145,6 +145,8 @@ declare module "@xmcl/common/version" {
          * @param minecraft The minecraft location
          */
         export function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<VersionDiagnosis>;
+
+        export function mixinArgumentString(hi: string, lo: string): string;
     }
 }
 
@@ -152,6 +154,7 @@ Version.parse = parse;
 Version.extendsVersion = extendsVersion;
 Version.diagnose = diagnose;
 Version.diagnoseTask = diagnoseTask;
+Version.mixinArgumentString = mixinArgumentString;
 
 function parse(minecraftPath: MinecraftLocation, version: string): Promise<ResolvedVersion> {
     return resolveDependency(minecraftPath, version).then(parseVersionHierarchy);
@@ -576,3 +579,4 @@ function parseVersionJson(versionString: string): ResolvedVersion {
 }
 
 export * from "@xmcl/common/version";
+export default Version;

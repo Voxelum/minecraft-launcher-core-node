@@ -211,38 +211,6 @@ export interface TextComponent {
     append(component: string | TextComponent): TextComponent;
 }
 
-/**
- * @see https://minecraft.gamepedia.com/Commands#Raw_JSON_text
- */
-export interface TextComponentFrame {
-    text: string;
-    translate?: string;
-    with?: string[];
-    score?: {
-        name: string,
-        objective: string,
-        value: string,
-    };
-    selector?: string;
-    keybind?: string;
-    extra?: TextComponentFrame[];
-    color?: string;
-    bold?: boolean;
-    italic?: boolean;
-    underlined?: boolean;
-    strikethrough?: boolean;
-    obfuscated?: boolean;
-    insertion?: string;
-    clickEvent?: {
-        action: "open_file" | "open_url" | "run_command" | "suggest_command",
-        value: string,
-    };
-    hoverEvent?: {
-        action: "show_text" | "show_item" | "show_entity",
-        value: string,
-    };
-}
-
 export namespace TextComponent {
     export function str(s?: string): TextComponent {
         return new TextComponentString(s);

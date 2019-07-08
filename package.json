@@ -1,8 +1,8 @@
 {
-  "name": "ts-minecraft",
+  "name": "@xmcl/minecraft-launcher-core",
   "version": "5.2.1",
-  "main": "./dest/index.js",
-  "types": "./dest/index.d.ts",
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher. Targeting ElectronJs environment!",
   "engines": {
     "node": ">=10.0"

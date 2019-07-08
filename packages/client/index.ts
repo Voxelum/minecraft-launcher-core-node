@@ -1,8 +1,12 @@
-import { Forge, GameProfile, ResourceMode, ServerInfoFrame, ServerStatusFrame } from "@xmcl/common";
+import { GameProfile, ResourceMode, ServerInfoFrame, ServerStatusFrame } from "@xmcl/common";
 import NBT from "@xmcl/nbt";
 import { TextComponent } from "@xmcl/text-component";
 import { createStatusClient } from "./net/status-client";
 
+interface ModIndentity {
+    readonly modid: string;
+    readonly version: string;
+}
 export namespace Server {
     export class Status {
         static pinging() { return new Status(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
@@ -47,7 +51,7 @@ export namespace Server {
             const modInfoJson = obj.modinfo;
             let modInfo;
             if (modInfoJson) {
-                let list: Forge.ModIndentity[] = [];
+                let list: ModIndentity[] = [];
                 const mList = modInfoJson.modList;
                 if (mList && mList instanceof Array) { list = mList; }
                 modInfo = {
@@ -70,7 +74,7 @@ export namespace Server {
             readonly playerList?: GameProfile[],
             readonly modInfos?: {
                 type: string,
-                modList: Forge.ModIndentity[],
+                modList: ModIndentity[],
             }) { }
 
         toString(): string {
@@ -177,6 +181,9 @@ export namespace Server {
     export function fetchStatus(server: { host: string, port?: number }, options: FetchOptions = {}): Promise<Status> {
         return fetchStatusFrame(server, options).then(Status.from);
     }
+
+    export type StatusFrame = ServerStatusFrame;
+    export type Info = ServerInfoFrame;
 }
 
 export * from "./net/coders";

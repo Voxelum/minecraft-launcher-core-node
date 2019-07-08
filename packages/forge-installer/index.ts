@@ -1,7 +1,7 @@
 import { Installer } from "@xmcl/installer";
 import Task from "@xmcl/task";
 import { computeChecksum, downloadFileWork, ensureDir, ensureFile, exists, got, MinecraftFolder, MinecraftLocation, multiChecksum, remove } from "@xmcl/util";
-import { ResolvedLibrary, parseLibPath, resolveLibraries, Version } from "@xmcl/version";
+import { parseLibPath, ResolvedLibrary, resolveLibraries, Version } from "@xmcl/version";
 import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";

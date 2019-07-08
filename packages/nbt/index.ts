@@ -26,19 +26,19 @@ export namespace NBT {
         typeof TagType.LongArray;
 
     export namespace TagType {
-        export const End = 0;
-        export const Byte = 1;
-        export const Short = 2;
-        export const Int = 3;
-        export const Long = 4;
-        export const Float = 5;
-        export const Double = 6;
-        export const ByteArray = 7;
-        export const String = 8;
-        export const List = 9;
-        export const Compound = 10;
-        export const IntArray = 11;
-        export const LongArray = 12;
+        export const End = 0 as const;
+        export const Byte = 1 as const;
+        export const Short = 2 as const;
+        export const Int = 3 as const;
+        export const Long = 4 as const;
+        export const Float = 5 as const;
+        export const Double = 6 as const;
+        export const ByteArray = 7 as const;
+        export const String = 8 as const;
+        export const List = 9 as const;
+        export const Compound = 10 as const;
+        export const IntArray = 11 as const;
+        export const LongArray = 12 as const;
     }
     export interface Tag<T extends TagType, V> {
         readonly type: T;

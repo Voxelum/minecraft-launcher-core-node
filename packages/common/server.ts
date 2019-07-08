@@ -1,4 +1,4 @@
-import { Forge, TextComponentFrame } from "./game";
+import { TextComponentFrame } from "./game";
 
 export enum ResourceMode {
     ENABLED,
@@ -18,6 +18,7 @@ export interface ServerInfoFrame {
     resourceMode?: ResourceMode;
 }
 
+
 export interface ServerStatusFrame {
     version: {
         name: string,
@@ -35,7 +36,10 @@ export interface ServerStatusFrame {
     favicon: string | "";
     modinfo?: {
         type: string | "FML",
-        modList: Forge.ModIndentity[],
+        modList: {
+            readonly modid: string;
+            readonly version: string;
+        }[],
     };
     ping: number;
 }

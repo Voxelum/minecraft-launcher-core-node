@@ -1,4 +1,4 @@
-# ts-minecraft
+# Minecraft Launcher Core
 
 [![npm version](https://img.shields.io/npm/v/ts-minecraft.svg)](https://www.npmjs.com/package/ts-minecraft)
 [![npm](https://img.shields.io/npm/l/ts-minecraft.svg)](https://github.com/ci010/ts-minecraft/blob/3.0/LICENSE)
@@ -15,29 +15,29 @@ This package is targeting the [Electron](https://electronjs.org) environment. Fe
 
 ## Getting Started
 
-- [ts-minecraft](#ts-minecraft)
-  - [Usage](#usage)
-  - [Getting Started](#getting-started)
-    - [NBT](#nbt)
-    - [WorldInfo](#worldinfo)
-    - [Server](#server)
-    - [Minecraft Install](#minecraft-install)
-    - [GameSetting](#gamesetting)
-    - [Language](#language)
-    - [ResourcePack](#resourcepack)
-    - [Game Profile](#game-profile)
-    - [Mojang Account Info](#mojang-account-info)
-    - [Forge](#forge)
-    - [Fabric](#fabric)
-    - [TextComponent](#textcomponent)
-    - [Auth](#auth)
-    - [Version](#version)
-    - [Launch](#launch)
-  - [Experiental Features](#experiental-features)
-    - [Monitor download progress](#monitor-download-progress)
-  - [Caching Request](#caching-request)
-  - [Issue](#issue)
-  - [Credit](#credit)
+- [Minecraft Launcher Core](#Minecraft-Launcher-Core)
+  - [Usage](#Usage)
+  - [Getting Started](#Getting-Started)
+    - [NBT](#NBT)
+    - [WorldInfo](#WorldInfo)
+    - [Server](#Server)
+    - [Minecraft Install](#Minecraft-Install)
+    - [GameSetting](#GameSetting)
+    - [Language](#Language)
+    - [ResourcePack](#ResourcePack)
+    - [Game Profile](#Game-Profile)
+    - [Mojang Account Info](#Mojang-Account-Info)
+    - [Forge](#Forge)
+    - [Fabric](#Fabric)
+    - [TextComponent](#TextComponent)
+    - [Auth](#Auth)
+    - [Version](#Version)
+    - [Launch](#Launch)
+  - [Experiental Features](#Experiental-Features)
+    - [Monitor download progress](#Monitor-download-progress)
+  - [Caching Request](#Caching-Request)
+  - [Issue](#Issue)
+  - [Credit](#Credit)
 
 ### NBT
 

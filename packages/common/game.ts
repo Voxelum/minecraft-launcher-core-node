@@ -6,7 +6,7 @@ export interface Pos3 extends Pos2 {
     y: number;
 }
 
-export interface ResourcePack {
+export interface ResourcePackMetaData {
     readonly description: string;
     readonly pack_format: number;
 }
@@ -41,10 +41,4 @@ export interface TextComponentFrame {
         action: "show_text" | "show_item" | "show_entity",
         value: string,
     };
-}
-export namespace Forge {
-    export interface ModIndentity {
-        readonly modid: string;
-        readonly version: string;
-    }
 }
