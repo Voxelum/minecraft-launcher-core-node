@@ -601,6 +601,7 @@ export namespace Forge {
             const forgeVersion = `${version.mcversion}-${version.version}`;
             const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`);
             let fullVersion: string;
+            let realJarPath: string;
 
             const universalURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`;
             const universalURL = `${maven}${version.universal.path}`;
@@ -628,6 +629,7 @@ export namespace Forge {
                     const raw = JSON.parse(buf.toString());
                     const id = raw.id;
                     fullVersion = id;
+                    realJarPath = mc.getLibraryByPath(parseLibPath(raw.libraries.find((l: any) => l.name.startsWith("net.minecraftforge:forge")).name));
                     const rootPath = mc.getVersionRoot(fullVersion);
 
                     await ensureDir(rootPath);
@@ -636,6 +638,12 @@ export namespace Forge {
                     throw new Error(`Cannot install forge json for ${version.version} since the version json is missing!`);
                 }
             });
+
+            if (realJarPath! !== jarPath) {
+                await ensureFile(realJarPath!);
+                await fs.promises.copyFile(jarPath, realJarPath!);
+                await fs.promises.unlink(jarPath);
+            }
 
             if (checkDependecies) {
                 const resolvedVersion = await Version.parse(minecraft, fullVersion!);
