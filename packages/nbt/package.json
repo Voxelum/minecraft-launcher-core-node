@@ -14,11 +14,11 @@
         "@types/node": "^10.0.0",
         "mocha": "^6.1.4",
         "tslint": "^5.14.0",
-        "typescript": "^3.4.1"
+        "typescript": "^3.4.3"
     },
     "scripts": {
         "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
-        "build": "tsc"
+        "build": "tsc --build tsconfig.json"
     },
     "repository": {
         "type": "git",

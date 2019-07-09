@@ -1,8 +1,6 @@
 {
   "name": "@xmcl/minecraft-launcher-core",
   "version": "5.2.1",
-  "main": "./index.js",
-  "types": "./index.d.ts",
   "description": "Propabaliy all the things I want for a minecraft launcher. Targeting ElectronJs environment!",
   "engines": {
     "node": ">=10.0"
@@ -10,13 +8,14 @@
   "devDependencies": {
     "@microsoft/rush": "^5.10.0",
     "tslint": "^5.14.0",
-    "typescript": "^3.4.1"
+    "typescript": "^3.4.3"
   },
   "scripts": {
     "update": "rush update",
     "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
     "build": "tslint -c tslint.json 'package/**/*.ts' && rush build"
   },
+  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ci010/ts-minecraft.git"

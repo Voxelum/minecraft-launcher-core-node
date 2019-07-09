@@ -1,7 +1,7 @@
+import Task from "@xmcl/task";
 import { createReadStream, createWriteStream, promises } from "fs";
 import * as gotDefault from "got";
 import { basename, resolve as pathResolve } from "path";
-import Task from "@xmcl/task";
 import { fileURLToPath, parse } from "url";
 import { ensureFile, validate } from "./fs";
 

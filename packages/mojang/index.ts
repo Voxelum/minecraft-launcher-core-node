@@ -1,6 +1,8 @@
 import { MojangAccount, MojangChallenge, MojangChallengeResponse } from "@xmcl/common";
 import { fetchJson } from "@xmcl/util";
+import { Response } from "got";
 
+export { MojangAccount, MojangChallenge, MojangChallengeResponse };
 export namespace MojangService {
     const defaultProvider = {
         apiStatus: "https://status.mojang.com/check",
@@ -45,7 +47,7 @@ export namespace MojangService {
         }).then((resp) => resp.body as MojangChallenge[])
             .catch((resp) => { throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, ...resp.body }; });
     }
-    export async function responseChallenges(accessToken: string, responses: MojangChallengeResponse[]) {
+    export async function responseChallenges(accessToken: string, responses: MojangChallengeResponse[]): Promise<Response<any>> {
         return fetchJson("/user/security/location", {
             baseUrl: "https://api.mojang.com",
             method: "POST",

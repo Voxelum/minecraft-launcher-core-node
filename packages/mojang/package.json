@@ -10,17 +10,21 @@
     "devDependencies": {
         "@types/mocha": "^2.2.41",
         "@types/node": "^10.0.0",
+        "@types/got": "^9.6.0",
+        "@types/long": "^3.0.31",
         "mocha": "^6.1.4",
         "tslint": "^5.14.0",
-        "typescript": "^3.4.1"
+        "typescript": "^3.4.3"
     },
     "dependencies": {
         "@xmcl/util": "^0.0.1",
-        "@xmcl/common": "^0.0.1"
+        "@xmcl/common": "^0.0.1",
+        "long": "^3.2.0",
+        "got": "^9.6.0"
     },
     "scripts": {
         "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
-        "build": "tsc"
+        "build": "tsc --build tsconfig.json"
     },
     "repository": {
         "type": "git",

@@ -8,11 +8,11 @@
   "description": "A tree structure task definition",
   "devDependencies": {
     "@types/node": "^9.3.0",
-    "typescript": "^2.6.2"
+    "typescript": "^3.4.3"
   },
   "license": "MIT",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc --build tsconfig.json"
   },
   "version": "0.0.1"
 }

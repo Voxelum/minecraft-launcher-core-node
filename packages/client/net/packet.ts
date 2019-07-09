@@ -66,12 +66,14 @@ export function Packet(side: Side, id: number, state: State) {
     };
 }
 
-export function clear() {
-    registry.splice(0, registry.length);
-}
+export namespace Packet {
+    export function clear() {
+        registry.splice(0, registry.length);
+    }
 
-export function flush() {
-    return Array.from(registry);
+    export function flush() {
+        return Array.from(registry);
+    }
 }
 
 

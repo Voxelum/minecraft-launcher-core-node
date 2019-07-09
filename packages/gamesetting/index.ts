@@ -56,7 +56,7 @@ function parse(str: string, strict?: boolean): GameSetting.Frame | undefined {
  * @param original
  * @param eol The end of line character, default is `\n`
  */
-export function stringify(setting: GameSetting | GameSetting.Frame | any, original?: string, eol: string = "\n"): string {
+function stringify(setting: GameSetting | GameSetting.Frame | any, original?: string, eol: string = "\n"): string {
     let model: any;
     if (original) {
         model = parse(original) as any;

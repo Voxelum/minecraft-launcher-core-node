@@ -5,7 +5,13 @@ import { Version } from "@xmcl/common";
 import Task from "@xmcl/task";
 import { computeChecksum, exists, MinecraftFolder, MinecraftLocation, validate } from "@xmcl/util";
 
-export function parseLibPath(name: string) {
+function parseLibPath(lib: string | ResolvedLibrary | Version.Library) {
+    let name: string;
+    if (typeof lib === "string") {
+        name = lib;
+    } else {
+        name = lib.name;
+    }
     const pathArr = name.split(":");
 
     const groupPath = pathArr[0].replace(/\./g, "/");
@@ -111,7 +117,7 @@ declare module "@xmcl/common/version" {
          * @param version The vesion id.
          * @return The final resolved version detail
          */
-        export function parse(minecraftPath: MinecraftLocation, version: string): Promise<ResolvedVersion>;
+        function parse(minecraftPath: MinecraftLocation, version: string): Promise<ResolvedVersion>;
         /**
          * Simply extends the version (actaully mixin)
          *
@@ -128,7 +134,7 @@ declare module "@xmcl/common/version" {
          * @param extra The extra version info which will overlap some parent information
          * @return The raw version json could be save to the version json file
          */
-        export function extendsVersion(id: string, parent: ResolvedVersion, extra: ResolvedVersion): Version;
+        function extendsVersion(id: string, parent: ResolvedVersion, extra: ResolvedVersion): Version;
 
         /**
          * Diagnose the version. It will check the version json/jar, libraries and assets.
@@ -136,7 +142,7 @@ declare module "@xmcl/common/version" {
          * @param version The version id string
          * @param minecraft The minecraft location
          */
-        export function diagnose(version: string, minecraft: MinecraftLocation): Promise<VersionDiagnosis>;
+        function diagnose(version: string, minecraft: MinecraftLocation): Promise<VersionDiagnosis>;
 
         /**
          * Diagnose the version. It will check the version json/jar, libraries and assets.
@@ -144,9 +150,15 @@ declare module "@xmcl/common/version" {
          * @param version The version id string
          * @param minecraft The minecraft location
          */
-        export function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<VersionDiagnosis>;
+        function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<VersionDiagnosis>;
 
-        export function mixinArgumentString(hi: string, lo: string): string;
+        function mixinArgumentString(hi: string, lo: string): string;
+
+        function resolveDependency(path: MinecraftLocation, version: string): Promise<ResolvedVersion[]>;
+
+        function resolveLibraries(libs: Version["libraries"], platform?: ReturnType<typeof getPlatform>): ResolvedLibrary[];
+
+        function getLibraryPath(name: string | Library | ResolvedLibrary): string;
     }
 }
 
@@ -155,6 +167,10 @@ Version.extendsVersion = extendsVersion;
 Version.diagnose = diagnose;
 Version.diagnoseTask = diagnoseTask;
 Version.mixinArgumentString = mixinArgumentString;
+Version.resolveDependency = resolveDependency;
+Version.resolveLibraries = resolveLibraries;
+Version.getLibraryPath = parseLibPath;
+
 
 function parse(minecraftPath: MinecraftLocation, version: string): Promise<ResolvedVersion> {
     return resolveDependency(minecraftPath, version).then(parseVersionHierarchy);
@@ -326,7 +342,7 @@ export class ResolvedNative extends ResolvedLibrary {
     }
 }
 
-export function resolveDependency(path: MinecraftLocation, version: string): Promise<ResolvedVersion[]> {
+function resolveDependency(path: MinecraftLocation, version: string): Promise<ResolvedVersion[]> {
     const folder = typeof path === "string" ? new MinecraftFolder(path) : path;
     return new Promise<ResolvedVersion[]>((res, rej) => {
         const stack: ResolvedVersion[] = [];
@@ -465,7 +481,7 @@ function checkAllowed(rules: Array<{ action?: string, os?: any }>, platform: Ret
     return allow;
 }
 
-export function resolveLibraries(libs: Version["libraries"], platform: ReturnType<typeof getPlatform> = getPlatform()) {
+function resolveLibraries(libs: Version["libraries"], platform: ReturnType<typeof getPlatform> = getPlatform()) {
     const empty = new ResolvedLibrary("", { path: "", sha1: "", size: 0, url: "" });
     return libs.map((lib) => {
         if (lib.rules && !checkAllowed(lib.rules, platform)) { return empty; }

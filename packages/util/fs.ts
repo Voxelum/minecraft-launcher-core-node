@@ -1,4 +1,3 @@
-import * as ByteBuffer from "bytebuffer";
 import { createHash } from "crypto";
 import { constants, createReadStream, existsSync, promises } from "fs";
 import { arch as getArch, platform as getPlatform, release } from "os";

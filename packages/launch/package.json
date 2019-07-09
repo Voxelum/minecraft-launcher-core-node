@@ -10,19 +10,22 @@
     "devDependencies": {
         "@types/mocha": "^2.2.41",
         "@types/node": "^10.0.0",
+        "@types/uuid": "^3.4.3",
         "mocha": "^6.1.4",
         "tslint": "^5.14.0",
-        "typescript": "^3.4.1"
+        "typescript": "^3.4.3"
     },
     "dependencies": {
         "@xmcl/auth": "^0.0.1",
         "@xmcl/util": "^0.0.1",
         "@xmcl/version": "^0.0.1",
-        "got": "^9.6.0"
+        "got": "^9.6.0",
+        "uuid": "^3.2.1",
+        "yauzlw": "0.0.7"
     },
     "scripts": {
         "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
-        "build": "tsc"
+        "build": "tsc --build tsconfig.json"
     },
     "repository": {
         "type": "git",

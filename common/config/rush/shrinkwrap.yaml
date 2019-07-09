@@ -20,8 +20,10 @@ dependencies:
   '@rush-temp/version': 'file:projects/version.tgz'
   '@rush-temp/world': 'file:projects/world.tgz'
   '@types/bytebuffer': 5.0.40
+  '@types/got': 9.6.0
   '@types/long': 3.0.32
   '@types/mocha': 2.2.48
+  '@types/uuid': 3.4.5
   '@types/yauzl': 2.9.1
   bytebuffer: 5.0.1
   fast-html-parser: 1.0.1
@@ -31,7 +33,9 @@ dependencies:
   long: 3.2.0
   mocha: 6.1.4
   tslint: 5.18.0
+  typescript: 3.5.3
   typescript-optional: 2.0.1
+  uuid: 3.3.2
 packages:
   /@babel/code-frame/7.0.0:
     dependencies:
@@ -68,6 +72,13 @@ packages:
     dev: false
     resolution:
       integrity: sha512-h48dyzZrPMz25K6Q4+NCwWaxwXany2FhQg/ErOcdZS1ZpsaDnDMZg8JYLMTGz7uvXKrcKGJUZJlZObyfgdaN9g==
+  /@types/got/9.6.0:
+    dependencies:
+      '@types/node': 12.6.1
+      '@types/tough-cookie': 2.3.5
+    dev: false
+    resolution:
+      integrity: sha512-t00QebxBllcawe7uMxi9jsfWfbki4+/zpJEPyoGWjUvnFOy4EkAzoYOI2UJt2+Fx0yIcDX2+us93k6ensKTddA==
   /@types/long/3.0.32:
     dev: false
     resolution:
@@ -80,6 +91,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-QcAKpaO6nhHLlxWBvpc4WeLrTvPqlHOvaj0s5GriKkA1zq+bsFBPpfYCvQhLqLgYlIko8A9YrPdaMHCo5mBcpg==
+  /@types/node/12.6.1:
+    dev: false
+    resolution:
+      integrity: sha512-rp7La3m845mSESCgsJePNL/JQyhkOJA6G4vcwvVgkDAwHhGdq5GCumxmPjEk1MZf+8p5ZQAUE7tqgQRQTXN7uQ==
   /@types/node/7.10.6:
     dev: false
     resolution:
@@ -88,6 +103,16 @@ packages:
     dev: false
     resolution:
       integrity: sha512-YY0Okyn4QXC4ugJI+Kng5iWjK8A6eIHiQVaGIhJkyn0YL6Iqo0E0tBC8BuhvYcBK87vykBijM5FtMnCqaa5anA==
+  /@types/tough-cookie/2.3.5:
+    dev: false
+    resolution:
+      integrity: sha512-SCcK7mvGi3+ZNz833RRjFIxrn4gI1PPR3NtuIS+6vMkvmsGjosqTJwRt5bAEFLRz+wtJMWv8+uOnZf2hi2QXTg==
+  /@types/uuid/3.4.5:
+    dependencies:
+      '@types/node': 12.6.1
+    dev: false
+    resolution:
+      integrity: sha512-MNL15wC3EKyw1VLF+RoVO4hJJdk9t/Hlv3rt1OL65Qvuadm4BYo6g9ZJQqoq7X8NBFSsQXgAujWciovh2lpVjA==
   /@types/yauzl/2.9.1:
     dependencies:
       '@types/node': 10.14.12
@@ -1124,13 +1149,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-xuwmqsCjE4OeeMKxbNX3jjNcISGzYh5Q9R1rM5OyxEVNIr94CB5llCkfKW+1nZTKbbUV0axN3QAUuX2fus/DhQ==
-  /typescript/2.9.2:
-    dev: false
-    engines:
-      node: '>=4.2.0'
-    hasBin: true
-    resolution:
-      integrity: sha512-Gr4p6nFNaoufRIY4NMdpQRNmgxVIGMs4Fcu/ujdYk3nAZqk7supzBE9idmvfZIlH/Cuj//dvi+019qEue9lV0w==
   /typescript/3.5.2:
     dev: false
     engines:
@@ -1138,6 +1156,13 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-7KxJovlYhTX5RaRbUdkAXN1KUZ8PwWlTzQdHV6xNqvuFOs7+WBo10TQUqT19Q/Jz2hk5v9TQDIhyLhhJY4p5AA==
+  /typescript/3.5.3:
+    dev: false
+    engines:
+      node: '>=4.2.0'
+    hasBin: true
+    resolution:
+      integrity: sha512-ACzBtm/PhXBDId6a6sDJfroT2pOWt/oOnk4/dElG5G33ZL776N3Y6/6bKZJBFpd+b05F3Ct9qDjMeJmRWtE2/g==
   /url-parse-lax/3.0.0:
     dependencies:
       prepend-http: 2.0.0
@@ -1146,6 +1171,11 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-FrXK/Afb42dsGxmZF3gj1lA6yww=
+  /uuid/3.3.2:
+    dev: false
+    hasBin: true
+    resolution:
+      integrity: sha512-yXJmeNaw3DnnKAOKJE51sL/ZaYfWJRl1pK9dr19YFCu0ObS231AB1/LbqTKRAQ5kw8A90rA6fr4riOUpTZvQZA==
   /which-module/2.0.0:
     dev: false
     resolution:
@@ -1261,43 +1291,52 @@ packages:
       integrity: sha512-4t63c/g5/Zpo510os5lLGq24YsNTa9spsHUbrowgL7mX41DCtCldrg65wJJdmvpOS2+V5rG/ujAuuJvJTNwJ6Q==
   'file:projects/auth.tgz':
     dependencies:
+      '@types/got': 9.6.0
       '@types/mocha': 2.2.48
       '@types/node': 10.14.12
+      '@types/uuid': 3.4.5
       got: 9.6.0
       mocha: 6.1.4
       tslint: /tslint/5.18.0/typescript@3.5.2
       typescript: 3.5.2
+      uuid: 3.3.2
     dev: false
     name: '@rush-temp/auth'
     resolution:
-      integrity: sha512-CeugdwhfuYSCEFB5FfHz2Bx1qjNn8aVLOjn8FvkUVhZr+LSYSENmZ6A2wbipqiYrGqhbJygUuxJqrOfZg2s9ZA==
+      integrity: sha512-LRMKMa0JTJ+xsjRPNQ0Tm5iheB9SBKQvlHp878SjcmLjyQ9D3vFuBs1rSmR2tk6iD1S0i9kwPrUKd2fdEGGV8Q==
       tarball: 'file:projects/auth.tgz'
     version: 0.0.0
   'file:projects/client.tgz':
     dependencies:
+      '@types/bytebuffer': 5.0.40
+      '@types/long': 3.0.32
       '@types/mocha': 2.2.48
       '@types/node': 10.14.12
+      bytebuffer: 5.0.1
       got: 9.6.0
+      long: 3.2.0
       mocha: 6.1.4
       tslint: /tslint/5.18.0/typescript@3.5.2
       typescript: 3.5.2
     dev: false
     name: '@rush-temp/client'
     resolution:
-      integrity: sha512-9o32T8A9Egt3tvF3058+RPWF6w0rNic+VME94X3qhJCRRLHdtCWv1ZQkeWI26RvApHqwu5fbyUFxROMNmKpZjg==
+      integrity: sha512-PWnyidJcORL8WmYKWexukQy3zal05oHOKS55kpCSM5INTCV/Wz/wgcgZq5KHLIgNb3yR1VFvdHRDWj+FvCfJKQ==
       tarball: 'file:projects/client.tgz'
     version: 0.0.0
   'file:projects/common.tgz':
     dependencies:
+      '@types/long': 3.0.32
       '@types/mocha': 2.2.48
       '@types/node': 10.14.12
+      long: 3.2.0
       mocha: 6.1.4
       tslint: /tslint/5.18.0/typescript@3.5.2
       typescript: 3.5.2
     dev: false
     name: '@rush-temp/common'
     resolution:
-      integrity: sha512-3vbsv5bLMG5KMNjaqgVpL8SYqC/NtUaDGK8aTD2ufVrTo41TC43hkWSHb8iRHDF8QkXEccWoXUfZWnFxmseB8Q==
+      integrity: sha512-G6z5XXTXaHXDFFLYUnupsHZUK83DPfB8dcRdaL1W9rkk5nd4JGkZKL7e3Vsw3Y9KnJxMUhKs/ozoGipmVH1gIA==
       tarball: 'file:projects/common.tgz'
     version: 0.0.0
   'file:projects/fabric.tgz':
@@ -1312,22 +1351,24 @@ packages:
     dev: false
     name: '@rush-temp/fabric'
     resolution:
-      integrity: sha512-8AqIFGw9VE5MeTV+rnIk8u3EzE5sltnX1flmL3rJpZtNIuF/JPaW7he1Qf5BOmTyQPc2s31RAXJGYvZJCmm4yQ==
+      integrity: sha512-ZNAnQSxZqZMe19p9nBe19C7xZlokTcJMY75ezXSvXcORmqnrkAeRQXTkgIHhVRCeAS6hyhmSZUdVJeJE+NXBWQ==
       tarball: 'file:projects/fabric.tgz'
     version: 0.0.0
   'file:projects/forge-installer.tgz':
     dependencies:
       '@types/mocha': 2.2.48
       '@types/node': 10.14.12
+      '@types/yauzl': 2.9.1
       got: 9.6.0
       mocha: 6.1.4
       treelike-task: 0.0.15
       tslint: /tslint/5.18.0/typescript@3.5.2
       typescript: 3.5.2
+      yauzlw: 0.0.7
     dev: false
     name: '@rush-temp/forge-installer'
     resolution:
-      integrity: sha512-8BqCq0XdqOV1SwwYJIN7u9pY+iiF+6YKC4gXDnA/UWC9Ym54M6nRkL95uXe/pk7u+7Y4060vqmlUNawVIRb5Ow==
+      integrity: sha512-DR/6vvymr5vW4RvIumhQWi9f1ImlB4h5IAis9CEEmVWBXKFH41rBr1OeR6NT5GYhgMIYmpKiG23yfsUTMrRjXg==
       tarball: 'file:projects/forge-installer.tgz'
     version: 0.0.0
   'file:projects/forge.tgz':
@@ -1373,7 +1414,7 @@ packages:
     dev: false
     name: '@rush-temp/installer'
     resolution:
-      integrity: sha512-c0SBEbZk+jUeN0I0Ve8kXK66BBXHkcLvYN+TlSQ6bsCA+GU79tR/tGX2Vvx5fiGuL4qPRM35q0M0pirCMK8jmQ==
+      integrity: sha512-/oAU3h0OsHW/CmxUNlIJyOd0087v2/XCky471snFhlGgrBUK8LR4sGWbM8F5AzNYm6RgbFPZulZZb7RQVgkRAw==
       tarball: 'file:projects/installer.tgz'
     version: 0.0.0
   'file:projects/language.tgz':
@@ -1411,14 +1452,16 @@ packages:
       mocha: 6.1.4
       tslint: /tslint/5.18.0/typescript@3.5.2
       typescript: 3.5.2
+      yauzlw: 0.0.7
     dev: false
     name: '@rush-temp/liteloader'
     resolution:
-      integrity: sha512-5/LOF2Lo27RsqGqdBxZcbimLZcpK3GNBjNjCGcmpjTs03gm3/H7k1T8bbBiFJpFkEA784Yyvjez0T6+XSCmO0w==
+      integrity: sha512-qLHTitvsrrDQOgtVwGc4sIK1GaVJoZjGB7SEVMbzFCk4h6ONTd9olNHowMnH0XIhbGCO76Ztt07ex5dzSr9trw==
       tarball: 'file:projects/liteloader.tgz'
     version: 0.0.0
   'file:projects/mojang.tgz':
     dependencies:
+      '@types/got': 9.6.0
       '@types/mocha': 2.2.48
       '@types/node': 10.14.12
       mocha: 6.1.4
@@ -1427,7 +1470,7 @@ packages:
     dev: false
     name: '@rush-temp/mojang'
     resolution:
-      integrity: sha512-RpTrxUFXsIQtvAHwqBfrMeuuB9mu7srz2+8LFMVWY0Eic2B6H7kwPGRFmfB4ldoU6EfX+wHlJYmKVFGDQfNzgw==
+      integrity: sha512-XfxfxAbunPwswAN5XEOfxR8mGm/h9AQvyiAxKXD/FU8gttiJ8jQiVDmPWChXZCCMqfaCLx/unTN7JYnZDRmSTg==
       tarball: 'file:projects/mojang.tgz'
     version: 0.0.0
   'file:projects/nbt.tgz':
@@ -1475,17 +1518,17 @@ packages:
     dev: false
     name: '@rush-temp/resourcepack'
     resolution:
-      integrity: sha512-GEboKwjkdguj9hOt2IWT3KD8gb0pdkAsIywx9B4WPWnntMjsccj2/os6WyFewck18ng+cPVg29bskSek08kbyw==
+      integrity: sha512-tZhB2LN3scOWRH3Gw3Rz0/EPua1iUoBFqmEJ935KaZJ589icvp1NPeiJtx5yt0j95Xr4vxDWztPc+06rn0nwBw==
       tarball: 'file:projects/resourcepack.tgz'
     version: 0.0.0
   'file:projects/task.tgz':
     dependencies:
       '@types/node': 9.6.49
-      typescript: 2.9.2
+      typescript: 3.5.3
     dev: false
     name: '@rush-temp/task'
     resolution:
-      integrity: sha512-hRgdiHsbMNkJpE8S8IugbVICZ/FMRomVJtvM/OEZCZux5K5o/dhAm+PE1uBlOzngyXvnf5BKjN3yFA2jdmdUFA==
+      integrity: sha512-8J5WIK5TheTwlWqy9RPgxgDReR0jz+Q8uOxcoIZfiowTApxsW9d14kipAx1OS/CCoOhNBMmpWDveZmQEWMroAw==
       tarball: 'file:projects/task.tgz'
     version: 0.0.0
   'file:projects/text-component.tgz':
@@ -1503,8 +1546,11 @@ packages:
     version: 0.0.0
   'file:projects/util.tgz':
     dependencies:
+      '@types/bytebuffer': 5.0.40
+      '@types/got': 9.6.0
       '@types/mocha': 2.2.48
       '@types/node': 10.14.12
+      bytebuffer: 5.0.1
       got: 9.6.0
       mocha: 6.1.4
       tslint: /tslint/5.18.0/typescript@3.5.2
@@ -1512,7 +1558,7 @@ packages:
     dev: false
     name: '@rush-temp/util'
     resolution:
-      integrity: sha512-v/jbG8G1ZZiB1nmWhzRHcmviBI1DQ51fGhHB/ih+YrJQRRrX5FN1E0H2oj45eiyMlJ7DgfnpS7UqW+tjI3QeHg==
+      integrity: sha512-ezu0VgGd0FTQCEr8bC1lfoSXaxC4DIGV8cdqCZjckc+E+IPMN5JicdwUuTrnGbDh9i+CT1NvLjgmH7dA9BWoVQ==
       tarball: 'file:projects/util.tgz'
     version: 0.0.0
   'file:projects/version.tgz':
@@ -1526,7 +1572,7 @@ packages:
     dev: false
     name: '@rush-temp/version'
     resolution:
-      integrity: sha512-ukaWna7ceOz2cIVuTScQNSuQP0UdHX8g6+phrCbw9SJ2ipWnSWRr1aySO25pwpAja6lgwAIa6TVYeQTYVOERLg==
+      integrity: sha512-MOivW7tIBvSeAT0jo9bM1QGj0hXoBG8NZ8Eb7QEdpBaLEUJJbGCOYliKUTYMoqShdzXr0L9XJfxBTWXLj2eIew==
       tarball: 'file:projects/version.tgz'
     version: 0.0.0
   'file:projects/world.tgz':
@@ -1569,8 +1615,10 @@ specifiers:
   '@rush-temp/version': 'file:./projects/version.tgz'
   '@rush-temp/world': 'file:./projects/world.tgz'
   '@types/bytebuffer': ^5.0.37
+  '@types/got': ^9.4.4
   '@types/long': ^3.0.31
   '@types/mocha': ^2.2.41
+  '@types/uuid': ^3.4.3
   '@types/yauzl': ^2.9.1
   bytebuffer: ^5.0.1
   fast-html-parser: ^1.0.1
@@ -1580,4 +1628,6 @@ specifiers:
   long: ^3.2.0
   mocha: ^6.1.4
   tslint: ^5.14.0
+  typescript: ^3.4.1
   typescript-optional: ^2.0.1
+  uuid: ^3.2.1

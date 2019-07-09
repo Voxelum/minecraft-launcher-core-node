@@ -8,19 +8,20 @@
         "node": ">=10.0"
     },
     "devDependencies": {
-        "@types/mocha": "^2.2.41",
+        "@types/bytebuffer": "^5.0.37",
         "@types/node": "^10.0.0",
-        "mocha": "^6.1.4",
+        "@types/got": "^9.6.0",
         "tslint": "^5.14.0",
-        "typescript": "^3.4.1"
+        "typescript": "^3.4.3"
     },
     "dependencies": {
         "got": "^9.6.0",
+        "bytebuffer": "^5.0.1",
         "@xmcl/task": "^0.0.1"
     },
     "scripts": {
         "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
-        "build": "tsc"
+        "build": "tsc --build tsconfig.json"
     },
     "repository": {
         "type": "git",

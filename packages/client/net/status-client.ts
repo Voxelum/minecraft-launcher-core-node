@@ -1,12 +1,16 @@
 import { Channel } from "./client";
-import { flush } from "./packet";
+import { Packet } from "./packet";
 import { Handshake, Ping, Pong, ServerQuery, ServerStatus } from "./protocols/default";
 
 export class StatusClient {
+
+    public static create(protocol: number, timeout?: number) {
+        return new StatusClient(protocol, timeout);
+    }
     readonly channel: Channel = new Channel();
 
     constructor(readonly protocol: number, readonly timeout?: number) {
-        flush().forEach((r) => this.channel.registerPacket(r));
+        Packet.flush().forEach((r) => this.channel.registerPacket(r));
     }
 
     async query(host: string, port?: number) {
@@ -44,7 +48,5 @@ export class StatusClient {
     }
 }
 
+export default StatusClient;
 
-export function createStatusClient(protocol: number, timeout?: number) {
-    return new StatusClient(protocol, timeout);
-}

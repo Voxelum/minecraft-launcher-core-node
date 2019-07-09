@@ -1,7 +1,7 @@
 import { Installer } from "@xmcl/installer";
 import Task from "@xmcl/task";
 import { computeChecksum, downloadFileWork, ensureDir, ensureFile, exists, got, MinecraftFolder, MinecraftLocation, multiChecksum, remove } from "@xmcl/util";
-import { parseLibPath, ResolvedLibrary, resolveLibraries, Version } from "@xmcl/version";
+import { ResolvedLibrary, Version } from "@xmcl/version";
 import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -102,7 +102,7 @@ export namespace ForgeInstaller {
             function processValue(v: string) {
                 if (v.match(/^\[.+\]$/g)) {
                     const targetId = v.substring(1, v.length - 1);
-                    return mc.getLibraryByPath(parseLibPath(targetId));
+                    return mc.getLibraryByPath(Version.getLibraryPath(targetId));
                 }
                 return v;
             }
@@ -223,7 +223,7 @@ export namespace ForgeInstaller {
                     return undefined;
                 }
 
-                const parsedLibs = resolveLibraries([...profile.libraries, ...versionJson.libraries]);
+                const parsedLibs = Version.resolveLibraries([...profile.libraries, ...versionJson.libraries]);
 
                 await context.execute("downloadLibraries", Installer.installLibrariesDirectTask(parsedLibs, mc, { libraryHost: libRedirect }).work);
 
@@ -231,10 +231,10 @@ export namespace ForgeInstaller {
                     ctx.update(0, profile.processors.length);
                     let i = 0;
                     for (const proc of profile.processors) {
-                        const jarRealPath = mc.getLibraryByPath(parseLibPath(proc.jar));
+                        const jarRealPath = mc.getLibraryByPath(Version.getLibraryPath(proc.jar));
                         const mainClass = await findMainClass(jarRealPath);
                         if (!mainClass) { throw new Error(`Cannot find main class for processor ${proc.jar}.`); }
-                        const cp = [...proc.classpath, proc.jar].map(parseLibPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter);
+                        const cp = [...proc.classpath, proc.jar].map(Version.getLibraryPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter);
                         const cmd = ["-cp", cp, mainClass, ...proc.args];
 
                         await new Promise<void>((resolve, reject) => {

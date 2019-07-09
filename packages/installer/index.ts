@@ -228,7 +228,7 @@ function installLibraryWork(lib: ResolvedLibrary, folder: MinecraftFolder, libra
     };
 }
 
-export function installLibrariesWork<T extends Pick<ResolvedVersion, "libraries" | "minecraftDirectory">>(version: T, option?: { libraryHost?: LibraryHost }) {
+function installLibrariesWork<T extends Pick<ResolvedVersion, "libraries" | "minecraftDirectory">>(version: T, option?: { libraryHost?: LibraryHost }) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = new MinecraftFolder(version.minecraftDirectory);
         const fullOption = option || {};

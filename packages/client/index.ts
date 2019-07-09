@@ -1,7 +1,7 @@
 import { GameProfile, ResourceMode, ServerInfoFrame, ServerStatusFrame } from "@xmcl/common";
 import NBT from "@xmcl/nbt";
 import { TextComponent } from "@xmcl/text-component";
-import { createStatusClient } from "./net/status-client";
+import { StatusClient } from "./net/status-client";
 
 interface ModIndentity {
     readonly modid: string;
@@ -158,7 +158,7 @@ export namespace Server {
         let result: ServerStatusFrame | undefined;
         let error: Error | undefined;
 
-        const client = createStatusClient(protocol, timeout);
+        const client = StatusClient.create(protocol, timeout);
         for (let retryTimes = retry + 1; retryTimes > 0; retryTimes--) {
             try {
                 result = await client.query(host, port);
