@@ -39,7 +39,7 @@ describe("Install", function () {
                 releaseTime: "",
                 url: "https://launchermeta.mojang.com/v1/packages/2e818dc89e364c7efcfa54bec7e873c5f00b3840/1.7.10.json",
             }, this.gameDirectory);
-        });
+        }).timeout(100000000);
         it("should be able to install 1.12.2", async function () {
             await installVersionClient({
                 id: "1.12.2",
@@ -113,7 +113,7 @@ describe("Install", function () {
             });
             await Version.installDependencies(await Version.parse(this.gameDirectory, result), this.gameDirectory);
             await assertNoError(result, this.gameDirectory);
-        });
+        }).timeout(100000000);
         it("should install forge on 1.12.2", async function () {
             before(() => {
                 if (fs.existsSync(`${this.gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`)) {
