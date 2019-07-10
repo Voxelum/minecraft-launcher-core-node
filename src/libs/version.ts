@@ -477,10 +477,11 @@ function parseVersionHierarchy(hierarchy: Version[]): Version {
         if (json.assetIndex) { assetIndex = json.assetIndex; }
         if (json.libraries) {
             json.libraries.forEach((lib) => {
+                const libOrgName = lib.name.substring(0, lib.name.lastIndexOf(":"));
                 if (lib instanceof Native) {
-                    nativesMap[lib.name] = lib;
+                    nativesMap[libOrgName] = lib;
                 } else {
-                    librariesMap[lib.name] = lib;
+                    librariesMap[libOrgName] = lib;
                 }
             });
         }
