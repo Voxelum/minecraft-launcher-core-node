@@ -219,6 +219,13 @@ describe("Launcher", () => {
             console.log(javaPath, javaVersion);
         });
 
+        describe("1.17.10", function () {
+            it("should launch with forge", async function () {
+                const option = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: this.gameDirectory, javaPath: "D:\\jvm\\bin\\java" };
+                await waitGameProcess(await Launcher.launch(option), "OpenAL initialized.");
+            }).timeout(100000);
+        });
+
         describe("1.12.2", function () {
             it("should launch normal minecraft", async function () {
                 const option = { version: "1.12.2", gamePath: this.gameDirectory, javaPath };
