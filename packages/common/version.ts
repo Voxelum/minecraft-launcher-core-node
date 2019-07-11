@@ -16,28 +16,51 @@ export namespace Version {
         readonly id: string;
     }
 
-    export interface Library {
+    export interface NormalLibrary {
         name: string;
-        rules?: Array<{ action: "allow" | "disallow", os?: { name: string } }>;
-        extract?: {
+        downloads: {
+            artifact: Artifact,
+        };
+    }
+
+    export interface NativeLibrary {
+        name: string;
+        downloads: {
+            artifact: Artifact,
+            classifiers: {
+                [os: string]: Artifact,
+            },
+        };
+        rules: Array<{ action: "allow" | "disallow", os?: { name: string } }>;
+        extract: {
             exclude: string[],
         };
         natives: {
             [os: string]: string,
         };
-        downloads: {
-            classifiers: {
-                [os: string]: Artifact,
-            },
-            artifact: Artifact,
-        };
-        url?: string;
-        checksums?: string[];
-        serverreq?: boolean;
-        clientreq?: boolean;
     }
 
-    export type LaunchArgument = string | { rules: Array<{ action: string, features?: any, os?: { name?: string, version?: string } }>, value: string | string[] };
+    export interface PlatformSpecificLibrary {
+        name: string;
+        downloads: {
+            artifact: Artifact,
+        };
+        rules: Array<{ action: "allow" | "disallow", os?: { name: string } }>;
+    }
+
+    export interface LegacyLibrary {
+        name: string;
+        url?: string;
+        clientreq?: boolean;
+        serverreq?: boolean;
+        checksums?: string[];
+    }
+
+    export type Library = NormalLibrary | NativeLibrary | PlatformSpecificLibrary | LegacyLibrary
+
+    export type LaunchArgument = string | {
+        rules: Array<{ action: string, features?: any, os?: { name?: string, version?: string } }>, value: string | string[]
+    };
 }
 
 
@@ -47,7 +70,7 @@ export interface Version {
     type: string;
     releaseTime: string;
     inheritsFrom?: string;
-    minimumLauncherVersion?: number;
+    minimumLauncherVersion: number;
 
     minecraftArguments?: string;
     arguments?: {
