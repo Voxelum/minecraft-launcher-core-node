@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/ts-minecraft.svg)](https://www.npmjs.com/package/ts-minecraft)
 [![npm](https://img.shields.io/npm/l/ts-minecraft.svg)](https://github.com/ci010/ts-minecraft/blob/3.0/LICENSE)
 [![Build Status](https://travis-ci.org/ci010/ts-minecraft.svg?branch=5.0)](https://travis-ci.org/ci010/ts-minecraft)
-[![Coverage Status](https://coveralls.io/repos/github/ci010/ts-minecraft/badge.svg?branch=5.0)](https://coveralls.io/github/ci010/ts-minecraft?branch=5.0)
+[![Coverage Status](https://coveralls.io/repos/github/ci010/ts-minecraft/badge.svg?branch=5.0)](https://coveralls.io/github/ci010/ts-minecraft?branch=5.0) [![Greenkeeper badge](https://badges.greenkeeper.io/ci010/ts-minecraft.svg)](https://greenkeeper.io/)
 
 Provide several useful functions for Minecraft.
 
