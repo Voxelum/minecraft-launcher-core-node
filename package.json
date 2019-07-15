@@ -10,9 +10,9 @@
   "devDependencies": {
     "@types/bytebuffer": "^5.0.37",
     "@types/got": "^9.4.4",
-    "@types/long": "^3.0.31",
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^10.0.0",
+    "@types/long": "^4.0.0",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.6.2",
     "@types/uuid": "^3.4.3",
     "@types/yauzl": "^2.9.1",
     "mocha": "^6.1.4",
@@ -40,11 +40,11 @@
   "dependencies": {
     "bytebuffer": "^5.0.1",
     "fast-html-parser": "^1.0.1",
-    "file-type": "^11.0.0",
+    "file-type": "^12.0.1",
     "got": "^9.6.0",
     "java-asm": "0.0.4",
-    "long": "^3.2.0",
-    "treelike-task": "0.0.15",
+    "long": "^4.0.0",
+    "treelike-task": "0.0.16",
     "uuid": "^3.2.1",
     "yauzlw": "0.0.7"
   },
