@@ -1,3 +1,4 @@
+import * as Long from "long";
 
 export enum GameType {
     NON = -1,
