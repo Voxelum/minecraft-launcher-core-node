@@ -102,7 +102,7 @@ export namespace ForgeInstaller {
             function processValue(v: string) {
                 if (v.match(/^\[.+\]$/g)) {
                     const targetId = v.substring(1, v.length - 1);
-                    return mc.getLibraryByPath(Version.getLibraryPath(targetId));
+                    return mc.getLibraryByPath(Version.getLibraryInfo(targetId).path);
                 }
                 return v;
             }
@@ -231,10 +231,10 @@ export namespace ForgeInstaller {
                     ctx.update(0, profile.processors.length);
                     let i = 0;
                     for (const proc of profile.processors) {
-                        const jarRealPath = mc.getLibraryByPath(Version.getLibraryPath(proc.jar));
+                        const jarRealPath = mc.getLibraryByPath(Version.getLibraryInfo(proc.jar).path);
                         const mainClass = await findMainClass(jarRealPath);
                         if (!mainClass) { throw new Error(`Cannot find main class for processor ${proc.jar}.`); }
-                        const cp = [...proc.classpath, proc.jar].map(Version.getLibraryPath).map((p) => mc.getLibraryByPath(p)).join(path.delimiter);
+                        const cp = [...proc.classpath, proc.jar].map(Version.getLibraryInfo).map((p) => mc.getLibraryByPath(p.path)).join(path.delimiter);
                         const cmd = ["-cp", cp, mainClass, ...proc.args];
 
                         await new Promise<void>((resolve, reject) => {
