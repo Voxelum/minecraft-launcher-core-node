@@ -2,12 +2,27 @@ import { GameSetting } from "@xmcl/common";
 
 declare module "@xmcl/common/gamesetting" {
     namespace GameSetting {
-        export function parse(str: string, strict?: boolean): GameSetting.Frame | undefined;
+        /**
+         * Parse raw game setting options.txt content
+         *
+         * @param str the options.txt content
+         * @param strict strictly follow the current version of options format (outdate version might cause problem. If your options.txt is new one with new fields, don't turn on this)
+         */
+        export function parse<T extends boolean>(str: string, strict?: T): T extends true ? GameSetting : GameSetting.Frame;
+
+        /**
+         * Generate text format game setting for options.txt file.
+         *
+         * @param setting The game setting object
+         * @param original
+         * @param eol The end of line character, default is `\n`
+         */
         export function stringify(setting: GameSetting | GameSetting.Frame | any, original?: string, eol?: string): string;
     }
 }
 
-GameSetting.parse = parse;
+
+GameSetting.parse = parse as <T extends boolean>(str: string, strict?: T) => T extends true ? GameSetting : GameSetting.Frame;
 GameSetting.stringify = stringify;
 
 /**
@@ -16,12 +31,14 @@ GameSetting.stringify = stringify;
  * @param str the options.txt content
  * @param strict strictly follow the current version of options format (outdate version might cause problem. If your options.txt is new one with new fields, don't turn on this)
  */
-function parse(str: string, strict?: boolean): GameSetting.Frame | undefined {
+function parse(str: string, strict?: boolean): GameSetting | GameSetting.Frame {
     const lines = str.split("\n");
     const intPattern = /^\d+$/;
     const floatPattern = /^[-+]?[0-9]*\.[0-9]+$/;
-    const booleanPattern = /(true)|(false)/;
-    if (!lines || lines.length === 0) { return undefined; }
+    const booleanPattern = /^(true)|(false)$/;
+    if (!lines || lines.length === 0) {
+        return strict ? GameSetting.getDefaultFrame() : {};
+    }
     const setting = lines.map((line) => line.trim().split(":"))
         .filter((pair) => pair[0].length !== 0)
         .map((pair) => {
@@ -30,7 +47,9 @@ function parse(str: string, strict?: boolean): GameSetting.Frame | undefined {
                 value = Number.parseInt(value, 10);
             } else if (floatPattern.test(value)) {
                 value = Number.parseFloat(value);
-            } else if (value === "true") { value = true; } else if (value === "false") { value = false; } else {
+            } else if (booleanPattern.test(value)) {
+                value = value === "true";
+            } else {
                 try {
                     value = JSON.parse(value);
                 } catch (e) { }
@@ -46,16 +65,9 @@ function parse(str: string, strict?: boolean): GameSetting.Frame | undefined {
         target[key] = typeof setting[key] === typeof source[key] ? setting[key] : source[key];
         delete setting.key;
     });
-    return target as GameSetting.Frame;
+    return target as GameSetting;
 }
 
-/**
- * Generate text format game setting for options.txt file.
- *
- * @param setting The game setting object
- * @param original
- * @param eol The end of line character, default is `\n`
- */
 function stringify(setting: GameSetting | GameSetting.Frame | any, original?: string, eol: string = "\n"): string {
     let model: any;
     if (original) {
