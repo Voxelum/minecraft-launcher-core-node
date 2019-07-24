@@ -285,7 +285,7 @@ export namespace ForgeInstaller {
                     const id = raw.id;
                     fullVersion = id;
                     const rootPath = mc.getVersionRoot(fullVersion);
-                    realJarPath = mc.getLibraryByPath(parseLibPath(raw.libraries.find((l: any) => l.name.startsWith("net.minecraftforge:forge")).name));
+                    realJarPath = mc.getLibraryByPath(Version.getLibraryInfo(raw.libraries.find((l: any) => l.name.startsWith("net.minecraftforge:forge"))).path);
 
                     await vfs.ensureDir(rootPath);
                     await vfs.writeFile(path.join(rootPath, `${id}.json`), buf);
