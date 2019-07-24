@@ -4,13 +4,18 @@
  */
 {
   "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/command-line.schema.json",
-
   /**
    * Custom "commands" introduce new verbs for the command-line.  To see the help for these
    * example commands, try "rush --help", "rush my-bulk-command --help", or
    * "rush my-global-command --help".
    */
   "commands": [
+    {
+      "commandKind": "bulk",
+      "name": "test",
+      "enableParallelism": true,
+      "summary": "Run test for each project"
+    }
     // {
     //   /**
     //    * (Required) Determines the type of custom command.
@@ -123,7 +128,6 @@
     //   "shellCommand": "node common/scripts/my-global-command.js"
     // }
   ],
-
   /**
    * Custom "parameters" introduce new parameters for specified Rush command-line commands.
    * For example, you might define a "--production" parameter for the "rush build" command.

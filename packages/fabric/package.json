@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "fast-html-parser": "^1.0.1",
+        "@xmcl/net": "^0.0.1",
         "@xmcl/util": "^0.0.1"
     },
     "scripts": {

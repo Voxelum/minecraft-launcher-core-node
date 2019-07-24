@@ -1,6 +1,5 @@
+import Unzip from "@xmcl/unzip";
 import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from "java-asm";
-import { Entry, ZipFile } from "yauzl";
-import { bufferEntry, open, walkEntries } from "yauzlw";
 
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
@@ -220,8 +219,8 @@ export namespace Forge {
         readonly isServerOnly?: boolean;
     }
 
-    async function asmMetaData(zip: ZipFile, entry: Entry, modidTree: any) {
-        const data = await bufferEntry(zip, entry);
+    async function asmMetaData(zip: Unzip.CachedZipFile, entry: Unzip.Entry, modidTree: any) {
+        const data = await zip.readEntry(entry);
         const metaContainer: any = {};
         const visitor = new KVisitor(metaContainer);
         new ClassReader(data).accept(visitor);
@@ -249,9 +248,9 @@ export namespace Forge {
         }
     }
 
-    async function jsonMetaData(zip: ZipFile, entry: Entry, modidTree: any) {
+    async function jsonMetaData(zip: Unzip.CachedZipFile, entry: Unzip.Entry, modidTree: any) {
         try {
-            const json = JSON.parse(await bufferEntry(zip, entry).then((b) => b.toString("utf-8")));
+            const json = JSON.parse(await zip.readEntry(entry).then((b) => b.toString("utf-8")));
             if (json instanceof Array) {
                 for (const m of json) { modidTree[m.modid] = m; }
             } else if (json.modList instanceof Array) {
@@ -262,10 +261,10 @@ export namespace Forge {
         } catch (e) { }
     }
 
-    async function regulize(mod: Buffer | string | ZipFile) {
+    async function regulize(mod: Buffer | string | Unzip.CachedZipFile) {
         let zip;
         if (mod instanceof Buffer || typeof mod === "string") {
-            zip = await open(mod, { lazyEntries: true, autoClose: false });
+            zip = await Unzip.open(mod);
         } else {
             zip = mod;
         }
@@ -277,18 +276,16 @@ export namespace Forge {
      * @param mod The mod path or data
      * @param asmOnly True for only reading the metadata from java bytecode, ignoring the mcmod.info
      */
-    export async function readModMetaData(mod: Buffer | string | ZipFile, asmOnly: boolean = false) {
+    export async function readModMetaData(mod: Buffer | string | Unzip.CachedZipFile, asmOnly: boolean = false) {
         const zip = await regulize(mod);
         const modidTree: any = {};
         const promise: Array<Promise<void>> = [];
-        await walkEntries(zip, (entry) => {
-            if (!asmOnly && entry.fileName === "mcmod.info") {
-                promise.push(jsonMetaData(zip, entry, modidTree));
-            } else if (entry.fileName.endsWith(".class")) {
-                promise.push(asmMetaData(zip, entry, modidTree));
-            }
-            return false;
-        });
+        const inf = zip.entries["mcmod.info"];
+        if (inf) {
+            promise.push(jsonMetaData(zip, inf, modidTree));
+        }
+        promise.push(...zip.filterEntries((e) => e.fileName.endsWith(".class"))
+            .map((e) => asmMetaData(zip, e, modidTree)));
         await Promise.all(promise);
         const modids = Object.keys(modidTree);
         if (modids.length === 0) { throw { type: "NonmodTypeFile" }; }
@@ -296,7 +293,7 @@ export namespace Forge {
             .filter((m) => m.modid !== undefined);
     }
 
-    export async function meta(mod: Buffer | string | ZipFile, asmOnly: boolean = false) {
+    export async function meta(mod: Buffer | string | Unzip.CachedZipFile, asmOnly: boolean = false) {
         return readModMetaData(mod, asmOnly);
     }
 

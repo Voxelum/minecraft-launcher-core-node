@@ -1,21 +1,20 @@
 import { Installer } from "@xmcl/installer";
+import { downloadFileWork, got } from "@xmcl/net";
 import Task from "@xmcl/task";
-import { computeChecksum, downloadFileWork, ensureDir, ensureFile, exists, got, MinecraftFolder, MinecraftLocation, multiChecksum, remove } from "@xmcl/util";
+import Unzip from "@xmcl/unzip";
+import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 import { ResolvedLibrary, Version } from "@xmcl/version";
 import { spawn } from "child_process";
-import * as fs from "fs";
 import * as path from "path";
 import { finished, Readable } from "stream";
 import { promisify } from "util";
-import { Entry, ZipFile } from "yauzl";
-import { bufferEntry, createExtractStream, createParseStream, open, openEntryReadStream, parseEntries } from "yauzlw";
 
 async function findMainClass(lib: string) {
-    const zip = await open(lib, { lazyEntries: true, autoClose: false });
-    const { "META-INF/MANIFEST.MF": manifest } = await parseEntries(zip, ["META-INF/MANIFEST.MF"]);
+    const zip = await Unzip.open(lib, { lazyEntries: true });
+    const [manifest] = await zip.filterEntries(["META-INF/MANIFEST.MF"]);
     let mainClass: string | undefined;
     if (manifest) {
-        const content = await bufferEntry(zip, manifest).then((b) => b.toString());
+        const content = await zip.readEntry(manifest).then((b) => b.toString());
         const mainClassPair = content.split("\n").map((l) => l.split(": ")).filter((arr) => arr[0] === "Main-Class")[0];
         if (mainClassPair) {
             mainClass = mainClassPair[1].trim();
@@ -72,11 +71,8 @@ export namespace ForgeInstaller {
             function downloadInstallerTask(installer: string, dest: string) {
                 return async (ctx: Task.Context) => {
                     let inStream;
-                    if (fs.existsSync(dest)) {
-                        const [md5, sha1] = await multiChecksum(dest, ["md5", "sha1"]);
-                        if (md5 === version.installer.md5 && sha1 === version.installer.sha1) {
-                            inStream = fs.createReadStream(dest);
-                        }
+                    if (await vfs.validate(dest, { algorithm: "md5", hash: version.installer.md5 }, { algorithm: "sha1", hash: version.installer.sha1 })) {
+                        inStream = vfs.createReadStream(dest);
                     }
                     if (!inStream) {
                         inStream = got.stream(installer, {
@@ -85,18 +81,16 @@ export namespace ForgeInstaller {
                         }).on("error", () => { })
                             .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); });
 
-                        inStream.pipe(fs.createWriteStream(dest));
+                        inStream.pipe(vfs.createWriteStream(dest));
                     }
 
-                    return inStream.pipe(createParseStream({ autoClose: false, lazyEntries: true }))
-                        .promise();
+                    return inStream.pipe(Unzip.createParseStream({ lazyEntries: true }))
+                        .wait();
                 };
             }
 
-            const temp = tempDir || await fs.promises.mkdtemp(mc.root + path.sep);
-            if (!fs.existsSync(temp)) {
-                await ensureDir(temp);
-            }
+            const temp = tempDir || await vfs.mkdtemp(mc.root + path.sep);
+            await vfs.ensureDir(temp);
             const installJar = path.join(temp, "forge-installer.jar");
 
             function processValue(v: string) {
@@ -117,79 +111,41 @@ export namespace ForgeInstaller {
             async function processVersionJson(s: Version) {
                 const rootPath = mc.getVersionRoot(s.id);
                 const jsonPath = path.join(rootPath, `${s.id}.json`);
-                await ensureFile(jsonPath);
-                await fs.promises.writeFile(jsonPath, JSON.stringify(s));
+                await vfs.ensureFile(jsonPath);
+                await vfs.writeFile(jsonPath, JSON.stringify(s));
             }
             async function processExtract(s: Readable, p: string) {
                 const file = path.join(temp, p);
-                await ensureFile(file);
-                await promisify(finished)(s.pipe(fs.createWriteStream(file)));
+                await vfs.ensureFile(file);
+                await promisify(finished)(s.pipe(vfs.createWriteStream(file)));
             }
             try {
-                let zip: ZipFile;
+                let zip: Unzip.LazyZipFile;
                 try {
                     zip = await context.execute("downloadInstaller", downloadInstallerTask(installerURL, installJar));
                 } catch {
                     zip = await context.execute("downloadInstaller", downloadInstallerTask(installerURLFallback, installJar));
                 }
+
+                const [forgeEntry, forgeUniversalEntry, binEntry, installProfileEntry, versionEntry] = await zip.filterEntries([
+                    `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`,
+                    `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`,
+                    "data/client.lzma",
+                    "install_profile.json",
+                    "version.json"]);
+
                 let profile!: LaunchProfile;
                 let versionJson!: Version;
-                await new Promise<void>((resolve, reject) => {
-                    let foundProfile = false, foundBin = false, foundVersion = false, foundUniversal = false, foundForge = false;
-                    const forgeEntry = `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`;
-                    const forgeUniversalEntry = `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`;
-                    const binEntry = "data/client.lzma";
-                    zip.once("end", () => {
-                        if (!foundProfile || !foundBin || !foundVersion || !foundUniversal || !foundForge) {
-                            reject({ foundProfile, foundBin, foundVersion, foundUniversal, foundForge });
-                        } else {
-                            resolve();
-                        }
-                    });
-                    zip.on("entry", (entry: Entry) => {
-                        function shouldContinue() {
-                            if (!foundProfile || !foundBin || !foundVersion || !foundUniversal || !foundForge) {
-                                zip.readEntry();
-                            } else {
-                                zip.close();
-                                resolve();
-                            }
-                        }
-                        if (entry.fileName === "install_profile.json") {
-                            bufferEntry(zip, entry).then((b) => b.toString()).then(JSON.parse).then((obj) => {
-                                foundProfile = true;
-                                profile = obj;
-                                shouldContinue();
-                            });
-                        } else if (entry.fileName === "version.json") {
-                            bufferEntry(zip, entry).then((b) => b.toString()).then(JSON.parse).then((obj) => {
-                                foundVersion = true;
-                                versionJson = obj;
-                                return processVersionJson(versionJson);
-                            }).then(() => {
-                                shouldContinue();
-                            });
-                        } else if (entry.fileName === binEntry) {
-                            openEntryReadStream(zip, entry).then((s) => processExtract(s, binEntry)).then(() => {
-                                foundBin = true;
-                                shouldContinue();
-                            });
-                        } else if (entry.fileName === forgeEntry) {
-                            openEntryReadStream(zip, entry).then((s) => processExtract(s, forgeEntry)).then(() => {
-                                foundForge = true;
-                                shouldContinue();
-                            });
-                        } else if (entry.fileName === forgeUniversalEntry) {
-                            openEntryReadStream(zip, entry).then((s) => processExtract(s, forgeUniversalEntry)).then(() => {
-                                foundUniversal = true;
-                                shouldContinue();
-                            });
-                        } else {
-                            zip.readEntry();
-                        }
-                    });
-                    zip.readEntry();
-                });
+
+                await Promise.all([
+                    processExtract(await zip.openEntry(forgeEntry), forgeEntry.fileName),
+                    processExtract(await zip.openEntry(forgeUniversalEntry), forgeUniversalEntry.fileName),
+                    processExtract(await zip.openEntry(binEntry), binEntry.fileName),
+                    zip.readEntry(installProfileEntry).then((b) => b.toString()).then(JSON.parse).then((o) => profile = o),
+                    zip.readEntry(versionEntry).then((b) => b.toString()).then(JSON.parse).then((o) => versionJson = o),
+                ]);
+
+                await processVersionJson(versionJson);
 
                 profile.data.MINECRAFT_JAR = {
                     client: mc.getVersionJar(version.mcversion),
@@ -269,17 +225,15 @@ export namespace ForgeInstaller {
                         ctx.update(i, profile.processors.length);
                         if (proc.outputs) {
                             for (const file in proc.outputs) {
-                                const sha1 = await computeChecksum(file, "sha1");
-                                const expected = proc.outputs[file].replace(/\'/g, "");
-                                if (sha1 !== expected) {
-                                    throw new Error(`Fail to process ${proc.jar} @ ${file} since its validation failed. ${sha1} vs ${expected}`);
+                                if (! await vfs.validate(file, { algorithm: "sha1", hash: proc.outputs[file].replace(/\'/g, "") })) {
+                                    throw new Error(`Fail to process ${proc.jar} @ ${file} since its validation failed.`);
                                 }
                             }
                         }
                     }
 
                     if (clearTempDir) {
-                        await remove(temp);
+                        await vfs.remove(temp);
                     }
                     i += 1;
                     ctx.update(i, profile.processors.length);
@@ -287,7 +241,7 @@ export namespace ForgeInstaller {
                 return fullVersion;
             } catch (e) {
                 if (clearTempDir) {
-                    await remove(temp);
+                    await vfs.remove(temp);
                 }
                 throw e;
             }
@@ -307,9 +261,9 @@ export namespace ForgeInstaller {
             const universalURL = `${maven}${version.universal.path}`;
 
             await context.execute("installForgeJar", async () => {
-                if (await exists(jarPath)) {
-                    const [md5, sha1] = await multiChecksum(jarPath, ["md5", "sha1"]);
-                    if (version.universal.md5 === md5 && version.universal.sha1 === sha1) {
+                if (await vfs.exists(jarPath)) {
+                    const valid = await vfs.validate(jarPath, { algorithm: "md5", hash: version.universal.md5 }, { algorithm: "sha1", hash: version.universal.sha1 });
+                    if (valid) {
                         return;
                     }
                 }
@@ -322,11 +276,11 @@ export namespace ForgeInstaller {
             });
 
             await context.execute("installForgeJson", async () => {
-                if (await exists(jsonPath)) { return; }
+                if (await vfs.exists(jsonPath)) { return; }
 
-                await ensureDir(rootPath);
-                await fs.createReadStream(jarPath).pipe(createExtractStream(path.dirname(jsonPath), ["version.json"])).promise();
-                await fs.promises.rename(path.resolve(path.dirname(jsonPath), "version.json"), jsonPath);
+                await vfs.ensureDir(rootPath);
+                await vfs.createReadStream(jarPath).pipe(Unzip.createExtractStream(path.dirname(jsonPath), ["version.json"])).wait();
+                await vfs.rename(path.resolve(path.dirname(jsonPath), "version.json"), jsonPath);
             });
 
             if (checkDependecies) {

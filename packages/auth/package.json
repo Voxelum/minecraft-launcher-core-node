@@ -20,7 +20,7 @@
         "got": "^9.6.0",
         "uuid": "^3.2.1",
         "@xmcl/profile-service": "^0.0.1",
-        "@xmcl/util": "^0.0.1",
+        "@xmcl/net": "^0.0.1",
         "@xmcl/common": "^0.0.1"
     },
     "scripts": {

@@ -18,10 +18,10 @@
     "dependencies": {
         "@xmcl/auth": "^0.0.1",
         "@xmcl/util": "^0.0.1",
+        "@xmcl/unzip": "^0.0.1",
         "@xmcl/version": "^0.0.1",
         "got": "^9.6.0",
-        "uuid": "^3.2.1",
-        "yauzlw": "0.0.7"
+        "uuid": "^3.2.1"
     },
     "scripts": {
         "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",

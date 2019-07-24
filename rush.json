@@ -323,6 +323,11 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@xmcl/minecraft-launcher-core",
+      "projectFolder": "packages/launcher-core",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@xmcl/nbt",
       "projectFolder": "packages/nbt",
       "shouldPublish": true
@@ -358,10 +363,20 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@xmcl/net",
+      "projectFolder": "packages/net",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@xmcl/world",
       "projectFolder": "packages/world",
       "shouldPublish": true
     },
+    {
+      "packageName": "@xmcl/unzip",
+      "projectFolder": "packages/unzip",
+      "shouldPublish": true
+    }
     // {
     //   /**
     //    * The NPM package name of the project (must match package.json)

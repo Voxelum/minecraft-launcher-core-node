@@ -16,7 +16,7 @@
     },
     "dependencies": {
         "file-type": "^11.0.0",
-        "yauzlw": "0.0.7",
+        "@xmcl/unzip": "^0.0.1",
         "@xmcl/nbt": "^0.0.1",
         "@xmcl/common": "^0.0.1"
     },

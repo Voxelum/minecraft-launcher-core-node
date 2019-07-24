@@ -1,5 +1,5 @@
 import { AuthResponse, GameProfile, UserType } from "@xmcl/common";
-import { fetchJson } from "@xmcl/util";
+import { fetchJson } from "@xmcl/net";
 import { Response } from "got";
 import { v4 } from "uuid";
 

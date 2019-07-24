@@ -1,7 +1,5 @@
 {
-  "name": "@xmcl/minecraft-launcher-core",
-  "version": "5.2.1",
-  "description": "Propabaliy all the things I want for a minecraft launcher. Targeting ElectronJs environment!",
+  "private": true,
   "engines": {
     "node": ">=10.0"
   },

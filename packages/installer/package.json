@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "got": "^9.6.0",
+        "@xmcl/net": "^0.0.1",
         "@xmcl/version": "^0.0.1",
         "@xmcl/task": "^0.0.1",
         "@xmcl/util": "^0.0.1"

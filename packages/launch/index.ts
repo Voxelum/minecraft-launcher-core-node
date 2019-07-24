@@ -1,15 +1,34 @@
 import { Auth } from "@xmcl/auth";
-import { computeChecksum, ensureDir, format, MinecraftFolder, missing } from "@xmcl/util";
+import { computeChecksum, ensureDir, MinecraftFolder, missing } from "@xmcl/util";
 import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
 
+import Unzip from "@xmcl/unzip";
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { v4 } from "uuid";
-import { createExtractStream } from "yauzlw";
 
+
+function format(template: string, args: any) {
+    return template.replace(/\$\{(.*?)}/g, (key) => {
+        const value = args[key.substring(2).substring(0, key.length - 3)];
+        return value ? value : key;
+    });
+}
 
 export namespace Launcher {
+    export interface ResolutionFeature {
+        has_custom_resolution: { resolution_width: string, resolution_height: string };
+    }
+    export interface DemoFeature {
+        is_demo_user: {};
+    }
+    export interface GenericFeatures {
+        [featureName: string]: { [argumentKey: string]: string };
+    }
+
+    export type Features = ResolutionFeature | GenericFeatures;
+
     export type PartialAuth = Pick<Auth, "selectedProfile" | "accessToken" | "userType" | "properties">;
     export interface Option {
         /**
@@ -38,6 +57,11 @@ export namespace Launcher {
         extraMCArgs?: string[];
         extraExecOption?: SpawnOptions;
         isDemo?: boolean;
+
+        /**
+         * Enable features
+         */
+        features?: Features;
 
         /**
          * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
@@ -265,11 +289,9 @@ export namespace Launcher {
             const notInMetaInf = (p: string) => p.indexOf("META-INF/") === -1;
             const notSha1AndNotGit = (p: string) => !(p.endsWith(".sha1") || p.endsWith(".git"));
             const from = mc.getLibraryByPath(n.download.path);
-            await fs.createReadStream(from)
-                .pipe(createExtractStream(native, (entry) =>
-                    containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName),
-                ))
-                .promise();
+            await fs.createReadStream(from).pipe(Unzip.createExtractStream(native, (entry) =>
+                containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName),
+            )).wait();
         }));
     }
 }

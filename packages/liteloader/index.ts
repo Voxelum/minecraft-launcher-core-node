@@ -1,10 +1,10 @@
 import { Installer } from "@xmcl/installer";
 import Task from "@xmcl/task";
+import Unzip from "@xmcl/unzip";
 import { ensureDir, getIfUpdate, MinecraftFolder, MinecraftLocation, UpdatedObject } from "@xmcl/util";
 import { Version } from "@xmcl/version";
 import * as fs from "fs";
 import * as path from "path";
-import { bufferEntry, open, parseEntries, ZipFile } from "yauzlw";
 
 export namespace LiteLoader {
     export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
@@ -108,14 +108,14 @@ export namespace LiteLoader {
         tweakClass: string;
     }
 
-    export async function meta(mod: string | Buffer | ZipFile) {
-        let zip: ZipFile;
-        if (mod instanceof ZipFile) {
+    export async function meta(mod: string | Buffer | Unzip.LazyZipFile) {
+        let zip: Unzip.LazyZipFile;
+        if (mod instanceof Unzip.LazyZipFile) {
             zip = mod;
         } else if (mod instanceof Buffer) {
-            zip = await open(mod);
+            zip = await Unzip.open(mod, { lazyEntries: true });
         } else if (typeof mod === "string" && fs.existsSync(mod)) {
-            zip = await open(mod);
+            zip = await Unzip.open(mod, { lazyEntries: true });
         } else {
             throw {
                 type: "IllegalInputType",
@@ -123,7 +123,7 @@ export namespace LiteLoader {
                 mod,
             };
         }
-        const { "litemod.json": entry } = await parseEntries(zip, ["litemod.json"]);
+        const [entry] = await zip.filterEntries(["litemod.json"]);
         if (entry == null) {
             throw {
                 type: "IllegalInputType",
@@ -131,7 +131,7 @@ export namespace LiteLoader {
                 mod,
             };
         }
-        const data = await bufferEntry(zip, entry);
+        const data = await zip.readEntry(entry);
         zip.close();
         const metadata = JSON.parse(data.toString().trim(), (key, value) => key === "revision" ? Number.parseInt(value, 10) : value) as MetaData;
         if (!metadata.version) {

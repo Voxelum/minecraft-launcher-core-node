@@ -1,4 +1,4 @@
-import { getIfUpdate, UpdatedObject } from "@xmcl/util";
+import { getIfUpdate, UpdatedObject } from "@xmcl/net";
 import * as parser from "fast-html-parser";
 import Forge from "./index";
 

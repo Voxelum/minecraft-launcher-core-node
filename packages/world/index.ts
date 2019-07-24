@@ -1,9 +1,9 @@
 import { LevelDataFrame, RegionDataFrame, World } from "@xmcl/common";
 import { NBT } from "@xmcl/nbt";
+import Unzip from "@xmcl/unzip";
 import fileType from "file-type";
 import * as fs from "fs";
 import * as path from "path";
-import { bufferEntry, open, walkEntries } from "yauzlw";
 import { inflateSync } from "zlib";
 
 type StringBoolean = "true" | "false";
@@ -51,10 +51,10 @@ async function load<K extends string & keyof World & ("players" | "advancements"
         const ft = fileType(buffer);
         if (!ft || ft.ext !== "zip") { throw new Error("IllgalMapFormat"); }
 
-        const zip = await open(buffer, { lazyEntries: true });
-        await walkEntries(zip, (e) => {
+        const zip = await Unzip.open(buffer, { lazyEntries: true });
+        await zip.walkEntries((e) => {
             if (enabledFunction.level && e.fileName.endsWith("/level.dat")) {
-                return bufferEntry(zip, e).then(NBT.Persistence.deserialize).then((l) => {
+                return zip.readEntry(e).then(NBT.Persistence.deserialize).then((l) => {
                     result.level = l.Data as any;
                     if (result.level === undefined || result.level === null) {
                         throw {
@@ -70,10 +70,10 @@ async function load<K extends string & keyof World & ("players" | "advancements"
                 });
             }
             if (enabledFunction.players && e.fileName.match(/\/playerdata\/[0-9a-z\-]+\.dat$/)) {
-                return bufferEntry(zip, e).then(NBT.Persistence.deserialize).then((r) => { result.players.push(r as any); });
+                return zip.readEntry(e).then(NBT.Persistence.deserialize).then((r) => { result.players.push(r as any); });
             }
             if (enabledFunction.advancements && e.fileName.match(/\/advancements\/[0-9a-z\-]+\.json$/)) {
-                return bufferEntry(zip, e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); });
+                return zip.readEntry(e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); });
             }
             return undefined;
         });

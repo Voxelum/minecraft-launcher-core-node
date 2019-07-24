@@ -1,0 +1,53 @@
+{
+    "name": "@xmcl/minecraft-launcher-core",
+    "description": "Propabaliy all the things I want for a minecraft launcher. Targeting ElectronJs environment!",
+    "engines": {
+        "node": ">=10.0"
+    },
+    "devDependencies": {
+        "tslint": "^5.14.0",
+        "typescript": "^3.4.3"
+    },
+    "scripts": {
+        "build": "tsc --build tsconfig.json"
+    },
+    "dependencies": {
+        "@xmcl/auth": "^0.0.1",
+        "@xmcl/client": "^0.0.1",
+        "@xmcl/common": "^0.0.1",
+        "@xmcl/fabric": "^0.0.1",
+        "@xmcl/forge": "^0.0.1",
+        "@xmcl/forge-installer": "^0.0.1",
+        "@xmcl/gamesetting": "^0.0.1",
+        "@xmcl/installer": "^0.0.1",
+        "@xmcl/language": "^0.0.1",
+        "@xmcl/launch": "^0.0.1",
+        "@xmcl/liteloader": "^0.0.1",
+        "@xmcl/mojang": "^0.0.1",
+        "@xmcl/nbt": "^0.0.1",
+        "@xmcl/profile-service": "^0.0.1",
+        "@xmcl/resourcepack": "^0.0.1",
+        "@xmcl/task": "^0.0.1",
+        "@xmcl/text-component": "^0.0.1",
+        "@xmcl/util": "^0.0.1",
+        "@xmcl/version": "^0.0.1",
+        "@xmcl/world": "^0.0.1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ci010/ts-minecraft.git"
+    },
+    "author": "cijhn@hotmail.com",
+    "keywords": [
+        "minecraft",
+        "typescript",
+        "minecraft-launcher",
+        "nodejs",
+        "electron"
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ci010/ts-minecraft/issues"
+    },
+    "homepage": "https://github.com/ci010/ts-minecraft#readme"
+}

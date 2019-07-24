@@ -1,6 +1,6 @@
 import { ResourcePackMetaData } from "@xmcl/common";
+import Unzip from "@xmcl/unzip";
 import * as fs from "fs";
-import { bufferEntry, open, parseEntries, ZipFile } from "yauzlw";
 export interface ResourcePack {
     readonly path: string;
     readonly type: "directory" | "zip";
@@ -15,18 +15,18 @@ export class ResourcePack {
 }
 
 export namespace ResourcePack {
-    async function readZip(fileName: string, zipFile: ZipFile, cacheIcon?: boolean) {
+    async function readZip(fileName: string, zipFile: Unzip.LazyZipFile, cacheIcon?: boolean) {
         const loadEntries = cacheIcon ? ["pack.mcmeta", "pack.png"] : ["pack.mcmeta"];
-        const entries = await parseEntries(zipFile, loadEntries as ["pack.mcmeta", "pack.png"] | ["pack.mcmeta"]);
-        if (!entries["pack.mcmeta"]) {
-            throw new Error("Cannot find pack.mcmeta");
-        }
-        const metadata = await bufferEntry(zipFile, entries["pack.mcmeta"])
-            .then((data) => JSON.parse(data.toString("utf-8").trim()).pack);
+        const entries = await zipFile.filterEntries(loadEntries as ["pack.mcmeta", "pack.png"] | ["pack.mcmeta"]);
+        const metadataEntry = entries.find((e) => e.fileName === "pack.mcmeta");
+        if (!metadataEntry) { throw new Error("Cannot find pack.mcmeta"); }
+
+        const metadata = await zipFile.readEntry(metadataEntry).then((data) => JSON.parse(data.toString("utf-8").trim()).pack);
 
         let icon = "";
-        if (entries["pack.png"]) {
-            icon = await bufferEntry(zipFile, entries["pack.png"])
+        const iconEntry = entries.find((e) => e.fileName === "pack.png");
+        if (iconEntry) {
+            icon = await zipFile.readEntry(iconEntry)
                 .then((data) => "data:image/png;base64, " + data.toString("base64"))
                 .catch((_) => "");
         }
@@ -60,10 +60,10 @@ export namespace ResourcePack {
             resourcePack.icon = icon;
             return icon;
         }
-        const zip = await open(filePath);
-        const { "pack.png": entry } = await parseEntries(zip, ["pack.png"]);
+        const zip = await Unzip.open(filePath, { lazyEntries: true });
+        const [entry] = await zip.filterEntries(["pack.png"]);
         if (entry) {
-            const buf = await bufferEntry(zip, entry);
+            const buf = await zip.readEntry(entry);
             const url = "data:image/png;base64, " + buf.toString("base64");
             resourcePack.icon = url;
             return url;
@@ -81,7 +81,7 @@ export namespace ResourcePack {
     export async function read(filePath: string, buffer?: Buffer, cacheIcon?: boolean): Promise<ResourcePack> {
         const stat = await fs.promises.stat(filePath);
         if (stat.isDirectory()) { return readDirectory(filePath, cacheIcon); }
-        const zip = buffer ? await open(buffer) : await open(filePath);
+        const zip = buffer ? await Unzip.open(buffer, { lazyEntries: true }) : await Unzip.open(filePath, { lazyEntries: true });
         return readZip(filePath, zip, cacheIcon);
     }
 }

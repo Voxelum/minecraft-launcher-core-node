@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { ChildProcess, spawn } from "child_process";
-import { Auth } from "../packages/auth";
+import { Auth } from "./index";
 
 function sleep(time: number) {
     return new Promise<void>((resolve, reject) => {

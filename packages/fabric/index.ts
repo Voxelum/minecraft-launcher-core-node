@@ -1,4 +1,5 @@
-import { ensureFile, fetchJson, getIfUpdate, MinecraftFolder, MinecraftLocation, UpdatedObject } from "@xmcl/util";
+import { fetchJson, getIfUpdate, UpdatedObject } from "@xmcl/net";
+import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 import * as parser from "fast-html-parser";
 import { promises } from "fs";
 
@@ -34,7 +35,7 @@ export namespace Fabric {
 
         const { body } = await fetchJson(`https://fabricmc.net/download/technic/?yarn=${encodeURIComponent(yarnVersion)}&loader=${encodeURIComponent(loaderVersion)}`);
         body.id = id;
-        await ensureFile(jsonFile);
+        await vfs.ensureFile(jsonFile);
         await promises.writeFile(jsonFile, JSON.stringify(body));
     }
 }

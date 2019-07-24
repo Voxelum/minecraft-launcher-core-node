@@ -10,6 +10,7 @@
     "devDependencies": {
         "@types/mocha": "^2.2.41",
         "@types/node": "^10.0.0",
+        "@types/bytebuffer": "^5.0.37",
         "mocha": "^6.1.4",
         "tslint": "^5.14.0",
         "typescript": "^3.4.3"
