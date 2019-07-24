@@ -188,14 +188,9 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
     const folder = MinecraftFolder.from(minecraftPath);
     const hierarchy = await resolveDependency(folder, version);
     if (hierarchy.length === 0) { throw new Error("The hierarchy cannot be empty!"); }
-    const root = hierarchy[0];
-    const id: string = root.id;
-    if (!("assetIndex" in root)) {
-        console.error(hierarchy.length);
-        console.error(JSON.stringify(root));
-        throw new Error("Corrupted root Minecraft version " + version);
-    }
-    let assetIndex: Version.AssetIndex = root.assetIndex!;
+    const cur = hierarchy[0];
+    const id: string = cur.id;
+    let assetIndex: Version.AssetIndex = cur.assetIndex!;
     let assets: string = "";
 
     const downloadsMap: { [key: string]: Version.Download } = {};
@@ -205,8 +200,8 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
     let mainClass: string;
     let args: any;
     let minimumLauncherVersion: number = 0;
-    const releaseTime: string = root.releaseTime;
-    const time: string = root.time;
+    const releaseTime: string = cur.releaseTime;
+    const time: string = cur.time;
     let type: string;
     let logging: any;
     let client: string | undefined;
@@ -294,7 +289,7 @@ function resolveDependency(path: MinecraftLocation, version: string): Promise<Pa
             }
             return fs.promises.readFile(jsonPath).then((value) => {
                 const versionInst = parseVersionJson(value.toString(), folder.root);
-                stack.push(versionInst);
+                stack.unshift(versionInst);
                 versionInst.minecraftDirectory = folder.root;
                 if (versionInst.inheritsFrom) {
                     return interal(folder.getVersionJson(versionInst.inheritsFrom), versionInst.inheritsFrom);
