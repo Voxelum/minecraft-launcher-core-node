@@ -19,3 +19,5 @@ script:
   - echo 'Building...' && echo -en 'travis_fold:start:build\\r'
   - node common/scripts/install-run-rush.js rebuild --verbose
   - echo -en 'travis_fold:end:build\\r'
+
+  - npm run test
