@@ -1,0 +1,42 @@
+{
+    "name": "@xmcl/unzip",
+    "version": "0.0.1",
+    "main": "./index.js",
+    "types": "./index.d.ts",
+    "description": "Unzip interface",
+    "engines": {
+        "node": ">=10.0"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.41",
+        "@types/node": "^10.0.0",
+        "@types/yauzl": "^2.9.1",
+        "mocha": "^6.1.4",
+        "tslint": "^5.14.0",
+        "typescript": "^3.4.3"
+    },
+    "dependencies": {
+        "yauzl": "^2.10.0"
+    },
+    "scripts": {
+        "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
+        "build": "tsc --build tsconfig.json"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ci010/ts-minecraft.git"
+    },
+    "author": "cijhn@hotmail.com",
+    "keywords": [
+        "minecraft",
+        "typescript",
+        "minecraft-launcher",
+        "nodejs",
+        "electron"
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ci010/ts-minecraft/issues"
+    },
+    "homepage": "https://github.com/ci010/ts-minecraft#readme"
+}
