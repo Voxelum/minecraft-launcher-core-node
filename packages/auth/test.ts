@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import { ChildProcess, spawn } from "child_process";
+import * as path from "path";
 import { Auth } from "./index";
 
 function sleep(time: number) {
@@ -10,11 +11,12 @@ function sleep(time: number) {
 
 describe("Auth", () => {
     let proc: ChildProcess;
+    const assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
     before(async function () {
         this.timeout(100000);
         try {
             await new Promise((resolve, reject) => {
-                proc = spawn("java", ["-jar", "yggdrasil-mock-server-0.0.1-SNAPSHOT.jar"]);
+                proc = spawn("java", ["-jar", path.join(assets, "yggdrasil-mock-server-0.0.1-SNAPSHOT.jar")]);
                 proc.on("error", reject);
                 proc.stdout.on("data", (b) => {
                     if (b.toString().indexOf("moe.yushi.yggdrasil.mockserver.Main") !== -1 &&
