@@ -63,7 +63,7 @@ export namespace ForgeInstaller {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const forgeVersion = `${version.mcversion}-${version.version}`;
-            const fullVersion = `${version.mcversion}-forge${version.mcversion}-${version.version}`;
+            let versionId: string;
 
             const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
             const installerURL = `${maven}${version.installer.path}`;
@@ -111,6 +111,7 @@ export namespace ForgeInstaller {
             async function processVersionJson(s: Version) {
                 const rootPath = mc.getVersionRoot(s.id);
                 const jsonPath = path.join(rootPath, `${s.id}.json`);
+                versionId = s.id;
                 await vfs.ensureFile(jsonPath);
                 await vfs.writeFile(jsonPath, JSON.stringify(s));
             }
@@ -238,7 +239,7 @@ export namespace ForgeInstaller {
                     i += 1;
                     ctx.update(i, profile.processors.length);
                 });
-                return fullVersion;
+                return versionId!;
             } catch (e) {
                 if (clearTempDir) {
                     await vfs.remove(temp);
@@ -253,9 +254,8 @@ export namespace ForgeInstaller {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const forgeVersion = `${version.mcversion}-${version.version}`;
             const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`);
-            const fullVersion = `${version.mcversion}-forge${version.mcversion}-${version.version}`;
-            const rootPath = mc.getVersionRoot(fullVersion);
-            const jsonPath = path.join(rootPath, `${fullVersion}.json`);
+            let fullVersion: string;
+            let realJarPath: string;
 
             const universalURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`;
             const universalURL = `${maven}${version.universal.path}`;
@@ -276,19 +276,36 @@ export namespace ForgeInstaller {
             });
 
             await context.execute("installForgeJson", async () => {
-                if (await vfs.exists(jsonPath)) { return; }
+                const zip = await Unzip.open(jarPath, { lazyEntries: true });
+                const [versionEntry] = await zip.filterEntries(["version.json"]);
 
-                await vfs.ensureDir(rootPath);
-                await vfs.createReadStream(jarPath).pipe(Unzip.createExtractStream(path.dirname(jsonPath), ["version.json"])).wait();
-                await vfs.rename(path.resolve(path.dirname(jsonPath), "version.json"), jsonPath);
+                if (versionEntry) {
+                    const buf = await zip.readEntry(versionEntry);
+                    const raw = JSON.parse(buf.toString());
+                    const id = raw.id;
+                    fullVersion = id;
+                    const rootPath = mc.getVersionRoot(fullVersion);
+                    realJarPath = mc.getLibraryByPath(parseLibPath(raw.libraries.find((l: any) => l.name.startsWith("net.minecraftforge:forge")).name));
+
+                    await vfs.ensureDir(rootPath);
+                    await vfs.writeFile(path.join(rootPath, `${id}.json`), buf);
+                } else {
+                    throw new Error(`Cannot install forge json for ${version.version} since the version json is missing!`);
+                }
             });
 
+            if (realJarPath! !== jarPath) {
+                await vfs.ensureFile(realJarPath!);
+                await vfs.copyFile(jarPath, realJarPath!);
+                await vfs.unlink(jarPath);
+            }
+
             if (checkDependecies) {
-                const resolvedVersion = await Version.parse(minecraft, fullVersion);
+                const resolvedVersion = await Version.parse(minecraft, fullVersion!);
                 context.execute("installDependencies", Installer.installDependenciesTask(resolvedVersion).work);
             }
 
-            return fullVersion;
+            return fullVersion!;
         };
     }
 

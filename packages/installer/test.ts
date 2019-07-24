@@ -33,6 +33,15 @@ describe("Install", function () {
             assert.equal(first, sec);
             assert.equal(first.timestamp, sec.timestamp);
         });
+        it("should be able to install 1.7.10", async function () {
+            await installVersionClient({
+                id: "1.7.10",
+                type: "release",
+                time: "",
+                releaseTime: "",
+                url: "https://launchermeta.mojang.com/v1/packages/2e818dc89e364c7efcfa54bec7e873c5f00b3840/1.7.10.json",
+            }, this.gameDirectory);
+        }).timeout(100000000);
         it("should be able to install 1.12.2", async function () {
             await installVersionClient({
                 id: "1.12.2",

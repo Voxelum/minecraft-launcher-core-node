@@ -239,10 +239,11 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
         if (json.assetIndex) { assetIndex = json.assetIndex; }
         if (json.libraries) {
             json.libraries.forEach((lib) => {
+                const libOrgName = lib.name.substring(0, lib.name.lastIndexOf(":"));
                 if (lib instanceof ResolvedNative) {
-                    nativesMap[lib.name] = lib;
+                    nativesMap[libOrgName] = lib;
                 } else {
-                    librariesMap[lib.name] = lib;
+                    librariesMap[libOrgName] = lib;
                 }
             });
         }
@@ -294,6 +295,7 @@ function resolveDependency(path: MinecraftLocation, version: string): Promise<Pa
             return fs.promises.readFile(jsonPath).then((value) => {
                 const versionInst = parseVersionJson(value.toString(), folder.root);
                 stack.push(versionInst);
+                versionInst.minecraftDirectory = folder.root;
                 if (versionInst.inheritsFrom) {
                     return interal(folder.getVersionJson(versionInst.inheritsFrom), versionInst.inheritsFrom);
                 } else {
