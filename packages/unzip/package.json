@@ -19,7 +19,7 @@
         "yauzl": "^2.10.0"
     },
     "scripts": {
-        "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
+        "test": "",
         "build": "tsc --build tsconfig.json"
     },
     "repository": {

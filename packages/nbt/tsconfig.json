@@ -3,5 +3,6 @@
   "files": [
     "index.ts",
     "utils.ts",
+    "test.ts"
   ]
 }

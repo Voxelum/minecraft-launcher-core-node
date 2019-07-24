@@ -1,6 +1,11 @@
 import * as assert from "assert";
+import * as path from "path";
 import { ResolvedNative, Version } from "./index";
 
+before(function() {
+    this.assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
+    this.gameDirectory = path.join(this.assets, "temp");
+});
 
 describe("Version", function () {
     describe("#getLibraryInfo", function () {
@@ -78,10 +83,10 @@ describe("Version", function () {
             assert.equal(resolved.clientreq, lib.clientreq);
             assert.equal(resolved.checksums, lib.checksums);
             assert.equal(resolved.download.sha1, lib.checksums[0]);
-            assert.equal(resolved.download.path, "org/scala-lang/plugins/scala-continuations-library_2.11/scala-continuations-library_2.11-1.0.2.jar");
+            assert.equal(resolved.download.path, "org/scala-lang/plugins/scala-continuations-library_2.11/1.0.2/scala-continuations-library_2.11-1.0.2.jar");
         });
         it("should be able to filter out useless native library", function () {
-            const nativeLib = {
+            const lib = {
                 name: "org.lwjgl.lwjgl:lwjgl_util:2.9.4-nightly-20150209",
                 rules: [
                     {
@@ -103,11 +108,12 @@ describe("Version", function () {
                     },
                 },
             };
-            const [onOsx] = Version.resolveLibraries([nativeLib], { name: "osx", version: "", arch: "64" });
-            const [onWin] = Version.resolveLibraries([nativeLib], { name: "win", version: "", arch: "64" });
-            assert(onOsx);
-            assert(onOsx instanceof ResolvedNative);
-            assert.equal(onWin, undefined);
+            const [onOsx] = Version.resolveLibraries([lib], { name: "osx", version: "", arch: "64" });
+            const [onWin] = Version.resolveLibraries([lib], { name: "win", version: "", arch: "64" });
+            const [onLinux] = Version.resolveLibraries([lib], { name: "linux", version: "", arch: "64" });
+            assert(!onOsx);
+            assert(onWin);
+            assert(onLinux);
         });
         it("should be able to select correct native library by system", function () {
             const selectionNative = {
@@ -261,11 +267,11 @@ describe("Version", function () {
         });
     });
 
-    it("should be able to extends the version", async function () {
-        const ver = await Version.parse(this.gameDirectory, "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT");
-        const ver2 = await Version.parse(this.gameDirectory, "1.12.2-forge1.12.2-14.23.5.2823");
+    // it("should be able to extends the version", async function () {
+    //     const ver = await Version.parse(this.gameDirectory, "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT");
+    //     const ver2 = await Version.parse(this.gameDirectory, "1.12.2-forge1.12.2-14.23.5.2823");
 
-        const out = Version.extendsVersion("test", ver, ver2);
-        assert(out);
-    });
+    //     const out = Version.extendsVersion("test", ver, ver2);
+    //     assert(out);
+    // });
 });

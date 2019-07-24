@@ -1,5 +1,11 @@
 import * as assert from "assert";
-import { World } from "../packages/world";
+import * as path from "path";
+import { World } from "./index";
+
+before(function() {
+    this.assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
+    this.gameDirectory = path.join(this.assets, "temp");
+});
 
 describe("World", () => {
     it("should load level of a simple map", async function () {

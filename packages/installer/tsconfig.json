@@ -2,6 +2,7 @@
     "extends": "../../tsconfig.json",
     "files": [
         "index.ts",
-        "decompress.ts"
+        "decompress.ts",
+        "test.ts"
     ]
 }

@@ -191,6 +191,8 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
     const root = hierarchy[0];
     const id: string = root.id;
     if (!("assetIndex" in root)) {
+        console.error(hierarchy.length);
+        console.error(JSON.stringify(root));
         throw new Error("Corrupted root Minecraft version " + version);
     }
     let assetIndex: Version.AssetIndex = root.assetIndex!;

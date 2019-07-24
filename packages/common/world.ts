@@ -264,3 +264,5 @@ export interface RegionDataFrame {
     };
     DataVersion: number;
 }
+
+exports.World = {};

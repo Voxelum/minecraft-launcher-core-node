@@ -1,23 +1,29 @@
 
 import * as assert from "assert";
 import * as fs from "fs";
-import { Server } from "../packages/client";
+import * as path from "path";
+import { Server } from "./index";
+
+before(function() {
+    this.assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
+    this.gameDirectory = path.join(this.assets, "temp");
+});
 
 describe("Server", () => {
-    it("should read server.dat file", function () {
+    it("should read server.dat file", async function () {
         const data = fs.readFileSync(`${this.assets}/servers.dat`);
-        const infos = Server.readInfo(data);
+        const infos = await Server.readInfo(data);
         assert.equal(infos[0].name, "nyaacat");
         assert.equal(infos[1].name, "himajin");
         assert.equal(infos[2].name, "mcJp");
         assert.equal(infos[3].name, "Minecraft Server");
     });
-    it("should write to nbt data right", () => {
-        const byte = Server.writeInfo([{
+    it("should write to nbt data right", async function () {
+        const byte = await Server.writeInfo([{
             name: "abc",
             host: "ip!",
         }]);
-        const readBack = Server.readInfo(byte);
+        const readBack = await Server.readInfo(byte);
         assert(readBack[0]);
         assert.equal(readBack[0].name, "abc");
         assert.equal(readBack[0].host, "ip!");

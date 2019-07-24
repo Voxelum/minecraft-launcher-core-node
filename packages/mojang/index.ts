@@ -1,5 +1,5 @@
 import { MojangAccount, MojangChallenge, MojangChallengeResponse } from "@xmcl/common";
-import { fetchJson } from "@xmcl/util";
+import { fetchJson } from "@xmcl/net";
 import { Response } from "got";
 
 export { MojangAccount, MojangChallenge, MojangChallengeResponse };

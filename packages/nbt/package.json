@@ -17,7 +17,7 @@
         "typescript": "^3.4.3"
     },
     "scripts": {
-        "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
+        "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000",
         "build": "tsc --build tsconfig.json"
     },
     "repository": {

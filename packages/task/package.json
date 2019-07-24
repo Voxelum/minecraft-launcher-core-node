@@ -12,7 +12,8 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "build": "tsc --build tsconfig.json",
+    "test": ""
   },
   "version": "0.0.1"
 }

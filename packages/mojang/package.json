@@ -17,13 +17,13 @@
         "typescript": "^3.4.3"
     },
     "dependencies": {
-        "@xmcl/util": "^0.0.1",
+        "@xmcl/net": "^0.0.1",
         "@xmcl/common": "^0.0.1",
         "long": "^3.2.0",
         "got": "^9.6.0"
     },
     "scripts": {
-        "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
+        "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000",
         "build": "tsc --build tsconfig.json"
     },
     "repository": {

@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as Long from "long";
-import { NBT } from "../packages/nbt";
+import { NBT } from "./index";
 
 describe("NBT", () => {
     let ser: NBT.Persistence.Serializer;
@@ -25,7 +25,7 @@ describe("NBT", () => {
     });
     it("should be able to serialize object", async () => {
         buf = await ser.serialize(src, "test");
-        assert(buf); ,
+        assert(buf);
     });
     it("should be able to deserialize buffer", async () => {
         deserialized = await ser.deserialize(buf).value;
@@ -44,7 +44,8 @@ describe("NBT", () => {
     it("should not serialize the error input", async () => {
         const input = { name: "ci010" };
         const inputType = { name: NBT.TagType.Byte };
-        const serializer = NBT.Persistence.create().register("test", inputType);
+        const serializer = NBT.Persistence.createSerializer().register("test", inputType);
+        assert.deepEqual((serializer as any).registry.test, inputType);
         try {
             serializer.serialize(input, "test", false);
         } catch (e) {
@@ -62,29 +63,33 @@ describe("NBT", () => {
         }
     });
     it("should ignore the additional field in serialization", async () => {
-        const input = { name: "ci010", age: 0 };
+        const unmatchedInput = { name: "ci010", age: 0 };
         const inputType = { name: NBT.TagType.String };
         const serializer = NBT.Persistence.createSerializer().register("test", inputType);
 
         const matchedInput = { name: "ci010" };
 
-        const matchedSer = await serializer.serialize(matchedInput, "test", false);
-        const matchedDirectSer = await serializer.serialize(matchedInput, "test", false);
+        const matched = await serializer.serialize(matchedInput, "test", false);
+        const matchedDirect = await NBT.Persistence.serialize({
+            ...matchedInput,
+            __nbtPrototype__: inputType,
+        }, false);
 
-        const testSerialized = await serializer.serialize(input, "test", false);
-        const directSer = await NBT.Persistence.serialize({
-            ...input,
+        const unmatched = await serializer.serialize(unmatchedInput, "test", false);
+        const unmatchedDirect = await NBT.Persistence.serialize({
+            ...unmatchedInput,
             __nbtPrototype__: inputType,
         });
 
-        assert.equal(0, matchedSer.compare(matchedDirectSer));
-        assert.equal(0, matchedSer.compare(testSerialized));
-        assert.equal(0, matchedSer.compare(directSer));
+        assert.equal(0, matched.compare(matchedDirect), "matched direct");
+        assert.equal(0, matched.compare(unmatched), "umatched");
+        assert.equal(0, matched.compare(unmatchedDirect), "unmatched direct");
 
-        const reversed = await serializer.deserialize(testSerialized);
-        const reversedDirect = await NBT.Persistence.deserialize(testSerialized);
-        assert.deepEqual(matchedInput, reversed.value);
-        assert.deepEqual(matchedInput, reversedDirect);
+        const reversed = await serializer.deserialize(unmatched);
+        const reversedDirect = await NBT.Persistence.deserialize(unmatched);
+
+        assert.deepEqual(matchedInput, reversed.value, "reversed");
+        assert.deepEqual(matchedInput, reversedDirect, "reversed direct");
     });
 
 

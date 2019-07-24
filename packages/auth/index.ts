@@ -177,3 +177,4 @@ export namespace Auth {
     }
 }
 
+export default Auth;

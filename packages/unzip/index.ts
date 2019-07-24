@@ -282,9 +282,6 @@ export declare namespace Unzip {
     class CachedZipFile extends ZipFile { }
     class LazyZipFile extends ZipFile { }
 }
-Unzip.ZipFile = AbstractZip as any;
-Unzip.LazyZipFile = LazyZip as any;
-Unzip.CachedZipFile = CachedZip as any;
 export namespace Unzip {
     export type OpenTarget = string | Buffer | number;
     export interface ZipFileOptions {
@@ -541,5 +538,9 @@ export namespace Unzip {
         return extractEntriesInternal(zipfile, dest, entries);
     }
 }
+
+Unzip.ZipFile = AbstractZip as any;
+Unzip.LazyZipFile = LazyZip as any;
+Unzip.CachedZipFile = CachedZip as any;
 
 export default Unzip;

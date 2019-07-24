@@ -101,3 +101,5 @@ export interface Version {
         },
     };
 }
+
+exports.Version = {};

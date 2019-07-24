@@ -19,11 +19,12 @@
         "@xmcl/installer": "^0.0.1",
         "@xmcl/version": "^0.0.1",
         "@xmcl/util": "^0.0.1",
+        "@xmcl/net": "^0.0.1",
         "@xmcl/task": "^0.0.1",
         "@xmcl/unzip": "^0.0.1"
     },
     "scripts": {
-        "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
+        "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000",
         "build": "tsc --build tsconfig.json"
     },
     "repository": {

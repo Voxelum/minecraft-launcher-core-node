@@ -1,7 +1,7 @@
 import { LevelDataFrame, RegionDataFrame, World } from "@xmcl/common";
 import { NBT } from "@xmcl/nbt";
 import Unzip from "@xmcl/unzip";
-import fileType from "file-type";
+import * as fileType from "file-type";
 import * as fs from "fs";
 import * as path from "path";
 import { inflateSync } from "zlib";

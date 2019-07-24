@@ -1,4 +1,4 @@
-import ByteBuffer from "bytebuffer";
+import * as ByteBuffer from "bytebuffer";
 import fileType = require("file-type");
 import * as Long from "long";
 import { Optional } from "typescript-optional";
@@ -39,6 +39,24 @@ export namespace NBT {
         export const Compound = 10 as const;
         export const IntArray = 11 as const;
         export const LongArray = 12 as const;
+
+        export function name(tagType: TagType) {
+            return [
+                "End",
+                "Byte",
+                "Short",
+                "Int",
+                "Long",
+                "Float",
+                "Double",
+                "ByteArray",
+                "String",
+                "List",
+                "Compound",
+                "IntArray",
+                "LongArray",
+            ][tagType];
+        }
     }
     export interface Tag<T extends TagType, V> {
         readonly type: T;
@@ -393,6 +411,7 @@ export namespace NBT {
                 },
                 write(buf, object = {}, context) {
                     for (const [key, value] of Object.entries(object)) {
+                        if (key === "___nbtPrototype___") { continue; }
                         const type = (context.type as CompoundSchema)[key];
                         let tagType: TagType;
                         let nextScope: Schema | undefined;
@@ -410,7 +429,7 @@ export namespace NBT {
                             tagType = TagType.Compound;
                             nextScope = type;
                         } else {
-                            return; // just ignore it if it's not on definition
+                            continue; // just ignore it if it's not on definition
                         }
 
                         const writer = handlers[tagType];
@@ -423,7 +442,7 @@ export namespace NBT {
                             if (e instanceof TypeError) {
                                 throw {
                                     type: "IllegalInputType",
-                                    message: `Require ${Object.keys(TagType)[13 + tagType]} but found ${typeof value}`,
+                                    message: `Require ${TagType.name(tagType)} but found ${typeof value}`,
                                 };
                             }
                         }

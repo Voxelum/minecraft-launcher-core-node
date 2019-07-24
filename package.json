@@ -10,7 +10,7 @@
   },
   "scripts": {
     "update": "rush update",
-    "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
+    "test": "npm run build && rush test",
     "build": "tslint -c tslint.json 'package/**/*.ts' && rush build"
   },
   "dependencies": {},

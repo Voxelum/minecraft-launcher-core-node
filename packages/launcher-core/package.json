@@ -9,7 +9,8 @@
         "typescript": "^3.4.3"
     },
     "scripts": {
-        "build": "tsc --build tsconfig.json"
+        "build": "tsc --build tsconfig.json",
+        "test": ""
     },
     "dependencies": {
         "@xmcl/auth": "^0.0.1",

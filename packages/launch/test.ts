@@ -1,11 +1,17 @@
+import Auth from "@xmcl/auth";
+import { MinecraftFolder } from "@xmcl/util";
+import Version from "@xmcl/version";
 import * as assert from "assert";
 import { ChildProcess, exec } from "child_process";
 import { EOL } from "os";
 import * as path from "path";
-import Auth from "../packages/auth";
-import Launcher from "../packages/launch";
-import { MinecraftFolder } from "../packages/util";
-import Version from "../packages/version";
+import Launcher from "./index";
+
+
+before(function() {
+    this.assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
+    this.gameDirectory = path.join(this.assets, "temp");
+});
 
 function getJavaVersion(javaPath: string) {
     return new Promise<number>((resolve, reject) => {
@@ -15,7 +21,6 @@ function getJavaVersion(javaPath: string) {
             } else {
                 if (err) {
                     const line = err.split(EOL)[0];
-                    console.log(line);
                     if (err.startsWith("java version")) {
                         const strNumber = line.split(" ")[2].split(".")[0];
                         resolve(Number.parseInt(strNumber.replace(/[^0-9]/g, ""), 10));

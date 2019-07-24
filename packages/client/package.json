@@ -20,11 +20,12 @@
         "bytebuffer": "^5.0.1",
         "@xmcl/nbt": "^0.0.1",
         "@xmcl/text-component": "^0.0.1",
+        "uuid": "^3.2.1",
         "@xmcl/common": "^0.0.1",
         "long": "^3.2.0"
     },
     "scripts": {
-        "test": "npm run build && node ./node_modules/mocha/bin/mocha dest/tests --timeout 10000",
+        "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000",
         "build": "tsc --build tsconfig.json"
     },
     "repository": {

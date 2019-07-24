@@ -120,12 +120,12 @@ modelPart_hat:true
         assert.equal(set.modelPart_hat, true, "model part");
     });
     it("should not parse illegal option", () => {
-        const set = GameSetting.parse("undefined:undefined\n");
+        const set = GameSetting.parse("undefined:undefined\n", true);
         assert(set);
         assert.equal((set as any).undefined, undefined);
     });
     it("should parse output even if input string is empty", () => {
-        const set = GameSetting.parse("");
+        const set = GameSetting.parse("", true);
         assert(set);
         assert.equal(set.ao, 2);
         assert.equal(set.fov, 0);
