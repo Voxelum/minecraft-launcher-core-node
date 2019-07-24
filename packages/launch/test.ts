@@ -8,7 +8,7 @@ import * as path from "path";
 import Launcher from "./index";
 
 
-before(function() {
+before(function () {
     this.assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
     this.gameDirectory = path.join(this.assets, "temp");
 });
@@ -116,6 +116,29 @@ describe("Launcher", () => {
     });
 
     describe("#generateArguments", function () {
+        it("should generate correct command for 1.7.10 with forge", async function () {
+            const javaPath = "/test/java";
+            const version = "1.7.10-Forge10.13.3.1400-1.7.10";
+            const gamePath = this.gameDirectory;
+            const auth = Auth.offline("tester");
+            const args = await Launcher.generateArguments({
+                version, gamePath, javaPath, auth,
+                launcherBrand: "launcherVersion",
+                launcherName: "launcherName",
+            });
+            assert.equal(args[0], javaPath);
+            assert(args.indexOf("net.minecraft.client.main.Main") !== -1);
+            assert.equal(args[args.indexOf("--username") + 1], auth.selectedProfile.name);
+            assert.equal(args[args.indexOf("--uuid") + 1], auth.selectedProfile.id.replace(/-/g, ""));
+            assert.equal(args[args.indexOf("--version") + 1], version);
+            assert.equal(args[args.indexOf("--gameDir") + 1], path.resolve(gamePath));
+            assert.equal(args[args.indexOf("--assetsDir") + 1], path.resolve(gamePath, "assets"));
+            const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
+            assert.equal(lversion, `-Dminecraft.launcher.version=launcherVersion`);
+            const lname = args.find((a) => a.startsWith("-Dminecraft.launcher.brand"));
+            assert.equal(lname, "-Dminecraft.launcher.brand=launcherName");
+        });
+
         it("should generate correct command", async function () {
             const javaPath = "/test/java";
             const version = "1.12.2";
@@ -183,6 +206,13 @@ describe("Launcher", () => {
                 }
             }
             console.log(javaPath, javaVersion);
+        });
+
+        describe("1.17.10", function () {
+            it("should launch with forge", async function () {
+                const option = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: this.gameDirectory, javaPath: "D:\\jvm\\bin\\java" };
+                await waitGameProcess(await Launcher.launch(option), "OpenAL initialized.");
+            }).timeout(100000);
         });
 
         describe("1.12.2", function () {
