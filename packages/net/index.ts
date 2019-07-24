@@ -1,9 +1,9 @@
 import Task from "@xmcl/task";
-import { createReadStream, createWriteStream, promises } from "fs";
+import { vfs } from "@xmcl/util";
 import * as gotDefault from "got";
+import { IncomingMessage } from "http";
 import { basename, resolve as pathResolve } from "path";
 import { fileURLToPath, parse } from "url";
-import { ensureFile, validate } from "./fs";
 
 const IS_ELECTRON = process.versions.hasOwnProperty("electron");
 
@@ -47,7 +47,7 @@ export interface DownloadOption {
     method?: string;
     headers?: { [key: string]: string };
     timeout?: number;
-    progress?: (written: number, total: number) => void;
+    progress?: (written: number, total: number) => boolean | void;
 }
 
 export interface DownloadToOption extends DownloadOption {
@@ -63,16 +63,21 @@ export interface DownloadAndCheckOption extends DownloadOption {
 
 export function openDownloadStream(option: DownloadOption) {
     const onProgress = option.progress || (() => { });
+    let response: IncomingMessage;
     return got.stream(option.url, {
         method: option.method,
         headers: option.headers,
         timeout: option.timeout,
         followRedirect: true,
         retry: option.retry,
+    }).on("response", (resp) => {
+        response = resp;
     }).on("error", () => {
         console.error(`Unable to download ${option.url}`);
     }).on("downloadProgress", (progress) => {
-        onProgress(progress.transferred, progress.total || -1);
+        if (onProgress(progress.transferred, progress.total || -1)) {
+            response.destroy();
+        }
     });
 }
 
@@ -87,26 +92,26 @@ export async function downloadBuffer(option: DownloadOption) {
 }
 
 export async function downloadFile(option: DownloadToOption) {
-    await ensureFile(option.destination);
+    await vfs.ensureFile(option.destination);
     const url = parse(option.url);
     if (url.protocol === "file:") {
         return new Promise<string>((resolve, reject) => {
-            createReadStream(fileURLToPath(option.url))
-                .pipe(createWriteStream(option.destination))
+            vfs.createReadStream(fileURLToPath(option.url))
+                .pipe(vfs.createWriteStream(option.destination))
                 .on("close", () => resolve(option.destination));
         });
     }
     return new Promise<string>((resolve, reject) => {
         openDownloadStream(option)
             .on("error", reject)
-            .pipe(createWriteStream(option.destination))
+            .pipe(vfs.createWriteStream(option.destination))
             .on("error", reject)
             .on("close", () => resolve(option.destination));
     });
 }
 
 export async function downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption) {
-    if (await validate(option.destination, option.checksum.hash, option.checksum.algorithm)) {
+    if (await vfs.validate(option.destination, option.checksum)) {
         return option.destination;
     }
     return downloadFile(option);
@@ -123,7 +128,7 @@ export const downloadFileWork = wrapToWork(downloadFile);
 export const downloadFileIfAbsentWork = wrapToWork(downloadFileIfAbsent);
 
 export async function downloadToFolder(option: DownloadToOption) {
-    const isDir = await promises.stat(option.destination).then((s) => s.isDirectory(), (_) => false);
+    const isDir = await vfs.stat(option.destination).then((s) => s.isDirectory(), (_) => false);
     if (!isDir) { throw new Error("Require destination is a directory!"); }
     const tempFilePath: string = pathResolve(option.destination, decodeURI(basename(option.url)));
     let realFilePath = tempFilePath;
@@ -132,12 +137,12 @@ export async function downloadToFolder(option: DownloadToOption) {
             .on("response", (resp) => {
                 realFilePath = pathResolve(option.destination, decodeURI(basename(resp.url as string)));
             })
-            .pipe(createWriteStream(tempFilePath))
+            .pipe(vfs.createWriteStream(tempFilePath))
             .on("close", () => resolve())
             .on("error", reject);
     });
     if (realFilePath !== tempFilePath) {
-        await promises.rename(tempFilePath, realFilePath);
+        await vfs.rename(tempFilePath, realFilePath);
     }
     return realFilePath;
 }

@@ -1,7 +1,54 @@
 import { createHash } from "crypto";
-import { constants, createReadStream, existsSync, promises } from "fs";
+import { constants, createReadStream, createWriteStream, promises } from "fs";
 import { arch as getArch, platform as getPlatform, release } from "os";
 import { dirname, resolve as presolve } from "path";
+
+export type VFS = typeof promises & {
+    createReadStream: typeof createReadStream;
+    createWriteStream: typeof createWriteStream;
+    ensureDir(target: string): Promise<void>;
+    ensureFile(target: string): Promise<void>;
+    remove(target: string): Promise<void>;
+    missing(target: string): Promise<boolean>;
+    exists(target: string): Promise<boolean>;
+
+    validate(target: string, ...validations: { algorithm: string, hash: string }[]): Promise<boolean>;
+};
+
+export const vfs: VFS = {
+    ...promises,
+    exists,
+    missing,
+    remove,
+    ensureDir,
+    ensureFile,
+    createReadStream,
+    createWriteStream,
+    validate(target, ...validations) {
+        return multiChecksum(target, validations.map(v => v.algorithm)).then(r => r.every((h, i) => h === validations[i].hash)).catch(() => false);
+    }
+};
+
+export namespace VFS {
+    export function setVirtualFS(nvfs: Partial<VFS>) {
+        for (const [key, value] of Object.entries(nvfs)) {
+            if (key in vfs && value !== undefined) {
+                Reflect.set(vfs, key, value);
+            }
+        }
+    }
+
+    export function restoreToDefault() {
+        Object.assign(vfs, {
+            ...promises,
+            exists,
+            missing,
+            remove,
+            ensureDir,
+            ensureFile,
+        });
+    }
+}
 
 export function exists(target: string) {
     return promises.access(target, constants.F_OK).then(() => true).catch(() => false);
@@ -74,13 +121,6 @@ export function multiChecksum(path: string, algorithms: string[]): Promise<strin
             .on("data", (chunk) => { hashes.forEach((h) => h.update(chunk)); })
             .on("error", (e) => { reject(new Error(e)); })
             .once("close", () => { resolve(hashes.map((h) => h.digest("hex"))); });
-    });
-}
-
-export function format(template: string, args: any) {
-    return template.replace(/\$\{(.*?)}/g, (key) => {
-        const value = args[key.substring(2).substring(0, key.length - 3)];
-        return value ? value : key;
     });
 }
 
