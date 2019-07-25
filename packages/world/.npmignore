@@ -1,4 +1,5 @@
-test.d.test
+test.d.ts
 test.js
 test.js.map
 test.ts
+*.log
