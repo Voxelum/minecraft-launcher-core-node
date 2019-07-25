@@ -11,7 +11,7 @@ export * from "@xmcl/launch";
 export * from "@xmcl/liteloader";
 export * from "@xmcl/mojang";
 export * from "@xmcl/nbt";
-export { ProfileService, GameProfile, Textures } from "@xmcl/profile-service";
+export { ProfileService, GameProfile } from "@xmcl/profile-service";
 export * from "@xmcl/resourcepack";
 export * from "@xmcl/task";
 export * from "@xmcl/text-component";
