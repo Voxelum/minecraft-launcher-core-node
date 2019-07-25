@@ -347,4 +347,6 @@ export namespace ForgeInstaller {
     }
 }
 
+export * from "./forgeweb";
+
 export default ForgeInstaller;

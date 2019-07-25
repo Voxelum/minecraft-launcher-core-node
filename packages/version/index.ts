@@ -106,6 +106,7 @@ export interface VersionDiagnosis {
 
 declare module "@xmcl/common/version" {
     namespace Version {
+        export type Resolved = ResolvedVersion;
         /**
          * Recursively parse the version JSON.
          *

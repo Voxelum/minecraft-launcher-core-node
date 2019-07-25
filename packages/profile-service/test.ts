@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import { ChildProcess, spawn } from "child_process";
 import * as path from "path";
-import { GameProfile, ProfileService, Textures } from "./index";
+import { GameProfile, ProfileService } from "./index";
 
 function sleep(time: number) {
     return new Promise<void>((resolve, reject) => {
@@ -93,7 +93,7 @@ describe("ProfileService", () => {
             // tslint:disable-next-line:max-line-length
             properties: { textures: "eyJ0aW1lc3RhbXAiOjE1NDEzODY0MzI2OTksInByb2ZpbGVJZCI6ImFiZjgxZmU5OWYwZDQ5NDhhOTA5NzcyMWE4MTk4YWM0IiwicHJvZmlsZU5hbWUiOiJDSTAxMCIsInNpZ25hdHVyZVJlcXVpcmVkIjp0cnVlLCJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGYwMzE0NzJmYjg3MjgyNjA4MjdjMTY2NzA2ZTJiYTI0YTBmYzlhMmRhNThlM2MyZDVlNWMzMDI0ZDQxNTNlZSJ9fX0=" },
         };
-        let texturesPromise: Promise<Textures>;
+        let texturesPromise: Promise<GameProfile.TexturesInfo>;
         before(() => {
             texturesPromise = ProfileService.getTextures(profile);
         });
@@ -106,9 +106,10 @@ describe("ProfileService", () => {
         }).timeout(10000);
         it("the texture in textures should be correct", async () => {
             const textures = (await texturesPromise).textures;
-            if (textures.skin) {
-                const skin = textures.skin;
+            if (textures.SKIN) {
+                const skin = textures.SKIN;
                 assert(typeof skin.url === "string");
+                assert(skin.url.startsWith("data:"));
                 if (skin.metadata) {
                     assert(typeof skin.metadata === "object");
                     assert(typeof skin.metadata.model === "string");
@@ -118,9 +119,6 @@ describe("ProfileService", () => {
                         assert(typeof key === "string");
                         assert(typeof skin.metadata[key] === "string");
                     }
-                }
-                if (skin.data) {
-                    assert(skin.data instanceof Buffer);
                 }
             }
         }).timeout(10000);

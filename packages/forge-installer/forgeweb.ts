@@ -88,7 +88,7 @@ export namespace ForgeWebPage {
         return page;
     }
 
-    export interface Version {
+    export interface Version extends Forge.VersionMeta {
         mcversion: string;
         version: string;
         date: string;

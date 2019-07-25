@@ -8,46 +8,9 @@ import * as url from "url";
 
 export { GameProfile } from "@xmcl/common";
 
-export interface Textures {
-    timestamp: number;
-    profileName: string;
-    profileId: string;
-    textures: {
-        skin?: Texture,
-        cape?: Texture,
-        elytra?: Texture,
-    };
-}
-/**
- * The data structure that hold the texture, it
- */
-export interface Texture {
-    url: string;
-    metadata?: { model?: "slim" | "steve", [key: string]: any };
-    data?: Buffer;
-}
-
-export namespace Texture {
-    export function isSlim(texture: Texture) {
-        return texture.metadata ? texture.metadata.model === "slim" : false;
-    }
-
-    export function getModelType(texture: Texture) {
-        return isSlim(texture) ? "slim" : "steve";
-    }
-}
-
-export function parseTexturesInfo(profile: GameProfile): Textures | undefined {
+function parseTexturesInfo(profile: GameProfile): GameProfile.TexturesInfo | undefined {
     if (!profile.properties || !profile.properties.textures) { return undefined; }
-    const obj = JSON.parse(Buffer.from(profile.properties.textures, "base64").toString());
-    obj.textures.skin = obj.textures.SKIN;
-    if (obj.textures.CAPE) { obj.textures.cape = obj.textures.CAPE; }
-    if (obj.textures.ELYTRA) { obj.textures.elytra = obj.textures.ELYTRA; }
-    delete obj.textures.SKIN;
-    delete obj.textures.CAPE;
-    delete obj.textures.ELYTRA;
-
-    return obj;
+    return JSON.parse(Buffer.from(profile.properties.textures, "base64").toString());
 }
 
 export namespace ProfileService {
@@ -122,24 +85,25 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         }
     }
 
-    export async function cacheTextures(tex: Textures) {
+    export async function cacheTextures(tex: GameProfile.TexturesInfo) {
         if (!tex) { return Promise.reject("No textures"); }
 
-        async function cache(texture: Texture): Promise<Texture> {
-            if (texture.data) { return texture; }
-            return {
-                ...texture,
-                data: await fetchBuffer(texture.url).then((resp) => resp.body),
-            };
+        async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
+            if (new URL(texture.url).protocol === "data;") { return texture; }
+            texture.url = await fetchBuffer(texture.url)
+                .then((resp) => resp.body)
+                .then((b) => b.toString("base64"))
+                .then((s) => `data:image/png;base64,${s}`);
+            return texture;
         }
-        if (tex.textures.skin) {
-            tex.textures.skin = await cache(tex.textures.skin);
+        if (tex.textures.SKIN) {
+            tex.textures.SKIN = await cache(tex.textures.SKIN);
         }
-        if (tex.textures.cape) {
-            tex.textures.cape = await cache(tex.textures.cape);
+        if (tex.textures.CAPE) {
+            tex.textures.CAPE = await cache(tex.textures.CAPE);
         }
-        if (tex.textures.elytra) {
-            tex.textures.elytra = await cache(tex.textures.elytra);
+        if (tex.textures.ELYTRA) {
+            tex.textures.ELYTRA = await cache(tex.textures.ELYTRA);
         }
         return tex;
     }
@@ -149,7 +113,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
      *
      * @param profile
      */
-    export async function getTextures(profile: GameProfile): Promise<Textures> {
+    export async function getTextures(profile: GameProfile): Promise<GameProfile.TexturesInfo> {
         const texture = parseTexturesInfo(profile);
         if (texture) { return cacheTextures(texture); }
         return Promise.reject(`No texture for user ${profile.id}.`);
@@ -202,7 +166,8 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         accessToken: string,
         uuid: string,
         type: "skin" | "cape" | "elytra",
-        texture?: Texture,
+        texture?: GameProfile.Texture,
+        data?: Buffer,
     }, api: API = API_MOJANG): Promise<void> {
         const textUrl = url.parse(API.getTextureUrl(api, option.uuid, option.type));
         const headers: any = { Authorization: `Bearer: ${option.accessToken}` };
@@ -227,7 +192,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
                 host: textUrl.host,
                 headers,
             });
-        } else if (option.texture.data) {
+        } else if (option.data) {
             let status = 0;
             const boundary = `----------------------${crypto.randomBytes(8).toString("hex")}`;
             let buff: ByteBuffer = new ByteBuffer();
@@ -266,7 +231,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
             }
             diposition("name", "file");
             header("Content-Type", "image/png");
-            content(option.texture.data);
+            content(option.data);
             finish();
             buff.flip();
             const out = Buffer.from(buff.toArrayBuffer());
