@@ -4,6 +4,9 @@
     "engines": {
         "node": ">=10.0"
     },
+    "publishConfig": {
+        "access": "public"
+    },
     "devDependencies": {
         "tslint": "^5.14.0",
         "typescript": "^3.4.3"
