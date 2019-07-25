@@ -584,7 +584,7 @@ function parseVersionJson(versionString: string, root: string): PartialResolvedV
             "${classpath}",
         ],
     };
-    args.jvm = processArguments(args.jvm);
+    args.jvm = processArguments(args.jvm || []);
     return { ...parsed, libraries, arguments: args, minecraftDirectory: root };
 }
 
