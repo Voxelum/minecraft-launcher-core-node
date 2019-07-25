@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "main": "./index.js",
     "types": "./index.d.ts",
-    "description": "Forge installer",
+    "description": "Forge mod parser",
     "engines": {
         "node": ">=10.0"
     },

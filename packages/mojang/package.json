@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "main": "./index.js",
     "types": "./index.d.ts",
-    "description": "Minecraft installer",
+    "description": "Minecraft Mojang Service",
     "engines": {
         "node": ">=10.0"
     },
