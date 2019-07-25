@@ -47,7 +47,7 @@ describe("NBT", () => {
         const serializer = NBT.Persistence.createSerializer().register("test", inputType);
         assert.deepEqual((serializer as any).registry.test, inputType);
         try {
-            serializer.serialize(input, "test", false);
+            await serializer.serialize(input, "test", false);
         } catch (e) {
             assert.equal(e.type, "IllegalInputType");
             assert.equal(e.message, "Require Byte but found string");
