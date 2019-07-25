@@ -1,0 +1,41 @@
+server:
+  port: 25566
+yggdrasil:
+  database:
+    users:
+    - email: test1@to2mbn.org
+      password: 111111
+    - email: test2@to2mbn.org
+      password: 222222
+      characters:
+      - name: character1
+        uuid: 00000000-0000-0000-0000-000000000000
+        model: steve
+        textures-locations:
+          skin: classpath:textures/eromanga/masamune_lzumi.png
+          cape: "https://textures.minecraft.net/texture/5786fe99be377dfb6858859f926c4dbc995751e91cee373468c5fbf4865e7151" # Mojang cape
+    - email: test3@to2mbn.org
+      password: 333333
+      characters:
+      - name: character2
+        model: alex
+        textures-locations:
+          skin: classpath:textures/eromanga/elf_yamada.png
+      - name: character3
+        model: steve
+        textures-locations:
+          cape: "https://textures.minecraft.net/texture/5786fe99be377dfb6858859f926c4dbc995751e91cee373468c5fbf4865e7151" # Mojang cape
+  token:
+    time-to-fully-expired: 20m
+    enable-time-to-partially-expired: true
+    time-to-partially-expired: 10m
+    only-last-session-available: false
+  core:
+    server-name: yggdrasil-mock-server
+    url: http://localhost:25566/
+    skin-domains:
+    - localhost
+  rate-limit:
+    limit-duration: 1ms
+  session:
+    auth-expire-time: 15s
