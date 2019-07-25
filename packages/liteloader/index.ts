@@ -176,7 +176,7 @@ export namespace LiteLoader {
         return installTask(versionMeta, location, version).execute();
     }
 
-    export function installTask(versionMeta: VersionMeta, location: MinecraftLocation, version?: string): Task<void> {
+    export function installTask(versionMeta: VersionMeta, location: MinecraftLocation, version?: string, check?: boolean): Task<void> {
         return Task.create("installLiteloader", async (context) => {
             const mc: MinecraftFolder = typeof location === "string" ? new MinecraftFolder(location) : location;
             const mountVersion = version || versionMeta.mcversion;
@@ -186,38 +186,7 @@ export namespace LiteLoader {
                 return;
             }
             const mountedJSON: any = await context.execute("resolveMinecraftVersionJson", async () => {
-                if (!vfs.exists(mountVersion)) {
-                    throw { type: "MissingVersionJson", version: mountVersion, location: mc.root };
-                }
-                return vfs.readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
-            });
-
-            await context.execute("generateLiteloaderJson", async () => {
-                const versionInf = buildVersionInfo(versionMeta, mountedJSON);
-                const versionPath = mc.getVersionRoot(versionInf.id);
-
-                await vfs.ensureDir(versionPath);
-                await vfs.writeFile(path.join(versionPath, versionInf.id + ".json"), JSON.stringify(versionInf, undefined, 4));
-            });
-        });
-    }
-
-    export function installAndCheck(versionMeta: VersionMeta, location: MinecraftLocation, version?: string) {
-        return installAndCheckTask(versionMeta, location, version).execute();
-    }
-
-    export function installAndCheckTask(versionMeta: VersionMeta, location: MinecraftLocation, version?: string): Task<void> {
-        return Task.create("installLiteloader", async (context) => {
-            const mc: MinecraftFolder = typeof location === "string" ? new MinecraftFolder(location) : location;
-            const mountVersion = version || versionMeta.mcversion;
-            const id = `${mountVersion}-Liteloader${versionMeta.mcversion}-${versionMeta.version}`;
-
-            if (await vfs.validate(mc.getVersionJson(id), { algorithm: "md5", hash: versionMeta.md5 })) {
-                return;
-            }
-
-            const mountedJSON: any = await context.execute("resolveMinecraftVersionJson", async () => {
-                if (! await vfs.exists(mc.getVersionJson(mountVersion))) {
+                if (await vfs.missing(mc.getVersionJson(mountVersion))) {
                     throw { type: "MissingVersionJson", version: mountVersion, location: mc.root };
                 }
                 return vfs.readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
@@ -229,15 +198,20 @@ export namespace LiteLoader {
 
                 await vfs.ensureDir(versionPath);
                 await vfs.writeFile(path.join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
-
                 return inf;
             });
 
-            await context.execute("checkDependency", async (ctx) => {
-                const resolved = await Version.parse(mc, versionInf.id);
-                await Installer.installDependenciesTask(resolved).work(ctx);
-            });
+            if (check) {
+                await context.execute("installDependencies", async (ctx) => {
+                    const resolved = await Version.parse(mc, versionInf.id);
+                    await Installer.installDependenciesTask(resolved).work(ctx);
+                });
+            }
         });
+    }
+
+    export function installAndCheck(versionMeta: VersionMeta, location: MinecraftLocation, version?: string) {
+        return installTask(versionMeta, location, version, true).execute();
     }
 }
 
