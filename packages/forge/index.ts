@@ -1,5 +1,5 @@
 import Unzip from "@xmcl/unzip";
-import { AnnotationVisitor, ClassReader, ClassVisitor, Opcodes } from "java-asm";
+import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from "java-asm";
 
 export namespace Forge {
     class AVisitor extends AnnotationVisitor {
@@ -8,19 +8,43 @@ export namespace Forge {
             this.map[s] = o;
         }
     }
+    class MVisitor extends MethodVisitor {
+        constructor(private parent: KVisitor, api: number) {
+            super(api);
+        }
+        visitInsn(opcode: number): void {
+            console.log(opcode);
+        }
+        visitFieldInsn(opcode: number, owner: string, name: string, desc: string) {
+            console.log(opcode, name);
+        }
+    }
+
     class KVisitor extends ClassVisitor {
-        public fields: any = {};
-        private className: string = "";
+        public fields: { [name: string]: any } = {};
+        public className: string = "";
+        public isDummyModContainer: boolean = false;
+
+        public commonFields: any = {};
         public constructor(readonly map: { [key: string]: any }) {
             super(Opcodes.ASM5);
         }
         visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
             this.className = name;
-        }
-        public visitField(access: number, name: string, desc: string, signature: string, value: any) {
-            if (this.className === "Config") {
-                this.fields[name] = value;
+            if (superName === "net/minecraftforge/fml/common/DummyModContainer") {
+                this.isDummyModContainer = true;
             }
+        }
+
+        public visitMethod(access: number, name: string, desc: string, signature: string, exceptions: string[]) {
+            if (this.isDummyModContainer && name === "<init>") {
+                return new MVisitor(this, Opcodes.ASM5);
+            }
+            return null;
+        }
+
+        public visitField(access: number, name: string, desc: string, signature: string, value: any) {
+            this.fields[name] = value;
             return null;
         }
 
@@ -219,13 +243,13 @@ export namespace Forge {
         readonly isServerOnly?: boolean;
     }
 
-    async function asmMetaData(zip: Unzip.CachedZipFile, entry: Unzip.Entry, modidTree: any) {
+    async function asmMetaData(zip: Unzip.CachedZipFile, entry: Unzip.Entry, modidTree: any, guessing: any) {
         const data = await zip.readEntry(entry);
         const metaContainer: any = {};
         const visitor = new KVisitor(metaContainer);
         new ClassReader(data).accept(visitor);
         if (Object.keys(metaContainer).length === 0) {
-            if (visitor.fields && visitor.fields.OF_NAME) {
+            if (visitor.className === "Config" && visitor.fields && visitor.fields.OF_NAME) {
                 metaContainer.modid = visitor.fields.OF_NAME;
                 metaContainer.name = visitor.fields.OF_NAME;
                 metaContainer.mcversion = visitor.fields.MC_VERSION;
@@ -234,6 +258,22 @@ export namespace Forge {
                 metaContainer.authorList = ["sp614x"];
                 metaContainer.url = "https://optifine.net";
                 metaContainer.isClientOnly = true;
+            }
+        }
+        for (const [k, v] of Object.entries(visitor.fields)) {
+            switch (k) {
+                case "MODID":
+                case "MOD_ID":
+                    guessing.modid = v;
+                    break;
+                case "MODNAME":
+                case "MOD_NAME":
+                    guessing.name = v;
+                    break;
+                case "VERSION":
+                case "MOD_VERSION":
+                    guessing.name = v;
+                    break;
             }
         }
         const modid = metaContainer.modid;
@@ -274,9 +314,8 @@ export namespace Forge {
      * Read metadata of the input mod.
      *
      * @param mod The mod path or data
-     * @param asmOnly True for only reading the metadata from java bytecode, ignoring the mcmod.info
      */
-    export async function readModMetaData(mod: Buffer | string | Unzip.CachedZipFile, asmOnly: boolean = false) {
+    export async function readModMetaData(mod: Buffer | string | Unzip.CachedZipFile) {
         const zip = await regulize(mod);
         const modidTree: any = {};
         const promise: Array<Promise<void>> = [];
@@ -284,8 +323,9 @@ export namespace Forge {
         if (inf) {
             promise.push(jsonMetaData(zip, inf, modidTree));
         }
+        const guessing: any = {}; // placeholder for guessing data, try handle the forge core mod
         promise.push(...zip.filterEntries((e) => e.fileName.endsWith(".class"))
-            .map((e) => asmMetaData(zip, e, modidTree)));
+            .map((e) => asmMetaData(zip, e, modidTree, guessing)));
         await Promise.all(promise);
         const modids = Object.keys(modidTree);
         if (modids.length === 0) { throw { type: "NonmodTypeFile" }; }
@@ -293,8 +333,8 @@ export namespace Forge {
             .filter((m) => m.modid !== undefined);
     }
 
-    export async function meta(mod: Buffer | string | Unzip.CachedZipFile, asmOnly: boolean = false) {
-        return readModMetaData(mod, asmOnly);
+    export async function meta(mod: Buffer | string | Unzip.CachedZipFile) {
+        return readModMetaData(mod);
     }
 
     export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
