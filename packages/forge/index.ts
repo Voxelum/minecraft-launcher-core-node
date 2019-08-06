@@ -1,32 +1,45 @@
 import Unzip from "@xmcl/unzip";
 import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from "java-asm";
+import { EOL } from "os";
 
 export namespace Forge {
-    class AVisitor extends AnnotationVisitor {
+    class ModAnnotationVisitor extends AnnotationVisitor {
         constructor(readonly map: { [key: string]: any }) { super(Opcodes.ASM5); }
         public visit(s: string, o: any) {
             this.map[s] = o;
         }
     }
-    class MVisitor extends MethodVisitor {
-        constructor(private parent: KVisitor, api: number) {
+    class DummyModConstructorVisitor extends MethodVisitor {
+        private stack: any[] = [];
+        constructor(private parent: ModClassVisitor, api: number) {
             super(api);
         }
-        visitInsn(opcode: number): void {
-            console.log(opcode);
+        visitLdcInsn(value: any) {
+            this.stack.push(value);
         }
         visitFieldInsn(opcode: number, owner: string, name: string, desc: string) {
-            console.log(opcode, name);
+            if (opcode === Opcodes.PUTFIELD) {
+                const last = this.stack.pop();
+                if (last) {
+                    if (name.endsWith(".modid")) {
+                        this.parent.guess.modid = last;
+                    } else if (name.endsWith(".version")) {
+                        this.parent.guess.version = last;
+                    } else if (name.endsWith(".name")) {
+                        this.parent.guess.name = last;
+                    }
+                }
+            }
         }
     }
 
-    class KVisitor extends ClassVisitor {
+    class ModClassVisitor extends ClassVisitor {
         public fields: { [name: string]: any } = {};
         public className: string = "";
         public isDummyModContainer: boolean = false;
 
         public commonFields: any = {};
-        public constructor(readonly map: { [key: string]: any }) {
+        public constructor(readonly map: { [key: string]: any }, public guess: any) {
             super(Opcodes.ASM5);
         }
         visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
@@ -38,7 +51,7 @@ export namespace Forge {
 
         public visitMethod(access: number, name: string, desc: string, signature: string, exceptions: string[]) {
             if (this.isDummyModContainer && name === "<init>") {
-                return new MVisitor(this, Opcodes.ASM5);
+                return new DummyModConstructorVisitor(this, Opcodes.ASM5);
             }
             return null;
         }
@@ -49,7 +62,7 @@ export namespace Forge {
         }
 
         public visitAnnotation(desc: string, visible: boolean): AnnotationVisitor | null {
-            if (desc === "Lnet/minecraftforge/fml/common/Mod;" || desc === "Lcpw/mods/fml/common/Mod;") { return new AVisitor(this.map); }
+            if (desc === "Lnet/minecraftforge/fml/common/Mod;" || desc === "Lcpw/mods/fml/common/Mod;") { return new ModAnnotationVisitor(this.map); }
             return null;
         }
     }
@@ -243,52 +256,106 @@ export namespace Forge {
         readonly isServerOnly?: boolean;
     }
 
-    async function asmMetaData(zip: Unzip.CachedZipFile, entry: Unzip.Entry, modidTree: any, guessing: any) {
+    async function tweakMetadata(zip: Unzip.CachedZipFile, modidTree: any) {
+        const entry = zip.entries["META-INF/MANIFEST.MF"];
+        if (!entry) { return; }
         const data = await zip.readEntry(entry);
-        const metaContainer: any = {};
-        const visitor = new KVisitor(metaContainer);
-        new ClassReader(data).accept(visitor);
-        if (Object.keys(metaContainer).length === 0) {
-            if (visitor.className === "Config" && visitor.fields && visitor.fields.OF_NAME) {
-                metaContainer.modid = visitor.fields.OF_NAME;
-                metaContainer.name = visitor.fields.OF_NAME;
-                metaContainer.mcversion = visitor.fields.MC_VERSION;
-                metaContainer.version = `${visitor.fields.OF_EDITION}_${visitor.fields.OF_RELEASE}`;
-                metaContainer.description = "OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.";
-                metaContainer.authorList = ["sp614x"];
-                metaContainer.url = "https://optifine.net";
-                metaContainer.isClientOnly = true;
+        const manifest = data.toString().split(EOL).map((l) => l.split(":").map((s) => s.trim()))
+            .reduce((a, b) => ({ ...a, [b[0]]: b[1] }), {}) as any;
+        if (manifest.TweakMetaFile) {
+            const file = manifest.TweakMetaFile;
+            const metadata = {
+                modid: manifest.TweakName,
+                name: manifest.TweakName,
+                authors: [manifest.TweakAuthor],
+                version: manifest.TweakVersion,
+                description: "",
+                url: "",
+            };
+            const metaFileEntry = zip.entries[`META-INF/${file}`];
+            if (metaFileEntry) {
+                const metadataContent = await zip.readEntry(metaFileEntry).then((s) => s.toString()).then(JSON.parse);
+                if (metadataContent.id) {
+                    metadata.modid = metadataContent.id;
+                }
+                if (metadataContent.name) {
+                    metadata.name = metadataContent.name;
+                }
+                if (metadataContent.version) {
+                    metadata.version = metadataContent.version;
+                }
+                if (metadataContent.authors) {
+                    metadata.authors = metadataContent.authors;
+                }
+                if (metadataContent.description) {
+                    metadata.description = metadataContent.description;
+                }
+                if (metadataContent.url) {
+                    metadata.url = metadataContent.url;
+                }
             }
-        }
-        for (const [k, v] of Object.entries(visitor.fields)) {
-            switch (k) {
-                case "MODID":
-                case "MOD_ID":
-                    guessing.modid = v;
-                    break;
-                case "MODNAME":
-                case "MOD_NAME":
-                    guessing.name = v;
-                    break;
-                case "VERSION":
-                case "MOD_VERSION":
-                    guessing.name = v;
-                    break;
+            if (metadata.modid) {
+                modidTree[metadata.modid] = metadata;
             }
-        }
-        const modid = metaContainer.modid;
-        let modMeta = modidTree[modid];
-        if (!modMeta) {
-            modMeta = {};
-            modidTree[modid] = modMeta;
-        }
-
-        for (const propKey in metaContainer) {
-            modMeta[propKey] = metaContainer[propKey];
         }
     }
 
-    async function jsonMetaData(zip: Unzip.CachedZipFile, entry: Unzip.Entry, modidTree: any) {
+
+    async function asmMetaData(zip: Unzip.CachedZipFile, modidTree: any) {
+        const guessing: any = {};
+        await Promise.all(zip.filterEntries((e) => e.fileName.endsWith(".class"))
+            .map(async (entry) => {
+                const data = await zip.readEntry(entry);
+                const metaContainer: any = {};
+                const visitor = new ModClassVisitor(metaContainer, guessing);
+                new ClassReader(data).accept(visitor);
+                if (Object.keys(metaContainer).length === 0) {
+                    if (visitor.className === "Config" && visitor.fields && visitor.fields.OF_NAME) {
+                        metaContainer.modid = visitor.fields.OF_NAME;
+                        metaContainer.name = visitor.fields.OF_NAME;
+                        metaContainer.mcversion = visitor.fields.MC_VERSION;
+                        metaContainer.version = `${visitor.fields.OF_EDITION}_${visitor.fields.OF_RELEASE}`;
+                        metaContainer.description = "OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.";
+                        metaContainer.authorList = ["sp614x"];
+                        metaContainer.url = "https://optifine.net";
+                        metaContainer.isClientOnly = true;
+                    }
+                }
+                for (const [k, v] of Object.entries(visitor.fields)) {
+                    switch (k) {
+                        case "MODID":
+                        case "MOD_ID":
+                            guessing.modid = guessing.modid || v;
+                            break;
+                        case "MODNAME":
+                        case "MOD_NAME":
+                            guessing.name = guessing.name || v;
+                            break;
+                        case "VERSION":
+                        case "MOD_VERSION":
+                            guessing.version = guessing.version || v;
+                            break;
+                    }
+                }
+                const modid = metaContainer.modid;
+                let modMeta = modidTree[modid];
+                if (!modMeta) {
+                    modMeta = {};
+                    modidTree[modid] = modMeta;
+                }
+
+                for (const propKey in metaContainer) {
+                    modMeta[propKey] = metaContainer[propKey];
+                }
+            }));
+        if (guessing.modid && !modidTree[guessing.modid]) {
+            modidTree[guessing.modid] = guessing;
+        }
+    }
+
+    async function jsonMetaData(zip: Unzip.CachedZipFile, modidTree: any) {
+        const entry = zip.entries["mcmod.info"];
+        if (!entry) { return; }
         try {
             const json = JSON.parse(await zip.readEntry(entry).then((b) => b.toString("utf-8")));
             if (json instanceof Array) {
@@ -319,13 +386,9 @@ export namespace Forge {
         const zip = await regulize(mod);
         const modidTree: any = {};
         const promise: Array<Promise<void>> = [];
-        const inf = zip.entries["mcmod.info"];
-        if (inf) {
-            promise.push(jsonMetaData(zip, inf, modidTree));
-        }
-        const guessing: any = {}; // placeholder for guessing data, try handle the forge core mod
-        promise.push(...zip.filterEntries((e) => e.fileName.endsWith(".class"))
-            .map((e) => asmMetaData(zip, e, modidTree, guessing)));
+        promise.push(jsonMetaData(zip, modidTree));
+        promise.push(tweakMetadata(zip, modidTree));
+        promise.push(asmMetaData(zip, modidTree));
         await Promise.all(promise);
         const modids = Object.keys(modidTree);
         if (modids.length === 0) { throw { type: "NonmodTypeFile" }; }
