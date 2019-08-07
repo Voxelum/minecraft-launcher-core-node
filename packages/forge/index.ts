@@ -21,12 +21,18 @@ export namespace Forge {
             if (opcode === Opcodes.PUTFIELD) {
                 const last = this.stack.pop();
                 if (last) {
-                    if (name.endsWith(".modid")) {
+                    if (name === "modId") {
                         this.parent.guess.modid = last;
-                    } else if (name.endsWith(".version")) {
+                    } else if (name === "version") {
                         this.parent.guess.version = last;
-                    } else if (name.endsWith(".name")) {
+                    } else if (name === "name") {
                         this.parent.guess.name = last;
+                    } else if (name === "url") {
+                        this.parent.guess.url = last;
+                    } else if (name === "parent") {
+                        this.parent.guess.parent = last;
+                    } else if (name === "mcversion") {
+                        this.parent.guess.mcversion = last;
                     }
                 }
             }
@@ -37,13 +43,15 @@ export namespace Forge {
         public fields: { [name: string]: any } = {};
         public className: string = "";
         public isDummyModContainer: boolean = false;
+        public isPluginClass: boolean = false;
 
         public commonFields: any = {};
-        public constructor(readonly map: { [key: string]: any }, public guess: any) {
+        public constructor(readonly map: { [key: string]: any }, public guess: any, readonly corePlugin?: string) {
             super(Opcodes.ASM5);
         }
         visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
             this.className = name;
+            this.isPluginClass = name === this.corePlugin;
             if (superName === "net/minecraftforge/fml/common/DummyModContainer") {
                 this.isDummyModContainer = true;
             }
@@ -298,16 +306,26 @@ export namespace Forge {
                 modidTree[metadata.modid] = metadata;
             }
         }
+        return manifest;
     }
 
 
-    async function asmMetaData(zip: Unzip.CachedZipFile, modidTree: any) {
+    async function asmMetaData(zip: Unzip.CachedZipFile, modidTree: any, manifest?: any) {
+        let corePluginClass: string | undefined;
+        if (manifest) {
+            if (typeof manifest.FMLCorePlugin === "string") {
+                const pluginEntry = zip.entries[manifest.FMLCorePlugin.replace(/\./g, "/")];
+                if (pluginEntry) {
+                    corePluginClass = pluginEntry.fileName;
+                }
+            }
+        }
         const guessing: any = {};
         await Promise.all(zip.filterEntries((e) => e.fileName.endsWith(".class"))
             .map(async (entry) => {
                 const data = await zip.readEntry(entry);
                 const metaContainer: any = {};
-                const visitor = new ModClassVisitor(metaContainer, guessing);
+                const visitor = new ModClassVisitor(metaContainer, guessing, corePluginClass);
                 new ClassReader(data).accept(visitor);
                 if (Object.keys(metaContainer).length === 0) {
                     if (visitor.className === "Config" && visitor.fields && visitor.fields.OF_NAME) {
@@ -322,7 +340,7 @@ export namespace Forge {
                     }
                 }
                 for (const [k, v] of Object.entries(visitor.fields)) {
-                    switch (k) {
+                    switch (k.toUpperCase()) {
                         case "MODID":
                         case "MOD_ID":
                             guessing.modid = guessing.modid || v;
@@ -334,6 +352,9 @@ export namespace Forge {
                         case "VERSION":
                         case "MOD_VERSION":
                             guessing.version = guessing.version || v;
+                            break;
+                        case "MCVERSION":
+                            guessing.mcversion = guessing.mcversion || v;
                             break;
                     }
                 }
@@ -354,10 +375,7 @@ export namespace Forge {
     }
 
     async function jsonMetaData(zip: Unzip.CachedZipFile, modidTree: any) {
-        const entry = zip.entries["mcmod.info"];
-        if (!entry) { return; }
-        try {
-            const json = JSON.parse(await zip.readEntry(entry).then((b) => b.toString("utf-8")));
+        function readJsonMetadata(json: any) {
             if (json instanceof Array) {
                 for (const m of json) { modidTree[m.modid] = m; }
             } else if (json.modList instanceof Array) {
@@ -365,7 +383,20 @@ export namespace Forge {
             } else if (json.modid) {
                 modidTree[json.modid] = json;
             }
-        } catch (e) { }
+        }
+        const entry = zip.entries["mcmod.info"];
+        if (entry) {
+            try {
+                const json = JSON.parse(await zip.readEntry(entry).then((b) => b.toString("utf-8")));
+                readJsonMetadata(json);
+            } catch (e) { }
+        } else {
+            try {
+                const jsons = await Promise.all(zip.filterEntries((e) => e.fileName.endsWith(".info"))
+                    .map((e) => zip.readEntry(e).then((b) => b.toString()).then(JSON.parse)));
+                jsons.forEach(readJsonMetadata);
+            } catch (e) { }
+        }
     }
 
     async function regulize(mod: Buffer | string | Unzip.CachedZipFile) {
