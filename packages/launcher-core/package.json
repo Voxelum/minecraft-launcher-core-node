@@ -21,7 +21,7 @@
         "@xmcl/client": "^0.0.1",
         "@xmcl/common": "^0.0.1",
         "@xmcl/fabric": "^0.0.1",
-        "@xmcl/forge": "^0.0.1",
+        "@xmcl/forge": "^0.0.2",
         "@xmcl/forge-installer": "^0.0.1",
         "@xmcl/gamesetting": "^0.0.1",
         "@xmcl/installer": "^0.0.1",
