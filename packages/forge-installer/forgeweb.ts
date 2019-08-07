@@ -1,6 +1,6 @@
 import { getIfUpdate, UpdatedObject } from "@xmcl/net";
 import * as parser from "fast-html-parser";
-import Forge from "./index";
+import { ForgeInstaller } from "./index";
 
 export namespace ForgeWebPage {
 
@@ -88,7 +88,7 @@ export namespace ForgeWebPage {
         return page;
     }
 
-    export interface Version extends Forge.VersionMeta {
+    export interface Version extends ForgeInstaller.VersionMeta {
         mcversion: string;
         version: string;
         date: string;
@@ -100,7 +100,7 @@ export namespace ForgeWebPage {
     }
 
     export namespace Version {
-        export function to(webPageVersion: ForgeWebPage.Version): Forge.VersionMeta {
+        export function to(webPageVersion: ForgeWebPage.Version): ForgeInstaller.VersionMeta {
             return {
                 universal: webPageVersion.universal,
                 installer: webPageVersion.installer,
@@ -113,12 +113,12 @@ export namespace ForgeWebPage {
 
 declare module "./index" {
     export namespace VersionMeta {
-        export function from(webPageVersion: ForgeWebPage.Version): Forge.VersionMeta;
+        export function from(webPageVersion: ForgeWebPage.Version): ForgeInstaller.VersionMeta;
     }
 }
 
-(Forge as any).VersionMeta = (Forge as any).VersionMeta || {};
-(Forge as any).VersionMeta.from = ForgeWebPage.Version.to;
+(ForgeInstaller as any).VersionMeta = (ForgeInstaller as any).VersionMeta || {};
+(ForgeInstaller as any).VersionMeta.from = ForgeWebPage.Version.to;
 
 export interface ForgeWebPage extends UpdatedObject {
     versions: ForgeWebPage.Version[];
