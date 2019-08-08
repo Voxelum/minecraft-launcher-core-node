@@ -12,7 +12,7 @@ export type VFS = typeof promises & {
     remove(target: string): Promise<void>;
     missing(target: string): Promise<boolean>;
     exists(target: string): Promise<boolean>;
-    copy(src: string, dest: string, filter: (name: string) => boolean): Promise<void>;
+    copy(src: string, dest: string, filter?: (name: string) => boolean): Promise<void>;
     waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
     validate(target: string, ...validations: { algorithm: string, hash: string }[]): Promise<boolean>;
 };
