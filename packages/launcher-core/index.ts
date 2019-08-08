@@ -16,8 +16,11 @@ export * from "@xmcl/resourcepack";
 export * from "@xmcl/task";
 export * from "@xmcl/text-component";
 
-import Util from "@xmcl/util";
+import * as Net from "@xmcl/net";
+const got = Net.got;
+
+import Util, { MinecraftFolder, MinecraftLocation } from "@xmcl/util";
 
 export * from "@xmcl/version";
 export { World } from "@xmcl/world";
-export { Util };
+export { Util, MinecraftFolder, MinecraftLocation, Net, got };

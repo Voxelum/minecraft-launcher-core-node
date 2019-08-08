@@ -1,51 +1,51 @@
 {
-    "name": "@xmcl/liteloader",
-    "version": "0.0.1",
-    "main": "./index.js",
-    "types": "./index.d.ts",
-    "description": "Liteloader parser & installer",
-    "engines": {
-        "node": ">=10.0"
-    },
-    "publishConfig": {
-        "access": "public"
-    },
-    "devDependencies": {
-        "@types/mocha": "^2.2.41",
-        "@types/node": "^10.0.0",
-        "@xmcl/forge-installer": "^0.0.1",
-        "mocha": "^6.1.4",
-        "tslint": "^5.14.0",
-        "typescript": "^3.4.3"
-    },
-    "dependencies": {
-        "got": "^9.6.0",
-        "@xmcl/installer": "^0.0.1",
-        "@xmcl/version": "^0.0.1",
-        "@xmcl/util": "^0.0.1",
-        "@xmcl/net": "^0.0.1",
-        "@xmcl/task": "^0.0.1",
-        "@xmcl/unzip": "^0.0.1"
-    },
-    "scripts": {
-        "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",
-        "build": "tsc --build tsconfig.json"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/ci010/ts-minecraft.git"
-    },
-    "author": "cijhn@hotmail.com",
-    "keywords": [
-        "minecraft",
-        "typescript",
-        "minecraft-launcher",
-        "nodejs",
-        "electron"
-    ],
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/ci010/ts-minecraft/issues"
-    },
-    "homepage": "https://github.com/ci010/ts-minecraft#readme"
+  "name": "@xmcl/liteloader",
+  "version": "0.0.2",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "description": "Liteloader parser & installer",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^10.0.0",
+    "@xmcl/forge-installer": "^0.0.2",
+    "mocha": "^6.1.4",
+    "tslint": "^5.14.0",
+    "typescript": "^3.4.3"
+  },
+  "dependencies": {
+    "got": "^9.6.0",
+    "@xmcl/installer": "^0.0.1",
+    "@xmcl/version": "^0.0.1",
+    "@xmcl/util": "^0.0.1",
+    "@xmcl/net": "^0.0.1",
+    "@xmcl/task": "^0.0.1",
+    "@xmcl/unzip": "^0.0.1"
+  },
+  "scripts": {
+    "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",
+    "build": "tsc --build tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ci010/ts-minecraft.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ci010/ts-minecraft/issues"
+  },
+  "homepage": "https://github.com/ci010/ts-minecraft#readme"
 }
