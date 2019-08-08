@@ -1,44 +1,44 @@
 {
-    "name": "@xmcl/util",
-    "version": "0.0.1",
-    "main": "./index.js",
-    "types": "./index.d.ts",
-    "description": "Common launcher utility",
-    "engines": {
-        "node": ">=10.0"
-    },
-    "publishConfig": {
-        "access": "public"
-    },
-    "devDependencies": {
-        "@types/bytebuffer": "^5.0.37",
-        "@types/node": "^10.0.0",
-        "tslint": "^5.14.0",
-        "typescript": "^3.4.3"
-    },
-    "dependencies": {
-        "bytebuffer": "^5.0.1",
-        "@xmcl/task": "^0.0.1"
-    },
-    "scripts": {
-        "test": "",
-        "build": "tsc --build tsconfig.json"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/ci010/ts-minecraft.git"
-    },
-    "author": "cijhn@hotmail.com",
-    "keywords": [
-        "minecraft",
-        "typescript",
-        "minecraft-launcher",
-        "nodejs",
-        "electron"
-    ],
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/ci010/ts-minecraft/issues"
-    },
-    "homepage": "https://github.com/ci010/ts-minecraft#readme"
+  "name": "@xmcl/util",
+  "version": "0.1.0",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "description": "Common launcher utility",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/bytebuffer": "^5.0.37",
+    "@types/node": "^10.0.0",
+    "tslint": "^5.14.0",
+    "typescript": "^3.4.3"
+  },
+  "dependencies": {
+    "bytebuffer": "^5.0.1",
+    "@xmcl/task": "^0.0.1"
+  },
+  "scripts": {
+    "test": "",
+    "build": "tsc --build tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ci010/ts-minecraft.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ci010/ts-minecraft/issues"
+  },
+  "homepage": "https://github.com/ci010/ts-minecraft#readme"
 }

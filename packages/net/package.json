@@ -1,47 +1,47 @@
 {
-    "name": "@xmcl/net",
-    "version": "0.0.1",
-    "main": "./index.js",
-    "types": "./index.d.ts",
-    "description": "network utility",
-    "engines": {
-        "node": ">=10.0"
-    },
-    "publishConfig": {
-        "access": "public"
-    },
-    "devDependencies": {
-        "@types/bytebuffer": "^5.0.37",
-        "@types/node": "^10.0.0",
-        "@types/got": "^9.6.0",
-        "tslint": "^5.14.0",
-        "typescript": "^3.4.3"
-    },
-    "dependencies": {
-        "got": "^9.6.0",
-        "bytebuffer": "^5.0.1",
-        "@xmcl/util": "^0.0.1",
-        "@xmcl/task": "^0.0.1"
-    },
-    "scripts": {
-        "test": "",
-        "build": "tsc --build tsconfig.json"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/ci010/ts-minecraft.git"
-    },
-    "author": "cijhn@hotmail.com",
-    "keywords": [
-        "minecraft",
-        "typescript",
-        "minecraft-launcher",
-        "nodejs",
-        "electron"
-    ],
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/ci010/ts-minecraft/issues"
-    },
-    "homepage": "https://github.com/ci010/ts-minecraft#readme"
+  "name": "@xmcl/net",
+  "version": "0.0.2",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "description": "network utility",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/bytebuffer": "^5.0.37",
+    "@types/node": "^10.0.0",
+    "@types/got": "^9.6.0",
+    "tslint": "^5.14.0",
+    "typescript": "^3.4.3"
+  },
+  "dependencies": {
+    "got": "^9.6.0",
+    "bytebuffer": "^5.0.1",
+    "@xmcl/util": "^0.1.0",
+    "@xmcl/task": "^0.0.1"
+  },
+  "scripts": {
+    "test": "",
+    "build": "tsc --build tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ci010/ts-minecraft.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ci010/ts-minecraft/issues"
+  },
+  "homepage": "https://github.com/ci010/ts-minecraft#readme"
 }
