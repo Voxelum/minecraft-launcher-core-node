@@ -17,10 +17,11 @@ export * from "@xmcl/task";
 export * from "@xmcl/text-component";
 
 import * as Net from "@xmcl/net";
-const got = Net.got;
+import { GotBodyFn, GotInstance } from "got";
+const got: GotInstance<GotBodyFn<string>> = Net.got;
 
 import Util, { MinecraftFolder, MinecraftLocation } from "@xmcl/util";
 
-export * from "@xmcl/version";
+export { ResolvedLibrary, ResolvedNative, ResolvedVersion, PartialResolvedVersion, LibraryInfo, VersionDiagnosis } from "@xmcl/version";
 export { World } from "@xmcl/world";
 export { Util, MinecraftFolder, MinecraftLocation, Net, got };

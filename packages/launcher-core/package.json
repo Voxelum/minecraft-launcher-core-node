@@ -10,7 +10,8 @@
   },
   "devDependencies": {
     "tslint": "^5.14.0",
-    "typescript": "^3.4.3"
+    "typescript": "^3.4.3",
+    "@types/got": "9.6.2"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json",
