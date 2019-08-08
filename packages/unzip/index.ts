@@ -245,6 +245,10 @@ abstract class AbstractZip implements Unzip.ZipFile {
     close(): void {
         this.delegate.close();
     }
+
+    async extractEntries(dest: string, mapper?: (e: yEntry) => undefined | string): Promise<void> {
+        await extractInternal(this.delegate, dest, mapper);
+    }
 }
 
 class LazyZip extends AbstractZip implements Unzip.LazyZipFile {
@@ -337,6 +341,8 @@ export namespace Unzip {
 
         readEntry(entry: Entry, options?: ZipFileOptions): Promise<Buffer>;
         openEntry(entry: Entry, options?: ZipFileOptions): Promise<Readable>;
+
+        extractEntries(dest: string, mapper?: (e: Entry) => undefined | string): Promise<void>;
 
         close(): void;
     }
