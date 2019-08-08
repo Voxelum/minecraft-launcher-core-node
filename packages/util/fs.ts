@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { constants, createReadStream, createWriteStream, promises } from "fs";
 import { arch as getArch, platform as getPlatform, release } from "os";
 import { dirname, resolve as presolve } from "path";
+import { finished } from "stream";
 
 export type VFS = typeof promises & {
     createReadStream: typeof createReadStream;
@@ -11,7 +12,8 @@ export type VFS = typeof promises & {
     remove(target: string): Promise<void>;
     missing(target: string): Promise<boolean>;
     exists(target: string): Promise<boolean>;
-
+    copy(src: string, dest: string, filter: (name: string) => boolean): Promise<void>;
+    waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
     validate(target: string, ...validations: { algorithm: string, hash: string }[]): Promise<boolean>;
 };
 
@@ -24,6 +26,8 @@ export const vfs: VFS = {
     ensureFile,
     createReadStream,
     createWriteStream,
+    copy,
+    waitStream,
     validate(target, ...validations) {
         return multiChecksum(target, validations.map(v => v.algorithm)).then(r => r.every((h, i) => h === validations[i].hash)).catch(() => false);
     }
@@ -50,6 +54,14 @@ export namespace VFS {
     }
 }
 
+export function waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream) {
+    return new Promise<void>((resolve, reject) => {
+        finished(stream, (err) => {
+            if (err) { reject(err); } else { resolve(); }
+        });
+    });
+}
+
 export function exists(target: string) {
     return promises.access(target, constants.F_OK).then(() => true).catch(() => false);
 }
@@ -60,6 +72,19 @@ export function missing(target: string) {
 
 export async function validate(target: string, hash: string, algorithm: string = "sha1") {
     return await exists(target) && await computeChecksum(target, algorithm) === hash;
+}
+
+export async function copy(src: string, dest: string, filter: (name: string) => boolean = () => true) {
+    const s = await promises.stat(src).catch((_) => { });
+    if (!s) { return; }
+    if (!filter(src)) { return; }
+    if (s.isDirectory()) {
+        await ensureDir(dest);
+        const childs = await promises.readdir(src);
+        await Promise.all(childs.map(p => copy(presolve(src, p), presolve(dest, p))));
+    } else if (await missing(dest)) {
+        await promises.copyFile(src, dest);
+    }
 }
 
 export async function ensureDir(target: string) {
