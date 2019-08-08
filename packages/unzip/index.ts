@@ -67,7 +67,20 @@ function walkEntries(zipfile: yZipFile, onEntry: (entry: yEntry) => Promise<any>
     });
 }
 
-async function extractEntriesInternal(zipfile: yZipFile, dest: string, entries: string[]) {
+async function extractCachedInternal(zipfile: yZipFile, dest: string, entries: yEntry[], mapper: (e: yEntry) => string | undefined = (e) => e.fileName) {
+    await Promise.all(entries.map((e) => {
+        const relative = mapper(e);
+        if (relative) {
+            const file = path.resolve(dest, relative);
+            return openEntryReadStream(zipfile, e)
+                .then((stream) => ensureFile(file).then(() => stream.pipe(fs.createWriteStream(file))))
+                .then(finishStream);
+        }
+        return Promise.resolve();
+    }));
+}
+
+async function extractEntriesInternal(zipfile: yZipFile, dest: string, entries: string[], mapper: (e: yEntry) => string | undefined = (e) => e.fileName) {
     const set = new Set();
     for (const e of entries) { set.add(e); }
     const promises: Array<Promise<void>> = [];
@@ -76,10 +89,13 @@ async function extractEntriesInternal(zipfile: yZipFile, dest: string, entries: 
         zipfile.on("entry", (entry: yEntry) => {
             if (set.has(entry.fileName)) {
                 set.delete(entry.fileName);
-                const file = path.resolve(dest, entry.fileName);
-                promises.push(openEntryReadStream(zipfile, entry)
-                    .then((stream) => ensureFile(file).then(() => stream.pipe(fs.createWriteStream(file))))
-                    .then(finishStream));
+                const relative = mapper(entry);
+                if (relative) {
+                    const file = path.resolve(dest, relative);
+                    promises.push(openEntryReadStream(zipfile, entry)
+                        .then((stream) => ensureFile(file).then(() => stream.pipe(fs.createWriteStream(file))))
+                        .then(finishStream));
+                }
             }
             if (set.size !== 0) {
                 if (zipfile.lazyEntries) {
@@ -245,7 +261,6 @@ abstract class AbstractZip implements Unzip.ZipFile {
     close(): void {
         this.delegate.close();
     }
-
     async extractEntries(dest: string, mapper?: (e: yEntry) => undefined | string): Promise<void> {
         await extractInternal(this.delegate, dest, mapper);
     }
@@ -280,6 +295,10 @@ class CachedZip extends AbstractZip implements Unzip.CachedZipFile {
     }
     filterEntries(filter: (e: yEntry) => boolean): yEntry[] {
         return Object.values(this.entries).filter(filter) as yEntry[];
+    }
+
+    async extractEntries(dest: string, mapper?: (e: yEntry) => undefined | string): Promise<void> {
+        await extractCachedInternal(this.delegate, dest, Object.values(this.entries), mapper);
     }
 }
 export declare namespace Unzip {
