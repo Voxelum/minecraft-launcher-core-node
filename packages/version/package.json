@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@xmcl/common": "^0.0.1",
-    "@xmcl/util": "^0.1.0",
+    "@xmcl/util": "^0.1.1",
     "@xmcl/task": "^0.0.1"
   },
   "scripts": {

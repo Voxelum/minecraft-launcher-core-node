@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "file-type": "^11.0.0",
-    "@xmcl/unzip": "^0.2.0",
+    "@xmcl/unzip": "^0.2.1",
     "@xmcl/nbt": "^0.0.1",
     "@xmcl/common": "^0.0.1"
   },

@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "@xmcl/auth": "^0.0.2",
-    "@xmcl/util": "^0.1.0",
-    "@xmcl/unzip": "^0.2.0",
+    "@xmcl/util": "^0.1.1",
+    "@xmcl/unzip": "^0.2.1",
     "@xmcl/version": "^0.0.2",
     "got": "^9.6.0",
     "uuid": "^3.2.1"
