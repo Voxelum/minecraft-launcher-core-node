@@ -131,15 +131,16 @@ function parseEntriesInternal(zipfile: yZipFile, entries: string[]) {
     });
 }
 
-function extractInternal(zipfile: yZipFile, dest: string, filter: (entry: yEntry) => boolean = () => true) {
+function extractInternal(zipfile: yZipFile, dest: string, filter: (entry: yEntry) => string | undefined = (e) => e.fileName) {
     return new Promise<void>((resolve, reject) => {
         zipfile.once("end", () => {
             resolve();
         });
         zipfile.on("entry", (entry: yEntry) => {
-            if (filter(entry)) {
+            const mapped = filter(entry);
+            if (mapped) {
                 if (!entry.fileName.endsWith("/")) {
-                    const file = path.resolve(dest, entry.fileName);
+                    const file = path.resolve(dest, mapped);
                     openEntryReadStream(zipfile, entry)
                         .then((stream) => ensureFile(file).then(() => stream.pipe(fs.createWriteStream(file))))
                         .then(finishStream)
@@ -401,7 +402,7 @@ export namespace Unzip {
         return new ParseEntriesStreamImpl(entries);
     }
 
-    export function createExtractStream(destination: string, entries?: string[] | ((entry: Entry) => boolean)): ExtractStream {
+    export function createExtractStream(destination: string, entries?: string[] | ((entry: Entry) => string | undefined)): ExtractStream {
         return new ExtractStreamImpl(destination, entries);
     }
 
@@ -486,7 +487,7 @@ export namespace Unzip {
     }
 
     class ExtractStreamImpl extends ZipFileStream<void> implements ExtractStream {
-        constructor(readonly destination: string, readonly entries?: string[] | ((entry: Entry) => boolean)) {
+        constructor(readonly destination: string, readonly entries?: string[] | ((entry: Entry) => string | undefined)) {
             super();
         }
 
@@ -521,7 +522,7 @@ export namespace Unzip {
      * @param dest The destination folder
      * @param filter The entry filter
      */
-    export async function extract(openFile: OpenTarget, dest: string, filter: (entry: Entry) => boolean = () => true) {
+    export async function extract(openFile: OpenTarget, dest: string, filter?: (entry: Entry) => string | undefined) {
         const zipfile = await openInternal(openFile, { lazyEntries: true, autoClose: false });
         return extractInternal(zipfile, dest, filter);
     }
