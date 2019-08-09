@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@xmcl/common": "^0.0.1",
-    "@xmcl/unzip": "^0.2.2"
+    "@xmcl/unzip": "^0.2.3"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",
