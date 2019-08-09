@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/language",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft language parsing",
@@ -18,7 +18,7 @@
     "typescript": "^3.4.3"
   },
   "dependencies": {
-    "@xmcl/util": "^0.1.1"
+    "@xmcl/util": "^0.1.2"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",

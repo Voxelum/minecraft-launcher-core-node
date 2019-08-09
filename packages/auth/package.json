@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/auth",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft authorization support",
@@ -22,8 +22,8 @@
   "dependencies": {
     "got": "^9.6.0",
     "uuid": "^3.2.1",
-    "@xmcl/profile-service": "^0.0.2",
-    "@xmcl/net": "^0.0.2",
+    "@xmcl/profile-service": "^0.0.3",
+    "@xmcl/net": "^0.0.3",
     "@xmcl/common": "^0.0.1"
   },
   "scripts": {

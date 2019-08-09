@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/version",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft version parsing",
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@xmcl/common": "^0.0.1",
-    "@xmcl/util": "^0.1.1",
+    "@xmcl/util": "^0.1.2",
     "@xmcl/task": "^0.0.1"
   },
   "scripts": {

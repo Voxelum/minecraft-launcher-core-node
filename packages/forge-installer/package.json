@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/forge-installer",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Forge installer",
@@ -20,12 +20,12 @@
   "dependencies": {
     "got": "^9.6.0",
     "fast-html-parser": "^1.0.1",
-    "@xmcl/net": "^0.0.2",
-    "@xmcl/installer": "^0.0.2",
-    "@xmcl/version": "^0.0.2",
-    "@xmcl/util": "^0.1.1",
+    "@xmcl/net": "^0.0.3",
+    "@xmcl/installer": "^0.0.3",
+    "@xmcl/version": "^0.0.3",
+    "@xmcl/util": "^0.1.2",
     "@xmcl/task": "^0.0.1",
-    "@xmcl/unzip": "^0.2.1"
+    "@xmcl/unzip": "^0.2.2"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",
