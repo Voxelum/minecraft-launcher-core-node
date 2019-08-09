@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/resourcepack",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft resource pack parsing",
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@xmcl/common": "^0.0.1",
-    "@xmcl/unzip": "^0.2.3"
+    "@xmcl/unzip": "^0.2.4"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",

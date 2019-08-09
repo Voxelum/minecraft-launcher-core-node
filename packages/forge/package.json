@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/forge",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Forge mod parser",
@@ -18,7 +18,7 @@
     "typescript": "^3.4.3"
   },
   "dependencies": {
-    "@xmcl/unzip": "^0.2.3",
+    "@xmcl/unzip": "^0.2.4",
     "java-asm": "^0.0.4"
   },
   "scripts": {
