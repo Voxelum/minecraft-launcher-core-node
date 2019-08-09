@@ -69,7 +69,7 @@ function walkEntries(zipfile: yZipFile, onEntry: (entry: yEntry) => Promise<any>
 
 async function extractCachedInternal(zipfile: yZipFile, dest: string, entries: yEntry[], mapper: (e: yEntry) => string | undefined = (e) => e.fileName) {
     await Promise.all(entries.map((e) => {
-        if (!e.fileName.endsWith("/")) {
+        if (e.fileName.endsWith("/")) {
             return Promise.resolve();
         }
         const relative = mapper(e);
