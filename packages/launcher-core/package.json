@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/minecraft-launcher-core",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Propabaliy all the things I want for a minecraft launcher. Targeting ElectronJs environment!",
   "engines": {
     "node": ">=10.0"
@@ -23,12 +23,12 @@
     "@xmcl/common": "^0.0.1",
     "@xmcl/fabric": "^0.0.3",
     "@xmcl/forge": "^0.0.6",
-    "@xmcl/forge-installer": "^0.0.6",
+    "@xmcl/forge-installer": "^0.0.7",
     "@xmcl/gamesetting": "^0.0.1",
-    "@xmcl/installer": "^0.0.3",
+    "@xmcl/installer": "^0.0.4",
     "@xmcl/language": "^0.0.3",
-    "@xmcl/launch": "^0.0.6",
-    "@xmcl/liteloader": "^0.0.6",
+    "@xmcl/launch": "^0.0.7",
+    "@xmcl/liteloader": "^0.0.7",
     "@xmcl/mojang": "^0.0.3",
     "@xmcl/nbt": "^0.0.1",
     "@xmcl/profile-service": "^0.0.3",
@@ -37,7 +37,7 @@
     "@xmcl/net": "^0.0.3",
     "@xmcl/text-component": "^0.0.1",
     "@xmcl/util": "^0.1.2",
-    "@xmcl/version": "^0.0.3",
+    "@xmcl/version": "^0.0.4",
     "@xmcl/world": "^0.0.5"
   },
   "repository": {
