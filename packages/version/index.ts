@@ -205,7 +205,7 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
     const time: string = cur.time;
     let type: string;
     let logging: any;
-    let client: string | undefined;
+    let client: string = cur.id;
     let location: string;
 
     const chains: string[] = hierarchy.map((j) => folder.getVersionRoot(j.id));
