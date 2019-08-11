@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/installer",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft installer",
@@ -20,7 +20,7 @@
   "dependencies": {
     "got": "^9.6.0",
     "@xmcl/net": "^0.0.3",
-    "@xmcl/version": "^0.0.7",
+    "@xmcl/version": "^0.0.8",
     "@xmcl/task": "^0.0.1",
     "@xmcl/util": "^0.1.3"
   },
