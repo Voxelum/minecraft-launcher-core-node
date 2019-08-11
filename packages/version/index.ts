@@ -189,25 +189,27 @@ Version.checkAllowed = checkAllowed;
 
 async function parse(minecraftPath: MinecraftLocation, version: string): Promise<ResolvedVersion> {
     const folder = MinecraftFolder.from(minecraftPath);
+    // the hierarchy is outer version to dep version
+    // e.g. [liteloader version, forge version, minecraft version]
     const hierarchy = await resolveDependency(folder, version);
     if (hierarchy.length === 0) { throw new Error("The hierarchy cannot be empty!"); }
-    const cur = hierarchy[0];
-    const id: string = cur.id;
-    let assetIndex: Version.AssetIndex = cur.assetIndex!;
+    const rootVersion = hierarchy[hierarchy.length - 1];
+    const id: string = rootVersion.id;
+    let assetIndex: Version.AssetIndex = rootVersion.assetIndex!;
     let assets: string = "";
 
     const downloadsMap: { [key: string]: Version.Download } = {};
     const librariesMap: { [key: string]: ResolvedLibrary } = {};
     const nativesMap: { [key: string]: ResolvedNative } = {};
 
-    let mainClass: string;
-    const args: any = { jvm: [], game: [] };
+    let mainClass: string = "";
+    const args = { jvm: [] as Version.LaunchArgument[], game: [] as Version.LaunchArgument[] };
     let minimumLauncherVersion: number = 0;
-    const releaseTime: string = cur.releaseTime;
-    const time: string = cur.time;
-    let type: string;
+    let releaseTime: string = "";
+    let time: string = "";
+    let type: string = "";
     let logging: any;
-    let client: string = cur.id;
+    let client: string = rootVersion.id;
     let location: string;
 
     const chains: string[] = hierarchy.map((j) => folder.getVersionRoot(j.id));
@@ -218,7 +220,7 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
         minimumLauncherVersion = Math.max(json.minimumLauncherVersion || 0, minimumLauncherVersion);
         location = json.minecraftDirectory;
 
-        client = (json as any).jar || client || json.id;
+        client = (json as any).jar || client;
 
         if (json.arguments.game) {
             args.game.push(...json.arguments.game);
@@ -226,11 +228,13 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
             args.jvm.push(...json.arguments.jvm);
         }
 
+        releaseTime = json.releaseTime || releaseTime;
+        time = json.time || time;
         logging = json.logging || logging;
         assets = json.assets || assets;
-        type = json.type;
-        mainClass = json.mainClass;
-        if (json.assetIndex) { assetIndex = json.assetIndex; }
+        type = json.type || type;
+        mainClass = json.mainClass || mainClass;
+        assetIndex = json.assetIndex || assetIndex;
         if (json.libraries) {
             json.libraries.forEach((lib) => {
                 const libOrgName = lib.name.substring(0, lib.name.lastIndexOf(":"));
@@ -288,7 +292,7 @@ function resolveDependency(path: MinecraftLocation, version: string): Promise<Pa
             }
             return fs.promises.readFile(jsonPath).then((value) => {
                 const versionInst = parseVersionJson(value.toString(), folder.root);
-                stack.unshift(versionInst);
+                stack.push(versionInst);
                 versionInst.minecraftDirectory = folder.root;
                 if (versionInst.inheritsFrom) {
                     return interal(folder.getVersionJson(versionInst.inheritsFrom), versionInst.inheritsFrom);
