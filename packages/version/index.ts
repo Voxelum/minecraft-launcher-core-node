@@ -543,10 +543,12 @@ function parseVersionJson(versionString: string, root: string, fillArgs?: boolea
     const libraries = resolveLibraries(parsed.libraries, platform);
     let args = parsed.arguments;
     if (!args) {
-        if (fillArgs) {
-            args = {
-                game: parsed.minecraftArguments!.split(" "),
-                jvm: [
+        args = {
+            game: parsed.minecraftArguments
+                ? parsed.minecraftArguments.split(" ")
+                : [],
+            jvm: fillArgs
+                ? [
                     {
                         rules: [
                             {
@@ -591,14 +593,9 @@ function parseVersionJson(versionString: string, root: string, fillArgs?: boolea
                     "-Dminecraft.launcher.version=${launcher_version}",
                     "-cp",
                     "${classpath}",
-                ],
-            };
-        } else {
-            args = {
-                jvm: [],
-                game: [],
-            };
-        }
+                ]
+                : [],
+        };
     }
 
     args.jvm = processArguments(args.jvm || []);
