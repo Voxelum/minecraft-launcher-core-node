@@ -1,13 +1,27 @@
 import { Auth } from "@xmcl/auth";
-import { computeChecksum, ensureDir, MinecraftFolder, missing } from "@xmcl/util";
-import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
-
 import Unzip from "@xmcl/unzip";
+import { computeChecksum, currentPlatform, ensureDir, MinecraftFolder, missing } from "@xmcl/util";
+import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { v4 } from "uuid";
 
+
+function filterFeature(arg: Version.LaunchArgument, features: Launcher.ProvidedFeatures) {
+    if (typeof arg === "object") {
+        if (Version.checkAllowed(arg.rules, currentPlatform, Object.keys(features))) {
+            const values = arg.value instanceof Array ? arg.value : [arg.value];
+            const args = arg.rules.filter((r) => r.features).map((r) =>
+                Object.entries(r.features!).map(([k, v]) => v ? features[k] : {}).reduce((a, b) => ({ ...a, ...b }), {}))
+                .reduce((a, b) => ({ ...a, ...b }), {});
+            const formatedArgs = values.map((v) => format(v, args));
+            return formatedArgs;
+        }
+    } else {
+        return arg;
+    }
+}
 
 function format(template: string, args: any) {
     return template.replace(/\$\{(.*?)}/g, (key) => {
@@ -24,10 +38,10 @@ export namespace Launcher {
         is_demo_user: {};
     }
     export interface GenericFeatures {
-        [featureName: string]: { [argumentKey: string]: string };
+        [featureName: string]: { [argumentKey: string]: object };
     }
 
-    export type Features = ResolutionFeature | GenericFeatures;
+    export type ProvidedFeatures = Partial<ResolutionFeature> & Partial<DemoFeature> & GenericFeatures;
 
     export type PartialAuth = Pick<Auth, "selectedProfile" | "accessToken" | "userType" | "properties">;
     export interface Option {
@@ -61,7 +75,7 @@ export namespace Launcher {
         /**
          * Enable features
          */
-        features?: Features;
+        features?: ProvidedFeatures;
 
         /**
          * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
@@ -231,7 +245,7 @@ export namespace Launcher {
             resolution_height: resolution.height || 470,
         };
 
-        cmd.push(...version.arguments.game.map((arg) => format(arg as string, mcOptions)));
+        cmd.push(...version.arguments.game.map((arg) => filterFeature(arg, {})).filter((s) => !!s).map((arg) => format(arg as string, mcOptions)));
 
         if (options.extraMCArgs) { cmd.push(...options.extraMCArgs); }
         if (options.server) {
@@ -290,7 +304,7 @@ export namespace Launcher {
             const notSha1AndNotGit = (p: string) => !(p.endsWith(".sha1") || p.endsWith(".git"));
             const from = mc.getLibraryByPath(n.download.path);
             await fs.createReadStream(from).pipe(Unzip.createExtractStream(native, (entry) =>
-                containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName),
+                containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ? entry.fileName : undefined,
             )).wait();
         }));
     }

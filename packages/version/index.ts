@@ -1,8 +1,7 @@
-import * as fs from "fs";
-
 import { Version } from "@xmcl/common";
 import Task from "@xmcl/task";
-import { computeChecksum, exists, MinecraftFolder, MinecraftLocation, validate } from "@xmcl/util";
+import { computeChecksum, currentPlatform, exists, getPlatform, MinecraftFolder, MinecraftLocation, Platform, validate } from "@xmcl/util";
+import * as fs from "fs";
 
 type PickPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 export type PartialResolvedVersion = Omit<PickPartial<ResolvedVersion, "assets" |
@@ -107,6 +106,8 @@ export interface VersionDiagnosis {
 declare module "@xmcl/common/version" {
     namespace Version {
         export type Resolved = ResolvedVersion;
+
+        function checkAllowed(rules: Rule[], platform?: Platform, features?: string[]): boolean;
         /**
          * Recursively parse the version JSON.
          *
@@ -183,6 +184,7 @@ Version.mixinArgumentString = mixinArgumentString;
 Version.resolveDependency = resolveDependency;
 Version.resolveLibraries = resolveLibraries;
 Version.getLibraryInfo = getLibraryInfo;
+Version.checkAllowed = checkAllowed;
 
 
 async function parse(minecraftPath: MinecraftLocation, version: string): Promise<ResolvedVersion> {
@@ -485,7 +487,7 @@ function getLibraryInfo(lib: string | ResolvedLibrary | Version.Library) {
     };
 }
 
-function resolveLibraries(libs: Version["libraries"], platform: ReturnType<typeof getPlatform> = getPlatform()) {
+function resolveLibraries(libs: Version["libraries"], platform: Platform = currentPlatform) {
     const empty: ResolvedLibrary = null!;
     return libs.map((lib) => {
         if ("rules" in lib && !checkAllowed(lib.rules, platform)) {
@@ -493,7 +495,7 @@ function resolveLibraries(libs: Version["libraries"], platform: ReturnType<typeo
         }
         if ("natives" in lib) {
             if (!lib.natives[platform.name]) { return empty; }
-            const classifier = (lib.natives[platform.name] as string).replace("${arch}", platform.arch);
+            const classifier = (lib.natives[platform.name] as string).replace("${arch}", platform.arch.substring(1));
             const nativeArtifact = lib.downloads.classifiers[classifier];
             if (!nativeArtifact) { return empty; }
             return new ResolvedNative(lib.name, getLibraryInfo(lib.name), lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
@@ -518,7 +520,7 @@ function resolveLibraries(libs: Version["libraries"], platform: ReturnType<typeo
     }).filter((l) => l !== empty);
 }
 
-function parseVersionJson(versionString: string, root: string): PartialResolvedVersion {
+function parseVersionJson(versionString: string, root: string, fillArgs?: boolean): PartialResolvedVersion {
     const platform = getPlatform();
     const processArguments = (ar: Version.LaunchArgument[]) => {
         return ar.map((a) => {
@@ -535,60 +537,70 @@ function parseVersionJson(versionString: string, root: string): PartialResolvedV
     };
     const parsed: Version = JSON.parse(versionString);
     const libraries = resolveLibraries(parsed.libraries, platform);
-    const args = parsed.arguments || {
-        game: parsed.minecraftArguments!.split(" "),
-        jvm: [
-            {
-                rules: [
+    let args = parsed.arguments;
+    if (!args) {
+        if (fillArgs) {
+            args = {
+                game: parsed.minecraftArguments!.split(" "),
+                jvm: [
                     {
-                        action: "allow",
-                        os: {
-                            name: "osx",
-                        },
+                        rules: [
+                            {
+                                action: "allow",
+                                os: {
+                                    name: "osx",
+                                },
+                            },
+                        ],
+                        value: [
+                            "-XstartOnFirstThread",
+                        ],
                     },
-                ],
-                value: [
-                    "-XstartOnFirstThread",
-                ],
-            },
-            {
-                rules: [
                     {
-                        action: "allow",
-                        os: {
-                            name: "windows",
-                        },
+                        rules: [
+                            {
+                                action: "allow",
+                                os: {
+                                    name: "windows",
+                                },
+                            },
+                        ],
+                        value: "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
                     },
-                ],
-                value: "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
-            },
-            {
-                rules: [
                     {
-                        action: "allow",
-                        os: {
-                            name: "windows",
-                            version: "^10\\.",
-                        },
+                        rules: [
+                            {
+                                action: "allow",
+                                os: {
+                                    name: "windows",
+                                    version: "^10\\.",
+                                },
+                            },
+                        ],
+                        value: [
+                            "-Dos.name=Windows 10",
+                            "-Dos.version=10.0",
+                        ],
                     },
+                    "-Djava.library.path=${natives_directory}",
+                    "-Dminecraft.launcher.brand=${launcher_name}",
+                    "-Dminecraft.launcher.version=${launcher_version}",
+                    "-cp",
+                    "${classpath}",
                 ],
-                value: [
-                    "-Dos.name=Windows 10",
-                    "-Dos.version=10.0",
-                ],
-            },
-            "-Djava.library.path=${natives_directory}",
-            "-Dminecraft.launcher.brand=${launcher_name}",
-            "-Dminecraft.launcher.version=${launcher_version}",
-            "-cp",
-            "${classpath}",
-        ],
-    };
-    args.jvm = processArguments(args.jvm || []);
+            };
+            args.jvm = processArguments(args.jvm || []);
+        } else {
+            args = {
+                jvm: [],
+                game: [],
+            };
+        }
+    }
     return { ...parsed, libraries, arguments: args, minecraftDirectory: root };
 }
 
-function checkAllowed(rules: Array<{ action?: string, os?: any }>, platform: ReturnType<typeof getPlatform>) {
+function checkAllowed(rules: Version.Rule[], platform: Platform = currentPlatform, features: string[] = []) {
     // by default it's allowed
     if (!rules) { return true; }
     // else it's disallow by default
@@ -597,7 +609,7 @@ function checkAllowed(rules: Array<{ action?: string, os?: any }>, platform: Ret
         const action = rule.action === "allow";
         // apply by default
         let apply = true;
-        if (rule.os) {
+        if ("os" in rule && rule.os) {
             // don't apply by default if has os rule
             apply = false;
             const osRule = rule.os;
@@ -606,26 +618,17 @@ function checkAllowed(rules: Array<{ action?: string, os?: any }>, platform: Ret
                 apply = true;
             }
         }
+        if (apply) {
+            if ("features" in rule && rule.features) {
+                const featureRequire = rule.features;
+                // only apply when the EVERY required features enabled & not required features disabled
+                apply = Object.entries(featureRequire)
+                    .every(([k, v]) => v ? features.indexOf(k) !== -1 : features.indexOf(k) === -1);
+            }
+        }
         if (apply) { allow = action; }
     }
     return allow;
-}
-
-function getPlatform() {
-    const os = require("os");
-    let arch = os.arch();
-    if (arch.startsWith("x")) { arch = arch.substring(1); }
-    const version = os.release();
-    switch (os.platform()) {
-        case "darwin":
-            return { name: "osx", version, arch };
-        case "linux":
-            return { name: "linux", version, arch };
-        case "win32":
-            return { name: "windows", version, arch };
-        default:
-            return { name: "unknown", version, arch };
-    }
 }
 
 export * from "@xmcl/common/version";
