@@ -1,3 +1,4 @@
+import { Platform } from "../util";
 
 export namespace Version {
     export interface Download {
@@ -23,6 +24,12 @@ export namespace Version {
         };
     }
 
+    export interface Rule {
+        action: "allow" | "disallow";
+        os?: Partial<Platform>;
+        features?: { [feat: string]: boolean };
+    }
+
     export interface NativeLibrary {
         name: string;
         downloads: {
@@ -31,7 +38,7 @@ export namespace Version {
                 [os: string]: Artifact,
             },
         };
-        rules: Array<{ action: "allow" | "disallow", os?: { name: string } }>;
+        rules: Array<Rule>;
         extract: {
             exclude: string[],
         };
@@ -45,7 +52,7 @@ export namespace Version {
         downloads: {
             artifact: Artifact,
         };
-        rules: Array<{ action: "allow" | "disallow", os?: { name: string } }>;
+        rules: Array<Rule>;
     }
 
     export interface LegacyLibrary {
@@ -59,7 +66,8 @@ export namespace Version {
     export type Library = NormalLibrary | NativeLibrary | PlatformSpecificLibrary | LegacyLibrary
 
     export type LaunchArgument = string | {
-        rules: Array<{ action: string, features?: any, os?: { name?: string, version?: string } }>, value: string | string[]
+        rules: Rule[];
+        value: string | string[];
     };
 }
 

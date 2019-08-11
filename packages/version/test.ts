@@ -59,7 +59,7 @@ describe("Version", function () {
                 },
             };
 
-            const [resolved] = Version.resolveLibraries([rawLib], { name: "darwin", version: "", arch: "64" });
+            const [resolved] = Version.resolveLibraries([rawLib], { name: "osx", version: "", arch: "x64" });
             assert.equal(resolved.download, rawLib.downloads.artifact);
             assert.equal(resolved.checksums, undefined);
             assert.equal(resolved.serverreq, undefined);
@@ -77,7 +77,7 @@ describe("Version", function () {
                 serverreq: true,
                 clientreq: true,
             };
-            const [resolved] = Version.resolveLibraries([lib], { name: "darwin", version: "", arch: "64" });
+            const [resolved] = Version.resolveLibraries([lib], { name: "osx", version: "", arch: "x64" });
             assert.equal(resolved.name, lib.name);
             assert.equal(resolved.serverreq, lib.serverreq);
             assert.equal(resolved.clientreq, lib.clientreq);
@@ -109,7 +109,7 @@ describe("Version", function () {
                 },
             };
             const [onOsx] = Version.resolveLibraries([lib], { name: "osx", version: "", arch: "64" });
-            const [onWin] = Version.resolveLibraries([lib], { name: "win", version: "", arch: "64" });
+            const [onWin] = Version.resolveLibraries([lib], { name: "windows", version: "", arch: "64" });
             const [onLinux] = Version.resolveLibraries([lib], { name: "linux", version: "", arch: "64" });
             assert(!onOsx);
             assert(onWin);

@@ -1,6 +1,5 @@
 import { createHash } from "crypto";
 import { constants, createReadStream, createWriteStream, promises } from "fs";
-import { arch as getArch, platform as getPlatform, release } from "os";
 import { dirname, resolve as presolve } from "path";
 import { finished } from "stream";
 
@@ -30,7 +29,7 @@ export const vfs: VFS = {
     waitStream,
     validate(target, ...validations) {
         return multiChecksum(target, validations.map(v => v.algorithm)).then(r => r.every((h, i) => h === validations[i].hash)).catch(() => false);
-    }
+    },
 };
 
 export namespace VFS {
@@ -148,27 +147,3 @@ export function multiChecksum(path: string, algorithms: string[]): Promise<strin
             .once("close", () => { resolve(hashes.map((h) => h.digest("hex"))); });
     });
 }
-
-export const platform = (() => {
-    let arch = getArch();
-    let osName: string = "unknown";
-    switch (getPlatform()) {
-        case "darwin":
-            osName = "osx";
-            break;
-        case "linux":
-            osName = "linux";
-            break;
-        case "win32":
-            osName = "windows";
-            break;
-    }
-
-    if (arch.startsWith("x")) { arch = arch.substring(1); }
-    return {
-        arch,
-        name: osName,
-        version: release(),
-    };
-});
-
