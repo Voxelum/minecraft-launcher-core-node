@@ -69,13 +69,13 @@ describe("Install", function () {
                 url: "https://launchermeta.mojang.com/v1/packages/26ec75fc9a8b990fa976100a211475d18bd97de0/1.13.2.json",
             }, this.gameDirectory);
         }).timeout(100000000);
-        it("should be able to install 1.14.2", async function () {
+        it("should be able to install 1.14.4", async function () {
             await installVersionClient({
-                id: "1.14.2",
+                id: "1.14.4",
                 type: "release",
-                url: "https://launchermeta.mojang.com/v1/packages/bc3ada07878913436f1333ba7af7f77115427ccc/1.14.2.json",
-                time: "2019-06-07T09:06:32+00:00",
-                releaseTime: "2019-05-27T11:48:25+00:00",
+                url: "https://launchermeta.mojang.com/v1/packages/132979c36455cc1e17e5f9cc767b4e13c6947033/1.14.4.json",
+                time: "2019-07-19T09:28:03+00:00",
+                releaseTime: "2019-07-19T09:25:47+00:00",
             }, this.gameDirectory);
         }).timeout(100000000);
     });

@@ -150,4 +150,45 @@ describe("ForgeInstaller", function () {
         await Installer.installDependencies(await Version.parse(this.gameDirectory, result), this.gameDirectory);
         await assertNoError(result, this.gameDirectory);
     }).timeout(100000000);
+
+    it("should install forge 1.14.4-forge-28.0.45", async function () {
+        before(async () => {
+            if (fs.existsSync(`${this.gameDirectory}/versions/1.14.4-forge-28.0.45/1.14.4-forge-28.0.45.json`)) {
+                fs.unlinkSync(`${this.gameDirectory}/versions/1.14.4-forge-28.0.45/1.14.4-forge-28.0.45.json`);
+            }
+            if (!fs.existsSync(`${this.gameDirectory}/temps`)) {
+                fs.mkdirSync(`${this.gameDirectory}/temps`);
+            }
+
+            try {
+                await new Promise((resolve, reject) => {
+                    exec("java", (e, so, se) => {
+                        if (e) { reject(e); } else { resolve(); }
+                    });
+                });
+            } catch (e) {
+                this.skip();
+            }
+        });
+        const meta: ForgeInstaller.VersionMeta = {
+            mcversion: "1.14.4",
+            version: "28.0.45",
+            universal: {
+                md5: "7f95bfb1266784cf1b9b9fa285bd9b68",
+                sha1: "4638379f1729ffe707ed1de94950318558366e54",
+                path: "/maven/net/minecraftforge/forge/1.14.4-28.0.45/forge-1.14.4-28.0.45-universal.jar",
+            },
+            installer: {
+                md5: "f719c80d52a3d0ea60e1feba96dd394e",
+                sha1: "ee1f3a8268894134d9b37b7469e5cf07021bbac1",
+                path: "/maven/net/minecraftforge/forge/1.14.4-28.0.45/forge-1.14.4-28.0.45-installer.jar",
+            },
+        };
+        const result = await ForgeInstaller.install(meta, new MinecraftFolder(this.gameDirectory), {
+            tempDir: `${this.gameDirectory}/temps`,
+            clearTempDirAfterInstall: false,
+        });
+        await Installer.installDependencies(await Version.parse(this.gameDirectory, result), this.gameDirectory);
+        await assertNoError(result, this.gameDirectory);
+    }).timeout(100000000);
 });

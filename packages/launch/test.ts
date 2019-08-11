@@ -127,10 +127,33 @@ describe("Launcher", () => {
                 launcherName: "launcherName",
             });
             assert.equal(args[0], javaPath);
-            assert(args.indexOf("net.minecraft.client.main.Main") !== -1);
+            assert(args.indexOf("net.minecraft.launchwrapper.Launch") !== -1);
             assert.equal(args[args.indexOf("--username") + 1], auth.selectedProfile.name);
             assert.equal(args[args.indexOf("--uuid") + 1], auth.selectedProfile.id.replace(/-/g, ""));
-            assert.equal(args[args.indexOf("--version") + 1], version);
+            assert.equal(args[args.indexOf("--version") + 1], "1.7.10");
+            assert.equal(args[args.indexOf("--gameDir") + 1], path.resolve(gamePath));
+            assert.equal(args[args.indexOf("--assetsDir") + 1], path.resolve(gamePath, "assets"));
+            const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
+            assert.equal(lversion, `-Dminecraft.launcher.version=launcherVersion`);
+            const lname = args.find((a) => a.startsWith("-Dminecraft.launcher.brand"));
+            assert.equal(lname, "-Dminecraft.launcher.brand=launcherName");
+        });
+
+        it("should generate correct command for 1.14.4 with forge", async function () {
+            const javaPath = "/test/java";
+            const version = "1.14.4-forge-28.0.45";
+            const gamePath = this.gameDirectory;
+            const auth = Auth.offline("tester");
+            const args = await Launcher.generateArguments({
+                version, gamePath, javaPath, auth,
+                launcherBrand: "launcherVersion",
+                launcherName: "launcherName",
+            });
+            assert.equal(args[0], javaPath);
+            assert(args.indexOf("cpw.mods.modlauncher.Launcher") !== -1);
+            assert.equal(args[args.indexOf("--username") + 1], auth.selectedProfile.name);
+            assert.equal(args[args.indexOf("--uuid") + 1], auth.selectedProfile.id.replace(/-/g, ""));
+            assert.equal(args[args.indexOf("--version") + 1], "1.14.4");
             assert.equal(args[args.indexOf("--gameDir") + 1], path.resolve(gamePath));
             assert.equal(args[args.indexOf("--assetsDir") + 1], path.resolve(gamePath, "assets"));
             const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
@@ -253,9 +276,9 @@ describe("Launcher", () => {
                 await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Created: 1024x512 textures-atlas");
             }).timeout(100000);
         });
-        describe("1.14.2", function () {
+        describe("1.14.4", function () {
             it("should launch normal minecraft", async function () {
-                const option = { version: "1.14.2", gamePath: this.gameDirectory, javaPath };
+                const option = { version: "1.14.4", gamePath: this.gameDirectory, javaPath };
                 await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Built for minecraft version 1.14.2");
             }).timeout(100000);
         });
