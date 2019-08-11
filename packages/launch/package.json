@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/launch",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft launch function",
@@ -17,16 +17,16 @@
     "mocha": "^6.1.4",
     "tslint": "^5.14.0",
     "typescript": "^3.4.3",
-    "@xmcl/installer": "^0.0.6",
-    "@xmcl/forge-installer": "^0.0.9",
-    "@xmcl/liteloader": "^0.0.9",
+    "@xmcl/installer": "^0.0.7",
+    "@xmcl/forge-installer": "^0.0.10",
+    "@xmcl/liteloader": "^0.0.10",
     "@xmcl/fabric": "^0.0.3"
   },
   "dependencies": {
     "@xmcl/auth": "^0.0.4",
     "@xmcl/util": "^0.1.3",
     "@xmcl/unzip": "^0.2.4",
-    "@xmcl/version": "^0.0.6",
+    "@xmcl/version": "^0.0.7",
     "got": "^9.6.0",
     "uuid": "^3.2.1"
   },
