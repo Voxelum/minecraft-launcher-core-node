@@ -201,7 +201,7 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
     const nativesMap: { [key: string]: ResolvedNative } = {};
 
     let mainClass: string;
-    let args: any;
+    const args: any = { jvm: [], game: [] };
     let minimumLauncherVersion: number = 0;
     const releaseTime: string = cur.releaseTime;
     const time: string = cur.time;
@@ -220,14 +220,10 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
 
         client = (json as any).jar || client || json.id;
 
-        if (!args) {
-            args = json.arguments;
-        } else {
-            if (json.arguments.game) {
-                args.game.push(...json.arguments.game);
-            } else if (json.arguments.jvm) {
-                args.jvm.push(...json.arguments.jvm);
-            }
+        if (json.arguments.game) {
+            args.game.push(...json.arguments.game);
+        } else if (json.arguments.jvm) {
+            args.jvm.push(...json.arguments.jvm);
         }
 
         logging = json.logging || logging;
@@ -536,6 +532,7 @@ function parseVersionJson(versionString: string, root: string, fillArgs?: boolea
         }, []);
     };
     const parsed: Version = JSON.parse(versionString);
+    if (!parsed.inheritsFrom) { fillArgs = true; }
     const libraries = resolveLibraries(parsed.libraries, platform);
     let args = parsed.arguments;
     if (!args) {
@@ -589,7 +586,6 @@ function parseVersionJson(versionString: string, root: string, fillArgs?: boolea
                     "${classpath}",
                 ],
             };
-            args.jvm = processArguments(args.jvm || []);
         } else {
             args = {
                 jvm: [],
@@ -597,6 +593,8 @@ function parseVersionJson(versionString: string, root: string, fillArgs?: boolea
             };
         }
     }
+
+    args.jvm = processArguments(args.jvm || []);
     return { ...parsed, libraries, arguments: args, minecraftDirectory: root };
 }
 
