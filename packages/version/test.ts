@@ -246,10 +246,10 @@ describe("Version", function () {
                 ],
             };
 
-            const [onOsx] = Version.resolveLibraries([lib], { name: "osx", version: "", arch: "64" });
-            const [onWin] = Version.resolveLibraries([lib], { name: "windows", version: "", arch: "64" });
-            const [onWin32] = Version.resolveLibraries([lib], { name: "windows", version: "", arch: "32" });
-            const [onLinux] = Version.resolveLibraries([lib], { name: "linux", version: "", arch: "64" });
+            const [onOsx] = Version.resolveLibraries([lib], { name: "osx", version: "", arch: "x64" });
+            const [onWin] = Version.resolveLibraries([lib], { name: "windows", version: "", arch: "x64" });
+            const [onWin32] = Version.resolveLibraries([lib], { name: "windows", version: "", arch: "x32" });
+            const [onLinux] = Version.resolveLibraries([lib], { name: "linux", version: "", arch: "x64" });
             assert(onOsx === undefined);
             assert(onWin instanceof ResolvedNative);
             assert(onWin32 instanceof ResolvedNative);
