@@ -138,6 +138,19 @@ export namespace ForgeInstaller {
                 let profile!: LaunchProfile;
                 let versionJson!: Version;
 
+                if (!forgeEntry) {
+                    throw new Error("Missing forge jar entry");
+                }
+                if (!forgeUniversalEntry) {
+                    throw new Error("Missing forge universal entry");
+                }
+                if (!installProfileEntry) {
+                    throw new Error("Missing install profile");
+                }
+                if (!versionEntry) {
+                    throw new Error("Missing version entry");
+                }
+
                 await Promise.all([
                     processExtract(await zip.openEntry(forgeEntry), forgeEntry.fileName),
                     processExtract(await zip.openEntry(forgeUniversalEntry), forgeUniversalEntry.fileName),
