@@ -212,6 +212,8 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
     let client: string = rootVersion.id;
     let location: string;
 
+    const replaceMode = Reflect.get(rootVersion, "replace");
+
     const chains: string[] = hierarchy.map((j) => folder.getVersionRoot(j.id));
 
     let json: ResolvedVersion;
@@ -222,13 +224,16 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
 
         client = (json as any).jar || client;
 
-        if (json.arguments) {
+        if (!replaceMode) {
             if (json.arguments.game) {
                 args.game.push(...json.arguments.game);
             }
             if (json.arguments.jvm) {
                 args.jvm.push(...json.arguments.jvm);
             }
+        } else {
+            args.game = json.arguments.game;
+            args.jvm = json.arguments.jvm;
         }
 
         releaseTime = json.releaseTime || releaseTime;
@@ -523,7 +528,7 @@ function resolveLibraries(libs: Version["libraries"], platform: Platform = curre
     }).filter((l) => l !== empty);
 }
 
-function parseVersionJson(versionString: string, root: string, fillArgs?: boolean): PartialResolvedVersion {
+function parseVersionJson(versionString: string, root: string): PartialResolvedVersion {
     const platform = getPlatform();
     const processArguments = (ar: Version.LaunchArgument[]) => {
         return ar.map((a) => {
@@ -539,67 +544,68 @@ function parseVersionJson(versionString: string, root: string, fillArgs?: boolea
         }, []);
     };
     const parsed: Version = JSON.parse(versionString);
-    if (!parsed.inheritsFrom) { fillArgs = true; }
     const libraries = resolveLibraries(parsed.libraries, platform);
-    let args = parsed.arguments;
-    if (!args) {
-        args = {
-            game: parsed.minecraftArguments
-                ? parsed.minecraftArguments.split(" ")
-                : [],
-            jvm: fillArgs
-                ? [
-                    {
-                        rules: [
-                            {
-                                action: "allow",
-                                os: {
-                                    name: "osx",
-                                },
-                            },
-                        ],
-                        value: [
-                            "-XstartOnFirstThread",
-                        ],
+    const args = {
+        jvm: [] as Version.LaunchArgument[],
+        game: [] as Version.LaunchArgument[],
+    };
+    if (!parsed.arguments) { // old version
+        args.game = parsed.minecraftArguments
+            ? parsed.minecraftArguments.split(" ")
+            : [];
+        args.jvm = [{
+            rules: [
+                {
+                    action: "allow",
+                    os: {
+                        name: "osx",
                     },
-                    {
-                        rules: [
-                            {
-                                action: "allow",
-                                os: {
-                                    name: "windows",
-                                },
-                            },
-                        ],
-                        value: "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
+                },
+            ],
+            value: [
+                "-XstartOnFirstThread",
+            ],
+        },
+        {
+            rules: [
+                {
+                    action: "allow",
+                    os: {
+                        name: "windows",
                     },
-                    {
-                        rules: [
-                            {
-                                action: "allow",
-                                os: {
-                                    name: "windows",
-                                    version: "^10\\.",
-                                },
-                            },
-                        ],
-                        value: [
-                            "-Dos.name=Windows 10",
-                            "-Dos.version=10.0",
-                        ],
+                },
+            ],
+            value: "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
+        },
+        {
+            rules: [
+                {
+                    action: "allow",
+                    os: {
+                        name: "windows",
+                        version: "^10\\.",
                     },
-                    "-Djava.library.path=${natives_directory}",
-                    "-Dminecraft.launcher.brand=${launcher_name}",
-                    "-Dminecraft.launcher.version=${launcher_version}",
-                    "-cp",
-                    "${classpath}",
-                ]
-                : [],
-        };
+                },
+            ],
+            value: [
+                "-Dos.name=Windows 10",
+                "-Dos.version=10.0",
+            ],
+        },
+            "-Djava.library.path=${natives_directory}",
+            "-Dminecraft.launcher.brand=${launcher_name}",
+            "-Dminecraft.launcher.version=${launcher_version}",
+            "-cp",
+            "${classpath}",
+        ];
+    } else {
+        args.jvm = parsed.arguments.jvm || [];
+        args.game = parsed.arguments.game || [];
     }
 
-    args.jvm = processArguments(args.jvm || []);
-    return { ...parsed, libraries, arguments: args, minecraftDirectory: root };
+    args.jvm = processArguments(args.jvm);
+    const partial = { ...parsed, libraries, arguments: args, minecraftDirectory: root, replace: !parsed.arguments };
+    return partial;
 }
 
 function checkAllowed(rules: Version.Rule[], platform: Platform = currentPlatform, features: string[] = []) {
