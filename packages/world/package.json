@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/world",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft text component parsing",
@@ -21,7 +21,7 @@
     "file-type": "^11.0.0",
     "@xmcl/unzip": "^0.2.4",
     "@xmcl/nbt": "^0.0.1",
-    "@xmcl/common": "^0.0.1"
+    "@xmcl/common": "^0.0.2"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",
