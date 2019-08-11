@@ -222,10 +222,13 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
 
         client = (json as any).jar || client;
 
-        if (json.arguments.game) {
-            args.game.push(...json.arguments.game);
-        } else if (json.arguments.jvm) {
-            args.jvm.push(...json.arguments.jvm);
+        if (json.arguments) {
+            if (json.arguments.game) {
+                args.game.push(...json.arguments.game);
+            }
+            if (json.arguments.jvm) {
+                args.jvm.push(...json.arguments.jvm);
+            }
         }
 
         releaseTime = json.releaseTime || releaseTime;
