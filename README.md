@@ -9,7 +9,7 @@ Provide several useful functions for Minecraft.
 
 This package is targeting the [Electron](https://electronjs.org) environment. Feel free to report issues related to it.
 
-**This package is now maintaining only! The bug might not be fixed on time. I did a refactor on this package and split it into multiple small packages. The alternative of this [@xmcl/minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core)**
+**This package is now MAINTAINING only! The bug might not be fixed on time. I did a refactor on this package and split it into multiple small packages. The alternative of this [@xmcl/minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core)**
 
 ## Usage
 
