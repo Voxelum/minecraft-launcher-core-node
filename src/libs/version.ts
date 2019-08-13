@@ -647,11 +647,11 @@ function parseVersionJson(versionString: string): Version {
                 "${classpath}",
             ],
         };
-        const jvms: string[] = [];
-        parsed.arguments.jvm
-            .filter((arg: LaunchArgument) => typeof arg === "string" ? true : checkAllowed(arg.rules, platform) ? true : false)
-            .forEach((arg: LaunchArgument) => typeof arg === "string" ? jvms.push(arg) : arg.value instanceof Array ? jvms.push(...arg.value) : jvms.push(arg.value as string));
-        parsed.arguments.jvm = jvms;
     }
+    const jvms: string[] = [];
+    parsed.arguments.jvm
+        .filter((arg: LaunchArgument) => typeof arg === "string" ? true : checkAllowed(arg.rules, platform) ? true : false)
+        .forEach((arg: LaunchArgument) => typeof arg === "string" ? jvms.push(arg) : arg.value instanceof Array ? jvms.push(...arg.value) : jvms.push(arg.value as string));
+    parsed.arguments.jvm = jvms;
     return parsed as Version;
 }
