@@ -188,7 +188,7 @@ export namespace Launcher {
             mc.getVersionJar(version.client)]
                 .join(path.delimiter)}`,
         };
-        cmd.push(...version.arguments.jvm.map((arg) => format(arg as string, jvmOptions)));
+        cmd.push(...version.arguments.jvm.filter((a) => typeof a === "string").map((arg) => format(arg as string, jvmOptions)));
 
         cmd.push(version.mainClass);
         const assetsDir = path.join(options.resourcePath, "assets");
@@ -209,7 +209,7 @@ export namespace Launcher {
             resolution_height: resolution.height || 470,
         };
 
-        cmd.push(...version.arguments.game.map((arg) => format(arg as string, mcOptions)));
+        cmd.push(...version.arguments.game.filter((arg) => typeof arg === "string").map((arg) => format(arg as string, mcOptions)));
 
         if (options.extraMCArgs) { cmd.push(...options.extraMCArgs); }
         if (options.server) {
