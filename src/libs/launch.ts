@@ -79,7 +79,7 @@ export namespace Launcher {
 
         await ensureLibraries(minecraftFolder, version);
 
-        const spawnOption = options.extraExecOption || { cwd: options.path, env: process.env };
+        const spawnOption = { cwd: options.path, env: process.env, ...(options.extraExecOption || {}) };
 
         return spawn(args[0], args.slice(1), spawnOption);
     }
@@ -116,7 +116,7 @@ export namespace Launcher {
         await ensureLibraries(minecraftFolder, version);
         await ensureNative(minecraftFolder, version);
 
-        const spawnOption = options.extraExecOption || { cwd: options.gamePath, env: process.env };
+        const spawnOption = { cwd: options.gamePath, env: process.env, ...(options.extraExecOption || {}) };
 
         return spawn(args[0], args.slice(1), spawnOption);
     }
