@@ -10,6 +10,7 @@ export class MinecraftFolder {
     get launcherProfile(): string { return this.getPath("launcher_profiles.json"); }
     get lastestLog(): string { return this.getPath("logs", "latest.log"); }
     get maps(): string { return this.getPath("saves"); }
+    get saves(): string { return this.getPath("saves"); }
 
     static from(location: MinecraftLocation) {
         return typeof location === "string" ? new MinecraftFolder(location) : location;
