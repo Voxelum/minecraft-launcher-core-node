@@ -63,7 +63,10 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     }
 
     async function fetchProfile(target: string, pemPubKey?: string, payload?: object) {
-        const { body: obj } = await fetchJson(target, { body: payload });
+        const { body: obj,  statusCode, statusMessage } = await fetchJson(target, { body: payload });
+        if (statusCode !== 200) {
+            throw new Error(statusMessage);
+        }
         function parseProfile(o: any) {
             if (o.properties) {
                 const properties = o.properties;
