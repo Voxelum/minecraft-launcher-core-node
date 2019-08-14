@@ -117,7 +117,7 @@ export namespace Launcher {
 
         await ensureLibraries(minecraftFolder, version);
 
-        const spawnOption = options.extraExecOption || { cwd: options.path, env: process.env };
+        const spawnOption = { cwd: options.path, env: process.env, ...(options.extraExecOption || {}) };
 
         return spawn(args[0], args.slice(1), spawnOption);
     }
@@ -154,7 +154,7 @@ export namespace Launcher {
         await ensureLibraries(minecraftFolder, version);
         await ensureNative(minecraftFolder, version);
 
-        const spawnOption = options.extraExecOption || { cwd: options.gamePath, env: process.env };
+        const spawnOption = { cwd: options.gamePath, env: process.env, ...(options.extraExecOption || {}) };
 
         return spawn(args[0], args.slice(1), spawnOption);
     }
@@ -269,6 +269,12 @@ export namespace Launcher {
         return cmd;
     }
 
+    /**
+     * Make sure the libraries are all good.
+     * 
+     * @param resourcePath The launching resource path, containing libraries folder
+     * @param version The resolved version
+     */
     export async function ensureLibraries(resourcePath: MinecraftFolder, version: ResolvedVersion) {
         const missingMask = await Promise.all(version.libraries.map((lib) => missing(resourcePath.getLibraryByPath(lib.download.path))));
         const missingLibs = version.libraries.filter((_, index) => missingMask[index]);
@@ -293,6 +299,9 @@ export namespace Launcher {
         }
     }
 
+    /**
+     * Ensure the native are correctly extracted there.
+     */
     export async function ensureNative(mc: MinecraftFolder, version: ResolvedVersion) {
         const native = mc.getNativesRoot(version.id);
         await ensureDir(native);
