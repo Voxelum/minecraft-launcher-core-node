@@ -11,7 +11,18 @@ type StringBoolean = "true" | "false";
 declare module "@xmcl/common/world" {
     namespace World {
         function loadRegionFromBuffer(buffer: Buffer, x: number, z: number): Promise<RegionDataFrame>;
+        /**
+         * 
+         * @param location The save file path. e.g .minecraft/saves/New World
+         * @param x The x of the chunk
+         * @param z The z of the chunk.
+         */
         function getRegionFile(location: string, x: number, z: number): string;
+        /**
+         * Load the specific part of the save
+         * @param location The save path
+         * @param entries The parts you want to load
+         */
         function load<K extends string & keyof World & ("players" | "advancements" | "level")>(location: string, entries: K[]): Promise<Pick<World, K | "path">>;
         function parseLevelData(buffer: Buffer): Promise<LevelDataFrame>;
     }

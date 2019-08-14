@@ -74,6 +74,10 @@ export namespace Forge {
             return null;
         }
     }
+
+    /**
+     * Represent the forge config file
+     */
     export interface Config {
         [category: string]: {
             comment?: string,
@@ -410,6 +414,9 @@ export namespace Forge {
     }
     /**
      * Read metadata of the input mod.
+     *
+     * This will scan the mcmod.info file, all class file for `@Mod` & coremod `DummyModContainer` class.
+     * This will also scan the manifest file on `META-INF/MANIFEST.MF` for tweak mod.
      *
      * @param mod The mod path or data
      */

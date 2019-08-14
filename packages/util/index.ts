@@ -5,6 +5,9 @@ import * as os from "os";
 import * as folder from "./folder";
 import * as fs from "./fs";
 
+/**
+ * Get Minecraft style platform info. (Majorly used to enable/disable native dependencies)
+ */
 export function getPlatform(): Platform {
     const arch = os.arch();
     const version = os.release();
@@ -20,6 +23,9 @@ export function getPlatform(): Platform {
     }
 }
 
+/**
+ * The current platform
+ */
 export const currentPlatform: Platform = getPlatform();
 export interface Platform {
     name: "osx" | "linux" | "windows" | "unknown";
