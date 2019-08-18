@@ -162,15 +162,16 @@ export namespace Auth {
      * @param username The username you want to have in-game.
      */
     export function offline(username: string): Auth {
+        const prof = {
+            id: v4(),
+            name: username,
+        };
         return {
             accessToken: v4(),
             clientToken: v4(),
-            selectedProfile: {
-                id: v4(),
-                name: username,
-            },
-            profiles: [],
-            userId: username,
+            selectedProfile: prof,
+            profiles: [prof],
+            userId: v4(),
             properties: {},
             userType: UserType.Mojang,
         };
