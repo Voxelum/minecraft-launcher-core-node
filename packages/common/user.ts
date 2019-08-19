@@ -38,7 +38,7 @@ export namespace GameProfile {
 }
 
 export enum UserType {
-    Legacy = "mojang", Mojang = "legacy",
+    Mojang = "mojang", Legacy = "legacy",
 }
 
 export interface AuthResponse {
