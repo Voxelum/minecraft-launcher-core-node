@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/client",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft client ping server",
@@ -24,7 +24,7 @@
     "@xmcl/nbt": "^0.0.1",
     "@xmcl/text-component": "^0.0.1",
     "uuid": "^3.2.1",
-    "@xmcl/common": "^0.0.2",
+    "@xmcl/common": "^0.0.3",
     "long": "^3.2.0"
   },
   "scripts": {

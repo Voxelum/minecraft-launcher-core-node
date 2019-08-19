@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/auth",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft authorization support",
@@ -22,9 +22,9 @@
   "dependencies": {
     "got": "^9.6.0",
     "uuid": "^3.2.1",
-    "@xmcl/profile-service": "^0.0.5",
+    "@xmcl/profile-service": "^0.0.6",
     "@xmcl/net": "^0.0.3",
-    "@xmcl/common": "^0.0.2"
+    "@xmcl/common": "^0.0.3"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",

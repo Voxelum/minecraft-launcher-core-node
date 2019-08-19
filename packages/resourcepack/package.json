@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/resourcepack",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft resource pack parsing",
@@ -18,7 +18,7 @@
     "typescript": "^3.4.3"
   },
   "dependencies": {
-    "@xmcl/common": "^0.0.2",
+    "@xmcl/common": "^0.0.3",
     "@xmcl/unzip": "^0.2.4"
   },
   "scripts": {

@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/mojang",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft Mojang Service",
@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@xmcl/net": "^0.0.3",
-    "@xmcl/common": "^0.0.2",
+    "@xmcl/common": "^0.0.3",
     "long": "^3.2.0",
     "got": "^9.6.0"
   },
