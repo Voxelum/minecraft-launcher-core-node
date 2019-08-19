@@ -63,19 +63,23 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     }
 
     async function fetchProfile(target: string, pemPubKey?: string, payload?: object) {
-        const { body: obj,  statusCode, statusMessage } = await fetchJson(target, { body: payload });
+        const { body: obj, statusCode, statusMessage } = await fetchJson(target, { body: payload });
         if (statusCode !== 200) {
             throw new Error(statusMessage);
         }
         function parseProfile(o: any) {
-            if (o.properties) {
-                const properties = o.properties;
-                const to: any = {};
+            if (typeof o.id !== "string" || typeof o.name !== "string") {
+                throw new Error(`Corrupted profile response ${JSON.stringify(o)}`);
+            }
+            if (o.properties && o.properties instanceof Array) {
+                const properties = o.properties as Array<{ name: string; value: string; signature: string; }>;
+                const to: { [key: string]: string } = {};
                 for (const prop of properties) {
-                    if (prop.signature && pemPubKey && !checkSign(prop.value, prop.signature, pemPubKey)) {
-                        throw { type: "SignatureMissMatch" };
+                    if (prop.signature && pemPubKey && !checkSign(prop.value, prop.signature, pemPubKey.toString())) {
+                        console.warn(`Discard corrupted prop ${prop.name}: ${prop.value} as the signature mismatched!`);
+                    } else {
+                        to[prop.name] = prop.value;
                     }
-                    to[prop.name] = prop.value;
                 }
                 o.properties = to;
             }
