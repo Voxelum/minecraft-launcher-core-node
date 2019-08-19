@@ -4,18 +4,38 @@ import { Response } from "got";
 import { v4 } from "uuid";
 
 export interface Auth {
+    /**
+     * The minecraft client token, the launcher should persist this
+     */
     readonly clientToken: string;
+    /**
+     * The access token get from auth server, which is used with client token to auth user identity
+     * The launcher should persist this
+     */
     readonly accessToken: string;
+    /**
+     * Selected game profile. It will be one of the `GameProfile` in `profiles`
+     */
     readonly selectedProfile: GameProfile;
+    /**
+     * All avaiable game profiles
+     */
     readonly profiles: GameProfile[];
+    /**
+     * User unique id, not same with the id in `GameProfile`
+     */
     readonly userId: string;
+    /**
+     * Properties of user
+     */
     readonly properties: { [key: string]: string };
+    /**
+     * The type of the user
+     */
     readonly userType: UserType;
 }
 
 export namespace Auth {
-    // this module migrates from jmccc: https://github.com/to2mbn/JMCCC/tree/master/jmccc-yggdrasil-authenticator
-    // @author huangyuhui
     export namespace Yggdrasil {
         export interface API {
             readonly hostName: string;
