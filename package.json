@@ -4,9 +4,9 @@
     "node": ">=10.0"
   },
   "publishConfig": {
-        "access": "public"
-    },
-    "devDependencies": {
+    "access": "public"
+  },
+  "devDependencies": {
     "@microsoft/rush": "^5.10.0",
     "tslint": "^5.14.0",
     "typescript": "^3.4.3"
