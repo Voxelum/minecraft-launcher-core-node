@@ -20,7 +20,7 @@
   "dependencies": {
     "fast-html-parser": "^1.0.1",
     "@xmcl/net": "^0.0.3",
-    "@xmcl/util": "^0.1.4"
+    "@xmcl/util": "^0.1.5"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",

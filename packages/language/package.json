@@ -18,7 +18,7 @@
     "typescript": "^3.4.3"
   },
   "dependencies": {
-    "@xmcl/util": "^0.1.4"
+    "@xmcl/util": "^0.1.5"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",

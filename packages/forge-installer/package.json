@@ -23,7 +23,7 @@
     "@xmcl/net": "^0.0.3",
     "@xmcl/installer": "^0.0.11",
     "@xmcl/version": "^0.0.11",
-    "@xmcl/util": "^0.1.4",
+    "@xmcl/util": "^0.1.5",
     "@xmcl/task": "^0.0.1",
     "@xmcl/unzip": "^0.2.4"
   },
