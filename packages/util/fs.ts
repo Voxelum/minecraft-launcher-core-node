@@ -133,7 +133,7 @@ export function computeChecksum(path: string, algorithm: string = "sha1"): Promi
         const hash = createHash(algorithm).setEncoding("hex");
         createReadStream(path)
             .pipe(hash)
-            .on("error", (e) => { reject(new Error(e)); })
+            .on("error", (e) => { reject(e); })
             .once("finish", () => { resolve(hash.read() as string); });
     });
 }
@@ -143,7 +143,7 @@ export function multiChecksum(path: string, algorithms: string[]): Promise<strin
         const hashes = algorithms.map((name) => createHash(name));
         createReadStream(path)
             .on("data", (chunk) => { hashes.forEach((h) => h.update(chunk)); })
-            .on("error", (e) => { reject(new Error(e)); })
+            .on("error", (e) => { reject(e); })
             .once("close", () => { resolve(hashes.map((h) => h.digest("hex"))); });
     });
 }
