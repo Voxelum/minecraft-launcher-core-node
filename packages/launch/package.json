@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/launch",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft launch function",
@@ -23,7 +23,7 @@
     "@xmcl/fabric": "^0.0.3"
   },
   "dependencies": {
-    "@xmcl/auth": "^0.0.6",
+    "@xmcl/auth": "^0.0.7",
     "@xmcl/util": "^0.1.5",
     "@xmcl/unzip": "^0.2.4",
     "@xmcl/version": "^0.0.11",
