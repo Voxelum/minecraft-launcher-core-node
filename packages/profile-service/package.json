@@ -21,6 +21,7 @@
   "dependencies": {
     "@xmcl/net": "^0.0.3",
     "@xmcl/common": "^0.0.3",
+    "@xmcl/util": "^0.1.5",
     "bytebuffer": "^5.0.1"
   },
   "scripts": {
