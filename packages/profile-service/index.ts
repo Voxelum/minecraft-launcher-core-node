@@ -1,10 +1,12 @@
 import { GameProfile } from "@xmcl/common";
-import { fetchBuffer, fetchJson } from "@xmcl/net";
+import { fetchBuffer, fetchJson, got } from "@xmcl/net";
+import { vfs } from "@xmcl/util";
 import * as ByteBuffer from "bytebuffer";
 import * as crypto from "crypto";
 import * as https from "https";
 import * as queryString from "querystring";
 import * as url from "url";
+import { deprecate } from "util";
 
 export { GameProfile } from "@xmcl/common";
 
@@ -92,7 +94,26 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         }
     }
 
-    export async function cacheTextures(tex: GameProfile.TexturesInfo) {
+    export function fetchTexture(texture: GameProfile.Texture, dest: string): Promise<void>;
+    export function fetchTexture(texture: GameProfile.Texture): Promise<Buffer>;
+    /**
+     * Fetch the texture into disk or memory
+     */
+    export async function fetchTexture(texture: GameProfile.Texture, dest?: string): Promise<void | Buffer> {
+        if (dest) {
+            await vfs.waitStream(got.stream(texture.url)
+                .pipe(vfs.createWriteStream(dest)));
+        } else {
+            const { body } = await fetchBuffer(texture.url);
+            return body;
+        }
+    }
+
+    /**
+     * Cache the texture into the url as data-uri
+     * @param tex The texture info
+     */
+    export async function cacheTexturesAsUri(tex: GameProfile.TexturesInfo) {
         if (!tex) { return Promise.reject("No textures"); }
 
         async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
@@ -116,13 +137,22 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     }
 
     /**
+     * Cache the texture into the url as data-uri
+     * @param tex The texture info
+     * @deprecated
+     */
+    export async function cacheTextures(tex: GameProfile.TexturesInfo) {
+        return cacheTexturesAsUri(tex);
+    }
+
+    /**
      * Get all the textures of this GameProfile and cache them.
      *
      * @param profile
      */
-    export async function getTextures(profile: GameProfile): Promise<GameProfile.TexturesInfo> {
+    export async function getTextures(profile: GameProfile, cache: boolean = true): Promise<GameProfile.TexturesInfo> {
         const texture = parseTexturesInfo(profile);
-        if (texture) { return cacheTextures(texture); }
+        if (texture) { return cache ? cacheTextures(texture) : texture; }
         return Promise.reject(`No texture for user ${profile.id}.`);
     }
 
@@ -265,3 +295,5 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         }
     }
 }
+
+ProfileService.cacheTextures = deprecate(ProfileService.cacheTextures, "Use cacheTexturesUri instead");
