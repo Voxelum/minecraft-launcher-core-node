@@ -183,15 +183,15 @@ export namespace Auth {
      */
     export function offline(username: string): Auth {
         const prof = {
-            id: v4(),
+            id: v4().replace(/-/g, ""),
             name: username,
         };
         return {
-            accessToken: v4(),
-            clientToken: v4(),
+            accessToken: v4().replace(/-/g, ""),
+            clientToken: v4().replace(/-/g, ""),
             selectedProfile: prof,
             profiles: [prof],
-            userId: v4(),
+            userId: v4().replace(/-/g, ""),
             properties: {},
             userType: UserType.Mojang,
         };
