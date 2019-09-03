@@ -55,7 +55,11 @@ export namespace Installer {
     export interface AssetsOption {
         assetsHost?: string;
     }
-    export type Option = AssetsOption & AssetsOption;
+    export interface JarOption {
+        client?: string;
+        server?: string;
+    }
+    export type Option = AssetsOption & AssetsOption & JarOption & LibraryOption;
 
     /**
      * Install the Minecraft game to a location by version metadata
@@ -80,12 +84,12 @@ export namespace Installer {
      * @param versionMeta the version metadata; get from updateVersionMeta
      * @param minecraft minecraft location
      */
-    export function installVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Promise<ResolvedVersion> {
-        return installVersionTask(type, versionMeta, minecraft).execute();
+    export function installVersion(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: JarOption): Promise<ResolvedVersion> {
+        return installVersionTask(type, versionMeta, minecraft, option).execute();
     }
 
-    export function installVersionTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation): Task<ResolvedVersion> {
-        return Task.create({ name: "installVersion", arguments: { type, version: versionMeta.id } }, installVersionWork(type, versionMeta, minecraft));
+    export function installVersionTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: JarOption): Task<ResolvedVersion> {
+        return Task.create({ name: "installVersion", arguments: { type, version: versionMeta.id } }, installVersionWork(type as any, versionMeta, minecraft, option));
     }
 
     /**
@@ -123,9 +127,9 @@ export namespace Installer {
     }
 }
 
-function installWork(type: string, versionMeta: Installer.VersionMeta, minecraft: MinecraftLocation, option?: { checksum?: boolean, libraryHost?: Installer.LibraryHost, assetsHost?: string }) {
+function installWork(type: "client" | "server", versionMeta: Installer.VersionMeta, minecraft: MinecraftLocation, option?: Installer.Option) {
     return async (context: Task.Context) => {
-        const version = await context.execute("installVersion", installVersionWork(type, versionMeta, minecraft));
+        const version = await context.execute("installVersion", installVersionWork(type, versionMeta, minecraft, option));
         if (type === "client") {
             await context.execute("installDependencies", installDependenciesWork(version, option));
         } else {
@@ -135,11 +139,11 @@ function installWork(type: string, versionMeta: Installer.VersionMeta, minecraft
     };
 }
 
-function installVersionWork(type: string, versionMeta: Installer.VersionMeta, minecraft: MinecraftLocation) {
+function installVersionWork(type: "client" | "server", versionMeta: Installer.VersionMeta, minecraft: MinecraftLocation, option?: Installer.JarOption) {
     return async (context: Task.Context) => {
         await context.execute("json", installVersionJsonWork(versionMeta, minecraft));
         const version = await Version.parse(minecraft, versionMeta.id);
-        await context.execute("jar", installVersionJarWork(type, version, minecraft));
+        await context.execute("jar", installVersionJarWork(type, version, minecraft, option));
         return version;
     };
 }
@@ -155,7 +159,7 @@ function installVersionJsonWork(version: Installer.VersionMeta, minecraft: Minec
     };
 }
 
-function installVersionJarWork(type: string, version: ResolvedVersion, minecraft: MinecraftLocation) {
+function installVersionJarWork(type: "client" | "server", version: ResolvedVersion, minecraft: MinecraftLocation, option: Installer.JarOption = {}) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
         await vfs.ensureDir(folder.getVersionRoot(version.id));
@@ -163,7 +167,10 @@ function installVersionJarWork(type: string, version: ResolvedVersion, minecraft
         const filename = type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar";
         const jar = path.join(folder.getVersionRoot(version.id), filename);
 
-        await downloadFileIfAbsentWork({ url: version.downloads[type].url, destination: jar, checksum: { algorithm: "sha1", hash: version.downloads[type].sha1 } })(context);
+        let url = option[type];
+        if (!url) { url = version.downloads[type].url; }
+
+        await downloadFileIfAbsentWork({ url, destination: jar, checksum: { algorithm: "sha1", hash: version.downloads[type].sha1 } })(context);
 
         const valid = await vfs.validate(jar, { algorithm: "sha1", hash: version.downloads[type].sha1 });
         if (!valid) {
@@ -228,7 +235,7 @@ function installLibraryWork(lib: ResolvedLibrary, folder: MinecraftFolder, libra
     };
 }
 
-function installLibrariesWork<T extends Pick<ResolvedVersion, "libraries" | "minecraftDirectory">>(version: T, option?: { libraryHost?: Installer.LibraryHost }) {
+function installLibrariesWork<T extends Pick<ResolvedVersion, "libraries" | "minecraftDirectory">>(version: T, option?: Installer.LibraryOption) {
     return async (context: Task.Context) => {
         const folder: MinecraftFolder = new MinecraftFolder(version.minecraftDirectory);
         const fullOption = option || {};
