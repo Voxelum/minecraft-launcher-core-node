@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/minecraft-launcher-core",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Propabaliy all the things I want for a minecraft launcher. Targeting ElectronJs environment!",
   "engines": {
     "node": ">=10.0"
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@xmcl/auth": "^0.0.7",
-    "@xmcl/client": "^0.0.3",
+    "@xmcl/client": "^0.0.4",
     "@xmcl/common": "^0.0.3",
     "@xmcl/fabric": "^0.0.3",
     "@xmcl/forge": "^0.0.7",
