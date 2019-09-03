@@ -1,6 +1,7 @@
 // tslint:disable: variable-name
 
 import NBT from "@xmcl/nbt";
+import * as ByteBuffer from "bytebuffer";
 import * as Long from "long";
 import "uuid";
 
