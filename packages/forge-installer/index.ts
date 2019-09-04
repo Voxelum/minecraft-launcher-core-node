@@ -120,6 +120,12 @@ export namespace ForgeInstaller {
                 await vfs.ensureFile(file);
                 await promisify(finished)(s.pipe(vfs.createWriteStream(file)));
             }
+            function libRedirect(lib: ResolvedLibrary) {
+                if (lib.name.startsWith("net.minecraftforge:forge:")) {
+                    return `file://${path.join(temp, "maven", lib.download.path)}`;
+                }
+                return undefined;
+            }
             try {
                 let zip: Unzip.LazyZipFile;
                 try {
@@ -186,13 +192,7 @@ export namespace ForgeInstaller {
                     }
                 }
 
-                function libRedirect(lib: ResolvedLibrary) {
-                    if (lib.name.startsWith("net.minecraftforge:forge:")) {
-                        return `file://${path.join(temp, "maven", lib.download.path)}`;
-                    }
-                    return undefined;
-                }
-
+               
                 const parsedLibs = Version.resolveLibraries([...profile.libraries, ...versionJson.libraries]);
 
                 await context.execute("downloadLibraries", Installer.installLibrariesDirectTask(parsedLibs, mc, { libraryHost: libRedirect }).work);
