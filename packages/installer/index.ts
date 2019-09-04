@@ -222,6 +222,11 @@ function installLibraryWork(lib: ResolvedLibrary, folder: MinecraftFolder, libra
                 await context.execute("unpack", () => unpack200(decompressed).then((buf) => vfs.writeFile(filePath, buf)));
             } else {
                 await downloadFileWork({ url: downloadURL, destination: filePath })(context);
+
+                const valid = await vfs.validate(filePath, { algorithm: "sha1", hash: lib.download.sha1 });
+                if (!valid) {
+                    await downloadFileWork({ url: lib.download.url, destination: filePath })(context);
+                }
             }
         };
         if (!exist) {
@@ -276,14 +281,14 @@ function installAssetsByCluster(objects: Array<{ name: string, hash: string, siz
         for (const o of objects) {
             const { hash, size, name } = o;
 
-            context.update(lastProgress, undefined, name);
-
             const head = hash.substring(0, 2);
             const dir = folder.getPath("assets", "objects", head);
             await vfs.ensureDir(dir);
 
+            context.update(lastProgress, undefined, `${assetsHost}/${head}/${hash}`);
+
             const file = path.join(dir, hash);
-            const valid = await vfs.validate(file, { algorithm: "sha1", hash });
+            let valid = await vfs.validate(file, { algorithm: "sha1", hash });
             if (!valid) {
                 await downloadFile({
                     url: `${assetsHost}/${head}/${hash}`,
@@ -292,6 +297,17 @@ function installAssetsByCluster(objects: Array<{ name: string, hash: string, siz
                         context.update(lastProgress + written);
                     },
                 });
+                valid = await vfs.validate(file, { algorithm: "sha1", hash });
+                if (!valid) {
+                    await downloadFile({
+                        url: `${Installer.DEFAULT_RESOURCE_ROOT_URL}/${head}/${hash}`,
+                        destination: file,
+                        progress(written) {
+                            context.update(lastProgress + written);
+                        },
+                    });
+                }
+
             }
             lastProgress += size;
             context.update(lastProgress);
