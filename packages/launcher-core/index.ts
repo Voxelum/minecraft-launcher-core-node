@@ -20,7 +20,7 @@ import * as Net from "@xmcl/net";
 import { GotBodyFn, GotInstance } from "got";
 const got: GotInstance<GotBodyFn<string>> = Net.got;
 
-import Util, { MinecraftFolder, MinecraftLocation } from "@xmcl/util";
+import Util, { MinecraftFolder, MinecraftLocation, JavaExecutor } from "@xmcl/util";
 
 export { ResolvedLibrary, ResolvedNative, ResolvedVersion, PartialResolvedVersion, LibraryInfo, VersionDiagnosis } from "@xmcl/version";
 export { World } from "@xmcl/world";
