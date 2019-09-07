@@ -97,7 +97,7 @@ export namespace ForgeInstaller {
         if (typeof versionOrProfile === "string") {
             const installProfPath = path.join(verRoot, "install_profile.json");
             if (await vfs.exists(installProfPath)) {
-                prof = JSON.parse(installProfPath);
+                prof = JSON.parse(await vfs.readFile(installProfPath).then((b) => b.toString()));
             }
         } else {
             prof = versionOrProfile;
