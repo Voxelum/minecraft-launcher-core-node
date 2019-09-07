@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/forge-installer",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Forge installer",
@@ -23,7 +23,7 @@
     "@xmcl/net": "^0.0.4",
     "@xmcl/installer": "^0.1.2",
     "@xmcl/version": "^0.1.0",
-    "@xmcl/util": "^0.2.0",
+    "@xmcl/util": "^0.2.1",
     "@xmcl/task": "^0.0.1",
     "@xmcl/unzip": "^0.2.4"
   },

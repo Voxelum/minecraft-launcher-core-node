@@ -20,7 +20,7 @@
   "dependencies": {
     "got": "^9.6.0",
     "bytebuffer": "^5.0.1",
-    "@xmcl/util": "^0.2.0",
+    "@xmcl/util": "^0.2.1",
     "@xmcl/task": "^0.0.1"
   },
   "scripts": {

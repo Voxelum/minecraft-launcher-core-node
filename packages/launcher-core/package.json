@@ -23,7 +23,7 @@
     "@xmcl/common": "^0.0.3",
     "@xmcl/fabric": "^0.0.4",
     "@xmcl/forge": "^0.0.7",
-    "@xmcl/forge-installer": "^0.2.1",
+    "@xmcl/forge-installer": "^0.2.2",
     "@xmcl/gamesetting": "^0.0.3",
     "@xmcl/installer": "^0.1.2",
     "@xmcl/language": "^0.0.4",
@@ -36,7 +36,7 @@
     "@xmcl/task": "^0.0.1",
     "@xmcl/net": "^0.0.4",
     "@xmcl/text-component": "^0.0.1",
-    "@xmcl/util": "^0.2.0",
+    "@xmcl/util": "^0.2.1",
     "@xmcl/version": "^0.1.0",
     "@xmcl/world": "^0.0.8"
   },
