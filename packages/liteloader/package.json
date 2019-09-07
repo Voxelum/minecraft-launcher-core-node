@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/liteloader",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Liteloader parser & installer",
@@ -13,17 +13,17 @@
   "devDependencies": {
     "@types/mocha": "^2.2.41",
     "@types/node": "^10.0.0",
-    "@xmcl/forge-installer": "^0.0.16",
+    "@xmcl/forge-installer": "^0.1.0",
     "mocha": "^6.1.4",
     "tslint": "^5.14.0",
     "typescript": "^3.4.3"
   },
   "dependencies": {
     "got": "^9.6.0",
-    "@xmcl/installer": "^0.1.1",
-    "@xmcl/version": "^0.0.11",
-    "@xmcl/util": "^0.1.5",
-    "@xmcl/net": "^0.0.3",
+    "@xmcl/installer": "^0.1.2",
+    "@xmcl/version": "^0.1.0",
+    "@xmcl/util": "^0.2.0",
+    "@xmcl/net": "^0.0.4",
     "@xmcl/task": "^0.0.1",
     "@xmcl/unzip": "^0.2.4"
   },

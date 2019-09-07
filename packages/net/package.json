@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/net",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "network utility",
@@ -20,7 +20,7 @@
   "dependencies": {
     "got": "^9.6.0",
     "bytebuffer": "^5.0.1",
-    "@xmcl/util": "^0.1.5",
+    "@xmcl/util": "^0.2.0",
     "@xmcl/task": "^0.0.1"
   },
   "scripts": {
