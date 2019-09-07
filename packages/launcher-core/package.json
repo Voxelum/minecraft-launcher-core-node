@@ -23,7 +23,7 @@
     "@xmcl/common": "^0.0.3",
     "@xmcl/fabric": "^0.0.4",
     "@xmcl/forge": "^0.0.7",
-    "@xmcl/forge-installer": "^0.1.3",
+    "@xmcl/forge-installer": "^0.1.4",
     "@xmcl/gamesetting": "^0.0.3",
     "@xmcl/installer": "^0.1.2",
     "@xmcl/language": "^0.0.4",
