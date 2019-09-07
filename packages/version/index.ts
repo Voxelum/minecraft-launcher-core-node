@@ -439,7 +439,8 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
             const libPath = minecraft.getLibraryByPath(lib.download.path);
             if (await exists(libPath)) {
                 if (lib.download.sha1) {
-                    return computeChecksum(libPath).then((c) => c === lib.download.sha1);
+                    return computeChecksum(libPath).then((c) =>
+                        c === lib.download.sha1);
                 }
                 return true;
             }
