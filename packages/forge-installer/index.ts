@@ -114,7 +114,7 @@ export namespace ForgeInstaller {
             }
         }
         if (await vfs.exists(versionJsonPath)) {
-            const versionJSON: Version = JSON.parse(versionJsonPath);
+            const versionJSON: Version = JSON.parse(await vfs.readFile(versionJsonPath).then((b) => b.toString()));
             if (versionJSON.arguments && versionJSON.arguments.game) {
                 const args = versionJSON.arguments.game;
                 const forgeVersion = args.indexOf("--fml.forgeVersion") + 1;
