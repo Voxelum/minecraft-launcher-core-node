@@ -105,10 +105,14 @@ export namespace ForgeInstaller {
         if (prof) {
             for (const proc of prof.processors) {
                 if (proc.outputs) {
+                    let bad = false;
                     for (const file in proc.outputs) {
                         if (! await vfs.validate(file, { algorithm: "sha1", hash: proc.outputs[file].replace(/\'/g, "") })) {
-                            diag.badProcessedFiles.push(proc);
+                            bad = true;
                         }
+                    }
+                    if (bad) {
+                        diag.badProcessedFiles.push(proc);
                     }
                 }
             }
