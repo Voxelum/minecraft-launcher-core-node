@@ -95,7 +95,7 @@ export namespace ForgeInstaller {
 
         let prof: InstallerProfile | undefined;
         if (typeof versionOrProfile === "string") {
-            const installProfPath = path.join(verRoot, "installer_profile.json");
+            const installProfPath = path.join(verRoot, "install_profile.json");
             if (await vfs.exists(installProfPath)) {
                 prof = JSON.parse(installProfPath);
             }
@@ -177,7 +177,7 @@ export namespace ForgeInstaller {
             let ver: Version;
             if (typeof version === "string") {
                 const versionRoot = mc.getVersionRoot(version);
-                prof = await vfs.readFile(path.join(versionRoot, "installer_profile.json")).then((b) => b.toString()).then(JSON.parse);
+                prof = await vfs.readFile(path.join(versionRoot, "install_profile.json")).then((b) => b.toString()).then(JSON.parse);
             } else {
                 prof = version;
             }
@@ -299,7 +299,7 @@ export namespace ForgeInstaller {
 
                 const rootPath = mc.getVersionRoot(versionJson.id);
                 const jsonPath = path.join(rootPath, `${versionJson.id}.json`);
-                const installJsonPath = path.join(rootPath, `installer_profile.json`);
+                const installJsonPath = path.join(rootPath, `install_profile.json`);
                 const clientDataPath = path.join(rootPath, profile.data.BINPATCH.client);
 
                 await vfs.ensureFile(jsonPath);
