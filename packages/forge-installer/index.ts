@@ -208,12 +208,18 @@ export namespace ForgeInstaller {
         const cp = [...proc.classpath, proc.jar].map(Version.getLibraryInfo).map((p) => mc.getLibraryByPath(p.path)).join(path.delimiter);
         const cmd = ["-cp", cp, mainClass, ...proc.args];
         await java(cmd);
+        let failed = false;
         if (proc.outputs) {
             for (const file in proc.outputs) {
                 if (! await vfs.validate(file, { algorithm: "sha1", hash: proc.outputs[file].replace(/\'/g, "") })) {
                     console.error(`Fail to process ${proc.jar} @ ${file} since its validation failed.`);
+                    failed = true;
                 }
             }
+        }
+        if (failed) {
+            console.error(`Java arguments: ${JSON.stringify(cmd)}`);
+            throw new Error(`Fail to process post processing since its validation failed.`);
         }
     }
 
