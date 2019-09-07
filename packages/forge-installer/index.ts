@@ -211,7 +211,7 @@ export namespace ForgeInstaller {
         if (proc.outputs) {
             for (const file in proc.outputs) {
                 if (! await vfs.validate(file, { algorithm: "sha1", hash: proc.outputs[file].replace(/\'/g, "") })) {
-                    throw new Error(`Fail to process ${proc.jar} @ ${file} since its validation failed.`);
+                    console.error(`Fail to process ${proc.jar} @ ${file} since its validation failed.`);
                 }
             }
         }
