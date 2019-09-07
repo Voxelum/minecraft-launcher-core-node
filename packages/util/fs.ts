@@ -13,7 +13,7 @@ export type VFS = typeof promises & {
     exists(target: string): Promise<boolean>;
     copy(src: string, dest: string, filter?: (name: string) => boolean): Promise<void>;
     waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
-    validate(target: string, ...validations: { algorithm: string, hash: string }[]): Promise<boolean>;
+    validate(target: string, ...validations: Array<{ algorithm: string, hash: string }>): Promise<boolean>;
 };
 
 export const vfs: VFS = {
@@ -28,7 +28,8 @@ export const vfs: VFS = {
     copy,
     waitStream,
     validate(target, ...validations) {
-        return multiChecksum(target, validations.map(v => v.algorithm)).then(r => r.every((h, i) => h === validations[i].hash)).catch(() => false);
+        return multiChecksum(target, validations.map((v) => v.algorithm)).then((r) => r.every((h, i) =>
+            h === validations[i].hash)).catch(() => false);
     },
 };
 
@@ -70,7 +71,8 @@ export function missing(target: string) {
 }
 
 export async function validate(target: string, hash: string, algorithm: string = "sha1") {
-    return await exists(target) && await computeChecksum(target, algorithm) === hash;
+    return await exists(target)
+        && await computeChecksum(target, algorithm) === hash;
 }
 
 export async function copy(src: string, dest: string, filter: (name: string) => boolean = () => true) {
@@ -80,7 +82,7 @@ export async function copy(src: string, dest: string, filter: (name: string) => 
     if (s.isDirectory()) {
         await ensureDir(dest);
         const childs = await promises.readdir(src);
-        await Promise.all(childs.map(p => copy(presolve(src, p), presolve(dest, p))));
+        await Promise.all(childs.map((p) => copy(presolve(src, p), presolve(dest, p))));
     } else if (await missing(dest)) {
         await promises.copyFile(src, dest);
     }
