@@ -244,7 +244,7 @@ export namespace ForgeInstaller {
             value.server = processValue(value.server);
 
             if (key === "BINPATCH") {
-                const verRoot = mc.getVersionRoot(profile.minecraft);
+                const verRoot = mc.getVersionRoot(profile.version);
                 value.client = path.join(verRoot, value.client);
                 value.server = path.join(verRoot, value.server);
             }
