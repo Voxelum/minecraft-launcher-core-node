@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/launch",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft launch function",
@@ -18,8 +18,8 @@
     "tslint": "^5.14.0",
     "typescript": "^3.4.3",
     "@xmcl/installer": "^0.1.2",
-    "@xmcl/forge-installer": "^0.1.5",
-    "@xmcl/liteloader": "^0.0.17",
+    "@xmcl/forge-installer": "^0.2.0",
+    "@xmcl/liteloader": "^0.0.18",
     "@xmcl/fabric": "^0.0.4"
   },
   "dependencies": {
