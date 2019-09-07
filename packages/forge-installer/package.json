@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/forge-installer",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Forge installer",
