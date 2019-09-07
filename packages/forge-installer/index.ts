@@ -61,14 +61,37 @@ export namespace ForgeInstaller {
                 [key: string]: string,
             },
         }>;
-        libraries: Version.Library[];
+        libraries: Version.NormalLibrary[];
     }
 
     export interface Diagnosis {
+        /**
+         * When this flag is true, please reinstall totally
+         */
+        badInstall: boolean;
+        /**
+         * When only this is not empty
+         */
         badProcessedFiles: Array<InstallProfile["processors"][number]>;
         badVersionJson: boolean;
+        /**
+         * When this is not empty, please use `postProcessInstallProfile`
+         */
+        missingInstallDependencies: Version.NormalLibrary[];
+
+        missingBinpatch: boolean;
+
+        /**
+         * Alt for badProcessedFiles
+         */
         missingSrgJar: boolean;
+        /**
+         * Alt for badProcessedFiles
+         */
         missingMinecraftExtraJar: boolean;
+        /**
+         * Alt for badProcessedFiles
+         */
         missingForgePatchesJar: boolean;
     }
 
@@ -87,7 +110,10 @@ export namespace ForgeInstaller {
 
         const diag: Diagnosis = {
             badProcessedFiles: [],
+            missingInstallDependencies: [],
             badVersionJson: false,
+            missingBinpatch: false,
+            badInstall: false,
             missingSrgJar: false,
             missingMinecraftExtraJar: false,
             missingForgePatchesJar: false,
@@ -118,6 +144,25 @@ export namespace ForgeInstaller {
                     }
                 }
             }
+            // if we have to process file, we have to check if the forge deps are ready
+            if (diag.badProcessedFiles.length !== 0) {
+                const libValidMask = await Promise.all(processedProfile.libraries.map(async (lib) => {
+                    const artifact = lib.downloads.artifact;
+                    const libPath = mc.getLibraryByPath(artifact.path);
+                    if (await vfs.exists(libPath)) {
+                        return artifact.sha1 ? vfs.validate(libPath) : true;
+                    }
+                    return false;
+                }));
+                const missingLibraries = processedProfile.libraries.filter((_, i) => !libValidMask[i]);
+                diag.missingInstallDependencies.push(...missingLibraries);
+
+                const validClient = await vfs.stat(processedProfile.data.BINPATCH.client).then((s) => s.size !== 0).catch((_) => false);
+                if (!validClient) {
+                    diag.missingBinpatch = true;
+                    diag.badInstall = true;
+                }
+            }
         }
         if (await vfs.exists(versionJsonPath)) {
             const versionJSON: Version = JSON.parse(await vfs.readFile(versionJsonPath).then((b) => b.toString()));
@@ -128,6 +173,7 @@ export namespace ForgeInstaller {
                 const mcpVersion = args.indexOf("--fml.mcpVersion") + 1;
                 if (!forgeVersion || !mcVersion || !mcpVersion) {
                     diag.badVersionJson = true;
+                    diag.badInstall = true;
                 } else {
                     const srgPath = mc.getLibraryByPath(`net/minecraft/client/${mcVersion}-${mcpVersion}/client-${mcVersion}-${mcpVersion}-srg.jar`);
                     const extraPath = mc.getLibraryByPath(`net/minecraft/client/${mcVersion}/client-${mcVersion}-extra.jar`);
@@ -138,9 +184,11 @@ export namespace ForgeInstaller {
                 }
             } else {
                 diag.badVersionJson = true;
+                diag.badInstall = true;
             }
         } else {
             diag.badVersionJson = true;
+            diag.badInstall = true;
         }
 
         return diag;
