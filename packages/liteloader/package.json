@@ -13,7 +13,7 @@
   "devDependencies": {
     "@types/mocha": "^2.2.41",
     "@types/node": "^10.0.0",
-    "@xmcl/forge-installer": "^0.2.3",
+    "@xmcl/forge-installer": "^0.2.4",
     "mocha": "^6.1.4",
     "tslint": "^5.14.0",
     "typescript": "^3.4.3"
