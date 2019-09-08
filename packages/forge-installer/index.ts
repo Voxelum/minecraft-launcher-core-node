@@ -313,12 +313,21 @@ export namespace ForgeInstaller {
             await context.execute("postProcessing", async (ctx) => {
                 ctx.update(0, profile.processors.length);
                 let i = 0;
+                const errs: Error[] = [];
                 for (const proc of profile.processors) {
-                    await postProcess(mc, proc, java);
+                    try {
+                        await postProcess(mc, proc, java);
+                    } catch (e) {
+                        errs.push(e);
+                    }
                     ctx.update(i += 1, profile.processors.length);
                 }
                 i += 1;
                 ctx.update(i, profile.processors.length);
+
+                if (errs.length !== 0) {
+                    throw new Error(`Fail to post processing`);
+                }
             });
         };
     }
@@ -418,7 +427,7 @@ export namespace ForgeInstaller {
 
                 await processExtractLibrary(await zip.openEntry(forgeEntry), forgeEntry.fileName);
                 await processExtractLibrary(await zip.openEntry(forgeUniversalEntry), forgeUniversalEntry.fileName);
-                await processVersion(zip, versionEntry, installProfileEntry, clientDataEntry);
+                await processVersion(zip, installProfileEntry, versionEntry, clientDataEntry);
 
                 await installByInstallerPartialWork(mc, profile, versionJson, java, installLibOption)(context);
 
