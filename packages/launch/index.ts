@@ -31,18 +31,6 @@ function format(template: string, args: any) {
 }
 
 export namespace Launcher {
-    /**
-     * Extract native for a version to somewhere. You can perform whatever strategy to extract native in this function
-     * @param mc The minecraft root dir
-     * @param version The resolved version
-     */
-    export type NativeExtractor = (mc: MinecraftFolder, version: ResolvedVersion) => Promise<void>;
-
-    export interface NativeStrategy {
-        extract(mc: MinecraftFolder, version: ResolvedVersion): Promise<void>;
-    }
-
-
     export interface ResolutionFeature {
         has_custom_resolution: { resolution_width: string, resolution_height: string };
     }
