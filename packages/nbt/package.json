@@ -10,17 +10,8 @@
     "publishConfig": {
         "access": "public"
     },
-    "devDependencies": {
-        "@types/bytebuffer": "^5.0.37",
-        "@types/long": "^3.0.31",
-        "@types/mocha": "^2.2.41",
-        "@types/node": "^10.0.0",
-        "mocha": "^6.1.4",
-        "tslint": "^5.14.0",
-        "typescript": "^3.4.3"
-    },
     "scripts": {
-        "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",
+        "test": "mocha test.js --timeout 10000 ",
         "build": "tsc --build tsconfig.json"
     },
     "repository": {

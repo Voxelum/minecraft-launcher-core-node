@@ -10,15 +10,9 @@
   "publishConfig": {
     "access": "public"
   },
-  "devDependencies": {
-    "@types/bytebuffer": "^5.0.37",
-    "@types/node": "^10.0.0",
-    "tslint": "^5.14.0",
-    "typescript": "^3.4.3"
-  },
   "dependencies": {
-    "bytebuffer": "^5.0.1",
-    "@xmcl/task": "^0.0.1"
+    "@xmcl/task": "file:../task",
+    "bytebuffer": "^5.0.1"
   },
   "scripts": {
     "test": "",

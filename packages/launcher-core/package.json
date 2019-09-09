@@ -8,37 +8,32 @@
   "publishConfig": {
     "access": "public"
   },
-  "devDependencies": {
-    "tslint": "^5.14.0",
-    "typescript": "^3.4.3",
-    "@types/got": "9.6.2"
-  },
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "test": ""
   },
   "dependencies": {
-    "@xmcl/auth": "^0.0.8",
-    "@xmcl/client": "^0.0.4",
-    "@xmcl/common": "^0.0.3",
-    "@xmcl/fabric": "^0.0.4",
-    "@xmcl/forge": "^0.0.7",
-    "@xmcl/forge-installer": "^0.2.4",
-    "@xmcl/gamesetting": "^0.0.3",
-    "@xmcl/installer": "^0.1.2",
-    "@xmcl/language": "^0.0.4",
-    "@xmcl/launch": "^0.0.19",
-    "@xmcl/liteloader": "^0.0.18",
-    "@xmcl/mojang": "^0.0.6",
-    "@xmcl/nbt": "^0.0.1",
-    "@xmcl/profile-service": "^0.1.1",
-    "@xmcl/resourcepack": "^0.0.7",
-    "@xmcl/task": "^0.0.1",
-    "@xmcl/net": "^0.0.4",
-    "@xmcl/text-component": "^0.0.1",
-    "@xmcl/util": "^0.2.1",
-    "@xmcl/version": "^0.1.0",
-    "@xmcl/world": "^0.0.8"
+    "@xmcl/auth": "file:../auth",
+    "@xmcl/client": "file:../client",
+    "@xmcl/common": "file:../common",
+    "@xmcl/fabric": "file:../fabric",
+    "@xmcl/forge": "file:../forge",
+    "@xmcl/forge-installer": "file:../forge-installer",
+    "@xmcl/gamesetting": "file:../gamesetting",
+    "@xmcl/installer": "file:../installer",
+    "@xmcl/language": "file:../language",
+    "@xmcl/launch": "file:../launch",
+    "@xmcl/liteloader": "file:../liteloader",
+    "@xmcl/mojang": "file:../mojang",
+    "@xmcl/nbt": "file:../nbt",
+    "@xmcl/net": "file:../net",
+    "@xmcl/profile-service": "file:../profile-service",
+    "@xmcl/resourcepack": "file:../resourcepack",
+    "@xmcl/task": "file:../task",
+    "@xmcl/text-component": "file:../text-component",
+    "@xmcl/util": "file:../util",
+    "@xmcl/version": "file:../version",
+    "@xmcl/world": "file:../world"
   },
   "repository": {
     "type": "git",

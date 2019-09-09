@@ -7,11 +7,7 @@
   },
   "description": "A tree structure task definition",
   "publishConfig": {
-        "access": "public"
-    },
-    "devDependencies": {
-    "@types/node": "^10.0.0",
-    "typescript": "^3.4.3"
+    "access": "public"
   },
   "license": "MIT",
   "scripts": {

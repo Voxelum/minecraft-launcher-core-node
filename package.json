@@ -7,16 +7,23 @@
     "access": "public"
   },
   "devDependencies": {
-    "@microsoft/rush": "^5.10.0",
+    "@types/bytebuffer": "^5.0.37",
+    "@types/got": "^9.6.0",
+    "@types/long": "^3.0.31",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^10.0.0",
+    "@types/uuid": "^3.4.3",
+    "@types/yauzl": "^2.9.1",
+    "lerna": "^3.16.4",
+    "mocha": "^6.1.4",
     "tslint": "^5.14.0",
     "typescript": "^3.4.3"
   },
   "scripts": {
-    "update": "rush update",
-    "test": "npm run build && rush test",
-    "build": "tslint -c tslint.json 'package/**/*.ts' && rush build"
+    "postinstall": "lerna bootstrap",
+    "test": "lerna run test",
+    "build": "tslint -c tslint.json 'package/**/*.ts' && lerna run build"
   },
-  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ci010/ts-minecraft.git"
@@ -33,5 +40,31 @@
   "bugs": {
     "url": "https://github.com/ci010/ts-minecraft/issues"
   },
-  "homepage": "https://github.com/ci010/ts-minecraft#readme"
+  "homepage": "https://github.com/ci010/ts-minecraft#readme",
+  "name": "launcher-core",
+  "dependencies": {
+    "@xmcl/auth": "file:packages\\auth",
+    "@xmcl/client": "file:packages\\client",
+    "@xmcl/common": "file:packages\\common",
+    "@xmcl/fabric": "file:packages\\fabric",
+    "@xmcl/forge": "file:packages\\forge",
+    "@xmcl/forge-installer": "file:packages\\forge-installer",
+    "@xmcl/gamesetting": "file:packages\\gamesetting",
+    "@xmcl/installer": "file:packages\\installer",
+    "@xmcl/language": "file:packages\\language",
+    "@xmcl/launch": "file:packages\\launch",
+    "@xmcl/liteloader": "file:packages\\liteloader",
+    "@xmcl/minecraft-launcher-core": "file:packages\\launcher-core",
+    "@xmcl/mojang": "file:packages\\mojang",
+    "@xmcl/nbt": "file:packages\\nbt",
+    "@xmcl/net": "file:packages\\net",
+    "@xmcl/profile-service": "file:packages\\profile-service",
+    "@xmcl/resourcepack": "file:packages\\resourcepack",
+    "@xmcl/task": "file:packages\\task",
+    "@xmcl/text-component": "file:packages\\text-component",
+    "@xmcl/unzip": "file:packages\\unzip",
+    "@xmcl/util": "file:packages\\util",
+    "@xmcl/version": "file:packages\\version",
+    "@xmcl/world": "file:packages\\world"
+  }
 }

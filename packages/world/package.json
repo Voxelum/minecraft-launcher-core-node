@@ -3,28 +3,21 @@
   "version": "0.0.8",
   "main": "./index.js",
   "types": "./index.d.ts",
-  "description": "Minecraft text component parsing",
+  "description": "Minecraft world dat parsing",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
     "access": "public"
   },
-  "devDependencies": {
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^10.0.0",
-    "mocha": "^6.1.4",
-    "tslint": "^5.14.0",
-    "typescript": "^3.4.3"
-  },
   "dependencies": {
-    "file-type": "^11.0.0",
-    "@xmcl/unzip": "^0.2.4",
-    "@xmcl/nbt": "^0.0.1",
-    "@xmcl/common": "^0.0.3"
+    "@xmcl/common": "file:../common",
+    "@xmcl/nbt": "file:../nbt",
+    "@xmcl/unzip": "file:../unzip",
+    "file-type": "^11.0.0"
   },
   "scripts": {
-    "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",
+    "test": "mocha test.js --timeout 10000 ",
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

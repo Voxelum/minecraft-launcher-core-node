@@ -11,27 +11,17 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^10.0.0",
-    "@types/uuid": "^3.4.3",
-    "mocha": "^6.1.4",
-    "tslint": "^5.14.0",
-    "typescript": "^3.4.3",
-    "@xmcl/installer": "^0.1.2",
-    "@xmcl/forge-installer": "^0.2.4",
-    "@xmcl/liteloader": "^0.0.18",
-    "@xmcl/fabric": "^0.0.4"
   },
   "dependencies": {
-    "@xmcl/auth": "^0.0.8",
-    "@xmcl/util": "^0.2.1",
-    "@xmcl/unzip": "^0.2.4",
-    "@xmcl/version": "^0.1.0",
+    "@xmcl/auth": "file:../auth",
+    "@xmcl/unzip": "file:../unzip",
+    "@xmcl/util": "file:../util",
+    "@xmcl/version": "file:../version",
     "got": "^9.6.0",
     "uuid": "^3.2.1"
   },
   "scripts": {
-    "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",
+    "test": "mocha test.js --timeout 10000 ",
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

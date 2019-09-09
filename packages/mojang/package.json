@@ -10,23 +10,14 @@
   "publishConfig": {
     "access": "public"
   },
-  "devDependencies": {
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^10.0.0",
-    "@types/got": "^9.6.0",
-    "@types/long": "^3.0.31",
-    "mocha": "^6.1.4",
-    "tslint": "^5.14.0",
-    "typescript": "^3.4.3"
-  },
   "dependencies": {
-    "@xmcl/net": "^0.0.4",
-    "@xmcl/common": "^0.0.3",
-    "long": "^3.2.0",
-    "got": "^9.6.0"
+    "@xmcl/common": "file:../common",
+    "@xmcl/net": "file:../net",
+    "got": "^9.6.0",
+    "long": "^3.2.0"
   },
   "scripts": {
-    "test": "node ./node_modules/mocha/bin/mocha test.js --timeout 10000 1>&2",
+    "test": "mocha test.js --timeout 10000 ",
     "build": "tsc --build tsconfig.json"
   },
   "repository": {
