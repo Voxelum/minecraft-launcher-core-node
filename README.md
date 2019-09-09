@@ -1,9 +1,8 @@
 # Minecraft Launcher Core
 
-[![npm version](https://img.shields.io/npm/v/ts-minecraft.svg)](https://www.npmjs.com/package/ts-minecraft)
-[![npm](https://img.shields.io/npm/l/ts-minecraft.svg)](https://github.com/ci010/ts-minecraft/blob/3.0/LICENSE)
-[![Build Status](https://travis-ci.org/ci010/ts-minecraft.svg)](https://travis-ci.org/ci010/ts-minecraft)
-[![Coverage Status](https://coveralls.io/repos/github/ci010/ts-minecraft/badge.svg)](https://coveralls.io/github/ci010/ts-minecraft)
+[![npm version](https://img.shields.io/npm/v/@xmcl/launcher-core.svg)](https://www.npmjs.com/package/launcher-core)
+[![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
+[![Build Status](https://travis-ci.org/voxelum/minecraft-launcher-core-node.svg)](https://travis-ci.org/voxelum/minecraft-launcher-core-node)
 
 Provide several useful functions for Minecraft.
 
@@ -35,9 +34,10 @@ Or you can import them seperatelyL
     - [ResourcePack](#resourcepack)
     - [Game Profile](#game-profile)
     - [Mojang Account Info](#mojang-account-info)
-    - [Forge Installation & Parsing](#forge-installation--parsing)
+    - [Forge Parsing](#forge-parsing)
+    - [Forge Installation](#forge-installation)
     - [TextComponent](#textcomponent)
-    - [Version](#version)
+    - [Minecraft Version Parsing](#minecraft-version-parsing)
     - [Fabric](#fabric)
     - [Launch](#launch)
   - [Experiental Features](#experiental-features)
@@ -224,7 +224,7 @@ Get personal info from mojang.
 
 Validate if user have a validated IP address, and get & answer challenges to validate player's identity.
 
-### Forge Installation & Parsing
+### Forge Parsing
 
 ```ts
     import { Forge } from "@xmcl/forge";
@@ -243,6 +243,8 @@ Read the forge mod metadata, including `@Mod` annotation and mcmods.info json da
 ```
 
 Read the forge mod config
+
+### Forge Installation
 
 ```ts
     import { ForgeInstaller, ForgeWebPage } from "@xmcl/forge-installer";
@@ -277,16 +279,27 @@ Consider support him to maintains forge.
 
 Create TextComponent from string OR Minecraft's formatted string, like '§cThis is red'
 
-### Version
+### Minecraft Version Parsing
 
 ```ts
-    import { Version } from "@xmcl/version"
-    const location: MinecraftLocation;
-    const versionId: string;
-    const version: Version.Resolved = await Version.parse(location, versionId);
+    import { Versoin } from "@xmcl/version";
+    const minecraftLocation: string;
+    const minecraftVersionId: string;
+
+    const resolvedVersion: ResolvedVersion = await Version.parse(minecraftLocation, minecraftVersionId);
 ```
 
-Parse existed version.
+Parse minecraft version as a resolved version, which is used for launching process. You can also read version info from it if you want.
+
+```ts
+    import { Versoin, VersionDiagnosis } from "@xmcl/version";
+    const minecraftLocation: string;
+    const minecraftVersionId: string;
+
+    const report: VersionDiagnosis = await Version.diagnose(minecraftLocation, minecraftVersionId);
+```
+
+Get the report of the version. It can check if version missing assets/libraries.
 
 
 ### Fabric 

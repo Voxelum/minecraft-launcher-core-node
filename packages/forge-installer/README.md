@@ -1,4 +1,10 @@
-# Forge Installer Module
+# Forge-installer Module
+
+[![npm version](https://img.shields.io/npm/v/@xmcl/forge-installer.svg)](https://www.npmjs.com/package/forge-installer)
+[![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
+[![Build Status](https://travis-ci.org/voxelum/minecraft-launcher-core-node.svg)](https://travis-ci.org/voxelum/minecraft-launcher-core-node)
+
+This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
 ## New Forge Installing process
 
@@ -21,4 +27,28 @@ The `ForgeInstaller.install` will do all of them.
 The `ForgeInstaller.installByInstallerPartial` will do 2 and 3.
 
 If you want to just do step 3, you can use `ForgeInstaller.diagnose` and find which libraries is break and use `ForgeInstaller.postProcess` to handle it.
+
+### Forge Installation
+
+```ts
+    import { ForgeInstaller, ForgeWebPage } from "@xmcl/forge-installer";
+    import { MinecraftLocation } from "@xmcl/util";
+    const page: ForgeWebPage = await ForgeWebPage.getWebPage();
+    const minecraftLocation: MinecraftLocation;
+    const mcversion = page.mcversion; // mc version
+    const firstVersionOnPage: ForgeWebPage.Version = page.versions[0];
+    await ForgeInstaller.install(firstVersionOnPage, minecraftLocation);
+```
+
+Get the forge version info and install forge from it. 
+
+Notice that this installation doesn't ensure full libraries installation.
+Please run `Installer.installDependencies` afther that.
+
+The new 1.13 forge installation process requires java to run. 
+Either you have `java` executable in your environment variable PATH,
+or you can assign java location by `ForgeInstaller.install(forgeVersionMeta, minecraftLocation, { java: yourJavaExecutablePath });`.
+
+If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
+Consider support him to maintains forge.
 
