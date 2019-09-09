@@ -333,9 +333,9 @@ export namespace Launcher {
     export async function ensureNative(mc: MinecraftFolder, version: ResolvedVersion, native: string) {
         await ensureDir(native);
         const natives = version.libraries.filter((lib) => lib instanceof ResolvedNative) as ResolvedNative[];
-        const checksumFile = path.join(native, ".checksum");
+        const checksumFile = path.join(native, ".json");
 
-        interface CheckEntry { name: string; sha1: string; libName: string; }
+        interface CheckEntry { file: string; sha1: string; name: string; }
         const shaEntries: CheckEntry[] = await vfs.readFile(checksumFile).then((b) => b.toString()).then(JSON.parse).catch((e) => undefined);
 
         const extractedNatives: CheckEntry[] = [];
@@ -349,7 +349,7 @@ export namespace Launcher {
             await fs.createReadStream(from).pipe(Unzip.createExtractStream(native, (entry) => {
                 const filtered = containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ? entry.fileName : undefined;
                 if (filtered) {
-                    extractedNatives.push({ name: entry.fileName, libName: n.name, sha1: "" });
+                    extractedNatives.push({ file: entry.fileName, name: n.name, sha1: "" });
                 }
                 return filtered;
             })).wait();
@@ -357,10 +357,10 @@ export namespace Launcher {
         if (shaEntries) {
             const invalidEntries: { [name: string]: boolean } = {};
             for (const entry of shaEntries) {
-                const file = path.join(native, entry.name);
+                const file = path.join(native, entry.file);
                 const valid = await vfs.validate(file, { algorithm: "sha1", hash: entry.sha1 });
                 if (!valid) {
-                    invalidEntries[entry.libName] = true;
+                    invalidEntries[entry.name] = true;
                 }
             }
             const missingNatives = Object.keys(invalidEntries).map((n) => natives.find((l) => l.name === n));
