@@ -1,6 +1,6 @@
 import { Auth } from "@xmcl/auth";
 import Unzip from "@xmcl/unzip";
-import { computeChecksum, currentPlatform, ensureDir, MinecraftFolder, missing } from "@xmcl/util";
+import { computeChecksum, currentPlatform, ensureDir, MinecraftFolder, missing, vfs } from "@xmcl/util";
 import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
 import * as fs from "fs";
@@ -44,6 +44,10 @@ export namespace Launcher {
     export type ProvidedFeatures = Partial<ResolutionFeature> & Partial<DemoFeature> & GenericFeatures;
 
     export type PartialAuth = Pick<Auth, "selectedProfile" | "accessToken" | "userType" | "properties">;
+
+    /**
+     * General launch option, used to generate launch arguments
+     */
     export interface Option {
         /**
          * The auth information
@@ -73,7 +77,13 @@ export namespace Launcher {
         isDemo?: boolean;
 
         /**
-         * Enable features
+         * Native directory. It's .minecraft/versions/<version>/<version>-natives by default.
+         * You can replace this by your self.
+         */
+        nativeRoot?: string;
+
+        /**
+         * Enable features. It's just a placeholder, not in used now.
          */
         features?: ProvidedFeatures;
 
@@ -87,6 +97,24 @@ export namespace Launcher {
 
         ignoreInvalidMinecraftCertificates?: boolean;
         ignorePatchDiscrepancies?: boolean;
+    }
+
+    export interface PrecheckService {
+        /**
+         * Make sure the libraries are all good.
+         *
+         * @param resourcePath The launching resource path, containing libraries folder
+         * @param version The resolved version
+         */
+        ensureLibraries?(resourcePath: MinecraftFolder, version: ResolvedVersion): Promise<void>;
+        /**
+         * Ensure required natives are all good.
+         *
+         * @param resourcePath The minecraft root
+         * @param version The resolved version
+         * @param root The native root directory
+         */
+        ensureNatives?(resourcePath: MinecraftFolder, version: ResolvedVersion, root: string): Promise<void>;
     }
 
     export interface ServerOptions {
@@ -132,7 +160,7 @@ export namespace Launcher {
      * @see spawn
      * @see generateArguments
      */
-    export async function launch(options: Option): Promise<ChildProcess> {
+    export async function launch(options: Option & PrecheckService): Promise<ChildProcess> {
         const args = await generateArguments(options);
         const version = options.version as ResolvedVersion;
         const minecraftFolder = new MinecraftFolder(options.resourcePath as string);
@@ -151,8 +179,8 @@ export namespace Launcher {
             };
         }
 
-        await ensureLibraries(minecraftFolder, version);
-        await ensureNative(minecraftFolder, version);
+        await (options.ensureLibraries || ensureLibraries)(minecraftFolder, version);
+        await (options.ensureNatives || ensureNative)(minecraftFolder, version, options.nativeRoot || minecraftFolder.getNativesRoot(version.id));
 
         const spawnOption = { cwd: options.gamePath, env: process.env, ...(options.extraExecOption || {}) };
 
@@ -217,7 +245,7 @@ export namespace Launcher {
         if (options.extraJVMArgs) { cmd.push(...options.extraJVMArgs); }
 
         const jvmOptions = {
-            natives_directory: (mc.getNativesRoot(version.id)),
+            natives_directory: options.nativeRoot || (mc.getNativesRoot(version.id)),
             launcher_name: options.launcherName,
             launcher_version: options.launcherBrand,
             classpath: `${[...version.libraries.map((lib) => mc.getLibraryByPath(lib.download.path)),
@@ -271,7 +299,7 @@ export namespace Launcher {
 
     /**
      * Make sure the libraries are all good.
-     * 
+     *
      * @param resourcePath The launching resource path, containing libraries folder
      * @param version The resolved version
      */
@@ -302,20 +330,48 @@ export namespace Launcher {
     /**
      * Ensure the native are correctly extracted there.
      */
-    export async function ensureNative(mc: MinecraftFolder, version: ResolvedVersion) {
-        const native = mc.getNativesRoot(version.id);
+    export async function ensureNative(mc: MinecraftFolder, version: ResolvedVersion, native: string) {
         await ensureDir(native);
         const natives = version.libraries.filter((lib) => lib instanceof ResolvedNative) as ResolvedNative[];
-        return Promise.all(natives.map(async (n) => {
+        const checksumFile = path.join(native, ".json");
+
+        interface CheckEntry { file: string; sha1: string; name: string; }
+        const shaEntries: CheckEntry[] = await vfs.readFile(checksumFile).then((b) => b.toString()).then(JSON.parse).catch((e) => undefined);
+
+        const extractedNatives: CheckEntry[] = [];
+        async function extractJar(n: ResolvedNative | undefined) {
+            if (!n) { return; }
             const excluded: string[] = n.extractExclude ? n.extractExclude : [];
             const containsExcludes = (p: string) => excluded.filter((s) => p.startsWith(s)).length === 0;
             const notInMetaInf = (p: string) => p.indexOf("META-INF/") === -1;
             const notSha1AndNotGit = (p: string) => !(p.endsWith(".sha1") || p.endsWith(".git"));
             const from = mc.getLibraryByPath(n.download.path);
-            await fs.createReadStream(from).pipe(Unzip.createExtractStream(native, (entry) =>
-                containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ? entry.fileName : undefined,
-            )).wait();
-        }));
+            await fs.createReadStream(from).pipe(Unzip.createExtractStream(native, (entry) => {
+                const filtered = containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ? entry.fileName : undefined;
+                if (filtered) {
+                    extractedNatives.push({ file: entry.fileName, name: n.name, sha1: "" });
+                }
+                return filtered;
+            })).wait();
+        }
+        if (shaEntries) {
+            const invalidEntries: { [name: string]: boolean } = {};
+            for (const entry of shaEntries) {
+                const file = path.join(native, entry.file);
+                const valid = await vfs.validate(file, { algorithm: "sha1", hash: entry.sha1 });
+                if (!valid) {
+                    invalidEntries[entry.name] = true;
+                }
+            }
+            const missingNatives = Object.keys(invalidEntries).map((n) => natives.find((l) => l.name === n));
+            if (missingNatives.length !== 0) {
+                await Promise.all(missingNatives.map(extractJar));
+            }
+        } else {
+            await Promise.all(natives.map(extractJar));
+            const targetContent = JSON.stringify(await extractedNatives.map(async (n) => ({ ...n, sha1: await computeChecksum(path.join(native, n.name)) })));
+            await vfs.writeFile(checksumFile, targetContent);
+        }
     }
 }
 

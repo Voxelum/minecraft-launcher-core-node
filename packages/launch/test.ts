@@ -207,7 +207,7 @@ describe("Launcher", () => {
     it("should be able to extract natives", async function () {
         const loc = new MinecraftFolder(this.gameDirectory);
         const ver = await Version.parse(loc, "1.13.2");
-        await Launcher.ensureNative(loc, ver);
+        await Launcher.ensureNative(loc, ver, loc.getNativesRoot("1.13.2"));
     });
     describe("#launch", function () {
         let javaPath: string;
