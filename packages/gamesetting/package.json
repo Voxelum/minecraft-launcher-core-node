@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/gamesetting",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft gamesetting parsing",
@@ -14,7 +14,6 @@
     "@xmcl/common": "file:../common"
   },
   "scripts": {
-    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

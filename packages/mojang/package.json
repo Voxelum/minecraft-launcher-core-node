@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/mojang",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft Mojang Service",
@@ -17,7 +17,6 @@
     "long": "^3.2.0"
   },
   "scripts": {
-    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

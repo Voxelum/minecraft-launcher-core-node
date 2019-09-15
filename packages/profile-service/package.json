@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/profile-service",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft profile services",
@@ -17,7 +17,6 @@
     "bytebuffer": "^5.0.1"
   },
   "scripts": {
-    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/forge",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Forge mod parser",
@@ -15,7 +15,6 @@
     "java-asm": "^0.0.4"
   },
   "scripts": {
-    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/launch",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft launch function",
@@ -9,8 +9,6 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "devDependencies": {
   },
   "dependencies": {
     "@xmcl/auth": "file:../auth",
@@ -21,7 +19,6 @@
     "uuid": "^3.2.1"
   },
   "scripts": {
-    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

@@ -1,6 +1,6 @@
 {
     "name": "@xmcl/nbt",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "main": "./index.js",
     "types": "./index.d.ts",
     "description": "NBT serialization and deserialization",
@@ -11,7 +11,6 @@
         "access": "public"
     },
     "scripts": {
-        
         "build": "tsc --build tsconfig.json"
     },
     "repository": {

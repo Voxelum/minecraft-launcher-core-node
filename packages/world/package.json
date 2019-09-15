@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/world",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft world dat parsing",

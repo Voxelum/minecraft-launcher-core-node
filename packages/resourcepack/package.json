@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/resourcepack",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft resource pack parsing",
@@ -15,7 +15,6 @@
     "@xmcl/unzip": "file:../unzip"
   },
   "scripts": {
-    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

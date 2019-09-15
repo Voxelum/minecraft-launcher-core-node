@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/liteloader",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Liteloader parser & installer",
@@ -20,7 +20,6 @@
     "got": "^9.6.0"
   },
   "scripts": {
-    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {
