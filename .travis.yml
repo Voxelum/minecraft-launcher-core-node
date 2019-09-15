@@ -4,9 +4,6 @@ node_js:
 cache: npm
 env:
   - ENV=TRAVIS
-cache:
-  directories:
-  - node_modules
 install:
   - npm install
 script:
