@@ -1,6 +1,6 @@
 # Minecraft Launcher Core
 
-[![npm version](https://img.shields.io/npm/v/@xmcl/launcher-core.svg)](https://www.npmjs.com/package/launcher-core)
+[![npm version](https://img.shields.io/npm/v/@xmcl/minecraft-launcher-core.svg)](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core)
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://travis-ci.org/voxelum/minecraft-launcher-core-node.svg)](https://travis-ci.org/voxelum/minecraft-launcher-core-node)
 
