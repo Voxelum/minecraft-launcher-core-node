@@ -66,9 +66,6 @@ export namespace Auth {
 
         function parseResponse(resp: Response<any>) {
             const { body } = resp;
-            if (body.error) {
-                throw { type: body.error, message: body.errorMessage };
-            }
             const userId = body.user ? body.user.id ? body.user.id : "" : "";
             const prop = body.user ? body.user.properties ? body.user.properties : {} : {};
             return {
@@ -172,7 +169,13 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export function signout(option: { username: string, password: string }, api: API = API_MOJANG): Promise<void> {
-            return request(api.hostName, api.signout, option).then(() => undefined);
+            return request(api.hostName, api.signout, option).then((resp) => {
+                const { body } = resp;
+                console.log(body);
+                if (body.error) {
+                    throw { type: body.error, message: body.errorMessage };
+                }
+            });
         }
     }
 

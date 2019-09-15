@@ -1,7 +1,9 @@
 /node_modules
-/dest
 
-/assets/temp
+/mock/libraries
+/mock/assets
+/mock/logs
+
 *.tsbuildinfo
 
 # Logs
@@ -64,10 +66,19 @@ jspm_packages/
 # Common toolchain intermediate files
 temp
 
-# Rush files
-common/temp/**
-package-deps.json
-
 packages/**/*.js
 packages/**/*.d.ts
 packages/**/*.js.map
+
+/mock/versions/*
+
+!/mock/versions/1.7.10
+/mock/versions/1.7.10/*
+!/mock/versions/1.7.10/1.7.10.json
+
+!/mock/versions/1.7.10-Forge10.13.3.1400-1.7.10
+/mock/versions/1.7.10-Forge10.13.3.1400-1.7.10/*
+!/mock/versions/1.7.10-Forge10.13.3.1400-1.7.10/1.7.10-Forge10.13.3.1400-1.7.10.json
+
+!/mock/versions/1.13.2/1.13.2.json
+!/mock/versions/1.13.2-forge-25.0.209/1.13.2-forge-25.0.209.json

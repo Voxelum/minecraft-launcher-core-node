@@ -18,13 +18,13 @@ describe("ProfileService", () => {
     };
     const RATE = 1000;
     const WAIT = 1500;
-    const assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
+    const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
 
-    before(async function () {
-        this.timeout(100000);
+    beforeAll(async function () {
+        jest.setTimeout(100000);
         try {
             await new Promise((resolve, reject) => {
-                proc = spawn("java", ["-jar", path.join(assets, "yggdrasil-mock-server-0.0.1-SNAPSHOT.jar")]);
+                proc = spawn("java", ["-jar", path.join(root, "yggdrasil-mock-server-0.0.1-SNAPSHOT.jar")]);
                 proc.stdout.on("data", (b) => {
                     if (b.toString().indexOf("moe.yushi.yggdrasil.mockserver.Main") !== -1 &&
                         b.toString().indexOf("Started Main") !== -1) {
@@ -33,56 +33,52 @@ describe("ProfileService", () => {
                 });
             });
         } catch (e) {
-            this.skip();
+            // this.skip();
         }
         await sleep(1000);
     });
-    after(() => { proc.kill(); });
+    afterAll(() => { proc.kill(); });
     afterEach(() => sleep(RATE));
 
     describe("#lookup", () => {
-        it("should fetch profile by name", async function () {
-            this.slow(RATE + WAIT);
+        test("should fetch profile by name", async () => {
+            // this.slow(RATE + WAIT);
             const [s] = await ProfileService.lookUpAll(["character1"], { api: MOCK });
             assert(s);
             if (s) {
-                assert.equal(s.name, "character1");
-                assert.equal("00000000000000000000000000000000", s.id);
+                expect(s.name).toBe("character1");
+                expect(s.id).toBe("00000000000000000000000000000000");
             }
-        }).timeout(10000);
-        it("should return undefined if profile doesn't exist", async function () {
-            this.slow(RATE + WAIT);
+        });
+        test("should return undefined if profile doesn't exist", async () => {
+            // this.slow(RATE + WAIT);
             const [a, b] = await ProfileService.lookUpAll(["character1", "characterX"], { api: MOCK });
-            assert(a);
-            assert.equal(undefined, b);
+            expect(a).toBeTruthy();
+            expect(b).toBeUndefined();
         });
     });
 
     describe("#fetch", () => {
         let profilePromise: Promise<GameProfile>;
-        before(() => {
+        beforeAll(() => {
             profilePromise = ProfileService.fetch("00000000000000000000000000000000", { api: MOCK });
         });
-        it("should fetch the correct username and uuid", async () => {
+        test("should fetch the correct username and uuid", async () => {
             const s = await profilePromise;
-            assert.equal(s.name, "character1");
-            assert.equal("00000000000000000000000000000000", s.id);
-        }).timeout(10000);
-        it("the game profile properties should be correct format", async () => {
+            expect(s.name).toBe("character1");
+            expect(s.id).toBe("00000000000000000000000000000000");
+        });
+        test("the game profile properties should be correct format", async () => {
             const s = await profilePromise;
-            if (s.properties !== undefined) {
-                for (const key in s.properties) {
-                    assert(typeof key === "string");
-                    assert(typeof s.properties[key] === "string");
-                }
+            for (const key in s.properties) {
+                expect(typeof key === "string").toBeTruthy();
+                expect(typeof s.properties[key] === "string").toBeTruthy();
             }
         });
-        it("should catch error if the profile doesn't exists", async function () {
-            try {
-                await ProfileService.fetch("asd", { api: MOCK });
-            } catch (e) {
-                assert(e);
-            }
+        test("should catch error if the profile doesn't exists", async () => {
+            expect(ProfileService.fetch("asd", { api: MOCK }))
+                .rejects
+                .toBeTruthy();
         });
     });
 
@@ -94,17 +90,17 @@ describe("ProfileService", () => {
             properties: { textures: "eyJ0aW1lc3RhbXAiOjE1NDEzODY0MzI2OTksInByb2ZpbGVJZCI6ImFiZjgxZmU5OWYwZDQ5NDhhOTA5NzcyMWE4MTk4YWM0IiwicHJvZmlsZU5hbWUiOiJDSTAxMCIsInNpZ25hdHVyZVJlcXVpcmVkIjp0cnVlLCJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGYwMzE0NzJmYjg3MjgyNjA4MjdjMTY2NzA2ZTJiYTI0YTBmYzlhMmRhNThlM2MyZDVlNWMzMDI0ZDQxNTNlZSJ9fX0=" },
         };
         let texturesPromise: Promise<GameProfile.TexturesInfo>;
-        before(() => {
+        beforeAll(() => {
             texturesPromise = ProfileService.getTextures(profile);
         });
-        it("the textures object format should be correct", async () => {
+        test("the textures object format should be correct", async () => {
             const textures = await texturesPromise;
             assert(typeof textures.profileId === "string");
             assert(typeof textures.profileName === "string");
             assert(typeof textures.textures === "object");
             assert(typeof textures.timestamp === "number");
-        }).timeout(10000);
-        it("the texture in textures should be correct", async () => {
+        });
+        test("the texture in textures should be correct", async () => {
             const textures = (await texturesPromise).textures;
             if (textures.SKIN) {
                 const skin = textures.SKIN;
@@ -121,7 +117,7 @@ describe("ProfileService", () => {
                     }
                 }
             }
-        }).timeout(10000);
+        });
     });
 
 

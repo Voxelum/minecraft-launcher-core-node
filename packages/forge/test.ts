@@ -2,46 +2,43 @@ import * as assert from "assert";
 import * as path from "path";
 import { Forge } from "./index";
 
-before(function () {
-    this.assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
-    this.gameDirectory = path.join(this.assets, "temp");
-});
-
 describe("Forge", () => {
+    const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
 
-    it("should read exactly things in jar", async function () {
-        const metadata = await Forge.readModMetaData(`${this.assets}/sample-mod.jar`);
-        assert.equal(metadata.length, 3);
+    test("should read exactly things in jar", async () => {
+        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
+        expect(metadata.length).toEqual(3);
     });
 
-    it("should read mcmod.info in jar", async function () {
-        const metadata = await Forge.readModMetaData(`${this.assets}/sample-mod.jar`);
-        assert(metadata.some((m) =>
+    test("should read mcmod.info in jar", async () => {
+        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
+        expect(metadata.some((m) =>
             m.modid === "soundfilters" &&
             m.name === "Sound Filters" &&
             m.description === "Adds reveb to caves, as well as muted sounds underwater/in lava, and behind walls." &&
             m.version === "0.8_for_1,8" &&
             m.mcversion === "1.8" &&
             m.credits === "Made by Tmtravlr.",
-        ));
+        )).toBeTruthy();
     });
 
-    it("should read @Mod in jar", async function () {
-        const metadata = await Forge.readModMetaData(`${this.assets}/sample-mod.jar`);
-        assert(metadata.some((m) => m.modid === "NuclearCraft" && m.version === "1.9e"));
+    test("should read @Mod in jar", async () => {
+        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
+        expect(metadata.some((m) => m.modid === "NuclearCraft" && m.version === "1.9e"))
+            .toBeTruthy();
     });
 
 
-    it("should detect optifine from class in jar", async function () {
-        const metadata = await Forge.readModMetaData(`${this.assets}/sample-mod.jar`);
-        assert(metadata.some((m) =>
+    test("should detect optifine from class in jar", async () => {
+        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
+        expect(metadata.some((m) =>
             m.modid === "OptiFine" &&
             m.name === "OptiFine" &&
             m.description === "OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options." &&
             m.version === "HD_U_C5" &&
             m.mcversion === "1.12.1" &&
             m.url === "https://optifine.net",
-        ));
+        )).toBeTruthy();
     });
 
 
@@ -71,27 +68,27 @@ describe("Forge", () => {
     }
     `;
         let config: Forge.Config;
-        it("forge config parsing", () => {
+        test("forge config parsing", () => {
             config = Forge.Config.parse(cfg1);
         });
-        it("forge config categories parsing", () => {
-            assert(config.versioncheck);
-            assert(config.tweaks);
+        test("forge config categories parsing", () => {
+            expect(config.versioncheck).toBeTruthy();
+            expect(config.tweaks).toBeTruthy();
         });
-        it("forge config property parsing", () => {
-            assert.equal(config.tweaks.properties[0].name, "replaceInGameConfig");
-            assert.equal(config.tweaks.properties[0].comment, "Replace the FML test config GUI with a working GUI.");
-            assert.equal(config.tweaks.properties[0].type, "B");
+        test("forge config property parsing", () => {
+            expect(config.tweaks.properties[0].name).toEqual("replaceInGameConfig");
+            expect(config.tweaks.properties[0].comment).toEqual("Replace the FML test config GUI with a working GUI.");
+            expect(config.tweaks.properties[0].type).toEqual("B");
         });
-        it("forge config multiple properties parsing", () => {
-            assert.equal(config.versioncheck.properties[0].name, "checkForUpdates");
-            assert.equal(config.versioncheck.properties[1].name, "knownVersions");
-            assert.equal(config.versioncheck.properties[1].value[0], "InGameInfoXML 2.8.1.82");
-            assert.equal(config.versioncheck.properties[1].value[1], "LunatriusCore 1.1.2.21");
-            assert.equal(config.versioncheck.properties[2].name, "silenceKnownUpdates");
-            assert.equal(config.versioncheck.properties[0].type, "B");
-            assert.equal(config.versioncheck.properties[1].type, "S");
-            assert.equal(config.versioncheck.properties[2].type, "B");
+        test("forge config multiple properties parsing", () => {
+            expect(config.versioncheck.properties[0].name).toEqual("checkForUpdates");
+            expect(config.versioncheck.properties[1].name).toEqual("knownVersions");
+            expect(config.versioncheck.properties[1].value[0]).toEqual("InGameInfoXML 2.8.1.82");
+            expect(config.versioncheck.properties[1].value[1]).toEqual("LunatriusCore 1.1.2.21");
+            expect(config.versioncheck.properties[2].name).toEqual("silenceKnownUpdates");
+            expect(config.versioncheck.properties[0].type).toEqual("B");
+            expect(config.versioncheck.properties[1].type).toEqual("S");
+            expect(config.versioncheck.properties[2].type).toEqual("B");
         });
     });
 });

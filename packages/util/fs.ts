@@ -34,6 +34,15 @@ export const vfs: VFS = {
 };
 
 export namespace VFS {
+    export const defaultFs = Object.freeze({
+        ...promises,
+        exists,
+        missing,
+        remove,
+        ensureDir,
+        ensureFile,
+    });
+
     export function setVirtualFS(nvfs: Partial<VFS>) {
         for (const [key, value] of Object.entries(nvfs)) {
             if (key in vfs && value !== undefined) {
@@ -43,14 +52,7 @@ export namespace VFS {
     }
 
     export function restoreToDefault() {
-        Object.assign(vfs, {
-            ...promises,
-            exists,
-            missing,
-            remove,
-            ensureDir,
-            ensureFile,
-        });
+        Object.assign(vfs, defaultFs);
     }
 }
 

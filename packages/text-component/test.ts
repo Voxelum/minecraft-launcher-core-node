@@ -1,13 +1,36 @@
-import * as assert from "assert";
-import { TextComponent } from "./index";
+import { TextComponent, TextFormatting } from "./index";
 
 describe("TextComponent", () => {
-    it("normal text converting", () => {
+    test("normal text converting", () => {
         const raw = "testCommon tesxt";
-        assert.equal(TextComponent.from(raw).unformatted, raw);
+        expect(TextComponent.from(raw).unformatted).toEqual(raw);
     });
-    it("string to TextComponent and reverse convention", () => {
+    test("string to TextComponent and reverse convention", () => {
         const raw = "§1colored§r";
-        assert.equal(TextComponent.from(raw).formatted, raw);
+        expect(TextComponent.from(raw).formatted).toEqual(raw);
     });
+});
+
+describe("TextFormatting", () => {
+    describe("#getValueByChar", () => {
+        test("should be able to get by char", () => {
+            expect(TextFormatting.getValueByChar("9"))
+                .toEqual(TextFormatting.BLUE);
+        });
+        test("should return Black for non-existed char", () => {
+            expect(TextFormatting.getValueByChar("z"))
+                .toEqual(TextFormatting.BLACK);
+        });
+    });
+    describe("#getValueByName", () => {
+        test("should be able to get by friendly name", () => {
+            expect(TextFormatting.getValueByName("dark_aqua"))
+                .toEqual(TextFormatting.DARK_AQUA);
+        });
+        test("should return null for non-existed name", () => {
+            expect(TextFormatting.getValueByName("dark_aquaaa"))
+                .toBeUndefined();
+        });
+    });
+
 });

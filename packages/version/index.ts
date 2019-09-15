@@ -1,6 +1,6 @@
 import { Version } from "@xmcl/common";
 import Task from "@xmcl/task";
-import { computeChecksum, currentPlatform, exists, getPlatform, MinecraftFolder, MinecraftLocation, Platform, validate } from "@xmcl/util";
+import { computeChecksum, currentPlatform, exists, getPlatform, MinecraftFolder, MinecraftLocation, Platform, validate, vfs } from "@xmcl/util";
 import * as fs from "fs";
 
 type PickPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
@@ -144,7 +144,7 @@ declare module "@xmcl/common/version" {
          * @param extra The extra version info which will overlap some parent information
          * @return The raw version json could be save to the version json file
          */
-        function extendsVersion(id: string, parent: ResolvedVersion, extra: ResolvedVersion): Version;
+        function extendsVersion(id: string, parent: Version, extra: Version): Version;
 
         /**
          * Diagnose the version. It will check the version json/jar, libraries and assets.
@@ -198,9 +198,8 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
     // the hierarchy is outer version to dep version
     // e.g. [liteloader version, forge version, minecraft version]
     const hierarchy = await resolveDependency(folder, version);
-    if (hierarchy.length === 0) { throw new Error("The hierarchy cannot be empty!"); }
     const rootVersion = hierarchy[hierarchy.length - 1];
-    const id: string = rootVersion.id;
+    const id: string = hierarchy[0].id;
     let assetIndex: Version.AssetIndex = rootVersion.assetIndex!;
     let assets: string = "";
 
@@ -231,12 +230,8 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
         client = (json as any).jar || client;
 
         if (!replaceMode) {
-            if (json.arguments.game) {
-                args.game.push(...json.arguments.game);
-            }
-            if (json.arguments.jvm) {
-                args.jvm.push(...json.arguments.jvm);
-            }
+            args.game.push(...json.arguments.game);
+            args.jvm.push(...json.arguments.jvm);
         } else {
             args.game = json.arguments.game;
             args.jvm = json.arguments.jvm;
@@ -282,7 +277,10 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
     }
 
     return {
-        id, assetIndex, assets, client,
+        id,
+        assetIndex,
+        assets,
+        client,
         arguments: args,
         downloads: downloadsMap,
         libraries: Object.keys(librariesMap).map((k) => librariesMap[k]).concat(Object.keys(nativesMap).map((k) => nativesMap[k])),
@@ -292,69 +290,61 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
     } as ResolvedVersion;
 }
 
-function resolveDependency(path: MinecraftLocation, version: string): Promise<PartialResolvedVersion[]> {
+async function resolveDependency(path: MinecraftLocation, version: string): Promise<PartialResolvedVersion[]> {
     const folder = typeof path === "string" ? new MinecraftFolder(path) : path;
-    return new Promise<PartialResolvedVersion[]>((res, rej) => {
-        const stack: PartialResolvedVersion[] = [];
-        const versionJsonPath = folder.getVersionJson(version);
-        function interal(jsonPath: string, versionName: string): Promise<PartialResolvedVersion[]> {
-            if (!fs.existsSync(jsonPath)) {
-                return Promise.reject({
-                    type: "MissingVersionJson",
-                    version: versionName,
-                });
-            }
-            return fs.promises.readFile(jsonPath).then((value) => {
-                const versionInst = parseVersionJson(value.toString(), folder.root);
-                stack.push(versionInst);
-                versionInst.minecraftDirectory = folder.root;
-                if (versionInst.inheritsFrom) {
-                    return interal(folder.getVersionJson(versionInst.inheritsFrom), versionInst.inheritsFrom);
-                } else {
-                    return stack;
-                }
+    const stack: PartialResolvedVersion[] = [];
+    const versionJsonPath = folder.getVersionJson(version);
+
+    async function walk(jsonPath: string, versionName: string) {
+        if (!fs.existsSync(jsonPath)) {
+            return Promise.reject({
+                type: "MissingVersionJson",
+                version: versionName,
             });
         }
-        interal(versionJsonPath, version).then((r) => res(r), (e) => rej(e));
-    });
+        const raw = parseVersionJson(await vfs.readFile(jsonPath).then((b) => b.toString()), folder.root);
+        stack.push(raw);
+        if (raw.inheritsFrom) {
+            await walk(folder.getVersionJson(raw.inheritsFrom), raw.inheritsFrom);
+        }
+    }
+    await walk(versionJsonPath, version);
+
+    return stack;
 }
 
-function extendsVersion(id: string, parent: ResolvedVersion, extra: ResolvedVersion): Version {
-    if (parent.assets !== extra.assets) { throw new Error("Cannot extends to the different minecraft version"); }
+function extendsVersion(id: string, parent: Version, version: Version): Version {
+    const launcherVersion = Math.max(parent.minimumLauncherVersion, version.minimumLauncherVersion);
 
-    const libMap: { [name: string]: ResolvedLibrary } = {};
+    const libMap: { [name: string]: Version.Library } = {};
     parent.libraries.forEach((l) => { libMap[l.name] = l; });
+    const libraries = version.libraries.filter((l) => libMap[l.name] === undefined);
 
-    const extraLibs = extra.libraries.filter((l) => libMap[l.name] === undefined).map((lib) => {
-        const alib: any = Object.assign({}, lib);
-        delete alib.download;
-        if (lib.download.sha1 === "") {
-            const url = lib.download.url.substring(0, lib.download.url.length - lib.download.path.length);
-            if (url !== "https://libraries.minecraft.net/") { alib.url = url; }
-        }
-        return alib;
-    });
-    const launcherVersion = Math.max(parent.minimumLauncherVersion, extra.minimumLauncherVersion);
-
-    const raw: Version = {
+    const result: Version = {
         id,
         time: new Date().toISOString(),
         releaseTime: new Date().toISOString(),
-        type: extra.type,
-        libraries: extraLibs,
-        mainClass: extra.mainClass,
+        type: version.type,
+        libraries,
+        mainClass: version.mainClass,
         inheritsFrom: parent.id,
         minimumLauncherVersion: launcherVersion,
     };
 
-    if (launcherVersion < 21) {
-        raw.minecraftArguments = mixinArgumentString(parent.arguments.game.filter((arg) => typeof arg === "string").join(" "),
-            extra.arguments.game.filter((arg) => typeof arg === "string").join(" "));
-    } else {
-        // not really know how new forge will do
+    if (typeof parent.minecraftArguments === "string") {
+        if (typeof version.arguments === "object") {
+            throw new Error("Extends require two version in same format!");
+        }
+        result.minecraftArguments = mixinArgumentString(parent.minecraftArguments,
+            version.minecraftArguments || "");
+    } else if (typeof parent.arguments === "object") {
+        if (typeof version.minecraftArguments === "string") {
+            throw new Error("Extends require two version in same format!");
+        }
+        result.arguments = version.arguments;
     }
 
-    return raw;
+    return result;
 }
 
 /**
@@ -437,14 +427,7 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
         const missingAssetsIndex = !await context.execute("checkAssetIndex", async () => validate(assetsIndexPath, resolvedVersion.assetIndex.sha1));
         const libMask = await context.execute("checkLibraries", () => Promise.all(resolvedVersion.libraries.map(async (lib) => {
             const libPath = minecraft.getLibraryByPath(lib.download.path);
-            if (await exists(libPath)) {
-                if (lib.download.sha1) {
-                    return computeChecksum(libPath).then((c) =>
-                        c === lib.download.sha1);
-                }
-                return true;
-            }
-            return false;
+            return vfs.validate(libPath, { algorithm: "sha1", hash: lib.download.sha1 });
         })));
         const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
         const missingAssets: { [object: string]: string } = {};
@@ -455,10 +438,7 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
             const assetsMask = await context.execute("checkAssets", () => Promise.all(files.map(async (object) => {
                 const { hash } = objects[object];
                 const hashPath = minecraft.getAsset(hash);
-                if (await exists(hashPath)) {
-                    return (await computeChecksum(hashPath)) === hash;
-                }
-                return false;
+                return vfs.validate(hashPath, { algorithm: "sha1", hash });
             })));
             files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
         }
@@ -617,7 +597,7 @@ function parseVersionJson(versionString: string, root: string): PartialResolvedV
 
 function checkAllowed(rules: Version.Rule[], platform: Platform = currentPlatform, features: string[] = []) {
     // by default it's allowed
-    if (!rules) { return true; }
+    if (!rules || rules.length === 0) { return true; }
     // else it's disallow by default
     let allow = false;
     for (const rule of rules) {

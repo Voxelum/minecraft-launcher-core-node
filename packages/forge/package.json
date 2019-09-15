@@ -15,7 +15,7 @@
     "java-asm": "^0.0.4"
   },
   "scripts": {
-    "test": "mocha test.js --timeout 10000 ",
+    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

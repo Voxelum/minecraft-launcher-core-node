@@ -11,29 +11,11 @@ function sleep(time: number) {
 
 describe("Auth", () => {
     let proc: ChildProcess;
-    const assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
-    before(async function () {
-        this.timeout(100000);
-        try {
-            await new Promise((resolve, reject) => {
-                proc = spawn("java", ["-jar", path.join(assets, "yggdrasil-mock-server-0.0.1-SNAPSHOT.jar")]);
-                proc.on("error", reject);
-                proc.stdout.on("data", (b) => {
-                    if (b.toString().indexOf("moe.yushi.yggdrasil.mockserver.Main") !== -1 &&
-                        b.toString().indexOf("Started Main") !== -1) {
-                        resolve();
-                    }
-                });
-            });
-        } catch (e) {
-            this.skip();
-        }
-        await sleep(1000);
-    });
-    after(() => { proc.kill(); });
-    afterEach(() => sleep(RATE));
+    let auth: Auth;
+
+    const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
     const MOCK = {
-        hostName: "http://localhost:25566/authserver",
+        hostName: "http://localhost:25567/authserver",
         authenticate: "/authenticate",
         refresh: "/refresh",
         validate: "/validate",
@@ -43,98 +25,96 @@ describe("Auth", () => {
     const RATE = 1000;
     const WAIT = 1500;
 
-    let auth: Auth;
-    describe("#login", () => {
-        it("should be able to login", async function () {
-            this.slow(WAIT + RATE);
-            auth = await Auth.Yggdrasil.login({ username: "test1@to2mbn.org", password: "111111" }, MOCK);
-            assert(auth);
-            assert.equal(auth.userType, "legacy");
-        });
-        it("should reject invalid username password", async function () {
-            this.slow(RATE + WAIT);
-            await Auth.Yggdrasil.login({ username: "18211378@163.com", password: "asd-x" }, MOCK)
-                .then((suc) => {
-                    throw new Error("Credit shouldn't have succeed");
-                }, (err) => {
-                    assert.equal(err.type, "ForbiddenOperationException");
-                    assert.equal(err.message, "Invalid credentials. Invalid username or password.");
+    beforeAll(async function () {
+        jest.setTimeout(1000000);
+        try {
+            await new Promise((resolve, reject) => {
+                proc = spawn("java", ["-jar", path.join(root, "yggdrasil-mock-server-0.0.1-SNAPSHOT.jar"), "--server.port=25567"]);
+                proc.on("error", reject);
+                proc.stdout.on("data", (b) => {
+                    if (b.toString().indexOf("moe.yushi.yggdrasil.mockserver.Main") !== -1 &&
+                        b.toString().indexOf("Started Main") !== -1) {
+                        resolve();
+                    }
                 });
+            });
+        } catch (e) {
+            describe = describe.skip;
+        }
+        await sleep(1000);
+    });
+    afterAll(() => { proc.kill(); });
+    afterEach(async () => { await sleep(RATE); });
+
+    describe("#login", () => {
+        test("should be able to login", async () => {
+            auth = await Auth.Yggdrasil.login({ username: "test1@to2mbn.org", password: "111111" }, MOCK);
+            expect(auth).toBeTruthy();
+            expect(auth.userType).toEqual("mojang");
+        });
+        test("should reject invalid username password", async () => {
+            await expect(Auth.Yggdrasil.login({ username: "18211378@163.com", password: "asd-x" }, MOCK))
+                .resolves
+                .toBeTruthy();
         });
     });
     describe("#validate", () => {
-        it("should be able to valid accessToken", async function () {
-            this.slow(WAIT + RATE);
+        test("should be able to valid accessToken", async () => {
             const valid = await Auth.Yggdrasil.validate({ accessToken: auth.accessToken, clientToken: auth.clientToken }, MOCK);
-            assert(valid);
+            expect(valid).toBeTruthy();
         });
-        it("should return false when validate an invalid access token", async function () {
-            this.slow(RATE + WAIT);
+        test("should return false when validate an invalid access token", async () => {
             const valid = await Auth.Yggdrasil.validate({ accessToken: "abc", clientToken: "bvd" }, MOCK);
             assert(valid === false);
+            expect(valid).toBeFalsy();
         });
-        it("should catch the error and not return false if error happened during validation", async function () {
-            this.slow(RATE + WAIT);
-            try {
-                await Auth.Yggdrasil.validate({ accessToken: "abc", clientToken: "bvd" }, { ...MOCK, hostName: "http://localhost:25566" });
-                throw new Error("This should not happen");
-            } catch (e) {
-                assert(e);
-            }
+        test("should catch the error and not return false if error happened during validation", async () => {
+            await expect(Auth.Yggdrasil.validate({ accessToken: "abc", clientToken: "bvd" }, { ...MOCK, hostName: "http://localhost:25566" }))
+                .rejects
+                .toBeTruthy();
         });
     });
     describe("#refresh", () => {
-        it("should be able to refresh accessToken", async function () {
-            this.slow(WAIT + RATE);
+        test("should be able to refresh accessToken", async () => {
             const old = auth.accessToken;
             const oldId = auth.userId;
             auth = await Auth.Yggdrasil.refresh({ accessToken: auth.accessToken, clientToken: auth.clientToken }, MOCK);
-            assert.notEqual(old, auth.accessToken);
-            assert.equal(auth.userId, oldId);
-            assert.equal(auth.userType, "legacy");
+            expect(old).not.toEqual(auth.accessToken);
+            expect(auth.userId).toEqual(oldId);
+            expect(auth.userType).toEqual("mojang");
         });
-        it("should throw error when refresh an invalid access token", async function () {
-            this.slow(RATE + WAIT);
-            try {
-                await Auth.Yggdrasil.refresh({ accessToken: "abc", clientToken: "bvd" }, MOCK);
-            } catch (e) {
-                assert(e);
-            }
+        test("should throw error when refresh an invalid access token", async () => {
+            await expect(Auth.Yggdrasil.refresh({ accessToken: "abc", clientToken: "bvd" }, MOCK))
+                .rejects
+                .toBeTruthy();
         });
     });
 
     describe("#invalidate", () => {
-        it("should be able to invalidate accessToken", async function () {
-            this.slow(WAIT + RATE);
+        test("should be able to invalidate accessToken", async () => {
             await Auth.Yggdrasil.invalide({ accessToken: auth.accessToken, clientToken: auth.clientToken }, MOCK);
             await sleep(RATE);
             const valid = await Auth.Yggdrasil.validate({ accessToken: auth.accessToken, clientToken: auth.clientToken }, MOCK);
-            assert(!valid);
+            expect(valid).toBeFalsy();
         });
     });
     describe("#signout", () => {
-        it("should be able to signout", async function () {
-            this.slow(WAIT + RATE);
+        test("should be able to signout", async () => {
             await Auth.Yggdrasil.signout({ username: "test1@to2mbn.org", password: "111111" }, MOCK);
         });
-        it("should catch error to non-existed user", async function () {
-            this.slow(WAIT + RATE);
-            try {
-                await Auth.Yggdrasil.signout({ username: "test1@to2mbn.org", password: "111111" }, MOCK);
-                throw new Error();
-            } catch (e) {
-                assert(e);
-            }
+        test("should mute error to non-existed user", async () => {
+            await expect(Auth.Yggdrasil.signout({ username: "test1@to2mbn.org", password: "111111" }, MOCK))
+                .resolves.toBeFalsy();
         });
     });
 
-    it("should offline auth", () => {
+    test("should offline auth", () => {
         const offlineUser = Auth.offline("ci010");
-        assert.equal(offlineUser.selectedProfile.name, "ci010");
-        assert(offlineUser.selectedProfile.id);
-        assert(offlineUser.accessToken);
-        assert(offlineUser.clientToken);
-        assert(offlineUser.userId);
-        assert(offlineUser.userType);
+        expect(offlineUser.selectedProfile.name).toEqual("ci010");
+        expect(offlineUser.selectedProfile.id).toBeTruthy();
+        expect(offlineUser.accessToken).toBeTruthy();
+        expect(offlineUser.clientToken).toBeTruthy();
+        expect(offlineUser.userId).toBeTruthy();
+        expect(offlineUser.userType).toBeTruthy();
     });
 });

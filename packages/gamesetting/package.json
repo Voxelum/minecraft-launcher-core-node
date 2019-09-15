@@ -14,7 +14,7 @@
     "@xmcl/common": "file:../common"
   },
   "scripts": {
-    "test": "mocha test.js --timeout 10000 ",
+    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

@@ -391,12 +391,6 @@ export namespace ForgeInstaller {
                 await vfs.ensureFile(file);
                 await vfs.waitStream(s.pipe(vfs.createWriteStream(file)));
             }
-            // function libRedirect(lib: ResolvedLibrary) {
-            //     if (lib.name.startsWith("net.minecraftforge:forge:")) {
-            //         return `file://${path.join(temp, "maven", lib.download.path)}`;
-            //     }
-            //     return undefined;
-            // }
             try {
                 let zip: Unzip.LazyZipFile;
                 try {

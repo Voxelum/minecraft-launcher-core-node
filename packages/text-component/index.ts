@@ -27,7 +27,7 @@ export class TextFormatting {
     static readonly UNDERLINE: TextFormatting = new TextFormatting("UNDERLINE", "n");
     static readonly ITALIC: TextFormatting = new TextFormatting("ITALIC", "o");
 
-    static getTextWithoutFormattingCode(text: string): string | null { return text == null ? null : text.replace(TextFormatting.FORMATTING_CODE_PATTERN, ""); }
+    static getTextWithoutFormattingCode(text: string): string { return text.replace(TextFormatting.FORMATTING_CODE_PATTERN, ""); }
     static getValueByChar(formattingCode: string): TextFormatting {
         for (const key in registry) {
             const textFormatting = registry[key];
@@ -37,8 +37,8 @@ export class TextFormatting {
         }
         return TextFormatting.BLACK;
     }
-    static getValueByName(friendlyName: string | null): TextFormatting | null {
-        return friendlyName == null ? null : registry[friendlyName.toLocaleLowerCase().replace(/[^a-z]/, "")];
+    static getValueByName(friendlyName: string): TextFormatting | undefined {
+        return registry[friendlyName.toLocaleLowerCase().replace(/[^a-z]/, "")];
     }
 
     private static FORMATTING_CODE_PATTERN = /\b§[0-9A-FK-OR]/;
@@ -52,25 +52,23 @@ export class TextFormatting {
     private constructor(readonly formatName: string, readonly formattingCode: string, param?: number) {
         if (!param) {
             this.fancyStyling = true;
-        } else if (typeof param === "number") {
+        } else {
             this.colorIndex = param;
             this.fancyStyling = false;
-        } else { throw new Error(); }
+        }
         this.controlString = "§" + this.formattingCode;
         registry[formatName.toLowerCase().replace(/[^a-z]/, "")] = this;
     }
 
     toString() { return this.controlString; }
     getFriendlyName() { return this.formatName.toLocaleLowerCase(); }
-
-
 }
 
 
 export class Style {
     static create(construct: {
         parent?: Style,
-        color?: TextFormatting,
+        color?: TextFormatting | string,
         bold?: boolean,
         italic?: boolean,
         underline?: boolean,
@@ -80,7 +78,9 @@ export class Style {
         hoverEvent?: Style.Event<TextComponent>,
         insertion?: string,
     }): Style {
-        return new Style(construct.parent, construct.color, construct.bold, construct.italic, construct.underline, construct.strikethrough, construct.obfuscated,
+        return new Style(construct.parent,
+            typeof construct.color === "string" ? TextFormatting.getValueByName(construct.color) : construct.color,
+            construct.bold, construct.italic, construct.underline, construct.strikethrough, construct.obfuscated,
             construct.clickEvent, construct.hoverEvent, construct.insertion);
     }
 
@@ -211,19 +211,49 @@ export interface TextComponent {
     append(component: string | TextComponent): TextComponent;
 }
 
+interface TextComponentRaw {
+    text?: string;
+    translate: string;
+    with: [];
+    score: {
+        name: string,
+        objective: string,
+        value: string,
+    };
+    selector: string;
+    keybind: string;
+    color: string;
+    bold: boolean;
+    italic: boolean;
+    underlined: boolean;
+    strikethrough: boolean;
+    obfuscated: boolean;
+    insertion: string;
+    clickEvent: {
+        action: string,
+        value: string,
+    };
+    hoverEvent: {
+        action: string,
+        value: string,
+    };
+    extra?: Array<TextComponentRaw | string>;
+}
+
 export namespace TextComponent {
     export function str(s?: string): TextComponent {
         return new TextComponentString(s);
     }
 
-    export function from(obj: any): TextComponent {
+    export function from(obj: string | TextComponentRaw): TextComponent {
         if (typeof obj === "string") {
             return fromFormattedString(obj);
         }
         let component: TextComponent | undefined;
         if (obj.text) { component = TextComponent.str(obj.text); }
         if (!component) { component = TextComponent.str(""); }
-        if (obj.extra && obj.extra instanceof Array) {
+        // component.style = Style.create(obj);
+        if (obj.extra instanceof Array) {
             for (const element of obj.extra) {
                 component.append(from(element));
             }

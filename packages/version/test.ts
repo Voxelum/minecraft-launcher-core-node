@@ -1,52 +1,49 @@
-import * as assert from "assert";
-import * as path from "path";
+import { currentPlatform, VFS } from "@xmcl/util";
+import { join, normalize } from "path";
 import { ResolvedNative, Version } from "./index";
 
-before(function() {
-    this.assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
-    this.gameDirectory = path.join(this.assets, "temp");
-});
+const root = normalize(join(__dirname, "..", "..", "mock"));
 
-describe("Version", function () {
-    describe("#getLibraryInfo", function () {
-        it("should be able to parse normal minecraft library", function () {
+describe("Version", () => {
+    describe("#getLibraryInfo", () => {
+        test("should be able to parse normal minecraft library", () => {
             const name = "com.mojang:patchy:1.1";
             const parsed = Version.getLibraryInfo(name);
-            assert.equal(parsed.groupId, "com.mojang");
-            assert.equal(parsed.artifactId, "patchy");
-            assert.equal(parsed.version, "1.1");
-            assert.equal(parsed.type, "jar");
-            assert.equal(parsed.isSnapshot, false);
-            assert.equal(parsed.path, "com/mojang/patchy/1.1/patchy-1.1.jar");
+            expect(parsed.groupId).toEqual("com.mojang");
+            expect(parsed.artifactId).toEqual("patchy");
+            expect(parsed.version).toEqual("1.1");
+            expect(parsed.type).toEqual("jar");
+            expect(parsed.isSnapshot).toEqual(false);
+            expect(parsed.path).toEqual("com/mojang/patchy/1.1/patchy-1.1.jar");
         });
 
-        it("should be able to parse strange forge library", function () {
+        test("should be able to parse strange forge library", () => {
             const name = "net.minecraftforge:forge:1.14.3-27.0.47:universal";
             const parsed = Version.getLibraryInfo(name);
-            assert.equal(parsed.groupId, "net.minecraftforge");
-            assert.equal(parsed.artifactId, "forge");
-            assert.equal(parsed.version, "1.14.3-27.0.47");
-            assert.equal(parsed.classifier, "universal");
-            assert.equal(parsed.type, "jar");
-            assert.equal(parsed.isSnapshot, false);
-            assert.equal(parsed.path, "net/minecraftforge/forge/1.14.3-27.0.47/forge-1.14.3-27.0.47-universal.jar");
+            expect(parsed.groupId).toEqual("net.minecraftforge");
+            expect(parsed.artifactId).toEqual("forge");
+            expect(parsed.version).toEqual("1.14.3-27.0.47");
+            expect(parsed.classifier).toEqual("universal");
+            expect(parsed.type).toEqual("jar");
+            expect(parsed.isSnapshot).toEqual(false);
+            expect(parsed.path).toEqual("net/minecraftforge/forge/1.14.3-27.0.47/forge-1.14.3-27.0.47-universal.jar");
         });
 
-        it("should be able to parse strange forge resource", function () {
+        test("should be able to parse strange forge resource", () => {
             const name = "de.oceanlabs.mcp:mcp_config:1.14.3-20190624.152911@zip";
             const parsed = Version.getLibraryInfo(name);
-            assert.equal(parsed.groupId, "de.oceanlabs.mcp");
-            assert.equal(parsed.artifactId, "mcp_config");
-            assert.equal(parsed.version, "1.14.3-20190624.152911");
-            assert.equal(parsed.classifier, "");
-            assert.equal(parsed.type, "zip");
-            assert.equal(parsed.isSnapshot, false);
-            assert.equal(parsed.path, "de/oceanlabs/mcp/mcp_config/1.14.3-20190624.152911/mcp_config-1.14.3-20190624.152911.zip");
+            expect(parsed.groupId).toEqual("de.oceanlabs.mcp");
+            expect(parsed.artifactId).toEqual("mcp_config");
+            expect(parsed.version).toEqual("1.14.3-20190624.152911");
+            expect(parsed.classifier).toEqual("");
+            expect(parsed.type).toEqual("zip");
+            expect(parsed.isSnapshot).toEqual(false);
+            expect(parsed.path).toEqual("de/oceanlabs/mcp/mcp_config/1.14.3-20190624.152911/mcp_config-1.14.3-20190624.152911.zip");
         });
     });
 
-    describe("#resolveLibraries", function () {
-        it("should be able to resolve normal minecraft library", function () {
+    describe("#resolveLibraries", () => {
+        test("should be able to resolve normal minecraft library", () => {
             const rawLib = {
                 name: "com.mojang:patchy:1.1",
                 downloads: {
@@ -60,13 +57,13 @@ describe("Version", function () {
             };
 
             const [resolved] = Version.resolveLibraries([rawLib], { name: "osx", version: "", arch: "x64" });
-            assert.equal(resolved.download, rawLib.downloads.artifact);
-            assert.equal(resolved.checksums, undefined);
-            assert.equal(resolved.serverreq, undefined);
-            assert.equal(resolved.clientreq, undefined);
-            assert.equal(resolved.name, rawLib.name);
+            expect(resolved.download).toEqual(rawLib.downloads.artifact);
+            expect(resolved.checksums).toEqual(undefined);
+            expect(resolved.serverreq).toEqual(undefined);
+            expect(resolved.clientreq).toEqual(undefined);
+            expect(resolved.name).toEqual(rawLib.name);
         });
-        it("should be able to resolve legacy forge library", function () {
+        test("should be able to resolve legacy forge library", () => {
             const lib = {
                 name: "org.scala-lang.plugins:scala-continuations-library_2.11:1.0.2",
                 url: "http://files.minecraftforge.net/maven/",
@@ -78,14 +75,14 @@ describe("Version", function () {
                 clientreq: true,
             };
             const [resolved] = Version.resolveLibraries([lib], { name: "osx", version: "", arch: "x64" });
-            assert.equal(resolved.name, lib.name);
-            assert.equal(resolved.serverreq, lib.serverreq);
-            assert.equal(resolved.clientreq, lib.clientreq);
-            assert.equal(resolved.checksums, lib.checksums);
-            assert.equal(resolved.download.sha1, lib.checksums[0]);
-            assert.equal(resolved.download.path, "org/scala-lang/plugins/scala-continuations-library_2.11/1.0.2/scala-continuations-library_2.11-1.0.2.jar");
+            expect(resolved.name).toEqual(lib.name);
+            expect(resolved.serverreq).toEqual(lib.serverreq);
+            expect(resolved.clientreq).toEqual(lib.clientreq);
+            expect(resolved.checksums).toEqual(lib.checksums);
+            expect(resolved.download.sha1).toEqual(lib.checksums[0]);
+            expect(resolved.download.path).toEqual("org/scala-lang/plugins/scala-continuations-library_2.11/1.0.2/scala-continuations-library_2.11-1.0.2.jar");
         });
-        it("should be able to filter out useless native library", function () {
+        test("should be able to filter out useless native library", () => {
             const lib = {
                 name: "org.lwjgl.lwjgl:lwjgl_util:2.9.4-nightly-20150209",
                 rules: [
@@ -111,11 +108,11 @@ describe("Version", function () {
             const [onOsx] = Version.resolveLibraries([lib], { name: "osx", version: "", arch: "64" });
             const [onWin] = Version.resolveLibraries([lib], { name: "windows", version: "", arch: "64" });
             const [onLinux] = Version.resolveLibraries([lib], { name: "linux", version: "", arch: "64" });
-            assert(!onOsx);
-            assert(onWin);
-            assert(onLinux);
+            expect(onOsx).toBeFalsy();
+            expect(onWin).toBeTruthy();
+            expect(onLinux).toBeTruthy();
         });
-        it("should be able to select correct native library by system", function () {
+        test("should be able to select correct native library by system", () => {
             const selectionNative = {
                 extract: {
                     exclude: [
@@ -155,15 +152,15 @@ describe("Version", function () {
             const [onOsx] = Version.resolveLibraries([selectionNative], { name: "osx", version: "", arch: "64" });
             const [onWin] = Version.resolveLibraries([selectionNative], { name: "windows", version: "", arch: "64" });
             const [onLinux] = Version.resolveLibraries([selectionNative], { name: "linux", version: "", arch: "64" });
-            assert(onOsx instanceof ResolvedNative);
-            assert(onWin instanceof ResolvedNative);
-            assert(onLinux instanceof ResolvedNative);
+            expect(onOsx).toBeInstanceOf(ResolvedNative);
+            expect(onWin).toBeInstanceOf(ResolvedNative);
+            expect(onLinux).toBeInstanceOf(ResolvedNative);
 
-            assert.equal(onOsx.download, selectionNative.downloads.classifiers["natives-osx"]);
-            assert.equal(onWin.download, selectionNative.downloads.classifiers["natives-windows"]);
-            assert.equal(onLinux.download, selectionNative.downloads.classifiers["natives-linux"]);
+            expect(onOsx.download).toEqual(selectionNative.downloads.classifiers["natives-osx"]);
+            expect(onWin.download).toEqual(selectionNative.downloads.classifiers["natives-windows"]);
+            expect(onLinux.download).toEqual(selectionNative.downloads.classifiers["natives-linux"]);
         });
-        it("should correct work on mixture case of selection & rule", function () {
+        test("should correct work on mixture case of selection & rule", () => {
             const lib = {
                 extract: {
                     exclude: [
@@ -203,13 +200,13 @@ describe("Version", function () {
             const [onOsx] = Version.resolveLibraries([lib], { name: "osx", version: "", arch: "64" });
             const [onWin] = Version.resolveLibraries([lib], { name: "windows", version: "", arch: "64" });
             const [onLinux] = Version.resolveLibraries([lib], { name: "linux", version: "", arch: "64" });
-            assert(onOsx instanceof ResolvedNative);
-            assert(onWin === undefined);
-            assert(onLinux === undefined);
+            expect(onOsx).toBeInstanceOf(ResolvedNative);
+            expect(onWin).toBeUndefined();
+            expect(onLinux).toBeUndefined();
 
-            assert.equal(onOsx.download, lib.downloads.classifiers["natives-osx"]);
+            expect(onOsx.download).toEqual(lib.downloads.classifiers["natives-osx"]);
         });
-        it("should be able to handle the case with arch", function () {
+        test("should be able to handle the case with arch", () => {
             const lib = {
                 downloads: {
                     classifiers: {
@@ -250,20 +247,146 @@ describe("Version", function () {
             const [onWin] = Version.resolveLibraries([lib], { name: "windows", version: "", arch: "x64" });
             const [onWin32] = Version.resolveLibraries([lib], { name: "windows", version: "", arch: "x32" });
             const [onLinux] = Version.resolveLibraries([lib], { name: "linux", version: "", arch: "x64" });
-            assert(onOsx === undefined);
-            assert(onWin instanceof ResolvedNative);
-            assert(onWin32 instanceof ResolvedNative);
-            assert(onLinux === undefined);
+            expect(onOsx).toBeUndefined();
+            expect(onWin).toBeInstanceOf(ResolvedNative);
+            expect(onWin32).toBeInstanceOf(ResolvedNative);
+            expect(onLinux).toBeUndefined();
 
-            assert.equal(onWin.download, lib.downloads.classifiers["natives-windows-64"]);
-            assert.equal(onWin32.download, lib.downloads.classifiers["natives-windows-32"]);
+            expect(onWin.download).toEqual(lib.downloads.classifiers["natives-windows-64"]);
+            expect(onWin32.download).toEqual(lib.downloads.classifiers["natives-windows-32"]);
         });
     });
-    describe("#mixinArgumentString", function () {
+    describe("#mixinArgumentString", () => {
+        test("should be able to mixin the version string", () => {
+            // tslint:disable:max-line-length
+            const s = Version.mixinArgumentString("--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}", "--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --versionType Forge");
+            expect(s).toEqual("--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}");
+        });
+    });
+
+    describe("#parse", () => {
+        test("should throw if no main class", async () => {
+            await expect(Version.parse(root, "no-main-class"))
+                .rejects
+                .toThrow();
+        });
+        test("should throw if no main class", async () => {
+            await expect(Version.parse(root, "no-assets-json"))
+                .rejects
+                .toThrow();
+        });
+        test("should be able to parse 1.17.10 version", async () => {
+            const version = await Version.parse(root, "1.7.10");
+            expect(version.id).toEqual("1.7.10");
+            expect(version.client).toEqual("1.7.10");
+            expect(version.mainClass).toBeTruthy();
+            expect(version.libraries).toBeInstanceOf(Array);
+            expect(version.arguments).toBeTruthy();
+            expect(version.arguments.game).toBeInstanceOf(Array);
+            expect(version.arguments.jvm).toBeInstanceOf(Array);
+            expect(version.minecraftDirectory).toEqual(root);
+        });
+        test("should be able to parse 1.13.2 version", async () => {
+            const version = await Version.parse(root, "1.13.2");
+            expect(version.id).toEqual("1.13.2");
+            expect(version.client).toEqual("1.13.2");
+            expect(version.mainClass).toBeTruthy();
+            expect(version.libraries).toBeInstanceOf(Array);
+            expect(version.arguments).toBeTruthy();
+            expect(version.arguments.game).toBeInstanceOf(Array);
+            expect(version.arguments.jvm).toBeInstanceOf(Array);
+            expect(version.minecraftDirectory).toEqual(root);
+        });
+        test("should be able to throw if version not existed", async () => {
+            expect(Version.parse(root, "1.12"))
+                .rejects
+                .toStrictEqual({
+                    type: "MissingVersionJson",
+                    version: "1.12",
+                });
+        });
+        test("should be able to parse extended profile for forge", async () => {
+            const version = await Version.parse(root, "1.7.10-Forge10.13.3.1400-1.7.10");
+            expect(version.id).toEqual("1.7.10-Forge10.13.3.1400-1.7.10");
+            expect(version.client).toEqual("1.7.10");
+            expect(version.mainClass).toBeTruthy();
+            expect(version.libraries).toBeInstanceOf(Array);
+            expect(version.arguments).toBeTruthy();
+            expect(version.arguments.game).toBeInstanceOf(Array);
+            expect(version.arguments.jvm).toBeInstanceOf(Array);
+            expect(version.minecraftDirectory).toEqual(root);
+        });
+        it("should be able to parse version chain", async function () {
+            // const ver = await Version.parse(root, "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT");
+            // expect(ver).toBeTruthy();
+            // expect(ver.pathChain).toBeInstanceOf(Array);
+            // expect(ver.pathChain).toHaveLength(2);
+            // expect(ver.pathChain[0]).toBe(mc.getVersionRoot("1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT")) ；
+            // const mc = new MinecraftFolder(this.gameDirectory);
+            // assert.equal(ver.pathChain.length, 2);
+            // assert.equal(ver.pathChain[0]);
+            // assert.equal(ver.pathChain[1], mc.getVersionRoot("1.12.2"));
+        });
+    });
+
+    describe("#diagnose", () => {
+        test("should be able to diagnose minecraft folder", async () => {
+            await Version.parse(root, "mock").catch((e) => {
+                console.log(e);
+            });
+            const mock = await Version.diagnose("mock", root);
+            expect(mock.version).toBe("mock");
+            expect(mock.minecraftLocation.root).toBe(root);
+            expect(mock.missingAssetsIndex).toBe(false);
+            // expect(v17.missingLibraries.length).toBeGreaterThan(0);
+            expect(mock.missingVersionJar).toBe(true);
+            expect(mock.missingVersionJson).toBe(false);
+        });
+        test.skip("should be able to diagnose empty json folder", async () => {
+            const v17 = await Version.diagnose("1.7.0", root);
+            expect(v17.version).toBe("1.7.0");
+            expect(v17.minecraftLocation.root).toBe(root);
+            // expect(v17.missingAssetsIndex).toBe(false);
+            // expect(v17.missingLibraries.length).toBe(0);
+            // expect(v17.missingVersionJar).toBe(true);
+            // expect(v17.missingVersionJson).toBe(true);
+        });
+    });
+
+    describe("#checkAllowed", () => {
+        test("should be able to handle empty rules", () => {
+            expect(Version.checkAllowed([]))
+                .toBeTruthy();
+        });
+        test("should be able to handle featured rules", () => {
+            expect(Version.checkAllowed([
+                {
+                    action: "allow",
+                    features: {
+                        is_demo_user: true,
+                    },
+                },
+            ], currentPlatform, ["is_demo_user"]))
+                .toBeTruthy();
+        });
+        test("should be able to handle featured rules with flag false", () => {
+            expect(Version.checkAllowed([
+                {
+                    action: "allow",
+                    features: {
+                        is_demo_user: false,
+                    },
+                },
+            ], currentPlatform, [""]))
+                .toBeTruthy();
+        });
+    });
+
+    describe("#mixinArgumentString", () => {
         it("should be able to mixin the version string", () => {
             // tslint:disable:max-line-length
             const s = Version.mixinArgumentString("--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}", "--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --versionType Forge");
-            assert.equal(s, "--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}");
+            expect(s).toEqual("--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}");
         });
     });
 

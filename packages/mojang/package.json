@@ -17,7 +17,7 @@
     "long": "^3.2.0"
   },
   "scripts": {
-    "test": "mocha test.js --timeout 10000 ",
+    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

@@ -1,8 +1,8 @@
 import * as assert from "assert";
 import { GameSetting } from "./index";
 
-describe("GameSetting", function () {
-    it("should parse all options", function () {
+describe("GameSetting", () => {
+    test("should parse all options", () => {
         const s = `
 version:512
 invertYMouse:false
@@ -106,34 +106,34 @@ modelPart_right_pants_leg:true
 modelPart_hat:true
 `;
         const set = GameSetting.parse(s);
-        assert(set);
-        assert.equal(set.ao, GameSetting.AmbientOcclusion.Minimum, "ao");
-        assert.equal(set.fov, 0, "fov");
-        assert.equal(set.mipmapLevels, 4, "mipmap");
-        assert.equal(set.difficulty, GameSetting.Difficulty.Easy, "difficulty");
-        assert.equal(set.renderClouds, GameSetting.RenderCloud.Off, "cloud");
-        assert.equal(set.fancyGraphics, GameSetting.Graphic.Fast, "graphic");
-        assert.equal(set.lastServer, "play.mcndsj.com", "lastServer");
-        assert.equal(set.particles, GameSetting.Particles.Decreased, "particles");
-        assert.deepEqual(set.resourcePacks, ["Xray Ultimate 1.12 v2.2.1.zip"], "resourcepacks");
-        assert.equal(set.lang, "en_US", "language");
-        assert.equal(set.modelPart_hat, true, "model part");
+        expect(set).toBeTruthy();
+        expect(set.ao).toEqual(GameSetting.AmbientOcclusion.Minimum);
+        expect(set.fov).toEqual(0);
+        expect(set.mipmapLevels).toEqual(4);
+        expect(set.difficulty).toEqual(GameSetting.Difficulty.Easy);
+        expect(set.renderClouds).toEqual(GameSetting.RenderCloud.Off);
+        expect(set.fancyGraphics).toEqual(GameSetting.Graphic.Fast);
+        expect(set.lastServer).toEqual("play.mcndsj.com");
+        expect(set.particles).toEqual(GameSetting.Particles.Decreased);
+        expect(set.resourcePacks).toStrictEqual(["Xray Ultimate 1.12 v2.2.1.zip"]);
+        expect(set.lang).toEqual("en_US");
+        expect(set.modelPart_hat).toEqual(true);
     });
-    it("should not parse illegal option", () => {
+    test("should not parse illegal option", () => {
         const set = GameSetting.parse("undefined:undefined\n", true);
-        assert(set);
-        assert.equal((set as any).undefined, undefined);
+        expect(set).toBeTruthy();
+        expect((set as any).undefined).toEqual(undefined);
     });
-    it("should parse output even if input string is empty", () => {
+    test("should parse output even if input string is empty", () => {
         const set = GameSetting.parse("", true);
-        assert(set);
-        assert.equal(set.ao, 2);
-        assert.equal(set.fov, 0);
-        assert.equal(set.mipmapLevels, 4);
-        assert.deepEqual(set.resourcePacks, []);
-        assert.equal(set.lang, "en_us");
+        expect(set).toBeTruthy();
+        expect(set.ao).toEqual(2);
+        expect(set.fov).toEqual(0);
+        expect(set.mipmapLevels).toEqual(4);
+        expect(set.resourcePacks).toStrictEqual([]);
+        expect(set.lang).toEqual("en_us");
     });
-    it("should write all options from frame", () => {
+    test("should write all options from frame", () => {
         const setting: GameSetting.Frame = {
             useVbo: false,
             fboEnable: false,
@@ -152,13 +152,13 @@ modelPart_hat:true
             resourcePacks: ["asb"],
         };
         const str = GameSetting.stringify(setting);
-        assert.notEqual(str.indexOf("maxFps:0"), -1);
-        assert.notEqual(str.indexOf("fboEnable:false"), -1);
-        assert.notEqual(str.indexOf("enableVsync:false"), - 1);
-        assert.notEqual(str.indexOf("fancyGraphics:false"), - 1);
-        assert.notEqual(str.indexOf('resourcePacks:["asb"]'), -1);
+        expect(str.indexOf("maxFps:0")).not.toEqual(-1);
+        expect(str.indexOf("fboEnable:false")).not.toEqual(-1);
+        expect(str.indexOf("enableVsync:false")).not.toEqual(- 1);
+        expect(str.indexOf("fancyGraphics:false")).not.toEqual(- 1);
+        expect(str.indexOf('resourcePacks:["asb"]')).not.toEqual(-1);
     });
-    it("should write all options from instance", () => {
+    test("should write all options from instance", () => {
         const setting: GameSetting.Frame = {
             useVbo: false,
             fboEnable: false,
@@ -177,17 +177,17 @@ modelPart_hat:true
             resourcePacks: [],
         };
         const str = GameSetting.stringify(setting);
-        assert.notEqual(str.indexOf("maxFps:0"), -1);
-        assert.notEqual(str.indexOf("fboEnable:false"), -1);
-        assert.notEqual(str.indexOf("enableVsync:false"), - 1);
-        assert.notEqual(str.indexOf("fancyGraphics:false"), - 1);
-        assert.notEqual(str.indexOf("resourcePacks:[]"), -1);
+        expect(str.indexOf("maxFps:0")).not.toEqual(-1);
+        expect(str.indexOf("fboEnable:false")).not.toEqual(-1);
+        expect(str.indexOf("enableVsync:false")).not.toEqual(- 1);
+        expect(str.indexOf("fancyGraphics:false")).not.toEqual(- 1);
+        expect(str.indexOf("resourcePacks:[]")).not.toEqual(-1);
     });
-    it("should not write undefined", () => {
+    test("should not write undefined", () => {
         const setting = {
             undefined,
         };
         const str = GameSetting.stringify(setting);
-        assert.equal(str.indexOf("undefined:undefined"), -1);
+        expect(str.indexOf("undefined:undefined")).toEqual(-1);
     });
 });

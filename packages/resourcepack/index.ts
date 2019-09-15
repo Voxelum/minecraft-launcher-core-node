@@ -1,6 +1,6 @@
 import { ResourcePackMetaData } from "@xmcl/common";
 import Unzip from "@xmcl/unzip";
-import * as fs from "fs";
+import { vfs } from "../util";
 export interface ResourcePack {
     readonly path: string;
     readonly type: "directory" | "zip";
@@ -19,7 +19,7 @@ export namespace ResourcePack {
         const loadEntries = cacheIcon ? ["pack.mcmeta", "pack.png"] : ["pack.mcmeta"];
         const entries = await zipFile.filterEntries(loadEntries as ["pack.mcmeta", "pack.png"] | ["pack.mcmeta"]);
         const metadataEntry = entries.find((e) => e.fileName === "pack.mcmeta");
-        if (!metadataEntry) { throw new Error("Cannot find pack.mcmeta"); }
+        if (!metadataEntry) { throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!"); }
 
         const metadata = await zipFile.readEntry(metadataEntry).then((data) => JSON.parse(data.toString("utf-8").trim()).pack);
 
@@ -38,11 +38,11 @@ export namespace ResourcePack {
         const metaPath = `${filePath}/pack.mcmeta`;
         const iconPath = `${filePath}/pack.png`;
 
-        if (!fs.existsSync(metaPath)) { throw Error("Illegal Resourcepack"); }
-        const metadata = await fs.promises.readFile(metaPath);
+        if (await vfs.missing(metaPath)) { throw Error("Illegal Resourcepack: Cannot find pack.mcmeta!"); }
+        const metadata = await vfs.readFile(metaPath);
 
         const meta = JSON.parse(metadata.toString("utf-8").trim()).pack;
-        const icon = cacheIcon ? await fs.promises.readFile(iconPath)
+        const icon = cacheIcon ? await vfs.readFile(iconPath)
             .then((data) => "data:image/png;base64, " + data.toString("base64"))
             .catch((_) => "") : "";
 
@@ -51,10 +51,10 @@ export namespace ResourcePack {
 
     export async function readIcon(resourcePack: ResourcePack) {
         const filePath = resourcePack.path;
-        const stat = await fs.promises.stat(filePath);
+        const stat = await vfs.stat(filePath);
         if (stat.isDirectory()) {
             const iconPath = `${filePath}/pack.png`;
-            const icon = await fs.promises.readFile(iconPath)
+            const icon = await vfs.readFile(iconPath)
                 .then((data) => "data:image/png;base64, " + data.toString("base64"))
                 .catch((_) => "");
             resourcePack.icon = icon;
@@ -79,7 +79,7 @@ export namespace ResourcePack {
      * @param buffer The zip file data Buffer you read.
      */
     export async function read(filePath: string, buffer?: Buffer, cacheIcon?: boolean): Promise<ResourcePack> {
-        const stat = await fs.promises.stat(filePath);
+        const stat = await vfs.stat(filePath);
         if (stat.isDirectory()) { return readDirectory(filePath, cacheIcon); }
         const zip = buffer ? await Unzip.open(buffer, { lazyEntries: true }) : await Unzip.open(filePath, { lazyEntries: true });
         return readZip(filePath, zip, cacheIcon);

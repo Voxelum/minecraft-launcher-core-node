@@ -12,7 +12,7 @@ describe("NBT", () => {
     };
     let deserializedDirect: any;
     let deserialized: any;
-    it("should be able to register serializer", () => {
+    test("should be able to register serializer", () => {
         ser = NBT.Persistence.createSerializer().register("test", {
             name: NBT.TagType.String,
             type: NBT.TagType.String,
@@ -23,25 +23,28 @@ describe("NBT", () => {
             nested: "test",
         });
     });
-    it("should be able to serialize object", async () => {
+    test("should be able to serialize object", async () => {
         buf = await ser.serialize(src, "test");
         assert(buf);
     });
-    it("should be able to deserialize buffer", async () => {
+    test("should be able to deserialize buffer", async () => {
         deserialized = await ser.deserialize(buf).value;
         assert(deserialized);
     });
-    it("should be able to deserialize buffer directly", async () => {
+    test("should be able to deserialize buffer directly", async () => {
         deserializedDirect = await NBT.Persistence.deserialize(buf);
         assert(deserializedDirect);
     });
-    it("should produce the same results across two type of deserializations", () => {
-        assert.deepEqual(deserializedDirect, deserialized);
-    });
-    it("should produce the same result as the input", () => {
+    test(
+        "should produce the same results across two type of deserializations",
+        () => {
+            assert.deepEqual(deserializedDirect, deserialized);
+        }
+    );
+    test("should produce the same result as the input", () => {
         assert.deepEqual(src, deserialized);
     });
-    it("should not serialize the error input", async () => {
+    test("should not serialize the error input", async () => {
         const input = { name: "ci010" };
         const inputType = { name: NBT.TagType.Byte };
         const serializer = NBT.Persistence.createSerializer().register("test", inputType);
@@ -49,8 +52,8 @@ describe("NBT", () => {
         try {
             await serializer.serialize(input, "test", false);
         } catch (e) {
-            assert.equal(e.type, "IllegalInputType");
-            assert.equal(e.message, "Require Byte but found string");
+            expect(e.type).toEqual("IllegalInputType");
+            expect(e.message).toEqual("Require Byte but found string");
         }
         try {
             await NBT.Persistence.serialize({
@@ -58,11 +61,11 @@ describe("NBT", () => {
                 __nbtPrototype__: inputType,
             });
         } catch (e) {
-            assert.equal(e.type, "IllegalInputType");
-            assert.equal(e.message, "Require Byte but found string");
+            expect(e.type).toEqual("IllegalInputType");
+            expect(e.message).toEqual("Require Byte but found string");
         }
     });
-    it("should ignore the additional field in serialization", async () => {
+    test("should ignore the additional field in serialization", async () => {
         const unmatchedInput = { name: "ci010", age: 0 };
         const inputType = { name: NBT.TagType.String };
         const serializer = NBT.Persistence.createSerializer().register("test", inputType);
@@ -81,9 +84,9 @@ describe("NBT", () => {
             __nbtPrototype__: inputType,
         });
 
-        assert.equal(0, matched.compare(matchedDirect), "matched direct");
-        assert.equal(0, matched.compare(unmatched), "umatched");
-        assert.equal(0, matched.compare(unmatchedDirect), "unmatched direct");
+        expect(0).toEqual(matched.compare(matchedDirect));
+        expect(0).toEqual(matched.compare(unmatched));
+        expect(0).toEqual(matched.compare(unmatchedDirect));
 
         const reversed = await serializer.deserialize(unmatched);
         const reversedDirect = await NBT.Persistence.deserialize(unmatched);

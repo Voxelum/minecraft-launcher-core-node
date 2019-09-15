@@ -1,47 +1,26 @@
 {
   "private": true,
-  "engines": {
-    "node": ">=10.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "devDependencies": {
     "@types/bytebuffer": "^5.0.37",
     "@types/got": "^9.6.0",
+    "@types/jest": "^24.0.18",
     "@types/long": "^3.0.31",
-    "@types/mocha": "^2.2.41",
     "@types/node": "^10.0.0",
     "@types/uuid": "^3.4.3",
     "@types/yauzl": "^2.9.1",
+    "jest": "^24.9.0",
     "lerna": "^3.16.4",
-    "mocha": "^6.1.4",
+    "ts-jest": "^24.0.2",
     "tslint": "^5.14.0",
     "typescript": "^3.4.3"
   },
   "scripts": {
     "postinstall": "lerna bootstrap",
-    "test": "lerna run test",
+    "test": "jest",
+    "test:unit": "jest packages",
+    "test:e2e": "jest e2e",
     "build": "tslint -c tslint.json 'package/**/*.ts' && lerna run build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ci010/ts-minecraft.git"
-  },
-  "author": "cijhn@hotmail.com",
-  "keywords": [
-    "minecraft",
-    "typescript",
-    "minecraft-launcher",
-    "nodejs",
-    "electron"
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/ci010/ts-minecraft/issues"
-  },
-  "homepage": "https://github.com/ci010/ts-minecraft#readme",
-  "name": "launcher-core",
   "dependencies": {
     "@xmcl/auth": "file:packages\\auth",
     "@xmcl/client": "file:packages\\client",
@@ -66,5 +45,24 @@
     "@xmcl/util": "file:packages\\util",
     "@xmcl/version": "file:packages\\version",
     "@xmcl/world": "file:packages\\world"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "modulePaths": [
+      "packages"
+    ],
+    "testRegex": "packages/.*test\\.ts",
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    },
+    "collectCoverage": true
   }
 }

@@ -4,43 +4,40 @@ import * as fs from "fs";
 import * as path from "path";
 import { Server } from "./index";
 
-before(function() {
-    this.assets = path.normalize(path.join(__dirname, "..", "..", "assets"));
-    this.gameDirectory = path.join(this.assets, "temp");
-});
 
 describe("Server", () => {
-    it("should read server.dat file", async function () {
-        const data = fs.readFileSync(`${this.assets}/servers.dat`);
+    const root =  path.normalize(path.join(__dirname, "..", "..", "mock"));
+    test("should read server.dat file", async () => {
+        const data = fs.readFileSync(`${root}/servers.dat`);
         const infos = await Server.readInfo(data);
-        assert.equal(infos[0].name, "nyaacat");
-        assert.equal(infos[1].name, "himajin");
-        assert.equal(infos[2].name, "mcJp");
-        assert.equal(infos[3].name, "Minecraft Server");
+        expect(infos[0].name).toEqual("nyaacat");
+        expect(infos[1].name).toEqual("himajin");
+        expect(infos[2].name).toEqual("mcJp");
+        expect(infos[3].name).toEqual("Minecraft Server");
     });
-    it("should write to nbt data right", async function () {
+    test("should write to nbt data right", async () => {
         const byte = await Server.writeInfo([{
             name: "abc",
             host: "ip!",
         }]);
         const readBack = await Server.readInfo(byte);
         assert(readBack[0]);
-        assert.equal(readBack[0].name, "abc");
-        assert.equal(readBack[0].host, "ip!");
+        expect(readBack[0].name).toEqual("abc");
+        expect(readBack[0].host).toEqual("ip!");
     });
-    describe("Ping", function () {
-        this.slow(3000);
-        it("should fetch server frame", async () => {
+    describe("Ping", () => {
+        // testContext.slow(3000);
+        test("should fetch server frame", async () => {
             const frame = await Server.fetchStatusFrame({ host: "mc.hypixel.net" });
             assert(frame);
             assert(frame.ping !== -1, "Frame should have ping");
-        }).timeout(100000);
+        });
         // it("should control the port", (done) => {
         //     Server.fetchStatusFrame({ host: "mc.hypixel.net", port: 138 }, { timeout: 500, retryTimes: 0 })
         //         .then(() => done("This should not happen"))
         //         .catch((err) => { done(); });
-        // }).timeout(100000);
-        it("should convert frame to status", async () => {
+        // });
+        test("should convert frame to status", async () => {
             const frame: Server.StatusFrame = {
                 version: { name: "test-version", protocol: 1 },
                 players: { max: 1, online: 1 },
@@ -49,14 +46,14 @@ describe("Server", () => {
                 ping: 5,
             };
             const status = Server.Status.from(frame);
-            assert.equal(status.capacity, 1, "capacity");
-            assert.equal(status.pingToServer, 5, "ping");
-            assert.equal(status.onlinePlayers, 1, "online");
-            assert.equal(status.serverMOTD.text, "abc", "motd");
-            assert.equal(status.icon, "", "icon");
-            assert.equal(status.protocolVersion, 1, "protocol");
+            expect(status.capacity).toEqual(1);
+            expect(status.pingToServer).toEqual(5);
+            expect(status.onlinePlayers).toEqual(1);
+            expect(status.serverMOTD.text).toEqual("abc");
+            expect(status.icon).toEqual("");
+            expect(status.protocolVersion).toEqual(1);
         });
-        it("should capture timeout exception", (done) => {
+        test("should capture timeout exception", (done) => {
             Server.fetchStatus({
                 host: "crafterr.me",
             }, { timeout: 100 }).then((status) => {
@@ -64,14 +61,14 @@ describe("Server", () => {
             }, (err) => {
                 done();
             });
-        }).timeout(100000);
-        it("should fetch server info and ping", (done) => {
+        });
+        test("should fetch server info and ping", (done) => {
             Server.fetchStatus({
                 host: "mc.hypixel.net",
             }, { timeout: 10000 }).then((status) => {
                 assert(status.pingToServer !== -1);
                 done();
             }).catch((e) => { done(e); });
-        }).timeout(100000);
+        });
     });
 });
