@@ -275,6 +275,13 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
             missing: "AssetIndex",
         };
     }
+    if (Object.keys(downloadsMap).length === 0) {
+        throw {
+            type: "CorruptedVersionJson",
+            version: id,
+            missing: "Downloads",
+        };
+    }
 
     return {
         id,
@@ -409,6 +416,7 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
         try {
             resolvedVersion = await context.execute("checkVersionJson", () => Version.parse(minecraft, version));
         } catch (e) {
+            console.error(e);
             return {
                 minecraftLocation: minecraft,
                 version,
@@ -531,7 +539,7 @@ function parseVersionJson(versionString: string, root: string): PartialResolvedV
         }, []);
     };
     const parsed: Version = JSON.parse(versionString);
-    const libraries = resolveLibraries(parsed.libraries, platform);
+    const libraries = resolveLibraries(parsed.libraries || [], platform);
     const args = {
         jvm: [] as Version.LaunchArgument[],
         game: [] as Version.LaunchArgument[],

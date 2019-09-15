@@ -1,4 +1,4 @@
-import * as Long from "long";
+import Long from "long";
 import { Server, ServerStatusFrame } from "../../index";
 import Coders from "../coders";
 import { Field, Packet } from "../packet";

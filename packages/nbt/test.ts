@@ -1,5 +1,5 @@
-import * as assert from "assert";
-import * as Long from "long";
+import assert from "assert";
+import Long from "long";
 import { NBT } from "./index";
 
 describe("NBT", () => {
@@ -25,21 +25,21 @@ describe("NBT", () => {
     });
     test("should be able to serialize object", async () => {
         buf = await ser.serialize(src, "test");
-        assert(buf);
+        expect(buf).toBeTruthy();
     });
     test("should be able to deserialize buffer", async () => {
         deserialized = await ser.deserialize(buf).value;
-        assert(deserialized);
+        expect(deserialized).toBeTruthy();
     });
     test("should be able to deserialize buffer directly", async () => {
         deserializedDirect = await NBT.Persistence.deserialize(buf);
-        assert(deserializedDirect);
+        expect(deserializedDirect).toBeTruthy();
     });
     test(
         "should produce the same results across two type of deserializations",
         () => {
             assert.deepEqual(deserializedDirect, deserialized);
-        }
+        },
     );
     test("should produce the same result as the input", () => {
         assert.deepEqual(src, deserialized);

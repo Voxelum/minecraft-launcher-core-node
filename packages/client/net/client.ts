@@ -1,4 +1,4 @@
-import * as ByteBuffer from "bytebuffer";
+import ByteBuffer from "bytebuffer";
 import { EventEmitter } from "events";
 import { NetConnectOpts, Socket } from "net";
 import { Transform, TransformCallback, Writable } from "stream";

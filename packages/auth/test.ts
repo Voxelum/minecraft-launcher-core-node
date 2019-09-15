@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import assert from "assert";
 import { ChildProcess, spawn } from "child_process";
 import * as path from "path";
 import { Auth } from "./index";
@@ -54,7 +54,7 @@ describe("Auth", () => {
         });
         test("should reject invalid username password", async () => {
             await expect(Auth.Yggdrasil.login({ username: "18211378@163.com", password: "asd-x" }, MOCK))
-                .resolves
+                .rejects
                 .toBeTruthy();
         });
     });

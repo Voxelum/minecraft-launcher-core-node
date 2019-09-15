@@ -11,8 +11,10 @@
         "access": "public"
     },
     "scripts": {
-        
         "build": "tsc --build tsconfig.json"
+    },
+    "dependencies": {
+        "@xmcl/common": "file:../common"
     },
     "repository": {
         "type": "git",

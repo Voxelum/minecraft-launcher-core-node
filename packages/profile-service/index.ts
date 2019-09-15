@@ -1,7 +1,7 @@
 import { GameProfile } from "@xmcl/common";
 import { fetchBuffer, fetchJson, got } from "@xmcl/net";
 import { vfs } from "@xmcl/util";
-import * as ByteBuffer from "bytebuffer";
+import ByteBuffer from "bytebuffer";
 import * as crypto from "crypto";
 import * as https from "https";
 import * as queryString from "querystring";

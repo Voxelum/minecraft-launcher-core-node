@@ -1,4 +1,4 @@
-import { Platform } from "../util";
+import { Platform } from "./platform";
 
 export namespace Version {
     export interface Download {
@@ -38,7 +38,7 @@ export namespace Version {
                 [os: string]: Artifact,
             },
         };
-        rules: Array<Rule>;
+        rules: Rule[];
         extract: {
             exclude: string[],
         };
@@ -52,7 +52,7 @@ export namespace Version {
         downloads: {
             artifact: Artifact,
         };
-        rules: Array<Rule>;
+        rules: Rule[];
     }
 
     export interface LegacyLibrary {
@@ -63,7 +63,7 @@ export namespace Version {
         checksums?: string[];
     }
 
-    export type Library = NormalLibrary | NativeLibrary | PlatformSpecificLibrary | LegacyLibrary
+    export type Library = NormalLibrary | NativeLibrary | PlatformSpecificLibrary | LegacyLibrary;
 
     export type LaunchArgument = string | {
         rules: Rule[];

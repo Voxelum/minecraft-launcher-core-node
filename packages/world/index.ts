@@ -1,8 +1,8 @@
 import { LevelDataFrame, RegionDataFrame, World } from "@xmcl/common";
 import { NBT } from "@xmcl/nbt";
 import Unzip from "@xmcl/unzip";
-import * as fileType from "file-type";
-import * as fs from "fs";
+import { vfs } from "@xmcl/util";
+import fileType from "file-type";
 import * as path from "path";
 import { inflateSync } from "zlib";
 
@@ -12,7 +12,7 @@ declare module "@xmcl/common/world" {
     namespace World {
         function loadRegionFromBuffer(buffer: Buffer, x: number, z: number): Promise<RegionDataFrame>;
         /**
-         * 
+         *
          * @param location The save file path. e.g .minecraft/saves/New World
          * @param x The x of the chunk
          * @param z The z of the chunk.
@@ -50,7 +50,7 @@ function getRegionFile(location: string, x: number, z: number) {
 }
 
 async function load<K extends string & keyof World & ("players" | "advancements" | "level")>(location: string, entries: K[]): Promise<Pick<World, K | "path">> {
-    const isDir = await fs.promises.stat(location).then((s) => s.isDirectory());
+    const isDir = await vfs.stat(location).then((s) => s.isDirectory());
     const enabledFunction = entries.reduce((o, v) => { o[v] = true; return o; }, {} as { [k: string]: boolean });
     const result: Partial<World> & Pick<World, "players" | "advancements"> = {
         path: path.resolve(location),
@@ -58,7 +58,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
         advancements: [],
     };
     if (!isDir) {
-        const buffer = await fs.promises.readFile(location);
+        const buffer = await vfs.readFile(location);
         const ft = fileType(buffer);
         if (!ft || ft.ext !== "zip") { throw new Error("IllgalMapFormat"); }
 
@@ -91,7 +91,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
     } else {
         const promises: Array<Promise<any>> = [];
         if (enabledFunction.level) {
-            promises.push(fs.promises.readFile(path.resolve(location, "level.dat")).then(NBT.Persistence.deserialize).then((l) => {
+            promises.push(vfs.readFile(path.resolve(location, "level.dat")).then(NBT.Persistence.deserialize).then((l) => {
                 result.level = l.Data as any;
                 if (result.level === undefined || result.level === null) {
                     throw {
@@ -107,18 +107,18 @@ async function load<K extends string & keyof World & ("players" | "advancements"
             }));
         }
         if (enabledFunction.players) {
-            promises.push(fs.promises.readdir(path.resolve(location, "playerdata")).then(
+            promises.push(vfs.readdir(path.resolve(location, "playerdata")).then(
                 (files) => Promise.all(files.map((f) => path.resolve(location, "playerdata", f))
-                    .map((p) => fs.promises.readFile(p)
+                    .map((p) => vfs.readFile(p)
                         .then(NBT.Persistence.deserialize).then((r) => { result.players.push(r as any); }),
                     )),
                 () => { },
             ));
         }
         if (enabledFunction.advancements) {
-            promises.push(fs.promises.readdir(path.resolve(location, "advancements")).then(
+            promises.push(vfs.readdir(path.resolve(location, "advancements")).then(
                 (files) => Promise.all(files.map((f) => path.resolve(location, "advancements", f))
-                    .map((p) => fs.promises.readFile(p)
+                    .map((p) => vfs.readFile(p)
                         .then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); }),
                     )),
                 () => { },

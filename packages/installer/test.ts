@@ -1,6 +1,6 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/util";
 import { Version } from "@xmcl/version";
-import * as assert from "assert";
+import assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import { Installer } from "./index";
@@ -91,7 +91,7 @@ describe.skip("Install", () => {
                     url: "https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json",
                 };
                 const version = await Installer.install("server", meta, root);
-            }
+            },
         );
     });
 });

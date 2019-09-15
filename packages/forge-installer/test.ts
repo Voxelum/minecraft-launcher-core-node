@@ -1,7 +1,7 @@
 import { Installer } from "@xmcl/installer";
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/util";
 import { Version } from "@xmcl/version";
-import * as assert from "assert";
+import assert from "assert";
 import { exec } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -23,8 +23,6 @@ import * as net from "@xmcl/net";
 const mockNet = net as jest.Mocked<typeof net>;
 
 describe.skip("ForgeWebpage", () => {
-
-
     test("should get the webpage infomation for 1.12.2", async () => {
         mockNet.getIfUpdate.mockReturnValue(Promise.resolve({
             timestamp: "0",

@@ -1,6 +1,6 @@
-import * as ByteBuffer from "bytebuffer";
+import ByteBuffer from "bytebuffer";
 import fileType = require("file-type");
-import * as Long from "long";
+import Long from "long";
 import { Optional } from "typescript-optional";
 import * as zlib from "zlib";
 import { readUTF8, writeUTF8 } from "./utils";

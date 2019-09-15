@@ -11,6 +11,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@types/fast-html-parser": "^1.0.0",
     "@xmcl/installer": "file:../installer",
     "@xmcl/net": "file:../net",
     "@xmcl/task": "file:../task",
@@ -21,7 +22,6 @@
     "got": "^9.6.0"
   },
   "scripts": {
-    
     "build": "tsc --build tsconfig.json"
   },
   "repository": {

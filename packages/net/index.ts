@@ -146,4 +146,3 @@ export async function downloadToFolder(option: DownloadToOption) {
     }
     return realFilePath;
 }
-

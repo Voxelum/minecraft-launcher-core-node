@@ -1,3 +1,4 @@
+import { TextComponentFrame } from "@xmcl/common";
 // tslint:disable:variable-name
 const registry: { [key: string]: TextFormatting } = {};
 
@@ -211,41 +212,13 @@ export interface TextComponent {
     append(component: string | TextComponent): TextComponent;
 }
 
-interface TextComponentRaw {
-    text?: string;
-    translate: string;
-    with: [];
-    score: {
-        name: string,
-        objective: string,
-        value: string,
-    };
-    selector: string;
-    keybind: string;
-    color: string;
-    bold: boolean;
-    italic: boolean;
-    underlined: boolean;
-    strikethrough: boolean;
-    obfuscated: boolean;
-    insertion: string;
-    clickEvent: {
-        action: string,
-        value: string,
-    };
-    hoverEvent: {
-        action: string,
-        value: string,
-    };
-    extra?: Array<TextComponentRaw | string>;
-}
 
 export namespace TextComponent {
     export function str(s?: string): TextComponent {
         return new TextComponentString(s);
     }
 
-    export function from(obj: string | TextComponentRaw): TextComponent {
+    export function from(obj: string | TextComponentFrame): TextComponent {
         if (typeof obj === "string") {
             return fromFormattedString(obj);
         }
