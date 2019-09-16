@@ -5,6 +5,7 @@ cache: npm
 env:
   - ENV=TRAVIS
 install:
+  - rm -rf node_modules
   - npm install
   - npm run clean
   - npm run update
