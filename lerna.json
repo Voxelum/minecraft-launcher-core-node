@@ -2,7 +2,7 @@
   "packages": [
     "packages/*"
   ],
-  "commands": {
+  "command": {
     "publish": {
       "conventionalCommits": true,
       "yes": true

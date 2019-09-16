@@ -15,6 +15,5 @@
     "allowSyntheticDefaultImports": true
   },
   "include": [
-    "typing.d.ts"
   ]
 }

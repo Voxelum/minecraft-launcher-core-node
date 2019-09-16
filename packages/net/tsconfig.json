@@ -1,7 +1,6 @@
 {
     "files": [
-        "index.ts",
-        "typing.d.ts"
+        "index.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

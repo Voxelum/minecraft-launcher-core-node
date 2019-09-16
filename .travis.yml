@@ -6,9 +6,11 @@ env:
   - ENV=TRAVIS
 install:
   - npm install
+  - npm run clean
+  - npm run update
 script:
   - npm run build
-  - npm run test
+  - npm run test:unit
 branches:
   only:
   - master
