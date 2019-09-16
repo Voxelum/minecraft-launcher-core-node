@@ -6,7 +6,8 @@ env:
   - ENV=TRAVIS
 install:
   - npm install -g lerna
-  - rm -rf node_modules
+  - pwd
+  - rm -rf /home/travis/build/Voxelum/minecraft-launcher-core-node/node_modules
   - npx lerna clean --yes
   - npx lerna bootstrap
 script:
