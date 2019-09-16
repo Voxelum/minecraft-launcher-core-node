@@ -6,8 +6,6 @@ import fileType from "file-type";
 import * as path from "path";
 import { inflateSync } from "zlib";
 
-type StringBoolean = "true" | "false";
-
 declare module "@xmcl/common/world" {
     namespace World {
         function loadRegionFromBuffer(buffer: Buffer, x: number, z: number): Promise<RegionDataFrame>;
@@ -88,6 +86,9 @@ async function load<K extends string & keyof World & ("players" | "advancements"
             }
             return undefined;
         });
+        if (!result.level) {
+            throw new Error("Cannot find level.dat");
+        }
     } else {
         const promises: Array<Promise<any>> = [];
         if (enabledFunction.level) {

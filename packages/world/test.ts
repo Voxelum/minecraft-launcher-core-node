@@ -19,12 +19,12 @@ describe("World", () => {
     });
 
     test("should not load a non-map directory", async () => {
-        expect(World.load(`${root}/resourcepacks/sample-resourcepack`, ["level"]))
+        await expect(World.load(`${root}/resourcepacks/sample-resourcepack`, ["level"]))
             .rejects
             .toBeTruthy();
     });
     test("should not load a non-map file", async () => {
-        expect(World.load(`${root}/resourcepacks/sample-resourcepack.zip`, ["level"]))
+        await expect(World.load(`${root}/resourcepacks/sample-resourcepack.zip`, ["level"]))
             .rejects
             .toBeTruthy();
     });
