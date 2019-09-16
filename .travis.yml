@@ -4,7 +4,7 @@ node_js:
 cache:
   yarn: true
   directories:
-    - "node_modules"
+    - $HOME/.npm
 env:
   - ENV=TRAVIS
 before_install:
