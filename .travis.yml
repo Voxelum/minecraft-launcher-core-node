@@ -5,10 +5,10 @@ cache: npm
 env:
   - ENV=TRAVIS
 install:
+  - npm install -g lerna
   - rm -rf node_modules
-  - npm install
-  - npm run clean
-  - npm run update
+  - npx lerna clean
+  - npx lerna bootstrap
 script:
   - npm run build
   - npm run test:unit
