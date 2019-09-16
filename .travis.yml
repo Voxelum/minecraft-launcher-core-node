@@ -1,13 +1,15 @@
 language: node_js
 node_js:
     - "10"
-cache: npm
+# cache: npm
 env:
   - ENV=TRAVIS
 install:
   - npm install -g lerna
   - pwd
+  - ls node_modules
   - rm -rf /home/travis/build/Voxelum/minecraft-launcher-core-node/node_modules
+  - ls node_modules
   - npx lerna clean --yes
   - npx lerna bootstrap
 script:
