@@ -7,7 +7,7 @@ env:
 install:
   - npm install -g lerna
   - rm -rf node_modules
-  - npx lerna clean
+  - npx lerna clean --yes
   - npx lerna bootstrap
 script:
   - npm run build
