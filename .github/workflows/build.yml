@@ -1,4 +1,4 @@
-name: Node CI
+name: Build Validation
 
 on: [push]
 
@@ -21,7 +21,7 @@ jobs:
       run: |
         npm install -g lerna
         npx lerna clean --yes
-        npm lerna bootstrap
+        npx lerna bootstrap
         npm test
       env:
         CI: true
