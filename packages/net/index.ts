@@ -5,7 +5,7 @@ import { IncomingMessage } from "http";
 import { basename, resolve as pathResolve } from "path";
 import { fileURLToPath, parse } from "url";
 
-const IS_ELECTRON = process.versions.hasOwnProperty("electron");
+const IS_ELECTRON = false; // process.versions.hasOwnProperty("electron");
 
 export interface UpdatedObject {
     timestamp: string;
