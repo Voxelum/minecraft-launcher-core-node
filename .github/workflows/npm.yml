@@ -25,6 +25,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - uses: actions/setup-java@v1
+      with:
+        java-version: '9.X'
+        architecture: x64
     - name: npm install
       run: |
         npm install
