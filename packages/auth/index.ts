@@ -171,7 +171,6 @@ export namespace Auth {
         export function signout(option: { username: string, password: string }, api: API = API_MOJANG): Promise<void> {
             return request(api.hostName, api.signout, option).then((resp) => {
                 const { body } = resp;
-                console.log(body);
                 if (body.error) {
                     throw { type: body.error, message: body.errorMessage };
                 }
