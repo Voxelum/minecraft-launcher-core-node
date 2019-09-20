@@ -1,7 +1,7 @@
 import Task from "@xmcl/task";
 import { vfs } from "@xmcl/util";
 import * as gotDefault from "got";
-import { IncomingMessage } from "http";
+import { IncomingMessage, RequestOptions } from "http";
 import { basename, resolve as pathResolve } from "path";
 import { fileURLToPath, parse } from "url";
 
@@ -25,20 +25,24 @@ export const fetchBuffer = gotDefault.extend({
     useElectronNet: IS_ELECTRON,
 });
 
-export function getIfUpdate<T extends UpdatedObject = UpdatedObject>(url: string, parser: (s: string) => any, lastObj?: T): Promise<T> {
+export async function getIfUpdate<T extends UpdatedObject = UpdatedObject>(url: string, parser: (s: string) => any, lastObj?: T): Promise<T | undefined> {
     const lastModified = lastObj ? lastObj.timestamp : undefined;
-    return got(url, {
-        encoding: "utf-8",
-        headers: lastModified ? { "If-Modified-Since": lastModified } : undefined,
-    }).then((resp) => {
-        return resp.statusCode === 304 ? lastObj : {
-            ...parser(resp.body),
+    try {
+        const resp = await got(url, {
+            encoding: "utf-8",
+            headers: lastModified ? { "If-Modified-Since": lastModified } : undefined,
+        });
+        if (resp.statusCode !== 304) {
+            return lastObj;
+        }
+        return {
             timestamp: resp.headers["last-modified"] as string,
+            ...parser(resp.body),
         };
-    }).catch((e) => {
+    } catch (e) {
         if (lastObj) { return lastObj; }
         throw e;
-    });
+    }
 }
 
 export interface DownloadOption {
@@ -48,6 +52,7 @@ export interface DownloadOption {
     headers?: { [key: string]: string };
     timeout?: number;
     progress?: (written: number, total: number) => boolean | void;
+    pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
 }
 
 export interface DownloadToOption extends DownloadOption {
@@ -61,10 +66,23 @@ export interface DownloadAndCheckOption extends DownloadOption {
     };
 }
 
+
+export interface HttpDownloadService<T extends HttpDownloadService.Option> {
+    download(options: T): Promise<string>;
+}
+
+export namespace HttpDownloadService {
+    export interface Option extends RequestOptions {
+        directory: string;
+        name?: string;
+        checksums?: { [algorithm: string]: string };
+    }
+}
+
 export function openDownloadStream(option: DownloadOption) {
     const onProgress = option.progress || (() => { });
     let response: IncomingMessage;
-    return got.stream(option.url, {
+    const stream = got.stream(option.url, {
         method: option.method,
         headers: option.headers,
         timeout: option.timeout,
@@ -79,6 +97,10 @@ export function openDownloadStream(option: DownloadOption) {
             response.destroy();
         }
     });
+    if (option.pausable) {
+        option.pausable(stream.pause, stream.resume);
+    }
+    return stream;
 }
 
 export async function downloadBuffer(option: DownloadOption) {
@@ -117,15 +139,39 @@ export async function downloadFileIfAbsent(option: DownloadAndCheckOption & Down
     return downloadFile(option);
 }
 
-function wrapToWork<T, O extends DownloadOption>(f: (option: O) => Promise<T>): (option: O) => (ctx: Task.Context) => Promise<T> {
-    return (o) => (ctx) => f({
-        ...o,
-        progress: (p, t) => { ctx.update(p, t, o.url); },
-    });
+export function downloadFileWork(option: DownloadToOption) {
+    return async (context: Task.Context) => {
+        let pf: (() => void) | undefined;
+        let rf: () => void;
+        option.pausable = (pFunc, rFunc) => {
+            context.task.on("pause", pf = pFunc);
+            context.task.on("resume", rf = rFunc);
+        };
+        option.progress = (p, t) => context.update(p, t, option.url);
+        await downloadFile(option);
+        if (pf) {
+            context.task.removeListener("pause", pf);
+            context.task.removeListener("resmue", rf!);
+        }
+    };
 }
 
-export const downloadFileWork = wrapToWork(downloadFile);
-export const downloadFileIfAbsentWork = wrapToWork(downloadFileIfAbsent);
+export function downloadFileIfAbsentWork(option: DownloadAndCheckOption & DownloadToOption) {
+    return async (context: Task.Context) => {
+        let pf: (() => void) | undefined;
+        let rf: () => void;
+        option.pausable = (pFunc, rFunc) => {
+            context.task.on("pause", pf = pFunc);
+            context.task.on("resume", rf = rFunc);
+        };
+        option.progress = (p, t) => context.update(p, t, option.url);
+        await downloadFileIfAbsent(option);
+        if (pf) {
+            context.task.removeListener("pause", pf);
+            context.task.removeListener("resmue", rf!);
+        }
+    };
+}
 
 export async function downloadToFolder(option: DownloadToOption) {
     const isDir = await vfs.stat(option.destination).then((s) => s.isDirectory(), (_) => false);

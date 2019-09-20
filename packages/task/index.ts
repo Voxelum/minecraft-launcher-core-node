@@ -1,4 +1,6 @@
-export type TaskNode = Task.Node;
+import { EventEmitter } from "events";
+
+export type TaskNode = Task.State;
 
 function execute<T>(context: Task.Context, work: Task.Work<T>): Promise<T> {
     try {
@@ -9,74 +11,77 @@ function execute<T>(context: Task.Context, work: Task.Work<T>): Promise<T> {
     }
 }
 
-export interface Task<T> {
-    readonly root: Task.Node;
+export interface Task<T, N = Task.State> extends EventEmitter {
+    readonly root: N;
     readonly work: Task.Work<T>;
 
-    onChild(listener: (parentNode: Task.Node, childNode: Task.Node) => void): this;
-    onError(listener: (error: any, childNode: Task.Node) => void): this;
-    onUpdate(listener: (update: { progress: number, total?: number, message?: string }, childNode: Task.Node) => void): this;
-    onFinish(listener: (result: any, childNode: Task.Node) => void): this;
+    on(event: "child", listener: (parentNode: N, childNode: N) => void): this;
+    on(event: "error", listener: (error: any, childNode: N) => void): this;
+    on(event: "update", listener: (update: { progress: number, total?: number, message?: string }, childNode: N) => void): this;
+    on(event: "finish", listener: (result: any, childNode: N) => void): this;
+    on(event: "pause", listener: (node: N) => void): this;
+    on(event: "resume", listener: (node: N) => void): this;
+
+    once(event: "child", listener: (parentNode: N, childNode: N) => void): this;
+    once(event: "error", listener: (error: any, childNode: N) => void): this;
+    once(event: "update", listener: (update: { progress: number, total?: number, message?: string }, childNode: N) => void): this;
+    once(event: "finish", listener: (result: any, childNode: N) => void): this;
+    once(event: "pause", listener: (node: N) => void): this;
+    once(event: "resume", listener: (node: N) => void): this;
 
     execute(): Promise<T>;
+
+    pause(): void;
+    resume(): void;
+
     cancel(): void;
 }
 
-class TaskImpl<T> implements Task<T> {
-    readonly root: Task.Node;
+class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, N> {
+    readonly root: N;
     // tslint:disable: variable-name
-    private _child: Array<(parentNode: Task.Node, childNode: Task.Node) => void> = [];
-    private _errors: Array<(error: any, childNode: Task.Node) => void> = [];
-    private _updates: Array<(update: { progress: number, total?: number, message?: string }, childNode: Task.Node) => void> = [];
-    private _finish: Array<(result: any, childNode: Task.Node) => void> = [];
     private _cancelled = false;
+    private _promise: Promise<T> = new Promise<T>((resolve, reject) => {
+        this._reject = reject;
+        this._resolve = resolve;
+    });
+    private _reject: any;
+    private _resolve: any;
+    private _paused: boolean = false;
     // tslint:enable: variable-name
 
-    constructor(nameOrObject: string | { name: string, arguments: object }, readonly work: Task.Work<T>) {
+    constructor(nameOrObject: string | { name: string, arguments: object }, readonly work: Task.Work<T>, private factory: (state: Task.State) => N) {
+        super();
         let args: object | undefined;
         let name;
         if (typeof nameOrObject === "string") { name = nameOrObject; } else {
             name = nameOrObject.name;
             args = nameOrObject.arguments;
         }
-        this.root = {
+        this.root = factory({
             name,
             arguments: args,
             path: name,
             total: -1,
             progress: -1,
-            tasks: [],
+            children: [],
             error: undefined,
             status: "running",
             message: "",
-        };
+        });
     }
 
-    onChild(listener: (parentNode: Task.Node, childNode: Task.Node) => void): this {
-        this._child.push(listener);
-        return this;
-    }
-    onError(listener: (error: any, childNode: Task.Node) => void): this {
-        this._errors.push(listener);
-        return this;
-    }
-    onUpdate(listener: (update: { progress: number, total?: number, message?: string }, childNode: Task.Node) => void): this {
-        this._updates.push(listener);
-        return this;
-    }
-    onFinish(listener: (result: any, childNode: Task.Node) => void): this {
-        this._finish.push(listener);
-        return this;
-    }
-
-    createContext(node: Task.Node): Task.Context {
+    createContext(node: Task.State): Task.Context {
         const self = this;
         return {
+            get task() {
+                return self;
+            },
             update(progress: number, total?: number, message?: string) {
                 node.progress = progress;
                 node.total = total || node.total;
                 node.message = message || node.message;
-                self._updates.forEach((u) => u({ progress, total, message }, node));
+                self.emit("update", { progress, total, message }, node);
                 if (self._cancelled) {
                     node.status = "cancelled";
                     throw new Error("cancelled");
@@ -98,24 +103,28 @@ class TaskImpl<T> implements Task<T> {
                 }
 
                 const nextPath = node.path + "." + name;
-                const nextNode: Task.Node = {
+                const nextNode: N = self.factory({
                     name,
                     arguments: args,
                     path: nextPath,
                     total: -1,
                     progress: -1,
-                    tasks: [],
+                    children: [],
                     error: undefined,
                     status: "running",
                     message: "",
-                };
-                node.tasks.push(nextNode);
-                self._child.forEach((c) => c(node, nextNode));
+                });
+                node.children.push(nextNode);
+                self.emit("child", node, nextNode);
                 const context = self.createContext(nextNode);
 
                 if (self._cancelled) {
                     nextNode.status = "cancelled";
                     throw new Error("cancelled");
+                }
+
+                if (self._paused) {
+                    nextNode.status = "paused";
                 }
 
                 return self.executeOnNode(context, work, nextNode);
@@ -124,17 +133,41 @@ class TaskImpl<T> implements Task<T> {
     }
 
     execute(): Promise<T> {
-        return this.executeOnNode(this.createContext(this.root), this.work, this.root);
+        if (this.root.status !== "ready") { return this._promise; }
+        this.executeOnNode(this.createContext(this.root), this.work, this.root)
+            .then((r) => this._resolve(r))
+            .catch((e) => this._reject(e));
+        return this._promise;
     }
 
     cancel(): void {
         this._cancelled = true;
     }
 
-    private executeOnNode<N>(context: Task.Context, work: Task.Work<N>, node: Task.Node) {
+    pause() {
+        this._paused = true;
+        this.emit("pause");
+    }
+
+    resume() {
+        this._paused = false;
+        this.emit("resume");
+    }
+
+    private async waitIfPause() {
+        if (this._paused) {
+            await new Promise<void>((resolve, reject) => {
+                this.once("resume", () => resolve());
+            });
+        }
+    }
+
+    private async executeOnNode<CT>(context: Task.Context, work: Task.Work<CT>, node: Task.State) {
+        await this.waitIfPause();
+
         return execute(context, work).then((r) => {
             node.status = "successed";
-            this._finish.forEach((func) => func(r, node));
+            this.emit("success", node);
             return r;
         }).catch((e) => {
             if (e === "cancelled") {
@@ -143,14 +176,17 @@ class TaskImpl<T> implements Task<T> {
             }
             node.status = "failed";
             node.error = e;
-            this._errors.forEach((f) => f(e, node));
+            this.emit("error", e, node);
             throw e;
         });
     }
 }
 
 export namespace Task {
+    export type Status = "ready" | "running" | "successed" | "failed" | "cancelled" | "paused";
     export interface Context {
+        readonly task: Task<any>;
+
         update(progres: number, total?: number, message?: string): void;
         execute<T>(name: string, work: Work<T>): Promise<T>;
         execute<T>(object: { name: string, arguments: object }, work: Work<T>): Promise<T>;
@@ -158,18 +194,18 @@ export namespace Task {
 
     export type Work<T> = (context: Task.Context) => (Promise<T> | T);
 
-    export function create<T>(name: string | { name: string, arguments: object }, work: Work<T>): Task<T> {
-        return new TaskImpl<T>(name, work);
+    export function create<T, N extends Task.State = Task.State>(name: string | { name: string, arguments: object }, work: Work<T>, stateFactory: (node: Task.State) => N): Task<T> {
+        return new TaskImpl<T, N>(name, work, stateFactory);
     }
 
-    export interface Node {
+    export interface State {
         name: string;
         arguments?: object;
         total: number;
         progress: number;
-        status: "running" | "successed" | "failed" | "cancelled";
+        status: Status;
         path: string;
-        tasks: Node[];
+        children: State[];
         error: any;
         message: string;
     }
