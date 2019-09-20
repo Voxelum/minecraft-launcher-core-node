@@ -10,7 +10,10 @@ export namespace ForgeWebPage {
         path: string;
     }
 
-    function parseWebPage(content: string): ForgeWebPage {
+    /**
+     * Parse the html string of forge webpage
+     */
+    export function parse(content: string): ForgeWebPage {
         const dom = parser.parse(content);
         const selected = dom.querySelector(".elem-active");
         const mcversion = selected.text;
@@ -22,12 +25,13 @@ export namespace ForgeWebPage {
                     const links = e.querySelector(".download-links").childNodes
                         .filter((elem) => elem.tagName === "li")
                         .map((elem) => {
+                            elem = elem.removeWhitespace();
                             const tt = elem.querySelector(".info-tooltip");
                             const url = tt.querySelector("a") || elem.querySelector("a");
                             return {
-                                name: url.childNodes[2].rawText.trim(),
-                                md5: tt.childNodes[2].text.trim(),
-                                sha1: tt.childNodes[6].text.trim(),
+                                name: url.childNodes[1].rawText.trim(),
+                                md5: tt.childNodes[1].text.trim(),
+                                sha1: tt.lastChild.text.trim(),
                                 path: url.attributes.href,
                             };
                         });
@@ -84,7 +88,7 @@ export namespace ForgeWebPage {
     } = {}): Promise<ForgeWebPage> {
         const mcversion = option.mcversion || "";
         const url = mcversion === "" ? `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html` : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`;
-        const page = await getIfUpdate(url, parseWebPage, option.fallback);
+        const page = await getIfUpdate(url, parse, option.fallback);
         return page;
     }
 
