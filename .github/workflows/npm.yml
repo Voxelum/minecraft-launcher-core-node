@@ -5,8 +5,8 @@ on:
     branches: 
       - master
     paths:
-      - '*.ts'
-      - '!*test.ts'
+      - 'packages/*/*.ts'
+      - '!packages/*/*test.ts'
   pull_request:
     branches:
       - master
