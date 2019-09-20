@@ -60,7 +60,7 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
 }
 
 
-describe.skip("Launcher", () => {
+describe("Launcher", () => {
     const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
     let javaPath: string;
     let javaVersion: number;
@@ -95,11 +95,26 @@ describe.skip("Launcher", () => {
             const args = await Launcher.generateArgumentsServer({
                 javaPath: "/test/java",
                 path: root,
-                version: "1.12.2",
+                version: "1.7.10",
             });
             assert(args);
             expect(args[0]).toEqual("/test/java");
         });
+    });
+    describe.skip("#ensureLibraries", () => {
+        jest.mock("@xmcl/util");
+        test("should check all libraries", async () => {
+            const mockUtil = jest.requireMock("@xmcl/util") as jest.Mocked<typeof import("@xmcl/util")>;
+
+            mockUtil.missing.mockReturnValue(Promise.resolve(false));
+
+            await expect(Launcher.ensureLibraries(new MinecraftFolder("/"), await Version.parse(root, "1.7.10")))
+                .resolves
+                .toBeTruthy();
+
+            expect(mockUtil.missing).toHaveBeenCalled();
+        });
+        jest.unmock("@xmcl/util");
     });
     describe.skip("#launchServer", () => {
         test("should launch server", async () => {
@@ -152,7 +167,7 @@ describe.skip("Launcher", () => {
             "should generate correct command for 1.14.4 with forge",
             async () => {
                 const jPath = "/test/java";
-                const version = "1.14.4-forge-28.0.45";
+                const version = "1.14.4-forge-28.0.47";
                 const gamePath = root;
                 const auth = Auth.offline("tester");
                 const args = await Launcher.generateArguments({
@@ -164,7 +179,7 @@ describe.skip("Launcher", () => {
                 expect(args.indexOf("cpw.mods.modlauncher.Launcher")).not.toEqual(-1);
                 expect(args[args.indexOf("--username") + 1]).toEqual(auth.selectedProfile.name);
                 expect(args[args.indexOf("--uuid") + 1]).toEqual(auth.selectedProfile.id.replace(/-/g, ""));
-                expect(args[args.indexOf("--version") + 1]).toEqual("1.14.4");
+                expect(args[args.indexOf("--version") + 1]).toEqual("1.14.4-forge-28.0.47");
                 expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
                 expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
                 const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
@@ -176,7 +191,7 @@ describe.skip("Launcher", () => {
 
         test("should generate correct command", async () => {
             const jPath = "/test/java";
-            const version = "1.12.2";
+            const version = "1.14.4";
             const gamePath = root;
             const auth = Auth.offline("tester");
             const args = await Launcher.generateArguments({
@@ -198,7 +213,7 @@ describe.skip("Launcher", () => {
         });
         test("should generate default user", async () => {
             const args = await Launcher.generateArguments({
-                version: "1.12.2", gamePath: root, javaPath: "/test/java",
+                version: "1.14.4", gamePath: root, javaPath: "/test/java",
             });
             expect(args.indexOf("net.minecraft.client.main.Main")).not.toBe(-1);
             expect(args[args.indexOf("--username") + 1]).toEqual("Steve");
@@ -210,7 +225,7 @@ describe.skip("Launcher", () => {
                 port: 25565,
             };
             const args = await Launcher.generateArguments({
-                version: "1.12.2", gamePath: root, javaPath: "/test/java", server,
+                version: "1.14.4", gamePath: root, javaPath: "/test/java", server,
             });
             expect(args[args.indexOf("--server") + 1]).toEqual(server.ip);
             expect(args[args.indexOf("--port") + 1]).toEqual(server.port.toString());
