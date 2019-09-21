@@ -24,7 +24,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - uses: actions/setup-java@v1
       with:
-        java-version: '9.X'
+        java-version: '8.X'
         architecture: x64
     - name: Install
       run: |
