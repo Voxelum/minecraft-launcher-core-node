@@ -34,12 +34,12 @@ jobs:
         npm install
       env:
         CI: true
-    - name: build and test
+    - name: build
       run: |
         npm run build
+    - name: test
+      run: |
         npm run test
-      env:
-        CI: true
     - name: publish
       if: github.event_name != 'pull_request'
       run: |
