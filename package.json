@@ -17,7 +17,7 @@
   "scripts": {
     "clean": "lerna clean --yes",
     "update": "lerna bootstrap",
-    "test": "jest",
+    "test": "jest packages",
     "test:unit": "jest packages",
     "test:e2e": "jest e2e",
     "build": "tslint -c tslint.json 'package/**/*.ts' && lerna run build"

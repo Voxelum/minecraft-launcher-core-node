@@ -1,12 +1,9 @@
-name: NPM
+name: Build Validation
 
 on:
   push:
     branches: 
       - master
-    paths:
-      - 'packages/*/*.ts'
-      - '!packages/*/*test.ts'
   pull_request:
     branches:
       - master
@@ -39,10 +36,5 @@ jobs:
         npm run build
     - name: Test
       run: |
+        java -jar yggdrasil-mock-server-0.0.1-SNAPSHOT.jar
         npm run test
-    - name: Publish
-      if: github.event_name != 'pull_request'
-      run: |
-        echo placeholder to publish
-      env:
-        NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
