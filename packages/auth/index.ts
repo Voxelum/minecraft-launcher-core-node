@@ -46,6 +46,9 @@ export namespace Auth {
             readonly invalidate: string;
             readonly signout: string;
         }
+        /**
+         * The default Mojang API
+         */
         export const API_MOJANG: API = {
             hostName: "https://authserver.mojang.com",
             authenticate: "/authenticate",
