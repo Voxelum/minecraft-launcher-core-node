@@ -2,7 +2,10 @@
 
 [![npm version](https://img.shields.io/npm/v/@xmcl/minecraft-launcher-core.svg)](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core)
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
+[![Convensional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://www.conventionalcommits.org)
 [![Build Status](https://travis-ci.org/voxelum/minecraft-launcher-core-node.svg)](https://travis-ci.org/voxelum/minecraft-launcher-core-node)
+[![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/.github/workflows/validation.yml/badge.svg)](https://github.com/voxelum/minecraft-launcher-core-node/.github/workflows/validation.yml/badge.svg)
+
 
 Provide several useful functions for Minecraft.
 
@@ -359,7 +362,7 @@ They might be not stable.
     const resolvedVersion: Version.Resolved = await Version.parse(expectedMcLoc, expectedVersion);
     const task: Task<Version> = Installer.installDependenciesTask(resolvedVersion, expectedMcLoc);
 
-    task.onUpdate(({ progress, total, message }) => {
+    task.on('update', ({ progress, total, message }) => {
         // monitor progress / total and message here
     });
 
