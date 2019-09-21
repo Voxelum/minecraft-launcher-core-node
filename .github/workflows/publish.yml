@@ -62,4 +62,5 @@ jobs:
         npx lerna version --no-git-tag-version --conventional-commits --yes
         npx lerna publish from-package --yes
       env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
