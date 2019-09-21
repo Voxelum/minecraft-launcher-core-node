@@ -144,6 +144,11 @@ export namespace Installer {
         return Task.create({ name: "installAssets", arguments: { version: version.id } }, installAssets0(version, option || {}));
     }
 
+    /**
+     * Install all the libraries of providing version
+     * @param version The target version
+     * @param option The library host swap option
+     */
     export function installLibraries(version: ResolvedVersion, option?: { libraryHost?: LibraryHost }): Promise<ResolvedVersion> {
         return installLibrariesTask(version, option).execute();
     }
