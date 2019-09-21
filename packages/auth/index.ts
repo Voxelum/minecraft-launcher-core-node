@@ -38,12 +38,30 @@ export interface Auth {
 export namespace Auth {
     export namespace Yggdrasil {
         export interface API {
+            /**
+             * The host url, like https://xxx.xxx.com
+             */
             readonly hostName: string;
-            // paths
+            /**
+             * Authenticate path, in the form of `/your-endpoint`.
+             * Use to login
+             */
             readonly authenticate: string;
+            /**
+             * Use to refresh access token
+             */
             readonly refresh: string;
+            /**
+             * Use to validate the user access token
+             */
             readonly validate: string;
+            /**
+             * Use to logout user (invalidate user access token)
+             */
             readonly invalidate: string;
+            /**
+             * Use to logout user (by username and password)
+             */
             readonly signout: string;
         }
         /**
