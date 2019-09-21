@@ -21,6 +21,7 @@ export interface Task<T, N = Task.State> extends EventEmitter {
     on(event: "finish", listener: (result: any, childNode: N) => void): this;
     on(event: "pause", listener: (node: N) => void): this;
     on(event: "resume", listener: (node: N) => void): this;
+    on(event: "cancel", listener: () => void): this;
 
     once(event: "child", listener: (parentNode: N, childNode: N) => void): this;
     once(event: "error", listener: (error: any, childNode: N) => void): this;
@@ -28,6 +29,7 @@ export interface Task<T, N = Task.State> extends EventEmitter {
     once(event: "finish", listener: (result: any, childNode: N) => void): this;
     once(event: "pause", listener: (node: N) => void): this;
     once(event: "resume", listener: (node: N) => void): this;
+    once(event: "cancel", listener: () => void): this;
 
     execute(): Promise<T>;
 
@@ -66,7 +68,7 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
             progress: -1,
             children: [],
             error: undefined,
-            status: "running",
+            status: "ready",
             message: "",
         });
     }
@@ -84,7 +86,7 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
                 self.emit("update", { progress, total, message }, node);
                 if (self._cancelled) {
                     node.status = "cancelled";
-                    throw new Error("cancelled");
+                    throw new Task.CancelledError();
                 }
             },
             execute<X>(nameOrObject: string | { name: string, arguments: object }, work: Task.Work<X>): Promise<X> {
@@ -96,7 +98,7 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
                 }
                 if (node.arguments) {
                     if (args) {
-                        args = { ...args, ...node.arguments };
+                        args = { ...node.arguments, ...args };
                     } else {
                         args = node.arguments;
                     }
@@ -111,21 +113,12 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
                     progress: -1,
                     children: [],
                     error: undefined,
-                    status: "running",
+                    status: "ready",
                     message: "",
                 });
                 node.children.push(nextNode);
                 self.emit("child", node, nextNode);
                 const context = self.createContext(nextNode);
-
-                if (self._cancelled) {
-                    nextNode.status = "cancelled";
-                    throw new Error("cancelled");
-                }
-
-                if (self._paused) {
-                    nextNode.status = "paused";
-                }
 
                 return self.executeOnNode(context, work, nextNode);
             },
@@ -135,13 +128,13 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
     execute(): Promise<T> {
         if (this.root.status !== "ready") { return this._promise; }
         this.executeOnNode(this.createContext(this.root), this.work, this.root)
-            .then((r) => this._resolve(r))
-            .catch((e) => this._reject(e));
+            .then((r) => this._resolve(r), (e) => this._reject(e));
         return this._promise;
     }
 
     cancel(): void {
         this._cancelled = true;
+        this.emit("cancel");
     }
 
     pause() {
@@ -163,14 +156,24 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
     }
 
     private async executeOnNode<CT>(context: Task.Context, work: Task.Work<CT>, node: Task.State) {
+        if (this._cancelled) {
+            node.status = "cancelled";
+            throw new Task.CancelledError();
+        }
+
+        if (this._paused) {
+            node.status = "paused";
+        }
+
         await this.waitIfPause();
 
+        node.status = "running";
         return execute(context, work).then((r) => {
             node.status = "successed";
             this.emit("success", node);
             return r;
-        }).catch((e) => {
-            if (e === "cancelled") {
+        }, (e) => {
+            if (e instanceof Task.CancelledError) {
                 node.status = "cancelled";
                 throw e;
             }
@@ -183,6 +186,9 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
 }
 
 export namespace Task {
+    export class CancelledError extends Error {
+    }
+
     export type Status = "ready" | "running" | "successed" | "failed" | "cancelled" | "paused";
     export interface Context {
         readonly task: Task<any>;
