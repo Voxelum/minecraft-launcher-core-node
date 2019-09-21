@@ -4,7 +4,7 @@ import Unzip from "@xmcl/unzip";
 import { vfs } from "@xmcl/util";
 import fileType from "file-type";
 import * as path from "path";
-import { inflateSync } from "zlib";
+import { inflate } from "zlib";
 
 declare module "@xmcl/common/world" {
     namespace World {
@@ -39,7 +39,16 @@ async function loadRegionFromBuffer(buffer: Buffer, x: number, z: number) {
         throw new Error(`Cannot resolve chunk with format ${format}.`);
     }
     const chunkData = buffer.slice(off + 5, off + 5 + length);
-    const data = await NBT.Persistence.deserialize(inflateSync(chunkData), false);
+    const inflatedData = await new Promise<Buffer>((resolve, reject) => {
+        inflate(chunkData, (e, r) => {
+            if (e) {
+                reject(e);
+            } else {
+                resolve(r);
+            }
+        });
+    });
+    const data = await NBT.Persistence.deserialize(inflatedData, false);
     return data as unknown as RegionDataFrame;
 }
 
