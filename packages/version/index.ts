@@ -91,6 +91,10 @@ export class ResolvedNative extends ResolvedLibrary {
     }
 }
 
+/**
+ * General diagnosis of the version.
+ * The missing diagnosis means either the file not existed, or the file not valid (checksum not matched)
+ */
 export interface VersionDiagnosis {
     minecraftLocation: MinecraftFolder;
     version: string;
