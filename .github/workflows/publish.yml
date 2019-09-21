@@ -53,6 +53,8 @@ jobs:
         git checkout origin/master
         git config user.name ci010
         git config user.email cijhn@hotmail.com
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
