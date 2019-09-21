@@ -9,6 +9,9 @@ import { decompressXZ, unpack200 } from "./decompress";
 
 export namespace Installer {
     export type LibraryHost = (libId: ResolvedLibrary) => string | undefined;
+    /**
+     * The version metadata containing the download version information, like url
+     */
     export interface VersionMeta {
         id: string;
         type: string;
@@ -16,6 +19,9 @@ export namespace Installer {
         releaseTime: string;
         url: string;
     }
+    /**
+     * Minecraft version metadata list
+     */
     interface VersionMetaList extends UpdatedObject {
         latest: {
             snapshot: string
@@ -46,7 +52,9 @@ export namespace Installer {
         remote?: string,
     }): Promise<VersionMetaList>;
     /**
-     * get/refresh a version metadata
+     * Get/refresh a version metadata.
+     * This try to send http GET request to offical Minecraft metadata endpoint by default.
+     * You can swap the endpoint by passing url on `remote` in option.
      */
     export function updateVersionMeta(option: {
         /**
@@ -99,7 +107,14 @@ export namespace Installer {
     export function install(type: "server" | "client", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion> {
         return installTask(type, versionMeta, minecraft, option).execute();
     }
-
+    /**
+     * Install the Minecraft game to a location by version metadata
+     *
+     * @param type The type of game, client or server
+     * @param versionMeta The version metadata
+     * @param minecraft The Minecraft location
+     * @param option
+     */
     export function installTask(type: "server" | "client", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: Option): Task<ResolvedVersion> {
         return Task.create({ name: "install", arguments: { version: versionMeta.id, type } }, installWork(type, versionMeta, minecraft, option));
     }
@@ -115,6 +130,13 @@ export namespace Installer {
         return installVersionTask(type, versionMeta, minecraft, option).execute();
     }
 
+    /**
+     * Only install the json/jar. Do not check dependencies;
+     *
+     * @param type client or server
+     * @param versionMeta the version metadata; get from updateVersionMeta
+     * @param minecraft minecraft location
+     */
     export function installVersionTask(type: string, versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: JarOption): Task<ResolvedVersion> {
         return Task.create({ name: "installVersion", arguments: { type, version: versionMeta.id } }, installVersionWork(type as any, versionMeta, minecraft, option));
     }
@@ -128,6 +150,12 @@ export namespace Installer {
     export function installDependencies(version: ResolvedVersion, option?: Option): Promise<ResolvedVersion> {
         return installDependenciesTask(version, option).execute();
     }
+    /**
+     * Install the completeness of the Minecraft game assets and libraries.
+     *
+     * @param version The resolved version produced by Version.parse
+     * @param minecraft The minecraft location
+     */
     export function installDependenciesTask(version: ResolvedVersion, option?: Option): Task<ResolvedVersion> {
         return Task.create({ name: "installDependencies", arguments: { version: version.id } }, installDependenciesWork(version, option));
     }
@@ -140,6 +168,11 @@ export namespace Installer {
     export function installAssets(version: ResolvedVersion, option?: { assetsHost?: string }): Promise<ResolvedVersion> {
         return installAssetsTask(version, option).execute();
     }
+    /**
+     * Install or check the assets to resolved version
+     * @param version The target version
+     * @param option The option to replace assets host url
+     */
     export function installAssetsTask(version: ResolvedVersion, option?: { assetsHost?: string }): Task<ResolvedVersion> {
         return Task.create({ name: "installAssets", arguments: { version: version.id } }, installAssets0(version, option || {}));
     }
@@ -152,6 +185,11 @@ export namespace Installer {
     export function installLibraries(version: ResolvedVersion, option?: { libraryHost?: LibraryHost }): Promise<ResolvedVersion> {
         return installLibrariesTask(version, option).execute();
     }
+    /**
+     * Install all the libraries of providing version
+     * @param version The target version
+     * @param option The library host swap option
+     */
     export function installLibrariesTask(version: ResolvedVersion, option?: { libraryHost?: LibraryHost }): Task<ResolvedVersion> {
         return Task.create({ name: "installLibraries", arguments: { version: version.id } }, installLibrariesWork(version, option));
     }
@@ -165,6 +203,12 @@ export namespace Installer {
     export function installLibrariesDirect(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<void> {
         return installLibrariesDirectTask(libraries, minecraft, option).execute();
     }
+    /**
+     * Only install several resolved libraries
+     * @param libraries The resolved libraries
+     * @param minecraft The minecraft location
+     * @param option The install option
+     */
     export function installLibrariesDirectTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<void> {
         return Task.create({ name: "installLibraries", arguments: {} }, async (ctx) => { await installLibrariesWork({ libraries, minecraftDirectory: typeof minecraft === "string" ? minecraft : minecraft.root }, option)(ctx); });
     }

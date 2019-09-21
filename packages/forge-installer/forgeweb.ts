@@ -105,6 +105,9 @@ export namespace ForgeWebPage {
         return page;
     }
 
+    /**
+     * A richer version info than forge installer required
+     */
     export interface Version extends ForgeInstaller.VersionMeta {
         mcversion: string;
         version: string;
