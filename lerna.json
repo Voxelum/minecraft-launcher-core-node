@@ -3,11 +3,6 @@
     "packages/*"
   ],
   "command": {
-    "publish": {
-      "conventionalCommits": true,
-      "yes": true,
-      "push": false
-    }
   },
   "version": "independent"
 }

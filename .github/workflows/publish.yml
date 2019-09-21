@@ -59,6 +59,7 @@ jobs:
         npm run build
     - name: Publish
       run: |
-        npx lerna publish
+        npx lerna version --no-git-tag-version --conventional-commits --yes
+        npx lerna publish from-package --yes
       env:
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
