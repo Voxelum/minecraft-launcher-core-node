@@ -200,7 +200,20 @@ export namespace Task {
 
     export type Work<T> = (context: Task.Context) => (Promise<T> | T);
 
-    export function create<T, N extends Task.State = Task.State>(name: string | { name: string, arguments: object }, work: Work<T>, stateFactory: (node: Task.State) => N = (n) => n as N): Task<T> {
+    export type StateFactory<X extends Task.State = Task.State> = (node: Task.State) => X;
+
+    export const DEFAULT_STATE_FACTORY: StateFactory = (n) => n;
+
+    let usingStateFactory: StateFactory = DEFAULT_STATE_FACTORY;
+
+    /**
+     * Change the default factory of state
+     */
+    export function useStateFactory<T extends Task.State>(factory: StateFactory<T>) {
+        usingStateFactory = factory;
+    }
+
+    export function create<T, N extends Task.State = Task.State>(name: string | { name: string, arguments: object }, work: Work<T>, stateFactory: StateFactory<N> = usingStateFactory as StateFactory<N>): Task<T> {
         return new TaskImpl<T, N>(name, work, stateFactory);
     }
 
