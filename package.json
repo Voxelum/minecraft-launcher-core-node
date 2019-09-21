@@ -18,7 +18,7 @@
     "clean": "lerna clean --yes",
     "update": "lerna bootstrap",
     "test": "jest packages",
-    "test:debug": "jest packages --converage --verbose --runInBand",
+    "test:debug": "jest packages --coverage --verbose --runInBand",
     "build": "tslint -c tslint.json 'package/**/*.ts' && lerna run build"
   },
   "dependencies": {
