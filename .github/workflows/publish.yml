@@ -49,8 +49,8 @@ jobs:
         ref: master
     - name: Update Remote
       run: |
-        git remote rm origin || true
-        git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
+        git checkout origin/master
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
