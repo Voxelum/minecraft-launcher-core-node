@@ -33,7 +33,9 @@ describe("ProfileService", () => {
                 });
             });
         } catch (e) {
-            // this.skip();
+            console.error("Cannot start the yggdrasil mock server!");
+            console.error(e);
+            describe = describe.skip;
         }
         await sleep(1000);
     });

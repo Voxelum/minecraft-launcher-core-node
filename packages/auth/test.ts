@@ -40,6 +40,8 @@ describe("Auth", () => {
             });
         } catch (e) {
             describe = describe.skip;
+            console.error("Cannot start the yggdrasil mock server!");
+            console.error(e);
         }
         await sleep(1000);
     });

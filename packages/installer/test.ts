@@ -30,7 +30,7 @@ describe.skip("Install", () => {
             const first = await Installer.updateVersionMeta();
             const sec = await Installer.updateVersionMeta({ fallback: first });
             expect(first).toEqual(sec);
-            expect(first.timestamp).toEqual(sec.timestamp);
+            expect(first!.timestamp).toEqual(sec!.timestamp);
         });
         test("should be able to install 1.7.10", async () => {
             await installVersionClient({

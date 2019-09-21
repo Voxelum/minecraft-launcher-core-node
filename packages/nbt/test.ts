@@ -99,8 +99,8 @@ describe("NBT", () => {
         test("tagCompound", () => {
             const compound = NBT.tagCompound({ a: NBT.tagByte(1) });
             expect(compound).toBeTruthy();
-            expect(compound.getByte("a")).toBe(1);
-            expect(compound.value.a).toBe(1);
+            expect(compound.getByte("a").get()).toEqual(1);
+            expect(compound.value.a.value).toEqual(1);
             expect(compound.type).toBe(NBT.TagType.Compound);
         });
     });
