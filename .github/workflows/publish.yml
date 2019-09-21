@@ -66,8 +66,8 @@ jobs:
     - name: Publish
       run: |
         git checkout master
-        npx lerna version --no-push --conventional-commits --yes -m "chore: bump version"
         git reset --hard HEAD
+        npx lerna version --no-push --conventional-commits --yes -m "chore: bump version"
         git push
         npx lerna publish from-package --yes
       env:
