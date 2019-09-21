@@ -6,7 +6,7 @@ export interface ResourcePack {
     readonly type: "directory" | "zip";
     readonly metadata: ResourcePackMetaData;
     /**
-     * Icon data url in base 64
+     * Icon data url in base 64. It will be an empty string if you not cache it.
      */
     icon: string;
 }
@@ -49,6 +49,11 @@ export namespace ResourcePack {
         return new ResourcePack(filePath, "directory", meta, icon);
     }
 
+    /**
+     * Read the icon for resource pack
+     * @param resourcePack The resource pack object
+     * @returns Base64 format data uri
+     */
     export async function readIcon(resourcePack: ResourcePack) {
         const filePath = resourcePack.path;
         const stat = await vfs.stat(filePath);
@@ -77,6 +82,7 @@ export namespace ResourcePack {
      *
      * @param filePath The absolute path of the resource pack file
      * @param buffer The zip file data Buffer you read.
+     * @param cacheIcon If cache the icon in to the resource pack object
      */
     export async function read(filePath: string, buffer?: Buffer, cacheIcon?: boolean): Promise<ResourcePack> {
         const stat = await vfs.stat(filePath);

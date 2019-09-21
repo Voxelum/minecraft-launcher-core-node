@@ -218,6 +218,9 @@ export namespace TextComponent {
         return new TextComponentString(s);
     }
 
+    /**
+     * Convert json format (server motd) or string to TextComponent Object
+     */
     export function from(obj: string | TextComponentFrame): TextComponent {
         if (typeof obj === "string") {
             return fromFormattedString(obj);
