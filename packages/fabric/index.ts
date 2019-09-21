@@ -22,10 +22,20 @@ export namespace Fabric {
         };
     }
 
+    /**
+     * Get or refresh the version list.
+     */
     export async function updateVersionList(versionList?: VersionList) {
         return getIfUpdate("https://fabricmc.net/use/", parseWebPage, versionList);
     }
 
+    /**
+     * Install the fabric to the client. Notice that this will only install the json.
+     * You need to call `Installer.installDependencies` to get a full client.
+     * @param yarnVersion The yarn version
+     * @param loaderVersion The fabric loader version
+     * @param minecraft The minecraft location
+     */
     export async function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation) {
         const folder = MinecraftFolder.from(minecraft);
         const mcversion = yarnVersion.split("+")[0];
