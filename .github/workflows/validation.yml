@@ -4,6 +4,14 @@ on:
   push:
     branches: 
       - master
+    paths:
+      - 'packages/*/*.ts'
+      - '.github/workflows/*'
+      - 'mock/*'
+      - 'application.yaml'
+      - 'package.json'
+      - 'tslint.json'
+      - 'lerna.json'
   pull_request:
     branches:
       - master
