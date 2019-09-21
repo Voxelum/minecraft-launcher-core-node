@@ -86,6 +86,7 @@ export namespace LiteLoader {
             }
             return metalist;
         }
+        export function update(): Promise<VersionMetaList>;
         export function update(option?: { fallback: VersionMetaList, remote?: string }): Promise<VersionMetaList>;
         export function update(option?: { remote?: string }): Promise<VersionMetaList | undefined>;
         export function update(option?: { fallback: undefined, remote?: string }): Promise<VersionMetaList | undefined>;

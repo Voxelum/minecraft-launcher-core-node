@@ -33,11 +33,12 @@ export namespace Installer {
      */
     export const DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.net";
 
+    export function updateVersionMeta(): Promise<VersionMetaList | undefined>;
     export function updateVersionMeta(option: {
         remote?: string,
     }): Promise<VersionMetaList | undefined>;
     export function updateVersionMeta(option: {
-        fallback: undefined,
+        fallback?: VersionMetaList,
         remote?: string,
     }): Promise<VersionMetaList | undefined>;
     export function updateVersionMeta(option: {

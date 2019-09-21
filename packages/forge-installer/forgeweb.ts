@@ -74,6 +74,7 @@ export namespace ForgeWebPage {
         };
     }
 
+    export function getWebPage(): Promise<ForgeWebPage | undefined>;
     export function getWebPage(option?: {
         mcversion?: string;
     }): Promise<ForgeWebPage | undefined>;
