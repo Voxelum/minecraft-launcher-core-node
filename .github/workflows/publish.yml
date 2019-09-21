@@ -65,6 +65,7 @@ jobs:
         npm run build
     - name: Publish
       run: |
+        git checkout master
         npx lerna version --no-git-tag-version --conventional-commits --yes
         npx lerna publish from-package --yes
       env:
