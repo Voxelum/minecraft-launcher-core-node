@@ -36,5 +36,4 @@ jobs:
         npm run build
     - name: Test
       run: |
-        java -jar mock/yggdrasil-mock-server-0.0.1-SNAPSHOT.jar
         npm run test
