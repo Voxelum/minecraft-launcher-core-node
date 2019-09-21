@@ -194,7 +194,7 @@ export namespace Task {
 
     export type Work<T> = (context: Task.Context) => (Promise<T> | T);
 
-    export function create<T, N extends Task.State = Task.State>(name: string | { name: string, arguments: object }, work: Work<T>, stateFactory: (node: Task.State) => N): Task<T> {
+    export function create<T, N extends Task.State = Task.State>(name: string | { name: string, arguments: object }, work: Work<T>, stateFactory: (node: Task.State) => N = (n) => n as N): Task<T> {
         return new TaskImpl<T, N>(name, work, stateFactory);
     }
 
