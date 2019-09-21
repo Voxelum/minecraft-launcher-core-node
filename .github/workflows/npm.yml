@@ -29,18 +29,18 @@ jobs:
       with:
         java-version: '9.X'
         architecture: x64
-    - name: npm install
+    - name: Install
       run: |
         npm install
       env:
         CI: true
-    - name: build
+    - name: Build
       run: |
         npm run build
-    - name: test
+    - name: Test
       run: |
         npm run test
-    - name: publish
+    - name: Publish
       if: github.event_name != 'pull_request'
       run: |
         echo placeholder to publish
