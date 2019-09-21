@@ -164,6 +164,12 @@ declare module "@xmcl/common/version" {
 
         function mixinArgumentString(hi: string, lo: string): string;
 
+        /**
+         * Resolve the dependencies of a minecraft version
+         * @param path The path of minecraft
+         * @param version The version id
+         * @returns All the version required to run this version, including this version
+         */
         function resolveDependency(path: MinecraftLocation, version: string): Promise<PartialResolvedVersion[]>;
 
         /**
