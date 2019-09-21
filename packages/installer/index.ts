@@ -61,14 +61,29 @@ export namespace Installer {
         return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.fallback);
     }
 
+    /**
+     * Change the library host url
+     */
     export interface LibraryOption {
         libraryHost?: LibraryHost;
     }
+    /**
+     * Change the host url of assets download
+     */
     export interface AssetsOption {
         assetsHost?: string;
     }
+    /**
+     * Replace the minecraft client or server jar download
+     */
     export interface JarOption {
+        /**
+         * The client jar url
+         */
         client?: string;
+        /**
+         * The server jar url
+         */
         server?: string;
     }
     export type Option = AssetsOption & AssetsOption & JarOption & LibraryOption;
@@ -117,6 +132,11 @@ export namespace Installer {
         return Task.create({ name: "installDependencies", arguments: { version: version.id } }, installDependenciesWork(version, option));
     }
 
+    /**
+     * Install or check the assets to resolved version
+     * @param version The target version
+     * @param option The option to replace assets host url
+     */
     export function installAssets(version: ResolvedVersion, option?: { assetsHost?: string }): Promise<ResolvedVersion> {
         return installAssetsTask(version, option).execute();
     }
@@ -131,6 +151,12 @@ export namespace Installer {
         return Task.create({ name: "installLibraries", arguments: { version: version.id } }, installLibrariesWork(version, option));
     }
 
+    /**
+     * Only install several resolved libraries
+     * @param libraries The resolved libraries
+     * @param minecraft The minecraft location
+     * @param option The install option
+     */
     export function installLibrariesDirect(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Promise<void> {
         return installLibrariesDirectTask(libraries, minecraft, option).execute();
     }
