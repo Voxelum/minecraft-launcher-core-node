@@ -3,6 +3,9 @@ import { fetchJson } from "@xmcl/net";
 import { Response } from "got";
 import { v4 } from "uuid";
 
+/**
+ * The interface to login/logout user
+ */
 export interface Auth {
     /**
      * The minecraft client token, the launcher should persist this
