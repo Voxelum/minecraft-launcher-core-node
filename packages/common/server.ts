@@ -36,10 +36,10 @@ export interface ServerStatusFrame {
     favicon: string | "";
     modinfo?: {
         type: string | "FML",
-        modList: {
+        modList: Array<{
             readonly modid: string;
             readonly version: string;
-        }[],
+        }>,
     };
     ping: number;
 }
