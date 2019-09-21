@@ -45,6 +45,11 @@ jobs:
     needs: build
     steps:
     - uses: actions/checkout@v1
+    - name: Use Master Branch
+      run: |
+        git remote rm origin || true
+        git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
+        git checkout master
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
