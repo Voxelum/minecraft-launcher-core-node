@@ -46,7 +46,7 @@ export namespace Launcher {
     export type PartialAuth = Pick<Auth, "selectedProfile" | "accessToken" | "userType" | "properties">;
 
     /**
-     * General launch option, used to generate launch arguments
+     * General launch option, used to generate launch arguments.
      */
     export interface Option {
         /**
@@ -69,9 +69,18 @@ export namespace Launcher {
         minMemory?: number;
         maxMemory?: number;
         version: string | ResolvedVersion;
+        /**
+         * Directly launch to a server
+         */
         server?: { ip: string, port?: number };
         resolution?: { width?: number, height?: number, fullscreen: false };
+        /**
+         * Extra jvm options. This will append after to generated options.
+         */
         extraJVMArgs?: string[];
+        /**
+         * Extra program arguments. This will append after to generated options.
+         */
         extraMCArgs?: string[];
         extraExecOption?: SpawnOptions;
         isDemo?: boolean;
@@ -154,6 +163,8 @@ export namespace Launcher {
      * Launch the minecraft as a child process. This function use spawn to create child process. To use an alternative way, see function generateArguments.
      *
      * This function will also check if the runtime libs are completed, and will extract native libs if needed.
+     * This function might throw exception when the version jar is missing/checksum not matched.
+     * This function might throw if the libraries/natives are missing
      *
      * @param options The detail options for this launching.
      * @see ChildProcess
@@ -187,6 +198,9 @@ export namespace Launcher {
         return spawn(args[0], args.slice(1), spawnOption);
     }
 
+    /**
+     * Generate the argument for server
+     */
     export async function generateArgumentsServer(options: ServerOptions) {
         const { javaPath, path: gamePath, version, minMemory = 1024, maxMemory = 1024, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options;
         const mc = new MinecraftFolder(gamePath);
