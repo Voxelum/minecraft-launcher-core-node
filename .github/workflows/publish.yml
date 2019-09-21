@@ -59,6 +59,6 @@ jobs:
         npm run build
     - name: Publish
       run: |
-        echo placeholder to publish
+        npx lerna publish
       env:
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
