@@ -18,8 +18,7 @@
     "clean": "lerna clean --yes",
     "update": "lerna bootstrap",
     "test": "jest packages",
-    "test:unit": "jest packages",
-    "test:e2e": "jest e2e",
+    "test:debug": "jest packages --converage --verbose --runInBand",
     "build": "tslint -c tslint.json 'package/**/*.ts' && lerna run build"
   },
   "dependencies": {
@@ -63,7 +62,6 @@
       "ts-jest": {
         "tsConfig": "tsconfig.json"
       }
-    },
-    "collectCoverage": true
+    }
   }
 }
