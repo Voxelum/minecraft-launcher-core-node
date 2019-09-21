@@ -51,6 +51,8 @@ jobs:
       run: |
         git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
         git checkout origin/master
+        git config user.name ci010
+        git config user.email cijhn@hotmail.com
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
