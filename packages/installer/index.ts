@@ -33,6 +33,17 @@ export namespace Installer {
      */
     export const DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.net";
 
+    export function updateVersionMeta(option: {
+        remote?: string,
+    }): Promise<VersionMetaList | undefined>;
+    export function updateVersionMeta(option: {
+        fallback: undefined,
+        remote?: string,
+    }): Promise<VersionMetaList | undefined>;
+    export function updateVersionMeta(option: {
+        fallback: VersionMetaList,
+        remote?: string,
+    }): Promise<VersionMetaList>;
     /**
      * get/refresh a version metadata
      */
@@ -45,7 +56,7 @@ export namespace Installer {
          * remote url of this request
          */
         remote?: string,
-    } = {}): Promise<VersionMetaList> {
+    } = {}): Promise<VersionMetaList | undefined> {
         return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.fallback);
     }
 

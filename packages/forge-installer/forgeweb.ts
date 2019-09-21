@@ -74,6 +74,18 @@ export namespace ForgeWebPage {
         };
     }
 
+    export function getWebPage(option?: {
+        mcversion?: string;
+    }): Promise<ForgeWebPage | undefined>;
+    export function getWebPage(option?: {
+        mcversion?: string;
+        fallback?: ForgeWebPage;
+    }): Promise<ForgeWebPage | undefined>;
+    export function getWebPage(option?: {
+        mcversion?: string;
+        fallback: ForgeWebPage;
+    }): Promise<ForgeWebPage>;
+
     /**
      * Query the webpage content from files.minecraftforge.net.
      *
@@ -85,7 +97,7 @@ export namespace ForgeWebPage {
     export async function getWebPage(option: {
         mcversion?: string,
         fallback?: ForgeWebPage,
-    } = {}): Promise<ForgeWebPage> {
+    } = {}): Promise<ForgeWebPage | undefined> {
         const mcversion = option.mcversion || "";
         const url = mcversion === "" ? `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html` : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`;
         const page = await getIfUpdate(url, parse, option.fallback);

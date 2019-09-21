@@ -86,13 +86,11 @@ export namespace LiteLoader {
             }
             return metalist;
         }
-        export async function update(option: { fallback?: VersionMetaList, remote?: string } = {}): Promise<VersionMetaList> {
-            const fallback = option.fallback || { timestamp: "" };
-            const result = await getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST, parse, { timestamp: fallback.timestamp });
-            if (result.timestamp === fallback.timestamp) {
-                return fallback as VersionMetaList;
-            }
-            return result as VersionMetaList;
+        export function update(option?: { fallback: VersionMetaList, remote?: string }): Promise<VersionMetaList>;
+        export function update(option?: { remote?: string }): Promise<VersionMetaList | undefined>;
+        export function update(option?: { fallback: undefined, remote?: string }): Promise<VersionMetaList | undefined>;
+        export async function update(option: { fallback?: VersionMetaList, remote?: string } = {}): Promise<VersionMetaList | undefined> {
+            return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST, parse, option.fallback);
         }
     }
 
