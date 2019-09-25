@@ -17,9 +17,11 @@
   "scripts": {
     "clean": "lerna clean --yes",
     "update": "lerna bootstrap",
-    "test": "jest packages",
-    "test:debug": "jest packages --coverage --verbose --runInBand",
-    "build": "tslint -c tslint.json 'package/**/*.ts' && lerna run build"
+    "test": "jest packages --runInBand",
+    "test:full": "jest packages --coverage --verbose --runInBand",
+    "lint": "tslint -c tslint.json 'package/**/*.ts'",
+    "compile": "lerna run compile",
+    "build": "lerna run build"
   },
   "dependencies": {
     "@xmcl/auth": "file:packages\\auth",

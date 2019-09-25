@@ -30,6 +30,9 @@ jobs:
         npm install
       env:
         CI: true
+    - name: Lint
+      run: |
+        npm run lint
     - name: Build
       run: |
         npm run build
@@ -71,7 +74,7 @@ jobs:
       run: |
         git checkout master
         git reset --hard HEAD
-        npx lerna version --no-push --conventional-commits --yes -m "chore: bump version"
+        npx lerna version --no-push --yes -m "chore: bump version"
         git push
         npx lerna publish from-package --yes
       env:

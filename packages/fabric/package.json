@@ -17,7 +17,8 @@
     "fast-html-parser": "^1.0.1"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "compile": "tsc --build tsconfig.json",
+    "build": "npm run compile && npm pack"
   },
   "repository": {
     "type": "git",
