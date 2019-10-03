@@ -40,4 +40,4 @@ async function main(dry) {
     }
 }
 
-main(true);
+main(false);

@@ -67,12 +67,12 @@ jobs:
         npm install
       env:
         CI: true
-    - name: Build
+    - name: Compile Project
       run: |
         npm run build
     - name: Bump Version 
       run: |
-        node bump.js
+        npm run bump
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v1.4.1
       env:

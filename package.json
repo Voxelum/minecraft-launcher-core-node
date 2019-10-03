@@ -17,6 +17,7 @@
     "typescript": "^3.4.3"
   },
   "scripts": {
+    "bump": "node bump.js",
     "clean": "lerna clean --yes",
     "update": "lerna bootstrap",
     "test": "jest packages --runInBand",
