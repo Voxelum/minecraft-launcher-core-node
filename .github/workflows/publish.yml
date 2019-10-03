@@ -10,25 +10,14 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
-    # if: github.event.pull_request.merged && github.ref === 'prepare-release'
+    if: github.event.pull_request.merged && github.head_ref == 'prepare-release' && github.event.pull_request.user == 'github-actions[bot]'
 
     strategy:
       matrix:
         node-version: [10.x]
     steps:
-    - name: GitHub Context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
-    - name: Job Context
-      env:
-        JOB_CONTEXT: ${{ toJson(job) }}
-      run: echo "$JOB_CONTEXT"
-    - name: Runner Context
-      env:
-        RUNNER_CONTEXT: ${{ toJson(runner) }}
-      run: echo "$RUNNER_CONTEXT"
     - uses: actions/checkout@v1
+      ref: dev
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
@@ -43,8 +32,13 @@ jobs:
         npm run compile
     - name: Publish
       run: |
-        echo pub!
-        # npx lerna publish --no-push from-package --yes
+        node publish.js
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+    - name: Delete PR head branch
+      uses: dawidd6/action-delete-branch@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.pull_request.head.ref }}
+        be_kind: true # don't fail on errors (optional)
