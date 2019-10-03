@@ -74,7 +74,7 @@ describe("Task", () => {
                 throw new Error("Fail");
             });
             const monitor = jest.fn();
-            task.on("error", monitor);
+            task.on("node-error", monitor);
             await expect(task.execute())
                 .rejects
                 .toEqual(new Error("Fail"));

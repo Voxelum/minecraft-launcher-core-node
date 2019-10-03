@@ -16,7 +16,7 @@ export interface Task<T, N = Task.State> extends EventEmitter {
     readonly work: Task.Work<T>;
 
     on(event: "child", listener: (parentNode: N, childNode: N) => void): this;
-    on(event: "error", listener: (error: any, childNode: N) => void): this;
+    on(event: "node-error", listener: (error: any, childNode: N) => void): this;
     on(event: "update", listener: (update: { progress: number, total?: number, message?: string }, childNode: N) => void): this;
     on(event: "finish", listener: (result: any, childNode: N) => void): this;
     on(event: "pause", listener: (node: N) => void): this;
@@ -24,7 +24,7 @@ export interface Task<T, N = Task.State> extends EventEmitter {
     on(event: "cancel", listener: () => void): this;
 
     once(event: "child", listener: (parentNode: N, childNode: N) => void): this;
-    once(event: "error", listener: (error: any, childNode: N) => void): this;
+    once(event: "node-error", listener: (error: any, childNode: N) => void): this;
     once(event: "update", listener: (update: { progress: number, total?: number, message?: string }, childNode: N) => void): this;
     once(event: "finish", listener: (result: any, childNode: N) => void): this;
     once(event: "pause", listener: (node: N) => void): this;
@@ -116,7 +116,6 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
                     status: "ready",
                     message: "",
                 });
-                node.children.push(nextNode);
                 self.emit("child", node, nextNode);
                 const context = self.createContext(nextNode);
 
@@ -179,7 +178,7 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
             }
             node.status = "failed";
             node.error = e;
-            this.emit("error", e, node);
+            this.emit("node-error", e, node);
             throw e;
         });
     }
