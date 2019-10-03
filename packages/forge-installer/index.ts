@@ -22,6 +22,9 @@ async function findMainClass(lib: string) {
     return mainClass;
 }
 
+/**
+ * The forge installer Module to install forge to the game
+ */
 export namespace ForgeInstaller {
     /**
      * The forge version metadata to download a forge
