@@ -3,7 +3,7 @@ import { downloadFileWork, got } from "@xmcl/net";
 import Task from "@xmcl/task";
 import Unzip from "@xmcl/unzip";
 import { JavaExecutor, MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
-import { ResolvedLibrary, Version } from "@xmcl/version";
+import { Version } from "@xmcl/version";
 import * as path from "path";
 import { Readable } from "stream";
 
