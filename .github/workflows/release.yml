@@ -1,4 +1,4 @@
-name: Release Validation
+name: Release Autamation
 
 on:
   push:
@@ -36,9 +36,9 @@ jobs:
     - name: Build
       run: |
         npm run build
-    - name: Test
-      run: |
-        npm run test
+    # - name: Test
+    #   run: |
+    #     npm run test
   publish:
     runs-on: ubuntu-latest
 
