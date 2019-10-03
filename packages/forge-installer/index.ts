@@ -23,18 +23,36 @@ async function findMainClass(lib: string) {
 }
 
 export namespace ForgeInstaller {
+    /**
+     * The forge version metadata to download a forge
+     */
     export interface VersionMeta {
+        /**
+         * The installer info
+         */
         installer: {
             md5: string;
             sha1: string;
+            /**
+             * The url path to concat with forge maven
+             */
             path: string;
         };
         universal: {
             md5: string;
             sha1: string;
+            /**
+             * The url path to concat with forge maven
+             */
             path: string;
         };
+        /**
+         * The minecraft version
+         */
         mcversion: string;
+        /**
+         * The forge version (without minecraft version)
+         */
         version: string;
     }
 
@@ -64,6 +82,9 @@ export namespace ForgeInstaller {
         libraries: Version.NormalLibrary[];
     }
 
+    /**
+     * The forge diagnosis report. It may have some intersection with `Version.Diagnosis`.
+     */
     export interface Diagnosis {
         /**
          * When this flag is true, please reinstall totally
