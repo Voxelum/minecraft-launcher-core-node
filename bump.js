@@ -34,7 +34,7 @@ async function main(dry) {
             const newVersion = semver.inc(packageJSON.version, result.releaseType);
             console.log(`${packageJSON.name}: ${packageJSON.version} -> ${newVersion}`);
             if (!dry) {
-                fs.writeFileSync(`packages/${package}/package.json`, JSON.stringify({ ...packageJSON, version: newVersion }));
+                fs.writeFileSync(`packages/${package}/package.json`, JSON.stringify({ ...packageJSON, version: newVersion }, null, 2));
             }
         }
     }
