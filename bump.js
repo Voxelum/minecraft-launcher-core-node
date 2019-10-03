@@ -15,9 +15,11 @@ function scanPackages() {
         return packageJSON;
     }
     const affectedMapping = {};
+    // scan all packages and filter out useless folder like .DS_Store
     const packages = fs.readdirSync('packages')
         .map(name => ({ package: readPackageJson(name), name }))
         .filter(pack => pack.package !== undefined);
+    // create dependencies mapping
     packages.forEach(pack => {
         const packageJSON = pack.package;
         if (packageJSON.dependencies) {
@@ -40,11 +42,11 @@ async function bumpPackages(packages) {
                 lernaPackage: '@xmcl/minecraft-launcher-core',
                 whatBump(comments) {
                     if (comments.some(c => c.header.startsWith('BREAKING CHANGE:'))) {
-                        return { level: 0 };
+                        return { level: 0 }; // major
                     } else if (comments.some(c => c.type === 'feat')) {
-                        return { level: 1 };
+                        return { level: 1 }; // minor
                     } else if (comments.some(c => c.type === 'fix')) {
-                        return { level: 2 };
+                        return { level: 2 }; // patch
                     }
                 }
             }, function (err, result) {
@@ -57,6 +59,7 @@ async function bumpPackages(packages) {
     for (const package of packages) {
         const packageJSON = package.package;
         const result = await getBumpSuggestion(package.name);
+        // bump version according to the release type 'major', 'minor' or 'patch'
         if (result.releaseType) {
             const newVersion = semver.inc(packageJSON.version, result.releaseType);
             console.log(`${packageJSON.name}: ${packageJSON.version} -> ${newVersion}`);
@@ -68,6 +71,7 @@ async function bumpPackages(packages) {
 
 function bumpDependenciesPackage(affectedMapping, packages) {
     for (const package of packages) {
+        // only major & minor change affect the dependents packages update
         if (package.newVersion && (package.releaseType === 'minor' || package.releaseType === 'major')) {
             const allAffectedPackages = affectedMapping[package.name];
             for (const affectedPackage of allAffectedPackages) {
