@@ -38,9 +38,9 @@ jobs:
         npm install
       env:
         CI: true
-    - name: Build
+    - name: Compile All
       run: |
-        npm run build
+        npm run compile
     - name: Publish
       run: |
         echo pub!

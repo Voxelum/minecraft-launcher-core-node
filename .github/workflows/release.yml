@@ -59,7 +59,7 @@ jobs:
         CI: true
     - name: Compile Project
       run: |
-        npm run build
+        npm run compile
     - name: Bump Version 
       run: |
         npm run bump
