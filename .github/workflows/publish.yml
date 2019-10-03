@@ -29,16 +29,6 @@ jobs:
         RUNNER_CONTEXT: ${{ toJson(runner) }}
       run: echo "$RUNNER_CONTEXT"
     - uses: actions/checkout@v1
-      with:
-        ref: master
-    - name: Update Remote
-      run: |
-        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
-        git checkout origin/master
-        git config user.name ci010
-        git config user.email cijhn@hotmail.com
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
