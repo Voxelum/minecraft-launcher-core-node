@@ -10,7 +10,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
-    # if: github.event.pull_request.merged && github.ref === 'release'
+    # if: github.event.pull_request.merged && github.ref.startsWith('release')
 
     strategy:
       matrix:
