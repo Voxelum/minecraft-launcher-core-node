@@ -3,8 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@xmcl/minecraft-launcher-core.svg)](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core)
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Convensional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://www.conventionalcommits.org)
-[![Build Status](https://travis-ci.org/voxelum/minecraft-launcher-core-node.svg)](https://travis-ci.org/voxelum/minecraft-launcher-core-node)
-[![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/.github/workflows/validation.yml/badge.svg)](https://github.com/voxelum/minecraft-launcher-core-node/.github/workflows/validation.yml/badge.svg)
+[![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build%20Validation/badge.svg)](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build%20Validation/badge.svg)
 
 
 Provide several useful functions for Minecraft.
@@ -19,7 +18,7 @@ You can install all of them in a single package: `@xmcl/minecraft-launcher-core`
 
 `import { NBT, ServerInfo, ...so on...} from '@xmcl/minecraft-launcher-core'`
 
-Or you can import them seperatelyL
+Or you can import them seperately.
 
 `import { NBT } from '@xmcl/nbt'`
 
