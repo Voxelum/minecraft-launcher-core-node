@@ -1,52 +1,33 @@
 name: Release
 
 on:
-  push:
-    branches: 
-      - master
-    paths:
-      - 'packages/*/*.ts'
+  pull_request:
+    types: [closed] 
+    branches:
+      - dev
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [10.x]
-
-    steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - uses: actions/setup-java@v1
-      with:
-        java-version: '12.X'
-        architecture: x64
-    - name: Install
-      run: |
-        npm install
-      env:
-        CI: true
-    - name: Lint
-      run: |
-        npm run lint
-    - name: Build
-      run: |
-        npm run build
-    - name: Test
-      run: |
-        npm run test
   publish:
     runs-on: ubuntu-latest
 
+    # if: github.event.pull_request.merged && github.ref === 'release'
+
     strategy:
       matrix:
         node-version: [10.x]
-    needs: build
     steps:
+    - name: GitHub Context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+    - name: Job Context
+      env:
+        JOB_CONTEXT: ${{ toJson(job) }}
+      run: echo "$JOB_CONTEXT"
+    - name: Runner Context
+      env:
+        RUNNER_CONTEXT: ${{ toJson(runner) }}
+      run: echo "$RUNNER_CONTEXT"
     - uses: actions/checkout@v1
       with:
         ref: master
@@ -72,11 +53,8 @@ jobs:
         npm run build
     - name: Publish
       run: |
-        git checkout master
-        git reset --hard HEAD
-        npx lerna version --no-push --yes -m "chore: bump version"
-        git push
-        npx lerna publish from-package --yes
+        echo pub!
+        # npx lerna publish --no-push from-package --yes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
