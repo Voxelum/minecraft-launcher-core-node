@@ -3,63 +3,42 @@ name: Release Autamation
 on:
   push:
     branches: 
-      - dev
+      - master
     paths:
       - 'packages/*/*.ts'
 
 jobs:
-  # build:
-  #   runs-on: ubuntu-latest
-
-  #   strategy:
-  #     matrix:
-  #       node-version: [10.x]
-
-    # steps:
-    # - uses: actions/checkout@v1
-    # - name: Use Node.js ${{ matrix.node-version }}
-    #   uses: actions/setup-node@v1
-    #   with:
-    #     node-version: ${{ matrix.node-version }}
-    # - uses: actions/setup-java@v1
-    #   with:
-    #     java-version: '12.X'
-    #     architecture: x64
-    # - name: Install
-    #   run: |
-    #     npm install
-    #   env:
-    #     CI: true
-    # - name: Lint
-    #   run: |
-    #     npm run lint
-    # - name: Build
-    #   run: |
-    #     npm run build
-    # - name: Test
-    #   run: |
-    #     npm run test
-  publish:
+  automation:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [10.x]
-    # needs: build
+
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - uses: actions/setup-java@v1
+      with:
+        java-version: '12.X'
+        architecture: x64
     - name: Install
       run: |
         npm install
       env:
         CI: true
-    - name: Compile Project
+    - name: Lint
       run: |
-        npm run compile
+        npm run lint
+    - name: Build
+      run: |
+        npm run build
+    - name: Test
+      run: |
+        npm run test
     - name: Bump Version 
       run: |
         npm run bump
