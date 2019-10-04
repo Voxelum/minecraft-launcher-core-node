@@ -39,12 +39,23 @@ jobs:
     # - name: Test
     #   run: |
     #     npm run test
-    - name: Bump Version 
+    - name: Prepare Pull Request 
       run: |
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
+        git config user.name ci010
+        git config user.email cijhn@hotmail.com
         node bump.js > bump.log
         cat bump.log
+        export PULL_REQUEST_TITLE=$(cat pr-title.log)
+        export PULL_REQUEST_BODY=$(cat pr-body.log)
+        echo $PULL_REQUEST_TITLE
+        echo $PULL_REQUEST_BODY
       env:
         CI: true
+    - name: Test Env Var
+      run: |
+        echo $PULL_REQUEST_TITLE
+        echo $PULL_REQUEST_BODY
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v1.4.1
       env:
@@ -60,4 +71,3 @@ jobs:
         PULL_REQUEST_REVIEWERS: ci010
         PULL_REQUEST_BRANCH: prepare-release
         BRANCH_SUFFIX: none
-        TAG: $(cat tag.log)
