@@ -1,37 +1,36 @@
 {
-    "name": "@xmcl/text-component",
-    "version": "0.0.3",
-    "main": "./index.js",
-    "types": "./index.d.ts",
-    "description": "Minecraft text component parsing",
-    "engines": {
-        "node": ">=10.0"
-    },
-    "publishConfig": {
-        "access": "public"
-    },
-    "scripts": {
-        "compile": "tsc --build tsconfig.json",
+  "name": "@xmcl/text-component",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "description": "Minecraft text component parsing",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "compile": "tsc --build tsconfig.json",
     "build": "npm run compile && npm pack"
-    },
-    "dependencies": {
-        "@xmcl/common": "file:../common"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/ci010/ts-minecraft.git"
-    },
-    "author": "cijhn@hotmail.com",
-    "keywords": [
-        "minecraft",
-        "typescript",
-        "minecraft-launcher",
-        "nodejs",
-        "electron"
-    ],
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/ci010/ts-minecraft/issues"
-    },
-    "homepage": "https://github.com/ci010/ts-minecraft#readme"
+  },
+  "dependencies": {
+    "@xmcl/common": "file:../common"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ci010/ts-minecraft.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ci010/ts-minecraft/issues"
+  },
+  "homepage": "https://github.com/ci010/ts-minecraft#readme"
 }

@@ -1,40 +1,39 @@
 {
-    "name": "@xmcl/nbt",
-    "version": "0.0.3",
-    "main": "./index.js",
-    "types": "./index.d.ts",
-    "description": "NBT serialization and deserialization",
-    "engines": {
-        "node": ">=10.0"
-    },
-    "publishConfig": {
-        "access": "public"
-    },
-    "scripts": {
-        "compile": "tsc --build tsconfig.json",
+  "name": "@xmcl/nbt",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "description": "NBT serialization and deserialization",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "compile": "tsc --build tsconfig.json",
     "build": "npm run compile && npm pack"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/ci010/ts-minecraft.git"
-    },
-    "author": "cijhn@hotmail.com",
-    "keywords": [
-        "minecraft",
-        "typescript",
-        "minecraft-launcher",
-        "nodejs",
-        "electron"
-    ],
-    "license": "MIT",
-    "dependencies": {
-        "bytebuffer": "^5.0.1",
-        "file-type": "^11.0.0",
-        "long": "^3.2.0",
-        "typescript-optional": "^2.0.1"
-    },
-    "bugs": {
-        "url": "https://github.com/ci010/ts-minecraft/issues"
-    },
-    "homepage": "https://github.com/ci010/ts-minecraft#readme"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ci010/ts-minecraft.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bytebuffer": "^5.0.1",
+    "file-type": "^11.0.0",
+    "long": "^3.2.0",
+    "typescript-optional": "^2.0.1"
+  },
+  "bugs": {
+    "url": "https://github.com/ci010/ts-minecraft/issues"
+  },
+  "homepage": "https://github.com/ci010/ts-minecraft#readme"
 }

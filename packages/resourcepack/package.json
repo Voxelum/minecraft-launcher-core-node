@@ -1,6 +1,5 @@
 {
   "name": "@xmcl/resourcepack",
-  "version": "0.0.9",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft resource pack parsing",

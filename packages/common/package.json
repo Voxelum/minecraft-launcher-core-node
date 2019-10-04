@@ -1,6 +1,5 @@
 {
   "name": "@xmcl/common",
-  "version": "0.0.5",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft common concepts",
