@@ -53,6 +53,12 @@ export namespace ProfileService {
             return api.profileByName.replace("${name}", name);
         }
 
+        /**
+         * Replace uuid string into `${uuid}`, and type string into `${type}`
+         * @param api The api
+         * @param uuid The uuid string
+         * @param type The type string
+         */
         export function getTextureUrl(api: API, uuid: string, type: string) {
             return api.texture.replace("${uuid}", uuid).replace("${type}", type);
         }
