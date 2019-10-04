@@ -109,6 +109,7 @@ export namespace Auth {
          *
          * @param option The login options, contains the username, password and clientToken
          * @param api The API of the auth server
+         * @throws This may throw the error object with `statusCode`, `statusMessage`, `type` (error type), and `message`
          */
         export function login(option: { username: string, password?: string, clientToken?: string | undefined },
             api: API = API_MOJANG): Promise<Auth> {
