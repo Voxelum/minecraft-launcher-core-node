@@ -15,5 +15,5 @@
     "build": "npm run compile && npm pack",
     "test": ""
   },
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
