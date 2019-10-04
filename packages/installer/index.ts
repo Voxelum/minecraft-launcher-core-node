@@ -8,6 +8,9 @@ import { decompressXZ, unpack200 } from "./decompress";
 
 
 export namespace Installer {
+    /**
+     * The function to swap library host
+     */
     export type LibraryHost = (libId: ResolvedLibrary) => string | undefined;
     /**
      * The version metadata containing the download version information, like url
