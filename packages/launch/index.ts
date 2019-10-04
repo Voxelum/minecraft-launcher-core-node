@@ -66,13 +66,22 @@ export namespace Launcher {
         resourcePath?: string;
         javaPath: string;
 
+        /**
+         * Min memory, this will add a jvm flag -Xms to the command result
+         */
         minMemory?: number;
+        /**
+         * Min memory, this will add a jvm flag -Xmx to the command result
+         */
         maxMemory?: number;
         version: string | ResolvedVersion;
         /**
          * Directly launch to a server
          */
         server?: { ip: string, port?: number };
+        /**
+         * Resolution. This will add --height & --width or --fullscreen to the java arguments
+         */
         resolution?: { width?: number, height?: number, fullscreen: false };
         /**
          * Extra jvm options. This will append after to generated options.
@@ -378,7 +387,7 @@ export namespace Launcher {
                     validEntries[entry.name] = true;
                 }
             }
-            const missingNatives =  natives.filter((n) => !validEntries[n.name]);
+            const missingNatives = natives.filter((n) => !validEntries[n.name]);
             if (missingNatives.length !== 0) {
                 await Promise.all(missingNatives.map(extractJar));
             }
