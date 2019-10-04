@@ -17,7 +17,8 @@ jobs:
         node-version: [10.x]
     steps:
     - uses: actions/checkout@v1
-      ref: master
+      with:
+        ref: ${{ github.sha	}}
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
