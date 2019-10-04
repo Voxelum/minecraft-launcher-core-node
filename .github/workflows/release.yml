@@ -33,15 +33,17 @@ jobs:
     - name: Lint
       run: |
         npm run lint
-    - name: Build
+    - name: Compile All
       run: |
-        npm run build
+        npm run compile
     # - name: Test
     #   run: |
     #     npm run test
     - name: Bump Version 
       run: |
         node bump.js > bump.log
+      env:
+        CI: true
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v1.4.1
       env:
