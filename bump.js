@@ -89,7 +89,7 @@ function bumpDependenciesPackage(affectedMapping, packages) {
 
 function writeAllNewVersionsToPackageJson(packages) {
     for (const package of packages) {
-        fs.writeFileSync(`packages/${package}/package.json`, JSON.stringify({ ...package.package, version: package.newVersion }, null, 2))
+        fs.writeFileSync(`packages/${package.name}/package.json`, JSON.stringify({ ...package.package, version: package.newVersion }, null, 2) + '\n');
     }
 }
 
