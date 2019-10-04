@@ -369,21 +369,23 @@ export namespace Launcher {
             })).wait();
         }
         if (shaEntries) {
-            const invalidEntries: { [name: string]: boolean } = {};
+            const validEntries: { [name: string]: boolean } = {};
             for (const entry of shaEntries) {
+                if (typeof entry.file !== "string") { continue; }
                 const file = path.join(native, entry.file);
                 const valid = await vfs.validate(file, { algorithm: "sha1", hash: entry.sha1 });
                 if (!valid) {
-                    invalidEntries[entry.name] = true;
+                    validEntries[entry.name] = true;
                 }
             }
-            const missingNatives = Object.keys(invalidEntries).map((n) => natives.find((l) => l.name === n));
+            const missingNatives =  natives.filter((n) => !validEntries[n.name]);
             if (missingNatives.length !== 0) {
                 await Promise.all(missingNatives.map(extractJar));
             }
         } else {
             await Promise.all(natives.map(extractJar));
-            const targetContent = JSON.stringify(await extractedNatives.map(async (n) => ({ ...n, sha1: await computeChecksum(path.join(native, n.name)) })));
+            const checkSumContent = await Promise.all(extractedNatives.map(async (n) => ({ ...n, sha1: await computeChecksum(path.join(native, n.name)) })));
+            const targetContent = JSON.stringify(checkSumContent);
             await vfs.writeFile(checksumFile, targetContent);
         }
     }
