@@ -32,7 +32,7 @@ export async function getIfUpdate<T extends UpdatedObject = UpdatedObject>(url: 
             encoding: "utf-8",
             headers: lastModified ? { "If-Modified-Since": lastModified } : undefined,
         });
-        if (resp.statusCode !== 304) {
+        if (resp.statusCode === 304) {
             return lastObj;
         }
         return {
