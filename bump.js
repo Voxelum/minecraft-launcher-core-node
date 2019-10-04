@@ -103,10 +103,10 @@ async function main(dry) {
     const newVersion = packages.find(pack => pack.package.name === '@xmcl/minecraft-launcher-core')
         .newVersion
     const exec = dry ? console.log : execSync;
-    exec(`git tag -f @xmcl/minecraft-launcher-core@${newVersion}`);
-    exec(`git push -f tag @xmcl/minecraft-launcher-core@${newVersion}`);
-    
     fs.writeFileSync('tag.log', `@xmcl/minecraft-launcher-core@${newVersion}`);
+    exec(`git tag -f @xmcl/minecraft-launcher-core@${newVersion}`);
+    exec(`git push origin tag @xmcl/minecraft-launcher-core@${newVersion} -f`);
+    
 }
 
 main(!process.env.CI);
