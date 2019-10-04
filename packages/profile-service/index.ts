@@ -21,24 +21,51 @@ export namespace ProfileService {
          * The PEM public key
          */
         publicKey?: string;
+        /**
+         * Full url to query profile by uuid. Place the uuid as `${uuid}` in this url
+         */
         profile: string;
+        /**
+         * Full url to query profile by name. Place the name as `${name}` in this url
+         */
         profileByName: string;
+        /**
+         * Full url to set texture by profile uuid and texture type. Place uuid as `${uuid}` and type as `${type}`
+         */
         texture: string;
     }
 
     export namespace API {
+        /**
+         * Replace `${uuid}` string into uuid param
+         * @param api The api
+         * @param uuid The uuid will be replaced
+         */
         export function getProfileUrl(api: API, uuid: string) {
             return api.profile.replace("${uuid}", uuid);
         }
-
+        /**
+         * Replace `${name}` string into name param
+         * @param api The api
+         * @param name The name will be replaced
+         */
         export function getProfileByNameUrl(api: API, name: string) {
             return api.profileByName.replace("${name}", name);
         }
 
+        /**
+         * Replace uuid string into `${uuid}`, and type string into `${type}`
+         * @param api The api
+         * @param uuid The uuid string
+         * @param type The type string
+         */
         export function getTextureUrl(api: API, uuid: string, type: string) {
             return api.texture.replace("${uuid}", uuid).replace("${type}", type);
         }
     }
+    /**
+     * The default Mojang API
+     */
     export const API_MOJANG: API = {
         publicKey: `-----BEGIN PUBLIC KEY-----
 MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAylB4B6m5lz7jwrcFz6Fd
@@ -148,7 +175,8 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     /**
      * Get all the textures of this GameProfile and cache them.
      *
-     * @param profile
+     * @param profile The game profile from the profile service
+     * @param cache Should we cache the texture into url? Default is `true`.
      */
     export async function getTextures(profile: GameProfile, cache: boolean = true): Promise<GameProfile.TexturesInfo> {
         const texture = parseTexturesInfo(profile);
@@ -186,6 +214,11 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         return fetchProfile(target, api.publicKey).then((p) => p as GameProfile);
     }
 
+    /**
+     * Look up all names by api
+     * @param names The names will go through
+     * @param option The option with api
+     */
     export function lookUpAll(names: string[], option: { api?: API } = {}) {
         const api = option.api || API_MOJANG;
         let target = API.getProfileByNameUrl(api, "");

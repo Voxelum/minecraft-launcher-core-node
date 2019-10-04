@@ -1,60 +1,24 @@
 name: Release
 
 on:
-  push:
-    branches: 
+  pull_request:
+    types: [closed] 
+    branches:
       - master
-    paths:
-      - 'packages/*/*.ts'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [10.x]
-
-    steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - uses: actions/setup-java@v1
-      with:
-        java-version: '12.X'
-        architecture: x64
-    - name: Install
-      run: |
-        npm install
-      env:
-        CI: true
-    - name: Build
-      run: |
-        npm run build
-    - name: Test
-      run: |
-        npm run test
   publish:
     runs-on: ubuntu-latest
 
+    if: github.event.pull_request.merged && github.head_ref == 'prepare-release' && github.event.pull_request.user == 'github-actions[bot]'
+
     strategy:
       matrix:
         node-version: [10.x]
-    needs: build
     steps:
     - uses: actions/checkout@v1
       with:
-        ref: master
-    - name: Update Remote
-      run: |
-        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
-        git checkout origin/master
-        git config user.name ci010
-        git config user.email cijhn@hotmail.com
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ github.sha	}}
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
@@ -64,16 +28,18 @@ jobs:
         npm install
       env:
         CI: true
-    - name: Build
+    - name: Compile All
       run: |
-        npm run build
+        npm run compile
     - name: Publish
       run: |
-        git checkout master
-        git reset --hard HEAD
-        npx lerna version --no-push --conventional-commits --yes -m "chore: bump version"
-        git push
-        npx lerna publish from-package --yes
+        lerna publish from-package --yes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+    - name: Delete PR head branch
+      uses: dawidd6/action-delete-branch@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.pull_request.head.ref }}
+        be_kind: true # don't fail on errors (optional)

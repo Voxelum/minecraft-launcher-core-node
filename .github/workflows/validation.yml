@@ -17,7 +17,7 @@ on:
       - master
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -39,9 +39,10 @@ jobs:
         npm install
       env:
         CI: true
-    - name: Build
+    - name: Lint and Compile
       run: |
-        npm run build
+        npm run lint
+        npm run compile
     - name: Test
       run: |
-        npm run test:debug
+        npm run test:full

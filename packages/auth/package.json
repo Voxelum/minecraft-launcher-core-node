@@ -18,7 +18,8 @@
     "uuid": "^3.2.1"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "compile": "tsc --build tsconfig.json",
+    "build": "npm run compile && npm pack"
   },
   "repository": {
     "type": "git",

@@ -475,10 +475,20 @@ export namespace NBT {
             },
         ];
 
+        /**
+         * Serialzie an nbt typed json object into NBT binary
+         * @param object The json
+         * @param compressed Should we compress it
+         */
         export async function serialize(object: TypedObject, compressed?: boolean): Promise<Buffer> {
             return writeRootTag(object, object.__nbtPrototype__, {}, "", compressed || false);
         }
 
+        /**
+         * Deserialize the nbt binary into json
+         * @param fileData The nbt binary
+         * @param compressed Should we compress it
+         */
         export async function deserialize(fileData: Buffer, compressed?: boolean): Promise<TypedObject> {
             const { value, type } = await readBuffer(fileData, compressed);
             deepFreeze(type);
@@ -542,18 +552,34 @@ export namespace NBT {
         export class Serializer {
             private registry: { [id: string]: CompoundSchema } = {};
             private reversedRegistry: { [shape: string]: string } = {};
+            /**
+             * Register a new type nbt schema to the serializer
+             * @param type The type name
+             * @param schema The schema
+             */
             register(type: string, schema: CompoundSchema): this {
                 if (typeof schema !== "object" || schema === null) { throw new Error(); }
                 this.registry[type] = schema;
                 this.reversedRegistry[JSON.stringify(schema)] = type;
                 return this;
             }
+            /**
+             * Serialize the object into the specific type
+             * @param object The json object
+             * @param type The registered nbt type
+             * @param compressed Should compress this nbt
+             */
             serialize(object: object, type: string, compressed: boolean = false) {
                 const schema = this.registry[type];
                 if (!schema) { throw new Error(`Unknown type [${schema}]`); }
 
                 return writeRootTag(object, schema, this.registry, "", compressed);
             }
+            /**
+             * Deserialize the nbt to json object directly
+             * @param fileData The nbt data
+             * @param compressed Does the data compressed
+             */
             deserialize(fileData: Buffer, compressed: boolean = false): { value: any, type: any | string } {
                 let doUnzip: boolean;
                 if (typeof compressed === "undefined") {

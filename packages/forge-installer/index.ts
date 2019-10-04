@@ -3,7 +3,7 @@ import { downloadFileWork, got } from "@xmcl/net";
 import Task from "@xmcl/task";
 import Unzip from "@xmcl/unzip";
 import { JavaExecutor, MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
-import { ResolvedLibrary, Version } from "@xmcl/version";
+import { Version } from "@xmcl/version";
 import * as path from "path";
 import { Readable } from "stream";
 
@@ -22,19 +22,40 @@ async function findMainClass(lib: string) {
     return mainClass;
 }
 
+/**
+ * The forge installer Module to install forge to the game
+ */
 export namespace ForgeInstaller {
+    /**
+     * The forge version metadata to download a forge
+     */
     export interface VersionMeta {
+        /**
+         * The installer info
+         */
         installer: {
             md5: string;
             sha1: string;
+            /**
+             * The url path to concat with forge maven
+             */
             path: string;
         };
         universal: {
             md5: string;
             sha1: string;
+            /**
+             * The url path to concat with forge maven
+             */
             path: string;
         };
+        /**
+         * The minecraft version
+         */
         mcversion: string;
+        /**
+         * The forge version (without minecraft version)
+         */
         version: string;
     }
 
@@ -64,6 +85,9 @@ export namespace ForgeInstaller {
         libraries: Version.NormalLibrary[];
     }
 
+    /**
+     * The forge diagnosis report. It may have some intersection with `Version.Diagnosis`.
+     */
     export interface Diagnosis {
         /**
          * When this flag is true, please reinstall totally

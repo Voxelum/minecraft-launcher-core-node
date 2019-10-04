@@ -74,14 +74,46 @@ export namespace ForgeWebPage {
         };
     }
 
+    /**
+     * Query the webpage content from files.minecraftforge.net.
+     *
+     * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
+     * It will request a new page only when the fallback option is outdated.
+     *
+     * @param option The option can control querying minecraft version, and page caching.
+     */
     export function getWebPage(): Promise<ForgeWebPage | undefined>;
+    /**
+     * Query the webpage content from files.minecraftforge.net.
+     *
+     * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
+     * It will request a new page only when the fallback option is outdated.
+     *
+     * @param option The option can control querying minecraft version, and page caching.
+     */
     export function getWebPage(option?: {
         mcversion?: string;
     }): Promise<ForgeWebPage | undefined>;
+    /**
+     * Query the webpage content from files.minecraftforge.net.
+     *
+     * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
+     * It will request a new page only when the fallback option is outdated.
+     *
+     * @param option The option can control querying minecraft version, and page caching.
+     */
     export function getWebPage(option?: {
         mcversion?: string;
         fallback?: ForgeWebPage;
     }): Promise<ForgeWebPage | undefined>;
+    /**
+     * Query the webpage content from files.minecraftforge.net.
+     *
+     * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
+     * It will request a new page only when the fallback option is outdated.
+     *
+     * @param option The option can control querying minecraft version, and page caching.
+     */
     export function getWebPage(option?: {
         mcversion?: string;
         fallback: ForgeWebPage;
@@ -109,13 +141,25 @@ export namespace ForgeWebPage {
      * A richer version info than forge installer required
      */
     export interface Version extends ForgeInstaller.VersionMeta {
+        /**
+         * The minecraft version
+         */
         mcversion: string;
+        /**
+         * The version of forge
+         */
         version: string;
         date: string;
+        /**
+         * The changelog info
+         */
         changelog: ForgeWebPage.Download;
         installer: ForgeWebPage.Download;
         mdk?: ForgeWebPage.Download;
         universal: ForgeWebPage.Download;
+        /**
+         * The type of the forge release. The `common` means the normal release.
+         */
         type: "buggy" | "recommended" | "common" | "latest";
     }
 
