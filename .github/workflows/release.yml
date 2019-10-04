@@ -42,6 +42,7 @@ jobs:
     - name: Bump Version 
       run: |
         node bump.js > bump.log
+        cat bump.log
       env:
         CI: true
     - name: Create Pull Request

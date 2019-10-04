@@ -107,7 +107,6 @@ async function main(dry) {
     exec(`git push -f tag @xmcl/minecraft-launcher-core@${newVersion}`);
     
     fs.writeFileSync('tag.log', `@xmcl/minecraft-launcher-core@${newVersion}`);
-    fs.writeFileSync('tag.log', `@xmcl/minecraft-launcher-core@${newVersion}`);
 }
 
 main(!process.env.CI);
