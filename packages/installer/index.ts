@@ -6,7 +6,9 @@ import * as os from "os";
 import * as path from "path";
 import { decompressXZ, unpack200 } from "./decompress";
 
-
+/**
+ * The minecraft installer
+ */
 export namespace Installer {
     /**
      * The function to swap library host
