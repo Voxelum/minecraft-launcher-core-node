@@ -64,6 +64,9 @@ export namespace Launcher {
          * The path for assets/mods/resource packs
          */
         resourcePath?: string;
+        /**
+         * The java executable file path. (Not the java home direcotry!)
+         */
         javaPath: string;
 
         /**
@@ -74,6 +77,9 @@ export namespace Launcher {
          * Min memory, this will add a jvm flag -Xmx to the command result
          */
         maxMemory?: number;
+        /**
+         * The version of launched Minecraft. Can be either resolved version or version string
+         */
         version: string | ResolvedVersion;
         /**
          * Directly launch to a server
@@ -113,7 +119,13 @@ export namespace Launcher {
             server: string,
         };
 
+        /**
+         * Add `-Dfml.ignoreInvalidMinecraftCertificates=true` to jvm argument
+         */
         ignoreInvalidMinecraftCertificates?: boolean;
+        /**
+         * Add `-Dfml.ignorePatchDiscrepancies=true` to jvm argument
+         */
         ignorePatchDiscrepancies?: boolean;
     }
 
