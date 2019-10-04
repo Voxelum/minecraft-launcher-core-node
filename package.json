@@ -8,6 +8,8 @@
     "@types/node": "^10.0.0",
     "@types/uuid": "^3.4.3",
     "@types/yauzl": "^2.9.1",
+    "conventional-recommended-bump": "^6.0.0",
+    "git-semver-tags": "^3.0.0",
     "jest": "^24.9.0",
     "lerna": "^3.16.4",
     "ts-jest": "^24.0.2",
@@ -15,11 +17,14 @@
     "typescript": "^3.4.3"
   },
   "scripts": {
+    "bump": "node bump.js",
     "clean": "lerna clean --yes",
     "update": "lerna bootstrap",
-    "test": "jest packages",
-    "test:debug": "jest packages --coverage --verbose --runInBand",
-    "build": "tslint -c tslint.json 'package/**/*.ts' && lerna run build"
+    "test": "jest packages --runInBand",
+    "test:full": "jest packages --coverage --verbose --runInBand",
+    "lint": "tslint -c tslint.json 'package/**/*.ts'",
+    "compile": "lerna run compile",
+    "build": "lerna run build"
   },
   "dependencies": {
     "@xmcl/auth": "file:packages\\auth",

@@ -11,6 +11,7 @@ export class MinecraftFolder {
     get lastestLog(): string { return this.getPath("logs", "latest.log"); }
     get maps(): string { return this.getPath("saves"); }
     get saves(): string { return this.getPath("saves"); }
+    get screenshots(): string { return this.getPath("screenshots"); }
 
     static from(location: MinecraftLocation) {
         return typeof location === "string" ? new MinecraftFolder(location) : location;

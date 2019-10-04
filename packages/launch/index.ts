@@ -64,15 +64,30 @@ export namespace Launcher {
          * The path for assets/mods/resource packs
          */
         resourcePath?: string;
+        /**
+         * The java executable file path. (Not the java home direcotry!)
+         */
         javaPath: string;
 
+        /**
+         * Min memory, this will add a jvm flag -Xms to the command result
+         */
         minMemory?: number;
+        /**
+         * Min memory, this will add a jvm flag -Xmx to the command result
+         */
         maxMemory?: number;
+        /**
+         * The version of launched Minecraft. Can be either resolved version or version string
+         */
         version: string | ResolvedVersion;
         /**
          * Directly launch to a server
          */
         server?: { ip: string, port?: number };
+        /**
+         * Resolution. This will add --height & --width or --fullscreen to the java arguments
+         */
         resolution?: { width?: number, height?: number, fullscreen: false };
         /**
          * Extra jvm options. This will append after to generated options.
@@ -104,7 +119,13 @@ export namespace Launcher {
             server: string,
         };
 
+        /**
+         * Add `-Dfml.ignoreInvalidMinecraftCertificates=true` to jvm argument
+         */
         ignoreInvalidMinecraftCertificates?: boolean;
+        /**
+         * Add `-Dfml.ignorePatchDiscrepancies=true` to jvm argument
+         */
         ignorePatchDiscrepancies?: boolean;
     }
 
@@ -369,21 +390,23 @@ export namespace Launcher {
             })).wait();
         }
         if (shaEntries) {
-            const invalidEntries: { [name: string]: boolean } = {};
+            const validEntries: { [name: string]: boolean } = {};
             for (const entry of shaEntries) {
+                if (typeof entry.file !== "string") { continue; }
                 const file = path.join(native, entry.file);
                 const valid = await vfs.validate(file, { algorithm: "sha1", hash: entry.sha1 });
                 if (!valid) {
-                    invalidEntries[entry.name] = true;
+                    validEntries[entry.name] = true;
                 }
             }
-            const missingNatives = Object.keys(invalidEntries).map((n) => natives.find((l) => l.name === n));
+            const missingNatives = natives.filter((n) => !validEntries[n.name]);
             if (missingNatives.length !== 0) {
                 await Promise.all(missingNatives.map(extractJar));
             }
         } else {
             await Promise.all(natives.map(extractJar));
-            const targetContent = JSON.stringify(await extractedNatives.map(async (n) => ({ ...n, sha1: await computeChecksum(path.join(native, n.name)) })));
+            const checkSumContent = await Promise.all(extractedNatives.map(async (n) => ({ ...n, sha1: await computeChecksum(path.join(native, n.name)) })));
+            const targetContent = JSON.stringify(checkSumContent);
             await vfs.writeFile(checksumFile, targetContent);
         }
     }

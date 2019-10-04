@@ -94,6 +94,9 @@ export namespace Forge {
             value: T;
         }
 
+        /**
+         * Convert a forge config to string
+         */
         export function stringify(config: Config) {
             let content = "# Configuration file\n\n\n";
             const propIndent = "    ", arrIndent = "        ";
@@ -120,6 +123,10 @@ export namespace Forge {
             return content;
         }
 
+        /**
+         * Parse a forge config string into `Config` object
+         * @param body The forge config string
+         */
         export function parse(body: string): Config {
             const lines = body.split("\n").map((s) => s.trim())
                 .filter((s) => s.length !== 0);
@@ -434,6 +441,14 @@ export namespace Forge {
             .filter((m) => m.modid !== undefined);
     }
 
+    /**
+     * Read metadata of the input mod.
+     *
+     * This will scan the mcmod.info file, all class file for `@Mod` & coremod `DummyModContainer` class.
+     * This will also scan the manifest file on `META-INF/MANIFEST.MF` for tweak mod.
+     *
+     * @param mod The mod path or data
+     */
     export async function meta(mod: Buffer | string | Unzip.CachedZipFile) {
         return readModMetaData(mod);
     }

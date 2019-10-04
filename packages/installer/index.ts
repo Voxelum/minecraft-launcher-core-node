@@ -6,8 +6,13 @@ import * as os from "os";
 import * as path from "path";
 import { decompressXZ, unpack200 } from "./decompress";
 
-
+/**
+ * The minecraft installer
+ */
 export namespace Installer {
+    /**
+     * The function to swap library host
+     */
     export type LibraryHost = (libId: ResolvedLibrary) => string | undefined;
     /**
      * The version metadata containing the download version information, like url

@@ -1,6 +1,6 @@
 import { Version } from "@xmcl/common";
 import Task from "@xmcl/task";
-import { computeChecksum, currentPlatform, exists, getPlatform, MinecraftFolder, MinecraftLocation, Platform, validate, vfs } from "@xmcl/util";
+import { currentPlatform, getPlatform, MinecraftFolder, MinecraftLocation, Platform, validate, vfs } from "@xmcl/util";
 import * as fs from "fs";
 
 type PickPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
@@ -9,6 +9,10 @@ export type PartialResolvedVersion = Omit<PickPartial<ResolvedVersion, "assets" 
     "client" |
     "server" |
     "downloads">, "pathChain">;
+/**
+ * The resolved version for launcher.
+ * It could be a combination of multiple versions as there might be some inheritions.
+ */
 export interface ResolvedVersion {
     inheritsFrom?: string;
     assetIndex: Version.AssetIndex;
@@ -57,6 +61,9 @@ export interface LibraryInfo {
     readonly path: string;
 }
 
+/**
+ * A resolved library for launcher. It can by parsed from `LibraryInfo`.
+ */
 export class ResolvedLibrary implements LibraryInfo {
     readonly groupId: string;
     readonly artifactId: string;
