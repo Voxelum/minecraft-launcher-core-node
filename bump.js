@@ -1,6 +1,8 @@
 const fs = require('fs');
 const convBump = require('conventional-recommended-bump');
 const semver = require('semver');
+const { execSync } = require('child_process');
+
 
 function scanPackages() {
     function readPackageJson(package) {
@@ -98,6 +100,11 @@ async function main(dry) {
     if (!dry) {
         writeAllNewVersionsToPackageJson(packages);
     }
+    const newVersion = packages.find(pack => pack.package.name === '@xmcl/minecraft-launcher-core')
+        .newVersion
+    const exec = dry ? console.log : execSync;
+    exec(`git tag -f @xmcl/minecraft-launcher-core@${newVersion}`);
+    exec(`git push -f tag @xmcl/minecraft-launcher-core@${newVersion}`);
 }
 
 main(!process.env.CI);
