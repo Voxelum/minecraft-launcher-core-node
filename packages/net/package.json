@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/net",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "network utility",
@@ -19,7 +19,7 @@
   "scripts": {
     "test": "",
     "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile && npm pack"
+    "build": "npm run compile"
   },
   "repository": {
     "type": "git",
