@@ -58,14 +58,5 @@ jobs:
         PULL_REQUEST_REVIEWERS: ci010
         PULL_REQUEST_BRANCH: prepare-release
         BRANCH_SUFFIX: none
-    - name: Update Tag
-      run: |
-        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
-        git config user.name ci010
-        git config user.email cijhn@hotmail.com
-        git tag -f $(cat tag.log)
-        git push origin tag $(cat tag.log) -f
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 

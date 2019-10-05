@@ -43,3 +43,14 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: ${{ github.pull_request.head.ref }}
         be_kind: true # don't fail on errors (optional)
+    - name: Publish Tag
+      run: |
+        echo "console.log(JSON.parse(require('fs').readFileSync('packages/launcher-core/package.json').toString()).version)" > log-tag.js
+        node log-tag.js > tag.log
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
+        git config user.name ci010
+        git config user.email cijhn@hotmail.com
+        git tag -f @xmcl/minecraft-launcher-core@$(cat tag.log)
+        git push origin tag @xmcl/minecraft-launcher-core@$(cat tag.log) -f
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

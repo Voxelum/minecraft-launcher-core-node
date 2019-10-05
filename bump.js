@@ -108,7 +108,7 @@ async function main(dry) {
     }
     const newVersion = packages.find(pack => pack.package.name === '@xmcl/minecraft-launcher-core')
         .newVersion
-    fs.writeFileSync('tag.log', `@xmcl/minecraft-launcher-core@${newVersion}`);
+    // fs.writeFileSync('tag.log', `@xmcl/minecraft-launcher-core@${newVersion}`);
 }
 
 main(!process.env.CI);
