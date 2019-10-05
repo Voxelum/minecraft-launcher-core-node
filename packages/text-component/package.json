@@ -12,7 +12,7 @@
     },
     "scripts": {
         "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile && npm pack"
+    "build": "npm run compile"
     },
     "dependencies": {
         "@xmcl/common": "file:../common"
