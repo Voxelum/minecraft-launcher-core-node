@@ -317,22 +317,29 @@ async function parse(minecraftPath: MinecraftLocation, version: string): Promise
 async function resolveDependency(path: MinecraftLocation, version: string): Promise<PartialResolvedVersion[]> {
     const folder = typeof path === "string" ? new MinecraftFolder(path) : path;
     const stack: PartialResolvedVersion[] = [];
-    const versionJsonPath = folder.getVersionJson(version);
 
-    async function walk(jsonPath: string, versionName: string) {
+    async function walk(versionName: string) {
+        const jsonPath = folder.getVersionJson(versionName);
         if (!fs.existsSync(jsonPath)) {
             return Promise.reject({
                 type: "MissingVersionJson",
                 version: versionName,
             });
         }
-        const raw = parseVersionJson(await vfs.readFile(jsonPath).then((b) => b.toString()), folder.root);
-        stack.push(raw);
-        if (raw.inheritsFrom) {
-            await walk(folder.getVersionJson(raw.inheritsFrom), raw.inheritsFrom);
+        const contentString = await vfs.readFile(jsonPath).then((b) => b.toString());
+        let nextVersion: string | undefined;
+        try {
+            const raw = parseVersionJson(contentString, folder.root);
+            stack.push(raw);
+            nextVersion = raw.inheritsFrom;
+        } catch (e) {
+            throw { error: "CorruptedVersionJson", version: versionName, message: e.message, json: contentString };
+        }
+        if (nextVersion) {
+            await walk(nextVersion);
         }
     }
-    await walk(versionJsonPath, version);
+    await walk(version);
 
     return stack;
 }
