@@ -5,16 +5,19 @@ import * as fs from "fs";
 import * as path from "path";
 import { Installer } from "./index";
 
-describe.skip("Install", () => {
-    const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
+describe("Install", () => {
+    const root = path.normalize(path.join(__dirname, "..", "..", "temp"));
+    if (!fs.existsSync(root)) {
+        fs.mkdirSync(root);
+    }
     jest.setTimeout(100000000);
 
     async function assertNoError(version: string, loc: MinecraftLocation) {
         const diag = await Version.diagnose(version, loc);
         expect(Object.keys(diag.missingAssets)).toHaveLength(0);
-        expect(diag.missingLibraries.length).toHaveLength(0);
-        assert(!diag.missingAssetsIndex, "Missing Asset Index");
-        assert(!diag.missingVersionJar, "Missing Version Jar");
+        expect(diag.missingLibraries).toHaveLength(0);
+        expect(diag.missingAssetsIndex).toBeFalsy();
+        expect(diag.missingVersionJar).toBeFalsy();
         expect(diag.missingVersionJson).toEqual(diag.missingVersionJson);
     }
     describe("MinecraftClient", () => {

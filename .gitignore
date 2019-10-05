@@ -66,3 +66,5 @@ jspm_packages/
 packages/**/*.js
 packages/**/*.d.ts
 packages/**/*.js.map
+
+/temp

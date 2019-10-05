@@ -1,125 +1,23 @@
-jest.mock("@xmcl/net");
 
 import { Installer } from "@xmcl/installer";
-import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
+import { MinecraftFolder, MinecraftLocation } from "@xmcl/util";
 import { Version } from "@xmcl/version";
-import assert from "assert";
 import { exec } from "child_process";
-import * as fs from "fs";
-import * as path from "path";
-import { ForgeWebPage } from "./forgeweb";
+import { existsSync, mkdirSync, unlinkSync } from "fs";
+import { join, normalize } from "path";
 import { ForgeInstaller } from "./index";
 
 async function assertNoError(version: string, loc: MinecraftLocation) {
     const diag = await Version.diagnose(version, loc);
     expect(Object.keys(diag.missingAssets).length).toHaveLength(0);
     expect(diag.missingLibraries.length).toHaveLength(0);
-    assert(!diag.missingAssetsIndex, "Missing Asset Index");
-    assert(!diag.missingVersionJar, "Missing Version Jar");
+    expect(diag.missingAssetsIndex).toBeFalsy();
+    expect(diag.missingVersionJar).toBeFalsy();
     expect(diag.missingVersionJson).toBe("");
 }
 
-describe("ForgeWebpage", () => {
-    let mockNet: jest.Mocked<typeof import("@xmcl/net")>;
-    beforeEach(() => {
-        mockNet = jest.requireMock("@xmcl/net") as jest.Mocked<typeof import("@xmcl/net")>;
-    });
-    describe("#parse", () => {
-        test("#parse", async () => {
-            const content = await vfs.readFile(path.join(__dirname, "..", "..", "mock", "sample-forge.html"));
-            const page = ForgeWebPage.parse(content.toString());
-            expect(page).toBeTruthy();
-            expect(page.versions).toHaveLength(3);
-            expect(page.mcversion).toEqual("1.14.4");
-            for (const ver of page.versions) {
-                expect(ver.type).toBeTruthy();
-                expect(ver.version).toBeTruthy();
-
-                expect(ver.installer.sha1).toBeTruthy();
-                expect(ver.installer.path).toBeTruthy();
-                expect(ver.installer.md5).toBeTruthy();
-            }
-            const last = page.versions[page.versions.length - 1];
-            expect(last.installer.md5).toEqual("2d24a32cce228d4cf3c42caf2e3cfe37");
-            expect(last.installer.sha1).toEqual("80ffade96232940422cbaf218ce6d424fd9192f2");
-            expect(last.installer.path).toEqual("http://files.minecraftforge.net/maven/net/minecraftforge/forge/1.14.4-28.0.4/forge-1.14.4-28.0.4-installer.jar");
-        });
-    });
-
-    describe("#getWebPage", () => {
-        test("Get Latest", async () => {
-            mockNet.getIfUpdate.mockReturnValue(Promise.resolve({
-                timestamp: "0",
-            }));
-            const page = await ForgeWebPage.getWebPage();
-
-            expect(page).toBeTruthy();
-            expect(mockNet.getIfUpdate).toHaveBeenCalled();
-            expect(mockNet.getIfUpdate).toHaveBeenCalledWith("http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html", ForgeWebPage.parse, undefined);
-
-        });
-        test("Get Specific version", async () => {
-            mockNet.getIfUpdate.mockReturnValue(Promise.resolve({
-                timestamp: "0",
-            }));
-            const page = await ForgeWebPage.getWebPage({ mcversion: "1.12.2" });
-
-            expect(page).toBeTruthy();
-            expect(mockNet.getIfUpdate).toHaveBeenCalled();
-            expect(mockNet.getIfUpdate).toHaveBeenCalledWith("http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_1.12.2.html", ForgeWebPage.parse, undefined);
-        });
-    });
-});
-
-// describe.skip("ForgeWebpage", () => {
-//     test("should get the webpage infomation for 1.12.2", async () => {
-//         mockNet.getIfUpdate.mockReturnValue(Promise.resolve({
-//             timestamp: "0",
-//         }));
-//         const page = await ForgeWebPage.getWebPage({ mcversion: "1.12.2" });
-//         assert(page);
-
-//         expect(mockNet.getIfUpdate).toHaveBeenCalled();
-//         expect(mockNet.getIfUpdate).toHaveBeenCalledWith();
-
-//         const vers = new Set<string>();
-//         for (const v of page.versions) {
-//             assert(v.changelog);
-//             assert(v.universal);
-//             assert(v.mdk);
-//             assert(v.installer);
-//             expect(page.mcversion).toEqual(v.mcversion);
-//             if (vers.has(v.version)) { throw new Error("Should not have duplicated version"); }
-//             vers.add(v.version);
-//         }
-//     });
-
-//     test("should get the webpage infomation for 1.13.2", async () => {
-//         const page = await ForgeWebPage.getWebPage({ mcversion: "1.13.2" });
-//         assert(page);
-
-//         const vers = new Set<string>();
-//         for (const v of page.versions) {
-//             assert(v.universal);
-//             assert(v.installer);
-//             expect(page.mcversion).toEqual(v.mcversion);
-//             if (vers.has(v.version)) { throw new Error("Should not have duplicated version"); }
-//             vers.add(v.version);
-//         }
-//     });
-
-//     test("should not fetch duplicate forge version", async () => {
-//         const first = await ForgeWebPage.getWebPage();
-//         const sec = await ForgeWebPage.getWebPage({ fallback: first });
-
-//         expect(first.timestamp).toEqual(sec.timestamp);
-//     });
-// });
-
-
-describe.skip("ForgeInstaller", () => {
-    const assets = path.normalize(path.join(__dirname, "..", "..", "mock"));
-    const gameDirectory = path.join(assets, "temp");
+describe("ForgeInstaller", () => {
+    const gameDirectory = normalize(join(__dirname, "..", "..", "temp"));
 
     jest.setTimeout(100000000);
 
@@ -146,8 +44,8 @@ describe.skip("ForgeInstaller", () => {
     });
     test("should install forge on 1.12.2", async () => {
         beforeAll(() => {
-            if (fs.existsSync(`${gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`)) {
-                fs.unlinkSync(`${gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`);
+            if (existsSync(`${gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`)) {
+                unlinkSync(`${gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`);
             }
         });
         const meta: ForgeInstaller.VersionMeta = {
@@ -172,11 +70,11 @@ describe.skip("ForgeInstaller", () => {
     });
     test("should install forge 1.13.2-25.0.209", async () => {
         beforeAll(async () => {
-            if (fs.existsSync(`${gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`)) {
-                fs.unlinkSync(`${gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`);
+            if (existsSync(`${gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`)) {
+                unlinkSync(`${gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`);
             }
-            if (!fs.existsSync(`${gameDirectory}/temps`)) {
-                fs.mkdirSync(`${gameDirectory}/temps`);
+            if (!existsSync(`${gameDirectory}/temps`)) {
+                mkdirSync(`${gameDirectory}/temps`);
             }
 
             try {
@@ -214,11 +112,11 @@ describe.skip("ForgeInstaller", () => {
 
     test("should install forge 1.14.4-forge-28.0.45", async () => {
         beforeAll(async () => {
-            if (fs.existsSync(`${gameDirectory}/versions/1.14.4-forge-28.0.45/1.14.4-forge-28.0.45.json`)) {
-                fs.unlinkSync(`${gameDirectory}/versions/1.14.4-forge-28.0.45/1.14.4-forge-28.0.45.json`);
+            if (existsSync(`${gameDirectory}/versions/1.14.4-forge-28.0.45/1.14.4-forge-28.0.45.json`)) {
+                unlinkSync(`${gameDirectory}/versions/1.14.4-forge-28.0.45/1.14.4-forge-28.0.45.json`);
             }
-            if (!fs.existsSync(`${gameDirectory}/temps`)) {
-                fs.mkdirSync(`${gameDirectory}/temps`);
+            if (!existsSync(`${gameDirectory}/temps`)) {
+                mkdirSync(`${gameDirectory}/temps`);
             }
 
             try {
@@ -246,8 +144,8 @@ describe.skip("ForgeInstaller", () => {
             },
         };
         const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory), {
-            tempDir: `${gameDirectory}/temps`,
-            clearTempDirAfterInstall: false,
+            // tempDir: `${gameDirectory}/temps`,
+            // clearTempDirAfterInstall: false,
         });
         await Installer.installDependencies(await Version.parse(gameDirectory, result));
         await assertNoError(result, gameDirectory);

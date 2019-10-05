@@ -36,7 +36,7 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
     return new Promise((resolve, reject) => {
         process.stdout.on("data", (chunk) => {
             const content = chunk.toString();
-            console.log(content);
+            // console.log(content);
             for (let i = 0; i < hints.length; i++) {
                 if (content.indexOf(hints[i]) !== -1) {
                     found[i] = true;
@@ -61,12 +61,11 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
 
 
 describe("Launcher", () => {
-    const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
+    const root = path.normalize(path.join(__dirname, "..", "..", "temp"));
     let javaPath: string;
     let javaVersion: number;
     let testOnJava: typeof test = test;
     let testOnOldJava: typeof test = test;
-
 
     jest.setTimeout(10000000);
 
@@ -89,6 +88,10 @@ describe("Launcher", () => {
         if (javaVersion > 8) {
             testOnOldJava = test.skip;
         }
+        if (process.env.CI) {
+            testOnJava = test.skip;
+            testOnOldJava = test.skip;
+        }
     });
     describe("#generateArgumentsServer", () => {
         test("should generate command arguments", async () => {
@@ -101,22 +104,15 @@ describe("Launcher", () => {
             expect(args[0]).toEqual("/test/java");
         });
     });
-    describe.skip("#ensureLibraries", () => {
-        jest.mock("@xmcl/util");
+    describe("#ensureLibraries", () => {
         test("should check all libraries", async () => {
-            const mockUtil = jest.requireMock("@xmcl/util") as jest.Mocked<typeof import("@xmcl/util")>;
-
-            mockUtil.missing.mockReturnValue(Promise.resolve(false));
-
-            await expect(Launcher.ensureLibraries(new MinecraftFolder("/"), await Version.parse(root, "1.7.10")))
+            await expect(Launcher.ensureLibraries(new MinecraftFolder(root),
+                await Version.parse(root, "1.7.10")))
                 .resolves
-                .toBeTruthy();
-
-            expect(mockUtil.missing).toHaveBeenCalled();
+                .toBeUndefined();
         });
-        jest.unmock("@xmcl/util");
     });
-    describe.skip("#launchServer", () => {
+    describe("#launchServer", () => {
         test("should launch server", async () => {
             const proc = await Launcher.launchServer({
                 javaPath,
@@ -236,7 +232,7 @@ describe("Launcher", () => {
     //     const ver = await Version.parse(loc, "1.13.2");
     //     await Launcher.ensureNative(loc, ver);
     // });
-    describe.skip("#launch", () => {
+    describe("#launch", () => {
         describe("1.17.10", () => {
             testOnJava("should launch with forge", async () => {
                 const option = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath: "D:\\jvm\\bin\\java" };
@@ -282,7 +278,7 @@ describe("Launcher", () => {
         describe("1.14.4", () => {
             testOnJava("should launch normal minecraft", async () => {
                 const option = { version: "1.14.4", gamePath: root, javaPath };
-                await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Built for minecraft version 1.14.2");
+                await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Built for minecraft version 1.14.4");
             });
         });
     });
