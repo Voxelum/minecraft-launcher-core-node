@@ -10,7 +10,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
-    if: github.event.pull_request.merged && github.head_ref == 'prepare-release' && github.event.pull_request.user == 'github-actions[bot]'
+    if: github.event.pull_request.merged && github.head_ref == 'prepare-release' && github.event.pull_request.user.login == 'github-actions[bot]'
 
     strategy:
       matrix:
