@@ -405,7 +405,7 @@ export namespace Launcher {
             }
         } else {
             await Promise.all(natives.map(extractJar));
-            const checkSumContent = await Promise.all(extractedNatives.map(async (n) => ({ ...n, sha1: await computeChecksum(path.join(native, n.name)) })));
+            const checkSumContent = await Promise.all(extractedNatives.map(async (n) => ({ ...n, sha1: await computeChecksum(path.join(native, n.file)) })));
             const targetContent = JSON.stringify(checkSumContent);
             await vfs.writeFile(checksumFile, targetContent);
         }
