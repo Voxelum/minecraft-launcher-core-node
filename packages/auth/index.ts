@@ -160,8 +160,11 @@ export namespace Auth {
         export function validate(option: { accessToken: string, clientToken?: string }, api: API = API_MOJANG): Promise<boolean> {
             return request(api.hostName, api.validate, Object.assign({}, option))
                 .then((s) => s.body.error === undefined, (error) => {
+                    if (error.error === "ForbiddenOperationException") {
+                        return false;
+                    }
                     if (error.body) {
-                        if (error.body.errorMessage === "Invalid token.") {
+                        if (error.body.errorMessage === "Invalid token" || error.body.errorMessage === "Invalid token.") {
                             return false;
                         }
                         throw error.body;
