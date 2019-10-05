@@ -69,16 +69,14 @@ async function bumpPackages(packages) {
 }
 
 function bumpDependenciesPackage(affectedMapping, packages) {
-    for (const package of packages) {
+    for (const package of packages.filter(package => package.newVersion && package.releaseType)) {
         // only major & minor change affect the dependents packages update
-        if (package.newVersion && (package.releaseType === 'minor' || package.releaseType === 'major')) {
-            const allAffectedPackages = affectedMapping[package.name];
-            for (const affectedPackage of allAffectedPackages) {
-                if (affectedPackage.newVersion) continue;
-                const affectedPackageJSON = affectedPackage.package;
-                const newVersion = semver.inc(affectedPackageJSON.version, 'patch');
-                affectedPackage.newVersion = newVersion;
-            }
+        const allAffectedPackages = affectedMapping[package.name];
+        for (const affectedPackage of allAffectedPackages) {
+            if (affectedPackage.newVersion) continue;
+            const affectedPackageJSON = affectedPackage.package;
+            const newVersion = semver.inc(affectedPackageJSON.version, 'patch');
+            affectedPackage.newVersion = newVersion;
         }
     }
 }
