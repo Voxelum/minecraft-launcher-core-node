@@ -12,8 +12,8 @@
   "license": "MIT",
   "scripts": {
     "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile && npm pack",
+    "build": "npm run compile",
     "test": ""
   },
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
