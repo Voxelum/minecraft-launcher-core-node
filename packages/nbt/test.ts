@@ -497,4 +497,114 @@ describe("NBT", () => {
     //         // console.log(checkExists(ourTag.get('TheEnd')).asTagString().value); // print That's all
     //     });
     // });
+
+    describe("TagCompound", () => {
+        test("access", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagInt(1) });
+            tag.value.a = NBT.tagInt(2);
+            tag.value.a = NBT.tagShort(2);
+            tag.value.a = NBT.tagByte(2);
+            tag.value.a = NBT.tagFloat(2);
+            tag.value.a = NBT.tagDouble(2);
+            tag.value.a = NBT.tagString("2");
+            tag.value.a = NBT.tagLong(new Long(2));
+            tag.value.a = NBT.tagByteArray(new Uint8Array([]));
+            tag.value.a = NBT.tagIntArray(new Int32Array([]));
+            tag.value.a = NBT.tagLongArray([new Long(1)]);
+
+            expect(() => tag.value.a = { type: 13, value: 1 } as any)
+                .toThrowError();
+            expect(() => tag.value.a = { type: {}, value: 1 } as any)
+                .toThrowError();
+            expect(() => tag.value.a = { type: NBT.TagType.Long, value: 1 } as any)
+                .toThrowError();
+        });
+    });
+    describe("TagByteArray", () => {
+        const object = {
+            value: new Uint8Array([1, 2, 3]),
+        };
+        Object.defineProperty(object, "__nbtPrototype__", {
+            value: { value: NBT.TagType.ByteArray },
+        });
+        test("read", () => {
+            NBT.Persistence.serialize({} as any);
+        });
+    });
+    describe("NBTTagListIO", () => {
+        describe("Primative type", () => {
+            let buffer: Buffer;
+            const object = {
+                value: [1, 2, 3],
+            };
+            Object.defineProperty(object, "__nbtPrototype__", {
+                value: { value: [NBT.TagType.Int] },
+            });
+            test("save", async () => {
+                buffer = await NBT.Persistence.serialize(object as any);
+                expect(buffer).toBeTruthy();
+                expect(buffer).toBeInstanceOf(Buffer);
+            });
+            test("load", async () => {
+                const result = await NBT.Persistence.deserialize(buffer, false);
+                expect(result).toStrictEqual(object);
+            });
+        });
+        describe("Object type", () => {
+            let buffer: Buffer;
+            const object = {
+                value: [{ x: 1 }, { x: 2 }, { x: 3 }],
+            };
+            Object.defineProperty(object, "__nbtPrototype__", {
+                value: { value: [{ x: NBT.TagType.Int }] },
+            });
+            test("save", async () => {
+                buffer = await NBT.Persistence.serialize(object as any);
+                expect(buffer).toBeTruthy();
+                expect(buffer).toBeInstanceOf(Buffer);
+            });
+            test("load", async () => {
+                const result = await NBT.Persistence.deserialize(buffer, false);
+                expect(result).toStrictEqual(object);
+            });
+        });
+        describe("Custom type", () => {
+            let buffer: Buffer;
+            const object = {
+                value: [{ x: 1 }, { x: 2 }, { x: 3 }],
+            };
+            const serializer = NBT.Persistence.createSerializer();
+            serializer.register("custom", { x: NBT.TagType.Int });
+            serializer.register("type", { value: ["custom"] });
+            test("save", async () => {
+                buffer = await serializer.serialize(object, "type");
+                expect(buffer).toBeTruthy();
+                expect(buffer).toBeInstanceOf(Buffer);
+            });
+            test("load", async () => {
+                const result = await serializer.deserialize(buffer, false);
+                expect(result.value).toStrictEqual(object);
+            });
+        });
+        describe("Unknown type", () => {
+            const object = {
+                value: [{ x: 1 }, { x: 2 }, { x: 3 }],
+            };
+            Object.defineProperty(object, "__nbtPrototype__", {
+                value: { value: null },
+            });
+            test("save", async () => {
+                await expect(NBT.Persistence.serialize(object as any))
+                    .rejects
+                    .toEqual({
+                        message: "Require Compound but found object",
+                        type: "IllegalInputType",
+                    });
+            });
+            // test("load", async () => {
+            //     const result = await NBT.Persistence.deserialize(buffer, false);
+            //     expect(result).not.toStrictEqual(object);
+            // });
+        });
+    });
 });
