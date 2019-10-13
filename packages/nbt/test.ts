@@ -95,7 +95,7 @@ describe("NBT", () => {
         assert.deepEqual(matchedInput, reversedDirect, "reversed direct");
     });
 
-    describe("CommonAPI", () => {
+    describe("TagCreation", () => {
         test("tagCompound", () => {
             const compound = NBT.tagCompound({ a: NBT.tagByte(1) });
             expect(compound).toBeTruthy();
@@ -103,6 +103,173 @@ describe("NBT", () => {
             expect(compound.value.a.value).toEqual(1);
             expect(compound.type).toBe(NBT.TagType.Compound);
         });
+        test("tagShort", () => {
+            const tag = NBT.tagShort(1);
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.Short);
+            expect(tag.value).toEqual(1);
+        });
+        test("tagInt", () => {
+            const tag = NBT.tagInt(1);
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.Int);
+            expect(tag.value).toEqual(1);
+        });
+        test("tagLong", () => {
+            const tag = NBT.tagLong(Long.fromInt(1));
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.Long);
+            expect(tag.value).toEqual(Long.fromInt(1));
+        });
+        test("tagFloat", () => {
+            const tag = NBT.tagFloat(1.1);
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.Float);
+            expect(tag.value).toEqual(1.1);
+        });
+        test("tagDouble", () => {
+            const tag = NBT.tagDouble(1.1);
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.Double);
+            expect(tag.value).toEqual(1.1);
+        });
+        test("tagIntArray", () => {
+            const tag = NBT.tagIntArray(new Int32Array([1, 2, 3]));
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.IntArray);
+            expect(tag.value).toEqual(new Int32Array([1, 2, 3]));
+        });
+        test("tagByteArray", () => {
+            const tag = NBT.tagByteArray(new Uint8Array([1, 2, 3]));
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.ByteArray);
+            expect(tag.value).toEqual(new Uint8Array([1, 2, 3]));
+        });
+        test("tagLongArray", () => {
+            const tag = NBT.tagLongArray([Long.fromInt(1), Long.fromInt(2)]);
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.LongArray);
+            expect(tag.value).toEqual([Long.fromInt(1), Long.fromInt(2)]);
+        });
+        test("tagString", () => {
+            const tag = NBT.tagString("abc");
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.String);
+            expect(tag.value).toEqual("abc");
+        });
+        test("tagList", () => {
+            const tag = NBT.tagList<NBT.TagByte>(NBT.TagType.Byte, [NBT.tagByte(1), NBT.tagByte(2), NBT.tagByte(3)]);
+            expect(tag).toBeTruthy();
+            expect(tag.type).toEqual(NBT.TagType.List);
+            expect(tag.value).toEqual(NBT.tagList<NBT.TagByte>(NBT.TagType.Byte, [NBT.tagByte(1), NBT.tagByte(2), NBT.tagByte(3)]));
+        });
+    });
+    describe("TagList", () => {
+        test("#push", () => {
+            NBT.tagList(NBT.TagType.Int, []);
+        });
+    });
+    describe("TagCompound", () => {
+        test("#getByte", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagByte(1) });
+            const result = tag.getByte("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(1);
+        });
+        test("#getShort", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagShort(1) });
+            const result = tag.getShort("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(1);
+        });
+        test("#getInt", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagInt(1) });
+            const result = tag.getInt("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(1);
+        });
+        test("#getLong", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagLong(Long.fromInt(1)) });
+            const result = tag.getLong("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(Long.fromInt(1));
+        });
+        test("#getFloat", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagFloat(1.1) });
+            const result = tag.getFloat("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(1.1);
+        });
+        test("#getDouble", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagDouble(1) });
+            const result = tag.getDouble("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(1);
+        });
+        test("#getString", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagString("sss") });
+            const result = tag.getString("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual("sss");
+        });
+
+
+        test("#setByte", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagByte(1) });
+            tag.setByte("a", 2);
+            const result = tag.getByte("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(2);
+        });
+        test("#setShort", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagShort(1) });
+            tag.setShort("a", 2);
+            const result = tag.getShort("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(2);
+        });
+        test("#setInt", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagInt(1) });
+            tag.setInt("a", 2);
+            const result = tag.getInt("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(2);
+        });
+        test("#setLong", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagLong(Long.fromInt(1)) });
+            tag.setLong("a", Long.fromInt(2));
+            const result = tag.getLong("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(Long.fromInt(2));
+        });
+        test("#setFloat", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagFloat(1.1) });
+            tag.setFloat("a", 2.2);
+            const result = tag.getFloat("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(2.2);
+        });
+        test("#setDouble", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagDouble(1) });
+            tag.setDouble("a", 2.2);
+            const result = tag.getDouble("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual(2.2);
+        });
+        test("#setString", () => {
+            const tag = NBT.tagCompound({ a: NBT.tagString("sss") });
+            tag.setString("a", "zzz");
+            const result = tag.getString("a");
+            expect(result.isPresent()).toBeTruthy();
+            expect(result.get()).toEqual("zzz");
+        });
+
+        // test("#getByte", () => {
+        //     const tag = NBT.tagCompound({ a: NBT.tagByte(1) });
+        //     const result = tag.getByte("a");
+        //     expect(result.isPresent()).toBeTruthy();
+        //     expect(result.get()).toEqual(1);
+        // });
     });
 
 
