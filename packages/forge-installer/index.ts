@@ -371,7 +371,7 @@ export namespace ForgeInstaller {
             const forgeVersion = `${version.mcversion}-${version.version}`;
             const installerURL = `${maven}${version.installer.path}`;
             const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
-            const installJar = mc.getLibraryByPath(version.installer.path.substring(version.installer.path.indexOf("/")));
+            const installJar = mc.getLibraryByPath(version.installer.path.substring(version.installer.path.indexOf("/") + 1));
 
             let versionId: string;
             let profile!: InstallProfile;
