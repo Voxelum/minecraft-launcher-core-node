@@ -161,7 +161,9 @@ describe("NBT", () => {
             const tag = NBT.tagList<NBT.TagByte>(NBT.TagType.Byte, [NBT.tagByte(1), NBT.tagByte(2), NBT.tagByte(3)]);
             expect(tag).toBeTruthy();
             expect(tag.type).toEqual(NBT.TagType.List);
-            expect(tag.value).toEqual(NBT.tagList<NBT.TagByte>(NBT.TagType.Byte, [NBT.tagByte(1), NBT.tagByte(2), NBT.tagByte(3)]));
+            expect(tag[0]).toEqual(NBT.tagByte(1));
+            expect(tag[1]).toEqual(NBT.tagByte(2));
+            expect(tag[2]).toEqual(NBT.tagByte(3));
         });
     });
     describe("TagList", () => {

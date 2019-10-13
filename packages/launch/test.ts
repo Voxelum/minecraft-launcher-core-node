@@ -99,7 +99,7 @@ describe("Launcher", () => {
         }
     });
     describe("#generateArgumentsServer", () => {
-        test("should generate command arguments", async () => {
+        testOnJava("should generate command arguments", async () => {
             const args = await Launcher.generateArgumentsServer({
                 javaPath: "/test/java",
                 path: root,
@@ -118,7 +118,7 @@ describe("Launcher", () => {
         });
     });
     describe("#launchServer", () => {
-        test("should launch server", async () => {
+        testOnJava("should launch server", async () => {
             const proc = await Launcher.launchServer({
                 javaPath,
                 path: root,
@@ -240,7 +240,7 @@ describe("Launcher", () => {
     describe("#launch", () => {
         describe("1.17.10", () => {
             testOnJava("should launch with forge", async () => {
-                const option = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath: "D:\\jvm\\bin\\java" };
+                const option = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath };
                 await waitGameProcess(await Launcher.launch(option), "OpenAL initialized.");
             });
         });
@@ -267,7 +267,6 @@ describe("Launcher", () => {
                 const option = { version: "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
                 await waitGameProcess(await Launcher.launch(option), "LiteLoader begin POSTINIT");
             });
-
             testOnOldJava("should launch forge liteloader minecraft", async () => {
                 const option = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
                 await waitGameProcess(await Launcher.launch(option), "LiteLoader begin POSTINIT", "[main/INFO] [FML]: Itemstack injection complete");

@@ -116,8 +116,6 @@ export interface VersionDiagnosis {
 
 declare module "@xmcl/common/version" {
     namespace Version {
-        export type Resolved = ResolvedVersion;
-
         /**
          * Check if all the rules in `Rule[]` are acceptable in certain OS `platform` and features.
          * @param rules The rules usually comes from `Library` or `LaunchArgument`
