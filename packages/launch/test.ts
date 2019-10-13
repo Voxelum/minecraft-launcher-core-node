@@ -70,6 +70,11 @@ describe("Launcher", () => {
     jest.setTimeout(10000000);
 
     beforeAll(async function () {
+        if (process.env.CI) {
+            testOnJava = test.skip;
+            testOnOldJava = test.skip;
+            return;
+        }
         if (process.env.JAVA_HOME) {
             javaPath = `${process.env.JAVA_HOME}/bin/java`;
             if (process.env.ENV && process.env.ENV === "TRAVIS") {
