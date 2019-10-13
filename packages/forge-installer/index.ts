@@ -332,7 +332,15 @@ export namespace ForgeInstaller {
             profile = postProcessInstallProfile(mc, profile);
 
             const parsedLibs = Version.resolveLibraries([...profile.libraries, ...versionJson.libraries]);
-            await context.execute("downloadLibraries", Installer.installLibrariesDirectTask(parsedLibs, mc, installLibOption).work);
+            await context.execute("downloadLibraries", Installer.installLibrariesDirectTask(parsedLibs, mc, {
+                ...installLibOption,
+                libraryHost: installLibOption.libraryHost ? (l) => {
+                    if (l.artifactId === "forge" && l.groupId === "net.minecraftforge") {
+                        return `file://${mc.getLibraryByPath(l.path)}`;
+                    }
+                    return installLibOption.libraryHost!(l);
+                } : undefined,
+            }).work);
 
             await context.execute("postProcessing", async (ctx) => {
                 ctx.update(0, profile.processors.length);
@@ -356,42 +364,36 @@ export namespace ForgeInstaller {
         };
     }
 
-    function installByInstallerTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string, installLibOption: Installer.LibraryOption, java: JavaExecutor, tempDir?: string, clearTempDir: boolean = true) {
+    function installByInstallerTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string, installLibOption: Installer.LibraryOption, java: JavaExecutor) {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
+
             const forgeVersion = `${version.mcversion}-${version.version}`;
-            let versionId: string;
-
-            const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
             const installerURL = `${maven}${version.installer.path}`;
+            const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
+            const installJar = mc.getLibraryByPath(version.installer.path.substring(version.installer.path.indexOf("/")));
 
-            function downloadInstallerTask(installer: string, dest: string) {
-                return async (ctx: Task.Context) => {
-                    let inStream;
-                    if (await vfs.validate(dest, { algorithm: "md5", hash: version.installer.md5 }, { algorithm: "sha1", hash: version.installer.sha1 })) {
-                        inStream = vfs.createReadStream(dest);
-                    }
-                    if (!inStream) {
-                        inStream = got.stream(installer, {
-                            method: "GET",
-                            headers: { connection: "keep-alive" },
-                        }).on("error", () => { })
-                            .on("downloadProgress", (progress) => { ctx.update(progress.transferred, progress.total as number); });
-
-                        inStream.pipe(vfs.createWriteStream(dest));
-                    }
-
-                    return inStream.pipe(Unzip.createParseStream({ lazyEntries: true }))
-                        .wait();
-                };
-            }
-
-            const temp = tempDir || await vfs.mkdtemp(mc.root + path.sep);
-            await vfs.ensureDir(temp);
-            const installJar = path.join(temp, "forge-installer.jar");
+            let versionId: string;
             let profile!: InstallProfile;
             let versionJson!: Version;
 
+            function downloadInstallerTask(installer: string, dest: string) {
+                return async (ctx: Task.Context) => {
+                    if (!await vfs.validate(dest, { algorithm: "md5", hash: version.installer.md5 }, { algorithm: "sha1", hash: version.installer.sha1 })) {
+                        const inStream = got.stream(installer, {
+                            method: "GET",
+                            headers: { connection: "keep-alive" },
+                        }).on("error", (e) => {
+                            console.error(`Error to open download stream for forge installer ${installer}`);
+                            console.error(e);
+                        }).on("downloadProgress", (progress) => {
+                            ctx.update(progress.transferred, progress.total as number);
+                        });
+                        await vfs.waitStream(inStream.pipe(vfs.createWriteStream(dest)));
+                    }
+                    return vfs.createReadStream(dest).pipe(Unzip.createParseStream({ lazyEntries: true })).wait();
+                };
+            }
             async function processVersion(zip: Unzip.ZipFile, installProfileEntry: Unzip.Entry, versionEntry: Unzip.Entry, clientDataEntry: Unzip.Entry) {
                 profile = await zip.readEntry(installProfileEntry).then((b) => b.toString()).then(JSON.parse);
                 versionJson = await zip.readEntry(versionEntry).then((b) => b.toString()).then(JSON.parse);
@@ -415,6 +417,7 @@ export namespace ForgeInstaller {
                 await vfs.ensureFile(file);
                 await vfs.waitStream(s.pipe(vfs.createWriteStream(file)));
             }
+
             try {
                 let zip: Unzip.LazyZipFile;
                 try {
@@ -451,15 +454,13 @@ export namespace ForgeInstaller {
 
                 return versionId!;
             } catch (e) {
-                if (clearTempDir) {
-                    await vfs.remove(temp);
-                }
+                console.error(`Cannot install forge by installer ${version.version}`);
                 throw e;
             }
         };
     }
 
-    function installByUniversalTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string, checkDependecies: boolean) {
+    function installByUniversalTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string) {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const forgeVersion = `${version.mcversion}-${version.version}`;
@@ -515,11 +516,6 @@ export namespace ForgeInstaller {
                 await vfs.unlink(jarPath);
             }
 
-            if (checkDependecies) {
-                const resolvedVersion = await Version.parse(minecraft, fullVersion!);
-                await context.execute("installDependencies", Installer.installDependenciesTask(resolvedVersion).work);
-            }
-
             return fullVersion!;
         };
     }
@@ -546,18 +542,15 @@ export namespace ForgeInstaller {
      */
     export function installTask(version: VersionMeta, minecraft: MinecraftLocation, option: {
         maven?: string,
-        forceInstallDependencies?: boolean,
         java?: JavaExecutor,
-        tempDir?: string,
-        clearTempDirAfterInstall?: boolean,
     } & Installer.LibraryOption = {}): Task<string> {
         let byInstaller = true;
         try {
             const minorVersion = Number.parseInt(version.mcversion.split(".")[1], 10);
             byInstaller = minorVersion >= 13;
         } catch { }
-        const work = byInstaller ? installByInstallerTask(version, minecraft, option.maven || DEFAULT_FORGE_MAVEN, option, option.java || JavaExecutor.createSimple("java"), option.tempDir, option.clearTempDirAfterInstall)
-            : installByUniversalTask(version, minecraft, option.maven || DEFAULT_FORGE_MAVEN, option.forceInstallDependencies === true);
+        const work = byInstaller ? installByInstallerTask(version, minecraft, option.maven || DEFAULT_FORGE_MAVEN, option, option.java || JavaExecutor.createSimple("java"))
+            : installByUniversalTask(version, minecraft, option.maven || DEFAULT_FORGE_MAVEN);
         return Task.create("installForge", work);
     }
 }
