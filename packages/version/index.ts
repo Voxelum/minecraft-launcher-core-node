@@ -466,7 +466,7 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
         const missingAssets: { [object: string]: string } = {};
 
         if (!missingAssetsIndex) {
-            const objects = (await fs.promises.readFile(assetsIndexPath).then((b) => b.toString()).then(JSON.parse)).objects;
+            const objects = (await vfs.readFile(assetsIndexPath).then((b) => b.toString()).then(JSON.parse)).objects;
             const files = Object.keys(objects);
             const assetsMask = await context.execute("checkAssets", () => Promise.all(files.map(async (object) => {
                 const { hash } = objects[object];
