@@ -459,6 +459,7 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
         const missingAssetsIndex = !await context.execute("checkAssetIndex", async () => validate(assetsIndexPath, resolvedVersion.assetIndex.sha1));
         const libMask = await context.execute("checkLibraries", () => Promise.all(resolvedVersion.libraries.map(async (lib) => {
             const libPath = minecraft.getLibraryByPath(lib.download.path);
+            if (lib.download.sha1 === "") { return true; }
             return vfs.validate(libPath, { algorithm: "sha1", hash: lib.download.sha1 });
         })));
         const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
