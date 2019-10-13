@@ -70,7 +70,7 @@ describe("Launcher", () => {
     jest.setTimeout(10000000);
 
     beforeAll(async function () {
-        if (process.env.CI) {
+        if (process.env.CI || process.env.GITHUB_WORKFLOW) {
             testOnJava = test.skip;
             testOnOldJava = test.skip;
             return;
