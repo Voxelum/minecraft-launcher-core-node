@@ -36,9 +36,7 @@ describe("ForgeInstaller", () => {
             },
             mcversion: "1.7.10",
         };
-        const result = await ForgeInstaller.install(meta, gameDirectory, {
-            tempDir: `${gameDirectory}/`,
-        });
+        const result = await ForgeInstaller.install(meta, gameDirectory);
         expect(result).toEqual("1.7.10-Forge10.13.3.1400-1.7.10");
         await expect(vfs.exists(join(gameDirectory, "versions", "1.7.10-Forge10.13.3.1400-1.7.10", "1.7.10-Forge10.13.3.1400-1.7.10.json")))
             .resolves
@@ -64,9 +62,7 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-installer.jar",
             },
         };
-        const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory), {
-            tempDir: `${gameDirectory}/`,
-        });
+        const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory));
         expect(result).toEqual("1.12.2-forge1.12.2-14.23.5.2823");
         await expect(vfs.exists(join(gameDirectory, "versions", "1.12.2-forge1.12.2-14.23.5.2823", "1.12.2-forge1.12.2-14.23.5.2823.json")))
             .resolves
@@ -97,10 +93,7 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.13.2-25.0.209/forge-1.13.2-25.0.209-installer.jar",
             },
         };
-        const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory), {
-            tempDir: `${gameDirectory}/temps`,
-            clearTempDirAfterInstall: false,
-        });
+        const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory));
         expect(result).toEqual("1.13.2-forge1.13.2-25.0.209");
         await expect(vfs.exists(join(gameDirectory, "versions", "1.13.2-forge1.13.2-25.0.209", "1.13.2-forge1.13.2-25.0.209.json")))
             .resolves
@@ -132,10 +125,7 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.14.4-28.0.45/forge-1.14.4-28.0.45-installer.jar",
             },
         };
-        const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory), {
-            // tempDir: `${gameDirectory}/temps`,
-            // clearTempDirAfterInstall: false,
-        });
+        const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory));
         expect(result).toEqual("1.14.4-forge-28.0.45");
         await expect(vfs.exists(join(gameDirectory, "versions", "1.14.4-forge-28.0.45", "1.14.4-forge-28.0.45.json")))
             .resolves

@@ -389,6 +389,7 @@ export namespace ForgeInstaller {
                         }).on("downloadProgress", (progress) => {
                             ctx.update(progress.transferred, progress.total as number);
                         });
+
                         await vfs.waitStream(inStream.pipe(vfs.createWriteStream(dest)));
                     }
                     return vfs.createReadStream(dest).pipe(Unzip.createParseStream({ lazyEntries: true })).wait();
@@ -527,10 +528,7 @@ export namespace ForgeInstaller {
      */
     export function install(version: VersionMeta, minecraft: MinecraftLocation, option?: {
         maven?: string,
-        forceCheckDependencies?: boolean,
         java?: JavaExecutor,
-        tempDir?: string,
-        clearTempDirAfterInstall?: boolean,
     }) {
         return installTask(version, minecraft, option).execute();
     }
