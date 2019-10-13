@@ -463,7 +463,9 @@ export namespace ForgeInstaller {
         return async (context: Task.Context) => {
             const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
             const forgeVersion = `${version.mcversion}-${version.version}`;
-            const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`);
+            const paths = version.universal.path.split("/");
+            const realForgeVersion = paths[paths.length - 2];
+            const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${realForgeVersion}/forge-${realForgeVersion}.jar`);
             let fullVersion: string;
             let realJarPath: string;
 
@@ -498,7 +500,10 @@ export namespace ForgeInstaller {
                     realJarPath = mc.getLibraryByPath(Version.getLibraryInfo(raw.libraries.find((l: any) => l.name.startsWith("net.minecraftforge:forge"))).path);
 
                     await vfs.ensureDir(rootPath);
-                    await vfs.writeFile(path.join(rootPath, `${id}.json`), buf);
+                    const jsonPath = path.join(rootPath, `${id}.json`);
+                    if (await vfs.missing(jsonPath)) {
+                        await vfs.writeFile(jsonPath, buf);
+                    }
                 } else {
                     throw new Error(`Cannot install forge json for ${version.version} since the version json is missing!`);
                 }
@@ -512,7 +517,7 @@ export namespace ForgeInstaller {
 
             if (checkDependecies) {
                 const resolvedVersion = await Version.parse(minecraft, fullVersion!);
-                context.execute("installDependencies", Installer.installDependenciesTask(resolvedVersion).work);
+                await context.execute("installDependencies", Installer.installDependenciesTask(resolvedVersion).work);
             }
 
             return fullVersion!;
