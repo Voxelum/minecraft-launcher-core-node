@@ -2,7 +2,7 @@ import { MinecraftFolder } from "@xmcl/util";
 import * as path from "path";
 import { LiteLoader } from "./index";
 
-describe.skip("Liteloader", async () => {
+describe.skip("Liteloader", () => {
     const root = path.normalize(path.join(__dirname, "..", "..", "temp"));
 
     jest.setTimeout(100000000);
