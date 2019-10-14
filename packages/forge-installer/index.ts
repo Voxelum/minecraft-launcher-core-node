@@ -1,10 +1,10 @@
 import { Installer } from "@xmcl/installer";
-import { downloadFileWork, got } from "@xmcl/net";
+import { downloadFileIfAbsentWork, downloadFileWork } from "@xmcl/net";
 import Task from "@xmcl/task";
 import Unzip from "@xmcl/unzip";
 import { JavaExecutor, MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 import { Version } from "@xmcl/version";
-import * as path from "path";
+import { delimiter, join } from "path";
 import { Readable } from "stream";
 
 async function findMainClass(lib: string) {
@@ -145,7 +145,7 @@ export namespace ForgeInstaller {
 
         let prof: InstallProfile | undefined;
         if (typeof versionOrProfile === "string") {
-            const installProfPath = path.join(verRoot, "install_profile.json");
+            const installProfPath = join(verRoot, "install_profile.json");
             if (await vfs.exists(installProfPath)) {
                 prof = JSON.parse(await vfs.readFile(installProfPath).then((b) => b.toString()));
             }
@@ -229,7 +229,7 @@ export namespace ForgeInstaller {
         const jarRealPath = mc.getLibraryByPath(Version.getLibraryInfo(proc.jar).path);
         const mainClass = await findMainClass(jarRealPath);
         if (!mainClass) { throw new Error(`Cannot find main class for processor ${proc.jar}.`); }
-        const cp = [...proc.classpath, proc.jar].map(Version.getLibraryInfo).map((p) => mc.getLibraryByPath(p.path)).join(path.delimiter);
+        const cp = [...proc.classpath, proc.jar].map(Version.getLibraryInfo).map((p) => mc.getLibraryByPath(p.path)).join(delimiter);
         const cmd = ["-cp", cp, mainClass, ...proc.args];
         await java(cmd);
         let failed = false;
@@ -275,8 +275,8 @@ export namespace ForgeInstaller {
 
             if (key === "BINPATCH") {
                 const verRoot = mc.getVersionRoot(profile.version);
-                value.client = path.join(verRoot, value.client);
-                value.server = path.join(verRoot, value.server);
+                value.client = join(verRoot, value.client);
+                value.server = join(verRoot, value.server);
             }
         }
         for (const proc of profile.processors) {
@@ -307,7 +307,7 @@ export namespace ForgeInstaller {
             let ver: Version;
             if (typeof version === "string") {
                 const versionRoot = mc.getVersionRoot(version);
-                prof = await vfs.readFile(path.join(versionRoot, "install_profile.json")).then((b) => b.toString()).then(JSON.parse);
+                prof = await vfs.readFile(join(versionRoot, "install_profile.json")).then((b) => b.toString()).then(JSON.parse);
             } else {
                 prof = version;
             }
@@ -371,7 +371,7 @@ export namespace ForgeInstaller {
             const forgeVersion = `${version.mcversion}-${version.version}`;
             const installerURL = `${maven}${version.installer.path}`;
             const installerURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
-            const installJar = mc.getLibraryByPath(version.installer.path.substring(version.installer.path.substring(1).indexOf("/") ));
+            const installJar = mc.getLibraryByPath(version.installer.path.substring(version.installer.path.substring(1).indexOf("/") + 1));
 
             let versionId: string;
             let profile!: InstallProfile;
@@ -379,19 +379,14 @@ export namespace ForgeInstaller {
 
             function downloadInstallerTask(installer: string, dest: string) {
                 return async (ctx: Task.Context) => {
-                    if (!await vfs.validate(dest, { algorithm: "md5", hash: version.installer.md5 }, { algorithm: "sha1", hash: version.installer.sha1 })) {
-                        const inStream = got.stream(installer, {
-                            method: "GET",
-                            headers: { connection: "keep-alive" },
-                        }).on("error", (e) => {
-                            console.error(`Error to open download stream for forge installer ${installer}`);
-                            console.error(e);
-                        }).on("downloadProgress", (progress) => {
-                            ctx.update(progress.transferred, progress.total as number);
-                        });
-
-                        await vfs.waitStream(inStream.pipe(vfs.createWriteStream(dest)));
-                    }
+                    await downloadFileIfAbsentWork({
+                        url: installer,
+                        destination: dest,
+                        checksum: {
+                            hash: version.installer.sha1,
+                            algorithm: "sha1",
+                        },
+                    })(ctx);
                     return vfs.createReadStream(dest).pipe(Unzip.createParseStream({ lazyEntries: true })).wait();
                 };
             }
@@ -401,9 +396,9 @@ export namespace ForgeInstaller {
                 versionId = versionJson.id;
 
                 const rootPath = mc.getVersionRoot(versionJson.id);
-                const jsonPath = path.join(rootPath, `${versionJson.id}.json`);
-                const installJsonPath = path.join(rootPath, `install_profile.json`);
-                const clientDataPath = path.join(rootPath, profile.data.BINPATCH.client);
+                const jsonPath = join(rootPath, `${versionJson.id}.json`);
+                const installJsonPath = join(rootPath, `install_profile.json`);
+                const clientDataPath = join(rootPath, profile.data.BINPATCH.client);
 
                 await vfs.ensureFile(jsonPath);
                 await vfs.writeFile(installJsonPath, JSON.stringify(profile));
@@ -413,10 +408,10 @@ export namespace ForgeInstaller {
                 const stream = await zip.openEntry(clientDataEntry);
                 await vfs.waitStream(stream.pipe(vfs.createWriteStream(clientDataPath)));
             }
-            async function processExtractLibrary(s: Readable, p: string) {
-                const file = mc.getLibraryByPath(p);
+            async function processExtractLibrary(stream: Readable, p: string) {
+                const file = mc.getLibraryByPath(p.substring(p.indexOf("/") + 1));
                 await vfs.ensureFile(file);
-                await vfs.waitStream(s.pipe(vfs.createWriteStream(file)));
+                await vfs.waitStream(stream.pipe(vfs.createWriteStream(file)));
             }
 
             try {
@@ -502,7 +497,7 @@ export namespace ForgeInstaller {
                     realJarPath = mc.getLibraryByPath(Version.getLibraryInfo(raw.libraries.find((l: any) => l.name.startsWith("net.minecraftforge:forge"))).path);
 
                     await vfs.ensureDir(rootPath);
-                    const jsonPath = path.join(rootPath, `${id}.json`);
+                    const jsonPath = join(rootPath, `${id}.json`);
                     if (await vfs.missing(jsonPath)) {
                         await vfs.writeFile(jsonPath, buf);
                     }
