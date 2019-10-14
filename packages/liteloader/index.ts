@@ -113,7 +113,7 @@ export namespace LiteLoader {
             zip = mod;
         } else if (mod instanceof Buffer) {
             zip = await Unzip.open(mod, { lazyEntries: true });
-        } else if (typeof mod === "string" && await vfs.exists(mod)) {
+        } else if (typeof mod === "string") {
             zip = await Unzip.open(mod, { lazyEntries: true });
         } else {
             throw {
