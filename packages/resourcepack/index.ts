@@ -1,6 +1,6 @@
 import { ResourcePackMetaData } from "@xmcl/common";
 import Unzip from "@xmcl/unzip";
-import { vfs } from "../util";
+import { vfs } from "@xmcl/util";
 export interface ResourcePack {
     readonly path: string;
     readonly type: "directory" | "zip";

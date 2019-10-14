@@ -36,7 +36,7 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
     return new Promise((resolve, reject) => {
         process.stdout.on("data", (chunk) => {
             const content = chunk.toString();
-            console.log(content);
+            // console.log(content);
             for (let i = 0; i < hints.length; i++) {
                 if (content.indexOf(hints[i]) !== -1) {
                     found[i] = true;
@@ -61,16 +61,20 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
 
 
 describe("Launcher", () => {
-    const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
+    const root = path.normalize(path.join(__dirname, "..", "..", "temp"));
     let javaPath: string;
     let javaVersion: number;
     let testOnJava: typeof test = test;
     let testOnOldJava: typeof test = test;
 
-
     jest.setTimeout(10000000);
 
     beforeAll(async function () {
+        if (process.env.CI || process.env.GITHUB_WORKFLOW) {
+            testOnJava = test.skip;
+            testOnOldJava = test.skip;
+            return;
+        }
         if (process.env.JAVA_HOME) {
             javaPath = `${process.env.JAVA_HOME}/bin/java`;
             if (process.env.ENV && process.env.ENV === "TRAVIS") {
@@ -89,9 +93,13 @@ describe("Launcher", () => {
         if (javaVersion > 8) {
             testOnOldJava = test.skip;
         }
+        if (process.env.CI) {
+            testOnJava = test.skip;
+            testOnOldJava = test.skip;
+        }
     });
     describe("#generateArgumentsServer", () => {
-        test("should generate command arguments", async () => {
+        testOnJava("should generate command arguments", async () => {
             const args = await Launcher.generateArgumentsServer({
                 javaPath: "/test/java",
                 path: root,
@@ -101,23 +109,16 @@ describe("Launcher", () => {
             expect(args[0]).toEqual("/test/java");
         });
     });
-    describe.skip("#ensureLibraries", () => {
-        jest.mock("@xmcl/util");
+    describe("#ensureLibraries", () => {
         test("should check all libraries", async () => {
-            const mockUtil = jest.requireMock("@xmcl/util") as jest.Mocked<typeof import("@xmcl/util")>;
-
-            mockUtil.missing.mockReturnValue(Promise.resolve(false));
-
-            await expect(Launcher.ensureLibraries(new MinecraftFolder("/"), await Version.parse(root, "1.7.10")))
+            await expect(Launcher.ensureLibraries(new MinecraftFolder(root),
+                await Version.parse(root, "1.7.10")))
                 .resolves
-                .toBeTruthy();
-
-            expect(mockUtil.missing).toHaveBeenCalled();
+                .toBeUndefined();
         });
-        jest.unmock("@xmcl/util");
     });
     describe.skip("#launchServer", () => {
-        test("should launch server", async () => {
+        testOnJava("should launch server", async () => {
             const proc = await Launcher.launchServer({
                 javaPath,
                 path: root,
@@ -167,7 +168,7 @@ describe("Launcher", () => {
             "should generate correct command for 1.14.4 with forge",
             async () => {
                 const jPath = "/test/java";
-                const version = "1.14.4-forge-28.0.47";
+                const version = "1.14.4-forge-28.0.45";
                 const gamePath = root;
                 const auth = Auth.offline("tester");
                 const args = await Launcher.generateArguments({
@@ -179,7 +180,7 @@ describe("Launcher", () => {
                 expect(args.indexOf("cpw.mods.modlauncher.Launcher")).not.toEqual(-1);
                 expect(args[args.indexOf("--username") + 1]).toEqual(auth.selectedProfile.name);
                 expect(args[args.indexOf("--uuid") + 1]).toEqual(auth.selectedProfile.id.replace(/-/g, ""));
-                expect(args[args.indexOf("--version") + 1]).toEqual("1.14.4-forge-28.0.47");
+                expect(args[args.indexOf("--version") + 1]).toEqual("1.14.4-forge-28.0.45");
                 expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
                 expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
                 const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
@@ -239,7 +240,7 @@ describe("Launcher", () => {
     describe.skip("#launch", () => {
         describe("1.17.10", () => {
             testOnJava("should launch with forge", async () => {
-                const option = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath: "D:\\jvm\\bin\\java" };
+                const option = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath };
                 await waitGameProcess(await Launcher.launch(option), "OpenAL initialized.");
             });
         });
@@ -266,7 +267,6 @@ describe("Launcher", () => {
                 const option = { version: "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
                 await waitGameProcess(await Launcher.launch(option), "LiteLoader begin POSTINIT");
             });
-
             testOnOldJava("should launch forge liteloader minecraft", async () => {
                 const option = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
                 await waitGameProcess(await Launcher.launch(option), "LiteLoader begin POSTINIT", "[main/INFO] [FML]: Itemstack injection complete");
@@ -282,7 +282,7 @@ describe("Launcher", () => {
         describe("1.14.4", () => {
             testOnJava("should launch normal minecraft", async () => {
                 const option = { version: "1.14.4", gamePath: root, javaPath };
-                await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Built for minecraft version 1.14.2");
+                await waitGameProcess(await Launcher.launch(option), "[Client thread/INFO]: Built for minecraft version 1.14.4");
             });
         });
     });

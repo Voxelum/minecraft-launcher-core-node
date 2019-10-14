@@ -1,10 +1,9 @@
-import { downloadFile, downloadFileIfAbsentWork, downloadFileWork, fetchBuffer, getIfUpdate, UpdatedObject } from "@xmcl/net";
+import { downloadFile, downloadFileIfAbsentWork, downloadFileWork, getIfUpdate, got, UpdatedObject } from "@xmcl/net";
 import Task from "@xmcl/task";
 import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 import { ResolvedLibrary, ResolvedVersion, Version } from "@xmcl/version";
-import * as os from "os";
-import * as path from "path";
-import { decompressXZ, unpack200 } from "./decompress";
+import { cpus } from "os";
+import { join } from "path";
 
 /**
  * The minecraft installer
@@ -251,32 +250,28 @@ function installVersionWork(type: "client" | "server", versionMeta: Installer.Ve
 
 function installVersionJsonWork(version: Installer.VersionMeta, minecraft: MinecraftLocation) {
     return async (context: Task.Context) => {
-        const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
+        const folder = MinecraftFolder.from(minecraft);
         await vfs.ensureDir(folder.getVersionRoot(version.id));
 
-        const json = folder.getVersionJson(version.id);
+        const destination = folder.getVersionJson(version.id);
+        const url = version.url;
         const expectSha1 = version.url.split("/")[5];
-        await downloadFileIfAbsentWork({ url: version.url, destination: json, checksum: { algorithm: "sha1", hash: expectSha1 } })(context);
+
+        await downloadFileIfAbsentWork({ url, destination, checksum: { algorithm: "sha1", hash: expectSha1 } })(context);
     };
 }
 
 function installVersionJarWork(type: "client" | "server", version: ResolvedVersion, minecraft: MinecraftLocation, option: Installer.JarOption = {}) {
     return async (context: Task.Context) => {
-        const folder: MinecraftFolder = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
+        const folder = MinecraftFolder.from(minecraft);
         await vfs.ensureDir(folder.getVersionRoot(version.id));
 
-        const filename = type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar";
-        const jar = path.join(folder.getVersionRoot(version.id), filename);
+        const destination = join(folder.getVersionRoot(version.id),
+            type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar");
+        const url = option[type] || version.downloads[type].url;
+        const expectedSha1 = version.downloads[type].sha1;
 
-        let url = option[type];
-        if (!url) { url = version.downloads[type].url; }
-
-        await downloadFileIfAbsentWork({ url, destination: jar, checksum: { algorithm: "sha1", hash: version.downloads[type].sha1 } })(context);
-
-        const valid = await vfs.validate(jar, { algorithm: "sha1", hash: version.downloads[type].sha1 });
-        if (!valid) {
-            throw new Error("SHA1 not matched! Probably caused by the incompleted file or illegal file source!");
-        }
+        await downloadFileIfAbsentWork({ url, destination, checksum: { algorithm: "sha1", hash: expectedSha1 } })(context);
         return version;
     };
 }
@@ -292,50 +287,68 @@ function installDependenciesWork(version: ResolvedVersion, option: { checksum?: 
 
 function installLibraryWork(lib: ResolvedLibrary, folder: MinecraftFolder, libraryHost?: Installer.LibraryHost) {
     return async (context: Task.Context) => {
+        const fallbackMavens = ["http://central.maven.org/maven2/"];
+
         context.update(0, -1, lib.name);
-        const rawPath = lib.download.path;
-        const filePath = path.join(folder.libraries, rawPath);
-        const exist = await vfs.exists(filePath);
-        let downloadURL: string;
+        const libraryPath = lib.download.path;
+        const filePath = join(folder.libraries, libraryPath);
 
-        const isCompressed = (lib.checksums) ? lib.checksums.length > 1 ? true : false : false;
-        const canDecompress = decompressXZ !== undefined;
-        const compressed = isCompressed && canDecompress;
-
+        let downloadURL: string = "";
         if (libraryHost) {
             const url = libraryHost(lib);
             downloadURL = url ? url : lib.download.url; // handle external host
-        } else {
-            // if there is no external host, and we cannot decompress, then we need to swap this two lib src... forge src is missing
-            downloadURL = (lib.name.startsWith("com.typesafe:config:") || lib.name.startsWith("com.typesafe.akka:akka-actor_2.11")) && !canDecompress ?
-                `http://central.maven.org/maven2/${lib.download.path}` :
-                lib.download.url;
         }
-        if (compressed) {
-            downloadURL += ".pack.xz";
-        }
-        const doDownload = async () => {
-            await vfs.ensureDir(path.dirname(filePath));
-            if (compressed) {
-                if (!decompressXZ || !unpack200) { throw new Error("Require external support for unpack compressed library!"); }
-                const buff = await context.execute("downloadLib", () => fetchBuffer(downloadURL).then((r) => r.body));
-                const decompressed = await context.execute("decompress", async () => decompressXZ(buff));
-                await context.execute("unpack", () => unpack200(decompressed).then((buf) => vfs.writeFile(filePath, buf)));
-            } else {
-                await downloadFileWork({ url: downloadURL, destination: filePath })(context);
+        async function download(trial: number = 0, errors: any[] = []) {
+            if (trial > fallbackMavens.length) {
+                if (errors.length !== 0) {
+                    for (let i = 0; i < errors.length; i++) {
+                        const e = errors[i];
+                        console.error(`Trial ${i}:`);
+                        console.error(e);
+                    }
+                    throw new Error(`Fail to download a library! ${lib.name}`);
+                }
+                throw new Error(`Library not found in every maven! forceURL[${downloadURL}] ${lib.download.url} ${JSON.stringify(fallbackMavens)}`);
+            }
+            let url: string;
 
-                const valid = await vfs.validate(filePath, { algorithm: "sha1", hash: lib.download.sha1 });
-                if (!valid) {
-                    await downloadFileWork({ url: lib.download.url, destination: filePath })(context);
+            if (trial === 0) {
+                if (downloadURL) {
+                    url = downloadURL;
+                } else {
+                    url = lib.download.url;
+                }
+                const existed = await got.head(url).then((r) => r.statusCode === 200).catch(() => false);
+                if (existed) {
+                    try {
+                        await downloadFileWork({ url, destination: filePath })(context);
+                    } catch (e) {
+                        await download(trial + 1, [...errors, e]);
+                    }
+                } else {
+                    await download(trial + 1, errors);
+                }
+            } else {
+                url = `${fallbackMavens[trial - 1]}${lib.download.path}`;
+                const existed = await got.head(url).then((r) => r.statusCode === 200).catch(() => false);
+                if (existed) {
+                    try {
+                        await downloadFileWork({ url, destination: filePath })(context);
+                    } catch (e) {
+                        await download(trial + 1, [...errors, e]);
+                    }
+                } else {
+                    await download(trial + 1, errors);
                 }
             }
-        };
-        if (!exist) {
-            await doDownload();
-        } else if (lib.download.sha1 && typeof lib.download.sha1 === "string") {
+        }
+
+        if (await vfs.missing(filePath)) {
+            await download();
+        } else if (typeof lib.download.sha1 === "string") {
             const valid = await vfs.validate(filePath, { algorithm: "sha1", hash: lib.download.sha1 });
             if (!valid) {
-                await doDownload();
+                await download();
             }
         }
     };
@@ -371,7 +384,6 @@ interface AssetIndex {
     };
 }
 
-const cores = os.cpus().length || 4;
 
 function installAssetsByCluster(objects: Array<{ name: string, hash: string, size: number }>, folder: MinecraftFolder, assetsHost: string) {
     return async (context: Task.Context) => {
@@ -388,8 +400,8 @@ function installAssetsByCluster(objects: Array<{ name: string, hash: string, siz
 
             context.update(lastProgress, undefined, `${assetsHost}/${head}/${hash}`);
 
-            const file = path.join(dir, hash);
-            let valid = await vfs.validate(file, { algorithm: "sha1", hash });
+            const file = join(dir, hash);
+            const valid = await vfs.validate(file, { algorithm: "sha1", hash });
             if (!valid) {
                 await downloadFile({
                     url: `${assetsHost}/${head}/${hash}`,
@@ -398,17 +410,6 @@ function installAssetsByCluster(objects: Array<{ name: string, hash: string, siz
                         context.update(lastProgress + written);
                     },
                 });
-                valid = await vfs.validate(file, { algorithm: "sha1", hash });
-                if (!valid) {
-                    await downloadFile({
-                        url: `${Installer.DEFAULT_RESOURCE_ROOT_URL}/${head}/${hash}`,
-                        destination: file,
-                        progress(written) {
-                            context.update(lastProgress + written);
-                        },
-                    });
-                }
-
             }
             lastProgress += size;
             context.update(lastProgress);
@@ -418,6 +419,7 @@ function installAssetsByCluster(objects: Array<{ name: string, hash: string, siz
 
 function installAssets0(version: ResolvedVersion, option: { assetsHost?: string }) {
     return async (context: Task.Context) => {
+        const cores = cpus().length || 4;
         const folder: MinecraftFolder = new MinecraftFolder(version.minecraftDirectory);
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 

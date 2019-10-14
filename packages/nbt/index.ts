@@ -140,8 +140,8 @@ export namespace NBT {
     }
 
     function badTag(tag: any): boolean {
-        if (typeof tag.type !== "number") { return false; }
-        if (!Number.isInteger(tag.type) || tag.type > 12 || tag.type < 0) { return false; }
+        if (typeof tag.type !== "number") { return true; }
+        if (!Number.isInteger(tag.type) || tag.type > 12 || tag.type < 0) { return true; }
         const tagType = tag.type;
         const value = tag.value;
         switch (tagType) {
@@ -157,13 +157,13 @@ export namespace NBT {
             case TagType.Double:
                 return typeof value !== "number";
             case TagType.ByteArray:
-                return typeof value !== "object" || !(value instanceof Buffer);
+                return typeof value !== "object" || !(value instanceof Uint8Array);
             case TagType.String:
                 return typeof value !== "string";
             case TagType.IntArray:
-                return typeof value !== "object" || !(value instanceof Buffer) || value.length % 4 !== 0;
+                return typeof value !== "object" || !(value instanceof Int32Array);
             case TagType.LongArray:
-                return typeof value !== "object" || !(value instanceof Buffer) || value.length % 8 !== 0;
+                return typeof value !== "object" || !(value instanceof Array);
         }
         return true;
     }

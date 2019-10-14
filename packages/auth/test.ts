@@ -28,12 +28,11 @@ describe("Auth", () => {
     beforeAll(async function () {
         jest.setTimeout(1000000);
         try {
-            console.log("start mock server");
             await new Promise((resolve, reject) => {
                 proc = spawn("java", ["-jar", path.join(root, "yggdrasil-mock-server-0.0.1-SNAPSHOT.jar"), "--server.port=25567"]);
                 proc.on("error", reject);
                 proc.stdout.on("data", (b) => {
-                    console.log(b.toString());
+                    // console.log(b.toString());
                     if (b.toString().indexOf("moe.yushi.yggdrasil.mockserver.Main") !== -1 &&
                         b.toString().indexOf("Started Main") !== -1) {
                         resolve();

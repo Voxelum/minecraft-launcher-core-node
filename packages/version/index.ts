@@ -116,8 +116,6 @@ export interface VersionDiagnosis {
 
 declare module "@xmcl/common/version" {
     namespace Version {
-        export type Resolved = ResolvedVersion;
-
         /**
          * Check if all the rules in `Rule[]` are acceptable in certain OS `platform` and features.
          * @param rules The rules usually comes from `Library` or `LaunchArgument`
@@ -459,13 +457,14 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
         const missingAssetsIndex = !await context.execute("checkAssetIndex", async () => validate(assetsIndexPath, resolvedVersion.assetIndex.sha1));
         const libMask = await context.execute("checkLibraries", () => Promise.all(resolvedVersion.libraries.map(async (lib) => {
             const libPath = minecraft.getLibraryByPath(lib.download.path);
+            if (lib.download.sha1 === "") { return true; }
             return vfs.validate(libPath, { algorithm: "sha1", hash: lib.download.sha1 });
         })));
         const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
         const missingAssets: { [object: string]: string } = {};
 
         if (!missingAssetsIndex) {
-            const objects = (await fs.promises.readFile(assetsIndexPath).then((b) => b.toString()).then(JSON.parse)).objects;
+            const objects = (await vfs.readFile(assetsIndexPath).then((b) => b.toString()).then(JSON.parse)).objects;
             const files = Object.keys(objects);
             const assetsMask = await context.execute("checkAssets", () => Promise.all(files.map(async (object) => {
                 const { hash } = objects[object];
