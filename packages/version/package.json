@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/version",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "main": "./index.js",
   "types": "./index.d.ts",
   "description": "Minecraft version parsing",
