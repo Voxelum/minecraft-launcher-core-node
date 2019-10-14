@@ -117,7 +117,7 @@ describe("Launcher", () => {
                 .toBeUndefined();
         });
     });
-    describe("#launchServer", () => {
+    describe.skip("#launchServer", () => {
         testOnJava("should launch server", async () => {
             const proc = await Launcher.launchServer({
                 javaPath,
@@ -168,7 +168,7 @@ describe("Launcher", () => {
             "should generate correct command for 1.14.4 with forge",
             async () => {
                 const jPath = "/test/java";
-                const version = "1.14.4-forge-28.0.47";
+                const version = "1.14.4-forge-28.0.45";
                 const gamePath = root;
                 const auth = Auth.offline("tester");
                 const args = await Launcher.generateArguments({
@@ -180,7 +180,7 @@ describe("Launcher", () => {
                 expect(args.indexOf("cpw.mods.modlauncher.Launcher")).not.toEqual(-1);
                 expect(args[args.indexOf("--username") + 1]).toEqual(auth.selectedProfile.name);
                 expect(args[args.indexOf("--uuid") + 1]).toEqual(auth.selectedProfile.id.replace(/-/g, ""));
-                expect(args[args.indexOf("--version") + 1]).toEqual("1.14.4-forge-28.0.47");
+                expect(args[args.indexOf("--version") + 1]).toEqual("1.14.4-forge-28.0.45");
                 expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
                 expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
                 const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
@@ -237,7 +237,7 @@ describe("Launcher", () => {
     //     const ver = await Version.parse(loc, "1.13.2");
     //     await Launcher.ensureNative(loc, ver);
     // });
-    describe("#launch", () => {
+    describe.skip("#launch", () => {
         describe("1.17.10", () => {
             testOnJava("should launch with forge", async () => {
                 const option = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath };
