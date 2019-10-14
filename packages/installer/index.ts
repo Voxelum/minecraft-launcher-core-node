@@ -345,7 +345,7 @@ function installLibraryWork(lib: ResolvedLibrary, folder: MinecraftFolder, libra
 
         if (await vfs.missing(filePath)) {
             await download();
-        } else if (typeof lib.download.sha1 === "string") {
+        } else if (typeof lib.download.sha1 === "string" && lib.download.sha1 !== "") {
             const valid = await vfs.validate(filePath, { algorithm: "sha1", hash: lib.download.sha1 });
             if (!valid) {
                 await download();
