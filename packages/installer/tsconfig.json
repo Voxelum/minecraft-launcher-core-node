@@ -1,7 +1,6 @@
 {
     "files": [
-        "index.ts",
-        "decompress.ts"
+        "index.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
