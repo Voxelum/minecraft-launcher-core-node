@@ -2,8 +2,6 @@
 import { Installer } from "@xmcl/installer";
 import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 import { Version } from "@xmcl/version";
-import { exec } from "child_process";
-import { existsSync, mkdirSync, unlinkSync } from "fs";
 import { join, normalize } from "path";
 import { ForgeInstaller } from "./index";
 
@@ -43,11 +41,6 @@ describe("ForgeInstaller", () => {
             .toBeTruthy();
     });
     test("should install forge on 1.12.2", async () => {
-        beforeAll(() => {
-            if (existsSync(`${gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`)) {
-                unlinkSync(`${gameDirectory}/versions/1.12.2-forge1.12.2-14.23.5.2823/1.12.2-forge1.12.2-14.23.5.2823.json`);
-            }
-        });
         const meta: ForgeInstaller.VersionMeta = {
             mcversion: "1.12.2",
             version: "14.23.5.2823",
@@ -71,14 +64,6 @@ describe("ForgeInstaller", () => {
         // await assertNoError(result, gameDirectory);
     });
     test("should install forge 1.13.2-25.0.209", async () => {
-        beforeAll(async () => {
-            if (existsSync(`${gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`)) {
-                unlinkSync(`${gameDirectory}/versions/1.13.2-forge1.13.2-25.0.209/1.13.2-forge1.13.2-25.0.209.json`);
-            }
-            if (!existsSync(`${gameDirectory}/temps`)) {
-                mkdirSync(`${gameDirectory}/temps`);
-            }
-        });
         const meta: ForgeInstaller.VersionMeta = {
             mcversion: "1.13.2",
             version: "25.0.209",
@@ -94,8 +79,8 @@ describe("ForgeInstaller", () => {
             },
         };
         const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory));
-        expect(result).toEqual("1.13.2-forge1.13.2-25.0.209");
-        await expect(vfs.exists(join(gameDirectory, "versions", "1.13.2-forge1.13.2-25.0.209", "1.13.2-forge1.13.2-25.0.209.json")))
+        expect(result).toEqual("1.13.2-forge-25.0.209");
+        await expect(vfs.exists(join(gameDirectory, "versions", "1.13.2-forge-25.0.209", "1.13.2-forge-25.0.209.json")))
             .resolves
             .toBeTruthy();
         // await Installer.installDependencies(await Version.parse(gameDirectory, result));
@@ -103,14 +88,6 @@ describe("ForgeInstaller", () => {
     });
 
     test("should install forge 1.14.4-forge-28.0.45", async () => {
-        beforeAll(async () => {
-            if (existsSync(`${gameDirectory}/versions/1.14.4-forge-28.0.45/1.14.4-forge-28.0.45.json`)) {
-                unlinkSync(`${gameDirectory}/versions/1.14.4-forge-28.0.45/1.14.4-forge-28.0.45.json`);
-            }
-            if (!existsSync(`${gameDirectory}/temps`)) {
-                mkdirSync(`${gameDirectory}/temps`);
-            }
-        });
         const meta: ForgeInstaller.VersionMeta = {
             mcversion: "1.14.4",
             version: "28.0.45",
