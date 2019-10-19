@@ -1,4 +1,4 @@
-import { Auth } from "@xmcl/auth";
+import { GameProfile, UserType } from "@xmcl/common";
 import Unzip from "@xmcl/unzip";
 import { computeChecksum, currentPlatform, ensureDir, MinecraftFolder, missing, vfs } from "@xmcl/util";
 import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
@@ -43,7 +43,15 @@ export namespace Launcher {
 
     export type ProvidedFeatures = Partial<ResolutionFeature> & Partial<DemoFeature> & GenericFeatures;
 
-    export type PartialAuth = Pick<Auth, "selectedProfile" | "accessToken" | "userType" | "properties">;
+    export interface UserInfo {
+        /**
+         * User selected game profile. For game display name & 
+         */
+        selectedProfile: GameProfile;
+        accessToken: string;
+        userType: UserType;
+        properties: object;
+    }
 
     /**
      * General launch option, used to generate launch arguments.
@@ -51,8 +59,15 @@ export namespace Launcher {
     export interface Option {
         /**
          * The auth information
+         * @deprecated
          */
-        auth?: PartialAuth;
+        auth?: UserInfo;
+
+        /**
+         * The user info;
+         */
+        user?: UserInfo;
+
         launcherName?: string;
         launcherBrand?: string;
 
@@ -248,7 +263,6 @@ export namespace Launcher {
      */
     export async function generateArguments(options: Option) {
         if (!options.version) { throw new Error("Version cannot be null!"); }
-        if (!options.auth) { options.auth = Auth.offline("Steve"); }
         if (!path.isAbsolute(options.gamePath)) { options.gamePath = path.resolve(options.gamePath); }
         if (!options.resourcePath) { options.resourcePath = options.gamePath; }
         if (!options.minMemory) { options.minMemory = 512; }
@@ -261,6 +275,11 @@ export namespace Launcher {
         const mc = new MinecraftFolder(options.resourcePath);
         const version = options.version;
         const cmd: string[] = [];
+        const profile: GameProfile = options.auth ? options.auth.selectedProfile : { id: v4().replace(/-/g, ""), name: "Steve" };
+        const accessToken = options.auth ? options.auth.accessToken : v4().replace(/-/g, "");
+        const properties = options.auth ? options.auth.properties : {};
+        const userType = options.auth ? options.auth.userType : "Mojang";
+
         cmd.push(options.javaPath);
 
         cmd.push(`-Xms${(options.minMemory)}M`);
@@ -295,15 +314,15 @@ export namespace Launcher {
         const mcOptions = {
             version_name: version.id,
             version_type: version.type,
-            assets_root: (assetsDir),
-            game_assets: (assetsDir),
+            assets_root: assetsDir,
+            game_assets: assetsDir,
             assets_index_name: version.assets,
-            game_directory: (options.gamePath),
-            auth_player_name: options.auth.selectedProfile ? options.auth.selectedProfile.name || "Steve" : "Steve",
-            auth_uuid: options.auth.selectedProfile.id.replace(/-/g, ""),
-            auth_access_token: options.auth.accessToken || v4(),
-            user_properties: JSON.stringify(options.auth.properties || {}),
-            user_type: options.auth.userType || "mojang",
+            game_directory: options.gamePath,
+            auth_player_name: profile.name,
+            auth_uuid: profile.id,
+            auth_access_token: accessToken,
+            user_properties: JSON.stringify(properties),
+            user_type: userType,
             resolution_width: resolution.width || 850,
             resolution_height: resolution.height || 470,
         };
