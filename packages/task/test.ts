@@ -69,6 +69,19 @@ describe("Task", () => {
         });
     });
     describe("#execute", () => {
+        test("should fire finish event change", async () => {
+            const task = Task.create("test", () => {
+                return 1;
+            });
+            const monitor = jest.fn();
+            task.on("finish", monitor);
+            await expect(task.execute())
+                .resolves
+                .toEqual(1);
+            expect(monitor).toBeCalled();
+            expect(task.root.error).toBeFalsy();
+            expect(task.root.status).toEqual("successed");
+        });
         test("should be able to catch error", async () => {
             const task = Task.create("test", () => {
                 throw new Error("Fail");
