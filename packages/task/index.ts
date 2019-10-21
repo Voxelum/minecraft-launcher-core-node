@@ -169,7 +169,7 @@ class TaskImpl<T, N extends Task.State> extends EventEmitter implements Task<T, 
         node.status = "running";
         return execute(context, work).then((r) => {
             node.status = "successed";
-            this.emit("success", node);
+            this.emit("finish", node);
             return r;
         }, (e) => {
             if (e instanceof Task.CancelledError) {

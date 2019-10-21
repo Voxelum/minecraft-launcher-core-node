@@ -207,13 +207,14 @@ export namespace Auth {
     }
 
     /**
-     * Create an offline auth.
+     * Create an offline auth. It'll ensure the user game profile's `uuid` is the same for the same `username`.
      *
      * @param username The username you want to have in-game.
      */
     export function offline(username: string): Auth {
+        const v5 = (s: string) => require("uuid/lib/v35")("", 50, require("uuid/lib/sha1"))(s, new (class A extends Array { concat(o: any[]) { return o; } })(16));
         const prof = {
-            id: v4().replace(/-/g, ""),
+            id: v5(username).replace(/-/g, "") as string,
             name: username,
         };
         return {
