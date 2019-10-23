@@ -40,8 +40,7 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
     - name: Publish Tag
       run: |
-        echo "console.log(JSON.parse(require('fs').readFileSync('packages/launcher-core/package.json').toString()).version)" > log-tag.js
-        node log-tag.js > tag.log
+        node --eval "console.log(JSON.parse(require('fs').readFileSync('packages/launcher-core/package.json').toString()).version)" > tag.log
         git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
         git config user.name ci010
         git config user.email cijhn@hotmail.com
