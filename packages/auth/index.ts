@@ -1,5 +1,5 @@
 import { AuthResponse, GameProfile, UserType } from "@xmcl/common";
-import { fetchJson } from "@xmcl/net";
+import { fetchJson, got } from "@xmcl/net";
 import { Response } from "got";
 import { v4 } from "uuid";
 
@@ -39,7 +39,85 @@ export interface Auth {
 }
 
 export namespace Auth {
+    /**
+     * Random generate a new token by uuid v4. It can be client or auth token.
+     * @returns a new token
+     */
+    export function newToken() {
+        return v4().replace(/-/g, "");
+    }
+    /**
+     * The client for Yggdrasil auth service
+     */
+    export interface Yggdrasil {
+        login(option: { username: string; password: string; requestUser?: boolean }): Promise<AuthResponse>;
+        validate(option: { accessToken: string; }): Promise<boolean>;
+        invalidate(option: { accessToken: string; }): Promise<void>;
+        refresh(option: { accessToken: string; profile?: string; }): Promise<AuthResponse>;
+        signout(option: { username: string; password: string; }): Promise<void>;
+    }
     export namespace Yggdrasil {
+        /**
+         * Create a client for `Yggdrasil` service, given API and clientToken.
+         * @param clientToken The client token uuid. It will generate a new one if it's absent.
+         * @param api The api for this client.
+         */
+        export function create(clientToken: string = newToken(), api: API = API_MOJANG): Yggdrasil {
+            const client = got.extend({
+                baseUrl: api.hostName,
+                encoding: "UTF-8",
+                json: true,
+                method: "POST",
+            });
+            return {
+                async login(option) {
+                    const { body } = await client(api.authenticate, {
+                        body: {
+                            agent: "Minecraft",
+                            requestUser: option.requestUser || true,
+                            clientToken,
+                            ...option,
+                        },
+                    });
+                    return body;
+                },
+                async validate(option) {
+                    try {
+                        await client(api.validate, {
+                            body: {
+                                clientToken,
+                                ...option,
+                            },
+                        });
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                },
+                async invalidate(option) {
+                    await client(api.invalidate, {
+                        body: {
+                            clientToken,
+                            ...option,
+                        },
+                    });
+                },
+                async refresh(option) {
+                    const { body } = await client(api.refresh, {
+                        body: {
+                            clientToken,
+                            ...option,
+                        },
+                    });
+                    return body;
+                },
+                async signout(option) {
+                    await client(api.signout, {
+                        body: option,
+                    });
+                },
+            };
+        }
         export interface API {
             /**
              * The host url, like https://xxx.xxx.com
@@ -111,24 +189,23 @@ export namespace Auth {
          * @param api The API of the auth server
          * @throws This may throw the error object with `statusCode`, `statusMessage`, `type` (error type), and `message`
          */
-        export function login(option: { username: string, password?: string, clientToken?: string | undefined },
+        export async function login(option: { username: string, password?: string, clientToken?: string | undefined },
             api: API = API_MOJANG): Promise<Auth> {
-            return fetchJson(api.authenticate, {
-                baseUrl: api.hostName,
-                method: "POST",
-                body: {
+            try {
+                const resp = await request(api.hostName, api.authenticate, {
                     agent: "Minecraft",
                     requestUser: true,
                     ...option,
-                },
-            }).then(parseResponse, (resp) => {
-                const body = resp.body;
+                });
+                return parseResponse(resp);
+            } catch (e) {
+                const body = e.body;
                 if (body) {
-                    throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage, type: body.error, message: body.errorMessage };
+                    throw { statusCode: e.statusCode, statusMessage: e.statusMessage, type: body.error, message: body.errorMessage };
                 } else {
-                    throw { statusCode: resp.statusCode, statusMessage: resp.statusMessage };
+                    throw { statusCode: e.statusCode, statusMessage: e.statusMessage };
                 }
-            });
+            }
         }
 
         /**
@@ -140,16 +217,17 @@ export namespace Auth {
          * @param option The tokens
          * @param api The API of the auth server
          */
-        export function refresh(option: { clientToken: string, accessToken: string, profile?: string },
+        export async function refresh(option: { clientToken: string, accessToken: string, profile?: string },
             api: API = API_MOJANG): Promise<Auth> {
-            return request(api.hostName, api.refresh, {
+            const resp = await request(api.hostName, api.refresh, {
                 clientToken: option.clientToken,
                 accessToken: option.accessToken,
                 requestUser: true,
                 selectedProfile: option.profile ? {
                     id: option.profile,
                 } : undefined,
-            }).then(parseResponse);
+            });
+            return parseResponse(resp);
         }
         /**
          * Determine whether the access/client token pair is valid.
@@ -157,29 +235,23 @@ export namespace Auth {
          * @param option The tokens
          * @param api The API of the auth server
          */
-        export function validate(option: { accessToken: string, clientToken?: string }, api: API = API_MOJANG): Promise<boolean> {
-            return request(api.hostName, api.validate, Object.assign({}, option))
-                .then((s) => s.body.error === undefined, (error) => {
-                    if (error.error === "ForbiddenOperationException") {
+        export async function validate(option: { accessToken: string, clientToken?: string }, api: API = API_MOJANG): Promise<boolean> {
+            try {
+                const s = await request(api.hostName, api.validate, Object.assign({}, option));
+                return s.body.error === undefined;
+            } catch (e) {
+                if (e.error === "ForbiddenOperationException") {
+                    return false;
+                }
+                if (e.body) {
+                    if (e.body.errorMessage === "Invalid token" || e.body.errorMessage === "Invalid token.") {
                         return false;
                     }
-                    if (error.body) {
-                        if (error.body.errorMessage === "Invalid token" || error.body.errorMessage === "Invalid token.") {
-                            return false;
-                        }
-                        throw error.body;
-                    }
-                    throw error;
-                });
+                    throw e.body;
+                }
+                throw e;
+            }
         }
-        /**
-         * Invalidate an access/client token pair
-         *
-         * @deprecated
-         * @param option The tokens
-         * @param api The API of the auth server
-         */
-        export const invalide = invalidate;
 
         /**
          * Invalidate an access/client token pair
@@ -187,8 +259,9 @@ export namespace Auth {
          * @param option The tokens
          * @param api The API of the auth server
          */
-        export function invalidate(option: { accessToken: string, clientToken: string }, api: API = API_MOJANG): Promise<void> {
-            return request(api.hostName, api.invalidate, option).then(() => undefined);
+        export async function invalidate(option: { accessToken: string, clientToken: string }, api: API = API_MOJANG): Promise<void> {
+            await request(api.hostName, api.invalidate, option);
+            return undefined;
         }
         /**
          * Signout user by username and password
@@ -196,13 +269,11 @@ export namespace Auth {
          * @param option The username and password
          * @param api The API of the auth server
          */
-        export function signout(option: { username: string, password: string }, api: API = API_MOJANG): Promise<void> {
-            return request(api.hostName, api.signout, option).then((resp) => {
-                const { body } = resp;
-                if (body.error) {
-                    throw { type: body.error, message: body.errorMessage };
-                }
-            });
+        export async function signout(option: { username: string, password: string }, api: API = API_MOJANG): Promise<void> {
+            const { body } = await request(api.hostName, api.signout, option);
+            if (body.error) {
+                throw { type: body.error, message: body.errorMessage };
+            }
         }
     }
 
@@ -218,11 +289,11 @@ export namespace Auth {
             name: username,
         };
         return {
-            accessToken: v4().replace(/-/g, ""),
-            clientToken: v4().replace(/-/g, ""),
+            accessToken: newToken(),
+            clientToken: newToken(),
             selectedProfile: prof,
             profiles: [prof],
-            userId: v4().replace(/-/g, ""),
+            userId: newToken(),
             properties: {},
             userType: UserType.Mojang,
         };
