@@ -95,7 +95,7 @@ describe("Auth", () => {
 
     describe("#invalidate", () => {
         test("should be able to invalidate accessToken", async () => {
-            await Auth.Yggdrasil.invalide({ accessToken: auth.accessToken, clientToken: auth.clientToken }, MOCK);
+            await Auth.Yggdrasil.invalidate({ accessToken: auth.accessToken, clientToken: auth.clientToken }, MOCK);
             await sleep(RATE);
             const valid = await Auth.Yggdrasil.validate({ accessToken: auth.accessToken, clientToken: auth.clientToken }, MOCK);
             expect(valid).toBeFalsy();
