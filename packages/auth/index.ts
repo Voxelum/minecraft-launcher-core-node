@@ -53,7 +53,7 @@ export namespace Auth {
         login(option: { username: string; password: string; requestUser?: boolean }): Promise<AuthResponse>;
         validate(option: { accessToken: string; }): Promise<boolean>;
         invalidate(option: { accessToken: string; }): Promise<void>;
-        refresh(option: { accessToken: string; profile?: string; }): Promise<AuthResponse>;
+        refresh(option: { accessToken: string; profile?: string; }): Promise<Pick<AuthResponse, "accessToken" | "clientToken">>;
         signout(option: { username: string; password: string; }): Promise<void>;
     }
     export namespace Yggdrasil {
