@@ -23,6 +23,7 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+        registry-url: 'https://registry.npmjs.org'
     - name: Install
       run: |
         npm install
@@ -36,7 +37,7 @@ jobs:
         npx lerna publish from-package --yes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
     - name: Delete PR head branch
       uses: dawidd6/action-delete-branch@master
       with:
