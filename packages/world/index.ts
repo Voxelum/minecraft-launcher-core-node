@@ -193,7 +193,7 @@ async function loadRegionFromBuffer(buffer: Buffer, x: number, z: number) {
     //         }
     //     });
     // });
-    const data = await NBT.Persistence.deserialize(chunkData, true);
+    const data = await NBT.Persistence.deserialize(chunkData, { compressed: true });
     return data as unknown as RegionDataFrame;
 }
 
@@ -285,7 +285,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
 }
 
 async function parseLevelData(buffer: Buffer): Promise<LevelDataFrame> {
-    const nbt = await NBT.Persistence.deserialize(buffer, true);
+    const nbt = await NBT.Persistence.deserialize(buffer, { compressed: true });
     const data = nbt.Data;
     if (!data) { throw new Error("Illegal Level Data Content"); }
     return Object.keys(data).sort().reduce((r: any, k: any) => (r[k] = data[k], r), {});
