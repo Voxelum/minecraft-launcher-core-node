@@ -9,7 +9,7 @@ export interface SlotData {
     blockId: number;
     itemCount?: number;
     itemDamage?: number;
-    nbt?: NBT.TagCompound;
+    nbt?: any;
 }
 
 export interface Coder<T> {
@@ -167,7 +167,7 @@ const Slot: Coder<SlotData> = {
             blockId,
             itemCount,
             itemDamage,
-            nbt: NBT.Persistence.readTagSync(Buffer.from(buffer.buffer)),
+            nbt: NBT.Persistence.deserializeSync(Buffer.from(buffer.buffer)),
         };
     },
     encode: (buffer, inst) => {
