@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ci010/ts-minecraft.git"
+    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
   },
   "author": "cijhn@hotmail.com",
   "keywords": [
@@ -31,7 +31,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ci010/ts-minecraft/issues"
+    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
-  "homepage": "https://github.com/ci010/ts-minecraft#readme"
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
 }
