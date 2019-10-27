@@ -50,7 +50,7 @@ describe("NBT", () => {
         const serializer = NBT.Persistence.createSerializer().register("test", inputType);
         assert.deepEqual((serializer as any).registry.test, inputType);
         try {
-            await serializer.serialize(input, "test", false);
+            await serializer.serialize(input, "test");
         } catch (e) {
             expect(e.type).toEqual("IllegalInputType");
             expect(e.message).toEqual("Require Byte but found string");
@@ -72,13 +72,13 @@ describe("NBT", () => {
 
         const matchedInput = { name: "ci010" };
 
-        const matched = await serializer.serialize(matchedInput, "test", false);
+        const matched = await serializer.serialize(matchedInput, "test");
         const matchedDirect = await NBT.Persistence.serialize({
             ...matchedInput,
             __nbtPrototype__: inputType,
-        }, false);
+        });
 
-        const unmatched = await serializer.serialize(unmatchedInput, "test", false);
+        const unmatched = await serializer.serialize(unmatchedInput, "test");
         const unmatchedDirect = await NBT.Persistence.serialize({
             ...unmatchedInput,
             __nbtPrototype__: inputType,
@@ -548,7 +548,7 @@ describe("NBT", () => {
                 expect(buffer).toBeInstanceOf(Buffer);
             });
             test("load", async () => {
-                const result = await NBT.Persistence.deserialize(buffer, false);
+                const result = await NBT.Persistence.deserialize(buffer);
                 expect(result).toStrictEqual(object);
             });
         });
@@ -566,7 +566,7 @@ describe("NBT", () => {
                 expect(buffer).toBeInstanceOf(Buffer);
             });
             test("load", async () => {
-                const result = await NBT.Persistence.deserialize(buffer, false);
+                const result = await NBT.Persistence.deserialize(buffer);
                 expect(result).toStrictEqual(object);
             });
         });
@@ -584,7 +584,7 @@ describe("NBT", () => {
                 expect(buffer).toBeInstanceOf(Buffer);
             });
             test("load", async () => {
-                const result = await serializer.deserialize(buffer, false);
+                const result = await serializer.deserialize(buffer);
                 expect(result.value).toStrictEqual(object);
             });
         });
