@@ -1,8 +1,7 @@
 {
     "files": [
         "index.ts",
-        "utils.ts",
-        "test.ts"
+        "utils.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

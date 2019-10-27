@@ -12,7 +12,7 @@
     },
     "scripts": {
         "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile"
+        "build": "npm run compile"
     },
     "repository": {
         "type": "git",
@@ -27,6 +27,9 @@
         "electron"
     ],
     "license": "MIT",
+    "optionalDependencies": {
+        "pako": "^1.0.10"
+    },
     "dependencies": {
         "bytebuffer": "^5.0.1",
         "file-type": "^11.0.0",

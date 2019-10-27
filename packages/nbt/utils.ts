@@ -1,3 +1,34 @@
+export type ZippingData = Uint8Array | number[] | string | Buffer;
+
+export declare function gzip(buffer: Buffer): Promise<Buffer | Uint16Array>;
+export declare function gzipSync(buffer: Buffer): Buffer;
+export declare function unzip(buffer: Buffer): Promise<Buffer>;
+export declare function unzipSync(buffer: Buffer): Buffer;
+
+try {
+    // tslint:disable-next-line: no-var-requires
+    const zlib: typeof import("zlib") = require("zlib");
+    (gzip as any) = function (buff: Buffer) {
+        return new Promise((resolve, reject) => {
+            zlib.gzip(buff, (e, r) => {
+                if (e) { reject(e); } else { resolve(r); }
+            });
+        });
+    };
+    (unzip as any) = function (buff: Buffer) {
+        return new Promise((resolve, reject) => {
+            zlib.gunzip(buff, (err, r) => {
+                if (err) { reject(err); } else { resolve(r); }
+            });
+        });
+    };
+    (gzipSync as any) = zlib.gzipSync;
+    (unzipSync as any) = zlib.unzipSync;
+} catch (e) {
+    // tslint:disable-next-line: no-var-requires
+    require("pako");
+}
+
 
 export function writeUTF8(out: ByteBuffer, str: string) {
     const strlen = str.length;
