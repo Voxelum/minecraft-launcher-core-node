@@ -34,6 +34,7 @@ jobs:
         npm run compile
     - name: Publish
       run: |
+        git reset --hard
         npx lerna publish from-package --yes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
