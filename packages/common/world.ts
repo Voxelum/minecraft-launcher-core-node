@@ -241,6 +241,21 @@ export interface TileEntityDataFrame {
     [key: string]: any;
 }
 
+export type RegionSectionDataFrame = {
+    BlockStates: Long[],
+    Palette: Array<{ Name: string; properties: { [key: string]: string } }>,
+    Data: number[],
+    BlockLight: number[],
+    SkyLight: number[],
+    Y: number,
+} | {
+    Blocks: number[],
+    Data: number[],
+    BlockLight: number[],
+    SkyLight: number[],
+    Y: number,
+}
+
 export interface RegionDataFrame {
     Level: {
         xPos: number;
@@ -254,13 +269,7 @@ export interface RegionDataFrame {
         Biomes: number[];
         Entities: object[];
         TileEntities: TileEntityDataFrame[];
-        Sections: Array<{
-            Blocks: number[],
-            Data: number[],
-            BlockLight: number[],
-            SkyLight: number[],
-            Y: number,
-        }>;
+        Sections: RegionSectionDataFrame[];
     };
     DataVersion: number;
 }
