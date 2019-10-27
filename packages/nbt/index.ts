@@ -1,9 +1,8 @@
 import ByteBuffer from "bytebuffer";
-import fileType = require("file-type");
+import fileType from "file-type";
 import Long from "long";
 import { Optional } from "typescript-optional";
-import * as zlib from "zlib";
-import { readUTF8, writeUTF8 } from "./utils";
+import { gzip, gzipSync, readUTF8, unzip, unzipSync, writeUTF8 } from "./utils";
 
 export namespace NBT {
 
@@ -293,10 +292,6 @@ export namespace NBT {
 
 
     export namespace Persistence {
-        export interface ReadOptions {
-            compressed?: boolean;
-        }
-
         interface TypedObject {
             readonly __nbtPrototype__: CompoundSchema;
             [key: string]: any;
@@ -308,7 +303,7 @@ export namespace NBT {
 
         type TypeIdentity = Schema | string | TagType;
 
-        class ReadContext {
+        export class ReadContext {
             constructor(private scopeType: TypeIdentity, private reg: { [name: string]: string }) { }
             set type(s: TypeIdentity) { this.scopeType = s; }
             get type(): TypeIdentity { return this.scopeType; }
@@ -318,18 +313,18 @@ export namespace NBT {
                 return new ReadContext(tagType as TagType, this.reg);
             }
         }
-        class WriteContext {
+        export class WriteContext {
             constructor(readonly type: Schema, private reg: { [id: string]: Schema }) { }
             findSchema(id: string): Schema | undefined { return this.reg[id]; }
             fork(type: Schema = {}): WriteContext { return new WriteContext(type, this.reg); }
         }
 
-        interface IO {
+        export interface IO {
             read(buf: ByteBuffer, context: ReadContext): any;
             write(buf: ByteBuffer, value: any, context: WriteContext): void;
 
-            readTag?(buf: ByteBuffer): Tags;
-            writeTag?(buf: ByteBuffer, tags: Tags): void;
+            // readTag?(buf: ByteBuffer): Tags;
+            // writeTag?(buf: ByteBuffer, tags: Tags): void;
         }
 
         const handlers: IO[] = [
@@ -337,7 +332,7 @@ export namespace NBT {
             { read: (buf) => buf.readByte(), write(buf, v) { buf.writeByte(v ? v : 0); } }, // byte
             { read: (buf) => buf.readShort(), write(buf, v) { buf.writeShort(v ? v : 0); } }, // short
             { read: (buf) => buf.readInt(), write(buf, v) { buf.writeInt(v ? v : 0); } }, // int
-            { read: (buf) => buf.readLong(), write(buf, v) { buf.writeInt64(v ? v : 0); } }, // long
+            { read: (buf) => buf.readInt64(), write(buf, v) { buf.writeInt64(v ? v : 0); } }, // long
             { read: (buf) => buf.readFloat(), write(buf, v) { buf.writeFloat(v ? v : 0); } }, // float
             { read: (buf) => buf.readDouble(), write(buf, v) { buf.writeDouble(v ? v : 0); } }, // double
             { // byte array
@@ -465,7 +460,7 @@ export namespace NBT {
                 read(buf) {
                     const len = buf.readInt();
                     const arr: Long[] = new Array(len);
-                    for (let i = 0; i < len; i++) { arr[i] = buf.readLong(); }
+                    for (let i = 0; i < len; i++) { arr[i] = buf.readInt64(); }
                     return arr;
                 },
                 write(buf, v = []) {
@@ -475,13 +470,25 @@ export namespace NBT {
             },
         ];
 
+        export interface SerializationOption {
+            compressed?: boolean;
+            /**
+             * IO override for serialization
+             */
+            io?: { [tagType: number]: IO };
+        }
+
         /**
          * Serialzie an nbt typed json object into NBT binary
          * @param object The json
          * @param compressed Should we compress it
          */
-        export async function serialize(object: TypedObject, compressed?: boolean): Promise<Buffer> {
-            return writeRootTag(object, object.__nbtPrototype__, {}, "", compressed || false);
+        export async function serialize(object: TypedObject, option: SerializationOption = {}): Promise<Buffer> {
+            const buff = writeRootTag(object, object.__nbtPrototype__, {}, "");
+            if (!option.compressed) {
+                return buff;
+            }
+            return gzip(buff) as any;
         }
 
         /**
@@ -489,18 +496,45 @@ export namespace NBT {
          * @param fileData The nbt binary
          * @param compressed Should we compress it
          */
-        export async function deserialize(fileData: Buffer, compressed?: boolean): Promise<TypedObject> {
-            const { value, type } = await readBuffer(fileData, compressed);
+        export async function deserialize(fileData: Buffer, option: SerializationOption = {}): Promise<TypedObject> {
+            const doUnzip: boolean = shouldUnzip(fileData, option.compressed);
+            const bb = ByteBuffer.wrap(doUnzip ? await unzip(fileData) : fileData);
+
+            const { value, type } = readRootTag(bb);
             deepFreeze(type);
             Object.defineProperty(value, "__nbtPrototype__", { value: type });
             return value;
         }
 
-        export function readTagSync(fileData: Buffer): NBT.TagCompound<any> | undefined {
-            return undefined;
+        /**
+         * Serialzie an nbt typed json object into NBT binary
+         * @param object The json
+         * @param compressed Should we compress it
+         */
+        export function serializeSync(object: TypedObject, option: SerializationOption = {}): Buffer {
+            const buff = writeRootTag(object, object.__nbtPrototype__, {}, "");
+            if (!option.compressed) {
+                return buff;
+            }
+            return gzipSync(buff);
         }
 
-        async function readBuffer(fileData: Buffer, compressed?: boolean) {
+        /**
+         * Deserialize the nbt binary into json
+         * @param fileData The nbt binary
+         * @param compressed Should we compress it
+         */
+        export function deserializeSync(fileData: Buffer, option: SerializationOption = {}): TypedObject {
+            const doUnzip: boolean = shouldUnzip(fileData, option.compressed);
+            const bb = ByteBuffer.wrap(doUnzip ? unzipSync(fileData) : fileData);
+
+            const { value, type } = readRootTag(bb);
+            deepFreeze(type);
+            Object.defineProperty(value, "__nbtPrototype__", { value: type });
+            return value;
+        }
+
+        function shouldUnzip(fileData: Buffer, compressed?: boolean) {
             let doUnzip: boolean;
             if (typeof compressed === "undefined") {
                 const ft = fileType(fileData);
@@ -508,12 +542,7 @@ export namespace NBT {
             } else {
                 doUnzip = compressed;
             }
-            const bb = ByteBuffer.wrap(doUnzip ? await new Promise((resolve, reject) => {
-                zlib.unzip(fileData, (err, r) => {
-                    if (err) { reject(err); } else { resolve(r); }
-                });
-            }) : fileData);
-            return readRootTag(bb);
+            return doUnzip;
         }
 
         function readRootTag(buffer: ByteBuffer, reg: { [id: string]: string } = {}) {
@@ -526,7 +555,7 @@ export namespace NBT {
             return { type: context.type, value, name };
         }
 
-        async function writeRootTag(value: any, type: Schema, reg: { [id: string]: Schema }, filename?: string, compressed?: boolean): Promise<Buffer> {
+        function writeRootTag(value: any, type: Schema, reg: { [id: string]: Schema }, filename?: string): Buffer {
             const buffer = new ByteBuffer();
             buffer.writeByte(NBT.TagType.Compound);
             writeUTF8(buffer, filename || "");
@@ -534,15 +563,7 @@ export namespace NBT {
             const context = new WriteContext(type, reg);
             handlers[NBT.TagType.Compound].write(buffer, value, context);
 
-            if (compressed) {
-                return new Promise((resolve, reject) => {
-                    zlib.gzip(buffer.flip().buffer.slice(0, buffer.limit), (e, r) => {
-                        if (e) { reject(e); } else { resolve(r); }
-                    });
-                });
-            } else {
-                return buffer.flip().buffer.slice(0, buffer.limit);
-            }
+            return buffer.flip().buffer.slice(0, buffer.limit);
         }
 
         export function createSerializer() {
@@ -569,33 +590,61 @@ export namespace NBT {
              * @param type The registered nbt type
              * @param compressed Should compress this nbt
              */
-            serialize(object: object, type: string, compressed: boolean = false) {
+            async serialize(object: object, type: string, compressed: boolean = false) {
                 const schema = this.registry[type];
                 if (!schema) { throw new Error(`Unknown type [${schema}]`); }
 
-                return writeRootTag(object, schema, this.registry, "", compressed);
+                const buff = writeRootTag(object, schema, this.registry, "");
+                if (!compressed) {
+                    return buff;
+                }
+                return gzip(buff);
+            }
+            /**
+             * Serialize the object into the specific type
+             * @param object The json object
+             * @param type The registered nbt type
+             * @param compressed Should compress this nbt
+             */
+            serializeSync(object: object, type: string, compressed: boolean = false) {
+                const schema = this.registry[type];
+                if (!schema) { throw new Error(`Unknown type [${schema}]`); }
+
+                const buff = writeRootTag(object, schema, this.registry, "");
+                if (!compressed) {
+                    return buff;
+                }
+                return gzipSync(buff);
             }
             /**
              * Deserialize the nbt to json object directly
              * @param fileData The nbt data
              * @param compressed Does the data compressed
              */
-            deserialize(fileData: Buffer, compressed: boolean = false): { value: any, type: any | string } {
-                let doUnzip: boolean;
-                if (typeof compressed === "undefined") {
-                    const ft = fileType(fileData);
-                    doUnzip = ft !== undefined && ft.ext === "gz";
-                } else {
-                    doUnzip = compressed;
-                }
+            async deserialize(fileData: Buffer, compressed: boolean = false): Promise<{ value: any, type: any | string }> {
+                const doUnzip: boolean = shouldUnzip(fileData, compressed);
+                let bytebuffer: ByteBuffer;
                 if (doUnzip) {
-                    const zip = zlib.unzipSync(fileData);
-                    const bytebuffer = ByteBuffer.wrap(zip);
-                    return readRootTag(bytebuffer, this.reversedRegistry);
+                    bytebuffer = ByteBuffer.wrap(await unzip(fileData));
                 } else {
-                    const bytebuffer = ByteBuffer.wrap(fileData);
-                    return readRootTag(bytebuffer, this.reversedRegistry);
+                    bytebuffer = ByteBuffer.wrap(fileData);
                 }
+                return readRootTag(bytebuffer, this.reversedRegistry);
+            }
+            /**
+             * Deserialize the nbt to json object directly
+             * @param fileData The nbt data
+             * @param compressed Does the data compressed
+             */
+            deserializeSync(fileData: Buffer, compressed: boolean = false): { value: any, type: any | string } {
+                const doUnzip: boolean = shouldUnzip(fileData, compressed);
+                let bytebuffer: ByteBuffer;
+                if (doUnzip) {
+                    bytebuffer = ByteBuffer.wrap(unzipSync(fileData));
+                } else {
+                    bytebuffer = ByteBuffer.wrap(fileData);
+                }
+                return readRootTag(bytebuffer, this.reversedRegistry);
             }
         }
 

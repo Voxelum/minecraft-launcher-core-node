@@ -28,7 +28,7 @@ describe("NBT", () => {
         expect(buf).toBeTruthy();
     });
     test("should be able to deserialize buffer", async () => {
-        deserialized = await ser.deserialize(buf).value;
+        deserialized = ser.deserializeSync(buf).value;
         expect(deserialized).toBeTruthy();
     });
     test("should be able to deserialize buffer directly", async () => {
