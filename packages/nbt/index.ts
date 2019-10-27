@@ -2,7 +2,7 @@ import ByteBuffer from "bytebuffer";
 import fileType from "file-type";
 import Long from "long";
 import { Optional } from "typescript-optional";
-import { gzip, gzipSync, readUTF8, unzip, unzipSync, writeUTF8 } from "./utils";
+import { readUTF8, writeUTF8, zlib } from "./utils";
 
 export namespace NBT {
 
@@ -488,7 +488,7 @@ export namespace NBT {
             if (!option.compressed) {
                 return buff;
             }
-            return gzip(buff) as any;
+            return zlib.gzip(buff) as any;
         }
 
         /**
@@ -498,7 +498,7 @@ export namespace NBT {
          */
         export async function deserialize(fileData: Buffer, option: SerializationOption = {}): Promise<TypedObject> {
             const doUnzip: boolean = shouldUnzip(fileData, option.compressed);
-            const bb = ByteBuffer.wrap(doUnzip ? await unzip(fileData) : fileData);
+            const bb = ByteBuffer.wrap(doUnzip ? await zlib.unzip(fileData) : fileData);
 
             const { value, type } = readRootTag(bb, undefined, Object.assign({}, handlers, option.io));
             deepFreeze(type);
@@ -516,7 +516,7 @@ export namespace NBT {
             if (!option.compressed) {
                 return buff;
             }
-            return gzipSync(buff);
+            return zlib.gzipSync(buff);
         }
 
         /**
@@ -526,7 +526,7 @@ export namespace NBT {
          */
         export function deserializeSync(fileData: Buffer, option: SerializationOption = {}): TypedObject {
             const doUnzip: boolean = shouldUnzip(fileData, option.compressed);
-            const bb = ByteBuffer.wrap(doUnzip ? unzipSync(fileData) : fileData);
+            const bb = ByteBuffer.wrap(doUnzip ? zlib.unzipSync(fileData) : fileData);
 
             const { value, type } = readRootTag(bb, undefined, Object.assign({}, handlers, option.io));
             deepFreeze(type);
@@ -598,7 +598,7 @@ export namespace NBT {
                 if (!option.compressed) {
                     return buff;
                 }
-                return gzip(buff) as Promise<Buffer>;
+                return zlib.gzip(buff) as Promise<Buffer>;
             }
             /**
              * Serialize the object into the specific type
@@ -614,7 +614,7 @@ export namespace NBT {
                 if (!option.compressed) {
                     return buff;
                 }
-                return gzipSync(buff);
+                return zlib.gzipSync(buff);
             }
             /**
              * Deserialize the nbt to json object directly
@@ -625,7 +625,7 @@ export namespace NBT {
                 const doUnzip: boolean = shouldUnzip(fileData, option.compressed);
                 let bytebuffer: ByteBuffer;
                 if (doUnzip) {
-                    bytebuffer = ByteBuffer.wrap(await unzip(fileData));
+                    bytebuffer = ByteBuffer.wrap(await zlib.unzip(fileData));
                 } else {
                     bytebuffer = ByteBuffer.wrap(fileData);
                 }
@@ -640,7 +640,7 @@ export namespace NBT {
                 const doUnzip: boolean = shouldUnzip(fileData, option.compressed);
                 let bytebuffer: ByteBuffer;
                 if (doUnzip) {
-                    bytebuffer = ByteBuffer.wrap(unzipSync(fileData));
+                    bytebuffer = ByteBuffer.wrap(zlib.unzipSync(fileData));
                 } else {
                     bytebuffer = ByteBuffer.wrap(fileData);
                 }

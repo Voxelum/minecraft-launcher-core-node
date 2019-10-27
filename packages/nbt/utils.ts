@@ -1,30 +1,39 @@
 export type ZippingData = Uint8Array | number[] | string | Buffer;
 
-export declare function gzip(buffer: Buffer): Promise<Buffer | Uint16Array>;
-export declare function gzipSync(buffer: Buffer): Buffer;
-export declare function unzip(buffer: Buffer): Promise<Buffer>;
-export declare function unzipSync(buffer: Buffer): Buffer;
+export let zlib: ZLib<any>;
+
+export function setZlib<BUF>(lib: ZLib<BUF>) { zlib = lib; }
+
+export interface ZLib<BUF> {
+    gzip(buffer: BUF): Promise<BUF>;
+    gzipSync(buffer: BUF): BUF;
+    unzip(buffer: BUF): Promise<BUF>;
+    unzipSync(buffer: BUF): BUF;
+}
 
 try {
     // tslint:disable-next-line: no-var-requires
-    const zlib: typeof import("zlib") = require("zlib");
-    (gzip as any) = function (buff: Buffer) {
-        return new Promise((resolve, reject) => {
-            zlib.gzip(buff, (e, r) => {
-                if (e) { reject(e); } else { resolve(r); }
+    const lib: typeof import("zlib") = require("zlib");
+    setZlib({
+        gzip(buf) {
+            return new Promise((resolve, reject) => {
+                lib.gzip(buf, (e, r) => {
+                    if (e) { reject(e); } else { resolve(r); }
+                });
             });
-        });
-    };
-    (unzip as any) = function (buff: Buffer) {
-        return new Promise((resolve, reject) => {
-            zlib.gunzip(buff, (err, r) => {
-                if (err) { reject(err); } else { resolve(r); }
+        },
+        unzip(buff) {
+            return new Promise((resolve, reject) => {
+                lib.gunzip(buff, (err, r) => {
+                    if (err) { reject(err); } else { resolve(r); }
+                });
             });
-        });
-    };
-    (gzipSync as any) = zlib.gzipSync;
-    (unzipSync as any) = zlib.unzipSync;
+        },
+        gzipSync(buff) { return lib.gzipSync(buff); },
+        unzipSync(buff) { return lib.unzipSync(buff); },
+    } as ZLib<Buffer>);
 } catch (e) {
+    console.error(e);
     // tslint:disable-next-line: no-var-requires
     require("pako");
 }
