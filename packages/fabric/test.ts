@@ -14,9 +14,12 @@ describe.skip("Fabric", () => {
 
     test("#updateVersionList", async () => {
         const list = await Fabric.updateVersionList();
-        expect(list.timestamp).toBeInstanceOf(String);
-        expect(list.yarnVersions).toBeInstanceOf(Array);
-        expect(list.yarnVersions.every((s) => typeof s === "string")).toBeTruthy();
-        expect(list.loaderVersions.every((s) => typeof s === "string")).toBeTruthy();
+        expect(list).toBeTruthy();
+        if (list) {
+            expect(typeof list.timestamp).toEqual("string");
+            expect(list.yarnVersions).toBeInstanceOf(Array);
+            expect(list.yarnVersions.every((s) => typeof s === "string")).toBeTruthy();
+            expect(list.loaderVersions.every((s) => typeof s === "string")).toBeTruthy();
+        }
     });
 });
