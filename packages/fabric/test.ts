@@ -11,4 +11,12 @@ describe.skip("Fabric", () => {
         await Fabric.install("1.14.1+build.10", "0.4.7+build.147", root);
         assert(fs.existsSync(new MinecraftFolder(root).getVersionJson("1.14.1-fabric1.14.1+build.10-0.4.7+build.147")));
     });
+
+    test("#updateVersionList", async () => {
+        const list = await Fabric.updateVersionList();
+        expect(list.timestamp).toBeInstanceOf(String);
+        expect(list.yarnVersions).toBeInstanceOf(Array);
+        expect(list.yarnVersions.every((s) => typeof s === "string")).toBeTruthy();
+        expect(list.loaderVersions.every((s) => typeof s === "string")).toBeTruthy();
+    });
 });
