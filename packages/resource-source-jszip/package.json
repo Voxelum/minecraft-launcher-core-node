@@ -1,0 +1,42 @@
+{
+  "name": "@xmcl/resource-source-jszip",
+  "version": "0.0.1",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "description": "Minecraft resource source jszip",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/jszip": "^3.1.4"
+  },
+  "dependencies": {
+    "@xmcl/resource-manager": "file:../resource-manager",
+    "jszip": "^3.1.5"
+  },
+  "scripts": {
+    "test": "",
+    "compile": "tsc --build tsconfig.json",
+    "build": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
+  },
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+}
