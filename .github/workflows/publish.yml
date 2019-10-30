@@ -26,7 +26,7 @@ jobs:
         registry-url: 'https://registry.npmjs.org'
     - name: Install
       run: |
-        npm install
+        npm ci
       env:
         CI: true
     - name: Compile All
