@@ -28,7 +28,11 @@ The `ForgeInstaller.installByInstallerPartial` will do 2 and 3.
 
 If you want to just do step 3, you can use `ForgeInstaller.diagnose` and find which libraries is break and use `ForgeInstaller.postProcess` to handle it.
 
+## Usage
+
 ### Forge Installation
+
+Get the forge version info and install forge from it. 
 
 ```ts
     import { ForgeInstaller, ForgeWebPage } from "@xmcl/forge-installer";
@@ -39,8 +43,6 @@ If you want to just do step 3, you can use `ForgeInstaller.diagnose` and find wh
     const firstVersionOnPage: ForgeWebPage.Version = page.versions[0];
     await ForgeInstaller.install(firstVersionOnPage, minecraftLocation);
 ```
-
-Get the forge version info and install forge from it. 
 
 Notice that this installation doesn't ensure full libraries installation.
 Please run `Installer.installDependencies` afther that.

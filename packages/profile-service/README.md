@@ -6,7 +6,19 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
+## Usage
+
 ### Game Profile 
+
+Or lookup profile by name:
+
+```ts
+    const username: string;
+    const gameProfilePromise: Promise<GameProfile> = ProfileService.lookup(username);
+```
+
+Fetch the user game profile by uuid. (This could also be used for get skin)
+
 
 ```ts
     import { ProfileService, GameProfile } from "@xmcl/profile-service"
@@ -14,16 +26,9 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     const gameProfilePromise: GameProfile = await ProfileService.fetch(userUUID);
 ```
 
-Or lookup profile by name.
+Get player texture:
 
 ```ts
-    const username: string;
-    const gameProfilePromise: Promise<GameProfile> = ProfileService.lookup(username);
-```
-
-Fetch the user game profile by uuid. This could also be used for get skin.
-
-```ts
-    const gameProfile: GameProfile;
-    const texturesPromise: Promise<GameProfile.Textures> = ProfileService.fetchProfileTexture(gameProfile);
+    const gameProfilePromise: GameProfile;
+    const texturesPromise: Promise<GameProfile.Textures> = ProfileService.fetchProfileTexture(gameProfilePromise);
 ```

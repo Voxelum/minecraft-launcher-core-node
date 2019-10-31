@@ -6,7 +6,11 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
+## Usage
+
 ### Mojang Account Info
+
+Get personal info from mojang.
 
 ```ts
     import { MojangService } from "@xmcl/mojang";
@@ -14,7 +18,7 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     const info: Promise<MojangAccount> = MojangService.getAccountInfo(accessToken);
 ```
 
-Get personal info from mojang.
+Validate if user have a validated IP address, and get & answer challenges to validate player's identity.
 
 ```ts
     import { MojangService } from "@xmcl/mojang";
@@ -29,4 +33,3 @@ Get personal info from mojang.
     }
 ```
 
-Validate if user have a validated IP address, and get & answer challenges to validate player's identity.

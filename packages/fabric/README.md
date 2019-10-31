@@ -6,7 +6,11 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
-### Fabric 
+## Usage
+
+### Fetch & Install Fabric
+
+Fetch the new fabric version list.
 
 ```ts
     import { Fabric } from "@xmcl/fabric";
@@ -15,7 +19,7 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     const latestLoaderVersion = versionList.loaderVersions[0];
 ```
 
-Fetch the new fabric version list.
+Install fabric to the client. This installation process doesn't ensure the minecraft libraries.
 
 ```ts
     import { Fabric } from "@xmcl/fabric";
@@ -25,7 +29,4 @@ Fetch the new fabric version list.
     const installPromise: Promise<void> = Fabric.install(yarnVersion, loaderVersion, minecraftLocation)
 ```
 
-Install fabric to the client. This installation process doesn't ensure the minecraft libraries.
-
 Please run `Installer.installDependencies` after that to install fully.
-

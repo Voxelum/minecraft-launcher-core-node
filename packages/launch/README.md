@@ -8,18 +8,19 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 
 ### Launch
 
+Launch minecraft from a version:
+
 ```ts
     import { Launcher } from "@xmcl/launch"
-    const version: string;
-    const javaPath: string;
-    const gamePath: string;
+    const version: string; // full version id, like 1.13, or your forge version like, 1.13-forge-<someForgeVersion>
+    const javaPath: string; // java executable path
+    const gamePath: string; // .minecraft path
     const proc: Promise<ChildProcess> = Launcher.launch({ gamePath, javaPath, version });
 ```
 
-Launch minecraft from a version.
+Detach from the parent process. So your launcher's exit/crash won't affact the Minecraft running.
 
 ```ts
     const proc: Promise<ChildProcess> = Launcher.launch({ gamePath, javaPath, version, extraExecOption: { detached: true } });
 ```
 
-Detach from the parent process. So your launcher's exit/crash won't affact the Minecraft running.

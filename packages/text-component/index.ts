@@ -212,8 +212,69 @@ export interface TextComponent {
     append(component: string | TextComponent): TextComponent;
 }
 
+const colorCode = new Array<number>(32);
+for (let i = 0; i < 32; i += 1) {
+    const j = ((i >> 3) & 1) * 85; // eslint-disable-line no-bitwise
+    let k = (((i >> 2) & 1) * 170) + j; // eslint-disable-line no-bitwise
+    let l = (((i >> 1) & 1) * 170) + j; // eslint-disable-line no-bitwise
+    let i1 = ((i & 1) * 170) + j; // eslint-disable-line no-bitwise
+    if (i === 6) { k += 85; }
+    if (i >= 16) {
+        k /= 4;
+        l /= 4;
+        i1 /= 4;
+    }
+    colorCode[i] = ((k & 255) << 16) | ((l & 255) << 8) | (i1 & 255); // eslint-disable-line no-bitwise
+}
+
 
 export namespace TextComponent {
+    /**
+     * Provide a standard rendering for text component to html/css element
+     * @param src The text component
+     */
+    export function render(src: TextComponent): Array<{ style: string; text: string }> {
+        function itr(comp: any) {
+            const comps = [comp];
+            if (comp._siblings.length !== 0) {
+                for (const s of comp._siblings) {
+                    comps.push(...itr(s));
+                }
+            }
+            return comps;
+        }
+
+        const elems: Array<{ style: string; text: string }> = [];
+
+        let iterator = src.iterator;
+        if ("iterator" in src) {
+            iterator = src.iterator;
+        } else if ((src as any)._siblings) {
+            iterator = itr(src);
+        }
+        if (iterator) {
+            for (const component of iterator) {
+                let style = "";
+                if (component.style.bold) { style += "font-weight:bold;"; }
+                if (component.style.underlined) { style += "text-decoration:underline;"; }
+                if (component.style.italic) { style += "font-style:italic;"; }
+                if (component.style.strikethrough) { style += "text-decoration:line-through;"; }
+                if (component.style.color) {
+                    const code = colorCode[component.style.color.colorIndex || -1];
+                    if (code !== undefined) {
+                        const r = (code >> 16); // eslint-disable-line no-bitwise
+                        const g = ((code >> 8) & 255); // eslint-disable-line no-bitwise
+                        const b = (code & 255); // eslint-disable-line no-bitwise
+                        style += `color: rgb(${r}, ${g}, ${b});`;
+                    }
+                }
+                elems.push({ style, text: component.unformatted });
+            }
+        }
+
+        return elems;
+    }
+
     export function str(s?: string): TextComponent {
         return new TextComponentString(s);
     }
