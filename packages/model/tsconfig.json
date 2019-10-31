@@ -1,0 +1,23 @@
+{
+    "files": [
+        "index.ts",
+        "player.ts",
+        "player-model.ts",
+        "block.ts"
+    ],
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "commonjs",
+        "lib": [
+            "dom"
+        ],
+        "experimentalDecorators": true,
+        "declaration": true,
+        "sourceMap": true,
+        "downlevelIteration": true,
+        "strict": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    }
+}
