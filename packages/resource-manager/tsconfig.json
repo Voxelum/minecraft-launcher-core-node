@@ -1,6 +1,7 @@
 {
     "files": [
-        "index.ts"
+        "index.ts",
+        "model-loader.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
