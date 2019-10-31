@@ -1,5 +1,5 @@
 import { BlockModel, PackMeta } from "@xmcl/common";
-import * as THREE from "three";
+import { BoxGeometry, Group, LinearFilter, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, NearestFilter, Object3D, TextureLoader, Vector2, Vector3 } from "three";
 
 interface Texture {
     url: string;
@@ -46,7 +46,7 @@ function findRealTexturePath(model: BlockModel.Resolved, variantKey: string) {
     return texturePath;
 }
 
-export class BlockModelObject extends THREE.Object3D {
+export class BlockModelObject extends Object3D {
     animationLoop: boolean = false;
     displayOption: BlockModel.Display = DEFAULT_DISPLAY;
 
@@ -89,8 +89,8 @@ export class BlockModelObject extends THREE.Object3D {
         for (let i = 0; i < group.children.length; i++) {
 
             const pivot = group.children[i];
-            const mesh = pivot.children[0] as THREE.Mesh;
-            const geo = mesh.geometry as THREE.BoxGeometry;
+            const mesh = pivot.children[0] as Mesh;
+            const geo = mesh.geometry as BoxGeometry;
 
             for (let j = 0; j < geo.vertices.length; j++) {
 
@@ -112,7 +112,7 @@ export class BlockModelObject extends THREE.Object3D {
 
         // return the center of the bounding box
 
-        return new THREE.Vector3(
+        return new Vector3(
             (box.minx + box.maxx) / 2,
             (box.miny + box.maxy) / 2,
             (box.minz + box.maxz) / 2,
@@ -121,10 +121,10 @@ export class BlockModelObject extends THREE.Object3D {
 }
 
 export class BlockModelFactory {
-    private static TRANSPARENT_MATERIAL = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, alphaTest: 0.5 });
+    private static TRANSPARENT_MATERIAL = new MeshBasicMaterial({ transparent: true, opacity: 0, alphaTest: 0.5 });
 
-    private loader = new THREE.TextureLoader();
-    private cachedMaterial: Record<string, THREE.MeshMaterialType> = {};
+    private loader = new TextureLoader();
+    private cachedMaterial: Record<string, Material> = {};
 
     constructor(readonly textureRegistry: TextureRegistry, readonly option: { clipUVs?: boolean, modelOnly?: boolean } = {}) { }
 
@@ -139,10 +139,10 @@ export class BlockModelFactory {
         const modelOnly = option.modelOnly || false;
 
         const obj = new BlockModelObject();
-        const group = new THREE.Group();
+        const group = new Group();
         group.name = "wrapper";
 
-        const materials: THREE.MeshMaterialType[] = [BlockModelFactory.TRANSPARENT_MATERIAL];
+        const materials: Material[] = [BlockModelFactory.TRANSPARENT_MATERIAL];
         const materialIndex: { [variant: string]: number } = {};
         const materialPathIndex: { [texPath: string]: number } = {};
 
@@ -163,11 +163,11 @@ export class BlockModelFactory {
                 const texture = this.loader.load(tex.url);
 
                 // sharp pixels and smooth edges
-                texture.magFilter = THREE.NearestFilter;
-                texture.minFilter = THREE.LinearFilter;
+                texture.magFilter = NearestFilter;
+                texture.minFilter = LinearFilter;
 
                 // map texture to material, keep transparency and fix transparent z-fighting
-                const mat = new THREE.MeshLambertMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
+                const mat = new MeshLambertMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
 
                 materialIndex[variant] = materials.length;
                 materialPathIndex[texPath] = materialIndex.length;
@@ -194,8 +194,8 @@ export class BlockModelFactory {
             };
 
             const fix = 0.001;
-            const blockGeometry = new THREE.BoxGeometry(width + fix, height + fix, length + fix);
-            const blockMesh = new THREE.Mesh(blockGeometry, materials);
+            const blockGeometry = new BoxGeometry(width + fix, height + fix, length + fix);
+            const blockMesh = new Mesh(blockGeometry, materials);
             blockMesh.name = "block-element";
 
             blockGeometry.faceVertexUvs[0] = [];
@@ -237,10 +237,10 @@ export class BlockModelFactory {
                     uv[3] -= 0.0005;
 
                     let map = [
-                        new THREE.Vector2(uv[0], 1 - uv[1]),
-                        new THREE.Vector2(uv[0], 1 - uv[3]),
-                        new THREE.Vector2(uv[2], 1 - uv[3]),
-                        new THREE.Vector2(uv[2], 1 - uv[1]),
+                        new Vector2(uv[0], 1 - uv[1]),
+                        new Vector2(uv[0], 1 - uv[3]),
+                        new Vector2(uv[2], 1 - uv[3]),
+                        new Vector2(uv[2], 1 - uv[1]),
                     ];
 
                     if (face.rotation) {
@@ -264,10 +264,10 @@ export class BlockModelFactory {
                     blockGeometry.faces[i * 2 + 1].materialIndex = 0;
 
                     const map = [
-                        new THREE.Vector2(0, 0),
-                        new THREE.Vector2(1, 0),
-                        new THREE.Vector2(1, 1),
-                        new THREE.Vector2(0, 1),
+                        new Vector2(0, 0),
+                        new Vector2(1, 0),
+                        new Vector2(1, 1),
+                        new Vector2(0, 1),
                     ];
 
                     blockGeometry.faceVertexUvs[0][i * 2] = [map[0], map[1], map[3]];
@@ -291,7 +291,7 @@ export class BlockModelFactory {
                 const angle = element.rotation.angle;
 
                 // create pivot
-                const pivot = new THREE.Group();
+                const pivot = new Group();
                 pivot.name = "pivot";
                 pivot.position.x = rotationOrigin.x;
                 pivot.position.y = rotationOrigin.y;
@@ -315,7 +315,7 @@ export class BlockModelFactory {
 
                 group.add(pivot);
             } else {
-                const pivot = new THREE.Group();
+                const pivot = new Group();
                 pivot.name = "pivot";
                 pivot.add(blockMesh);
                 group.add(pivot);

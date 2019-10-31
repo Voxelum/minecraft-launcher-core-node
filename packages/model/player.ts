@@ -1,5 +1,4 @@
-import { Geometry, Mesh, MeshBasicMaterial, Object3D } from "three";
-import * as THREE from "three";
+import { BoxGeometry, BoxHelper, CanvasTexture, Color, DoubleSide, Geometry, Mesh, MeshBasicMaterial, NearestFilter, Object3D } from "three";
 import format, { CubeUVMapping, ModelTemplate } from "./player-model";
 
 function convertLegacySkin(context: CanvasRenderingContext2D, width: number) {
@@ -60,7 +59,7 @@ function convertLegacySkin(context: CanvasRenderingContext2D, width: number) {
 
 type TextureSource = string | HTMLImageElement;
 
-function mapUV(mesh: THREE.Mesh, faceIdx: number, x1: number, y1: number, x2: number, y2: number) {
+function mapUV(mesh: Mesh, faceIdx: number, x1: number, y1: number, x2: number, y2: number) {
     const geometry = mesh.geometry as Geometry;
     const material = mesh.material as MeshBasicMaterial;
     const texture = material.map!;
@@ -91,7 +90,7 @@ function mapCubeUV(mesh: Mesh, src: CubeUVMapping) {
 export class PlayerObject3D extends Object3D {
     private _slim: boolean = false;
 
-    constructor(skin: THREE.MeshBasicMaterial, cape: THREE.MeshBasicMaterial, tranparent: THREE.MeshBasicMaterial, slim: boolean) {
+    constructor(skin: MeshBasicMaterial, cape: MeshBasicMaterial, tranparent: MeshBasicMaterial, slim: boolean) {
         super();
         this._slim = slim;
         buildPlayerModel(this, skin, cape, tranparent, slim);
@@ -107,19 +106,19 @@ export class PlayerObject3D extends Object3D {
             const leftArm = this.getObjectByName("leftArm") as Mesh;
             const rightArm = this.getObjectByName("rightArm") as Mesh;
 
-            leftArm.geometry = new THREE.CubeGeometry(template.leftArm.w, template.leftArm.h, template.leftArm.d);
+            leftArm.geometry = new BoxGeometry(template.leftArm.w, template.leftArm.h, template.leftArm.d);
             mapCubeUV(leftArm, template.leftArm);
-            rightArm.geometry = new THREE.CubeGeometry(template.rightArm.w, template.rightArm.h, template.rightArm.d);
+            rightArm.geometry = new BoxGeometry(template.rightArm.w, template.rightArm.h, template.rightArm.d);
             mapCubeUV(rightArm, template.rightArm);
 
             const leftArmLayer = this.getObjectByName("leftArmLayer") as Mesh;
             const rightArmLayer = this.getObjectByName("rightArmLayer") as Mesh;
             if (leftArmLayer) {
-                leftArmLayer.geometry = new THREE.CubeGeometry(template.leftArm.layer.w, template.leftArm.layer.h, template.leftArm.layer.d);
+                leftArmLayer.geometry = new BoxGeometry(template.leftArm.layer.w, template.leftArm.layer.h, template.leftArm.layer.d);
                 mapCubeUV(leftArmLayer, template.leftArm.layer);
             }
             if (rightArmLayer) {
-                rightArmLayer.geometry = new THREE.CubeGeometry(template.rightArm.layer.w, template.rightArm.layer.h, template.rightArm.layer.d);
+                rightArmLayer.geometry = new BoxGeometry(template.rightArm.layer.w, template.rightArm.layer.h, template.rightArm.layer.d);
                 mapCubeUV(rightArmLayer, template.rightArm.layer);
             }
         }
@@ -127,14 +126,14 @@ export class PlayerObject3D extends Object3D {
     }
 }
 
-function buildPlayerModel(root: THREE.Object3D, skin: THREE.MeshBasicMaterial, cape: THREE.MeshBasicMaterial, tranparent: THREE.MeshBasicMaterial, slim: boolean): Object3D {
+function buildPlayerModel(root: Object3D, skin: MeshBasicMaterial, cape: MeshBasicMaterial, tranparent: MeshBasicMaterial, slim: boolean): Object3D {
     const template = slim ? format.alex : format.steve;
     const partsNames: Array<keyof ModelTemplate> = Object.keys(template) as any;
 
     for (const partName of partsNames) {
         const model = template[partName];
 
-        const mesh = new THREE.Mesh(new THREE.CubeGeometry(model.w, model.h, model.d),
+        const mesh = new Mesh(new BoxGeometry(model.w, model.h, model.d),
             partName === "cape" ? cape : skin);
 
         mesh.name = partName;
@@ -146,14 +145,14 @@ function buildPlayerModel(root: THREE.Object3D, skin: THREE.MeshBasicMaterial, c
         }
         mapCubeUV(mesh, model);
 
-        const box = new THREE.BoxHelper(mesh, new THREE.Color(0xffffff));
+        const box = new BoxHelper(mesh, new Color(0xffffff));
         box.name = `${partName}Box`;
         box.visible = false;
         mesh.add(box);
 
         if ("layer" in model) {
             const layer = model.layer;
-            const layerMesh = new THREE.Mesh(new THREE.CubeGeometry(layer.w, layer.h, layer.d), tranparent);
+            const layerMesh = new Mesh(new BoxGeometry(layer.w, layer.h, layer.d), tranparent);
             layerMesh.name = `${partName}Layer`;
             if (layer.y) { layerMesh.position.y = layer.y; }
             if (layer.x) { layerMesh.position.x = layer.x; }
@@ -198,38 +197,38 @@ export class PlayerModel {
     static create() { return new PlayerModel(); }
 
     readonly playerObject3d: PlayerObject3D;
-    readonly materialPlayer: THREE.MeshBasicMaterial;
-    readonly materialTransparent: THREE.MeshBasicMaterial;
-    readonly materialCape: THREE.MeshBasicMaterial;
-    readonly textureCape: THREE.CanvasTexture;
-    readonly texturePlayer: THREE.CanvasTexture;
+    readonly materialPlayer: MeshBasicMaterial;
+    readonly materialTransparent: MeshBasicMaterial;
+    readonly materialCape: MeshBasicMaterial;
+    readonly textureCape: CanvasTexture;
+    readonly texturePlayer: CanvasTexture;
 
     constructor() {
         const canvas = document.createElement("canvas");
         canvas.width = 64;
         canvas.height = 64;
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.magFilter = THREE.NearestFilter;
-        texture.minFilter = THREE.NearestFilter;
+        const texture = new CanvasTexture(canvas);
+        texture.magFilter = NearestFilter;
+        texture.minFilter = NearestFilter;
         this.texturePlayer = texture;
         texture.name = "skinTexture";
 
-        this.materialPlayer = new THREE.MeshBasicMaterial({ map: texture });
+        this.materialPlayer = new MeshBasicMaterial({ map: texture });
 
-        this.materialTransparent = new THREE.MeshBasicMaterial({
+        this.materialTransparent = new MeshBasicMaterial({
             map: texture,
             transparent: true,
             depthWrite: false,
-            side: THREE.DoubleSide,
+            side: DoubleSide,
         });
 
-        const textureCape = new THREE.CanvasTexture(document.createElement("canvas"));
-        textureCape.magFilter = THREE.NearestFilter;
-        textureCape.minFilter = THREE.NearestFilter;
+        const textureCape = new CanvasTexture(document.createElement("canvas"));
+        textureCape.magFilter = NearestFilter;
+        textureCape.minFilter = NearestFilter;
         textureCape.name = "capeTexture";
         this.textureCape = textureCape;
 
-        const materialCape = new THREE.MeshBasicMaterial({
+        const materialCape = new MeshBasicMaterial({
             map: this.textureCape,
         });
         materialCape.name = "capeMaterial";
@@ -279,14 +278,14 @@ export class PlayerModel {
     //     if (this.nameTagObject) { this.clear(); }
     //     // build the texture
     //     const canvas = buildNameTag(name);
-    //     const texture = new THREE.Texture(canvas);
+    //     const texture = new Texture(canvas);
     //     texture.needsUpdate = true;
     //     // build the sprite itself
-    //     const material = new THREE.SpriteMaterial({
+    //     const material = new SpriteMaterial({
     //         map: texture,
     //         // useScreenCoordinates: false
     //     });
-    //     const sprite = new THREE.Sprite(material);
+    //     const sprite = new Sprite(material);
     //     this.nameTagObject = sprite;
     //     sprite.position.y = 1.15;
     //     // add sprite to the character
@@ -317,14 +316,14 @@ export class PlayerModel {
 
     //     // build the texture
     //     const canvas = buildChatBox(text);
-    //     const texture = new THREE.Texture(canvas);
+    //     const texture = new Texture(canvas);
     //     texture.needsUpdate = true;
     //     // build the sprite itself
-    //     const material = new THREE.SpriteMaterial({
+    //     const material = new SpriteMaterial({
     //         map: texture,
     //         // useScreenCoordinates: false
     //     });
-    //     const sprite = new THREE.Sprite(material);
+    //     const sprite = new Sprite(material);
     //     this.speakBox = sprite;
     //     sprite.scale.multiplyScalar(4);
     //     sprite.position.y = 1.5;
