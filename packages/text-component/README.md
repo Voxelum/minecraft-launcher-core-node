@@ -6,7 +6,11 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
+## Usage
+
 ### TextComponent
+
+Create TextComponent from string OR Minecraft's formatted string, like '§cThis is red'
 
 ```ts
     import { TextComponent } from "@xmcl/text-component";
@@ -15,4 +19,10 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     const fromFormatted: TextComponent = TextComponent.from(formattedString);
 ```
 
-Create TextComponent from string OR Minecraft's formatted string, like '§cThis is red'
+Render the TextComponent to css
+
+```ts
+    import { TextComponent } from "@xmcl/text-component";
+    const yourComponent: TextComponent;
+    const hint: Array<{ style: string; text: string }> = TextComponent.render(yourComponent);
+```

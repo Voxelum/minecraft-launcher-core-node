@@ -6,7 +6,9 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
-### GameSetting (options.txt)
+### Usage Read/Write GameSetting (options.txt)
+
+Serialize/Deserialize the minecraft game setting string.
 
 ```ts
     import { GameSetting } from '@xmcl/gamesetting'
@@ -14,5 +16,3 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     const setting: GameSetting = GameSetting.parse(settingString);
     const string: string = GameSetting.stringify(setting);
 ```
-
-Serialize/Deserialize the minecraft game setting string.

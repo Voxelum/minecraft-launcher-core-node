@@ -6,7 +6,11 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
-### Forge Parsing
+## Usage
+
+### Forge Mod Parsing
+
+Read the forge mod metadata, including `@Mod` annotation and mcmods.info json data.
 
 ```ts
     import { Forge } from "@xmcl/forge";
@@ -16,12 +20,10 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     const modid = metadata[0].modid; // get modid of first mods
 ```
 
-Read the forge mod metadata, including `@Mod` annotation and mcmods.info json data
+Read the forge mod config file (.cfg)
 
 ```ts
     const modConfigString: string;
     const config: Forge.Config = Forge.Config.parse(modConfigString);
-    const serializedBack = Forge.Config.stringify(config);
+    const serializedBack: string = Forge.Config.stringify(config);
 ```
-
-Read the forge mod config

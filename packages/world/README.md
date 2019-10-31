@@ -6,15 +6,18 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
+## Usage
+
 ### Save/World Data Loading
+
+Read the level info from a buffer.
 
 ```ts
     import { World, LevelDataFrame } from '@xmcl/world'
     const levelDatBuffer: Buffer;
     const info: LevelDataFrame = await World.parseLevelData(levelDatBuffer);
 ```
-
-Read the level info from a buffer.
+Read the level data & player data by save folder location string.
 
 ```ts
     import { World } from "@xmcl/world";
@@ -22,4 +25,3 @@ Read the level info from a buffer.
     const { level, players } = await World.load(worldSaveFolder, ["level", "player"]);
 ```
 
-Read the level data & player data by save folder location string.

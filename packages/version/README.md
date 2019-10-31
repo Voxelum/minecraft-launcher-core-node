@@ -6,7 +6,11 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
+## Usage
+
 ### Minecraft Version Parsing
+
+Parse minecraft version as a resolved version, which is used for launching process. You can also read version info from it if you want.
 
 ```ts
     import { Versoin } from "@xmcl/version";
@@ -16,7 +20,7 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     const resolvedVersion: ResolvedVersion = await Version.parse(minecraftLocation, minecraftVersionId);
 ```
 
-Parse minecraft version as a resolved version, which is used for launching process. You can also read version info from it if you want.
+Get the report of the version. It can check if version missing assets/libraries.
 
 ```ts
     import { Versoin, VersionDiagnosis } from "@xmcl/version";
@@ -26,4 +30,3 @@ Parse minecraft version as a resolved version, which is used for launching proce
     const report: VersionDiagnosis = await Version.diagnose(minecraftLocation, minecraftVersionId);
 ```
 
-Get the report of the version. It can check if version missing assets/libraries.

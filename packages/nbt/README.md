@@ -6,14 +6,22 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
-### NBT
+## Usage
+
+### Read/Write NBT
+
+You can simply deserialize/serialize nbt.
 
 ```ts
     import { NBT } from "@xmcl/nbt";
     const fileData: Buffer;
     const compressed: boolean;
-    const readed: NBT.Persistence.TypedObject = NBT.Persistence.deserialize(fileData, compressed);
+    const readed: NBT.Persistence.TypedObject = await NBT.Persistence.deserialize(fileData, { compressed });
+    // NBT.Persistence.TypedObject is just a object with __nbtPrototype__ defining its nbt type
+    // After you do the modification on it, you can serialize it back to NBT
+    const buf: Buffer = await NBT.Persistence.serialize(readed, { compressed });
 
+    // or use serializer style
     const serial = NBT.Persistence.createSerializer()
         .register("server", {
             name: NBT.TagType.String,
@@ -21,6 +29,6 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
             port: NBT.TagType.Int,
             icon: NBT.TagType.String,
         });
-    const serverInfo;
-    const serialized: Buffer = serial.serialize(serverInfo, "server");
+    const serverInfo: any; // this doesn't require the js object to be a TypedObject
+    const serialized: Buffer = await serial.serialize(serverInfo, "server");
 ```

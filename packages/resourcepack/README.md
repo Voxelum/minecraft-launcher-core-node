@@ -6,7 +6,11 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
-### ResourcePack
+## Usage
+
+### Read ResourcePack Basic Info
+
+Read ResourcePack from filePath
 
 ```ts
     import { ResourcePack } from "@xmcl/resourcepack"
@@ -22,4 +26,3 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     const packPromise: ResourcePack = await ResourcePack.read(fileFullPath, fileContentBuffer);
 ```
 
-Read ResourcePack from filePath

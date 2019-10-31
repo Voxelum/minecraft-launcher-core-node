@@ -6,7 +6,11 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
+## Usage
+
 ### Minecraft Install
+
+Fully install vanilla minecraft client including assets and libs.
 
 ```ts
     import { Installer } from "@xmcl/installer";
@@ -14,9 +18,48 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     import { ResolvedVersion } from "@xmcl/version";
 
     const minecraft: MinecraftLocation;
-    const versionPromise: Promise<ResolvedVersion> = Installer.updateVersionMeta()
-        .then((metas: Installer.VersionMetaList) => metas.versions[0]) // i just pick the first version in list here
-        .then((meta: Installer.VersionMeta) => Installer.install("client", meta, minecraft));
+    const list: Installer.VersionMetaList = await Installer.updateVersionMeta();
+    const aVersion: Installer.VersionMeta = list[0]; // i just pick the first version in list here
+    await Installer.install("client", aVersion, minecraft);
 ```
 
-Fully install vanilla minecraft client including assets and libs.
+Just install libraries:
+
+```ts
+    import { Installer } from "@xmcl/installer";
+    import { MinecraftLocation } from "@xmcl/util";
+    import { ResolvedVersion, Version } from "@xmcl/version";
+
+    const minecraft: MinecraftLocation;
+    const version: string; // version string like 1.13
+    const resolvedVersion: ResolvedVersion = await Version.parse(version);
+    await Installer.installLibraries(resolvedVersion);
+```
+
+Just install assets:
+
+```ts
+    import { Installer } from "@xmcl/installer";
+    import { MinecraftLocation } from "@xmcl/util";
+    import { ResolvedVersion, Version } from "@xmcl/version";
+
+    const minecraft: MinecraftLocation;
+    const version: string; // version string like 1.13
+    const resolvedVersion: ResolvedVersion = await Version.parse(version);
+    await Installer.installAssets(resolvedVersion);
+```
+
+Just ensure all assets and libraries are installed:
+
+```ts
+    import { Installer } from "@xmcl/installer";
+    import { MinecraftLocation } from "@xmcl/util";
+    import { ResolvedVersion, Version } from "@xmcl/version";
+
+    const minecraft: MinecraftLocation;
+    const version: string; // version string like 1.13
+    const resolvedVersion: ResolvedVersion = await Version.parse(version);
+    await Installer.installDependencies(resolvedVersion);
+```
+
+

@@ -6,11 +6,15 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
+## Usage
+
 ### Minecraft Client Ping Server
+
+Read sever info (server ip, port) and fetch its status (ping, server motd):
 
 ```ts
     import { Server } from '@xmcl/client'
-    const seversDatBuffer: Buffer;
+    const seversDatBuffer: Buffer; // this is the servers.dat under .minecraft folder
     const infos: Server.Info[] = await Server.readInfo(seversDatBuffer);
     const info: Server.Info = infos[0]
     // fetch the server status
@@ -18,5 +22,3 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
     // or you want the raw json
     const rawJsonPromise: Promise<Server.StatusFrame> = Server.fetchStatusFrame(info);
 ```
-
-Read sever info and fetch its status.
