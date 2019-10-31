@@ -7,7 +7,9 @@
         "mojang.ts",
         "user.ts",
         "game.ts",
-        "gamesetting.ts"
+        "gamesetting.ts",
+        "model.ts",
+        "resource.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
