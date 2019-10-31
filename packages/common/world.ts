@@ -254,7 +254,7 @@ export type RegionSectionDataFrame = {
     BlockLight: number[],
     SkyLight: number[],
     Y: number,
-}
+};
 
 export interface RegionDataFrame {
     Level: {
