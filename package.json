@@ -10,14 +10,14 @@
     "@types/uuid": "^3.4.3",
     "@types/yauzl": "^2.9.1",
     "@types/pako": "^1.0.1",
-    "@types/three": "^0.103.2",
+    "three": "^0.110.0",
     "conventional-recommended-bump": "^6.0.0",
     "git-semver-tags": "^3.0.0",
     "jest": "^24.9.0",
     "lerna": "^3.18.3",
     "ts-jest": "^24.0.2",
     "tslint": "^5.14.0",
-    "typescript": "^3.4.3",
+    "typescript": "^3.6.3",
     "pako": "^1.0.10"
   },
   "scripts": {
