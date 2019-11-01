@@ -233,10 +233,10 @@ async function load<K extends string & keyof World & ("players" | "advancements"
                     }
                 });
             }
-            if (enabledFunction.players && e.fileName.match(/\/playerdata\/[0-9a-z\-]+\.dat$/)) {
+            if (enabledFunction.players && e.fileName.match(/\/playerdata\/[0-9a-z-]+\.dat$/)) {
                 return zip.readEntry(e).then(NBT.Persistence.deserialize).then((r) => { result.players.push(r as any); });
             }
-            if (enabledFunction.advancements && e.fileName.match(/\/advancements\/[0-9a-z\-]+\.json$/)) {
+            if (enabledFunction.advancements && e.fileName.match(/\/advancements\/[0-9a-z-]+\.json$/)) {
                 return zip.readEntry(e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); });
             }
             return undefined;

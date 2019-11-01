@@ -23,7 +23,7 @@ export namespace PackMeta {
      */
     export interface Pack {
         /**
-         * Pack version. If this number does not match the current required number, the resource pack will display an error and required additional confirmation to load the pack. 
+         * Pack version. If this number does not match the current required number, the resource pack will display an error and required additional confirmation to load the pack.
          * Requires 1 for 1.6.1–1.8.9, 2 for 1.9–1.10.2, 3 for 1.11–1.12.2, and 4 for 1.13–1.14.4.
          */
         pack_format: number;
