@@ -23,7 +23,7 @@ describe("Install", () => {
     describe("MinecraftClient", () => {
         async function installVersionClient(version: Installer.VersionMeta, gameDirectory: string) {
             const loc = new MinecraftFolder(gameDirectory);
-            await Installer.installTask("client", version, loc).execute();
+            await Installer.install("client", version, loc);
             assert(fs.existsSync(loc.getVersionJar(version.id)));
             assert(fs.existsSync(loc.getVersionJson(version.id)));
             await assertNoError(version.id, loc);
