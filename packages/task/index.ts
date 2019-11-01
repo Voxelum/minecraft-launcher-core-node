@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 
 export type TaskNode = Task.State;
 
-function runTask<T>(context: Task.Context, task: Task<T>): Promise<T> {
+function runTask<T>(context: Task.Context, task: TaskOrTaskObject<T>): Promise<T> {
     try {
         const result = typeof task === "function" ? task(context) : task.run(context);
         return result instanceof Promise ? result : Promise.resolve(result);
@@ -34,19 +34,18 @@ export interface TaskRuntime<N extends Task.State = Task.State> extends EventEmi
      * Submit the task to task runtime. The runtime will decide when to run the task
      * @param task The task will be run
      */
-    submit<T>(task: Task<T, N>): TaskHandle<T, N>;
+    submit<T>(task: TaskOrTaskObject<T>): TaskHandle<T, N>;
 }
 
 class RuntimeImpl<N extends Task.State = Task.State> extends EventEmitter implements TaskRuntime<N>  {
     constructor(readonly factory: Task.StateFactory<N>) { super(); }
 
-    submit<T>(task: Task<T, N>) {
+    submit<T>(task: TaskOrTaskObject<T>) {
         const handle = new TaskHandle(task, this, this.factory);
         return handle;
     }
 }
 
-export type Task<T, N = Task.State> = Task.Function<T> | Task.Object<T>;
 
 export class TaskHandle<T, N extends Task.State> {
     // tslint:disable: variable-name
@@ -67,7 +66,8 @@ export class TaskHandle<T, N extends Task.State> {
     private root: N;
     // tslint:enable: variable-name
 
-    constructor(readonly task: Task<T>,
+    constructor(
+        readonly task: TaskOrTaskObject<T>,
         readonly runtime: EventEmitter,
         private factory: (state: Task.State) => N) {
         this.root = this.factory({
@@ -152,7 +152,7 @@ export class TaskHandle<T, N extends Task.State> {
         }
     }
 
-    private async executeOnNode<CT>(context: Task.Context, work: Task<CT>, node: Task.State, parent?: Task.State) {
+    private async executeOnNode<CT>(context: Task.Context, work: TaskOrTaskObject<CT>, node: Task.State, parent?: Task.State) {
         await new Promise((resolve) => setImmediate(() => resolve()));
         if (this._cancelled) {
             this.runtime.emit("cancel", node);
@@ -182,6 +182,9 @@ export class TaskHandle<T, N extends Task.State> {
     }
 }
 
+type TaskOrTaskObject<T> = Task.Function<T> | Task.Object<T>;
+export type Task<T> = Task.Function<T>;
+
 export namespace Task {
     export interface Function<T> {
         readonly name: string;
@@ -199,7 +202,7 @@ export namespace Task {
     export interface Context {
         pausealbe(onPause?: () => void, onResume?: () => void): void;
         update(progres: number, total?: number, message?: string): void;
-        execute<T>(task: Task<T>): Promise<T>;
+        execute<T>(task: TaskOrTaskObject<T>): Promise<T>;
     }
 
     export type StateFactory<X extends Task.State = Task.State> = (node: Task.State) => X;
@@ -210,7 +213,7 @@ export namespace Task {
      * Run the task immediately (next tick)
      * @param task The task will be run
      */
-    export function execute<T, N extends Task.State = State>(task: Task<T, N>) {
+    export function execute<T, N extends Task.State = State>(task: TaskOrTaskObject<T>) {
         return new TaskHandle(task, { emit() { } } as any, DEFAULT_STATE_FACTORY).wait();
     }
 
