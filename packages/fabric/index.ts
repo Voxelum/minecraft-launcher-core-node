@@ -1,4 +1,4 @@
-import { fetchJson, getIfUpdate, UpdatedObject } from "@xmcl/net";
+import { UpdatedObject, fetchJson, getIfUpdate } from "@xmcl/net";
 import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 import * as parser from "fast-html-parser";
 import { promises } from "fs";

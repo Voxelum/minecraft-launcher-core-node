@@ -26,13 +26,15 @@ export const BUILTIN_GENERATED: BlockModel.Resolved = {
     display: DEFAULT_DISPLAY,
     ambientocclusion: false,
     textures: {},
-    elements: [{
+    elements: [
+{
         from: [0, 0, 0],
         to: [16, 16, 16],
         faces: {
             down: { uv: [0, 0, 16, 16], texture: "" },
         },
-    }],
+    }
+],
     overrides: [],
 };
 

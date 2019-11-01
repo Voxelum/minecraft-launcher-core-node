@@ -1,4 +1,4 @@
-import { currentPlatform, VFS } from "@xmcl/util";
+import { VFS, currentPlatform } from "@xmcl/util";
 import { join, normalize } from "path";
 import { ResolvedNative, Version } from "./index";
 
@@ -115,9 +115,7 @@ describe("Version", () => {
         test("should be able to select correct native library by system", () => {
             const selectionNative = {
                 extract: {
-                    exclude: [
-                        "META-INF/",
-                    ],
+                    exclude: ["META-INF/",],
                 },
                 name: "net.java.jinput:jinput-platform:2.0.5",
                 natives: {
@@ -163,9 +161,7 @@ describe("Version", () => {
         test("should correct work on mixture case of selection & rule", () => {
             const lib = {
                 extract: {
-                    exclude: [
-                        "META-INF/",
-                    ],
+                    exclude: ["META-INF/",],
                 },
                 name: "ca.weblite:java-objc-bridge:1.0.0",
                 natives: {
@@ -225,9 +221,7 @@ describe("Version", () => {
                     },
                 },
                 extract: {
-                    exclude: [
-                        "META-INF/",
-                    ],
+                    exclude: ["META-INF/",],
                 },
                 name: "tv.twitch:twitch-external-platform:4.5",
                 natives: {

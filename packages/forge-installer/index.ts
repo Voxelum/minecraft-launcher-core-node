@@ -427,7 +427,8 @@ export namespace ForgeInstaller {
                     `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`,
                     "data/client.lzma",
                     "install_profile.json",
-                    "version.json"]);
+                    "version.json"
+]);
 
                 if (!forgeEntry) {
                     throw new Error("Missing forge jar entry");

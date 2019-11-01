@@ -1,4 +1,4 @@
-import { downloadFile, downloadFileIfAbsentWork, downloadFileWork, getIfUpdate, got, UpdatedObject } from "@xmcl/net";
+import { UpdatedObject, downloadFile, downloadFileIfAbsentWork, downloadFileWork, getIfUpdate, got } from "@xmcl/net";
 import Task from "@xmcl/task";
 import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 import { ResolvedLibrary, ResolvedVersion, Version } from "@xmcl/version";

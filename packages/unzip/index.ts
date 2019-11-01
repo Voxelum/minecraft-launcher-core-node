@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
-import { finished, Readable, Writable } from "stream";
+import { Readable, Writable, finished } from "stream";
 import * as util from "util";
-import { Entry as yEntry, fromBuffer, fromFd, open as yopen, Options as yOptions, ZipFile as yZipFile, ZipFileOptions as yZipFileOptions } from "yauzl";
+import { fromBuffer, fromFd, Entry as yEntry, Options as yOptions, ZipFile as yZipFile, ZipFileOptions as yZipFileOptions, open as yopen } from "yauzl";
 
 const mkdir0 = util.promisify(fs.mkdir);
 const finishStream = util.promisify(finished);
