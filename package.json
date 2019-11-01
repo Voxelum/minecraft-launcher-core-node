@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "lerna run build",
+    "build": "npm run lint && lerna run build",
     "bump": "node bump.js",
     "clean": "lerna clean --yes",
     "compile": "lerna run compile",
