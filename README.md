@@ -46,6 +46,7 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [Load Minecraft Resource](#load-minecraft-resource)
     - [Load Minecraft Block Model](#load-minecraft-block-model)
     - [Read ResourcePack Basic Info](#read-resourcepack-basic-info)
+    - [Progress Moniting](#progress-moniting)
     - [TextComponent](#textcomponent)
     - [Minecraft Version Parsing](#minecraft-version-parsing)
     - [Save/World Data Loading](#saveworld-data-loading)
@@ -53,6 +54,7 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [Monitor download progress](#monitor-download-progress)
     - [Caching Request](#caching-request)
   - [Credit](#credit)
+
 
 ### User Login & Auth (Official/Offline)
 
@@ -90,6 +92,7 @@ Use third party Yggdrasil API to auth:
     const yourAPI: Auth.Yggdrasil.API;
     const authFromMojang: Auth = await Auth.Yggdrasil.login({ username, password }, yourAPI); // official login
 ```
+
 
 ### Minecraft Client Ping Server
 
@@ -173,6 +176,7 @@ or you can assign java location by `ForgeInstaller.install(forgeVersionMeta, min
 If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
 Consider support him to maintains forge.
 
+
 ### Minecraft Install
 
 Fully install vanilla minecraft client including assets and libs.
@@ -226,6 +230,8 @@ Just ensure all assets and libraries are installed:
     const resolvedVersion: ResolvedVersion = await Version.parse(version);
     await Installer.installDependencies(resolvedVersion);
 ```
+
+
 
 ### Install Liteloader
 
@@ -301,6 +307,7 @@ Validate if user have a validated IP address, and get & answer challenges to val
         await MojangService.responseChallenges(accessToken, responses);
     }
 ```
+
 
 ### Read/Write NBT
 
@@ -426,6 +433,8 @@ You can use this to load Minecraft block model and texture.
     const resolvedModel: BlockModel.Resolved = models["block/grass"];
 ```
 
+
+
 ### Read ResourcePack Basic Info
 
 Read ResourcePack from filePath
@@ -442,6 +451,54 @@ Read ResourcePack from filePath
     // the file path will be only used for resource pack name
     const fileContentBuffer: Buffer;
     const packPromise: ResourcePack = await ResourcePack.read(fileFullPath, fileContentBuffer);
+```
+
+
+### Progress Moniting
+
+You can use `@xmcl/task` model to track the progress of a task. *In the launcher, they are majorly download task.*
+
+The module is designed with event based. Use event to track what's happening.
+
+The module won't mutate the task node, as many of us use the state management things required `Unidirectional Data Flow`.
+
+Therefore you can just treat the `TaskRuntime` object a stateless event emitter.
+
+```ts
+    import { Task, TaskRuntime, TaskHandle } from "@xmcl/task";
+
+    const runtime: TaskRuntime = Task.createRuntime();
+    const task: Task<YourResultType>; // your task
+    
+    runtime.on("update", ({ progress, total, message }, node) => {
+        // handle the progress, total update.
+        // message usually the current downloading url.
+    });
+    runtime.on("execute", (node, parent) => {
+        const name = child.name; // name is just the name to create the task
+
+        const newChildPath = child.path; // path is the chaining all parents' name togather
+        // if parent name is 'install'
+        // and child name is 'json'
+        // the path will be 'install.json'
+
+        const arguments = child.arguments; // argument is optional
+        // normally the arguments is some values that helps you to localized
+        // like 'library' task in during install library
+        // it will provide a 'lib' property which is the name of the library
+    });
+
+    runtime.on("finish", (result, node) => {
+        // every node, parent or child will emit finish event when it finish
+    });
+
+    runtime.on("node-error", (error, node) => {
+        // emit when a task node (parent or child) failed
+    });
+
+    const handle: TaskHandle<YourResultType> = runtime.submit(task);
+    await handle.wait();
+    // the error will still reject to the promise
 ```
 
 ### TextComponent
@@ -485,6 +542,7 @@ Get the report of the version. It can check if version missing assets/libraries.
     const report: VersionDiagnosis = await Version.diagnose(minecraftLocation, minecraftVersionId);
 ```
 
+
 ### Save/World Data Loading
 
 Read the level info from a buffer.
@@ -501,6 +559,7 @@ Read the level data & player data by save folder location string.
     const worldSaveFolder: string;
     const { level, players } = await World.load(worldSaveFolder, ["level", "player"]);
 ```
+
 
 ## Experiental Features
 
