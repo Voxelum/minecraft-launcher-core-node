@@ -219,7 +219,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
         await zip.walkEntries((e) => {
             if (enabledFunction.level && e.fileName.endsWith("/level.dat")) {
                 return zip.readEntry(e).then(NBT.Persistence.deserialize).then((l) => {
-                    result.level = l.Data as any;
+                    result.level = l.Data;
                     if (result.level === undefined || result.level === null) {
                         throw {
                             error: "Corrupted Map",
@@ -237,7 +237,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
                 return zip.readEntry(e).then(NBT.Persistence.deserialize).then((r) => { result.players.push(r as any); });
             }
             if (enabledFunction.advancements && e.fileName.match(/\/advancements\/[0-9a-z-]+\.json$/)) {
-                return zip.readEntry(e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); });
+                return zip.readEntry(e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r); });
             }
             return undefined;
         });
@@ -248,7 +248,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
         const promises: Array<Promise<any>> = [];
         if (enabledFunction.level) {
             promises.push(vfs.readFile(path.resolve(location, "level.dat")).then(NBT.Persistence.deserialize).then((l) => {
-                result.level = l.Data as any;
+                result.level = l.Data;
                 if (result.level === undefined || result.level === null) {
                     throw {
                         error: "Corrupted Map",
@@ -275,7 +275,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
             promises.push(vfs.readdir(path.resolve(location, "advancements")).then(
                 (files) => Promise.all(files.map((f) => path.resolve(location, "advancements", f))
                     .map((p) => vfs.readFile(p)
-                        .then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r as any); }),
+                        .then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r); }),
                     )),
                 () => { },
             ));

@@ -298,7 +298,7 @@ class CachedZip extends AbstractZip implements Unzip.CachedZipFile {
         super(delegate);
     }
     filterEntries(filter: (e: yEntry) => boolean): yEntry[] {
-        return Object.values(this.entries).filter(filter) as yEntry[];
+        return Object.values(this.entries).filter(filter);
     }
 
     async extractEntries(dest: string, mapper?: (e: yEntry) => undefined | string): Promise<void> {

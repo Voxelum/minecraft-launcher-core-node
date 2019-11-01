@@ -525,7 +525,7 @@ function resolveLibraries(libs: Version["libraries"], platform: Platform = curre
         }
         if ("natives" in lib) {
             if (!lib.natives[platform.name]) { return empty; }
-            const classifier = (lib.natives[platform.name] as string).replace("${arch}", platform.arch.substring(1));
+            const classifier = (lib.natives[platform.name]).replace("${arch}", platform.arch.substring(1));
             const nativeArtifact = lib.downloads.classifiers[classifier];
             if (!nativeArtifact) { return empty; }
             return new ResolvedNative(lib.name, getLibraryInfo(lib.name), lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);

@@ -415,7 +415,7 @@ export namespace NBT {
                             tagType = type;
                         } else if (type instanceof Array) { // array type
                             tagType = TagType.List;
-                            nextScope = type as ListSchema;
+                            nextScope = type;
                         } else if (typeof type === "string") { // custom type
                             tagType = TagType.Compound;
                             nextScope = context.findSchema(type);

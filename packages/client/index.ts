@@ -27,7 +27,7 @@ export namespace Server {
             let max = -1;
             if (version) {
                 if (version.name) {
-                    versionText = TextComponent.from(version.name as string);
+                    versionText = TextComponent.from(version.name);
                 }
                 if (version.protocol) {
                     protocol = version.protocol;
