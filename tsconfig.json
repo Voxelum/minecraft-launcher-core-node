@@ -15,5 +15,9 @@
     "allowSyntheticDefaultImports": true
   },
   "include": [
+    "packages/**/*.ts"
+  ],
+  "exclude": [
+    "packages/**/*.d.ts"
   ]
 }
