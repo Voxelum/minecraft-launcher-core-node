@@ -149,11 +149,11 @@ export namespace LiteLoader {
         const type = versionMeta.type;
         const args = mountedJSON.arguments ? mountedJSON.arguments.game : mountedJSON.minecraftArguments.split(" ");
         const libraries = [
-{
-            name: `com.mumfrey:liteloader:${versionMeta.version}`,
-            url: type === "SNAPSHOT" ? snapshotRoot : releaseRoot,
-        }, ...versionMeta.libraries.map(processLibraries)
-];
+            {
+                name: `com.mumfrey:liteloader:${versionMeta.version}`,
+                url: type === "SNAPSHOT" ? snapshotRoot : releaseRoot,
+            }, ...versionMeta.libraries.map(processLibraries)
+        ];
         const mainClass = "net.minecraft.launchwrapper.Launch";
         const inheritsFrom = mountedJSON.id;
         const jar = mountedJSON.jar || mountedJSON.id;

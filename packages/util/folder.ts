@@ -24,9 +24,9 @@ export class MinecraftFolder {
     getVersionJar(version: string, type?: string) { return type === "client" || type === undefined ? paths.join(this.getVersionRoot(version), version + ".jar") : paths.join(this.getVersionRoot(version), `${version}-${type}.jar`); }
     getVersionAll(version: string) {
         return [
-paths.join(this.versions, version), paths.join(this.versions, version, version + ".json"),
-        paths.join(this.versions, version, version + ".jar")
-];
+            paths.join(this.versions, version), paths.join(this.versions, version, version + ".json"),
+            paths.join(this.versions, version, version + ".jar")
+        ];
     }
     getResourcePack(fileName: string) { return paths.join(this.resourcepacks, fileName); }
     getMod(fileName: string) { return paths.join(this.mods, fileName); }

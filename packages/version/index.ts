@@ -576,43 +576,43 @@ function parseVersionJson(versionString: string, root: string): PartialResolvedV
             ? parsed.minecraftArguments.split(" ")
             : [];
         args.jvm = [
-{
-            rules: [
-                {
-                    action: "allow",
-                    os: {
-                        name: "osx",
+            {
+                rules: [
+                    {
+                        action: "allow",
+                        os: {
+                            name: "osx",
+                        },
                     },
-                },
-            ],
-            value: ["-XstartOnFirstThread",],
-        },
-        {
-            rules: [
-                {
-                    action: "allow",
-                    os: {
-                        name: "windows",
+                ],
+                value: ["-XstartOnFirstThread",],
+            },
+            {
+                rules: [
+                    {
+                        action: "allow",
+                        os: {
+                            name: "windows",
+                        },
                     },
-                },
-            ],
-            value: "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
-        },
-        {
-            rules: [
-                {
-                    action: "allow",
-                    os: {
-                        name: "windows",
-                        version: "^10\\.",
+                ],
+                value: "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
+            },
+            {
+                rules: [
+                    {
+                        action: "allow",
+                        os: {
+                            name: "windows",
+                            version: "^10\\.",
+                        },
                     },
-                },
-            ],
-            value: [
-                "-Dos.name=Windows 10",
-                "-Dos.version=10.0",
-            ],
-        },
+                ],
+                value: [
+                    "-Dos.name=Windows 10",
+                    "-Dos.version=10.0",
+                ],
+            },
             "-Djava.library.path=${natives_directory}",
             "-Dminecraft.launcher.brand=${launcher_name}",
             "-Dminecraft.launcher.version=${launcher_version}",
