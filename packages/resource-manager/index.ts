@@ -30,6 +30,11 @@ export class ResourceLocation {
         if (idx === 0) { return new ResourceLocation("minecraft", path.substring(1, path.length)); }
         return new ResourceLocation(path.substring(0, idx), path.substring(idx + 1, path.length));
     }
+
+    static getAssetsPath(location: ResourceLocation) {
+        return `assets/${location.domain}/${location.path}`;
+    }
+
     constructor(
         readonly domain: string,
         readonly path: string) { }
@@ -145,7 +150,7 @@ export class ResourceManager<T = string> {
      * Invalidate the resource cache
      */
     invalidate(location: ResourceLocation) {
-        delete this.cache[location.toString()];
+        delete this.cache[`${location.domain}:${location.path}`];
     }
 
     load(location: ResourceLocation): Promise<Resource<T> | undefined>;
@@ -157,7 +162,7 @@ export class ResourceManager<T = string> {
      * @param urlOnly If true, it will force return uri, else it will return the normal resource content
      */
     async load(location: ResourceLocation, urlOnly: boolean = false): Promise<any> {
-        const cached = this.cache[location.toString()];
+        const cached = this.cache[`${location.domain}:${location.path}`];
         if (cached) { return cached; }
 
         for (const src of this.list) {
@@ -171,7 +176,7 @@ export class ResourceManager<T = string> {
     }
 
     private putCache(res: Resource<T>) {
-        this.cache[res.location.toString()] = res;
+        this.cache[`${res.location.domain}:${res.location.path}`] = res;
     }
 }
 
