@@ -310,7 +310,7 @@ describe("Version", () => {
         //     expect(version.minecraftDirectory).toEqual(root);
         // });
         test("should be able to throw if version not existed", async () => {
-            expect(Version.parse(root, "1.12"))
+            await expect(Version.parse(root, "1.12"))
                 .rejects
                 .toStrictEqual({
                     type: "MissingVersionJson",

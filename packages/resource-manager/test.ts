@@ -62,7 +62,7 @@ describe("ResourceManager", () => {
             load() { return ""; },
         };
         await man.addResourceSource(dummy);
-        expect(man.load(ResourceLocation.fromPath("abc")))
+        await expect(man.load(ResourceLocation.fromPath("abc")))
             .resolves
             .toEqual("");
     });

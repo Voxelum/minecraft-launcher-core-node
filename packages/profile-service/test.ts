@@ -79,7 +79,7 @@ describe("ProfileService", () => {
             }
         });
         test("should catch error if the profile doesn't exists", async () => {
-            expect(ProfileService.fetch("asd", { api: MOCK }))
+            await expect(ProfileService.fetch("asd", { api: MOCK }))
                 .rejects
                 .toBeTruthy();
         });
@@ -89,7 +89,6 @@ describe("ProfileService", () => {
         const profile = {
             id: "abf81fe99f0d4948a9097721a8198ac4",
             name: "CI010",
-            // tslint:disable-next-line:max-line-length
             properties: { textures: "eyJ0aW1lc3RhbXAiOjE1NDEzODY0MzI2OTksInByb2ZpbGVJZCI6ImFiZjgxZmU5OWYwZDQ5NDhhOTA5NzcyMWE4MTk4YWM0IiwicHJvZmlsZU5hbWUiOiJDSTAxMCIsInNpZ25hdHVyZVJlcXVpcmVkIjp0cnVlLCJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGYwMzE0NzJmYjg3MjgyNjA4MjdjMTY2NzA2ZTJiYTI0YTBmYzlhMmRhNThlM2MyZDVlNWMzMDI0ZDQxNTNlZSJ9fX0=" },
         };
         let texturesPromise: Promise<GameProfile.TexturesInfo>;

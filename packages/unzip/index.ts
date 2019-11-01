@@ -152,22 +152,23 @@ function parseEntriesInternal(zipfile: yZipFile, entries: string[]) {
 
 function extractInternal(zipfile: yZipFile, dest: string, filter: (entry: yEntry) => string | undefined = (e) => e.fileName) {
     return new Promise<void>((resolve, reject) => {
+        let allEntries: Promise<any>[] = [];
         zipfile.once("end", () => {
-            resolve();
+            resolve(Promise.all(allEntries).then(() => undefined));
         });
         zipfile.on("entry", (entry: yEntry) => {
             const mapped = filter(entry);
             if (mapped) {
                 if (!entry.fileName.endsWith("/")) {
                     const file = path.resolve(dest, mapped);
-                    openEntryReadStream(zipfile, entry)
+                    allEntries.push(openEntryReadStream(zipfile, entry)
                         .then((stream) => ensureFile(file).then(() => stream.pipe(fs.createWriteStream(file))))
                         .then(finishStream)
                         .then(() => {
                             if (zipfile.lazyEntries) {
                                 zipfile.readEntry();
                             }
-                        });
+                        }));
                 } else if (zipfile.lazyEntries) {
                     zipfile.readEntry();
                 }
