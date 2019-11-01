@@ -55,7 +55,7 @@ export namespace ForgeWebPage {
                     const universal = links.find((l) => l.name === "Universal");
 
                     if (installer === undefined || universal === undefined) {
-                        throw new Error(`Cannot parse forge web since it missing installer and universal jar info.`);
+                        throw new Error("Cannot parse forge web since it missing installer and universal jar info.");
                     }
                     const result = {
                         version,
@@ -132,7 +132,7 @@ export namespace ForgeWebPage {
         fallback?: ForgeWebPage,
     } = {}): Promise<ForgeWebPage | undefined> {
         const mcversion = option.mcversion || "";
-        const url = mcversion === "" ? `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html` : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`;
+        const url = mcversion === "" ? "http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html" : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`;
         const page = await getIfUpdate(url, parse, option.fallback);
         return page;
     }

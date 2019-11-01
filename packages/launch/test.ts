@@ -47,7 +47,7 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
             }
         });
         process.stderr.on("data", (chunk) => {
-            console.log(chunk.toString());
+            console.warn(chunk.toString());
         });
         process.on("exit", (code, signal) => {
             if (signal === "SIGINT" || code === 130) {
@@ -127,7 +127,7 @@ describe("Launcher", () => {
             await new Promise((resolve, reject) => {
                 proc.stdout.on("data", (buf) => {
                     const str = buf.toString();
-                    console.log(str);
+                    console.warn(str);
                     if (str.indexOf("Starting minecraft server version 1.12.2") !== -1) {
                         resolve();
                     }
@@ -158,7 +158,7 @@ describe("Launcher", () => {
                 expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
                 expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
                 const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
-                expect(lversion).toEqual(`-Dminecraft.launcher.version=launcherVersion`);
+                expect(lversion).toEqual("-Dminecraft.launcher.version=launcherVersion");
                 const lname = args.find((a) => a.startsWith("-Dminecraft.launcher.brand"));
                 expect(lname).toEqual("-Dminecraft.launcher.brand=launcherName");
             },
@@ -184,7 +184,7 @@ describe("Launcher", () => {
                 expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
                 expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
                 const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
-                expect(lversion).toEqual(`-Dminecraft.launcher.version=launcherVersion`);
+                expect(lversion).toEqual("-Dminecraft.launcher.version=launcherVersion");
                 const lname = args.find((a) => a.startsWith("-Dminecraft.launcher.brand"));
                 expect(lname).toEqual("-Dminecraft.launcher.brand=launcherName");
             },
@@ -208,7 +208,7 @@ describe("Launcher", () => {
             expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
             expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
             expect(args.find((a) => a.startsWith("-Dminecraft.launcher.version")))
-                .toEqual(`-Dminecraft.launcher.version=launcherVersion`);
+                .toEqual("-Dminecraft.launcher.version=launcherVersion");
             expect(args.find((a) => a.startsWith("-Dminecraft.launcher.brand")))
                 .toEqual("-Dminecraft.launcher.brand=launcherName");
         });

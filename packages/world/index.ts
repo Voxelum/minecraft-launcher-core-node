@@ -1,9 +1,10 @@
 import { LevelDataFrame, PlayerDataFrame, RegionDataFrame, World } from "@xmcl/common";
 import { NBT } from "@xmcl/nbt";
-import Unzip from "@xmcl/unzip";
+import { Unzip } from "@xmcl/unzip";
 import { vfs } from "@xmcl/util";
 import fileType from "file-type";
-import * as path from "path";
+import path from "path";
+
 
 declare module "@xmcl/common/world" {
     namespace World {

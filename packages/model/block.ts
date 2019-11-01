@@ -249,7 +249,7 @@ export class BlockModelFactory {
                         const amount = face.rotation;
                         // check property
                         if (!([0, 90, 180, 270].indexOf(amount) >= 0)) {
-                            console.error('The "rotation" property for "' + face + '" face is invalid (got "' + amount + '").');
+                            console.error("The \"rotation\" property for \"" + face + "\" face is invalid (got \"" + amount + "\").");
                         }
                         // rotate map
                         for (let j = 0; j < amount / 90; j++) {

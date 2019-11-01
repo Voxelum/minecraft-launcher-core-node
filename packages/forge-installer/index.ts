@@ -243,7 +243,7 @@ export namespace ForgeInstaller {
         }
         if (failed) {
             console.error(`Java arguments: ${JSON.stringify(cmd)}`);
-            throw new Error(`Fail to process post processing since its validation failed.`);
+            throw new Error("Fail to process post processing since its validation failed.");
         }
     }
 
@@ -358,7 +358,7 @@ export namespace ForgeInstaller {
                 ctx.update(i, profile.processors.length);
 
                 if (errs.length !== 0) {
-                    throw new Error(`Fail to post processing`);
+                    throw new Error("Fail to post processing");
                 }
             });
         };
@@ -397,7 +397,7 @@ export namespace ForgeInstaller {
 
                 const rootPath = mc.getVersionRoot(versionJson.id);
                 const jsonPath = join(rootPath, `${versionJson.id}.json`);
-                const installJsonPath = join(rootPath, `install_profile.json`);
+                const installJsonPath = join(rootPath, "install_profile.json");
                 const clientDataPath = join(rootPath, profile.data.BINPATCH.client);
 
                 await vfs.ensureFile(jsonPath);
