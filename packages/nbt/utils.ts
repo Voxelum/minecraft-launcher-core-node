@@ -117,12 +117,12 @@ export function readUTF8(buff: ByteBuffer) {
         c = bytearr[count] & 0xff;
         switch (c >> 4) {
             case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-                /* 0xxxxxxx*/
+            /* 0xxxxxxx*/
                 count++;
                 chararr[chararrCount++] = c;
                 break;
             case 12: case 13:
-                /* 110x xxxx   10xx xxxx*/
+            /* 110x xxxx   10xx xxxx*/
                 count += 2;
                 if (count > utflen) {
                     throw new Error(
@@ -137,7 +137,7 @@ export function readUTF8(buff: ByteBuffer) {
                     (char2 & 0x3F));
                 break;
             case 14:
-                /* 1110 xxxx  10xx xxxx  10xx xxxx */
+            /* 1110 xxxx  10xx xxxx  10xx xxxx */
                 count += 3;
                 if (count > utflen) {
                     throw new Error(
@@ -154,7 +154,7 @@ export function readUTF8(buff: ByteBuffer) {
                     ((char3 & 0x3F) << 0));
                 break;
             default:
-                /* 10xx xxxx,  1111 xxxx */
+            /* 10xx xxxx,  1111 xxxx */
                 throw new Error(
                     "malformed input around byte " + count);
         }

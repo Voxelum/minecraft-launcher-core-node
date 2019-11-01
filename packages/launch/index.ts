@@ -303,9 +303,9 @@ export namespace Launcher {
             launcher_name: options.launcherName,
             launcher_version: options.launcherBrand,
             classpath: `${[
-...version.libraries.map((lib) => mc.getLibraryByPath(lib.download.path)),
-            mc.getVersionJar(version.client)
-]
+                ...version.libraries.map((lib) => mc.getLibraryByPath(lib.download.path)),
+                mc.getVersionJar(version.client)
+            ]
                 .join(path.delimiter)}`,
         };
         cmd.push(...version.arguments.jvm.map((arg) => format(arg as string, jvmOptions)));

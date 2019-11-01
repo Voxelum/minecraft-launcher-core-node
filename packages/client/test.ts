@@ -17,11 +17,11 @@ describe("Server", () => {
     });
     test("should write to nbt data right", async () => {
         const byte = await Server.writeInfo([
-{
-            name: "abc",
-            host: "ip!",
-        }
-]);
+            {
+                name: "abc",
+                host: "ip!",
+            }
+        ]);
         const readBack = await Server.readInfo(byte);
         assert(readBack[0]);
         expect(readBack[0].name).toEqual("abc");

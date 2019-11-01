@@ -428,7 +428,7 @@ export namespace ForgeInstaller {
                     "data/client.lzma",
                     "install_profile.json",
                     "version.json"
-]);
+                ]);
 
                 if (!forgeEntry) {
                     throw new Error("Missing forge jar entry");
