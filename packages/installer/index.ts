@@ -225,7 +225,7 @@ export namespace Installer {
     export function installLibrariesDirectTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: { libraryHost?: LibraryHost }): Task<void> {
         return new Proxy(installLibrariesWork({ libraries, minecraftDirectory: typeof minecraft === "string" ? minecraft : minecraft.root }, option), {
             apply(target, thisArgs, args) {
-                return target(args[0]).then(_ => undefined);
+                return target(args[0]).then(() => undefined);
             },
         }) as any;
     }

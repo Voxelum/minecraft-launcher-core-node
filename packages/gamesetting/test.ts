@@ -156,7 +156,7 @@ modelPart_hat:true
         expect(str.indexOf("fboEnable:false")).not.toEqual(-1);
         expect(str.indexOf("enableVsync:false")).not.toEqual(- 1);
         expect(str.indexOf("fancyGraphics:false")).not.toEqual(- 1);
-        expect(str.indexOf('resourcePacks:["asb"]')).not.toEqual(-1);
+        expect(str.indexOf("resourcePacks:[\"asb\"]")).not.toEqual(-1);
     });
     test("should write all options from instance", () => {
         const setting: GameSetting.Frame = {

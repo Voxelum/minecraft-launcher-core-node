@@ -237,7 +237,7 @@ export class Channel extends EventEmitter {
                 this.connection.setKeepAlive(true, typeof option.keepalive === "boolean" ? 3500 : option.keepalive);
             }
             this.connection.once("error", (e) => { reject(e); });
-            this.connection.once("timeout", () => { reject(new Error(`Connection timeout.`)); });
+            this.connection.once("timeout", () => { reject(new Error("Connection timeout.")); });
         });
 
         this.emit("listen");

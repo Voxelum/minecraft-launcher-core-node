@@ -118,7 +118,7 @@ export namespace Forge {
                     }
                     content += "\n";
                 });
-                content += `}\n\n`;
+                content += "}\n\n";
             });
             return content;
         }
