@@ -1,8 +1,8 @@
 import { GameProfile, UserType } from "@xmcl/common";
 import Unzip from "@xmcl/unzip";
-import { computeChecksum, currentPlatform, ensureDir, MinecraftFolder, missing, vfs } from "@xmcl/util";
+import { MinecraftFolder, computeChecksum, currentPlatform, ensureDir, missing, vfs } from "@xmcl/util";
 import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
-import { ChildProcess, spawn, SpawnOptions } from "child_process";
+import { ChildProcess, SpawnOptions, spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { v4 } from "uuid";
@@ -302,8 +302,10 @@ export namespace Launcher {
             natives_directory: options.nativeRoot || (mc.getNativesRoot(version.id)),
             launcher_name: options.launcherName,
             launcher_version: options.launcherBrand,
-            classpath: `${[...version.libraries.map((lib) => mc.getLibraryByPath(lib.download.path)),
-            mc.getVersionJar(version.client)]
+            classpath: `${[
+...version.libraries.map((lib) => mc.getLibraryByPath(lib.download.path)),
+            mc.getVersionJar(version.client)
+]
                 .join(path.delimiter)}`,
         };
         cmd.push(...version.arguments.jvm.map((arg) => format(arg as string, jvmOptions)));

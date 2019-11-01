@@ -575,7 +575,8 @@ function parseVersionJson(versionString: string, root: string): PartialResolvedV
         args.game = parsed.minecraftArguments
             ? parsed.minecraftArguments.split(" ")
             : [];
-        args.jvm = [{
+        args.jvm = [
+{
             rules: [
                 {
                     action: "allow",
@@ -584,9 +585,7 @@ function parseVersionJson(versionString: string, root: string): PartialResolvedV
                     },
                 },
             ],
-            value: [
-                "-XstartOnFirstThread",
-            ],
+            value: ["-XstartOnFirstThread",],
         },
         {
             rules: [

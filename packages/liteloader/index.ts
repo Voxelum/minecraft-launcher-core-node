@@ -1,5 +1,5 @@
 import { Installer } from "@xmcl/installer";
-import { getIfUpdate, UpdatedObject } from "@xmcl/net";
+import { UpdatedObject, getIfUpdate } from "@xmcl/net";
 import Task from "@xmcl/task";
 import Unzip from "@xmcl/unzip";
 import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
@@ -148,10 +148,12 @@ export namespace LiteLoader {
         const releaseTime = time;
         const type = versionMeta.type;
         const args = mountedJSON.arguments ? mountedJSON.arguments.game : mountedJSON.minecraftArguments.split(" ");
-        const libraries = [{
+        const libraries = [
+{
             name: `com.mumfrey:liteloader:${versionMeta.version}`,
             url: type === "SNAPSHOT" ? snapshotRoot : releaseRoot,
-        }, ...versionMeta.libraries.map(processLibraries)];
+        }, ...versionMeta.libraries.map(processLibraries)
+];
         const mainClass = "net.minecraft.launchwrapper.Launch";
         const inheritsFrom = mountedJSON.id;
         const jar = mountedJSON.jar || mountedJSON.id;
