@@ -51,10 +51,8 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [Minecraft Version Parsing](#minecraft-version-parsing)
     - [Save/World Data Loading](#saveworld-data-loading)
   - [Experiental Features](#experiental-features)
-    - [Monitor download progress](#monitor-download-progress)
     - [Caching Request](#caching-request)
   - [Credit](#credit)
-
 
 ### User Login & Auth (Official/Offline)
 
@@ -564,24 +562,6 @@ Read the level data & player data by save folder location string.
 ## Experiental Features
 
 They might be not stable.
-
-### Monitor download progress
-
-```ts
-    import { Installer } from "@xmcl/installer";
-    import Task from "@xmcl/task";
-    import { Version } from "@xmcl/version";
-
-    const expectedVersion: string;
-    const expectedMcLoc: MinecraftLocation;
-    const resolvedVersion: Version.Resolved = await Version.parse(expectedMcLoc, expectedVersion);
-    const task: Task<Version> = Installer.installDependenciesTask(resolvedVersion, expectedMcLoc);
-
-    task.on('update', ({ progress, total, message }) => {
-        // monitor progress / total and message here
-    });
-
-```
 
 ### Caching Request
 
