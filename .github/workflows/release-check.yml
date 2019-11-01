@@ -42,6 +42,7 @@ jobs:
     - name: Prepare Pull Request
       id: vars
       run: |
+        npm run docs
         node prepare-pr.js
         echo ::set-output name=pr_title::"$(echo $(cat pr_title.log))"
         echo ::set-output name=pr_body::"$(cat pr_body.log)"

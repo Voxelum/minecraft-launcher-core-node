@@ -1,5 +1,45 @@
 {
   "private": true,
+  "scripts": {
+    "build": "lerna run build",
+    "bump": "node bump.js",
+    "clean": "lerna clean --yes",
+    "compile": "lerna run compile",
+    "docs": "node build-readme.js",
+    "lint": "eslint packages --ext .ts",
+    "lint:fix": "eslint packages --ext .ts --fix",
+    "test": "jest packages --runInBand",
+    "test:full": "jest packages --coverage --verbose --runInBand",
+    "update": "lerna bootstrap"
+  },
+  "dependencies": {
+    "@xmcl/auth": "file:packages\\auth",
+    "@xmcl/client": "file:packages\\client",
+    "@xmcl/common": "file:packages\\common",
+    "@xmcl/fabric": "file:packages\\fabric",
+    "@xmcl/forge": "file:packages\\forge",
+    "@xmcl/forge-installer": "file:packages\\forge-installer",
+    "@xmcl/gamesetting": "file:packages\\gamesetting",
+    "@xmcl/installer": "file:packages\\installer",
+    "@xmcl/language": "file:packages\\language",
+    "@xmcl/launch": "file:packages\\launch",
+    "@xmcl/liteloader": "file:packages\\liteloader",
+    "@xmcl/minecraft-launcher-core": "file:packages\\launcher-core",
+    "@xmcl/model": "file:packages\\model",
+    "@xmcl/mojang": "file:packages\\mojang",
+    "@xmcl/nbt": "file:packages\\nbt",
+    "@xmcl/net": "file:packages\\net",
+    "@xmcl/profile-service": "file:packages\\profile-service",
+    "@xmcl/resource-manager": "file:packages\\resource-manager",
+    "@xmcl/resource-source-jszip": "file:packages\\resource-source-jszip",
+    "@xmcl/resourcepack": "file:packages\\resourcepack",
+    "@xmcl/task": "file:packages\\task",
+    "@xmcl/text-component": "file:packages\\text-component",
+    "@xmcl/unzip": "file:packages\\unzip",
+    "@xmcl/util": "file:packages\\util",
+    "@xmcl/version": "file:packages\\version",
+    "@xmcl/world": "file:packages\\world"
+  },
   "devDependencies": {
     "@types/bytebuffer": "^5.0.37",
     "@types/got": "^9.6.0",
@@ -22,62 +62,23 @@
     "ts-jest": "^24.0.2",
     "typescript": "^3.6.3"
   },
-  "scripts": {
-    "bump": "node bump.js",
-    "clean": "lerna clean --yes",
-    "lint": "eslint packages --ext .ts",
-    "lint:fix": "eslint packages --ext .ts --fix",
-    "update": "lerna bootstrap",
-    "test": "jest packages --runInBand",
-    "test:full": "jest packages --coverage --verbose --runInBand",
-    "compile": "lerna run compile",
-    "build": "lerna run build"
-  },
-  "dependencies": {
-    "@xmcl/auth": "file:packages\\auth",
-    "@xmcl/client": "file:packages\\client",
-    "@xmcl/common": "file:packages\\common",
-    "@xmcl/fabric": "file:packages\\fabric",
-    "@xmcl/forge": "file:packages\\forge",
-    "@xmcl/forge-installer": "file:packages\\forge-installer",
-    "@xmcl/gamesetting": "file:packages\\gamesetting",
-    "@xmcl/installer": "file:packages\\installer",
-    "@xmcl/language": "file:packages\\language",
-    "@xmcl/launch": "file:packages\\launch",
-    "@xmcl/liteloader": "file:packages\\liteloader",
-    "@xmcl/minecraft-launcher-core": "file:packages\\launcher-core",
-    "@xmcl/mojang": "file:packages\\mojang",
-    "@xmcl/model": "file:packages\\model",
-    "@xmcl/nbt": "file:packages\\nbt",
-    "@xmcl/net": "file:packages\\net",
-    "@xmcl/profile-service": "file:packages\\profile-service",
-    "@xmcl/resourcepack": "file:packages\\resourcepack",
-    "@xmcl/resource-manager": "file:packages\\resource-manager",
-    "@xmcl/resource-source-jszip": "file:packages\\resource-source-jszip",
-    "@xmcl/task": "file:packages\\task",
-    "@xmcl/text-component": "file:packages\\text-component",
-    "@xmcl/unzip": "file:packages\\unzip",
-    "@xmcl/util": "file:packages\\util",
-    "@xmcl/version": "file:packages\\version",
-    "@xmcl/world": "file:packages\\world"
-  },
   "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "testSequencer": "./test-sequencer.js",
-    "modulePaths": [
-      "packages"
-    ],
-    "testRegex": "packages/.*test\\.ts",
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    },
     "moduleFileExtensions": [
       "ts",
       "js",
       "json"
     ],
-    "globals": {
-      "ts-jest": {
-        "tsConfig": "tsconfig.json"
-      }
-    }
+    "modulePaths": [
+      "packages"
+    ],
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testRegex": "packages/.*test\\.ts",
+    "testSequencer": "./test-sequencer.js"
   }
 }
