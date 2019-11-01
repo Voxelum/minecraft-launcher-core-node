@@ -59,12 +59,12 @@ describe("ResourceManager", () => {
         const dummy: any = {
             info() { return {}; },
             domains() { return []; },
-            load() { return ""; },
+            load() { return { location: { domain: "a", path: "b" } }; },
         };
         await man.addResourceSource(dummy);
         await expect(man.load(ResourceLocation.fromPath("abc")))
             .resolves
-            .toEqual("");
+            .toEqual({ location: { domain: "a", path: "b" } });
     });
     test("cache", async () => {
         const man = new ResourceManager();
