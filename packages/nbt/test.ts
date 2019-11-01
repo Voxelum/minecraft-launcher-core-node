@@ -530,7 +530,7 @@ describe("NBT", () => {
             value: { value: NBT.TagType.ByteArray },
         });
         test("read", () => {
-            NBT.Persistence.serialize({} as any);
+            NBT.Persistence.serializeSync({} as any);
         });
     });
     describe("NBTTagListIO", () => {
