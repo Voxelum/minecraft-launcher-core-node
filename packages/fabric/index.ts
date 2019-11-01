@@ -16,9 +16,9 @@ export namespace Fabric {
 
         return {
             yarnVersions: yarns.childNodes.filter((n) => typeof n.attributes.value === "string")
-                .map((n) => n.attributes.value as string),
+                .map((n) => n.attributes.value),
             loaderVersions: loaders.childNodes.filter((n) => typeof n.attributes.value === "string")
-                .map((n) => n.attributes.value as string),
+                .map((n) => n.attributes.value),
         };
     }
 

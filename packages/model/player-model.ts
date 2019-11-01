@@ -213,7 +213,7 @@ function create(slim: boolean) {
             };
         }
         for (const part of Object.values(group)) {
-            Object.assign(part, calculate(part as any));
+            Object.assign(part, calculate(part));
             if ("layer" in part) {
                 part.layer.w *= PIXRATIO;
                 part.layer.h *= PIXRATIO;

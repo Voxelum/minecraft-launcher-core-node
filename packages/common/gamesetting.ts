@@ -159,7 +159,7 @@ export namespace GameSetting {
         "renderDistance": 12 as RenderDistance,
         "particles": Particles.Decreased,
         "fboEnable": true,
-        "fancyGraphics": Graphic.Fancy as Graphic,
+        "fancyGraphics": Graphic.Fancy,
         "ao": AmbientOcclusion.Maximum,
         "renderClouds": RenderCloud.Fancy as RenderCloud,
         "enableVsync": true,
