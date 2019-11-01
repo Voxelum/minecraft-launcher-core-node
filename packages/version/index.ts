@@ -419,7 +419,7 @@ function mixinArgumentString(hi: string, lo: string): string {
  * @param minecraft The minecraft location
  */
 function diagnose(version: string, minecraft: MinecraftLocation): Promise<VersionDiagnosis> {
-    return diagnoseTask(version, minecraft).execute();
+    return Task.execute(diagnoseTask(version, minecraft));
 }
 
 /**
@@ -429,14 +429,14 @@ function diagnose(version: string, minecraft: MinecraftLocation): Promise<Versio
  * @param minecraft The minecraft location
  */
 function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<VersionDiagnosis> {
-    return Task.create("Diagnose", diagnoseSkeleton(version, typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft));
+    return diagnoseSkeleton(version, typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft);
 }
 
 function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<VersionDiagnosis> {
-    return async (context: Task.Context) => {
+    return async function diagnose(context: Task.Context) {
         let resolvedVersion: ResolvedVersion;
         try {
-            resolvedVersion = await context.execute("checkVersionJson", () => Version.parse(minecraft, version));
+            resolvedVersion = await context.execute(function checkVersionJson() { return Version.parse(minecraft, version) });
         } catch (e) {
             console.error(e);
             return {
@@ -452,25 +452,29 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
             };
         }
         const jarPath = minecraft.getVersionJar(resolvedVersion.client);
-        const missingJar = !await context.execute("checkJar", () => validate(jarPath, resolvedVersion.downloads.client.sha1));
+        const missingJar = !await context.execute(function checkJar() { return validate(jarPath, resolvedVersion.downloads.client.sha1); });
         const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
-        const missingAssetsIndex = !await context.execute("checkAssetIndex", async () => validate(assetsIndexPath, resolvedVersion.assetIndex.sha1));
-        const libMask = await context.execute("checkLibraries", () => Promise.all(resolvedVersion.libraries.map(async (lib) => {
-            const libPath = minecraft.getLibraryByPath(lib.download.path);
-            if (lib.download.sha1 === "") { return true; }
-            return vfs.validate(libPath, { algorithm: "sha1", hash: lib.download.sha1 });
-        })));
+        const missingAssetsIndex = !await context.execute(async function checkAssetIndex() { return validate(assetsIndexPath, resolvedVersion.assetIndex.sha1); });
+        const libMask = await context.execute(function checkLibraries() {
+            return Promise.all(resolvedVersion.libraries.map(async (lib) => {
+                const libPath = minecraft.getLibraryByPath(lib.download.path);
+                if (lib.download.sha1 === "") { return true; }
+                return vfs.validate(libPath, { algorithm: "sha1", hash: lib.download.sha1 });
+            }));
+        });
         const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
         const missingAssets: { [object: string]: string } = {};
 
         if (!missingAssetsIndex) {
             const objects = (await vfs.readFile(assetsIndexPath).then((b) => b.toString()).then(JSON.parse)).objects;
             const files = Object.keys(objects);
-            const assetsMask = await context.execute("checkAssets", () => Promise.all(files.map(async (object) => {
-                const { hash } = objects[object];
-                const hashPath = minecraft.getAsset(hash);
-                return vfs.validate(hashPath, { algorithm: "sha1", hash });
-            })));
+            const assetsMask = await context.execute(function checkAssets() {
+                return Promise.all(files.map(async (object) => {
+                    const { hash } = objects[object];
+                    const hashPath = minecraft.getAsset(hash);
+                    return vfs.validate(hashPath, { algorithm: "sha1", hash });
+                }));
+            });
             files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
         }
 

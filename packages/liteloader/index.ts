@@ -172,11 +172,11 @@ export namespace LiteLoader {
     }
 
     export function install(versionMeta: VersionMeta, location: MinecraftLocation, version?: string) {
-        return installTask(versionMeta, location, version).execute();
+        return Task.execute(installTask(versionMeta, location, version));
     }
 
     export function installTask(versionMeta: VersionMeta, location: MinecraftLocation, version?: string, check?: boolean): Task<void> {
-        return Task.create("installLiteloader", async (context) => {
+        return async function installLiteloader(context) {
             const mc: MinecraftFolder = typeof location === "string" ? new MinecraftFolder(location) : location;
             const mountVersion = version || versionMeta.mcversion;
             const id = `${mountVersion}-Liteloader${versionMeta.mcversion}-${versionMeta.version}`;
@@ -184,14 +184,14 @@ export namespace LiteLoader {
             if (await vfs.validate(mc.getVersionJson(id), { algorithm: "md5", hash: versionMeta.md5 })) {
                 return;
             }
-            const mountedJSON: any = await context.execute("resolveMinecraftVersionJson", async () => {
+            const mountedJSON: any = await context.execute(async function resolveVersionJson() {
                 if (await vfs.missing(mc.getVersionJson(mountVersion))) {
                     throw { type: "MissingVersionJson", version: mountVersion, location: mc.root };
                 }
                 return vfs.readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
             });
 
-            const versionInf = await context.execute("generateLiteloaderJson", async () => {
+            const versionInf = await context.execute(async function generateLiteloaderJson() {
                 const inf = buildVersionInfo(versionMeta, mountedJSON);
                 const versionPath = mc.getVersionRoot(inf.id);
 
@@ -201,16 +201,16 @@ export namespace LiteLoader {
             });
 
             if (check) {
-                await context.execute("installDependencies", async (ctx) => {
+                await context.execute(async function installDependencies(ctx) {
                     const resolved = await Version.parse(mc, versionInf.id);
-                    await Installer.installDependenciesTask(resolved).work(ctx);
+                    await Installer.installDependenciesTask(resolved)(ctx);
                 });
             }
-        });
+        };
     }
 
     export function installAndCheck(versionMeta: VersionMeta, location: MinecraftLocation, version?: string) {
-        return installTask(versionMeta, location, version, true).execute();
+        return Task.execute(installTask(versionMeta, location, version, true));
     }
 }
 

@@ -142,35 +142,19 @@ export async function downloadFileIfAbsent(option: DownloadAndCheckOption & Down
 
 export function downloadFileWork(option: DownloadToOption) {
     return async (context: Task.Context) => {
-        let pf: (() => void) | undefined;
-        let rf: () => void;
-        option.pausable = (pFunc, rFunc) => {
-            context.task.on("pause", pf = pFunc);
-            context.task.on("resume", rf = rFunc);
-        };
+        option.pausable = context.pausealbe;
         option.progress = (p, t) => context.update(p, t, option.url);
         await downloadFile(option);
-        if (pf) {
-            context.task.removeListener("pause", pf);
-            context.task.removeListener("resmue", rf!);
-        }
+        context.pausealbe(undefined, undefined);
     };
 }
 
 export function downloadFileIfAbsentWork(option: DownloadAndCheckOption & DownloadToOption) {
     return async (context: Task.Context) => {
-        let pf: (() => void) | undefined;
-        let rf: () => void;
-        option.pausable = (pFunc, rFunc) => {
-            context.task.on("pause", pf = pFunc);
-            context.task.on("resume", rf = rFunc);
-        };
+        option.pausable = context.pausealbe;
         option.progress = (p, t) => context.update(p, t, option.url);
         await downloadFileIfAbsent(option);
-        if (pf) {
-            context.task.removeListener("pause", pf);
-            context.task.removeListener("resmue", rf!);
-        }
+        context.pausealbe(undefined, undefined);
     };
 }
 
