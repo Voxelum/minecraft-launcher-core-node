@@ -45,7 +45,7 @@ export namespace Launcher {
 
     export interface UserInfo {
         /**
-         * User selected game profile. For game display name & 
+         * User selected game profile. For game display name &
          */
         selectedProfile: GameProfile;
         accessToken: string;

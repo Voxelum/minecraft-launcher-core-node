@@ -128,7 +128,7 @@ export async function remove(f: string) {
             await promises.unlink(f);
         }
     } catch {
-        return;
+
     }
 }
 
