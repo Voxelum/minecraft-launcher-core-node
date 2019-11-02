@@ -31,7 +31,6 @@
     "@xmcl/net": "file:packages\\net",
     "@xmcl/profile-service": "file:packages\\profile-service",
     "@xmcl/resource-manager": "file:packages\\resource-manager",
-    "@xmcl/resource-source-jszip": "file:packages\\resource-source-jszip",
     "@xmcl/resourcepack": "file:packages\\resourcepack",
     "@xmcl/task": "file:packages\\task",
     "@xmcl/text-component": "file:packages\\text-component",
