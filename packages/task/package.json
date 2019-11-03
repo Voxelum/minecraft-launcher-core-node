@@ -1,7 +1,6 @@
 {
   "name": "@xmcl/task",
   "main": "index.js",
-  "types": "index.d.ts",
   "author": {
     "name": "cijhn@hotmail.com"
   },

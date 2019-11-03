@@ -2,7 +2,6 @@
   "name": "@xmcl/gamesetting",
   "version": "0.0.6",
   "main": "./index.js",
-  "types": "./index.d.ts",
   "description": "Minecraft gamesetting parsing",
   "engines": {
     "node": ">=10.0"

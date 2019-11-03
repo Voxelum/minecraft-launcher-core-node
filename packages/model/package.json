@@ -3,7 +3,6 @@
     "version": "0.0.1",
     "main": "./index.js",
     "module": "./index.js",
-    "types": "./index.d.ts",
     "description": "Create Three.js model for player and block",
     "engines": {
       "node": ">=10.0"

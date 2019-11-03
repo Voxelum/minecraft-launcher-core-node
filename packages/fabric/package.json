@@ -2,7 +2,6 @@
   "name": "@xmcl/fabric",
   "version": "0.0.8",
   "main": "./index.js",
-  "types": "./index.d.ts",
   "description": "Fabric installation support",
   "engines": {
     "node": ">=10.0"
