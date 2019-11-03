@@ -1,23 +1,25 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "module": "commonjs",
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "incremental": true,
     "lib": [
       "dom"
     ],
-    "experimentalDecorators": true,
-    "declaration": true,
-    "sourceMap": true,
-    "downlevelIteration": true,
-    "strict": true,
+    "module": "commonjs",
     "moduleResolution": "node",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "newLine": "LF",
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2018"
   },
-  "include": [
-    "packages/**/*.ts"
-  ],
   "exclude": [
     "packages/**/*.d.ts"
+  ],
+  "include": [
+    "packages/**/*.ts"
   ]
 }
