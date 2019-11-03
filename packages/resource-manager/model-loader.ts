@@ -56,7 +56,7 @@ export class ModelLoader<T> {
 
         delete raw.parent;
 
-        const model = raw as BlockModel.Resolved;
+        const model: BlockModel.Resolved = raw as any;
         this.models[modelPath] = model;
 
         const reg = this.textures;
