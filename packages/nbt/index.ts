@@ -337,7 +337,7 @@ export namespace NBT {
             { read: (buf) => buf.readDouble(), write(buf, v) { buf.writeDouble(v ? v : 0); } }, // double
             { // byte array
                 read(buf) {
-                    const arr = new Int8Array(buf.readInt());
+                    const arr = new Array(buf.readInt());
                     for (let i = 0; i < arr.length; i++) { arr[i] = buf.readByte(); }
                     return arr;
                 },
@@ -447,7 +447,7 @@ export namespace NBT {
             },
             { // int array
                 read(buf) {
-                    const arr = new Int32Array(buf.readInt());
+                    const arr = new Array(buf.readInt());
                     for (let i = 0; i < arr.length; i++) { arr[i] = buf.readInt(); }
                     return arr;
                 },
