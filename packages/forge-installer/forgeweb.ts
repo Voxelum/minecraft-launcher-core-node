@@ -46,7 +46,6 @@ export namespace ForgeWebPage {
                                 md5 = tooltipInfo.childNodes[1].text.trim();
                                 sha1 = tooltipInfo.childNodes[4].text.trim();
                             } catch {
-                                console.log(JSON.stringify(tooltipInfo));
                                 console.warn(`Error during fetching the sha1 and md5 for the forge "${href}". The result might be wrong.`);
                             }
                             const isSha1 = /\b([a-f0-9]{40})\b/i
