@@ -1,41 +1,40 @@
 {
-    "name": "@xmcl/model",
-    "version": "0.0.1",
-    "main": "./index.js",
-    "module": "./index.js",
-    "description": "Create Three.js model for player and block",
-    "engines": {
-      "node": ">=10.0"
-    },
-    "publishConfig": {
-      "access": "public"
-    },
-    "dependencies": {
-      "@xmcl/common": "file:../common"
-    },
-    "peerDependencies": {
-      "three": "^0.110.0"
-    },
-    "scripts": {
-      "compile": "tsc --build tsconfig.json",
-      "build": "npm run compile"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
-    },
-    "author": "cijhn@hotmail.com",
-    "keywords": [
-      "minecraft",
-      "typescript",
-      "minecraft-launcher",
-      "nodejs",
-      "electron"
-    ],
-    "license": "MIT",
-    "bugs": {
-      "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
-    },
-    "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
-  }
-  
+  "name": "@xmcl/model",
+  "version": "0.1.0",
+  "main": "./index.js",
+  "module": "./index.js",
+  "description": "Create Three.js model for player and block",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@xmcl/common": "file:../common"
+  },
+  "peerDependencies": {
+    "three": "^0.110.0"
+  },
+  "scripts": {
+    "compile": "tsc --build tsconfig.json",
+    "build": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
+  },
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+}
