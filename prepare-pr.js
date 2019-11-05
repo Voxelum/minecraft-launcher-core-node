@@ -75,7 +75,7 @@ async function bumpPackages(packages) {
 function bumpDependenciesPackage(affectedMapping, packages) {
     for (const package of packages.filter(package => package.newVersion && package.releaseType)) {
         // only major & minor change affect the dependents packages update
-        const allAffectedPackages = affectedMapping[package.name];
+        const allAffectedPackages = affectedMapping[package.name] || [];
         for (const affectedPackage of allAffectedPackages) {
             if (affectedPackage.newVersion) continue;
             const affectedPackageJSON = affectedPackage.package;

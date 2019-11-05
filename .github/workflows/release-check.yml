@@ -46,7 +46,7 @@ jobs:
         node prepare-pr.js
         echo ::set-output name=pr_title::"$(echo $(cat pr_title.log))"
         echo ::set-output name=pr_body::"$(cat pr_body.log)"
-        echo ::set-output name=commit_message::"$(cat commit_message.log)"
+        ( echo ::set-output name=commit_message::"$(cat commit_message.log)" )
       env:
         CI: true
     - name: Create Pull Request
