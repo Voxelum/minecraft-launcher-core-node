@@ -8,6 +8,6 @@ outputs:
   message:
     description: The pull request message
 runs:
-  using: 'node10'
+  using: 'node12'
   main: index.js
   
