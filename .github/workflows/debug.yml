@@ -28,9 +28,7 @@ jobs:
       uses: ./.github/actions/prepare-pr
       env:
         CI: true
-    - name: Debug
-      run: |
-        echo $(cat tag.log)
+    - name: Create Debug PR
       uses: peter-evans/create-pull-request@v1.4.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
