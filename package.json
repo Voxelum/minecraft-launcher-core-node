@@ -41,6 +41,7 @@
     "@xmcl/world": "file:packages\\world"
   },
   "devDependencies": {
+    "@actions/core": "^1.2.0",
     "@types/bytebuffer": "^5.0.37",
     "@types/got": "^9.6.0",
     "@types/jest": "^24.0.18",
