@@ -1,4 +1,5 @@
-import { MinecraftFolder, MinecraftLocation, missing } from "@xmcl/util";
+import { missing } from "@xmcl/util";
+import { MinecraftFolder, MinecraftLocation } from "@xmcl/common";
 import * as fs from "fs";
 import * as path from "path";
 

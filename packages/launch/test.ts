@@ -1,5 +1,5 @@
 import Auth from "@xmcl/auth";
-import { MinecraftFolder } from "@xmcl/util";
+import { MinecraftFolder } from "@xmcl/common";
 import Version from "@xmcl/version";
 import assert from "assert";
 import { ChildProcess, exec } from "child_process";

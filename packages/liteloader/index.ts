@@ -2,7 +2,8 @@ import { Installer } from "@xmcl/installer";
 import { UpdatedObject, getIfUpdate } from "@xmcl/net";
 import Task from "@xmcl/task";
 import Unzip from "@xmcl/unzip";
-import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
+import { MinecraftFolder, MinecraftLocation } from "@xmcl/common"
+import { vfs } from "@xmcl/util";
 import { Version } from "@xmcl/version";
 import * as path from "path";
 

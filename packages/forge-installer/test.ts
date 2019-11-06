@@ -1,12 +1,12 @@
 
 import { Installer } from "@xmcl/installer";
-import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
-import { Version } from "@xmcl/version";
+import { vfs } from "@xmcl/util";
+import { MinecraftFolder, MinecraftLocation } from "@xmcl/common";
 import { join, normalize } from "path";
 import { ForgeInstaller } from "./index";
 
 async function assertNoError(version: string, loc: MinecraftLocation) {
-    const diag = await Version.diagnose(version, loc);
+    const diag = await Installer.diagnose(version, loc);
     expect(Object.keys(diag.missingAssets).length).toHaveLength(0);
     expect(diag.missingLibraries.length).toHaveLength(0);
     expect(diag.missingAssetsIndex).toBeFalsy();

@@ -1,4 +1,5 @@
-import { ResourceLocation, ResourceManager } from ".";
+import { ResourceManager } from ".";
+import { ResourceLocation } from "@xmcl/resourcepack";
 
 describe("ResourceLocation", () => {
     describe("#ofModelPath", () => {
@@ -50,9 +51,9 @@ describe("ResourceManager", () => {
             info() { return {}; },
             domains() { return []; },
         };
-        await man.addResourceSource(dummy);
-        expect(man.allSources).toHaveLength(1);
-        expect(man.allSources[0]).toEqual({});
+        await man.addResourcePack(dummy);
+        expect(man.allResourcePacks).toHaveLength(1);
+        expect(man.allResourcePacks[0]).toEqual({});
     });
     test("#load", async () => {
         const man = new ResourceManager();
@@ -61,7 +62,7 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load() { return { location: { domain: "a", path: "b" } }; },
         };
-        await man.addResourceSource(dummy);
+        await man.addResourcePack(dummy);
         await expect(man.load(ResourceLocation.fromPath("abc")))
             .resolves
             .toEqual({ location: { domain: "a", path: "b" } });
@@ -74,7 +75,7 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load(r: any) { monitor(); return { location: r }; },
         };
-        await man.addResourceSource(dummy);
+        await man.addResourcePack(dummy);
         await man.load({ domain: "a", path: "b" });
         await man.load({ domain: "a", path: "b" });
         expect(monitor).toBeCalledTimes(1);
@@ -87,7 +88,7 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load(r: any) { monitor(); return { location: r }; },
         };
-        await man.addResourceSource(dummy);
+        await man.addResourcePack(dummy);
         await man.load({ domain: "a", path: "b" });
         man.clearCache();
         await man.load({ domain: "a", path: "b" });
@@ -101,7 +102,7 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load(r: any) { monitor(); return { location: r }; },
         };
-        await man.addResourceSource(dummy);
+        await man.addResourcePack(dummy);
         await man.load({ domain: "a", path: "b" });
         man.clearAll();
         const result = await man.load({ domain: "a", path: "b" });
@@ -121,11 +122,11 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load(r: any) { monitor(); return { location: r }; },
         };
-        await man.addResourceSource(dummy);
-        await man.addResourceSource(dummyB);
+        await man.addResourcePack(dummy);
+        await man.addResourcePack(dummyB);
 
-        expect(man.allSources).toEqual(["A", "B"]);
+        expect(man.allResourcePacks).toEqual(["A", "B"]);
         man.swap(0, 1);
-        expect(man.allSources).toEqual(["B", "A"]);
+        expect(man.allResourcePacks).toEqual(["B", "A"]);
     });
 });

@@ -1,10 +1,9 @@
 export * from "./fs";
-export * from "./folder";
 import { ExecOptions, spawn } from "child_process";
 import * as os from "os";
 
-import * as folder from "./folder";
 import * as fs from "./fs";
+import { Platform } from "@xmcl/common";
 
 /**
  * Get Minecraft style platform info. (Majorly used to enable/disable native dependencies)
@@ -28,11 +27,6 @@ export function getPlatform(): Platform {
  * The current platform
  */
 export const currentPlatform: Platform = getPlatform();
-export interface Platform {
-    name: "osx" | "linux" | "windows" | "unknown";
-    version: string;
-    arch: "x32" | "x64" | string;
-}
 
 export type JavaExecutor = (args: string[], option?: ExecOptions) => Promise<any>;
 
@@ -72,7 +66,6 @@ export namespace JavaExecutor {
 
 export default {
     ...fs,
-    ...folder,
     getPlatform,
     currentPlatform,
 };

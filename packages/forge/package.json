@@ -2,6 +2,7 @@
   "name": "@xmcl/forge",
   "version": "0.0.8",
   "main": "./index.js",
+  "module": "./index.js",
   "description": "Forge mod parser",
   "engines": {
     "node": ">=10.0"

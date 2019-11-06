@@ -1,9 +1,12 @@
 import { UpdatedObject, downloadFile, downloadFileIfAbsentWork, downloadFileWork, getIfUpdate, got } from "@xmcl/net";
 import Task from "@xmcl/task";
-import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
+import { vfs } from "@xmcl/util";
+import { MinecraftFolder, MinecraftLocation, System } from "@xmcl/common";
 import { ResolvedLibrary, ResolvedVersion, Version } from "@xmcl/version";
 import { cpus } from "os";
 import { join } from "path";
+
+const fs = System.fs;
 
 /**
  * The minecraft installer
@@ -229,6 +232,42 @@ export namespace Installer {
             },
         }) as any;
     }
+
+    /**
+     * Diagnose the version. It will check the version json/jar, libraries and assets.
+     *
+     * @param version The version id string
+     * @param minecraft The minecraft location
+     */
+    export function diagnose(version: string, minecraft: MinecraftLocation): Promise<VersionDiagnosis> {
+        return Task.execute(diagnoseTask(version, minecraft));
+    }
+
+    /**
+     * Diagnose the version. It will check the version json/jar, libraries and assets.
+     *
+     * @param version The version id string
+     * @param minecraft The minecraft location
+     */
+    export function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<VersionDiagnosis> {
+        return diagnoseSkeleton(version, typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft);
+    }
+}
+
+/**
+ * General diagnosis of the version.
+ * The missing diagnosis means either the file not existed, or the file not valid (checksum not matched)
+ */
+export interface VersionDiagnosis {
+    minecraftLocation: MinecraftFolder;
+    version: string;
+
+    missingVersionJson: string;
+    missingVersionJar: boolean;
+    missingAssetsIndex: boolean;
+
+    missingLibraries: ResolvedLibrary[];
+    missingAssets: { [file: string]: string };
 }
 
 function installWork(type: "client" | "server", versionMeta: Installer.VersionMeta, minecraft: MinecraftLocation, option?: Installer.Option) {
@@ -479,4 +518,65 @@ function installAssetsWork(version: ResolvedVersion, option: { assetsHost?: stri
     }
     installAssets.parameters = { version: version.id };
     return installAssets;
+}
+
+
+function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<VersionDiagnosis> {
+    return async function diagnose(context: Task.Context) {
+        let resolvedVersion: ResolvedVersion;
+        try {
+            resolvedVersion = await context.execute(function checkVersionJson() { return Version.parse(minecraft, version) });
+        } catch (e) {
+            console.error(e);
+            return {
+                minecraftLocation: minecraft,
+                version,
+
+                missingVersionJson: e.version,
+                missingVersionJar: false,
+                missingAssetsIndex: false,
+
+                missingLibraries: [],
+                missingAssets: {},
+            };
+        }
+        const jarPath = minecraft.getVersionJar(resolvedVersion.client);
+        const missingJar = !await context.execute(function checkJar() { return fs.validateSha1(jarPath, resolvedVersion.downloads.client.sha1); });
+        const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
+        const missingAssetsIndex = !await context.execute(async function checkAssetIndex() { return fs.validateSha1(assetsIndexPath, resolvedVersion.assetIndex.sha1); });
+        const libMask = await context.execute(function checkLibraries() {
+            return Promise.all(resolvedVersion.libraries.map(async (lib) => {
+                const libPath = minecraft.getLibraryByPath(lib.download.path);
+                if (lib.download.sha1 === "") { return true; }
+                return fs.validateSha1(libPath, lib.download.sha1);
+            }));
+        });
+        const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
+        const missingAssets: { [object: string]: string } = {};
+
+        if (!missingAssetsIndex) {
+            const objects = (await fs.readFile(assetsIndexPath, "utf-8").then(JSON.parse)).objects;
+            const files = Object.keys(objects);
+            const assetsMask = await context.execute(function checkAssets() {
+                return Promise.all(files.map(async (object) => {
+                    const { hash } = objects[object];
+                    const hashPath = minecraft.getAsset(hash);
+                    return fs.validateSha1(hashPath, hash);
+                }));
+            });
+            files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
+        }
+
+        return {
+            minecraftLocation: minecraft,
+            version,
+
+            missingVersionJson: "",
+            missingVersionJar: missingJar,
+            missingAssetsIndex,
+
+            missingLibraries,
+            missingAssets,
+        };
+    };
 }

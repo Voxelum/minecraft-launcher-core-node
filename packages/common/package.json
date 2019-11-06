@@ -2,6 +2,7 @@
   "name": "@xmcl/common",
   "version": "0.2.0",
   "main": "./index.js",
+  "module": "./index.module.js",
   "description": "Minecraft common concepts",
   "engines": {
     "node": ">=10.0"
