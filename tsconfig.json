@@ -9,7 +9,7 @@
     "lib": [
       "dom"
     ],
-    "module": "commonjs",
+    "module": "es2015",
     "moduleResolution": "node",
     "newLine": "LF",
     "sourceMap": true,
@@ -20,6 +20,7 @@
     "packages/**/*.d.ts"
   ],
   "include": [
-    "packages/**/*.ts"
+    "packages/**/*.ts",
+    "global.d.ts"
   ]
 }
