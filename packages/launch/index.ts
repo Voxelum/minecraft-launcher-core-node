@@ -1,6 +1,6 @@
-import { GameProfile, UserType } from "@xmcl/common";
+import { MinecraftFolder, GameProfile, UserType } from "@xmcl/common";
 import Unzip from "@xmcl/unzip";
-import { MinecraftFolder, computeChecksum, currentPlatform, ensureDir, missing, vfs } from "@xmcl/util";
+import { computeChecksum, currentPlatform, ensureDir, missing, vfs } from "@xmcl/util";
 import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
 import { ChildProcess, SpawnOptions, spawn } from "child_process";
 import * as fs from "fs";

@@ -1,7 +1,6 @@
-import { Version } from "@xmcl/common";
-import Task from "@xmcl/task";
-import { currentPlatform, getPlatform, MinecraftFolder, MinecraftLocation, Platform, validate, vfs } from "@xmcl/util";
-import * as fs from "fs";
+import { Platform, System, Version, MinecraftFolder, MinecraftLocation } from "@xmcl/common";
+
+const fs = System.fs;
 
 type PickPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 export type PartialResolvedVersion = Omit<PickPartial<ResolvedVersion, "assets" |
@@ -98,22 +97,6 @@ export class ResolvedNative extends ResolvedLibrary {
     }
 }
 
-/**
- * General diagnosis of the version.
- * The missing diagnosis means either the file not existed, or the file not valid (checksum not matched)
- */
-export interface VersionDiagnosis {
-    minecraftLocation: MinecraftFolder;
-    version: string;
-
-    missingVersionJson: string;
-    missingVersionJar: boolean;
-    missingAssetsIndex: boolean;
-
-    missingLibraries: ResolvedLibrary[];
-    missingAssets: { [file: string]: string };
-}
-
 declare module "@xmcl/common/version" {
     namespace Version {
         /**
@@ -155,21 +138,6 @@ declare module "@xmcl/common/version" {
          */
         function extendsVersion(id: string, parent: Version, extra: Version): Version;
 
-        /**
-         * Diagnose the version. It will check the version json/jar, libraries and assets.
-         *
-         * @param version The version id string
-         * @param minecraft The minecraft location
-         */
-        function diagnose(version: string, minecraft: MinecraftLocation): Promise<VersionDiagnosis>;
-
-        /**
-         * Diagnose the version. It will check the version json/jar, libraries and assets.
-         *
-         * @param version The version id string
-         * @param minecraft The minecraft location
-         */
-        function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<VersionDiagnosis>;
 
         function mixinArgumentString(hi: string, lo: string): string;
 
@@ -186,7 +154,7 @@ declare module "@xmcl/common/version" {
          * @param libs All raw lib
          * @param platform The platform
          */
-        function resolveLibraries(libs: Library[], platform?: ReturnType<typeof getPlatform>): ResolvedLibrary[];
+        function resolveLibraries(libs: Library[], platform?: Platform): ResolvedLibrary[];
 
         /**
          * Get the base info of the library
@@ -199,8 +167,6 @@ declare module "@xmcl/common/version" {
 
 Version.parse = parse;
 Version.extendsVersion = extendsVersion;
-Version.diagnose = diagnose;
-Version.diagnoseTask = diagnoseTask;
 Version.mixinArgumentString = mixinArgumentString;
 Version.resolveDependency = resolveDependency;
 Version.resolveLibraries = resolveLibraries;
@@ -318,13 +284,13 @@ async function resolveDependency(path: MinecraftLocation, version: string): Prom
 
     async function walk(versionName: string) {
         const jsonPath = folder.getVersionJson(versionName);
-        if (!fs.existsSync(jsonPath)) {
+        if (!await System.fs.existsFile(jsonPath)) {
             return Promise.reject({
                 type: "MissingVersionJson",
                 version: versionName,
             });
         }
-        const contentString = await vfs.readFile(jsonPath).then((b) => b.toString());
+        const contentString = await fs.readFile(jsonPath, "utf-8");
         let nextVersion: string | undefined;
         try {
             const raw = parseVersionJson(contentString, folder.root);
@@ -412,86 +378,6 @@ function mixinArgumentString(hi: string, lo: string): string {
     return out.join(" ");
 }
 
-/**
- * Diagnose the version. It will check the version json/jar, libraries and assets.
- *
- * @param version The version id string
- * @param minecraft The minecraft location
- */
-function diagnose(version: string, minecraft: MinecraftLocation): Promise<VersionDiagnosis> {
-    return Task.execute(diagnoseTask(version, minecraft));
-}
-
-/**
- * Diagnose the version. It will check the version json/jar, libraries and assets.
- *
- * @param version The version id string
- * @param minecraft The minecraft location
- */
-function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<VersionDiagnosis> {
-    return diagnoseSkeleton(version, typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft);
-}
-
-function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context: Task.Context) => Promise<VersionDiagnosis> {
-    return async function diagnose(context: Task.Context) {
-        let resolvedVersion: ResolvedVersion;
-        try {
-            resolvedVersion = await context.execute(function checkVersionJson() { return Version.parse(minecraft, version) });
-        } catch (e) {
-            console.error(e);
-            return {
-                minecraftLocation: minecraft,
-                version,
-
-                missingVersionJson: e.version,
-                missingVersionJar: false,
-                missingAssetsIndex: false,
-
-                missingLibraries: [],
-                missingAssets: {},
-            };
-        }
-        const jarPath = minecraft.getVersionJar(resolvedVersion.client);
-        const missingJar = !await context.execute(function checkJar() { return validate(jarPath, resolvedVersion.downloads.client.sha1); });
-        const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
-        const missingAssetsIndex = !await context.execute(async function checkAssetIndex() { return validate(assetsIndexPath, resolvedVersion.assetIndex.sha1); });
-        const libMask = await context.execute(function checkLibraries() {
-            return Promise.all(resolvedVersion.libraries.map(async (lib) => {
-                const libPath = minecraft.getLibraryByPath(lib.download.path);
-                if (lib.download.sha1 === "") { return true; }
-                return vfs.validate(libPath, { algorithm: "sha1", hash: lib.download.sha1 });
-            }));
-        });
-        const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
-        const missingAssets: { [object: string]: string } = {};
-
-        if (!missingAssetsIndex) {
-            const objects = (await vfs.readFile(assetsIndexPath).then((b) => b.toString()).then(JSON.parse)).objects;
-            const files = Object.keys(objects);
-            const assetsMask = await context.execute(function checkAssets() {
-                return Promise.all(files.map(async (object) => {
-                    const { hash } = objects[object];
-                    const hashPath = minecraft.getAsset(hash);
-                    return vfs.validate(hashPath, { algorithm: "sha1", hash });
-                }));
-            });
-            files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
-        }
-
-        return {
-            minecraftLocation: minecraft,
-            version,
-
-            missingVersionJson: "",
-            missingVersionJar: missingJar,
-            missingAssetsIndex,
-
-            missingLibraries,
-            missingAssets,
-        };
-    };
-}
-
 function getLibraryInfo(lib: string | ResolvedLibrary | Version.Library) {
     const name: string = typeof lib === "string" ? lib : lib.name;
     const [body, type = "jar"] = name.split("@");
@@ -517,7 +403,7 @@ function getLibraryInfo(lib: string | ResolvedLibrary | Version.Library) {
     };
 }
 
-function resolveLibraries(libs: Version["libraries"], platform: Platform = currentPlatform) {
+function resolveLibraries(libs: Version["libraries"], platform: Platform = System) {
     const empty: ResolvedLibrary = null!;
     return libs.map((lib) => {
         if ("rules" in lib && !checkAllowed(lib.rules, platform)) {
@@ -551,7 +437,7 @@ function resolveLibraries(libs: Version["libraries"], platform: Platform = curre
 }
 
 function parseVersionJson(versionString: string, root: string): PartialResolvedVersion {
-    const platform = getPlatform();
+    const platform = System;
     const processArguments = (ar: Version.LaunchArgument[]) => {
         return ar.map((a) => {
             if (typeof a === "object") { return checkAllowed(a.rules, platform) ? a.value : ""; }
@@ -629,7 +515,7 @@ function parseVersionJson(versionString: string, root: string): PartialResolvedV
     return partial;
 }
 
-function checkAllowed(rules: Version.Rule[], platform: Platform = currentPlatform, features: string[] = []) {
+function checkAllowed(rules: Version.Rule[], platform: Platform = System, features: string[] = []) {
     // by default it's allowed
     if (!rules || rules.length === 0) { return true; }
     // else it's disallow by default

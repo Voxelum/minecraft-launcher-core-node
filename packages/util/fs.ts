@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { constants, createReadStream, createWriteStream, promises } from "fs";
 import { dirname, resolve as presolve } from "path";
 import { finished } from "stream";
+import { FileSystem, System } from "@xmcl/common";
 
 export type VFS = typeof promises & {
     createReadStream: typeof createReadStream;
@@ -72,9 +73,17 @@ export function missing(target: string) {
     return promises.access(target, constants.F_OK).then(() => false).catch(() => true);
 }
 
-export async function validate(target: string, hash: string, algorithm: string = "sha1") {
-    return await exists(target)
+export async function validate(fs: FileSystem, target: string, hash: string, algorithm: string = "sha1") {
+    return await fs.existsFile(target)
         && await computeChecksum(target, algorithm) === hash;
+}
+
+export async function validateSha1(fs: FileSystem, target: string, hash: string) {
+    if (!await fs.existsFile(target)) {
+        return false;
+    }
+    const sha1 = await System.sha1(await fs.readFile(target));
+    return sha1 === hash;
 }
 
 export async function copy(src: string, dest: string, filter: (name: string) => boolean = () => true) {

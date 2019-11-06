@@ -1,4 +1,4 @@
-import { MinecraftFolder } from "@xmcl/util";
+import { MinecraftFolder } from "@xmcl/common";
 import assert from "assert";
 import * as fs from "fs";
 import * as path from "path";

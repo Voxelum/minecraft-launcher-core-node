@@ -52,14 +52,14 @@ export abstract class WorldReader {
 
     public async getPlayerData(): Promise<PlayerDataFrame> {
         if (this.playerData === null) {
-            this.playerData = await this.readEntry("players.dat").then((b) => NBT.Persistence.deserialize(b) as any);
+            this.playerData = await this.readEntry("players.dat").then((b) => NBT.deserialize(b) as any);
         }
         return this.playerData!;
     }
 
     public async getLevelData(): Promise<LevelDataFrame> {
         if (this.levelData === null) {
-            this.levelData = await this.readEntry("level.dat").then((b) => NBT.Persistence.deserialize(b) as any);
+            this.levelData = await this.readEntry("level.dat").then((b) => NBT.deserialize(b) as any);
         }
         return this.levelData!;
     }
@@ -194,7 +194,7 @@ async function loadRegionFromBuffer(buffer: Buffer, x: number, z: number) {
     //         }
     //     });
     // });
-    const data = await NBT.Persistence.deserialize(chunkData, { compressed: true });
+    const data = await NBT.deserialize(chunkData, { compressed: true });
     return data as unknown as RegionDataFrame;
 }
 
@@ -218,7 +218,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
         const zip = await Unzip.open(buffer, { lazyEntries: true });
         await zip.walkEntries((e) => {
             if (enabledFunction.level && e.fileName.endsWith("/level.dat")) {
-                return zip.readEntry(e).then(NBT.Persistence.deserialize).then((l) => {
+                return zip.readEntry(e).then(NBT.deserialize).then((l) => {
                     result.level = l.Data;
                     if (result.level === undefined || result.level === null) {
                         throw {
@@ -234,7 +234,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
                 });
             }
             if (enabledFunction.players && e.fileName.match(/\/playerdata\/[0-9a-z-]+\.dat$/)) {
-                return zip.readEntry(e).then(NBT.Persistence.deserialize).then((r) => { result.players.push(r as any); });
+                return zip.readEntry(e).then(NBT.deserialize).then((r) => { result.players.push(r as any); });
             }
             if (enabledFunction.advancements && e.fileName.match(/\/advancements\/[0-9a-z-]+\.json$/)) {
                 return zip.readEntry(e).then((b) => b.toString()).then(JSON.parse).then((r) => { result.advancements.push(r); });
@@ -247,7 +247,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
     } else {
         const promises: Array<Promise<any>> = [];
         if (enabledFunction.level) {
-            promises.push(vfs.readFile(path.resolve(location, "level.dat")).then(NBT.Persistence.deserialize).then((l) => {
+            promises.push(vfs.readFile(path.resolve(location, "level.dat")).then(NBT.deserialize).then((l) => {
                 result.level = l.Data;
                 if (result.level === undefined || result.level === null) {
                     throw {
@@ -266,7 +266,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
             promises.push(vfs.readdir(path.resolve(location, "playerdata")).then(
                 (files) => Promise.all(files.map((f) => path.resolve(location, "playerdata", f))
                     .map((p) => vfs.readFile(p)
-                        .then(NBT.Persistence.deserialize).then((r) => { result.players.push(r as any); }),
+                        .then(NBT.deserialize).then((r) => { result.players.push(r as any); }),
                     )),
                 () => { },
             ));
@@ -286,7 +286,7 @@ async function load<K extends string & keyof World & ("players" | "advancements"
 }
 
 async function parseLevelData(buffer: Buffer): Promise<LevelDataFrame> {
-    const nbt = await NBT.Persistence.deserialize(buffer, { compressed: true });
+    const nbt = await NBT.deserialize(buffer, { compressed: true });
     const data = nbt.Data;
     if (!data) { throw new Error("Illegal Level Data Content"); }
     return Object.keys(data).sort().reduce((r: any, k: any) => (r[k] = data[k], r), {});

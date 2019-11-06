@@ -10,7 +10,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common"
+    "@xmcl/common": "file:../common",
+    "@xmcl/resourcepack": "file:../resourcepack"
   },
   "scripts": {
     "test": "",

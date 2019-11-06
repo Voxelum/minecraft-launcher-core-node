@@ -1,6 +1,5 @@
 import { GameProfile } from "@xmcl/common";
-import { fetchBuffer, fetchJson, got } from "@xmcl/net";
-import { vfs } from "@xmcl/util";
+import { fetchBuffer, fetchJson } from "@xmcl/net";
 import ByteBuffer from "bytebuffer";
 import * as crypto from "crypto";
 import * as https from "https";
@@ -121,56 +120,55 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         }
     }
 
-    export function fetchTexture(texture: GameProfile.Texture, dest: string): Promise<void>;
-    export function fetchTexture(texture: GameProfile.Texture): Promise<Buffer>;
-    /**
-     * Fetch the texture into disk or memory
-     */
-    export async function fetchTexture(texture: GameProfile.Texture, dest?: string): Promise<void | Buffer> {
-        if (dest) {
-            await vfs.waitStream(got.stream(texture.url)
-                .pipe(vfs.createWriteStream(dest)));
-        } else {
-            const { body } = await fetchBuffer(texture.url);
-            return body;
-        }
-    }
+    // export function fetchTexture(texture: GameProfile.Texture, dest: string): Promise<void>;
+    // export function fetchTexture(texture: GameProfile.Texture): Promise<Buffer>;
+    // /**
+    //  * Fetch the texture into disk or memory
+    //  */
+    // export async function fetchTexture(texture: GameProfile.Texture, dest?: string): Promise<void | Buffer> {
+    //     if (dest) {
+    //         await vfs.waitStream(got.stream(texture.url).pipe(vfs.createWriteStream(dest)));
+    //     } else {
+    //         const { body } = await fetchBuffer(texture.url);
+    //         return body;
+    //     }
+    // }
 
-    /**
-     * Cache the texture into the url as data-uri
-     * @param tex The texture info
-     */
-    export async function cacheTexturesAsUri(tex: GameProfile.TexturesInfo) {
-        if (!tex) { return Promise.reject("No textures"); }
+    // /**
+    //  * Cache the texture into the url as data-uri
+    //  * @param tex The texture info
+    //  */
+    // export async function cacheTexturesAsUri(tex: GameProfile.TexturesInfo) {
+    //     if (!tex) { return Promise.reject("No textures"); }
 
-        async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
-            if (new URL(texture.url).protocol === "data;") { return texture; }
-            texture.url = await fetchBuffer(texture.url)
-                .then((resp) => resp.body)
-                .then((b) => b.toString("base64"))
-                .then((s) => `data:image/png;base64,${s}`);
-            return texture;
-        }
-        if (tex.textures.SKIN) {
-            tex.textures.SKIN = await cache(tex.textures.SKIN);
-        }
-        if (tex.textures.CAPE) {
-            tex.textures.CAPE = await cache(tex.textures.CAPE);
-        }
-        if (tex.textures.ELYTRA) {
-            tex.textures.ELYTRA = await cache(tex.textures.ELYTRA);
-        }
-        return tex;
-    }
+    //     async function cache(texture: GameProfile.Texture): Promise<GameProfile.Texture> {
+    //         if (new URL(texture.url).protocol === "data;") { return texture; }
+    //         texture.url = await fetchBuffer(texture.url)
+    //             .then((resp) => resp.body)
+    //             .then((b) => b.toString("base64"))
+    //             .then((s) => `data:image/png;base64,${s}`);
+    //         return texture;
+    //     }
+    //     if (tex.textures.SKIN) {
+    //         tex.textures.SKIN = await cache(tex.textures.SKIN);
+    //     }
+    //     if (tex.textures.CAPE) {
+    //         tex.textures.CAPE = await cache(tex.textures.CAPE);
+    //     }
+    //     if (tex.textures.ELYTRA) {
+    //         tex.textures.ELYTRA = await cache(tex.textures.ELYTRA);
+    //     }
+    //     return tex;
+    // }
 
-    /**
-     * Cache the texture into the url as data-uri
-     * @param tex The texture info
-     * @deprecated
-     */
-    export async function cacheTextures(tex: GameProfile.TexturesInfo) {
-        return cacheTexturesAsUri(tex);
-    }
+    // /**
+    //  * Cache the texture into the url as data-uri
+    //  * @param tex The texture info
+    //  * @deprecated
+    //  */
+    // export async function cacheTextures(tex: GameProfile.TexturesInfo) {
+    //     return cacheTexturesAsUri(tex);
+    // }
 
     /**
      * Get all the textures of this GameProfile and cache them.
@@ -178,9 +176,9 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
      * @param profile The game profile from the profile service
      * @param cache Should we cache the texture into url? Default is `true`.
      */
-    export async function getTextures(profile: GameProfile, cache: boolean = true): Promise<GameProfile.TexturesInfo> {
+    export async function getTextures(profile: GameProfile): Promise<GameProfile.TexturesInfo> {
         const texture = parseTexturesInfo(profile);
-        if (texture) { return cache ? cacheTextures(texture) : texture; }
+        if (texture) { return texture; }
         return Promise.reject(`No texture for user ${profile.id}.`);
     }
 
@@ -328,5 +326,3 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         }
     }
 }
-
-ProfileService.cacheTextures = deprecate(ProfileService.cacheTextures, "Use cacheTexturesUri instead");

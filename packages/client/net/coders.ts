@@ -167,7 +167,7 @@ const Slot: Coder<SlotData> = {
             blockId,
             itemCount,
             itemDamage,
-            nbt: NBT.Persistence.deserializeSync(Buffer.from(buffer.buffer)),
+            nbt: NBT.deserializeSync(Buffer.from(buffer.buffer)),
         };
     },
     encode: (buffer, inst) => {

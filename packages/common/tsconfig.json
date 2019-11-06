@@ -9,7 +9,9 @@
         "game.ts",
         "gamesetting.ts",
         "model.ts",
-        "resource.ts"
+        "resource.ts",
+        "system.ts",
+        "global.d.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

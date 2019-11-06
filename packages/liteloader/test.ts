@@ -1,4 +1,4 @@
-import { MinecraftFolder } from "@xmcl/util";
+import { MinecraftFolder } from "@xmcl/common";
 import { join, normalize } from "path";
 import { LiteLoader } from "./index";
 

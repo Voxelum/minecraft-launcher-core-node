@@ -1,5 +1,6 @@
 import { BlockModel } from "@xmcl/common";
-import { Resource, ResourceLocation, ResourceManager } from "./index";
+import { Resource, ResourceLocation } from "@xmcl/resourcepack";
+import { ResourceManager } from "./index";
 
 function findRealTexturePath(model: BlockModel.Resolved, variantKey: string) {
     let texturePath = model.textures[variantKey] as string;
@@ -14,11 +15,11 @@ function findRealTexturePath(model: BlockModel.Resolved, variantKey: string) {
 /**
  * The model loader load the resource
  */
-export class ModelLoader<T> {
+export class ModelLoader {
     /**
      * All required texture raw resources
      */
-    readonly textures: Record<string, Resource<T>> = {};
+    readonly textures: Record<string, Resource> = {};
     /**
      * All the resolved model
      */
@@ -26,9 +27,8 @@ export class ModelLoader<T> {
 
     /**
      * @param manager The resource manager
-     * @param transformer The transformer use to transform raw data to string
      */
-    constructor(readonly manager: ResourceManager<T>, readonly transformer: (original: T) => string) { }
+    constructor(readonly manager: ResourceManager) { }
 
     /**
      * Load a model by search its parent. It will throw an error if the model is not found.
@@ -36,7 +36,7 @@ export class ModelLoader<T> {
     async loadModel(modelPath: string): Promise<BlockModel.Resolved> {
         const res = await this.manager.load(ResourceLocation.ofModelPath(modelPath));
         if (!res) { throw new Error(`Model ${modelPath} not found`); }
-        const raw = JSON.parse(this.transformer(res.content)) as BlockModel;
+        const raw = JSON.parse(new TextDecoder().decode(res.content)) as BlockModel;
 
         if (!raw.textures) { raw.textures = {}; }
 

@@ -1,7 +1,6 @@
 {
     "files": [
         "index.ts",
-        "folder.ts",
         "fs.ts"
     ],
     "compilerOptions": {

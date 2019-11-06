@@ -1,7 +1,8 @@
 import { UpdatedObject, fetchJson, getIfUpdate } from "@xmcl/net";
-import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
+import { MinecraftFolder, MinecraftLocation } from "@xmcl/common";
 import * as parser from "fast-html-parser";
 import { promises } from "fs";
+import { vfs } from "@xmcl/util";
 
 export namespace Fabric {
     export interface VersionList extends UpdatedObject {
