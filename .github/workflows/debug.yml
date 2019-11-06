@@ -1,14 +1,8 @@
-name: Release Pre-Check
-
-on:
-  push:
-    branches: 
-      - master
-    paths:
-      - 'packages/*/*.ts'
+name: Debug
+on: [push, pull_request]
 
 jobs:
-  automation:
+  debug:
     runs-on: ubuntu-latest
 
     strategy:
@@ -21,24 +15,11 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - uses: actions/setup-java@v1
-      with:
-        java-version: '12.X'
-        architecture: x64
     - name: Install
       run: |
         npm ci
       env:
         CI: true
-    - name: Lint
-      run: |
-        npm run lint
-    - name: Compile All
-      run: |
-        npm run compile
-    - name: Test
-      run: |
-        npm run test
     - name: Update Documents
       run: |
         npm run docs
@@ -47,16 +28,15 @@ jobs:
       uses: ./.github/actions/prepare-pr
       env:
         CI: true
-    - name: Create Pull Request
+    - name: Debug
+      run: |
+        echo $(cat tag.log)
       uses: peter-evans/create-pull-request@v1.4.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COMMIT_MESSAGE: ${{ steps.vars.outputs.commit_message }}
-        PULL_REQUEST_TITLE: ${{ steps.vars.outputs.pr_title }}
-        PULL_REQUEST_BODY: ${{ steps.vars.outputs.pr_body }}
+        COMMIT_MESSAGE: ${{ steps.vars.outputs.message }}
+        PULL_REQUEST_TITLE: ${{ steps.vars.outputs.title }}
+        PULL_REQUEST_BODY: ${{ steps.vars.outputs.body }}
         PULL_REQUEST_ASSIGNEES: ci010
         PULL_REQUEST_REVIEWERS: ci010
-        PULL_REQUEST_BRANCH: prepare-release
-        BRANCH_SUFFIX: none
-
 
