@@ -39,7 +39,7 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [Forge Installation](#forge-installation)
     - [Minecraft Install](#minecraft-install)
     - [Install Liteloader](#install-liteloader)
-    - [Build THREE.js model for block and player](#build-threejs-model-for-block-and-player)
+    - [Build THREE.js model for block and player (PREVIEW, not available yet)](#build-threejs-model-for-block-and-player-preview-not-available-yet)
     - [Mojang Account Info](#mojang-account-info)
     - [Read/Write NBT](#readwrite-nbt)
     - [Game Profile](#game-profile)
@@ -57,6 +57,11 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [How to Dev](#how-to-dev)
     - [Design Principle](#design-principle)
     - [Before Submit PR](#before-submit-pr)
+  - [Dependencies & Module Coupling](#dependencies--module-coupling)
+    - [Core Features (Node/Electron Only)](#core-features-nodeelectron-only)
+    - [General Gaming Features (Node/Electron/Browser)](#general-gaming-features-nodeelectronbrowser)
+    - [User Authorization Features (Node/Electron/Browser)](#user-authorization-features-nodeelectronbrowser)
+    - [Client Only Features (Browser Only)](#client-only-features-browser-only)
   - [Credit](#credit)
 
 ### User Login & Auth (Official/Offline)
@@ -634,6 +639,54 @@ This decision is majorly influenced by the original project design - all the mod
 ### Before Submit PR
 
 Make sure you run `npm run build` to pass lint and compile at least. (I always forget this) 
+## Dependencies & Module Coupling
+
+Just depict some big idea for the module design here. They may not be totally accurate. 
+
+### Core Features (Node/Electron Only)
+
+The features like version parsing, installing, diagnosing, are in this group:
+
+- @xmcl/version
+  - @xmcl/installer
+  - @xmcl/launch
+  - @xmcl/forge-installer
+  - @xmcl/liteloader
+  - *@xmcl/fabric (fabric module is too simple; it dones't really depends on @xmcl/version module)*
+
+They all depends on `@xmcl/version` module, which providing the basic version parsing system. This feature group is nodejs/electron only, as it definity requires file read/write, downloading to file functions, which are no sense on browser in my opinion.
+
+These module use such modules as helper:
+
+- fs-extra, for file system operation
+- got, for downloader
+- yauzl, for decompress
+
+### General Gaming Features (Node/Electron/Browser)
+
+The features like parsing game setting, parsing forge mod metadata, NBT parsing, game saves parsing, they don't really have any strong connection.
+
+- @xmcl/nbt
+- @xmcl/common
+  - @xmcl/forge
+  - @xmcl/world
+  - @xmcl/gamesetting
+  - @xmcl/text-component
+  - *@xmcl/client (the module is design to be browser/node capable but it not ready now)* 
+  - @xmcl/resourcepack
+
+### User Authorization Features (Node/Electron/Browser)
+
+The features like login, fetch user info/textures goes here:
+
+- @xmcl/auth
+- @xmcl/profile-service
+
+### Client Only Features (Browser Only)
+
+The features only serves for browser:
+
+- @xmcl/model
 
 ## Credit
 

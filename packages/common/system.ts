@@ -10,10 +10,7 @@ export interface System extends Platform {
     decodeBase64(input: string): string;
     encodeBase64(input: string): string;
 
-    gzip(buffer: Uint8Array): Promise<Uint8Array>;
-    gzipSync(buffer: Uint8Array): Uint8Array;
-    unzip(buffer: Uint8Array): Promise<Uint8Array>;
-    unzipSync(buffer: Uint8Array): Uint8Array;
+    openSocket?(): null;
 
     basename(path: string): string;
     /**

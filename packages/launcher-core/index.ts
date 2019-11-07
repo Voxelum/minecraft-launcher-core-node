@@ -14,7 +14,7 @@ export * from "@xmcl/nbt";
 export { ProfileService, GameProfile } from "@xmcl/profile-service";
 export * from "@xmcl/resourcepack";
 export * from "@xmcl/task";
-export * from "@xmcl/text-component";
+// export * from "@xmcl/text-component";
 
 import * as Net from "@xmcl/net";
 import { GotBodyFn, GotInstance } from "got";

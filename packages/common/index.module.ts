@@ -15,7 +15,6 @@ const { Version } = require("./version");
 exports.World = World;
 exports.Version = Version;
 
-import pako from "pako";
 import md5 from "ts-md5";
 import rusha from "rusha";
 import { setSystem, System, FileSystem } from "./system";
@@ -36,18 +35,6 @@ class BrowserSystem implements System {
     }
     encodeBase64(input: string): string {
         return btoa(input);
-    }
-    gzip(buffer: Uint8Array): Promise<Uint8Array> {
-        return Promise.resolve(pako.gzip(buffer));
-    }
-    gzipSync(buffer: Uint8Array): Uint8Array {
-        return pako.gzip(buffer);
-    }
-    unzip(buffer: Uint8Array): Promise<Uint8Array> {
-        throw new Error("Method not implemented.");
-    }
-    unzipSync(buffer: Uint8Array): Uint8Array {
-        throw new Error("Method not implemented.");
     }
     basename(path: string): string {
         throw new Error("Method not implemented.");

@@ -18,7 +18,6 @@ const { Version } = require("./version");
 exports.World = World;
 exports.Version = Version;
 
-import { gunzip, gunzipSync, gzip, gzipSync, unzip, unzipSync } from "zlib";
 import { basename, join } from "path";
 import { createHash } from "crypto";
 import { Unzip } from "@xmcl/unzip";
@@ -97,22 +96,6 @@ class NodeSystem implements System {
     }
     encodeBase64(input: string): string {
         return Buffer.from(input, "utf-8").toString("base64");
-    }
-    gzip(buffer: Uint8Array): Promise<Uint8Array> {
-        return new Promise((resolve, reject) => {
-            gzip(buffer, (e, r) => { if (e) { reject(e); } else { resolve(r); } });
-        });
-    }
-    gzipSync(buffer: Uint8Array): Uint8Array {
-        return gzipSync(buffer);
-    }
-    unzip(buffer: Uint8Array): Promise<Uint8Array> {
-        return new Promise((resolve, reject) => {
-            unzip(buffer, (err, r) => { if (err) { reject(err); } else { resolve(r); } });
-        });
-    }
-    unzipSync(buffer: Uint8Array): Uint8Array {
-        return unzipSync(buffer);
     }
     basename(path: string): string {
         return basename(path);

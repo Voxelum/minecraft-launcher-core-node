@@ -1,7 +1,6 @@
 export * from "./fs";
 import { ExecOptions, spawn } from "child_process";
 import * as os from "os";
-
 import * as fs from "./fs";
 import { Platform } from "@xmcl/common";
 

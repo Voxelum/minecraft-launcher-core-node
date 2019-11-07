@@ -2,7 +2,7 @@
   "name": "@xmcl/nbt",
   "version": "0.1.1",
   "main": "./index.js",
-  "module": "./index.js",
+  "module": "./index.module.js",
   "description": "NBT serialization and deserialization",
   "engines": {
     "node": ">=10.0"
@@ -31,7 +31,6 @@
     "pako": "^1.0.10"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common",
     "bytebuffer": "^5.0.1",
     "file-type": "^11.0.0",
     "long": "^3.2.0",
