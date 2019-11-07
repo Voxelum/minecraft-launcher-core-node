@@ -1,6 +1,8 @@
 {
     "files": [
         "index.ts",
+        "index.module.ts",
+        "nbt.ts",
         "utils.ts"
     ],
     "compilerOptions": {

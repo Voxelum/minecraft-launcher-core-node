@@ -52,6 +52,11 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [Save/World Data Loading](#saveworld-data-loading)
   - [Experiental Features](#experiental-features)
     - [Caching Request](#caching-request)
+  - [Dependencies & Module Coupling](#dependencies--module-coupling)
+    - [Core Features (Node/Electron Only)](#core-features-nodeelectron-only)
+    - [General Gaming Features (Node/Electron/Browser)](#general-gaming-features-nodeelectronbrowser)
+    - [User Authorization Features (Node/Electron/Browser)](#user-authorization-features-nodeelectronbrowser)
+    - [Client Only Features (Browser Only)](#client-only-features-browser-only)
   - [Credit](#credit)
 
 ### User Login & Auth (Official/Offline)
@@ -591,6 +596,55 @@ For Forge, it's the same:
     const oldWebPageCache = JSON.parse(fs.readFileSync("forge-anyname-cache.json").toString());
     const updated = ForgeWebPage.getWebPage({ fallback: oldWebPageCache }); // this should be up-to-date
 ```
+
+## Dependencies & Module Coupling
+
+Just depict some big idea for the module design here. They may not be totally accurate. 
+
+### Core Features (Node/Electron Only)
+
+The features like version parsing, installing, diagnosing, are in this group:
+
+- @xmcl/version
+  - @xmcl/installer
+  - @xmcl/launch
+  - @xmcl/forge-installer
+  - @xmcl/liteloader
+  - *@xmcl/fabric (fabric module is too simple; it dones't really depends on @xmcl/version module)*
+
+They all depends on `@xmcl/version` module, which providing the basic version parsing system. This feature group is nodejs/electron only, as it definity requires file read/write, downloading to file functions, which are no sense on browser in my opinion.
+
+These module use such modules as helper:
+
+- fs-extra, for file system operation
+- got, for downloader
+- yauzl, for decompress
+
+### General Gaming Features (Node/Electron/Browser)
+
+The features like parsing game setting, parsing forge mod metadata, NBT parsing, game saves parsing, they don't really have any strong connection.
+
+- @xmcl/nbt
+- @xmcl/common
+  - @xmcl/forge
+  - @xmcl/world
+  - @xmcl/gamesetting
+  - @xmcl/text-component
+  - *@xmcl/client (the module is design to be browser/node capable but it not ready now)* 
+  - @xmcl/resourcepack
+
+### User Authorization Features (Node/Electron/Browser)
+
+The features like login, fetch user info/textures goes here:
+
+- @xmcl/auth
+- @xmcl/profile-service
+
+### Client Only Features (Browser Only)
+
+The features only serves for browser:
+
+- @xmcl/model
 
 ## Credit
 

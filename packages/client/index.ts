@@ -91,7 +91,7 @@ export namespace Server {
      * @param buff The binary data of .minecraft/server.dat
      */
     export async function readInfo(buff: Uint8Array): Promise<ServerInfoFrame[]> {
-        const value = await NBT.deserialize(buff);
+        const value = await NBT.deserialize<any>(buff);
         if (!value.servers) {
             throw {
                 type: "InvalidServerSyntext",

@@ -85,6 +85,7 @@ function bumpDependenciesPackage(affectedMapping, packages) {
             if (!affectedPackage.reasons) {
                 affectedPackage.reasons = [];
             }
+            affectedPackage.passive = true;
             affectedPackage.reasons.push(`Dependency ${package.package.name} bumped`);
         }
     }
@@ -101,10 +102,11 @@ function writeAllNewVersionsToPackageJson(packages) {
 
 function info(packages) {
     let body = ``;
-    for (const package of packages) {
+
+    for (const package of packages.sort((a, b) => a.passive && !b.passive ? 1 : !a.passive && b.passive ? -1 : 0)) {
         const packageJSON = package.package;
         if (!package.newVersion) continue;
-        body += `- ${packageJSON.name}: ${packageJSON.version} -> ${package.newVersion}\n`;
+        body += `- **${packageJSON.name}: ${packageJSON.version}** -> ${package.newVersion}\n`;
         if (package.reasons) {
             for (const reason of package.reasons) {
                 if (typeof reason === 'string') {
