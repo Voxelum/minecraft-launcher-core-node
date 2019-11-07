@@ -96,7 +96,6 @@ Use third party Yggdrasil API to auth:
     const authFromMojang: Auth = await Auth.Yggdrasil.login({ username, password }, yourAPI); // official login
 ```
 
-
 ### Minecraft Client Ping Server
 
 Read sever info (server ip, port) and fetch its status (ping, server motd):
@@ -179,7 +178,6 @@ or you can assign java location by `ForgeInstaller.install(forgeVersionMeta, min
 If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
 Consider support him to maintains forge.
 
-
 ### Minecraft Install
 
 Fully install vanilla minecraft client including assets and libs.
@@ -233,8 +231,6 @@ Just ensure all assets and libraries are installed:
     const resolvedVersion: ResolvedVersion = await Version.parse(version);
     await Installer.installDependencies(resolvedVersion);
 ```
-
-
 
 ### Install Liteloader
 
@@ -310,7 +306,6 @@ Validate if user have a validated IP address, and get & answer challenges to val
         await MojangService.responseChallenges(accessToken, responses);
     }
 ```
-
 
 ### Read/Write NBT
 
@@ -436,8 +431,6 @@ You can use this to load Minecraft block model and texture.
     const resolvedModel: BlockModel.Resolved = models["block/grass"];
 ```
 
-
-
 ### Read ResourcePack Basic Info
 
 Read ResourcePack from filePath
@@ -455,7 +448,6 @@ Read ResourcePack from filePath
     const fileContentBuffer: Buffer;
     const packPromise: ResourcePack = await ResourcePack.read(fileFullPath, fileContentBuffer);
 ```
-
 
 ### Progress Moniting
 
@@ -545,7 +537,6 @@ Get the report of the version. It can check if version missing assets/libraries.
     const report: VersionDiagnosis = await Version.diagnose(minecraftLocation, minecraftVersionId);
 ```
 
-
 ### Save/World Data Loading
 
 Read the level info from a buffer.
@@ -562,7 +553,6 @@ Read the level data & player data by save folder location string.
     const worldSaveFolder: string;
     const { level, players } = await World.load(worldSaveFolder, ["level", "player"]);
 ```
-
 
 ## Experiental Features
 
