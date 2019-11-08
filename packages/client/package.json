@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/client",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "main": "./index.js",
   "description": "Minecraft client ping server",
   "engines": {

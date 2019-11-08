@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/auth",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "./index.js",
   "module": "./index.module.js",
   "description": "Minecraft authorization support",
