@@ -2,7 +2,6 @@ import { createHash } from "crypto";
 import { constants, createReadStream, createWriteStream, promises } from "fs";
 import { dirname, resolve as presolve } from "path";
 import { finished } from "stream";
-import { FileSystem, System } from "@xmcl/common";
 
 export type VFS = typeof promises & {
     createReadStream: typeof createReadStream;
@@ -15,6 +14,7 @@ export type VFS = typeof promises & {
     copy(src: string, dest: string, filter?: (name: string) => boolean): Promise<void>;
     waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
     validate(target: string, ...validations: Array<{ algorithm: string, hash: string }>): Promise<boolean>;
+    validateSha1(target: string, hash: string): Promise<boolean>;
 };
 
 export const vfs: VFS = {
@@ -32,6 +32,7 @@ export const vfs: VFS = {
         return multiChecksum(target, validations.map((v) => v.algorithm)).then((r) => r.every((h, i) =>
             h === validations[i].hash)).catch(() => false);
     },
+    validateSha1,
 };
 
 export namespace VFS {
@@ -73,16 +74,9 @@ export function missing(target: string) {
     return promises.access(target, constants.F_OK).then(() => false).catch(() => true);
 }
 
-export async function validate(fs: FileSystem, target: string, hash: string, algorithm: string = "sha1") {
-    return await fs.existsFile(target)
-        && await computeChecksum(target, algorithm) === hash;
-}
-
-export async function validateSha1(fs: FileSystem, target: string, hash: string) {
-    if (!await fs.existsFile(target)) {
-        return false;
-    }
-    const sha1 = await System.sha1(await fs.readFile(target));
+export async function validateSha1(target: string, hash: string) {
+    if (await missing(target)) { return false; }
+    const sha1 = await computeChecksum(target, "sha1");
     return sha1 === hash;
 }
 

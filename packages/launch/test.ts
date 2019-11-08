@@ -1,5 +1,4 @@
-import Auth from "@xmcl/auth";
-import { MinecraftFolder } from "@xmcl/common";
+import { MinecraftFolder } from "@xmcl/util";
 import Version from "@xmcl/version";
 import assert from "assert";
 import { ChildProcess, exec } from "child_process";
@@ -144,16 +143,23 @@ describe("Launcher", () => {
                 const jPath = "/test/java";
                 const version = "1.7.10-Forge10.13.3.1400-1.7.10";
                 const gamePath = root;
-                const auth = Auth.offline("tester");
                 const args = await Launcher.generateArguments({
-                    version, gamePath, javaPath: jPath, auth,
+                    version, 
+                    gamePath, 
+                    javaPath: jPath,
+                    userType: "mojang",
+                    accessToken: "accessToken",
+                    gameProfile: {
+                        id: "profileId",
+                        name: "username",
+                    },
                     launcherBrand: "launcherVersion",
                     launcherName: "launcherName",
                 });
                 expect(args[0]).toEqual(jPath);
                 expect(args.indexOf("net.minecraft.launchwrapper.Launch")).not.toEqual(-1);
-                expect(args[args.indexOf("--username") + 1]).toEqual(auth.selectedProfile.name);
-                expect(args[args.indexOf("--uuid") + 1]).toEqual(auth.selectedProfile.id.replace(/-/g, ""));
+                expect(args[args.indexOf("--username") + 1]).toEqual("username");
+                expect(args[args.indexOf("--uuid") + 1]).toEqual("profileId");
                 expect(args[args.indexOf("--version") + 1]).toEqual("1.7.10-Forge10.13.3.1400-1.7.10");
                 expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
                 expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
@@ -170,9 +176,8 @@ describe("Launcher", () => {
                 const jPath = "/test/java";
                 const version = "1.14.4-forge-28.0.45";
                 const gamePath = root;
-                const auth = Auth.offline("tester");
                 const args = await Launcher.generateArguments({
-                    version, gamePath, javaPath: jPath, auth,
+                    version, gamePath, javaPath: jPath,
                     launcherBrand: "launcherVersion",
                     launcherName: "launcherName",
                 });

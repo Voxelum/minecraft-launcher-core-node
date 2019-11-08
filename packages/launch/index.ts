@@ -1,12 +1,10 @@
-import { MinecraftFolder, GameProfile, UserType } from "@xmcl/common";
 import Unzip from "@xmcl/unzip";
-import { computeChecksum, currentPlatform, ensureDir, missing, vfs } from "@xmcl/util";
+import { MinecraftFolder, computeChecksum, currentPlatform, ensureDir, missing, vfs } from "@xmcl/util";
 import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
 import { ChildProcess, SpawnOptions, spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { v4 } from "uuid";
-
 
 function filterFeature(arg: Version.LaunchArgument, features: Launcher.ProvidedFeatures) {
     if (typeof arg === "object") {
@@ -43,30 +41,20 @@ export namespace Launcher {
 
     export type ProvidedFeatures = Partial<ResolutionFeature> & Partial<DemoFeature> & GenericFeatures;
 
-    export interface UserInfo {
-        /**
-         * User selected game profile. For game display name &
-         */
-        selectedProfile: GameProfile;
-        accessToken: string;
-        userType: UserType;
-        properties: object;
-    }
-
     /**
      * General launch option, used to generate launch arguments.
      */
     export interface Option {
         /**
-         * The auth information
-         * @deprecated
+         * User selected game profile. For game display name &
          */
-        auth?: UserInfo;
-
-        /**
-         * The user info;
-         */
-        user?: UserInfo;
+        gameProfile?: {
+            name: string;
+            id: string;
+        };
+        accessToken?: string;
+        userType?: "mojang" | "legacy";
+        properties?: object;
 
         launcherName?: string;
         launcherBrand?: string;
@@ -273,12 +261,13 @@ export namespace Launcher {
         options.version = typeof options.version === "string" ? await Version.parse(options.resourcePath, options.version) : options.version;
 
         const mc = new MinecraftFolder(options.resourcePath);
-        const version = options.version;
         const cmd: string[] = [];
-        const profile: GameProfile = options.auth ? options.auth.selectedProfile : { id: v4().replace(/-/g, ""), name: "Steve" };
-        const accessToken = options.auth ? options.auth.accessToken : v4().replace(/-/g, "");
-        const properties = options.auth ? options.auth.properties : {};
-        const userType = options.auth ? options.auth.userType : "Mojang";
+
+        const version = options.version;
+        const { id = v4().replace(/-/g, ""), name = "Steve" } = options.gameProfile || {};
+        const accessToken = options.accessToken || v4().replace(/-/g, "");
+        const properties = options.properties || {};
+        const userType = options.userType || "Mojang";
 
         cmd.push(options.javaPath);
 
@@ -320,8 +309,8 @@ export namespace Launcher {
             game_assets: assetsDir,
             assets_index_name: version.assets,
             game_directory: options.gamePath,
-            auth_player_name: profile.name,
-            auth_uuid: profile.id,
+            auth_player_name: name,
+            auth_uuid: id,
             auth_access_token: accessToken,
             user_properties: JSON.stringify(properties),
             user_type: userType,
@@ -415,7 +404,7 @@ export namespace Launcher {
             for (const entry of shaEntries) {
                 if (typeof entry.file !== "string") { continue; }
                 const file = path.join(native, entry.file);
-                const valid = await vfs.validate(file, { algorithm: "sha1", hash: entry.sha1 });
+                const valid = await vfs.validateSha1(file, entry.sha1);
                 if (!valid) {
                     validEntries[entry.name] = true;
                 }

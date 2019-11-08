@@ -1,7 +1,6 @@
 
 import { Installer } from "@xmcl/installer";
-import { vfs } from "@xmcl/util";
-import { MinecraftFolder, MinecraftLocation } from "@xmcl/common";
+import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 import { join, normalize } from "path";
 import { ForgeInstaller } from "./index";
 

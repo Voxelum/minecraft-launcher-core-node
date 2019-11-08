@@ -1,8 +1,6 @@
 import { UpdatedObject, fetchJson, getIfUpdate } from "@xmcl/net";
-import { MinecraftFolder, MinecraftLocation } from "@xmcl/common";
 import * as parser from "fast-html-parser";
-import { promises } from "fs";
-import { vfs } from "@xmcl/util";
+import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 
 export namespace Fabric {
     export interface VersionList extends UpdatedObject {
@@ -47,6 +45,6 @@ export namespace Fabric {
         const { body } = await fetchJson(`https://fabricmc.net/download/technic/?yarn=${encodeURIComponent(yarnVersion)}&loader=${encodeURIComponent(loaderVersion)}`);
         body.id = id;
         await vfs.ensureFile(jsonFile);
-        await promises.writeFile(jsonFile, JSON.stringify(body));
+        await vfs.writeFile(jsonFile, JSON.stringify(body));
     }
 }
