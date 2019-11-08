@@ -2,8 +2,7 @@ import { Installer } from "@xmcl/installer";
 import { downloadFileIfAbsentWork, downloadFileWork } from "@xmcl/net";
 import Task from "@xmcl/task";
 import Unzip from "@xmcl/unzip";
-import { MinecraftFolder, MinecraftLocation } from "@xmcl/common";
-import { JavaExecutor, vfs } from "@xmcl/util";
+import { MinecraftFolder, MinecraftLocation, JavaExecutor, vfs } from "@xmcl/util";
 import { Version } from "@xmcl/version";
 import { delimiter, join } from "path";
 import { Readable } from "stream";
@@ -159,7 +158,7 @@ export namespace ForgeInstaller {
                 if (proc.outputs) {
                     let bad = false;
                     for (const file in proc.outputs) {
-                        if (! await vfs.validate(file, { algorithm: "sha1", hash: proc.outputs[file].replace(/'/g, "") })) {
+                        if (! await vfs.validateSha1(file, proc.outputs[file].replace(/'/g, ""))) {
                             bad = true;
                             break;
                         }
@@ -175,7 +174,7 @@ export namespace ForgeInstaller {
                     const artifact = lib.downloads.artifact;
                     const libPath = mc.getLibraryByPath(artifact.path);
                     if (await vfs.exists(libPath)) {
-                        return artifact.sha1 ? vfs.validate(libPath) : true;
+                        return artifact.sha1 ? vfs.validateSha1(libPath, artifact.sha1) : true;
                     }
                     return false;
                 }));
@@ -236,7 +235,7 @@ export namespace ForgeInstaller {
         let failed = false;
         if (proc.outputs) {
             for (const file in proc.outputs) {
-                if (! await vfs.validate(file, { algorithm: "sha1", hash: proc.outputs[file].replace(/'/g, "") })) {
+                if (! await vfs.validateSha1(file, proc.outputs[file].replace(/'/g, ""))) {
                     console.error(`Fail to process ${proc.jar} @ ${file} since its validation failed.`);
                     failed = true;
                 }

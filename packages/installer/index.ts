@@ -1,12 +1,9 @@
 import { UpdatedObject, downloadFile, downloadFileIfAbsentWork, downloadFileWork, getIfUpdate, got } from "@xmcl/net";
 import Task from "@xmcl/task";
-import { vfs } from "@xmcl/util";
-import { MinecraftFolder, MinecraftLocation, System } from "@xmcl/common";
+import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
 import { ResolvedLibrary, ResolvedVersion, Version } from "@xmcl/version";
 import { cpus } from "os";
 import { join } from "path";
-
-const fs = System.fs;
 
 /**
  * The minecraft installer
@@ -396,7 +393,7 @@ function installLibraryWork(lib: ResolvedLibrary, folder: MinecraftFolder, libra
         if (await vfs.missing(filePath)) {
             await download();
         } else if (typeof lib.download.sha1 === "string" && lib.download.sha1 !== "") {
-            const valid = await vfs.validate(filePath, { algorithm: "sha1", hash: lib.download.sha1 });
+            const valid = await vfs.validateSha1(filePath, lib.download.sha1);
             if (!valid) {
                 await download();
             }
@@ -454,7 +451,7 @@ function installAssetsByCluster(version: string, objects: Array<{ name: string, 
             context.update(lastProgress, undefined, `${assetsHost}/${head}/${hash}`);
 
             const file = join(dir, hash);
-            const valid = await vfs.validate(file, { algorithm: "sha1", hash });
+            const valid = await vfs.validateSha1(file, hash);
             if (!valid) {
                 await downloadFile({
                     url: `${assetsHost}/${head}/${hash}`,
@@ -541,27 +538,27 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
             };
         }
         const jarPath = minecraft.getVersionJar(resolvedVersion.client);
-        const missingJar = !await context.execute(function checkJar() { return fs.validateSha1(jarPath, resolvedVersion.downloads.client.sha1); });
+        const missingJar = !await context.execute(function checkJar() { return vfs.validateSha1(jarPath, resolvedVersion.downloads.client.sha1); });
         const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
-        const missingAssetsIndex = !await context.execute(async function checkAssetIndex() { return fs.validateSha1(assetsIndexPath, resolvedVersion.assetIndex.sha1); });
+        const missingAssetsIndex = !await context.execute(async function checkAssetIndex() { return vfs.validateSha1(assetsIndexPath, resolvedVersion.assetIndex.sha1); });
         const libMask = await context.execute(function checkLibraries() {
             return Promise.all(resolvedVersion.libraries.map(async (lib) => {
                 const libPath = minecraft.getLibraryByPath(lib.download.path);
                 if (lib.download.sha1 === "") { return true; }
-                return fs.validateSha1(libPath, lib.download.sha1);
+                return vfs.validateSha1(libPath, lib.download.sha1);
             }));
         });
         const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
         const missingAssets: { [object: string]: string } = {};
 
         if (!missingAssetsIndex) {
-            const objects = (await fs.readFile(assetsIndexPath, "utf-8").then(JSON.parse)).objects;
+            const objects = (await vfs.readFile(assetsIndexPath, "utf-8").then(b => JSON.parse(b.toString()))).objects;
             const files = Object.keys(objects);
             const assetsMask = await context.execute(function checkAssets() {
                 return Promise.all(files.map(async (object) => {
                     const { hash } = objects[object];
                     const hashPath = minecraft.getAsset(hash);
-                    return fs.validateSha1(hashPath, hash);
+                    return vfs.validateSha1(hashPath, hash);
                 }));
             });
             files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
