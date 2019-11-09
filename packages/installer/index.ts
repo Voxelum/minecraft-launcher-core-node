@@ -247,7 +247,7 @@ export namespace Installer {
      * @param minecraft The minecraft location
      */
     export function diagnoseTask(version: string, minecraft: MinecraftLocation): Task<VersionDiagnosis> {
-        return diagnoseSkeleton(version, typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft);
+        return diagnoseSkeleton(version, MinecraftFolder.from(minecraft));
     }
 }
 
@@ -405,7 +405,7 @@ function installLibraryWork(lib: ResolvedLibrary, folder: MinecraftFolder, libra
 
 function installLibrariesWork<T extends Pick<ResolvedVersion, "libraries" | "minecraftDirectory">>(version: T, option?: Installer.LibraryOption) {
     async function installLibraries(context: Task.Context) {
-        const folder: MinecraftFolder = new MinecraftFolder(version.minecraftDirectory);
+        const folder = MinecraftFolder.from(version.minecraftDirectory);
         const fullOption = option || {};
         const libraryHost: Installer.LibraryHost | undefined = fullOption.libraryHost;
         try {
@@ -472,7 +472,7 @@ function installAssetsByCluster(version: string, objects: Array<{ name: string, 
 function installAssetsWork(version: ResolvedVersion, option: { assetsHost?: string }) {
     async function installAssets(context: Task.Context) {
         const cores = cpus().length || 4;
-        const folder: MinecraftFolder = new MinecraftFolder(version.minecraftDirectory);
+        const folder = MinecraftFolder.from(version.minecraftDirectory);
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
         await context.execute(function assetsJson(work) {
@@ -552,7 +552,7 @@ function diagnoseSkeleton(version: string, minecraft: MinecraftFolder): (context
         const missingAssets: { [object: string]: string } = {};
 
         if (!missingAssetsIndex) {
-            const objects = (await vfs.readFile(assetsIndexPath, "utf-8").then(b => JSON.parse(b.toString()))).objects;
+            const objects = (await vfs.readFile(assetsIndexPath, "utf-8").then((b) => JSON.parse(b.toString()))).objects;
             const files = Object.keys(objects);
             const assetsMask = await context.execute(function checkAssets() {
                 return Promise.all(files.map(async (object) => {

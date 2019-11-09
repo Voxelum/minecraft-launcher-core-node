@@ -1,4 +1,3 @@
-import assert from "assert";
 import * as path from "path";
 import { Forge } from "./index";
 

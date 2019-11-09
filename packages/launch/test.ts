@@ -110,7 +110,7 @@ describe("Launcher", () => {
     });
     describe("#ensureLibraries", () => {
         test("should check all libraries", async () => {
-            await expect(Launcher.ensureLibraries(new MinecraftFolder(root),
+            await expect(Launcher.ensureLibraries(MinecraftFolder.from(root),
                 await Version.parse(root, "1.7.10")))
                 .resolves
                 .toBeUndefined();
@@ -144,8 +144,8 @@ describe("Launcher", () => {
                 const version = "1.7.10-Forge10.13.3.1400-1.7.10";
                 const gamePath = root;
                 const args = await Launcher.generateArguments({
-                    version, 
-                    gamePath, 
+                    version,
+                    gamePath,
                     javaPath: jPath,
                     userType: "mojang",
                     accessToken: "accessToken",
@@ -180,11 +180,15 @@ describe("Launcher", () => {
                     version, gamePath, javaPath: jPath,
                     launcherBrand: "launcherVersion",
                     launcherName: "launcherName",
+                    gameProfile: {
+                        id: "userid",
+                        name: "username",
+                    }
                 });
                 expect(args[0]).toEqual(jPath);
                 expect(args.indexOf("cpw.mods.modlauncher.Launcher")).not.toEqual(-1);
-                expect(args[args.indexOf("--username") + 1]).toEqual(auth.selectedProfile.name);
-                expect(args[args.indexOf("--uuid") + 1]).toEqual(auth.selectedProfile.id.replace(/-/g, ""));
+                expect(args[args.indexOf("--username") + 1]).toEqual("username");
+                expect(args[args.indexOf("--uuid") + 1]).toEqual("userid");
                 expect(args[args.indexOf("--version") + 1]).toEqual("1.14.4-forge-28.0.45");
                 expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
                 expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
@@ -199,16 +203,19 @@ describe("Launcher", () => {
             const jPath = "/test/java";
             const version = "1.14.4";
             const gamePath = root;
-            const auth = Auth.offline("tester");
             const args = await Launcher.generateArguments({
-                version, gamePath, javaPath: jPath, auth,
+                version, gamePath, javaPath: jPath,
+                gameProfile: {
+                    id: "id",
+                    name: "name",
+                },
                 launcherBrand: "launcherVersion",
                 launcherName: "launcherName",
             });
             expect(args[0]).toEqual(jPath);
             expect(args.indexOf("net.minecraft.client.main.Main")).not.toEqual(-1);
-            expect(args[args.indexOf("--username") + 1]).toEqual(auth.selectedProfile.name);
-            expect(args[args.indexOf("--uuid") + 1]).toEqual(auth.selectedProfile.id.replace(/-/g, ""));
+            expect(args[args.indexOf("--username") + 1]).toEqual("name");
+            expect(args[args.indexOf("--uuid") + 1]).toEqual("id");
             expect(args[args.indexOf("--version") + 1]).toEqual(version);
             expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
             expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));

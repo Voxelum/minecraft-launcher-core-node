@@ -9,7 +9,7 @@ describe.skip("Fabric", () => {
     const root = path.join(__dirname, "..", "..", "mock");
     test("should be able to install fabric", async () => {
         await Fabric.install("1.14.1+build.10", "0.4.7+build.147", root);
-        assert(fs.existsSync(new MinecraftFolder(root).getVersionJson("1.14.1-fabric1.14.1+build.10-0.4.7+build.147")));
+        assert(fs.existsSync(MinecraftFolder.from(root).getVersionJson("1.14.1-fabric1.14.1+build.10-0.4.7+build.147")));
     });
 
     test("#updateVersionList", async () => {

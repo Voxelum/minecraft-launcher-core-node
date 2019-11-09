@@ -54,7 +54,7 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-installer.jar",
             },
         };
-        const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory));
+        const result = await ForgeInstaller.install(meta, MinecraftFolder.from(gameDirectory));
         expect(result).toEqual("1.12.2-forge1.12.2-14.23.5.2823");
         await expect(vfs.exists(join(gameDirectory, "versions", "1.12.2-forge1.12.2-14.23.5.2823", "1.12.2-forge1.12.2-14.23.5.2823.json")))
             .resolves
@@ -77,7 +77,7 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.13.2-25.0.209/forge-1.13.2-25.0.209-installer.jar",
             },
         };
-        const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory));
+        const result = await ForgeInstaller.install(meta, MinecraftFolder.from(gameDirectory));
         expect(result).toEqual("1.13.2-forge-25.0.209");
         await expect(vfs.exists(join(gameDirectory, "versions", "1.13.2-forge-25.0.209", "1.13.2-forge-25.0.209.json")))
             .resolves
@@ -101,7 +101,7 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.14.4-28.0.45/forge-1.14.4-28.0.45-installer.jar",
             },
         };
-        const result = await ForgeInstaller.install(meta, new MinecraftFolder(gameDirectory));
+        const result = await ForgeInstaller.install(meta, MinecraftFolder.from(gameDirectory));
         expect(result).toEqual("1.14.4-forge-28.0.45");
         await expect(vfs.exists(join(gameDirectory, "versions", "1.14.4-forge-28.0.45", "1.14.4-forge-28.0.45.json")))
             .resolves

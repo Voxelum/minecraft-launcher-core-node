@@ -12,8 +12,6 @@
   "dependencies": {
     "@xmcl/common": "file:../common",
     "@xmcl/nbt": "file:../nbt",
-    "@xmcl/unzip": "file:../unzip",
-    "@xmcl/util": "file:../util",
     "file-type": "^11.0.0"
   },
   "scripts": {

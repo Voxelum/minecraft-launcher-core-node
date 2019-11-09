@@ -366,7 +366,7 @@ export namespace ForgeInstaller {
 
     function installByInstallerTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string, installLibOption: Installer.LibraryOption, java: JavaExecutor) {
         return async function installForge(context: Task.Context) {
-            const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
+            const mc = MinecraftFolder.from(minecraft);
 
             const forgeVersion = `${version.mcversion}-${version.version}`;
             const installerURL = `${maven}${version.installer.path}`;
@@ -459,7 +459,7 @@ export namespace ForgeInstaller {
 
     function installByUniversalTask(version: VersionMeta, minecraft: MinecraftLocation, maven: string) {
         return async function installForge(context: Task.Context) {
-            const mc = typeof minecraft === "string" ? new MinecraftFolder(minecraft) : minecraft;
+            const mc = MinecraftFolder.from(minecraft);
             const forgeVersion = `${version.mcversion}-${version.version}`;
             const paths = version.universal.path.split("/");
             const realForgeVersion = paths[paths.length - 2];

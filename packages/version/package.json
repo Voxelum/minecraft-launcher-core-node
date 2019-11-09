@@ -10,7 +10,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/task": "file:../task",
     "@xmcl/util": "file:../util"
   },
   "scripts": {

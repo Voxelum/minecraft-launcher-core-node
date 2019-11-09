@@ -1,6 +1,4 @@
-import { Platform } from "./platform";
-
-export interface System extends Platform {
+export interface System {
     fs: FileSystem;
     openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
 
@@ -9,8 +7,6 @@ export interface System extends Platform {
 
     decodeBase64(input: string): string;
     encodeBase64(input: string): string;
-
-    openSocket?(): null;
 
     basename(path: string): string;
     /**
@@ -23,11 +19,11 @@ export interface System extends Platform {
 
 export abstract class FileSystem {
     abstract readonly root: string;
+    abstract readonly writeable: boolean;
 
     // base methods
 
     abstract isDirectory(name: string): Promise<boolean>;
-    abstract writeFile(name: string, data: Uint8Array): Promise<void>;
     abstract existsFile(name: string): Promise<boolean>;
     abstract readFile(name: string, encoding: "utf-8" | "base64"): Promise<string>;
     abstract readFile(name: string): Promise<Uint8Array>;
@@ -36,6 +32,10 @@ export abstract class FileSystem {
     abstract listFiles(name: string): Promise<string[]>;
 
     // extension methods
+
+    async missingFile(name: string) {
+        return this.existsFile(name).then((v) => !v);
+    }
 
     async walkFiles(startingDir: string, walker: (path: string) => void | Promise<void>) {
         const childs = await this.listFiles(startingDir);
@@ -51,13 +51,7 @@ export abstract class FileSystem {
         }
     }
 
-    async validateSha1(name: string, hash: string) {
-        if (!await this.existsFile(name)) {
-            return false;
-        }
-        const sha1 = await System.sha1(await this.readFile(name));
-        return sha1 === hash;
-    }
+    async close(): Promise<void> { }
 }
 
 export let System: System;

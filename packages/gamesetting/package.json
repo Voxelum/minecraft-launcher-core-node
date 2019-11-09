@@ -10,7 +10,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

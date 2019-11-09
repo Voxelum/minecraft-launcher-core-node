@@ -174,7 +174,7 @@ export namespace Launcher {
     export async function launchServer(options: ServerOptions) {
         const args = await generateArgumentsServer(options);
         const version = options.version as ResolvedVersion;
-        const minecraftFolder = new MinecraftFolder(options.path);
+        const minecraftFolder = MinecraftFolder.from(options.path);
 
         await ensureLibraries(minecraftFolder, version);
 
@@ -198,7 +198,7 @@ export namespace Launcher {
     export async function launch(options: Option & PrecheckService): Promise<ChildProcess> {
         const args = await generateArguments(options);
         const version = options.version as ResolvedVersion;
-        const minecraftFolder = new MinecraftFolder(options.resourcePath as string);
+        const minecraftFolder = MinecraftFolder.from(options.resourcePath as string);
 
         const jarPath = minecraftFolder.getVersionJar(version.client);
         if (!fs.existsSync(jarPath)) {
@@ -227,7 +227,7 @@ export namespace Launcher {
      */
     export async function generateArgumentsServer(options: ServerOptions) {
         const { javaPath, path: gamePath, version, minMemory = 1024, maxMemory = 1024, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options;
-        const mc = new MinecraftFolder(gamePath);
+        const mc = MinecraftFolder.from(gamePath);
         const resolvedVersion = typeof version === "string" ? await Version.parse(mc, version) : version;
         const cmd = [
             javaPath, `-Xms${(minMemory)}M`, `-Xmx${(maxMemory)}M`, ...extraJVMArgs,
@@ -260,7 +260,7 @@ export namespace Launcher {
         if (!options.isDemo) { options.isDemo = false; }
         options.version = typeof options.version === "string" ? await Version.parse(options.resourcePath, options.version) : options.version;
 
-        const mc = new MinecraftFolder(options.resourcePath);
+        const mc = MinecraftFolder.from(options.resourcePath);
         const cmd: string[] = [];
 
         const version = options.version;

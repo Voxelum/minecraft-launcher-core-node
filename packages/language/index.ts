@@ -14,7 +14,7 @@ export namespace Language {
      * @param version The version you want to read
      */
     export async function read(location: MinecraftLocation, version: string): Promise<Language[]> {
-        const loca: MinecraftFolder = typeof location === "string" ? new MinecraftFolder(location) : location;
+        const loca = MinecraftFolder.from(location);
         const json = path.join(loca.assets, "indexes", version + ".json");
         if (await missing(json)) {
             throw { type: "MissingVersionIndex", location: loca.root };

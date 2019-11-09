@@ -1,4 +1,5 @@
-import { FileSystem, PackMeta, System } from "@xmcl/common";
+import { FileSystem, System } from "@xmcl/common";
+import { PackMeta } from "./format";
 
 export class ResourceLocation {
     /**
@@ -134,4 +135,5 @@ export namespace ResourcePack {
     }
 }
 
+export * from "./format";
 export default ResourcePack;

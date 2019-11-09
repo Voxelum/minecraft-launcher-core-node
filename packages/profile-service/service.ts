@@ -1,4 +1,51 @@
-import { GameProfile } from "@xmcl/common";
+/**
+ * The data structure holds the user game profile
+ */
+export interface GameProfile {
+    readonly id: string;
+    readonly name: string;
+    readonly properties?: { [name: string]: string };
+}
+
+export namespace GameProfile {
+
+    export interface TexturesInfo {
+        /**
+         * java time in ms
+         */
+        timestamp: number;
+        /**
+         * player name
+         */
+        profileName: string;
+        /**
+         * player id
+         */
+        profileId: string;
+        textures: {
+            SKIN?: Texture,
+            CAPE?: Texture,
+            ELYTRA?: Texture,
+        };
+    }
+    /**
+     * The data structure that hold the texture
+     */
+    export interface Texture {
+        url: string;
+        metadata?: { model?: "slim" | "steve", [key: string]: any };
+    }
+
+    export namespace Texture {
+        export function isSlim(o: Texture) {
+            return o.metadata ? o.metadata.model === "slim" : false;
+        }
+
+        export function getModelType(o: Texture) {
+            return isSlim(o) ? "slim" : "steve";
+        }
+    }
+}
 
 function parseTexturesInfo(profile: GameProfile): GameProfile.TexturesInfo | undefined {
     if (!profile.properties || !profile.properties.textures) { return undefined; }
@@ -14,7 +61,7 @@ export function setBase(req: typeof requester, ver: Verify) {
 }
 
 type Verify = (value: string, signature: string, pemKey: string) => Promise<boolean>;
-type Requester = (url: string, option?: { methods?: string; body?: any, headers?: { [key: string]: string }, form?: any, formMultipart?: any }) => Promise<{ body: any; statusCode: number; statusMessage: string }>;
+type Requester = (url: string, option?: { methods?: string; body?: any, headers?: { [key: string]: string }, search?: any, formMultipart?: any }) => Promise<{ body: any; statusCode: number; statusMessage: string }>;
 
 export namespace ProfileService {
     export interface API {
@@ -87,8 +134,8 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         profileByName: "https://api.mojang.com/users/profiles/minecraft/${name}",
     };
 
-    async function fetchProfile(target: string, pemPubKey?: string, payload?: object, form?: object) {
-        const { body: obj, statusCode, statusMessage } = await requester(target, { body: payload, form });
+    async function fetchProfile(target: string, pemPubKey?: string, payload?: object, search?: object) {
+        const { body: obj, statusCode, statusMessage } = await requester(target, { methods: "GET", body: payload, search });
         if (statusCode !== 200) {
             throw new Error(statusMessage);
         }
@@ -191,7 +238,8 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
             await requester(urlString, { methods: "DELETE", headers });
         } else if (option.data) {
             await requester(urlString, {
-                methods: "PUT", formMultipart: {
+                methods: "PUT",
+                formMultipart: {
                     ...(option.texture.metadata || {}),
                     file: option.data,
                 },
@@ -199,7 +247,8 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
             });
         } else if (option.texture.url) {
             await requester(urlString, {
-                methods: "PUT", form: {
+                methods: "PUT",
+                search: {
                     url: option.texture.url, ...(option.texture.metadata || {})
                 },
                 headers,

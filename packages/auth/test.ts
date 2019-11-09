@@ -1,4 +1,3 @@
-import { AuthResponse } from "@xmcl/common";
 import assert from "assert";
 import { ChildProcess, spawn } from "child_process";
 import * as path from "path";
@@ -51,7 +50,7 @@ describe("Auth", () => {
 
     describe("YggdrasilClient", () => {
         const client = Auth.Yggdrasil.create("clientToken", MOCK);
-        let auth: AuthResponse;
+        let auth: Auth.Response;
         describe("#login", () => {
             test("should be able to login", async () => {
                 auth = await client.login({ username: "test1@to2mbn.org", password: "111111" });
@@ -177,7 +176,6 @@ describe("Auth", () => {
         expect(offlineUser.selectedProfile.id).toBeTruthy();
         expect(offlineUser.accessToken).toBeTruthy();
         expect(offlineUser.clientToken).toBeTruthy();
-        expect(offlineUser.userId).toBeTruthy();
-        expect(offlineUser.userType).toBeTruthy();
+        expect(offlineUser.user.id).toBeTruthy();
     });
 });

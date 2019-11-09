@@ -1,13 +1,14 @@
-import { ProfileService, setBase } from "./service";
+import { ProfileService, setBase, GameProfile } from "./service";
 import got from "got";
 import { URLSearchParams } from "url";
 import FormData from "form-data";
 import { createVerify } from "crypto";
 
-async function req(url: string, option: { method?: string, headers?: any, form?: Record<string, string>, formMultipart?: any; body?: any } = {}) {
+async function request(url: string, option: { method?: string, headers?: any, search?: Record<string, string>, formMultipart?: any; body?: any } = {}) {
     let body;
-    if (option.form) {
-        body = new URLSearchParams(option.form);
+    let query;
+    if (option.search) {
+        query = new URLSearchParams(option.search);
     }
     if (option.formMultipart) {
         body = new FormData();
@@ -22,10 +23,13 @@ async function req(url: string, option: { method?: string, headers?: any, form?:
     if (option.body) {
         body = option.body;
     }
+
+
     const { body: respBody, statusCode, statusMessage } = await got(url, {
         method: option.method,
         headers: option.headers,
         body,
+        query,
         json: true
     })
     return {
@@ -39,8 +43,7 @@ async function verify(data: string, signature: string, pemKey: string | Uint8Arr
     return createVerify("SHA1").update(data, "utf8").verify(pemKey, signature, "base64");
 }
 
-setBase(req, verify);
+setBase(request, verify);
 
-export { ProfileService }
-export { GameProfile } from "@xmcl/common";
+export { ProfileService, GameProfile }
 export default ProfileService;

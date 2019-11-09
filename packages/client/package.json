@@ -10,7 +10,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common",
     "@xmcl/nbt": "file:../nbt",
     "@xmcl/text-component": "file:../text-component",
     "bytebuffer": "^5.0.1",

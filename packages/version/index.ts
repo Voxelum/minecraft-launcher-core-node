@@ -412,7 +412,7 @@ export namespace Version {
      * @returns All the version required to run this version, including this version
      */
     export async function resolveDependency(path: MinecraftLocation, version: string): Promise<PartialResolvedVersion[]> {
-        const folder = typeof path === "string" ? new MinecraftFolder(path) : path;
+        const folder = MinecraftFolder.from(path);
         const stack: PartialResolvedVersion[] = [];
 
         async function walk(versionName: string) {
@@ -423,7 +423,7 @@ export namespace Version {
                     version: versionName,
                 });
             }
-            const contentString = await vfs.readFile(jsonPath, "utf-8").then(b => b.toString());
+            const contentString = await vfs.readFile(jsonPath, "utf-8").then((b) => b.toString());
             let nextVersion: string | undefined;
             try {
                 const raw = parseVersionJson(contentString, folder.root);

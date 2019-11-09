@@ -1,5 +1,6 @@
 {
     "files": [
+        "format.ts",
         "index.ts"
     ],
     "compilerOptions": {

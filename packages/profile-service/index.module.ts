@@ -1,4 +1,4 @@
-import { ProfileService, setBase } from "./service";
+import { ProfileService, setBase, GameProfile } from "./service";
 
 async function req(url: string, option: { method?: string, headers?: any, form?: Record<string, string>, formMultipart?: any; body?: any } = {}) {
     let body;
@@ -42,8 +42,8 @@ async function verify(data: string, signature: string, pemKey: string | Uint8Arr
     };
     if (typeof pemKey === "string") {
         pemKey = pemKey.replace("\n", "")
-            .replace('-----BEGIN PRIVATE KEY-----', '')
-            .replace('-----END PRIVATE KEY-----', '');
+            .replace("-----BEGIN PRIVATE KEY-----", "")
+            .replace("-----END PRIVATE KEY-----", "");
         pemKey = atob(pemKey);
         pemKey = stringToBuffer(pemKey);
     }
@@ -53,6 +53,5 @@ async function verify(data: string, signature: string, pemKey: string | Uint8Arr
 
 setBase(req, verify);
 
-export { ProfileService }
-export { GameProfile } from "@xmcl/common";
+export { ProfileService, GameProfile }
 export default ProfileService;

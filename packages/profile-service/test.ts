@@ -107,7 +107,6 @@ describe("ProfileService", () => {
             if (textures.SKIN) {
                 const skin = textures.SKIN;
                 assert(typeof skin.url === "string");
-                assert(skin.url.startsWith("data:"));
                 if (skin.metadata) {
                     assert(typeof skin.metadata === "object");
                     assert(typeof skin.metadata.model === "string");

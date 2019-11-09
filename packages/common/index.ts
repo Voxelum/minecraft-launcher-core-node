@@ -1,29 +1,14 @@
-import { setSystem, System, FileSystem } from "./system";
-import { EOL, platform, arch, release } from "os";
-
-export * from "./game";
-export * from "./version";
-export * from "./gamesetting";
-export * from "./user";
-export * from "./mojang";
-export * from "./world";
-export * from "./server";
-export * from "./model";
-export * from "./resource";
-export * from "./system";
-export * from "./platform";
-
-const { World } = require("./world");
-const { Version } = require("./version");
-exports.World = World;
-exports.Version = Version;
-
-import { basename, join } from "path";
-import { createHash } from "crypto";
 import { Unzip } from "@xmcl/unzip";
+import { createHash } from "crypto";
 import { promises } from "fs";
+import { EOL } from "os";
+import { basename, join } from "path";
+import { FileSystem, setSystem, System } from "./system";
+
+export * from "./system";
 
 class DefaultFS extends FileSystem {
+    readonly writeable = true;
     isDirectory(name: string): Promise<boolean> {
         return promises.stat(join(this.root, name)).then((s) => s.isDirectory());
     }
@@ -42,11 +27,9 @@ class DefaultFS extends FileSystem {
     constructor(readonly root: string) { super(); }
 }
 class ZipFS extends FileSystem {
+    writeable = false;
     isDirectory(name: string): Promise<boolean> {
         return Promise.resolve(Object.keys(this.zip.entries).some((k) => k.startsWith(name)));
-    }
-    writeFile(name: string, data: Uint8Array): Promise<void> {
-        throw new Error("Unsupported!");
     }
     existsFile(name: string): Promise<boolean> {
         if (this.zip.entries[name]) { return Promise.resolve(true); }
@@ -71,18 +54,18 @@ class ZipFS extends FileSystem {
 }
 class NodeSystem implements System {
     fs: FileSystem = new DefaultFS("/");
-    async openFileSystem(basePath: string | Uint8Array): Promise<FileSystem> {
+    async openFileSystem<T>(basePath: string | Uint8Array): Promise<FileSystem> {
         if (typeof basePath === "string") {
             const stat = await promises.stat(basePath);
             if (stat.isDirectory()) {
-                return new DefaultFS(basePath);
+                return new DefaultFS(basePath) as any;
             } else {
                 const zip = await Unzip.open(basePath, { lazyEntries: false });
-                return new ZipFS(basePath, zip);
+                return new ZipFS(basePath, zip) as any;
             }
         } else {
             const zip = await Unzip.open(basePath as Buffer, { lazyEntries: false });
-            return new ZipFS("", zip);
+            return new ZipFS("", zip) as any;
         }
     }
     md5(data: Uint8Array): Promise<string> {
@@ -104,28 +87,8 @@ class NodeSystem implements System {
         return join(...paths);
     }
     eol: string = EOL;
-    name: "osx" | "linux" | "windows" | "unknown";
-    version: string;
-    arch: string;
 
-    constructor() {
-        this.arch = arch();
-        this.version = release();
-        switch (platform()) {
-            case "darwin":
-                this.name = "osx";
-                break;
-            case "linux":
-                this.name = "linux";
-                break;
-            case "win32":
-                this.name = "windows";
-                break;
-            default:
-                this.name = "unknown";
-                break;
-        }
-    }
+    constructor() { }
 }
 
 setSystem(new NodeSystem());

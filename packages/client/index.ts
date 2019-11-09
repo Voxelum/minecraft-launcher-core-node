@@ -1,9 +1,55 @@
-import { GameProfile, ResourceMode, ServerInfoFrame, ServerStatusFrame } from "@xmcl/common";
 import NBT from "@xmcl/nbt";
-import { TextComponent } from "@xmcl/text-component";
+import { TextComponent, TextComponentFrame } from "@xmcl/text-component";
 import { StatusClient } from "./net/status-client";
 
-interface ModIndentity {
+export enum ResourceMode {
+    ENABLED,
+    DISABLED,
+    PROMPT,
+}
+
+/**
+ * The servers.dat format server information, contains known host displayed in "Multipler" page.
+ */
+export interface ServerInfoFrame {
+    name?: string;
+    host: string;
+    port?: number;
+    icon?: string;
+    isLanServer?: boolean;
+    resourceMode?: ResourceMode;
+}
+
+export interface ServerStatusFrame {
+    version: {
+        name: string,
+        protocol: number,
+    };
+    players: {
+        max: number,
+        online: number,
+        sample?: Array<{ id: string, name: string }>,
+    };
+    /**
+     * The motd of server, which might be the raw TextComponent string or structurelized TextComponent JSON
+     */
+    description: TextComponentFrame | string;
+    favicon: string | "";
+    modinfo?: {
+        type: string | "FML",
+        modList: Array<{
+            readonly modid: string;
+            readonly version: string;
+        }>,
+    };
+    ping: number;
+}
+interface GameProfile {
+    name: string;
+    id: string;
+}
+
+interface ForgeModIdentity {
     readonly modid: string;
     readonly version: string;
 }
@@ -51,7 +97,7 @@ export namespace Server {
             const modInfoJson = obj.modinfo;
             let modInfo;
             if (modInfoJson) {
-                let list: ModIndentity[] = [];
+                let list: ForgeModIdentity[] = [];
                 const mList = modInfoJson.modList;
                 if (mList && mList instanceof Array) { list = mList; }
                 modInfo = {
@@ -74,7 +120,7 @@ export namespace Server {
             readonly playerList?: GameProfile[],
             readonly modInfos?: {
                 type: string,
-                modList: ModIndentity[],
+                modList: ForgeModIdentity[],
             }) { }
 
         toString(): string {
@@ -190,4 +236,3 @@ export * from "./net/coders";
 export * from "./net/packet";
 export * from "./net/status-client";
 export * from "./net/client";
-export * from "@xmcl/common/server";

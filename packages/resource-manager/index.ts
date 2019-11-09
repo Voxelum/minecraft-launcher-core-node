@@ -1,5 +1,4 @@
-import { PackMeta } from "@xmcl/common";
-import { ResourcePack, Resource, ResourceLocation } from "@xmcl/resourcepack";
+import { PackMeta, ResourcePack, Resource, ResourceLocation } from "@xmcl/resourcepack";
 
 interface ResourceSourceWrapper {
     source: ResourcePack;

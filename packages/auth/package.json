@@ -11,8 +11,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common",
-    "@xmcl/profile-service": "file:../profile-service",
     "got": "^9.6.0",
     "uuid": "^3.2.1"
   },

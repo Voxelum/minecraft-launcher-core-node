@@ -10,8 +10,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common",
-    "@xmcl/net": "file:../net",
     "got": "^9.6.0",
     "long": "^3.2.0"
   },

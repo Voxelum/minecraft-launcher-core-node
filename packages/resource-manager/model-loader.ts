@@ -1,21 +1,20 @@
-import { BlockModel } from "@xmcl/common";
-import { Resource, ResourceLocation } from "@xmcl/resourcepack";
+import { BlockModel, Resource, ResourceLocation } from "@xmcl/resourcepack";
 import { ResourceManager } from "./index";
-
-function findRealTexturePath(model: BlockModel.Resolved, variantKey: string) {
-    let texturePath = model.textures[variantKey] as string;
-    while (texturePath.startsWith("#")) {
-        const next = model.textures[texturePath.substring(1, texturePath.length)];
-        if (!next) { return undefined; }
-        texturePath = next;
-    }
-    return texturePath;
-}
 
 /**
  * The model loader load the resource
  */
 export class ModelLoader {
+    static findRealTexturePath(model: BlockModel.Resolved, variantKey: string) {
+        let texturePath = model.textures[variantKey] as string;
+        while (texturePath.startsWith("#")) {
+            const next = model.textures[texturePath.substring(1, texturePath.length)];
+            if (!next) { return undefined; }
+            texturePath = next;
+        }
+        return texturePath;
+    }
+
     /**
      * All required texture raw resources
      */
@@ -61,7 +60,7 @@ export class ModelLoader {
 
         const reg = this.textures;
         for (const variant of Object.keys(model.textures)) {
-            const texPath = findRealTexturePath(model, variant);
+            const texPath = ModelLoader.findRealTexturePath(model, variant);
             if (texPath) {
                 const load = await this.manager.load(ResourceLocation.ofTexturePath(texPath));
                 if (load) {
