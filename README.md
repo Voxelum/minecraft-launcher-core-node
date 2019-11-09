@@ -658,7 +658,6 @@ They all depends on `@xmcl/version` module, which providing the basic version pa
 
 These module use such modules as helper:
 
-- fs-extra, for file system operation
 - got, for downloader
 - yauzl, for decompress
 
@@ -667,13 +666,14 @@ These module use such modules as helper:
 The features like parsing game setting, parsing forge mod metadata, NBT parsing, game saves parsing, they don't really have any strong connection.
 
 - @xmcl/nbt
+- @xmcl/forge
+- @xmcl/gamesetting
+- @xmcl/text-component
 - @xmcl/common
-  - @xmcl/forge
+  - @xmcl/resource-manager
   - @xmcl/world
-  - @xmcl/gamesetting
-  - @xmcl/text-component
-  - *@xmcl/client (the module is design to be browser/node capable but it not ready now)* 
   - @xmcl/resourcepack
+- *@xmcl/client (the module is design to be browser/node capable but it not ready now)* 
 
 ### User Authorization Features (Node/Electron/Browser)
 
