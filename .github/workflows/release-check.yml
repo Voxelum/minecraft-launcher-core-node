@@ -35,9 +35,10 @@ jobs:
         npm run lint
     - name: Compile All
       run: |
-        npm run compile
+        npm run compile -- --noEmit
     - name: Test
       run: |
+        npm run build:clean
         npm run test
     - name: Update Documents
       run: |
