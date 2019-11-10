@@ -100,7 +100,7 @@ describe("Install", () => {
 
     describe("#diagnose", () => {
         test("should be able to diagnose minecraft folder", async () => {
-            await Version.parse(root, "temp").catch((e) => {
+            await Version.parse(root, "1.7.10").catch((e) => {
             });
             // const mock = await Installer.diagnose("mock", root);
             // expect(mock.version).toBe("mock");
@@ -110,8 +110,8 @@ describe("Install", () => {
             // expect(mock.missingVersionJar).toBeTruthy();
             // expect(mock.missingVersionJson).toBe(false);
         });
-        test("should be able to diagnose empty json folder", async () => {
-            const v17 = await Installer.diagnose("temp", root);
+        test.skip("should be able to diagnose empty json folder", async () => {
+            const v17 = await Installer.diagnose("1.7.10", root);
             // expect(v17.version).toBe("1.7.0");
             // expect(v17.minecraftLocation.root).toBe(root);
             // expect(v17.missingAssetsIndex).toBe(false);

@@ -81,6 +81,11 @@ export interface ResourcePack {
      * The pack info, just like resource pack
      */
     info(): Promise<PackMeta.Pack>;
+
+    /**
+     * The icon of the resource pack
+     */
+    icon(): Promise<Uint8Array>;
 }
 
 class ResourcePackImpl implements ResourcePack {
@@ -88,26 +93,39 @@ class ResourcePackImpl implements ResourcePack {
         const p = this.getPath(location);
         const name = p.substring(0, p.lastIndexOf("."));
         const metafileName = name + ".mcmeta";
-        return {
-            location,
-            url: "",
-            content: await this.fs.readFile(p),
-            metadata: await this.fs.existsFile(metafileName) ? JSON.parse(await this.fs.readFile(metafileName, "utf-8")) : {}
-        };
+        if (await this.fs.existsFile(p)) {
+            return {
+                location,
+                url: this.fs.type === "path" ? `file://${this.fs.root}${p}` : "",
+                content: await this.fs.readFile(p),
+                metadata: await this.fs.existsFile(metafileName) ? JSON.parse(await this.fs.readFile(metafileName, "utf-8")) : {}
+            };
+        }
+        return undefined;
     }
     has(location: ResourceLocation): Promise<boolean> {
         return this.fs.existsFile(this.getPath(location));
     }
-    domains(): Promise<string[]> {
-        return this.fs.listFiles("assets");
+    async domains(): Promise<string[]> {
+        const files = await this.fs.listFiles("assets");
+        const result: string[] = [];
+        for (const f of files) {
+            if (await this.fs.isDirectory("assets/" + f)) {
+                result.push(f);
+            }
+        }
+        return result;
     }
     async info(): Promise<PackMeta.Pack> {
         return JSON.parse(await this.fs.readFile("pack.mcmeta", "utf-8"));
     }
+    icon(): Promise<Uint8Array> {
+        return this.fs.readFile("pack.png");
+    }
     constructor(private fs: FileSystem) { }
 
-    private getPath(Location: ResourceLocation) {
-        return `assets/${Location.domain}/${location.pathname};`
+    private getPath(location: ResourceLocation) {
+        return `assets/${location.domain}/${location.path}`;
     }
 }
 
@@ -126,12 +144,18 @@ export namespace ResourcePack {
      */
     export async function head(resourcePack: string | Buffer, cacheIcon?: boolean): Promise<{ metadata: PackMeta.Pack, icon?: string }> {
         const system = await System.openFileSystem(resourcePack);
+        if (!await system.existsFile("pack.mcmeta")) {
+            throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!");
+        }
         const metadata = JSON.parse(await system.readFile("pack.mcmeta", "utf-8"));
+        if (!metadata.pack) {
+            throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!");
+        }
         let icon;
         if (cacheIcon) {
             icon = "data:image/png;base64, " + await system.readFile("pack.png", "base64");
         }
-        return { metadata, icon };
+        return { metadata: metadata.pack, icon };
     }
 }
 

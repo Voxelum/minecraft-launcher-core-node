@@ -13,7 +13,7 @@ export class WorldReader {
      * @param chunkZ The z value of chunk coord
      */
     public async getRegionData(chunkX: number, chunkZ: number): Promise<RegionDataFrame> {
-        const path = System.join("region", `r.${chunkX}.${chunkZ}.mca`);
+        const path = System.fs.join("region", `r.${chunkX}.${chunkZ}.mca`);
         const buffer = await this.fs.readFile(path);
         const bb = ByteBuffer.wrap(buffer);
         const off = getChunkOffset(buffer, chunkX, chunkZ);

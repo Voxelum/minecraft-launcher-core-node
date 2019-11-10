@@ -30,6 +30,11 @@ describe("WorldReader", () => {
         expect(level.LevelName).toEqual("Testa");
         expect(level.Difficulty).toEqual(2);
     });
+    test("#getPlayerData", async () => {
+        const reader = await WorldReader.create(`${root}/saves/sample-map`);
+        const players = await reader.getPlayerData();
+        expect(players).toHaveLength(1);
+    });
     test("#getRegionData", async () => {
         const reader = await WorldReader.create(`${root}/saves/sample-map`);
         const region = await reader.getRegionData(0, 0);

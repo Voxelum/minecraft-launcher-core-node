@@ -40,8 +40,6 @@ describe("Forge", () => {
         )).toBeTruthy();
     });
 
-
-
     describe("Config", () => {
         const cfg1 = `
     # Configuration file

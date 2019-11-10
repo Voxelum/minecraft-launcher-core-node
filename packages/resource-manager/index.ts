@@ -20,7 +20,12 @@ export class ResourceManager {
      * Add a new resource source to the end of the resource list.
      */
     async addResourcePack(resourcePack: ResourcePack) {
-        const info = await resourcePack.info();
+        let info;
+        try {
+            info = await resourcePack.info();
+        } catch{
+            info = { pack_format: -1, description: "" };
+        }
         const domains = await resourcePack.domains();
         const wrapper = { info, source: resourcePack, domains };
 
@@ -72,7 +77,6 @@ export class ResourceManager {
     async load(location: ResourceLocation, urlOnly: boolean = false): Promise<any> {
         const cached = this.cache[`${location.domain}:${location.path}`];
         if (cached) { return cached; }
-
         for (const src of this.list) {
             const loaded = await src.source.load(location, urlOnly);
             if (!loaded) { continue; }

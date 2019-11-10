@@ -11,7 +11,8 @@
     "access": "public"
   },
   "dependencies": {
-    "java-asm": "^0.0.4"
+    "@xmcl/common": "file:../common",
+    "java-asm": "^0.0.6"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

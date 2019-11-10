@@ -1,5 +1,6 @@
 import { BlockModel, Resource, ResourceLocation } from "@xmcl/resourcepack";
 import { ResourceManager } from "./index";
+import { System } from "@xmcl/common";
 
 /**
  * The model loader load the resource
@@ -34,8 +35,8 @@ export class ModelLoader {
      */
     async loadModel(modelPath: string): Promise<BlockModel.Resolved> {
         const res = await this.manager.load(ResourceLocation.ofModelPath(modelPath));
-        if (!res) { throw new Error(`Model ${modelPath} not found`); }
-        const raw = JSON.parse(new TextDecoder().decode(res.content)) as BlockModel;
+        if (!res) { throw new Error(`Model ${modelPath} (${ResourceLocation.ofModelPath(modelPath)}) not found`); }
+        const raw = JSON.parse(System.bufferToText(res.content)) as BlockModel;
 
         if (!raw.textures) { raw.textures = {}; }
 

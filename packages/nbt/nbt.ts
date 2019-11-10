@@ -7,7 +7,7 @@ interface Zlib {
     gzip(buffer: Uint8Array): Promise<Uint8Array>;
     gzipSync(buffer: Uint8Array): Uint8Array;
     ungzip(buffer: Uint8Array): Promise<Uint8Array>;
-    ungzipSync(buffer: Uint8Array): Uint8Array;
+    gunzipSync(buffer: Uint8Array): Uint8Array;
     deflate(buffer: Uint8Array): Promise<Uint8Array>;
     deflateSync(buffer: Uint8Array): Uint8Array;
     inflate(buffer: Uint8Array): Promise<Uint8Array>;
@@ -263,13 +263,7 @@ export namespace NBT {
      */
     export async function serialize(object: TypedObject, option: SerializationOption = {}): Promise<Uint8Array> {
         const buff = writeRootTag(object, object.__nbtPrototype__, {}, "", Object.assign({}, handlers, option.io));
-        if (!option.compressed) {
-            return buff;
-        }
-        if (option.compressed === "deflate") {
-            return zlib.deflate(buff);
-        }
-        return zlib.gzip(buff);
+        return normalizeBuffer(buff, option.compressed);
     }
 
     /**
@@ -277,12 +271,12 @@ export namespace NBT {
      * @param fileData The nbt binary
      */
     export async function deserialize<T>(fileData: Uint8Array, option: SerializationOption = {}): Promise<T> {
-        const doUnzip = normalizeBuffer(fileData, option.compressed);
+        const doUnzip = normalizeCompress(fileData, option.compressed);
         const bb = ByteBuffer.wrap(doUnzip === "none"
             ? fileData
             : doUnzip === "gzip"
-                ? await zlib.gzip(fileData)
-                : await zlib.deflate(fileData));
+                ? await zlib.ungzip(fileData)
+                : await zlib.inflate(fileData));
 
         const { value, type } = readRootTag(bb, undefined, Object.assign({}, handlers, option.io));
         deepFreeze(type);
@@ -296,13 +290,7 @@ export namespace NBT {
      */
     export function serializeSync(object: TypedObject, option: SerializationOption = {}): Uint8Array {
         const buff = writeRootTag(object, object.__nbtPrototype__, {}, "", Object.assign({}, handlers, option.io));
-        if (!option.compressed) {
-            return buff;
-        }
-        if (option.compressed === "deflate") {
-            return zlib.deflateSync(buff);
-        }
-        return zlib.gzipSync(buff);
+        return normalizeBufferSync(buff, option.compressed);
     }
 
     /**
@@ -311,11 +299,11 @@ export namespace NBT {
      * @param compressed Should we compress it
      */
     export function deserializeSync<T>(fileData: Uint8Array, option: SerializationOption = {}): T {
-        const doUnzip = normalizeBuffer(fileData, option.compressed);
+        const doUnzip = normalizeCompress(fileData, option.compressed);
         const bb = ByteBuffer.wrap(doUnzip === "none"
             ? fileData
             : doUnzip === "gzip"
-                ? zlib.ungzipSync(fileData)
+                ? zlib.gunzipSync(fileData)
                 : zlib.inflateSync(fileData));
 
         const { value, type } = readRootTag(bb, undefined, Object.assign({}, handlers, option.io));
@@ -324,17 +312,28 @@ export namespace NBT {
         return value;
     }
 
-    function normalizeBuffer(fileData: Uint8Array, compressed?: true | "deflate" | "gzip"): "none" | "gzip" | "deflate" {
+    function normalizeCompress(fileData: Uint8Array, compressed?: true | "deflate" | "gzip"): "none" | "gzip" | "deflate" {
         let doUnzip: "none" | "gzip" | "deflate";
         if (typeof compressed === "undefined") {
             const ft = fileType(fileData);
             doUnzip = ft !== undefined && ft.ext === "gz" ? "gzip" : "none";
-        } else if (compressed) {
+        } else if (typeof compressed === "boolean" && compressed) {
             doUnzip = "gzip";
         } else {
             doUnzip = compressed;
         }
         return doUnzip;
+    }
+
+    function normalizeBuffer(buff: Uint8Array, compressed?: true | "deflate" | "gzip") {
+        if (!compressed) { return buff; }
+        if (compressed === "deflate") { return zlib.deflate(buff); }
+        return zlib.gzip(buff);
+    }
+    function normalizeBufferSync(buff: Uint8Array, compressed?: true | "deflate" | "gzip") {
+        if (!compressed) { return buff; }
+        if (compressed === "deflate") { return zlib.deflateSync(buff); }
+        return zlib.gzipSync(buff);
     }
 
     function readRootTag(buffer: ByteBuffer, reg: { [id: string]: string } = {}, io: IO[] = handlers) {
@@ -387,13 +386,7 @@ export namespace NBT {
             if (!schema) { throw new Error(`Unknown type [${schema}]`); }
 
             const buff = writeRootTag(object, schema, this.registry, "", Object.assign({}, handlers, option.io));
-            if (!option.compressed) {
-                return buff;
-            }
-            if (option.compressed === "deflate") {
-                return zlib.deflate(buff);
-            }
-            return zlib.gzip(buff);
+            return normalizeBuffer(buff, option.compressed);
         }
         /**
          * Serialize the object into the specific type
@@ -406,13 +399,7 @@ export namespace NBT {
             if (!schema) { throw new Error(`Unknown type [${schema}]`); }
 
             const buff = writeRootTag(object, schema, this.registry, "", Object.assign({}, handlers, option.io));
-            if (!option.compressed) {
-                return buff;
-            }
-            if (option.compressed === "deflate") {
-                return zlib.deflate(buff);
-            }
-            return zlib.gzipSync(buff);
+            return normalizeBufferSync(buff, option.compressed);
         }
         /**
          * Deserialize the nbt to json object directly
@@ -420,7 +407,7 @@ export namespace NBT {
          * @param compressed Does the data compressed
          */
         async deserialize(fileData: Uint8Array, option: SerializationOption = {}): Promise<{ value: any, type: any | string }> {
-            const doUnzip = normalizeBuffer(fileData, option.compressed);
+            const doUnzip = normalizeCompress(fileData, option.compressed);
             let bytebuffer: ByteBuffer;
             if (doUnzip !== "none") {
                 bytebuffer = ByteBuffer.wrap(doUnzip === "gzip" ? await zlib.ungzip(fileData) : await zlib.inflate(fileData));
@@ -435,10 +422,10 @@ export namespace NBT {
          * @param compressed Does the data compressed
          */
         deserializeSync(fileData: Uint8Array, option: SerializationOption = {}): { value: any, type: any | string } {
-            const doUnzip = normalizeBuffer(fileData, option.compressed);
+            const doUnzip = normalizeCompress(fileData, option.compressed);
             let bytebuffer: ByteBuffer;
             if (doUnzip !== "none") {
-                bytebuffer = ByteBuffer.wrap(doUnzip === "gzip" ? zlib.ungzipSync(fileData) : zlib.inflateSync(fileData));
+                bytebuffer = ByteBuffer.wrap(doUnzip === "gzip" ? zlib.gunzipSync(fileData) : zlib.inflateSync(fileData));
             } else {
                 bytebuffer = ByteBuffer.wrap(fileData);
             }

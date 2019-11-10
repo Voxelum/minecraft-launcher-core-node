@@ -8,20 +8,23 @@ export interface System {
     decodeBase64(input: string): string;
     encodeBase64(input: string): string;
 
+    bufferToText(buff: Uint8Array): string;
+    bufferToBase64(buff: Uint8Array): string;
+
     basename(path: string): string;
-    /**
-     * Just like `path.join`
-     */
-    join(...paths: string[]): string;
 
     eol: string;
 }
 
 export abstract class FileSystem {
     abstract readonly root: string;
+    abstract readonly sep: string;
+    abstract readonly type: "zip" | "path";
     abstract readonly writeable: boolean;
 
     // base methods
+
+    abstract join(...paths: string[]): string;
 
     abstract isDirectory(name: string): Promise<boolean>;
     abstract existsFile(name: string): Promise<boolean>;
@@ -37,21 +40,20 @@ export abstract class FileSystem {
         return this.existsFile(name).then((v) => !v);
     }
 
-    async walkFiles(startingDir: string, walker: (path: string) => void | Promise<void>) {
-        const childs = await this.listFiles(startingDir);
-        for (const child of childs) {
-            if (this.isDirectory(child)) {
-                await this.walkFiles(System.join(startingDir, child), walker);
-            } else {
-                const result = walker(System.join(startingDir, child));
-                if (result instanceof Promise) {
-                    await result;
-                }
+    async walkFiles(target: string, walker: (path: string) => void | Promise<void>) {
+        if (await this.isDirectory(target)) {
+            const childs = await this.listFiles(target);
+            for (const child of childs) {
+                await this.walkFiles(this.join(target, child), walker);
+            }
+        } else {
+            const result = walker(this.join(target));
+            if (result instanceof Promise) {
+                await result;
             }
         }
     }
 
-    async close(): Promise<void> { }
 }
 
 export let System: System;

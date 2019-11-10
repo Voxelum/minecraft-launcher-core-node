@@ -136,7 +136,7 @@ async function asmMetaData(fs: FileSystem, modidTree: ModidTree, manifest?: any)
         const data = await fs.readFile(f);
         const metaContainer: any = {};
         const visitor = new ModClassVisitor(metaContainer, guessing, corePluginClass);
-        new ClassReader(data as any).accept(visitor);
+        new ClassReader(data).accept(visitor);
         if (Object.keys(metaContainer).length === 0) {
             if (visitor.className === "Config" && visitor.fields && visitor.fields.OF_NAME) {
                 metaContainer.modid = visitor.fields.OF_NAME;
@@ -183,7 +183,7 @@ async function asmMetaData(fs: FileSystem, modidTree: ModidTree, manifest?: any)
         modidTree[guessing.modid] = guessing;
     }
 }
-async function jsonMetaData(zip: FileSystem, modidTree: ModidTree) {
+async function jsonMetaData(fs: FileSystem, modidTree: ModidTree) {
     function readJsonMetadata(json: any) {
         if (json instanceof Array) {
             for (const m of json) { modidTree[m.modid] = m; }
@@ -193,9 +193,9 @@ async function jsonMetaData(zip: FileSystem, modidTree: ModidTree) {
             modidTree[json.modid] = json;
         }
     }
-    if (await zip.existsFile("mcmod.info")) {
+    if (await fs.existsFile("mcmod.info")) {
         try {
-            const json = JSON.parse(await zip.readFile("mcmod.info", "utf-8"));
+            const json = JSON.parse(await fs.readFile("mcmod.info", "utf-8"));
             readJsonMetadata(json);
         } catch (e) { }
     }

@@ -1,5 +1,9 @@
 import { ResourceManager } from ".";
-import { ResourceLocation } from "@xmcl/resourcepack";
+import { join } from "path";
+import ResourcePack, { ResourceLocation } from "@xmcl/resourcepack";
+import { ModelLoader } from "./model-loader";
+
+const mock = join(__dirname, "..", "..", "mock");
 
 describe("ResourceLocation", () => {
     describe("#ofModelPath", () => {
@@ -128,5 +132,33 @@ describe("ResourceManager", () => {
         expect(man.allResourcePacks).toEqual(["A", "B"]);
         man.swap(0, 1);
         expect(man.allResourcePacks).toEqual(["B", "A"]);
+    });
+});
+
+describe("ModelLoader", () => {
+    describe("#loadModel", () => {
+        test("should load grass block model", async () => {
+            const man = new ResourceManager();
+            await man.addResourcePack(await ResourcePack.open(join(mock, "resourcepacks", "1.14.4.zip")));
+            const loader = new ModelLoader(man);
+            const model = await loader.loadModel("block/grass_block");
+            expect(model).toBeTruthy();
+            expect(model.textures).toEqual({
+                particle: "block/dirt",
+                bottom: "block/dirt",
+                top: "block/grass_block_top",
+                side: "block/grass_block_side",
+                overlay: "block/grass_block_side_overlay"
+            });
+            expect(model.display).toBeTruthy();
+            expect(model.elements).toBeTruthy();
+
+            expect(loader.textures["block/grass_block_side_overlay"])
+                .toBeTruthy();
+            expect(loader.textures["block/grass_block_side"])
+                .toBeTruthy();
+            expect(loader.textures["block/dirt"])
+                .toBeTruthy();
+        });
     });
 });
