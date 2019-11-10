@@ -2,18 +2,11 @@ export interface System {
     fs: FileSystem;
     openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
 
-    md5(data: Uint8Array): Promise<string>;
-    sha1(data: Uint8Array): Promise<string>;
-
     decodeBase64(input: string): string;
     encodeBase64(input: string): string;
 
     bufferToText(buff: Uint8Array): string;
     bufferToBase64(buff: Uint8Array): string;
-
-    basename(path: string): string;
-
-    eol: string;
 }
 
 export abstract class FileSystem {

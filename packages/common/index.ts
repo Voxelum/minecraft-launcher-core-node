@@ -1,18 +1,15 @@
 import { Unzip } from "@xmcl/unzip";
-import { createHash } from "crypto";
 import { promises } from "fs";
-import { EOL } from "os";
-import { basename, join, sep } from "path";
-import { FileSystem, System, setSystem } from "./system";
-
+import { join, sep } from "path";
+import { FileSystem, setSystem, System } from "./system";
 
 class DefaultFS extends FileSystem {
     sep = sep;
+    type = "path" as const;
+    writeable = true;
     join(...paths: string[]): string {
         return join(...paths);
     }
-    type = "path" as const;
-    readonly writeable = true;
     isDirectory(name: string): Promise<boolean> {
         return promises.stat(join(this.root, name)).then((s) => s.isDirectory());
     }
@@ -32,11 +29,11 @@ class DefaultFS extends FileSystem {
 }
 class ZipFS extends FileSystem {
     sep = "/";
+    type = "zip" as const;
+    writeable = false;
     join(...paths: string[]): string {
         return paths.join("/");
     }
-    type = "zip" as const;
-    writeable = false;
     isDirectory(name: string): Promise<boolean> {
         if (this.zip.entries[name]) {
             return Promise.resolve(name.endsWith("/"));
@@ -93,7 +90,6 @@ class ZipFS extends FileSystem {
     constructor(readonly root: string, private zip: Unzip.CachedZipFile) { super(); }
 }
 class NodeSystem implements System {
-    sep = sep;
     fs: FileSystem = new DefaultFS("/");
     async openFileSystem(basePath: string | Uint8Array): Promise<FileSystem> {
         if (typeof basePath === "string") {
@@ -109,26 +105,12 @@ class NodeSystem implements System {
             return new ZipFS("", zip);
         }
     }
-    md5(data: Uint8Array): Promise<string> {
-        return Promise.resolve(createHash("md5").update(data).digest("hex"));
-    }
-    sha1(data: Uint8Array): Promise<string> {
-        return Promise.resolve(createHash("sha1").update(data).digest("hex"));
-    }
     decodeBase64(input: string): string {
         return Buffer.from(input, "base64").toString("utf-8");
     }
     encodeBase64(input: string): string {
         return Buffer.from(input, "utf-8").toString("base64");
     }
-    basename(path: string): string {
-        return basename(path);
-    }
-    join(...paths: string[]): string {
-        return join(...paths);
-    }
-    eol: string = EOL;
-
     bufferToText(buff: Uint8Array): string {
         if (buff instanceof Buffer) {
             return buff.toString("utf-8");
@@ -150,3 +132,4 @@ const node: System = new NodeSystem();
 setSystem(node);
 
 export * from "./system";
+
