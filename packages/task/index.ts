@@ -223,7 +223,7 @@ export namespace Task {
 
     export interface State {
         name: string;
-        arguments?: object;
+        arguments?: { [key: string]: any };
         path: string;
     }
 }

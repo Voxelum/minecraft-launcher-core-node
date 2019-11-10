@@ -24,7 +24,7 @@ describe("Task", () => {
             test.parameters = { x: 1 };
             const runtime = Task.createRuntime();
             runtime.once("execute", (n) => {
-                expect((n.arguments as any).x).toBe(1);
+                expect(n.arguments!.x).toBe(1);
                 expect(n.path).toEqual("test");
                 expect(n.name).toEqual("test");
             });
@@ -43,7 +43,7 @@ describe("Task", () => {
             const onSuccess = jest.fn();
             runtime.on("execute", (ch) => {
                 onExec();
-                expect((ch.arguments as any).x).toEqual(ch.name === "c" ? 2 : 1);
+                expect(ch.arguments!.x).toEqual(ch.name === "c" ? 2 : 1);
             });
             runtime.on("finish", () => {
                 onSuccess();
@@ -67,7 +67,7 @@ describe("Task", () => {
             const runtime = Task.createRuntime();
             runtime.on("execute", (ch) => {
                 onExec();
-                expect((ch.arguments as any).x).toEqual(1);
+                expect(ch.arguments!.x).toEqual(1);
             });
             runtime.on("finish", () => {
                 onSuccess();
