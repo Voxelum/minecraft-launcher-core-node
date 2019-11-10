@@ -80,7 +80,7 @@ interface ModidTree {
 async function tweakMetadata(fs: FileSystem, modidTree: ModidTree) {
     if (! await fs.existsFile("META-INF/MANIFEST.MF")) { return; }
     const data = await fs.readFile("META-INF/MANIFEST.MF");
-    const manifest = data.toString().split(System.eol).map((l) => l.split(":").map((s) => s.trim()))
+    const manifest = data.toString().split("\n").map((l) => l.split(":").map((s) => s.trim()))
         .reduce((a, b) => ({ ...a, [b[0]]: b[1] }), {}) as any;
     if (manifest.TweakMetaFile) {
         const file = manifest.TweakMetaFile;
