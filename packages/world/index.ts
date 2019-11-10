@@ -40,13 +40,13 @@ export class WorldReader {
     public async getPlayerData(): Promise<PlayerDataFrame[]> {
         const files = await this.fs.listFiles("playerdata");
         return Promise.all(files
-            .map((f) => this.fs.readFile(f).then((b) => NBT.deserialize<PlayerDataFrame>(b))));
+            .map((f) => this.fs.readFile(this.fs.join("playerdata", f)).then((b) => NBT.deserialize<PlayerDataFrame>(b))));
     }
 
     public async getAdvancementsData(): Promise<AdvancementDataFrame[]> {
         const files = await this.fs.listFiles("advancements");
         return Promise.all(files
-            .map((f) => this.fs.readFile(f).then((b) => NBT.deserialize<AdvancementDataFrame>(b))));
+            .map((f) => this.fs.readFile(this.fs.join("advancements", f)).then((b) => NBT.deserialize<AdvancementDataFrame>(b))));
     }
 }
 
