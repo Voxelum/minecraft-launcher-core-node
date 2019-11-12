@@ -3,7 +3,7 @@ import ByteBuffer from "bytebuffer";
 import { NBT } from "@xmcl/nbt";
 
 export class WorldReader {
-    static async create(path: string) {
+    static async create(path: string | Uint8Array) {
         return new WorldReader(await System.openFileSystem(path));
     }
     constructor(private fs: FileSystem) { }
