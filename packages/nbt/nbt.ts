@@ -364,6 +364,14 @@ export namespace NBT {
     export class Serializer {
         private registry: { [id: string]: CompoundSchema } = {};
         private reversedRegistry: { [shape: string]: string } = {};
+
+        getSchema(type: string) {
+            return this.registry[type];
+        }
+
+        getType(schema: CompoundSchema) {
+            return this.reversedRegistry[JSON.stringify(schema)];
+        }
         /**
          * Register a new type nbt schema to the serializer
          * @param type The type name
@@ -383,7 +391,7 @@ export namespace NBT {
          */
         async serialize(object: object, type: string, option: SerializationOption = {}) {
             const schema = this.registry[type];
-            if (!schema) { throw new Error(`Unknown type [${schema}]`); }
+            if (!schema) { throw new Error(`Unknown type [${type}]`); }
 
             const buff = writeRootTag(object, schema, this.registry, "", Object.assign({}, handlers, option.io));
             return normalizeBuffer(buff, option.compressed);
@@ -396,7 +404,7 @@ export namespace NBT {
          */
         serializeSync(object: object, type: string, option: SerializationOption = {}) {
             const schema = this.registry[type];
-            if (!schema) { throw new Error(`Unknown type [${schema}]`); }
+            if (!schema) { throw new Error(`Unknown type [${type}]`); }
 
             const buff = writeRootTag(object, schema, this.registry, "", Object.assign({}, handlers, option.io));
             return normalizeBufferSync(buff, option.compressed);
@@ -414,6 +422,7 @@ export namespace NBT {
             } else {
                 bytebuffer = ByteBuffer.wrap(fileData);
             }
+
             return readRootTag(bytebuffer, this.reversedRegistry, Object.assign({}, handlers, option.io));
         }
         /**
@@ -429,6 +438,7 @@ export namespace NBT {
             } else {
                 bytebuffer = ByteBuffer.wrap(fileData);
             }
+
             return readRootTag(bytebuffer, this.reversedRegistry, Object.assign({}, handlers, option.io));
         }
     }
