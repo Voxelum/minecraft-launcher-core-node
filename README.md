@@ -522,7 +522,7 @@ Parse minecraft version as a resolved version, which is used for launching proce
     const resolvedVersion: ResolvedVersion = await Version.parse(minecraftLocation, minecraftVersionId);
 ```
 
-Get the report of the version. It can check if version missing assets/libraries.
+Get the report of the version. It can also check if version is missing assets/libraries.
 
 ```ts
     import { Versoin, VersionDiagnosis } from "@xmcl/version";
@@ -551,7 +551,7 @@ Read the level data & player data by save folder location string.
 
 ## Experiental Features
 
-They might be not stable.
+These features might be not stable.
 
 ### Caching Request
 
