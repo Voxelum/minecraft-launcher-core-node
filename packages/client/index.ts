@@ -55,19 +55,19 @@ interface ForgeModIdentity {
 }
 export namespace Server {
     export class Status {
-        static pinging() { return new Status(TextComponent.str("unknown"), TextComponent.str("Pinging..."), -1, -1, -1); }
-        static error() { return new Status(TextComponent.str("Error"), TextComponent.str("Error"), -1, -1, -1); }
+        static pinging() { return new Status(TextComponent.from("unknown"), TextComponent.from("Pinging..."), -1, -1, -1); }
+        static error() { return new Status(TextComponent.from("Error"), TextComponent.from("Error"), -1, -1, -1); }
         static from(obj: ServerStatusFrame | Status): Status {
             if (obj instanceof Status) {
                 return obj;
             }
-            let motd: TextComponent = TextComponent.str("");
+            let motd: TextComponent = TextComponent.from("");
             if (obj.description) {
                 motd = TextComponent.from(obj.description);
             }
             const favicon = obj.favicon;
             const version = obj.version;
-            let versionText: TextComponent = TextComponent.str("");
+            let versionText: TextComponent = TextComponent.from("");
             let protocol = -1;
             let online = -1;
             let max = -1;
