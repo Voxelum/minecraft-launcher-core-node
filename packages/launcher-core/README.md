@@ -214,6 +214,16 @@ Just ensure all assets and libraries are installed:
     await Installer.installDependencies(resolvedVersion);
 ```
 
+Get the report of the version. It can check if version missing assets/libraries.
+
+```ts
+    import { Installer, VersionDiagnosis } from "@xmcl/version";
+    const minecraftLocation: string;
+    const minecraftVersionId: string;
+
+    const report: VersionDiagnosis = await Installer.diagnose(minecraftLocation, minecraftVersionId);
+```
+
 ### Install Liteloader
 
 Fetch liteloader version and install:
@@ -266,14 +276,16 @@ You can simply deserialize/serialize nbt.
 ```ts
     import { NBT } from "@xmcl/nbt";
     const fileData: Buffer;
-    const compressed: boolean;
-    const readed: NBT.Persistence.TypedObject = await NBT.Persistence.deserialize(fileData, { compressed });
+    // compressed = undefined will not perform compress algorithm
+    // compressed = true will use gzip algorithm
+    const compressed: true | "gzip" | "deflate" | undefined;
+    const readed: NBT.TypedObject = await NBT.deserialize(fileData, { compressed });
     // NBT.Persistence.TypedObject is just a object with __nbtPrototype__ defining its nbt type
     // After you do the modification on it, you can serialize it back to NBT
-    const buf: Buffer = await NBT.Persistence.serialize(readed, { compressed });
+    const buf: Buffer = await NBT.serialize(readed, { compressed });
 
     // or use serializer style
-    const serial = NBT.Persistence.createSerializer()
+    const serial = NBT.createSerializer()
         .register("server", {
             name: NBT.TagType.String,
             host: NBT.TagType.String,
@@ -420,15 +432,20 @@ Get the report of the version. It can also check if the version is missing asset
 Read the level info from a buffer.
 
 ```ts
-    import { World, LevelDataFrame } from '@xmcl/world'
-    const levelDatBuffer: Buffer;
-    const info: LevelDataFrame = await World.parseLevelData(levelDatBuffer);
+    import { WorldReader, LevelDataFrame } from '@xmcl/world'
+    const worldSaveFolder: string;
+    const reader: WorldReader = await WorldReader.create(worldSaveFolder);
+    const levelData: LevelDataFrame = await reader.getLevelData();
 ```
-Read the level data & player data by save folder location string.
+
+***Preview*** Read the region data, this feature is not tested yet, but the api will look like this
 
 ```ts
-    import { World } from "@xmcl/world";
+    import { WorldReader, RegionDataFrame, RegionReader } from "@xmcl/world";
     const worldSaveFolder: string;
-    const { level, players } = await World.load(worldSaveFolder, ["level", "player"]);
+    const reader: WorldReader = await WorldReader.create(worldSaveFolder);
+    const chunkX: number;
+    const chunkZ: number;
+    const region: RegionDataFrame = await reader.getRegionData(chunkX, chunkZ);
 ```
 

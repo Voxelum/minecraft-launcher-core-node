@@ -15,14 +15,16 @@ You can simply deserialize/serialize nbt.
 ```ts
     import { NBT } from "@xmcl/nbt";
     const fileData: Buffer;
-    const compressed: boolean;
-    const readed: NBT.Persistence.TypedObject = await NBT.Persistence.deserialize(fileData, { compressed });
+    // compressed = undefined will not perform compress algorithm
+    // compressed = true will use gzip algorithm
+    const compressed: true | "gzip" | "deflate" | undefined;
+    const readed: NBT.TypedObject = await NBT.deserialize(fileData, { compressed });
     // NBT.Persistence.TypedObject is just a object with __nbtPrototype__ defining its nbt type
     // After you do the modification on it, you can serialize it back to NBT
-    const buf: Buffer = await NBT.Persistence.serialize(readed, { compressed });
+    const buf: Buffer = await NBT.serialize(readed, { compressed });
 
     // or use serializer style
-    const serial = NBT.Persistence.createSerializer()
+    const serial = NBT.createSerializer()
         .register("server", {
             name: NBT.TagType.String,
             host: NBT.TagType.String,
