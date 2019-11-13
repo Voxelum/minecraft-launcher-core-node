@@ -152,20 +152,15 @@ describe("ProfileService", () => {
                 .put("/user/profile/uuid/skin", undefined, {
                     reqheaders: {
                         Authorization: "Bearer my-token",
-
                     }
                 })
                 .reply(200);
-            try {
-                await ProfileService.setTexture({
-                    accessToken: "my-token", type: "skin", uuid: "uuid", texture: {
-                        url: "http://my-skin.url"
-                    },
-                    data: Buffer.from([12]),
-                });
-            } catch (e) {
-                console.log(e);
-            }
+            await ProfileService.setTexture({
+                accessToken: "my-token", type: "skin", uuid: "uuid", texture: {
+                    url: "http://my-skin.url"
+                },
+                data: Buffer.from([12]),
+            });
         });
     });
 
