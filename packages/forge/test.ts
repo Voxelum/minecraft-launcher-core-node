@@ -21,6 +21,26 @@ describe("Forge", () => {
         )).toBeTruthy();
     });
 
+    test("should read tweak class in jar", async () => {
+        const metadata = await Forge.readModMetaData(`${root}/mods/tweak-class.jar`);
+        expect(metadata).toEqual([
+            {
+                modid: "betterfps",
+                name: "BetterFps",
+                authors: ["Guichaguri"],
+                version: "1.4.8",
+                description: "Performance Improvements",
+                url: "http://guichaguri.github.io/BetterFps/"
+            }
+        ]);
+    });
+
+    test("should read dummy mod in jar", async () => {
+        const metadata = await Forge.readModMetaData(`${root}/mods/dummy-mod.jar`);
+        expect(metadata).toEqual([{ modid: "mousedelayfix", name: "MouseDelayFix", version: "1.0" }])
+    });
+
+
     test("should read @Mod in jar", async () => {
         const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
         expect(metadata.some((m) => m.modid === "NuclearCraft" && m.version === "1.9e"))
@@ -62,6 +82,9 @@ describe("Forge", () => {
 
         # Should the mod remind you only for new updates (once per version)?
         B:silenceKnownUpdates=false
+
+        I:someInt=1
+        D:someDouble=0.1
     }
     `;
         let config: Forge.Config;
@@ -87,5 +110,10 @@ describe("Forge", () => {
             expect(config.versioncheck.properties[1].type).toEqual("S");
             expect(config.versioncheck.properties[2].type).toEqual("B");
         });
+        test("should stringify the config", () => {
+            const string = Forge.Config.stringify(config);
+            expect(string.split("\n").map((l) => l.trim()).filter((l) => l.length !== 0))
+                .toEqual(cfg1.split("\n").map((l) => l.trim()).filter((l) => l.length !== 0));
+        })
     });
 });
