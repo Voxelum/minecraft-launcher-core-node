@@ -1,11 +1,14 @@
 import { MinecraftFolder, MinecraftLocation, Platform, vfs, currentPlatform } from "@xmcl/util";
 
 type PickPartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-export type PartialResolvedVersion = Omit<PickPartial<ResolvedVersion, "assets" |
-    "assetIndex" |
-    "client" |
-    "server" |
-    "downloads">, "pathChain">;
+export interface PartialResolvedVersion extends Version {
+    libraries: ResolvedLibrary[];
+    arguments: {
+        game: Version.LaunchArgument[];
+        jvm: Version.LaunchArgument[];
+    };
+    minecraftDirectory: string;
+};
 /**
  * The resolved version for launcher.
  * It could be a combination of multiple versions as there might be some inheritions.
@@ -426,7 +429,7 @@ export namespace Version {
             const contentString = await vfs.readFile(jsonPath, "utf-8").then((b) => b.toString());
             let nextVersion: string | undefined;
             try {
-                const raw = parseVersionJson(contentString, folder.root);
+                const raw = normalizeVersionJson(contentString, folder.root);
                 stack.push(raw);
                 nextVersion = raw.inheritsFrom;
             } catch (e) {
@@ -509,22 +512,35 @@ export namespace Version {
         };
     }
 
-    function parseVersionJson(versionString: string, root: string): PartialResolvedVersion {
+    /**
+     * Normalize a single version json.
+     *
+     * This function will force legacy version format into new format.
+     * It will convert `minecraftArguments` into `arguments.game` and generate a default `arguments.jvm`
+     *
+     * This will pre-process the libraries according to the rules fields and current platform.
+     * Non-matched libraries will be filtered out.
+     *
+     * This will also pre-process the jvm arguments according to the platform (os) info it provided.
+     *
+     * @param versionString The version json string
+     * @param root The root of the version
+     */
+    export function normalizeVersionJson(versionString: string, root: string): PartialResolvedVersion {
         const platform = currentPlatform;
-        const processArguments = (ar: Version.LaunchArgument[]) => {
-            return ar.map((a) => {
-                if (typeof a === "object") { return checkAllowed(a.rules, platform) ? a.value : ""; }
-                return a;
-            }).filter((a) => a !== "").reduce<string[]>((a, b) => {
-                if (b instanceof Array) {
-                    a.push(...b);
-                } else {
-                    a.push(b);
+        function processArguments(ar: Version.LaunchArgument[]) {
+            return ar.filter((a) => {
+                // only filter out the os only rule.
+                // if the features fields presented, we don't process it now
+                if (typeof a === "object" && a.rules.every((r) => typeof r === "string" || !("features" in r))) {
+                    return checkAllowed(a.rules, platform);
                 }
-                return a;
-            }, []);
+                return true;
+            });
         };
         const parsed: Version = JSON.parse(versionString);
+        // if we legacy version json don't have argument, but have minecraftArugments
+        const legacyVersionJson = !parsed.arguments;
         const libraries = resolveLibraries(parsed.libraries || [], platform);
         const args = {
             jvm: [] as Version.LaunchArgument[],
@@ -584,7 +600,14 @@ export namespace Version {
         }
 
         args.jvm = processArguments(args.jvm);
-        const partial = { ...parsed, libraries, arguments: args, minecraftDirectory: root, replace: !parsed.arguments };
+        const partial = {
+            ...parsed,
+            libraries,
+            arguments: args,
+            minecraftDirectory: root,
+            // we want to replace the arguments for every version json in legacy version json
+            replace: legacyVersionJson,
+        };
         return partial;
     }
 }
