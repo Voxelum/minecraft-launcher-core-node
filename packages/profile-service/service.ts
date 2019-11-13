@@ -47,11 +47,6 @@ export namespace GameProfile {
     }
 }
 
-function parseTexturesInfo(profile: GameProfile): GameProfile.TexturesInfo | undefined {
-    if (!profile.properties || !profile.properties.textures) { return undefined; }
-    return JSON.parse(Buffer.from(profile.properties.textures, "base64").toString());
-}
-
 let requester: Requester;
 let verify: Verify;
 
@@ -61,7 +56,7 @@ export function setBase(req: typeof requester, ver: Verify) {
 }
 
 type Verify = (value: string, signature: string, pemKey: string) => Promise<boolean>;
-type Requester = (url: string, option?: { methods?: string; body?: any, headers?: { [key: string]: string }, search?: any, formMultipart?: any }) => Promise<{ body: any; statusCode: number; statusMessage: string }>;
+type Requester = (url: string, option?: { method?: string; body?: any, headers?: { [key: string]: string }, search?: any, formMultipart?: any }) => Promise<{ body: any; statusCode: number; statusMessage: string }>;
 
 export namespace ProfileService {
     export interface API {
@@ -135,13 +130,13 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     };
 
     async function fetchProfile(target: string, pemPubKey?: string, payload?: object, search?: object) {
-        const { body: obj, statusCode, statusMessage } = await requester(target, { methods: "GET", body: payload, search });
+        const { body: obj, statusCode, statusMessage } = await requester(target, { method: "GET", body: payload, search });
         if (statusCode !== 200) {
             throw new Error(statusMessage);
         }
         async function parseProfile(o: any) {
             if (typeof o.id !== "string" || typeof o.name !== "string") {
-                throw new Error(`Corrupted profile response ${JSON.stringify(o)}`);
+                return undefined;
             }
             if (o.properties && o.properties instanceof Array) {
                 const properties = o.properties as Array<{ name: string; value: string; signature: string; }>;
@@ -170,10 +165,15 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
      * @param profile The game profile from the profile service
      * @param cache Should we cache the texture into url? Default is `true`.
      */
-    export async function getTextures(profile: GameProfile): Promise<GameProfile.TexturesInfo> {
-        const texture = parseTexturesInfo(profile);
-        if (texture) { return texture; }
-        return Promise.reject(`No texture for user ${profile.id}.`);
+    export function getTextures(profile: GameProfile): GameProfile.TexturesInfo | undefined {
+        if (!profile.properties || !profile.properties.textures) { return undefined; }
+        let content: string;
+        if (Buffer) {
+            content = Buffer.from(profile.properties.textures, "base64").toString();
+        } else {
+            content = atob(profile.properties.textures);
+        }
+        return JSON.parse(content);
     }
 
 
@@ -202,7 +202,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
         if (time) {
             form = { at: (time / 1000) };
         }
-        return fetchProfile(target, api.publicKey, undefined, form).then((p) => p as GameProfile);
+        return fetchProfile(target, api.publicKey, undefined, form).then((p) => p as GameProfile | undefined);
     }
 
     /**
@@ -210,7 +210,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
      * @param names The names will go through
      * @param option The option with api
      */
-    export function lookUpAll(names: string[], option: { api?: API } = {}) {
+    export function lookupAll(names: string[], option: { api?: API } = {}) {
         const api = option.api || API_MOJANG;
         let target = API.getProfileByNameUrl(api, "");
         target = target.substring(0, target.length - 1);
@@ -235,10 +235,10 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
             Authorization: `Bearer: ${option.accessToken}`
         };
         if (!option.texture) {
-            await requester(urlString, { methods: "DELETE", headers });
+            await requester(urlString, { method: "DELETE", headers });
         } else if (option.data) {
             await requester(urlString, {
-                methods: "PUT",
+                method: "PUT",
                 formMultipart: {
                     ...(option.texture.metadata || {}),
                     file: option.data,
@@ -247,9 +247,10 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
             });
         } else if (option.texture.url) {
             await requester(urlString, {
-                methods: "PUT",
+                method: "POST",
                 search: {
-                    url: option.texture.url, ...(option.texture.metadata || {})
+                    model: (option.texture.metadata || {}).model || "",
+                    url: option.texture.url,
                 },
                 headers,
             });
