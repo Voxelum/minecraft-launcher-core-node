@@ -80,18 +80,28 @@ interface ModidTree {
 async function tweakMetadata(fs: FileSystem, modidTree: ModidTree) {
     if (! await fs.existsFile("META-INF/MANIFEST.MF")) { return; }
     const data = await fs.readFile("META-INF/MANIFEST.MF");
-    const manifest = data.toString().split("\n").map((l) => l.split(":").map((s) => s.trim()))
+    const manifest: Record<string, string> = data.toString().split("\n").map((l) => l.split(":").map((s) => s.trim()))
         .reduce((a, b) => ({ ...a, [b[0]]: b[1] }), {}) as any;
+    const metadata = {
+        modid: "",
+        name: "",
+        authors: new Array<string>(),
+        version: "",
+        description: "",
+        url: "",
+    };
+    if (typeof manifest.TweakName === "string") {
+        metadata.modid = manifest.TweakName;
+        metadata.name = manifest.TweakName;
+    }
+    if (typeof manifest.TweakAuthor === "string") {
+        metadata.authors = [manifest.TweakAuthor];
+    }
+    if (typeof manifest.TweakVersion === "string") {
+        metadata.version = manifest.TweakVersion;
+    }
     if (manifest.TweakMetaFile) {
         const file = manifest.TweakMetaFile;
-        const metadata = {
-            modid: manifest.TweakName,
-            name: manifest.TweakName,
-            authors: [manifest.TweakAuthor],
-            version: manifest.TweakVersion,
-            description: "",
-            url: "",
-        };
         if (await fs.existsFile(`META-INF/${file}`)) {
             const metadataContent = await fs.readFile(`META-INF/${file}`, "utf-8").then(JSON.parse);
             if (metadataContent.id) {
@@ -113,14 +123,14 @@ async function tweakMetadata(fs: FileSystem, modidTree: ModidTree) {
                 metadata.url = metadataContent.url;
             }
         }
-        if (metadata.modid) {
-            modidTree[metadata.modid] = metadata;
-        }
+    }
+    if (metadata.modid) {
+        modidTree[metadata.modid] = metadata;
     }
     return manifest;
 }
 
-async function asmMetaData(fs: FileSystem, modidTree: ModidTree, manifest?: any) {
+async function asmMetaData(fs: FileSystem, modidTree: ModidTree, manifest?: Record<string, string>) {
     let corePluginClass: string | undefined;
     if (manifest) {
         if (typeof manifest.FMLCorePlugin === "string") {
@@ -329,10 +339,14 @@ export namespace Forge {
                             line,
                         };
                     }
-                    if (line === ">") { inlist = false; } else if (line.endsWith(" >")) {
+                    if (line === ">") {
+                        inlist = false;
+                    } else if (line.endsWith(" >")) {
                         last.value.push(parseVal(last.type, line.substring(0, line.length - 2)));
                         inlist = false;
-                    } else { last.value.push(parseVal(last.type, line)); }
+                    } else {
+                        last.value.push(parseVal(last.type, line));
+                    }
                     continue;
                 }
                 switch (line.charAt(0)) {
