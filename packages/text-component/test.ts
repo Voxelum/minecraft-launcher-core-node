@@ -179,17 +179,16 @@ describe("TextComponent", () => {
         const str = TextComponent.toFormattedString(comp);
         expect(str).toEqual("§c§k§l§m§n§ohello§rworld§r");
     });
-    describe("#str", () => {
-
-    })
 });
 
 describe("TextComponentString", () => {
     describe("#toString", () => {
         test("should equal to original one", () => {
-            const raw = "§1colored§r";
+            const raw = "colored";
             const str = TextComponentString.of(raw);
-            expect(str.toString()).toEqual(raw);
+            expect(str.text).toEqual("colored");
+            str.style.color = "red";
+            expect(str.toString()).toEqual("§ccolored§r");
         });
     });
 });
