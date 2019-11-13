@@ -1,25 +1,10 @@
 import Unzip from "@xmcl/unzip";
-import { MinecraftFolder, computeChecksum, currentPlatform, ensureDir, missing, vfs } from "@xmcl/util";
+import { MinecraftFolder, computeChecksum, currentPlatform, ensureDir, missing, vfs, Platform, JavaExecutor, validateSha1 } from "@xmcl/util";
 import { ResolvedNative, ResolvedVersion, Version } from "@xmcl/version";
 import { ChildProcess, SpawnOptions, spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { v4 } from "uuid";
-
-function filterFeature(arg: Version.LaunchArgument, features: Launcher.ProvidedFeatures) {
-    if (typeof arg === "object") {
-        if (Version.checkAllowed(arg.rules, currentPlatform, Object.keys(features))) {
-            const values = arg.value instanceof Array ? arg.value : [arg.value];
-            const args = arg.rules.filter((r) => r.features).map((r) =>
-                Object.entries(r.features!).map(([k, v]) => v ? features[k] : {}).reduce((a, b) => ({ ...a, ...b }), {}))
-                .reduce((a, b) => ({ ...a, ...b }), {});
-            const formatedArgs = values.map((v) => format(v, args));
-            return formatedArgs;
-        }
-    } else {
-        return arg;
-    }
-}
 
 function format(template: string, args: any) {
     return template.replace(/\$\{(.*?)}/g, (key) => {
@@ -29,17 +14,11 @@ function format(template: string, args: any) {
 }
 
 export namespace Launcher {
-    export interface ResolutionFeature {
-        has_custom_resolution: { resolution_width: string, resolution_height: string };
+    export interface EnabledFeatures {
+        [featureName: string]: object | boolean | undefined;
+        has_custom_resolution?: { resolution_width: string, resolution_height: string };
+        is_demo_user?: boolean;
     }
-    export interface DemoFeature {
-        is_demo_user: {};
-    }
-    export interface GenericFeatures {
-        [featureName: string]: { [argumentKey: string]: object };
-    }
-
-    export type ProvidedFeatures = Partial<ResolutionFeature> & Partial<DemoFeature> & GenericFeatures;
 
     /**
      * General launch option, used to generate launch arguments.
@@ -91,7 +70,7 @@ export namespace Launcher {
         /**
          * Resolution. This will add --height & --width or --fullscreen to the java arguments
          */
-        resolution?: { width?: number, height?: number, fullscreen: false };
+        resolution?: { width?: number, height?: number, fullscreen?: true };
         /**
          * Extra jvm options. This will append after to generated options.
          */
@@ -110,9 +89,9 @@ export namespace Launcher {
         nativeRoot?: string;
 
         /**
-         * Enable features. It's just a placeholder, not in used now.
+         * Enable features.
          */
-        features?: ProvidedFeatures;
+        features?: EnabledFeatures;
 
         /**
          * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
@@ -196,18 +175,15 @@ export namespace Launcher {
      * @see generateArguments
      */
     export async function launch(options: Option & PrecheckService): Promise<ChildProcess> {
-        const args = await generateArguments(options);
-        const version = options.version as ResolvedVersion;
+        const gamePath = !path.isAbsolute(options.gamePath) ? path.resolve(options.gamePath) : options.gamePath;
+        const resourcePath = options.resourcePath || gamePath;
+        const version = typeof options.version === "string" ? await Version.parse(resourcePath, options.version) : options.version;
+
+        const args = await generateArguments({ ...options, version, gamePath, resourcePath });
         const minecraftFolder = MinecraftFolder.from(options.resourcePath as string);
 
         const jarPath = minecraftFolder.getVersionJar(version.client);
-        if (!fs.existsSync(jarPath)) {
-            throw {
-                type: "MissingVersionJar",
-                version: version.client,
-            };
-        }
-        if (await computeChecksum(jarPath, "sha1") !== version.downloads.client.sha1) {
+        if (!await validateSha1(jarPath, version.downloads.client.sha1)) {
             throw {
                 type: "CorruptedVersionJar",
                 version: version.client,
@@ -251,28 +227,34 @@ export namespace Launcher {
      */
     export async function generateArguments(options: Option) {
         if (!options.version) { throw new Error("Version cannot be null!"); }
-        if (!path.isAbsolute(options.gamePath)) { options.gamePath = path.resolve(options.gamePath); }
-        if (!options.resourcePath) { options.resourcePath = options.gamePath; }
-        if (!options.minMemory) { options.minMemory = 512; }
-        if (!options.maxMemory) { options.maxMemory = options.minMemory; }
-        if (!options.launcherName) { options.launcherName = "Launcher"; }
-        if (!options.launcherBrand) { options.launcherBrand = "0.0.1"; }
         if (!options.isDemo) { options.isDemo = false; }
-        options.version = typeof options.version === "string" ? await Version.parse(options.resourcePath, options.version) : options.version;
 
-        const mc = MinecraftFolder.from(options.resourcePath);
+        const gamePath = !path.isAbsolute(options.gamePath) ? path.resolve(options.gamePath) : options.gamePath;
+        const resourcePath = options.resourcePath || gamePath;
+        const version = typeof options.version === "string" ? await Version.parse(resourcePath, options.version) : options.version;
+        const mc = MinecraftFolder.from(resourcePath);
         const cmd: string[] = [];
 
-        const version = options.version;
         const { id = v4().replace(/-/g, ""), name = "Steve" } = options.gameProfile || {};
         const accessToken = options.accessToken || v4().replace(/-/g, "");
         const properties = options.properties || {};
         const userType = options.userType || "Mojang";
+        const features = options.features || {};
+        const jvmArguments = normalizeArguments(version.arguments.jvm, currentPlatform, features);
+        const gameArguments = normalizeArguments(version.arguments.game, currentPlatform, features);
+        const featureValues = Object.values(features).filter((f) => typeof f === "object").reduce((a: any, b: any) => ({ ...a, ...b }), {});
+        const launcherName = options.launcherName || "Launcher";
+        const launcherBrand = options.launcherBrand || "0.0.1";
+        const nativeRoot = options.nativeRoot || mc.getNativesRoot(version.id);
 
         cmd.push(options.javaPath);
 
-        cmd.push(`-Xms${(options.minMemory)}M`);
-        cmd.push(`-Xmx${(options.maxMemory)}M`);
+        if (options.minMemory) {
+            cmd.push(`-Xms${(options.minMemory)}M`);
+        }
+        if (options.maxMemory) {
+            cmd.push(`-Xmx${(options.maxMemory)}M`);
+        }
 
         if (options.ignoreInvalidMinecraftCertificates) {
             cmd.push("-Dfml.ignoreInvalidMinecraftCertificates=true");
@@ -284,58 +266,73 @@ export namespace Launcher {
         if (options.yggdrasilAgent) {
             cmd.push(`-javaagent:${options.yggdrasilAgent.jar}=${options.yggdrasilAgent.server}`);
         }
-        // add extra jvm args
-        if (options.extraJVMArgs) { cmd.push(...options.extraJVMArgs); }
 
         const jvmOptions = {
-            natives_directory: options.nativeRoot || (mc.getNativesRoot(version.id)),
-            launcher_name: options.launcherName,
-            launcher_version: options.launcherBrand,
+            natives_directory: nativeRoot,
+            launcher_name: launcherName,
+            launcher_version: launcherBrand,
             classpath: `${[
                 ...version.libraries.map((lib) => mc.getLibraryByPath(lib.download.path)),
                 mc.getVersionJar(version.client)
-            ]
-                .join(path.delimiter)}`,
+            ].join(path.delimiter)}`,
+            ...featureValues,
         };
-        cmd.push(...version.arguments.jvm.map((arg) => format(arg as string, jvmOptions)));
+
+        cmd.push(...jvmArguments.map((arg) => format(arg, jvmOptions)));
+
+        // add extra jvm args
+        if (options.extraJVMArgs instanceof Array) {
+            if (options.extraJVMArgs.some((v) => typeof v !== "string")) {
+                throw new Error("Require extraJVMArgs be all string!");
+            }
+            cmd.push(...options.extraJVMArgs);
+        }
 
         cmd.push(version.mainClass);
-        const assetsDir = path.join(options.resourcePath, "assets");
-        const resolution = options.resolution || { width: 850, height: 470 };
+        const assetsDir = path.join(resourcePath, "assets");
+        const resolution = options.resolution;
         const mcOptions = {
             version_name: version.id,
             version_type: version.type,
             assets_root: assetsDir,
             game_assets: assetsDir,
             assets_index_name: version.assets,
-            game_directory: options.gamePath,
+            game_directory: gamePath,
             auth_player_name: name,
             auth_uuid: id,
             auth_access_token: accessToken,
             user_properties: JSON.stringify(properties),
             user_type: userType,
-            resolution_width: resolution.width || 850,
-            resolution_height: resolution.height || 470,
+            resolution_width: -1,
+            resolution_height: -1,
+            ...featureValues,
         };
 
-        cmd.push(...version.arguments.game.map((arg) => filterFeature(arg, {})).filter((s) => !!s).map((arg) => format(arg as string, mcOptions)));
+        if (resolution) {
+            mcOptions.resolution_width = resolution.width;
+            mcOptions.resolution_height = resolution.height;
+        }
 
-        if (options.extraMCArgs) { cmd.push(...options.extraMCArgs); }
+        cmd.push(...gameArguments.map((arg) => format(arg, mcOptions)));
+
+        if (options.extraMCArgs) {
+            cmd.push(...options.extraMCArgs);
+        }
         if (options.server) {
-            cmd.push("--server"); cmd.push(options.server.ip);
+            cmd.push("--server", options.server.ip);
             if (options.server.port) {
-                cmd.push("--port"); cmd.push(options.server.port.toString());
+                cmd.push("--port", options.server.port.toString());
             }
         }
-        if (options.resolution) {
+        if (options.resolution && !cmd.find((a) => a === "--width")) {
             if (options.resolution.fullscreen) {
                 cmd.push("--fullscreen");
             } else {
                 if (options.resolution.height) {
-                    cmd.push(`--height ${options.resolution.height}`);
+                    cmd.push("--height", options.resolution.height.toString());
                 }
                 if (options.resolution.width) {
-                    cmd.push(`--width ${options.resolution.width}`);
+                    cmd.push("--width", options.resolution.width.toString());
                 }
             }
         }
@@ -374,8 +371,9 @@ export namespace Launcher {
 
     /**
      * Ensure the native are correctly extracted there.
+     * @param native The native directory path
      */
-    export async function ensureNative(mc: MinecraftFolder, version: ResolvedVersion, native: string) {
+    export async function ensureNative(mc: MinecraftFolder, version: ResolvedVersion, native: string = mc.getNativesRoot(version.id)) {
         await ensureDir(native);
         const natives = version.libraries.filter((lib) => lib instanceof ResolvedNative) as ResolvedNative[];
         const checksumFile = path.join(native, ".json");
@@ -419,6 +417,28 @@ export namespace Launcher {
             const targetContent = JSON.stringify(checkSumContent);
             await vfs.writeFile(checksumFile, targetContent);
         }
+    }
+
+    /**
+     * Truely normalize the launch argument.
+     */
+    export function normalizeArguments(args: Version.LaunchArgument[], platform: Platform, features: EnabledFeatures): string[] {
+        return args.map((arg) => {
+            if (typeof arg === "string") {
+                return arg;
+            }
+            if (!Version.checkAllowed(arg.rules, platform, Object.keys(features))) {
+                return "";
+            }
+            return arg.value;
+        }).reduce<string[]>((result, cur) => {
+            if (cur instanceof Array) {
+                result.push(...cur);
+            } else if (cur) {
+                result.push(cur);
+            }
+            return result;
+        }, []);
     }
 }
 
