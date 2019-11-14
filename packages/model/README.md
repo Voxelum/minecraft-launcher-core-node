@@ -9,7 +9,7 @@
 
 ## Usage
 
-### Build THREE.js model for block and player
+### Build THREE.js model for block and player (PREVIEW, not available yet)
 
 *Please read how to use [resource-manager](https://github.com/voxelum/minecraft-launcher-core-node/packages/resource-manager/README.md) before this*
 

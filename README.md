@@ -52,6 +52,11 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [Save/World Data Loading](#saveworld-data-loading)
   - [Experiental Features](#experiental-features)
     - [Caching Request](#caching-request)
+  - [Contribute](#contribute)
+    - [Setup Dev Workspace](#setup-dev-workspace)
+    - [How to Dev](#how-to-dev)
+    - [Design Principle](#design-principle)
+    - [Before Submit PR](#before-submit-pr)
   - [Credit](#credit)
 
 ### User Login & Auth (Official/Offline)
@@ -90,7 +95,6 @@ Use third party Yggdrasil API to auth:
     const yourAPI: Auth.Yggdrasil.API;
     const authFromMojang: Auth = await Auth.Yggdrasil.login({ username, password }, yourAPI); // official login
 ```
-
 
 ### Minecraft Client Ping Server
 
@@ -174,7 +178,6 @@ or you can assign java location by `ForgeInstaller.install(forgeVersionMeta, min
 If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
 Consider support him to maintains forge.
 
-
 ### Minecraft Install
 
 Fully install vanilla minecraft client including assets and libs.
@@ -229,8 +232,6 @@ Just ensure all assets and libraries are installed:
     await Installer.installDependencies(resolvedVersion);
 ```
 
-
-
 ### Install Liteloader
 
 Fetch liteloader version and install:
@@ -251,7 +252,7 @@ Read .litemod metadata:
     const metadata: LiteLoader.MetaData = await LiteLoader.meta(`${mock}/mods/sample-mod.litemod`);
 ```
 
-### Build THREE.js model for block and player
+### Build THREE.js model for block and player (PREVIEW, not available yet)
 
 *Please read how to use [resource-manager](https://github.com/voxelum/minecraft-launcher-core-node/packages/resource-manager/README.md) before this*
 
@@ -305,7 +306,6 @@ Validate if user have a validated IP address, and get & answer challenges to val
         await MojangService.responseChallenges(accessToken, responses);
     }
 ```
-
 
 ### Read/Write NBT
 
@@ -431,8 +431,6 @@ You can use this to load Minecraft block model and texture.
     const resolvedModel: BlockModel.Resolved = models["block/grass"];
 ```
 
-
-
 ### Read ResourcePack Basic Info
 
 Read ResourcePack from filePath
@@ -450,7 +448,6 @@ Read ResourcePack from filePath
     const fileContentBuffer: Buffer;
     const packPromise: ResourcePack = await ResourcePack.read(fileFullPath, fileContentBuffer);
 ```
-
 
 ### Progress Moniting
 
@@ -540,7 +537,6 @@ Get the report of the version. It can check if version missing assets/libraries.
     const report: VersionDiagnosis = await Version.diagnose(minecraftLocation, minecraftVersionId);
 ```
 
-
 ### Save/World Data Loading
 
 Read the level info from a buffer.
@@ -557,7 +553,6 @@ Read the level data & player data by save folder location string.
     const worldSaveFolder: string;
     const { level, players } = await World.load(worldSaveFolder, ["level", "player"]);
 ```
-
 
 ## Experiental Features
 
@@ -591,6 +586,54 @@ For Forge, it's the same:
     const oldWebPageCache = JSON.parse(fs.readFileSync("forge-anyname-cache.json").toString());
     const updated = ForgeWebPage.getWebPage({ fallback: oldWebPageCache }); // this should be up-to-date
 ```
+
+## Contribute
+
+Feel free to contribute to the project. You can fork the project and make PR to here just like any other github project.
+
+### Setup Dev Workspace
+
+Use git to clone the project `git clone https://github.com/Voxelum/minecraft-launcher-core-node`.
+
+After you cloned the project, you can just install it like normal node project by `npm install` in your repo folder. If there are somethings missing, you can try to run `npm run update` or `npx lerna bootstrap`.
+
+### How to Dev
+
+The code are splited into seperated projects, which layed in under `packages` folder. Most of them are really simple (only one `index.ts` file or few files).
+
+If you want to write some code for specific module, the command `npm run watch` might help you.
+
+For example, you want to add a functions to parse minecraft chunk data, you can add some code in `packages/world/index.ts`. You might also want to add some test related to your new features, just add sth. in `packages/world/test.ts`. 
+
+During this process, you can first run `npm run watch world`, and it will start to auto compile & test the code for world module. You can see the result immediately.
+
+**Highly recommended to add test for the features,** ~~which I always lazy to add.~~
+
+### Design Principle
+
+There is no strict principle for this project. Just add sth you think is valuable for a Minecraft launcher.
+
+For code structure, personally, I prefer the usage of `namespace`, which means instead of just export a function out of module, I would like to wrap them in a namespace or object. 
+
+For example, for parsing Forge mod content, rather than just export a function `parseForgeMod` which will be come 
+
+```ts
+import { parseForgeMod } from "@xmcl/forge";
+parseForgeMod(mod);
+```
+
+I prefer to export `Forge` namespace and used by
+
+```ts
+import { Forge } from "@xmcl/forge";
+Forge.parseForgeMod(mod);
+```
+
+This decision is majorly influenced by the original project design - all the modules are in the same npm package, if all of them exporting the functions, the import will become messy.
+
+### Before Submit PR
+
+Make sure you run `npm run build` to pass lint and compile at least. (I always forget this) 
 
 ## Credit
 
