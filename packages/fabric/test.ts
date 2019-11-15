@@ -5,11 +5,34 @@ import * as path from "path";
 import { Fabric } from "./index";
 
 
-describe.skip("Fabric", () => {
-    const root = path.join(__dirname, "..", "..", "mock");
+describe("Fabric", () => {
+    const root = path.join(__dirname, "..", "..", "temp");
+    const mockRoot = path.join(__dirname, "..", "..", "mock");
     test("should be able to install fabric", async () => {
         await Fabric.install("1.14.1+build.10", "0.4.7+build.147", root);
-        assert(fs.existsSync(MinecraftFolder.from(root).getVersionJson("1.14.1-fabric1.14.1+build.10-0.4.7+build.147")));
+        expect(fs.existsSync(MinecraftFolder.from(root).getVersionJson("1.14.1-fabric1.14.1+build.10-0.4.7+build.147")))
+            .toBeTruthy();
+    });
+
+    describe("#parseVersionMavenXML", () => {
+        test("should parse valid version xml from fabric", () => {
+            const xmlString = fs.readFileSync(path.join(mockRoot, "fabric-yarn.xml")).toString();
+            const versions = Fabric.parseVersionMavenXML(xmlString);
+            expect(versions).toEqual([
+                "19w13b.8",
+                "3D Shareware v1.34.2",
+                "1.14 Pre-Release 4+build.7",
+                "1.14.3+build.13",
+                "1.14.4-pre7+build.1",
+                "1.14_combat-3+build.2",
+                "1.14.4+build.15",
+                "19w46b+build.1"
+            ]);
+        });
+        test("should just return empty if the input is invalid", () => {
+            const versions = Fabric.parseVersionMavenXML("");
+            expect(versions).toEqual([]);
+        })
     });
 
     test("#updateVersionList", async () => {
