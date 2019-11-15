@@ -230,7 +230,11 @@ export namespace Launcher {
         await (options.ensureNatives || ensureNative)(minecraftFolder, version, options.nativeRoot || minecraftFolder.getNativesRoot(version.id));
 
         const spawnOption = { cwd: options.gamePath, env: process.env, ...(options.extraExecOption || {}) };
-
+        
+        // change args[0] to java executable
+        args[0] = options.javaPath;
+        
+        // spawn minecraft
         return spawn(args[0], args.slice(1), spawnOption);
     }
 
