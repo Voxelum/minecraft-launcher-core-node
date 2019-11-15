@@ -38,4 +38,9 @@ jobs:
         npm run test:full
       env:
         CI: true
+    - name: Upload Coverage
+      uses: actions/upload-artifact@master
+      with:
+        name: coverage
+        path: coverage
 

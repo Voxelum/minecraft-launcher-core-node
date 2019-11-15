@@ -59,5 +59,10 @@ jobs:
         PULL_REQUEST_REVIEWERS: ci010
         PULL_REQUEST_BRANCH: prepare-release
         BRANCH_SUFFIX: none
+    - name: Upload Coverage
+      uses: actions/upload-artifact@master
+      with:
+        name: coverage
+        path: coverage
 
 
