@@ -10,10 +10,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@types/fast-html-parser": "^1.0.0",
     "@xmcl/net": "file:../net",
-    "@xmcl/util": "file:../util",
-    "fast-html-parser": "^1.0.1"
+    "@xmcl/util": "file:../util"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",
