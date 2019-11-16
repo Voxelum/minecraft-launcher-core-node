@@ -3,6 +3,7 @@
   "scripts": {
     "build": "npm run lint && npm run compile",
     "build:clean": "node scripts/clean.js",
+    "build:web": "parcel build .github/pages/src/index.html -d .github/pages/build",
     "clean": "lerna clean --yes",
     "compile": "tsc",
     "docs": "node scripts/build-readme.js",
@@ -11,7 +12,8 @@
     "test": "jest packages --runInBand",
     "test:full": "jest packages --coverage --verbose --runInBand",
     "update": "lerna bootstrap",
-    "watch": "node scripts/dev.js"
+    "dev": "node scripts/dev.js",
+    "dev:web": "parcel serve .github/pages/src/index.html -d .github/pages/build"
   },
   "dependencies": {
     "@xmcl/auth": "file:packages\\auth",
@@ -60,12 +62,17 @@
     "lerna": "^3.18.3",
     "nock": "^11.7.0",
     "pako": "^1.0.10",
+    "parcel": "^1.12.4",
     "rusha": "^0.8.13",
     "three": "^0.110.0",
+    "three-orbitcontrols": "^2.110.1",
     "ts-jest": "^24.0.2",
     "ts-md5": "^1.2.7",
     "typescript": "^3.6.3"
   },
+  "browserslist": [
+    "last 1 Chrome versions"
+  ],
   "jest": {
     "globals": {
       "ts-jest": {
