@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/util",
-  "version": "0.2.6",
+  "version": "1.0.0",
   "main": "./index.js",
   "description": "Common launcher utility",
   "engines": {

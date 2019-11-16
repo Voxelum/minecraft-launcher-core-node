@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/fabric",
-  "version": "0.0.8",
+  "version": "1.0.0",
   "main": "./index.js",
   "description": "Fabric installation support",
   "engines": {

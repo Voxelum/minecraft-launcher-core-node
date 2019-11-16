@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/gamesetting",
-  "version": "0.0.7",
+  "version": "1.0.0",
   "main": "./index.js",
   "description": "Minecraft gamesetting parsing",
   "engines": {
@@ -9,8 +9,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "scripts": {
     "compile": "tsc --build tsconfig.json",
     "build": "npm run compile"
