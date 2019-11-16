@@ -1,0 +1,37 @@
+name: Pull Request Test
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/pages/*'
+jobs:
+  page-deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install
+      run: |
+        npm ci
+      env:
+        CI: true
+    - name: Build Github Pages
+      run: |
+        npm run build:web
+    - name: Deploy to Github Pages
+      uses: crazy-max/ghaction-github-pages@v1
+      with:
+        target_branch: gh-pages
+        build_dir: .github/pages/build
+      env:
+        GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
