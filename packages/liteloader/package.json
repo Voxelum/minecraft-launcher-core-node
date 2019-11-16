@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/liteloader",
-  "version": "0.0.26",
+  "version": "1.0.0",
   "main": "./index.js",
   "description": "Liteloader parser & installer",
   "engines": {

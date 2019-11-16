@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/mojang",
-  "version": "0.0.12",
+  "version": "1.0.0",
   "main": "./index.js",
   "description": "Minecraft Mojang Service",
   "engines": {
