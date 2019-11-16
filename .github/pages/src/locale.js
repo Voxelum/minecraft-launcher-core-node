@@ -13,8 +13,6 @@ i18next.init({
 $('#languages').dropdown({
     onChange: function (src, _, elem) {
         i18next.changeLanguage(elem.attr('value'), (err, r) => {
-            console.log('local');
-            console.log(err);
             $('.section').localize();
             $('.bar').localize();
         })

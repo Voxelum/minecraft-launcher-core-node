@@ -1,4 +1,4 @@
-name: Pull Request Test
+name: Deploy Github Pages
 
 on:
   push:
