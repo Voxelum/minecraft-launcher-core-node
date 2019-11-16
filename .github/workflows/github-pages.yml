@@ -5,7 +5,7 @@ on:
     branches:
       - master
     paths:
-      - '.github/pages/*'
+      - '.github/pages/**'
 jobs:
   page-deploy:
     runs-on: ubuntu-latest
