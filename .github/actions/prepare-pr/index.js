@@ -18,11 +18,17 @@ function scanPackages() {
         return packageJSON;
     }
     const affectedMapping = {};
+    const nameToPack = {};
+    const packageMapping = {};
     // scan all packages and filter out useless folder like .DS_Store
-    const packages = fs.readdirSync('packages')
+    let packages = fs.readdirSync('packages')
         .map(name => ({ package: readPackageJson(name), name }))
         .filter(pack => pack.package !== undefined);
     // create dependencies mapping
+    packages.forEach(pack => {
+        nameToPack[pack.name] = pack;
+    });
+
     packages.forEach(pack => {
         const packageJSON = pack.package;
         if (packageJSON.dependencies) {
@@ -30,9 +36,16 @@ function scanPackages() {
                 const name = dep.substring(dep.indexOf('/') + 1);
                 affectedMapping[name] = affectedMapping[name] || [];
                 affectedMapping[name].push(pack);
+
+                packageMapping[pack.name] = packageMapping[pack.name] || [];
+                if (nameToPack[name]) {
+                    packageMapping[pack.name].push(nameToPack[name]);
+                }
             }
         }
     });
+
+    packages = toposort(packageMapping, packages);
 
     return [affectedMapping, packages];
 }
@@ -74,8 +87,45 @@ async function bumpPackages(packages) {
     }
 }
 
+/**
+ * Toposort the packages
+ * @param { {[name: string]: Package[]} } packageMapping
+ * @param { Array<Package> } packages
+ * @returns {Array<Package>}
+ */
+function toposort(packageMapping, packages) {
+    const sorted = [];
+    const visited = new Set();
+    /**
+     * @param {Package} package
+     */
+    function dfs(package) {
+        if (visited.has(package.name)) {
+            return;
+        }
+        visited.add(package.name);
+        const deps = packageMapping[package.name] || [];
+        for (const dep of deps) {
+            dfs(dep);
+        }
+        sorted.push(package);
+    }
+
+    for (const pack of packages) {
+        dfs(pack);
+    }
+
+    return sorted;
+}
+
+/**
+ * @typedef {{ name: string; version: string; dependencies?: {[name:string]: string} }} PackageJSON
+ * @typedef {{ package: PackageJSON; level?: number; releaseType?: string; passive?: boolean; newVersion?: string; name: string }} Package
+ * @param { {[name: string]: Package[]} } affectedMapping
+ * @param { Array<Package> } packages
+ */
 function bumpDependenciesPackage(affectedMapping, packages) {
-    for (const package of packages.filter(package => package.newVersion && package.releaseType)) {
+    function bump(package) {
         // only major & minor change affect the dependents packages update
         const allAffectedPackages = affectedMapping[package.name] || [];
         for (const affectedPackage of allAffectedPackages) {
@@ -86,38 +136,47 @@ function bumpDependenciesPackage(affectedMapping, packages) {
             let bumpType = 'patch';
 
             if (affectedPackageJSON.name === "@xmcl/minecraft-launcher-core") {
-                if (!affectedPackageJSON.level) {
-                    affectedPackage.releaseType = package.releaseType;
-                    affectedPackage.level = package.level;
-                } else if (package.level < affectedPackageJSON.level) {
-                    newVersion = semver.inc(affectedPackageJSON.version, package.releaseType);
-                    affectedPackage.releaseType = package.releaseType;
-                    affectedPackage.level = package.level;
-                } else {
-                    continue;
-                }
+                // if affect the core package
+                bumpType = package.releaseType;
+                bumpLevel = package.level;
             } else {
-                if (affectedPackage.newVersion) continue;
-                newVersion = semver.inc(affectedPackageJSON.version, 'patch');
-                affectedPackage.releaseType = 'patch';
-                affectedPackage.level = 3;
+                // else just do a normal bump
+                bumpType = 'patch';
+                bumpLevel = 3;
             }
 
-            if (bumpLevel >= affectedPackage.level) {
-                continue;
+            let affected = false;
+
+            // if current bumping priority is lower than affected bumped priority
+            if (!("level" in affectedPackage) || bumpLevel < affectedPackage.level) {
+                newVersion = semver.inc(affectedPackageJSON.version, bumpType);
+                affectedPackage.level = bumpLevel;
+                affectedPackage.releaseType = bumpType;
+                affectedPackage.newVersion = newVersion;
+
+                affected = true;
             }
 
-            newVersion = semver.inc(affectedPackageJSON.version, bumpType);
-            affectedPackage.newVersion = newVersion;
             if (!affectedPackage.reasons) {
                 affectedPackage.reasons = [];
             }
             affectedPackage.passive = true;
-            affectedPackage.reasons.push(`Dependency ${package.package.name} bumped`);
+            affectedPackage.reasons.push(`Dependency ${package.package.name} bump **${bumpType}**`);
+            if (affected) {
+                bump(affectedPackage);
+            }
         }
+    }
+    for (const package of packages.filter(package => package.newVersion && package.releaseType)) {
+        bump(package);
     }
 }
 
+/**
+ * Update the package.json
+ * 
+ * @param {Package[]} packages 
+ */
 function writeAllNewVersionsToPackageJson(packages) {
     for (const package of packages) {
         if (!package.newVersion) continue;
