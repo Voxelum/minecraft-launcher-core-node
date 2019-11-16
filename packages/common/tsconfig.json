@@ -1,15 +1,8 @@
 {
     "files": [
         "index.ts",
-        "world.ts",
-        "version.ts",
-        "server.ts",
-        "mojang.ts",
-        "user.ts",
-        "game.ts",
-        "gamesetting.ts",
-        "model.ts",
-        "resource.ts"
+        "system.ts",
+        "test.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

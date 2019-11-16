@@ -14,6 +14,7 @@ export type VFS = typeof promises & {
     copy(src: string, dest: string, filter?: (name: string) => boolean): Promise<void>;
     waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
     validate(target: string, ...validations: Array<{ algorithm: string, hash: string }>): Promise<boolean>;
+    validateSha1(target: string, hash: string): Promise<boolean>;
 };
 
 export const vfs: VFS = {
@@ -31,6 +32,7 @@ export const vfs: VFS = {
         return multiChecksum(target, validations.map((v) => v.algorithm)).then((r) => r.every((h, i) =>
             h === validations[i].hash)).catch(() => false);
     },
+    validateSha1,
 };
 
 export namespace VFS {
@@ -72,9 +74,10 @@ export function missing(target: string) {
     return promises.access(target, constants.F_OK).then(() => false).catch(() => true);
 }
 
-export async function validate(target: string, hash: string, algorithm: string = "sha1") {
-    return await exists(target)
-        && await computeChecksum(target, algorithm) === hash;
+export async function validateSha1(target: string, hash: string) {
+    if (await missing(target)) { return false; }
+    const sha1 = await computeChecksum(target, "sha1");
+    return sha1 === hash;
 }
 
 export async function copy(src: string, dest: string, filter: (name: string) => boolean = () => true) {

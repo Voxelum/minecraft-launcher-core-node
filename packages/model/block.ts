@@ -1,4 +1,4 @@
-import { BlockModel, PackMeta } from "@xmcl/common";
+import { BlockModel, PackMeta } from "@xmcl/resourcepack";
 import { BoxGeometry, Group, LinearFilter, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, NearestFilter, Object3D, TextureLoader, Vector2, Vector3 } from "three";
 
 interface Texture {

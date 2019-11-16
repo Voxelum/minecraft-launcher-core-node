@@ -31,10 +31,16 @@ jobs:
     - name: Lint and Compile
       run: |
         npm run lint
-        npm run compile
+        npm run compile -- --noEmit
     - name: Test
       run: |
+        npm run build:clean
         npm run test:full
       env:
         CI: true
+    - name: Upload Coverage
+      uses: actions/upload-artifact@master
+      with:
+        name: coverage
+        path: coverage
 

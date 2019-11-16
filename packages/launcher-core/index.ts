@@ -11,7 +11,7 @@ export * from "@xmcl/launch";
 export * from "@xmcl/liteloader";
 export * from "@xmcl/mojang";
 export * from "@xmcl/nbt";
-export { ProfileService, GameProfile } from "@xmcl/profile-service";
+export { ProfileService } from "@xmcl/profile-service";
 export * from "@xmcl/resourcepack";
 export * from "@xmcl/task";
 export * from "@xmcl/text-component";
@@ -20,8 +20,9 @@ import * as Net from "@xmcl/net";
 import { GotBodyFn, GotInstance } from "got";
 const got: GotInstance<GotBodyFn<string>> = Net.got;
 
-import Util, { JavaExecutor, MinecraftFolder, MinecraftLocation } from "@xmcl/util";
+import * as Util from "@xmcl/util"
+export { JavaExecutor, Platform, MinecraftFolder, MinecraftLocation } from "@xmcl/util";
 
-export { ResolvedLibrary, ResolvedNative, ResolvedVersion, PartialResolvedVersion, LibraryInfo, VersionDiagnosis } from "@xmcl/version";
-export { World } from "@xmcl/world";
-export { Util, MinecraftFolder, MinecraftLocation, Net, got, JavaExecutor };
+export * from "@xmcl/version";
+export * from "@xmcl/world";
+export { Util, Net, got };

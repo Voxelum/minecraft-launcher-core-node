@@ -1,32 +1,49 @@
-import { UpdatedObject, fetchJson, getIfUpdate } from "@xmcl/net";
+import { fetchJson, getRawIfUpdate, UpdatedObject } from "@xmcl/net";
 import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
-import * as parser from "fast-html-parser";
-import { promises } from "fs";
 
 export namespace Fabric {
+    export const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
+    export const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
     export interface VersionList extends UpdatedObject {
         yarnVersions: string[];
         loaderVersions: string[];
     }
 
-    function parseWebPage(content: string) {
-        const dom = parser.parse(content);
-        const yarns = dom.querySelector("#yarnVersion");
-        const loaders = dom.querySelector("#loaderVersion");
-
-        return {
-            yarnVersions: yarns.childNodes.filter((n) => typeof n.attributes.value === "string")
-                .map((n) => n.attributes.value),
-            loaderVersions: loaders.childNodes.filter((n) => typeof n.attributes.value === "string")
-                .map((n) => n.attributes.value),
-        };
+    /**
+     * Parse the maven xml provided by Fabric. This is pretty tricky. I don't want to include another lib to parse xml.
+     * Therefore I just use RegExp here to match.
+     *
+     * @param content The xml string from Fabric.
+     */
+    export function parseVersionMavenXML(content: string) {
+        const matchVersions = /<version>(.+)<\/version>/g;
+        const matched = content.match(matchVersions);
+        if (!matched) {
+            return [];
+        }
+        return matched.map((v) => v.substring(9, v.length - 10));
     }
 
     /**
      * Get or refresh the version list.
      */
-    export async function updateVersionList(versionList?: VersionList) {
-        return getIfUpdate("https://fabricmc.net/use/", parseWebPage, versionList);
+    export async function updateVersionList(versionList?: VersionList): Promise<VersionList> {
+        const timestamp = versionList ? versionList.timestamp : undefined;
+        const yarn = await getRawIfUpdate(YARN_MAVEN_URL, timestamp);
+        const loader = await getRawIfUpdate(LOADER_MAVEN_URL, timestamp);
+        let yarnList;
+        let loaderList;
+        if (yarn.content) {
+            yarnList = parseVersionMavenXML(yarn.content);
+        }
+        if (loader.content) {
+            loaderList = parseVersionMavenXML(loader.content);
+        }
+        return {
+            yarnVersions: yarnList || (versionList ? versionList.yarnVersions : []),
+            loaderVersions: loaderList || (versionList ? versionList.loaderVersions : []),
+            timestamp: new Date(yarn.timestamp) > new Date(loader.timestamp) ? yarn.timestamp : loader.timestamp,
+        }
     }
 
     /**
@@ -46,6 +63,6 @@ export namespace Fabric {
         const { body } = await fetchJson(`https://fabricmc.net/download/technic/?yarn=${encodeURIComponent(yarnVersion)}&loader=${encodeURIComponent(loaderVersion)}`);
         body.id = id;
         await vfs.ensureFile(jsonFile);
-        await promises.writeFile(jsonFile, JSON.stringify(body));
+        await vfs.writeFile(jsonFile, JSON.stringify(body));
     }
 }

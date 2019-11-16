@@ -1,9 +1,24 @@
-import * as paths from "path";
+import { join } from "path";
+
+export interface MinecraftFolder {
+    readonly root: string;
+}
+
 export class MinecraftFolder {
-    get mods(): string { return paths.join(this.root, "mods"); }
-    get resourcepacks(): string { return paths.join(this.root, "resourcepacks"); }
-    get assets(): string { return paths.join(this.root, "assets"); }
-    get libraries(): string { return paths.join(this.root, "libraries"); }
+    static from(location: MinecraftLocation) {
+        return typeof location === "string"
+            ? new MinecraftFolder(location)
+            : location instanceof MinecraftFolder
+                ? location
+                : new MinecraftFolder((location as any).root);
+    }
+
+    constructor(readonly root: string) { }
+
+    get mods(): string { return join(this.root, "mods"); }
+    get resourcepacks(): string { return join(this.root, "resourcepacks"); }
+    get assets(): string { return join(this.root, "assets"); }
+    get libraries(): string { return join(this.root, "libraries"); }
     get versions(): string { return this.getPath("versions"); }
     get logs(): string { return this.getPath("logs"); }
     get options(): string { return this.getPath("options.txt"); }
@@ -13,36 +28,61 @@ export class MinecraftFolder {
     get saves(): string { return this.getPath("saves"); }
     get screenshots(): string { return this.getPath("screenshots"); }
 
-    static from(location: MinecraftLocation) {
-        return typeof location === "string" ? new MinecraftFolder(location) : location;
-    }
-    constructor(readonly root: string) { }
-
-    getNativesRoot(version: string) { return paths.join(this.getVersionRoot(version), version + "-natives"); }
-    getVersionRoot(version: string) { return paths.join(this.versions, version); }
-    getVersionJson(version: string) { return paths.join(this.getVersionRoot(version), version + ".json"); }
-    getVersionJar(version: string, type?: string) { return type === "client" || type === undefined ? paths.join(this.getVersionRoot(version), version + ".jar") : paths.join(this.getVersionRoot(version), `${version}-${type}.jar`); }
+    getNativesRoot(version: string) { return join(this.getVersionRoot(version), version + "-natives"); }
+    getVersionRoot(version: string) { return join(this.versions, version); }
+    getVersionJson(version: string) { return join(this.getVersionRoot(version), version + ".json"); }
+    getVersionJar(version: string, type?: string) { return type === "client" || type === undefined ? join(this.getVersionRoot(version), version + ".jar") : join(this.getVersionRoot(version), `${version}-${type}.jar`); }
     getVersionAll(version: string) {
         return [
-            paths.join(this.versions, version), paths.join(this.versions, version, version + ".json"),
-            paths.join(this.versions, version, version + ".jar")
+            join(this.versions, version), join(this.versions, version, version + ".json"),
+            join(this.versions, version, version + ".jar")
         ];
     }
-    getResourcePack(fileName: string) { return paths.join(this.resourcepacks, fileName); }
-    getMod(fileName: string) { return paths.join(this.mods, fileName); }
-    getLog(fileName: string) { return paths.join(this.logs, fileName); }
+    getResourcePack(fileName: string) { return join(this.resourcepacks, fileName); }
+    getMod(fileName: string) { return join(this.mods, fileName); }
+    getLog(fileName: string) { return join(this.logs, fileName); }
     getMapInfo(map: string) { return this.getPath("saves", map, "level.dat"); }
     getMapIcon(map: string) { return this.getPath("saves", map, "icon.png"); }
     getLibraryByPath(libraryPath: string): string {
-        return paths.join(this.libraries, libraryPath);
+        return join(this.libraries, libraryPath);
     }
     getAssetsIndex(versionAssets: string): string { return this.getPath("assets", "indexes", versionAssets + ".json"); }
     getAsset(hash: string): string { return this.getPath("assets", "objects", hash.substring(0, 2), hash); }
     getPath(...path: string[]) {
-        return paths.join(this.root, ...path);
+        return join(this.root, ...path);
     }
 }
 
+export namespace MinecraftPath {
+    export const mods = "mods";
+    export const resourcepacks = "resourcepacks";
+    export const assets = "assets";
+    export const libraries = "libraries";
+    export const versions = "versions";
+    export const logs = "logs";
+    export const options = "options.txt";
+    export const launcherProfile = "launcher_profiles.json"
+    export const lastestLog = "logs/latest.log";
+    export const maps = MinecraftPath.saves;
+    export const saves = "saves";
+    export const screenshots = "screenshots";
+
+    export function getVersionRoot(version: string) { return join("versions", version); }
+    export function getNativesRoot(version: string) { return join("versions", version, version + "-natives"); }
+    export function getVersionJson(version: string) { return join("versions", version, version + ".json"); }
+    export function getVersionJar(version: string, type?: string) {
+        return type === "client" || type === undefined
+            ? join("versions", version, version + ".jar")
+            : join("versions", version, `${version}-${type}.jar`);
+    }
+    export function getResourcePack(fileName: string) { return join("resourcepacks", fileName); }
+    export function getMod(fileName: string) { return join("mods", fileName); }
+    export function getLog(fileName: string) { return join("logs", fileName); }
+    export function getMapInfo(map: string) { return join("saves", map, "level.dat"); }
+    export function getMapIcon(map: string) { return join("saves", map, "icon.png"); }
+    export function getLibraryByPath(libraryPath: string) { return join("libraries", libraryPath); }
+    export function getAssetsIndex(versionAssets: string) { return join("assets", "indexes", versionAssets + ".json"); }
+    export function getAsset(hash: string): string { return join("assets", "objects", hash.substring(0, 2), hash); }
+}
+
 export type MinecraftLocation = MinecraftFolder | string;
-
-

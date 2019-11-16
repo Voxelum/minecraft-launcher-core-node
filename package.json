@@ -2,16 +2,18 @@
   "private": true,
   "scripts": {
     "build": "npm run lint && npm run compile",
-    "bump": "node bump.js",
+    "build:clean": "node scripts/clean.js",
+    "build:web": "parcel build .github/pages/src/index.html -d .github/pages/build",
     "clean": "lerna clean --yes",
     "compile": "tsc",
-    "docs": "node build-readme.js",
+    "docs": "node scripts/build-readme.js",
     "lint": "eslint packages --ext .ts",
     "lint:fix": "eslint packages --ext .ts --fix",
     "test": "jest packages --runInBand",
     "test:full": "jest packages --coverage --verbose --runInBand",
     "update": "lerna bootstrap",
-    "watch": "node dev.js"
+    "dev": "node scripts/dev.js",
+    "dev:web": "parcel serve .github/pages/src/index.html -d .github/pages/build"
   },
   "dependencies": {
     "@xmcl/auth": "file:packages\\auth",
@@ -41,6 +43,7 @@
     "@xmcl/world": "file:packages\\world"
   },
   "devDependencies": {
+    "@actions/core": "^1.2.0",
     "@types/bytebuffer": "^5.0.37",
     "@types/got": "^9.6.0",
     "@types/jest": "^24.0.18",
@@ -57,11 +60,19 @@
     "git-semver-tags": "^3.0.0",
     "jest": "^24.9.0",
     "lerna": "^3.18.3",
+    "nock": "^11.7.0",
     "pako": "^1.0.10",
+    "parcel": "^1.12.4",
+    "rusha": "^0.8.13",
     "three": "^0.110.0",
+    "three-orbitcontrols": "^2.110.1",
     "ts-jest": "^24.0.2",
+    "ts-md5": "^1.2.7",
     "typescript": "^3.6.3"
   },
+  "browserslist": [
+    "last 1 Chrome versions"
+  ],
   "jest": {
     "globals": {
       "ts-jest": {
@@ -79,6 +90,9 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "testRegex": "packages/.*test\\.ts",
-    "testSequencer": "./test-sequencer.js"
+    "testSequencer": "./scripts/test-sequencer.js",
+    "transform": {
+      "^.+\\.(ts|tsx)?$": "ts-jest"
+    }
   }
 }

@@ -2,6 +2,7 @@
   "name": "@xmcl/common",
   "version": "0.2.0",
   "main": "./index.js",
+  "module": "./index.module.js",
   "description": "Minecraft common concepts",
   "engines": {
     "node": ">=10.0"
@@ -10,7 +11,8 @@
     "access": "public"
   },
   "dependencies": {
-    "long": "^3.2.0"
+    "long": "^3.2.0",
+    "jszip": "^3.2.2"
   },
   "scripts": {
     "test": "",

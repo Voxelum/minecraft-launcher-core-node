@@ -1,99 +1,7 @@
-import { PackMeta } from "@xmcl/common";
+import { PackMeta, ResourcePack, Resource, ResourceLocation } from "@xmcl/resourcepack";
 
-export class ResourceLocation {
-    /**
-     * build from texture path
-     */
-    static ofTexturePath(path: string) {
-        const idx = path.indexOf(":");
-        if (idx === -1) { return new ResourceLocation("minecraft", `textures/${path}.png`); }
-        if (idx === 0) { return new ResourceLocation("minecraft", `textures/${path.substring(1, path.length)}.png`); }
-        return new ResourceLocation(path.substring(0, idx), `textures/${path.substring(idx + 1, path.length)}.png`);
-    }
-
-    /**
-     * build from model path
-     */
-    static ofModelPath(path: string) {
-        const idx = path.indexOf(":");
-        if (idx === -1) { return new ResourceLocation("minecraft", `models/${path}.json`); }
-        if (idx === 0) { return new ResourceLocation("minecraft", `models/${path.substring(1, path.length)}.json`); }
-        return new ResourceLocation(path.substring(0, idx), `models/${path.substring(idx + 1, path.length)}.json`);
-    }
-
-    /**
-     * from absoluted path
-     */
-    static fromPath(path: string) {
-        const idx = path.indexOf(":");
-        if (idx === -1) { return new ResourceLocation("minecraft", path); }
-        if (idx === 0) { return new ResourceLocation("minecraft", path.substring(1, path.length)); }
-        return new ResourceLocation(path.substring(0, idx), path.substring(idx + 1, path.length));
-    }
-
-    static getAssetsPath(location: ResourceLocation) {
-        return `assets/${location.domain}/${location.path}`;
-    }
-
-    constructor(
-        readonly domain: string,
-        readonly path: string) { }
-    toString() { return `${this.domain}:${this.path}`; }
-}
-
-export interface Resource<T> {
-    /**
-     * the absolute location of the resource
-     */
-    location: ResourceLocation;
-    /**
-     * The real resource url;
-     */
-    url: string;
-    /**
-     * The resource content
-     */
-    content: T;
-    /**
-     * The metadata of the resource
-     */
-    metadata: PackMeta;
-}
-
-/**
- * The source of the resource. You can think this as the resource pack in minecraft.
- */
-export interface ResourceSource<T> {
-    readonly type: string;
-    /**
-     * Load the resource
-     * @param location The resource location
-     * @param urlOnly Should only provide the url, no content
-     */
-    load(location: ResourceLocation, urlOnly: true): Promise<Resource<null> | void>;
-    load(location: ResourceLocation, urlOnly: boolean): Promise<Resource<T> | void>;
-    /**
-     * Does the resource source has the resource
-     */
-    has(location: ResourceLocation): Promise<boolean>;
-    /**
-     * Update the resource content to the source
-     * @param location The resource location
-     * @param data The resource content
-     */
-    update(location: ResourceLocation, data: T): Promise<void>;
-    /**
-     * The owned domain. You can think about the modids.
-     */
-    domains(): Promise<string[]>;
-    /**
-     * The pack info, just like resource pack
-     */
-    info(): Promise<PackMeta.Pack>;
-}
-
-interface ResourceSourceWrapper<T> {
-    source: ResourceSource<T>;
+interface ResourceSourceWrapper {
+    source: ResourcePack;
     info: PackMeta.Pack;
     domains: string[];
 }
@@ -102,19 +10,24 @@ interface ResourceSourceWrapper<T> {
  * The resource manager. Design to be able to use in both nodejs and browser environment.
  * @template T The type of the resource content. If you use this in node, it's probably `Buffer`. If you are in browser, it might be `string`. Just align this with your `ResourceSource`
  */
-export class ResourceManager<T = string> {
-    get allSources() { return this.list.map((l) => l.info); }
-    private cache: { [location: string]: Resource<T> | undefined } = {};
+export class ResourceManager {
+    get allResourcePacks() { return this.list.map((l) => l.info); }
+    private cache: { [location: string]: Resource | undefined } = {};
 
-    constructor(private list: Array<ResourceSourceWrapper<T>> = []) { }
+    constructor(private list: Array<ResourceSourceWrapper> = []) { }
 
     /**
      * Add a new resource source to the end of the resource list.
      */
-    async addResourceSource(source: ResourceSource<T>) {
-        const info = await source.info();
-        const domains = await source.domains();
-        const wrapper = { info, source, domains };
+    async addResourcePack(resourcePack: ResourcePack) {
+        let info;
+        try {
+            info = await resourcePack.info();
+        } catch{
+            info = { pack_format: -1, description: "" };
+        }
+        const domains = await resourcePack.domains();
+        const wrapper = { info, source: resourcePack, domains };
 
         this.list.push(wrapper);
     }
@@ -153,9 +66,9 @@ export class ResourceManager<T = string> {
         delete this.cache[`${location.domain}:${location.path}`];
     }
 
-    load(location: ResourceLocation): Promise<Resource<T> | undefined>;
-    load(location: ResourceLocation, urlOnly: false): Promise<Resource<T> | undefined>;
-    load(location: ResourceLocation, urlOnly: true): Promise<Resource<null> | undefined>;
+    load(location: ResourceLocation): Promise<Resource | undefined>;
+    load(location: ResourceLocation, urlOnly: false): Promise<Resource | undefined>;
+    load(location: ResourceLocation, urlOnly: true): Promise<Resource | undefined>;
     /**
      * Load the resource in that location. This will walk through current resource source list to load the resource.
      * @param location The resource location
@@ -164,7 +77,6 @@ export class ResourceManager<T = string> {
     async load(location: ResourceLocation, urlOnly: boolean = false): Promise<any> {
         const cached = this.cache[`${location.domain}:${location.path}`];
         if (cached) { return cached; }
-
         for (const src of this.list) {
             const loaded = await src.source.load(location, urlOnly);
             if (!loaded) { continue; }
@@ -175,39 +87,9 @@ export class ResourceManager<T = string> {
         return undefined;
     }
 
-    private putCache(res: Resource<T>) {
+    private putCache(res: Resource) {
         this.cache[`${res.location.domain}:${res.location.path}`] = res;
     }
-}
-
-export abstract class AbstractResourceSource<T> implements ResourceSource<T> {
-    constructor(readonly type: string) { }
-
-    async load(location: ResourceLocation, urlOnly: boolean) {
-        const path = `assets/${location.domain}/${location.path}`;
-        const resource: Resource<any> = {
-            url: this.getUrl(path),
-            content: urlOnly ? null : await this.loadResource(path),
-            location,
-            metadata: await this.loadResourceMetadata(path),
-        };
-        return resource;
-    }
-    has(location: ResourceLocation): Promise<boolean> {
-        return this.hasResource(`assets/${location.domain}/${location.path}`);
-    }
-
-    update(location: ResourceLocation, data: T): Promise<void> {
-        throw new Error("Unsupported");
-    }
-
-    abstract domains(): Promise<string[]>;
-    abstract info(): Promise<PackMeta.Pack>;
-
-    protected abstract hasResource(path: string): Promise<boolean>;
-    protected abstract loadResource(path: string): Promise<T>;
-    protected abstract loadResourceMetadata(path: string): Promise<any>;
-    protected abstract getUrl(path: string): string;
 }
 
 export * from "./model-loader";

@@ -2,6 +2,7 @@
   "name": "@xmcl/profile-service",
   "version": "0.1.7",
   "main": "./index.js",
+  "module": "./index.module.js",
   "description": "Minecraft profile services",
   "engines": {
     "node": ">=10.0"
@@ -10,10 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common",
-    "@xmcl/net": "file:../net",
-    "@xmcl/util": "file:../util",
-    "bytebuffer": "^5.0.1"
+    "form-data": "^3.0.0"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

@@ -1,4 +1,9 @@
-import { ResourceLocation, ResourceManager } from ".";
+import { ResourceManager } from ".";
+import { join } from "path";
+import ResourcePack, { ResourceLocation } from "@xmcl/resourcepack";
+import { ModelLoader } from "./model-loader";
+
+const mock = join(__dirname, "..", "..", "mock");
 
 describe("ResourceLocation", () => {
     describe("#ofModelPath", () => {
@@ -50,9 +55,9 @@ describe("ResourceManager", () => {
             info() { return {}; },
             domains() { return []; },
         };
-        await man.addResourceSource(dummy);
-        expect(man.allSources).toHaveLength(1);
-        expect(man.allSources[0]).toEqual({});
+        await man.addResourcePack(dummy);
+        expect(man.allResourcePacks).toHaveLength(1);
+        expect(man.allResourcePacks[0]).toEqual({});
     });
     test("#load", async () => {
         const man = new ResourceManager();
@@ -61,7 +66,7 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load() { return { location: { domain: "a", path: "b" } }; },
         };
-        await man.addResourceSource(dummy);
+        await man.addResourcePack(dummy);
         await expect(man.load(ResourceLocation.fromPath("abc")))
             .resolves
             .toEqual({ location: { domain: "a", path: "b" } });
@@ -74,7 +79,7 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load(r: any) { monitor(); return { location: r }; },
         };
-        await man.addResourceSource(dummy);
+        await man.addResourcePack(dummy);
         await man.load({ domain: "a", path: "b" });
         await man.load({ domain: "a", path: "b" });
         expect(monitor).toBeCalledTimes(1);
@@ -87,7 +92,7 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load(r: any) { monitor(); return { location: r }; },
         };
-        await man.addResourceSource(dummy);
+        await man.addResourcePack(dummy);
         await man.load({ domain: "a", path: "b" });
         man.clearCache();
         await man.load({ domain: "a", path: "b" });
@@ -101,7 +106,7 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load(r: any) { monitor(); return { location: r }; },
         };
-        await man.addResourceSource(dummy);
+        await man.addResourcePack(dummy);
         await man.load({ domain: "a", path: "b" });
         man.clearAll();
         const result = await man.load({ domain: "a", path: "b" });
@@ -121,11 +126,39 @@ describe("ResourceManager", () => {
             domains() { return []; },
             load(r: any) { monitor(); return { location: r }; },
         };
-        await man.addResourceSource(dummy);
-        await man.addResourceSource(dummyB);
+        await man.addResourcePack(dummy);
+        await man.addResourcePack(dummyB);
 
-        expect(man.allSources).toEqual(["A", "B"]);
+        expect(man.allResourcePacks).toEqual(["A", "B"]);
         man.swap(0, 1);
-        expect(man.allSources).toEqual(["B", "A"]);
+        expect(man.allResourcePacks).toEqual(["B", "A"]);
+    });
+});
+
+describe("ModelLoader", () => {
+    describe("#loadModel", () => {
+        test("should load grass block model", async () => {
+            const man = new ResourceManager();
+            await man.addResourcePack(await ResourcePack.open(join(mock, "resourcepacks", "1.14.4.zip")));
+            const loader = new ModelLoader(man);
+            const model = await loader.loadModel("block/grass_block");
+            expect(model).toBeTruthy();
+            expect(model.textures).toEqual({
+                particle: "block/dirt",
+                bottom: "block/dirt",
+                top: "block/grass_block_top",
+                side: "block/grass_block_side",
+                overlay: "block/grass_block_side_overlay"
+            });
+            expect(model.display).toBeTruthy();
+            expect(model.elements).toBeTruthy();
+
+            expect(loader.textures["block/grass_block_side_overlay"])
+                .toBeTruthy();
+            expect(loader.textures["block/grass_block_side"])
+                .toBeTruthy();
+            expect(loader.textures["block/dirt"])
+                .toBeTruthy();
+        });
     });
 });

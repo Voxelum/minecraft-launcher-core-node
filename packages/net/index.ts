@@ -25,6 +25,23 @@ export const fetchBuffer = gotDefault.extend({
     useElectronNet: IS_ELECTRON,
 });
 
+
+export async function getRawIfUpdate(url: string, timestamp?: string): Promise<{ timestamp: string; content: string | undefined }> {
+    const lastModified = timestamp;
+    const resp = await got(url, {
+        encoding: "utf-8",
+        headers: lastModified ? { "If-Modified-Since": lastModified } : undefined,
+    });
+    const lastModifiedReturn = resp.headers["last-modified"] || resp.headers["Last-Modified"] as string || "";
+    if (resp.statusCode === 304) {
+        return { timestamp: lastModifiedReturn, content: undefined };
+    }
+    return {
+        timestamp: lastModifiedReturn,
+        content: resp.body,
+    };
+}
+
 export async function getIfUpdate<T extends UpdatedObject = UpdatedObject>(url: string, parser: (s: string) => any, lastObj?: T): Promise<T | undefined> {
     const lastModified = lastObj ? lastObj.timestamp : undefined;
     try {

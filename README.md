@@ -39,7 +39,7 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [Forge Installation](#forge-installation)
     - [Minecraft Install](#minecraft-install)
     - [Install Liteloader](#install-liteloader)
-    - [Build THREE.js model for block and player](#build-threejs-model-for-block-and-player)
+    - [Build THREE.js model for block and player (PREVIEW, not available yet)](#build-threejs-model-for-block-and-player-preview-not-available-yet)
     - [Mojang Account Info](#mojang-account-info)
     - [Read/Write NBT](#readwrite-nbt)
     - [Game Profile](#game-profile)
@@ -57,6 +57,11 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [How to Dev](#how-to-dev)
     - [Design Principle](#design-principle)
     - [Before Submit PR](#before-submit-pr)
+  - [Dependencies & Module Coupling](#dependencies--module-coupling)
+    - [Core Features (Node/Electron Only)](#core-features-nodeelectron-only)
+    - [General Gaming Features (Node/Electron/Browser)](#general-gaming-features-nodeelectronbrowser)
+    - [User Authorization Features (Node/Electron/Browser)](#user-authorization-features-nodeelectronbrowser)
+    - [Client Only Features (Browser Only)](#client-only-features-browser-only)
   - [Credit](#credit)
 
 ### User Login & Auth (Official/Offline)
@@ -232,6 +237,16 @@ Just ensure all assets and libraries are installed:
     await Installer.installDependencies(resolvedVersion);
 ```
 
+Get the report of the version. It can check if version missing assets/libraries.
+
+```ts
+    import { Installer, VersionDiagnosis } from "@xmcl/version";
+    const minecraftLocation: string;
+    const minecraftVersionId: string;
+
+    const report: VersionDiagnosis = await Installer.diagnose(minecraftLocation, minecraftVersionId);
+```
+
 ### Install Liteloader
 
 Fetch liteloader version and install:
@@ -314,14 +329,16 @@ You can simply deserialize/serialize nbt.
 ```ts
     import { NBT } from "@xmcl/nbt";
     const fileData: Buffer;
-    const compressed: boolean;
-    const readed: NBT.Persistence.TypedObject = await NBT.Persistence.deserialize(fileData, { compressed });
+    // compressed = undefined will not perform compress algorithm
+    // compressed = true will use gzip algorithm
+    const compressed: true | "gzip" | "deflate" | undefined;
+    const readed: NBT.TypedObject = await NBT.deserialize(fileData, { compressed });
     // NBT.Persistence.TypedObject is just a object with __nbtPrototype__ defining its nbt type
     // After you do the modification on it, you can serialize it back to NBT
-    const buf: Buffer = await NBT.Persistence.serialize(readed, { compressed });
+    const buf: Buffer = await NBT.serialize(readed, { compressed });
 
     // or use serializer style
-    const serial = NBT.Persistence.createSerializer()
+    const serial = NBT.createSerializer()
         .register("server", {
             name: NBT.TagType.String,
             host: NBT.TagType.String,
@@ -542,16 +559,21 @@ Get the report of the version. It can also check if the version is missing asset
 Read the level info from a buffer.
 
 ```ts
-    import { World, LevelDataFrame } from '@xmcl/world'
-    const levelDatBuffer: Buffer;
-    const info: LevelDataFrame = await World.parseLevelData(levelDatBuffer);
+    import { WorldReader, LevelDataFrame } from '@xmcl/world'
+    const worldSaveFolder: string;
+    const reader: WorldReader = await WorldReader.create(worldSaveFolder);
+    const levelData: LevelDataFrame = await reader.getLevelData();
 ```
-Read the level data & player data by save folder location string.
+
+***Preview*** Read the region data, this feature is not tested yet, but the api will look like this
 
 ```ts
-    import { World } from "@xmcl/world";
+    import { WorldReader, RegionDataFrame, RegionReader } from "@xmcl/world";
     const worldSaveFolder: string;
-    const { level, players } = await World.load(worldSaveFolder, ["level", "player"]);
+    const reader: WorldReader = await WorldReader.create(worldSaveFolder);
+    const chunkX: number;
+    const chunkZ: number;
+    const region: RegionDataFrame = await reader.getRegionData(chunkX, chunkZ);
 ```
 
 ## Experiental Features
@@ -634,6 +656,54 @@ This decision is majorly influenced by the original project design - all the mod
 ### Before Submit PR
 
 Make sure you run `npm run build` to pass lint and compile at least. (I always forget this) 
+## Dependencies & Module Coupling
+
+Just depict some big idea for the module design here. They may not be totally accurate. 
+
+### Core Features (Node/Electron Only)
+
+The features like version parsing, installing, diagnosing, are in this group:
+
+- @xmcl/version
+  - @xmcl/installer
+  - @xmcl/launch
+  - @xmcl/forge-installer
+  - @xmcl/liteloader
+  - *@xmcl/fabric (fabric module is too simple; it dones't really depends on @xmcl/version module)*
+
+They all depends on `@xmcl/version` module, which providing the basic version parsing system. This feature group is nodejs/electron only, as it definity requires file read/write, downloading to file functions, which are no sense on browser in my opinion.
+
+These module use such modules as helper:
+
+- got, for downloader
+- yauzl, for decompress
+
+### General Gaming Features (Node/Electron/Browser)
+
+The features like parsing game setting, parsing forge mod metadata, NBT parsing, game saves parsing, they don't really have any strong connection.
+
+- @xmcl/nbt
+- @xmcl/forge
+- @xmcl/gamesetting
+- @xmcl/text-component
+- @xmcl/common
+  - @xmcl/resource-manager
+  - @xmcl/world
+  - @xmcl/resourcepack
+- *@xmcl/client (the module is design to be browser/node capable but it not ready now)* 
+
+### User Authorization Features (Node/Electron/Browser)
+
+The features like login, fetch user info/textures goes here:
+
+- @xmcl/auth
+- @xmcl/profile-service
+
+### Client Only Features (Browser Only)
+
+The features only serves for browser:
+
+- @xmcl/model
 
 ## Credit
 

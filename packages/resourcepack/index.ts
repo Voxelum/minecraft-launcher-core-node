@@ -1,95 +1,163 @@
-import { ResourcePackMetaData } from "@xmcl/common";
-import Unzip from "@xmcl/unzip";
-import { vfs } from "@xmcl/util";
-export interface ResourcePack {
-    readonly path: string;
-    readonly type: "directory" | "zip";
-    readonly metadata: ResourcePackMetaData;
+import { FileSystem, System } from "@xmcl/common";
+import { PackMeta } from "./format";
+
+export class ResourceLocation {
     /**
-     * Icon data url in base 64. It will be an empty string if you not cache it.
+     * build from texture path
      */
-    icon: string;
+    static ofTexturePath(path: string) {
+        const idx = path.indexOf(":");
+        if (idx === -1) { return new ResourceLocation("minecraft", `textures/${path}.png`); }
+        if (idx === 0) { return new ResourceLocation("minecraft", `textures/${path.substring(1, path.length)}.png`); }
+        return new ResourceLocation(path.substring(0, idx), `textures/${path.substring(idx + 1, path.length)}.png`);
+    }
+
+    /**
+     * build from model path
+     */
+    static ofModelPath(path: string) {
+        const idx = path.indexOf(":");
+        if (idx === -1) { return new ResourceLocation("minecraft", `models/${path}.json`); }
+        if (idx === 0) { return new ResourceLocation("minecraft", `models/${path.substring(1, path.length)}.json`); }
+        return new ResourceLocation(path.substring(0, idx), `models/${path.substring(idx + 1, path.length)}.json`);
+    }
+
+    /**
+     * from absoluted path
+     */
+    static fromPath(path: string) {
+        const idx = path.indexOf(":");
+        if (idx === -1) { return new ResourceLocation("minecraft", path); }
+        if (idx === 0) { return new ResourceLocation("minecraft", path.substring(1, path.length)); }
+        return new ResourceLocation(path.substring(0, idx), path.substring(idx + 1, path.length));
+    }
+
+    static getAssetsPath(location: ResourceLocation) {
+        return `assets/${location.domain}/${location.path}`;
+    }
+
+    constructor(
+        readonly domain: string,
+        readonly path: string) { }
+    toString() { return `${this.domain}:${this.path}`; }
 }
-export class ResourcePack {
-    constructor(readonly path: string, readonly type: "directory" | "zip", readonly metadata: ResourcePackMetaData, public icon: string) { }
+
+export interface Resource<T = Uint8Array> {
+    /**
+     * the absolute location of the resource
+     */
+    location: ResourceLocation;
+    /**
+     * The real resource url;
+     */
+    url: string;
+    /**
+     * The resource content
+     */
+    content: T;
+    /**
+     * The metadata of the resource
+     */
+    metadata: PackMeta;
+}
+
+export interface ResourcePack {
+    /**
+     * Load the resource
+     * @param location The resource location
+     * @param urlOnly Should only provide the url, no content
+     */
+    load(location: ResourceLocation, urlOnly: true): Promise<Resource | void>;
+    load(location: ResourceLocation, urlOnly: boolean): Promise<Resource | void>;
+    /**
+     * Does the resource source has the resource
+     */
+    has(location: ResourceLocation): Promise<boolean>;
+    /**
+     * The owned domain. You can think about the modids.
+     */
+    domains(): Promise<string[]>;
+    /**
+     * The pack info, just like resource pack
+     */
+    info(): Promise<PackMeta.Pack>;
+
+    /**
+     * The icon of the resource pack
+     */
+    icon(): Promise<Uint8Array>;
+}
+
+class ResourcePackImpl implements ResourcePack {
+    async load(location: ResourceLocation, urlOnly: any) {
+        const p = this.getPath(location);
+        const name = p.substring(0, p.lastIndexOf("."));
+        const metafileName = name + ".mcmeta";
+        if (await this.fs.existsFile(p)) {
+            return {
+                location,
+                url: this.fs.type === "path" ? `file://${this.fs.root}${p}` : "",
+                content: await this.fs.readFile(p),
+                metadata: await this.fs.existsFile(metafileName) ? JSON.parse(await this.fs.readFile(metafileName, "utf-8")) : {}
+            };
+        }
+        return undefined;
+    }
+    has(location: ResourceLocation): Promise<boolean> {
+        return this.fs.existsFile(this.getPath(location));
+    }
+    async domains(): Promise<string[]> {
+        const files = await this.fs.listFiles("assets");
+        const result: string[] = [];
+        for (const f of files) {
+            if (await this.fs.isDirectory("assets/" + f)) {
+                result.push(f);
+            }
+        }
+        return result;
+    }
+    async info(): Promise<PackMeta.Pack> {
+        return JSON.parse(await this.fs.readFile("pack.mcmeta", "utf-8"));
+    }
+    icon(): Promise<Uint8Array> {
+        return this.fs.readFile("pack.png");
+    }
+    constructor(private fs: FileSystem) { }
+
+    private getPath(location: ResourceLocation) {
+        return `assets/${location.domain}/${location.path}`;
+    }
 }
 
 export namespace ResourcePack {
-    async function readZip(fileName: string, zipFile: Unzip.LazyZipFile, cacheIcon?: boolean) {
-        const loadEntries = cacheIcon ? ["pack.mcmeta", "pack.png"] : ["pack.mcmeta"];
-        const entries = await zipFile.filterEntries(loadEntries as ["pack.mcmeta", "pack.png"] | ["pack.mcmeta"]);
-        const metadataEntry = entries.find((e) => e.fileName === "pack.mcmeta");
-        if (!metadataEntry) { throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!"); }
-
-        const metadata = await zipFile.readEntry(metadataEntry).then((data) => JSON.parse(data.toString("utf-8").trim()).pack);
-
-        let icon = "";
-        const iconEntry = entries.find((e) => e.fileName === "pack.png");
-        if (iconEntry) {
-            icon = await zipFile.readEntry(iconEntry)
-                .then((data) => "data:image/png;base64, " + data.toString("base64"))
-                .catch((_) => "");
-        }
-
-        return new ResourcePack(fileName, "zip", metadata, icon);
-    }
-
-    async function readDirectory(filePath: string, cacheIcon?: boolean) {
-        const metaPath = `${filePath}/pack.mcmeta`;
-        const iconPath = `${filePath}/pack.png`;
-
-        if (await vfs.missing(metaPath)) { throw Error("Illegal Resourcepack: Cannot find pack.mcmeta!"); }
-        const metadata = await vfs.readFile(metaPath);
-
-        const meta = JSON.parse(metadata.toString("utf-8").trim()).pack;
-        const icon = cacheIcon ? await vfs.readFile(iconPath)
-            .then((data) => "data:image/png;base64, " + data.toString("base64"))
-            .catch((_) => "") : "";
-
-        return new ResourcePack(filePath, "directory", meta, icon);
-    }
-
-    /**
-     * Read the icon for resource pack
-     * @param resourcePack The resource pack object
-     * @returns Base64 format data uri
-     */
-    export async function readIcon(resourcePack: ResourcePack) {
-        const filePath = resourcePack.path;
-        const stat = await vfs.stat(filePath);
-        if (stat.isDirectory()) {
-            const iconPath = `${filePath}/pack.png`;
-            const icon = await vfs.readFile(iconPath)
-                .then((data) => "data:image/png;base64, " + data.toString("base64"))
-                .catch((_) => "");
-            resourcePack.icon = icon;
-            return icon;
-        }
-        const zip = await Unzip.open(filePath, { lazyEntries: true });
-        const [entry] = await zip.filterEntries(["pack.png"]);
-        if (entry) {
-            const buf = await zip.readEntry(entry);
-            const url = "data:image/png;base64, " + buf.toString("base64");
-            resourcePack.icon = url;
-            return url;
-        }
-        return "";
+    export async function open(resourcePack: string | Buffer): Promise<ResourcePack> {
+        return new ResourcePackImpl(await System.openFileSystem(resourcePack));
     }
     /**
      * Read the resource pack metadata from zip file or directory.
      *
      * If you have already read the data of the zip file, you can pass it as the second parameter. The second parameter will be ignored on reading directory.
      *
-     * @param filePath The absolute path of the resource pack file
+     * @param resourcePack The absolute path of the resource pack file
      * @param buffer The zip file data Buffer you read.
      * @param cacheIcon If cache the icon in to the resource pack object
      */
-    export async function read(filePath: string, buffer?: Buffer, cacheIcon?: boolean): Promise<ResourcePack> {
-        const stat = await vfs.stat(filePath);
-        if (stat.isDirectory()) { return readDirectory(filePath, cacheIcon); }
-        const zip = buffer ? await Unzip.open(buffer, { lazyEntries: true }) : await Unzip.open(filePath, { lazyEntries: true });
-        return readZip(filePath, zip, cacheIcon);
+    export async function head(resourcePack: string | Buffer, cacheIcon?: boolean): Promise<{ metadata: PackMeta.Pack, icon?: string }> {
+        const system = await System.openFileSystem(resourcePack);
+        if (!await system.existsFile("pack.mcmeta")) {
+            throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!");
+        }
+        const metadata = JSON.parse(await system.readFile("pack.mcmeta", "utf-8"));
+        if (!metadata.pack) {
+            throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!");
+        }
+        let icon;
+        if (cacheIcon) {
+            icon = "data:image/png;base64, " + await system.readFile("pack.png", "base64");
+        }
+        return { metadata: metadata.pack, icon };
     }
 }
 
+export * from "./format";
 export default ResourcePack;

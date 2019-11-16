@@ -62,4 +62,15 @@ Just ensure all assets and libraries are installed:
     await Installer.installDependencies(resolvedVersion);
 ```
 
+Get the report of the version. It can check if version missing assets/libraries.
+
+```ts
+    import { Installer, VersionDiagnosis } from "@xmcl/version";
+    const minecraftLocation: string;
+    const minecraftVersionId: string;
+
+    const report: VersionDiagnosis = await Installer.diagnose(minecraftLocation, minecraftVersionId);
+```
+
+
 

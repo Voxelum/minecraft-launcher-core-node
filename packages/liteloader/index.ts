@@ -1,10 +1,8 @@
-import { Installer } from "@xmcl/installer";
 import { UpdatedObject, getIfUpdate } from "@xmcl/net";
 import Task from "@xmcl/task";
 import Unzip from "@xmcl/unzip";
-import { MinecraftFolder, MinecraftLocation, vfs } from "@xmcl/util";
-import { Version } from "@xmcl/version";
-import * as path from "path";
+import { vfs, MinecraftFolder, MinecraftLocation } from "@xmcl/util";
+import { join } from "path";
 
 export namespace LiteLoader {
     export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
@@ -177,9 +175,9 @@ export namespace LiteLoader {
         return Task.execute(installTask(versionMeta, location, version));
     }
 
-    export function installTask(versionMeta: VersionMeta, location: MinecraftLocation, version?: string, check?: boolean): Task<void> {
+    export function installTask(versionMeta: VersionMeta, location: MinecraftLocation, version?: string): Task<void> {
         return async function installLiteloader(context) {
-            const mc: MinecraftFolder = typeof location === "string" ? new MinecraftFolder(location) : location;
+            const mc: MinecraftFolder = MinecraftFolder.from(location);
             const mountVersion = version || versionMeta.mcversion;
             const id = `${mountVersion}-Liteloader${versionMeta.mcversion}-${versionMeta.version}`;
 
@@ -198,21 +196,14 @@ export namespace LiteLoader {
                 const versionPath = mc.getVersionRoot(inf.id);
 
                 await vfs.ensureDir(versionPath);
-                await vfs.writeFile(path.join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
+                await vfs.writeFile(join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
                 return inf;
             });
-
-            if (check) {
-                await context.execute(async function installDependencies(ctx) {
-                    const resolved = await Version.parse(mc, versionInf.id);
-                    await Installer.installDependenciesTask(resolved)(ctx);
-                });
-            }
         };
     }
 
     export function installAndCheck(versionMeta: VersionMeta, location: MinecraftLocation, version?: string) {
-        return Task.execute(installTask(versionMeta, location, version, true));
+        return Task.execute(installTask(versionMeta, location, version));
     }
 }
 

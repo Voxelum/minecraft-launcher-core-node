@@ -13,15 +13,19 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 Read the level info from a buffer.
 
 ```ts
-    import { World, LevelDataFrame } from '@xmcl/world'
-    const levelDatBuffer: Buffer;
-    const info: LevelDataFrame = await World.parseLevelData(levelDatBuffer);
+    import { WorldReader, LevelDataFrame } from '@xmcl/world'
+    const worldSaveFolder: string;
+    const reader: WorldReader = await WorldReader.create(worldSaveFolder);
+    const levelData: LevelDataFrame = await reader.getLevelData();
 ```
-Read the level data & player data by save folder location string.
+
+***Preview*** Read the region data, this feature is not tested yet, but the api will look like this
 
 ```ts
-    import { World } from "@xmcl/world";
+    import { WorldReader, RegionDataFrame, RegionReader } from "@xmcl/world";
     const worldSaveFolder: string;
-    const { level, players } = await World.load(worldSaveFolder, ["level", "player"]);
+    const reader: WorldReader = await WorldReader.create(worldSaveFolder);
+    const chunkX: number;
+    const chunkZ: number;
+    const region: RegionDataFrame = await reader.getRegionData(chunkX, chunkZ);
 ```
-

@@ -1,6 +1,8 @@
 {
     "files": [
-        "index.ts"
+        "index.ts",
+        "index.module.ts",
+        "auth.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

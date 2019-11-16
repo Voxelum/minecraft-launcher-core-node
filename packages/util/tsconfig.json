@@ -1,7 +1,9 @@
 {
     "files": [
         "index.ts",
+        "java.ts",
         "folder.ts",
+        "platform.ts",
         "fs.ts"
     ],
     "compilerOptions": {
