@@ -69,6 +69,7 @@ async function bumpPackages(packages) {
             package.newVersion = newVersion;
             package.releaseType = result.releaseType;
             package.reasons = result.reasons;
+            package.level = result.level;
         }
     }
 }
@@ -78,9 +79,35 @@ function bumpDependenciesPackage(affectedMapping, packages) {
         // only major & minor change affect the dependents packages update
         const allAffectedPackages = affectedMapping[package.name] || [];
         for (const affectedPackage of allAffectedPackages) {
-            if (affectedPackage.newVersion) continue;
+            let newVersion;
             const affectedPackageJSON = affectedPackage.package;
-            const newVersion = semver.inc(affectedPackageJSON.version, 'patch');
+
+            let bumpLevel = 3;
+            let bumpType = 'patch';
+
+            if (affectedPackageJSON.name === "@xmcl/minecraft-launcher-core") {
+                if (!affectedPackageJSON.level) {
+                    affectedPackage.releaseType = package.releaseType;
+                    affectedPackage.level = package.level;
+                } else if (package.level < affectedPackageJSON.level) {
+                    newVersion = semver.inc(affectedPackageJSON.version, package.releaseType);
+                    affectedPackage.releaseType = package.releaseType;
+                    affectedPackage.level = package.level;
+                } else {
+                    continue;
+                }
+            } else {
+                if (affectedPackage.newVersion) continue;
+                newVersion = semver.inc(affectedPackageJSON.version, 'patch');
+                affectedPackage.releaseType = 'patch';
+                affectedPackage.level = 3;
+            }
+
+            if (bumpLevel >= affectedPackage.level) {
+                continue;
+            }
+
+            newVersion = semver.inc(affectedPackageJSON.version, bumpType);
             affectedPackage.newVersion = newVersion;
             if (!affectedPackage.reasons) {
                 affectedPackage.reasons = [];
