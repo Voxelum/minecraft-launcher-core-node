@@ -132,7 +132,7 @@ function bumpDependenciesPackage(affectedMapping, packages) {
             let newVersion;
             const affectedPackageJSON = affectedPackage.package;
 
-            let bumpLevel = 3;
+            let bumpLevel = 2;
             let bumpType = 'patch';
 
             if (affectedPackageJSON.name === "@xmcl/minecraft-launcher-core") {
@@ -142,7 +142,7 @@ function bumpDependenciesPackage(affectedMapping, packages) {
             } else {
                 // else just do a normal bump
                 bumpType = 'patch';
-                bumpLevel = 3;
+                bumpLevel = 2;
             }
 
             let affected = false;
