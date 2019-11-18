@@ -27,7 +27,7 @@ export namespace Installer {
     /**
      * Minecraft version metadata list
      */
-    interface VersionMetaList extends UpdatedObject {
+    export interface VersionMetaList extends UpdatedObject {
         latest: {
             /**
              * Snapshot version id of the Minecraft
