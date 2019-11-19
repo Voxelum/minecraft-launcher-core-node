@@ -623,11 +623,11 @@ After you cloned the project, you can just install it like normal node project b
 
 The code are splited into seperated projects, which layed in under `packages` folder. Most of them are really simple (only one `index.ts` file or few files).
 
-If you want to write some code for specific module, the command `npm run watch` might help you.
+If you want to write some code for specific module, the command `npm run dev` might help you.
 
 For example, you want to add a functions to parse minecraft chunk data, you can add some code in `packages/world/index.ts`. You might also want to add some test related to your new features, just add sth. in `packages/world/test.ts`. 
 
-During this process, you can first run `npm run watch world`, and it will start to auto compile & test the code for world module. You can see the result immediately.
+During this process, you can first run `npm run dev world`, and it will start to auto compile & test the code for world module. You can see the result immediately.
 
 **Highly recommended to add test for the features,** ~~which I always lazy to add.~~
 
