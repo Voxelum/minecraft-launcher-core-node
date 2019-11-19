@@ -62,3 +62,23 @@ body {
 .light.fixed {
     background-color: #666666;
 }
+
+.model-demo {
+    margin: 0 auto;
+}
+
+.model-demo canvas {
+    box-shadow: 0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2);
+}
+
+.model-demo .headline {
+    text-align: center;
+}
+
+canvas {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}

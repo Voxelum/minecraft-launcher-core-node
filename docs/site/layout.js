@@ -1,3 +1,4 @@
+import { getLatestTagName } from "./github";
 
 $(document).ready(function () {
     $('body').pagepiling({
@@ -7,3 +8,7 @@ $(document).ready(function () {
 });
 $('.menu .item').tab();
 $('.dropdown').dropdown();
+
+getLatestTagName().then(t => {
+    $('#version').text(t);
+})
