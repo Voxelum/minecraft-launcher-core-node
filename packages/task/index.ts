@@ -11,8 +11,8 @@ function runTask<T>(context: Task.Context, task: TaskOrTaskObject<T>): Promise<T
     }
 }
 
-export interface TaskRuntime<N extends Task.State = Task.State> extends EventEmitter {
-    readonly factory: Task.StateFactory<N>;
+export class TaskRuntime<N extends Task.State = Task.State> extends EventEmitter  {
+    constructor(readonly factory: Task.StateFactory<N>) { super(); }
 
     on(event: "execute", listener: (node: N, parent?: N) => void): this;
     on(event: "node-error", listener: (error: any, node: N) => void): this;
@@ -21,6 +21,10 @@ export interface TaskRuntime<N extends Task.State = Task.State> extends EventEmi
     on(event: "pause", listener: (node: N) => void): this;
     on(event: "resume", listener: (node: N) => void): this;
     on(event: "cancel", listener: (node: N) => void): this;
+    on(event: string, listener: (...args: any[]) => void): this {
+        super.on(event, listener);
+        return this;
+    }
 
     once(event: "execute", listener: (node: N, parent?: N) => void): this;
     once(event: "node-error", listener: (error: any, node: N) => void): this;
@@ -29,18 +33,12 @@ export interface TaskRuntime<N extends Task.State = Task.State> extends EventEmi
     once(event: "pause", listener: (node: N) => void): this;
     once(event: "resume", listener: (node: N) => void): this;
     once(event: "cancel", listener: (node: N) => void): this;
+    once(event: string, listener: (...args: any[]) => void): this {
+        super.once(event, listener);
+        return this;
+    }
 
-    /**
-     * Submit the task to task runtime. The runtime will decide when to run the task
-     * @param task The task will be run
-     */
-    submit<T>(task: TaskOrTaskObject<T>): TaskHandle<T, N>;
-}
-
-class RuntimeImpl<N extends Task.State = Task.State> extends EventEmitter implements TaskRuntime<N>  {
-    constructor(readonly factory: Task.StateFactory<N>) { super(); }
-
-    submit<T>(task: TaskOrTaskObject<T>) {
+    submit<T>(task: TaskOrTaskObject<T>): TaskHandle<T, N> {
         const handle = new TaskHandle(task, this, this.factory);
         return handle;
     }
@@ -218,7 +216,7 @@ export namespace Task {
     }
 
     export function createRuntime<X extends Task.State = Task.State>(factory: StateFactory<X> = DEFAULT_STATE_FACTORY as any): TaskRuntime {
-        return new RuntimeImpl(factory);
+        return new TaskRuntime(factory);
     }
 
     export interface State {
