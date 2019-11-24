@@ -180,7 +180,7 @@ export namespace Launcher {
         const version = typeof options.version === "string" ? await Version.parse(resourcePath, options.version) : options.version;
 
         const args = await generateArguments({ ...options, version, gamePath, resourcePath });
-        const minecraftFolder = MinecraftFolder.from(options.resourcePath as string);
+        const minecraftFolder = MinecraftFolder.from(resourcePath);
 
         const jarPath = minecraftFolder.getVersionJar(version.client);
         if (!await validateSha1(jarPath, version.downloads.client.sha1)) {
