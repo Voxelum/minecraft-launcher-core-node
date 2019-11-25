@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/minecraft-launcher-core",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "main": "index.js",
   "description": "Propabaliy all the things I want for a minecraft launcher. Targeting ElectronJs environment!",
   "engines": {
