@@ -11,9 +11,10 @@
         ],
         "experimentalDecorators": true,
         "declaration": true,
-        "sourceMap": true,
         "downlevelIteration": true,
         "strict": true,
+        "inlineSourceMap": true,
+        "inlineSources": true,
         "moduleResolution": "node",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true
