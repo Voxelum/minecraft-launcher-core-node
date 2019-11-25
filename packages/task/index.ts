@@ -194,7 +194,7 @@ class TaskRunContext<T, N extends Task.State> {
                 this.runtime.emit("cancel", node);
                 throw e;
             }
-            this.runtime.emit("node-error", e, node);
+            this.runtime.emit("fail", e, node);
             throw e;
         });
     }
