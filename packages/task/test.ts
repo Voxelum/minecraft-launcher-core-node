@@ -94,7 +94,7 @@ describe("Task", () => {
         test("should be able to catch error", async () => {
             const runtime = Task.createRuntime();
             const monitor = jest.fn();
-            runtime.on("node-error", (e) => {
+            runtime.on("fail", (e) => {
                 expect(e).toEqual(new Error("Fail"));
                 monitor();
             });
