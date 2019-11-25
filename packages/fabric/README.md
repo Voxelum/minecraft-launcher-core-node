@@ -30,3 +30,14 @@ Install fabric to the client. This installation process doesn't ensure the minec
 ```
 
 Please run `Installer.installDependencies` after that to install fully.
+
+### Parse Fabric Mod Metadata
+
+```ts
+    import { Fabric } from "@xmcl/fabric";
+    const modJarBinary = fs.readFileSync("your-fabric.jar");
+    const metadata: Fabric.ModMetadata = await Fabric.readModMetaData(modJarBinary);
+
+    // or directly read from path
+    const sameMetadata: Fabric.ModMetadata = await Fabric.readModMetaData("your-fabric.jar");
+```
