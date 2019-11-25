@@ -129,17 +129,12 @@ describe("Auth", () => {
                 assert(valid === false);
                 expect(valid).toBeFalsy();
             });
-            test("should catch the error and not return false if error happened during validation", async () => {
-                await expect(Auth.Yggdrasil.validate({ accessToken: "abc", clientToken: "bvd" }, { ...MOCK, hostName: "http://localhost:25566" }))
-                    .rejects
-                    .toBeTruthy();
-            });
         });
         describe("#refresh", () => {
             test("should be able to refresh accessToken", async () => {
                 const old = auth.accessToken;
                 const oldId = auth.user.id;
-                auth = await Auth.Yggdrasil.refresh({ accessToken: auth.accessToken, clientToken: auth.clientToken }, MOCK);
+                auth = await Auth.Yggdrasil.refresh({ accessToken: auth.accessToken, clientToken: auth.clientToken, requestUser: true }, MOCK);
                 expect(old).not.toEqual(auth.accessToken);
                 expect(auth.user.id).toEqual(oldId);
             });
