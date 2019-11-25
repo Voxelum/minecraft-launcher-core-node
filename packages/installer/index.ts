@@ -246,7 +246,6 @@ export namespace Installer {
             }
             const { objects } = JSON.parse(await vfs.readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
             await vfs.ensureDir(folder.getPath("assets", "objects"));
-            const assetsHost = option.assetsHost || Installer.DEFAULT_RESOURCE_ROOT_URL;
             const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
 
             const totalSize = objectArray.reduce((p, v) => p + v.size, 0);
