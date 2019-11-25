@@ -68,7 +68,7 @@
     "three-orbitcontrols": "^2.110.1",
     "ts-jest": "^24.0.2",
     "ts-md5": "^1.2.7",
-    "typescript": "^3.6.3"
+    "typescript": "^3.7.2"
   },
   "browserslist": [
     "last 1 Chrome versions"
