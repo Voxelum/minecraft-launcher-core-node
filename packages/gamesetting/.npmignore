@@ -3,4 +3,5 @@ test.js
 test.js.map
 test.ts
 *.ts
+!*.d.ts
 *.log
