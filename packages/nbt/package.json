@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/nbt",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "./index.js",
   "module": "./index.module.js",
   "description": "NBT serialization and deserialization",
