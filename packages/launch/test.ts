@@ -173,8 +173,6 @@ describe("Launcher", () => {
             expect(lname).toEqual("-Dminecraft.launcher.brand=launcherName");
         });
 
-
-
         test("should generate correct command for 1.14.4 with forge", async () => {
             const jPath = "/test/java";
             const version = "1.14.4-forge-28.0.45";
@@ -199,8 +197,7 @@ describe("Launcher", () => {
             expect(lversion).toEqual("-Dminecraft.launcher.version=launcherVersion");
             const lname = args.find((a) => a.startsWith("-Dminecraft.launcher.brand"));
             expect(lname).toEqual("-Dminecraft.launcher.brand=launcherName");
-        },
-        );
+        });
 
         test("should generate correct command", async () => {
             const jPath = "/test/java";
@@ -242,6 +239,28 @@ describe("Launcher", () => {
                 .toEqual("-Dminecraft.launcher.version=launcherVersion");
             expect(args.find((a) => a.startsWith("-Dminecraft.launcher.brand")))
                 .toEqual("-Dminecraft.launcher.brand=launcherName");
+        });
+        test("should use default jvm arguments", async () => {
+            const jPath = "/test/java";
+            const version = "1.14.4";
+            const gamePath = root;
+            const args = await Launcher.generateArguments({
+                version, gamePath, javaPath: jPath,
+                gameProfile: {
+                    id: "id",
+                    name: "name",
+                },
+                launcherBrand: "launcherVersion",
+                launcherName: "launcherName",
+                server: { ip: "localhost", port: 10 },
+                minMemory: 10,
+                maxMemory: 20,
+                ignoreInvalidMinecraftCertificates: true,
+                ignorePatchDiscrepancies: true,
+                extraJVMArgs: ["hello"],
+                extraMCArgs: ["Minecraft!"]
+            });
+            expect(Launcher.DEFAULT_EXTRA_JVM_ARGS.every((a) => args.indexOf(a) !== -1));
         });
         test("should genearte correct command for partial resolution", async () => {
             let args = await Launcher.generateArguments({
