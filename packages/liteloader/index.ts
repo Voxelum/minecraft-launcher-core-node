@@ -1,4 +1,5 @@
 import { UpdatedObject, getIfUpdate } from "@xmcl/net";
+import { FileSystem, System } from "@xmcl/common";
 import Task from "@xmcl/task";
 import Unzip from "@xmcl/unzip";
 import { vfs, MinecraftFolder, MinecraftLocation } from "@xmcl/util";
@@ -131,6 +132,23 @@ export namespace LiteLoader {
         const data = await zip.readEntry(entry);
         zip.close();
         const metadata = JSON.parse(data.toString().trim(), (key, value) => key === "revision" ? Number.parseInt(value, 10) : value) as MetaData;
+        if (!metadata.version) {
+            (metadata as any).version = `${metadata.mcversion}:${metadata.revision || 0}`;
+        }
+        return metadata;
+    }
+
+    export async function readModMetaData(mod: string | Uint8Array | FileSystem) {
+        const fs = await System.resolveFileSystem(mod);
+        const text = await fs.readFile("litemod.json", "utf-8").catch(() => undefined);
+        if (!text) {
+            throw {
+                type: "IllegalInputType",
+                message: "Illegal input type! Expect a jar file contains litemod.json",
+                mod,
+            };
+        }
+        const metadata = JSON.parse(text.trim(), (key, value) => key === "revision" ? Number.parseInt(value, 10) : value) as MetaData;
         if (!metadata.version) {
             (metadata as any).version = `${metadata.mcversion}:${metadata.revision || 0}`;
         }

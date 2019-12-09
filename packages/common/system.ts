@@ -1,6 +1,7 @@
 export interface System {
     fs: FileSystem;
     openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
+    resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem>;
 
     decodeBase64(input: string): string;
     encodeBase64(input: string): string;

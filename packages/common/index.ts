@@ -91,6 +91,13 @@ class ZipFS extends FileSystem {
 }
 class NodeSystem implements System {
     fs: FileSystem = new DefaultFS("/");
+    resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem> {
+        if (typeof base === "string" || base instanceof Uint8Array) {
+            return this.openFileSystem(base);
+        } else {
+            return Promise.resolve(base);
+        }
+    }
     async openFileSystem(basePath: string | Uint8Array): Promise<FileSystem> {
         if (typeof basePath === "string") {
             const stat = await promises.stat(basePath);
