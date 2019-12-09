@@ -89,7 +89,7 @@
       "packages"
     ],
     "preset": "ts-jest",
-    "testEnvironment": "node",
+    "testEnvironment": "./scripts/test-env.js",
     "testRegex": "packages/.*test\\.ts",
     "testSequencer": "./scripts/test-sequencer.js",
     "transform": {
