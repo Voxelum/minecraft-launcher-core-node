@@ -1,7 +1,7 @@
 jest.mock("child_process");
 
 import { exec } from "child_process";
-import { JavaInstaller } from './index';
+import { JavaInstaller } from "./index";
 import { VFS } from "@xmcl/util";
 
 describe("JavaInstaller", () => {
@@ -15,7 +15,7 @@ describe("JavaInstaller", () => {
                 Java HotSpot(TM) 64-Bit Server VM (build 24.55-b03, mixed mode)`);
             });
             const inf = await JavaInstaller.resolveJava("path/to/java");
-            expect(inf).toEqual({ path: 'path/to/java', version: '1.7.0', majorVersion: 7 });
+            expect(inf).toEqual({ path: "path/to/java", version: "1.7.0", majorVersion: 7 });
         });
         test("should resolve new java version", async () => {
             VFS.setVirtualFS({ async exists() { return true } });
@@ -25,7 +25,7 @@ describe("JavaInstaller", () => {
                 Java HotSpot(TM) 64-Bit Server VM 18.3 (build 10.0.1+10, mixed mode)`);
             });
             const inf = await JavaInstaller.resolveJava("path/to/java");
-            expect(inf).toEqual({ path: 'path/to/java', version: '10.0.1', majorVersion: 10 });
+            expect(inf).toEqual({ path: "path/to/java", version: "10.0.1", majorVersion: 10 });
         });
         test("should return undefined if path not existed", async () => {
             VFS.setVirtualFS({ async exists() { return false } });
@@ -35,7 +35,7 @@ describe("JavaInstaller", () => {
         test("should return undefined if the process is not java", async () => {
             VFS.setVirtualFS({ async exists() { return true } });
             mockExc.mockImplementationOnce((arg: string, cb: any) => {
-                cb(undefined, undefined, `whatever`);
+                cb(undefined, undefined, "whatever");
             });
             const inf = await JavaInstaller.resolveJava("path/to/java");
             expect(inf).toBeUndefined();
