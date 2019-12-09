@@ -1,0 +1,39 @@
+{
+  "name": "@xmcl/java-installer",
+  "version": "0.0.1",
+  "main": "./index.js",
+  "description": "Detect local Java or install Java from Mojang source",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@xmcl/net": "file:../net",
+    "@xmcl/task": "file:../task",
+    "@xmcl/util": "file:../util",
+    "got": "^9.6.0"
+  },
+  "scripts": {
+    "compile": "tsc --build tsconfig.json",
+    "build": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
+  },
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+}
