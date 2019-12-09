@@ -33,7 +33,7 @@ export namespace JavaInstaller {
         /**
          * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
          */
-        unpackLZMA: (src: string, dest: string) => Promise<string>;
+        unpackLZMA: (src: string, dest: string) => Promise<void>;
     }) {
         const {
             platform = currentPlatform,
@@ -118,7 +118,7 @@ export namespace JavaInstaller {
         /**
          * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
          */
-        unpackLZMA: (src: string, dest: string) => Promise<string>;
+        unpackLZMA: (src: string, dest: string) => Promise<void>;
     }) {
         return Task.execute(installJreFromMojangTask(options)).wait();
     }
