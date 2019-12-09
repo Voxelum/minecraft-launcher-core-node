@@ -10,6 +10,14 @@ function wait(time: number) {
 
 describe("Task", () => {
     describe("#create", () => {
+        test("should return the correct root node in handle", async () => {
+            function test() { }
+            const runtime = Task.createRuntime();
+            const handle = runtime.submit(test);
+            expect(handle.root).toBeTruthy();
+            expect(handle.root.path).toEqual("test");
+            expect(handle.root.name).toEqual("test");
+        });
         test("should be able to create task with string", async () => {
             function test() { }
             const runtime = Task.createRuntime();
@@ -135,16 +143,20 @@ describe("Task", () => {
             });
             const monitor = jest.fn();
             runtime.on("cancel", monitor);
+            const monitorA = jest.fn();
+            const monitorB = jest.fn();
             const handle = runtime.submit(async (c) => {
-                await c.execute(function A() { return wait(1000); });
+                await c.execute(function A() { return wait(1000).then(monitorA); });
                 handle.cancel();
-                await c.execute(() => wait(1000));
+                await c.execute(() => wait(1000).then(monitorB));
             });
             await expect(handle.wait())
                 .rejects
                 .toEqual(new Task.CancelledError());
 
             expect(monitor).toBeCalled();
+            expect(monitorA).toBeCalled();
+            expect(monitorB).not.toBeCalled();
         });
     });
     describe("#pause", () => {
