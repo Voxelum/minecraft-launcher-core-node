@@ -126,7 +126,7 @@ export namespace Installer {
      * @param option
      */
     export function install(type: "server" | "client", versionMeta: VersionMeta, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion> {
-        return Task.execute(installTask(type, versionMeta, minecraft, option));
+        return Task.execute(installTask(type, versionMeta, minecraft, option)).wait();
     }
     /**
      * Install the Minecraft game to a location by version metadata
@@ -158,7 +158,7 @@ export namespace Installer {
      * @param minecraft minecraft location
      */
     export function installVersion(type: "client" | "server", versionMeta: VersionMeta, minecraft: MinecraftLocation, option: JarOption = {}): Promise<ResolvedVersion> {
-        return Task.execute(installVersionTask(type, versionMeta, minecraft, option));
+        return Task.execute(installVersionTask(type, versionMeta, minecraft, option)).wait();
     }
 
     /**
@@ -186,7 +186,7 @@ export namespace Installer {
      * @param minecraft The minecraft location
      */
     export function installDependencies(version: ResolvedVersion, option?: Option): Promise<ResolvedVersion> {
-        return Task.execute(installDependenciesTask(version, option));
+        return Task.execute(installDependenciesTask(version, option)).wait();
     }
     /**
      * Install the completeness of the Minecraft game assets and libraries.
@@ -212,7 +212,7 @@ export namespace Installer {
      * @param option The option to replace assets host url
      */
     export function installAssets(version: ResolvedVersion, option?: AssetsOption): Promise<ResolvedVersion> {
-        return Task.execute(installAssetsTask(version, option));
+        return Task.execute(installAssetsTask(version, option)).wait();
     }
     /**
      * Install or check the assets to resolved version
@@ -280,7 +280,7 @@ export namespace Installer {
      * @param option The library host swap option
      */
     export function installLibraries(version: ResolvedVersion, option: LibraryOption = {}): Promise<ResolvedVersion> {
-        return Task.execute(installLibrariesTask(version, option));
+        return Task.execute(installLibrariesTask(version, option)).wait();
     }
     /**
      * Install all the libraries of providing version
@@ -315,7 +315,7 @@ export namespace Installer {
      * @param option The install option
      */
     export function installLibrariesDirect(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Promise<void> {
-        return Task.execute(installLibrariesDirectTask(libraries, minecraft, option));
+        return Task.execute(installLibrariesDirectTask(libraries, minecraft, option)).wait();
     }
     /**
      * Only install several resolved libraries
@@ -338,7 +338,7 @@ export namespace Installer {
      * @param minecraft The minecraft location
      */
     export function diagnose(version: string, minecraft: MinecraftLocation): Promise<VersionDiagnosis> {
-        return Task.execute(diagnoseTask(version, minecraft));
+        return Task.execute(diagnoseTask(version, minecraft)).wait();
     }
 
     /**

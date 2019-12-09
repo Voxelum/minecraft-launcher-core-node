@@ -190,7 +190,7 @@ export namespace LiteLoader {
     }
 
     export function install(versionMeta: VersionMeta, location: MinecraftLocation, version?: string) {
-        return Task.execute(installTask(versionMeta, location, version));
+        return Task.execute(installTask(versionMeta, location, version)).wait();
     }
 
     export function installTask(versionMeta: VersionMeta, location: MinecraftLocation, version?: string): Task<void> {
@@ -221,7 +221,7 @@ export namespace LiteLoader {
     }
 
     export function installAndCheck(versionMeta: VersionMeta, location: MinecraftLocation, version?: string) {
-        return Task.execute(installTask(versionMeta, location, version));
+        return Task.execute(installTask(versionMeta, location, version)).wait();
     }
 }
 

@@ -324,7 +324,7 @@ export namespace ForgeInstaller {
     export async function installByInstallerPartial(version: string | InstallProfile, minecraft: MinecraftLocation, option: {
         java?: JavaExecutor,
     } & Installer.LibraryOption = {}) {
-        return Task.execute(installByInstallerPartialTask(version, minecraft, option));
+        return Task.execute(installByInstallerPartialTask(version, minecraft, option)).wait();
     }
 
     function installByInstallerPartialWork(mc: MinecraftFolder, profile: InstallProfile, versionJson: Version, java: JavaExecutor, installLibOption: Installer.LibraryOption) {
@@ -524,7 +524,7 @@ export namespace ForgeInstaller {
         maven?: string,
         java?: JavaExecutor,
     }) {
-        return Task.execute(installTask(version, minecraft, option));
+        return Task.execute(installTask(version, minecraft, option)).wait();
     }
 
     /**
