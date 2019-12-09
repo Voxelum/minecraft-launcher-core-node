@@ -24,6 +24,7 @@
     "@xmcl/forge-installer": "file:packages\\forge-installer",
     "@xmcl/gamesetting": "file:packages\\gamesetting",
     "@xmcl/installer": "file:packages\\installer",
+    "@xmcl/java-installer": "file:packages\\java-installer",
     "@xmcl/language": "file:packages\\language",
     "@xmcl/launch": "file:packages\\launch",
     "@xmcl/liteloader": "file:packages\\liteloader",
