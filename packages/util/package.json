@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/util",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "./index.js",
   "description": "Common launcher utility on NodeJS or Electron env",
   "engines": {
