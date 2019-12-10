@@ -12,7 +12,7 @@ describe("Task", () => {
     describe("#create", () => {
         test("should return the correct root node in handle", async () => {
             function test() { }
-            const runtime = Task.createRuntime();
+            const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY, 4);
             const handle = runtime.submit(test);
             expect(handle.root).toBeTruthy();
             expect(handle.root.path).toEqual("test");
@@ -30,7 +30,7 @@ describe("Task", () => {
         test("should be able to create task with arguments", async () => {
             function test() { }
             test.parameters = { x: 1 };
-            const runtime = Task.createRuntime();
+            const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY, 4);
             runtime.once("execute", (n) => {
                 expect(n.arguments!.x).toBe(1);
                 expect(n.path).toEqual("test");
@@ -46,7 +46,7 @@ describe("Task", () => {
             }
             test.parameters = { x: 1 };
 
-            const runtime = Task.createRuntime();
+            const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY, 4);
             const onExec = jest.fn();
             const onSuccess = jest.fn();
             runtime.on("execute", (ch) => {
@@ -72,7 +72,7 @@ describe("Task", () => {
             const onSuccess = jest.fn();
             const onExec = jest.fn();
 
-            const runtime = Task.createRuntime();
+            const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY, 4);
             runtime.on("execute", (ch) => {
                 onExec();
                 expect(ch.arguments!.x).toEqual(1);
@@ -133,7 +133,7 @@ describe("Task", () => {
 
     describe("#cancel", () => {
         test("should be able to cancel the task after execution", async () => {
-            const runtime = Task.createRuntime();
+            const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY, 4);
             runtime.on("execute", (child, parent) => {
                 if (child.path === "") {
                     expect(child.name).toEqual("");
@@ -161,7 +161,7 @@ describe("Task", () => {
     });
     describe("#pause", () => {
         test("should be paused the task before it execute", async () => {
-            const runtime = Task.createRuntime();
+            const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY, 4);
             const monitor = jest.fn();
             const task = runtime.submit(monitor);
             task.pause();
@@ -172,7 +172,7 @@ describe("Task", () => {
             const aFunc = jest.fn();
             const bFunc = jest.fn();
 
-            const runtime = Task.createRuntime();
+            const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY, 4);
             const task = runtime.submit(async function test(c) {
                 await c.execute(aFunc);
                 task.pause();

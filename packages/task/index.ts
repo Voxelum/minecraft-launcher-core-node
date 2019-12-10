@@ -249,7 +249,7 @@ export namespace Task {
      * @param maxConcurrentTasks The max number of concurrent tasks
      */
     export function createScheduler(maxConcurrentTasks: number = cpus().length / 2): Schedualer {
-        maxConcurrentTasks = Math.min(maxConcurrentTasks, 1);
+        maxConcurrentTasks = Math.max(maxConcurrentTasks, 1);
         let unruned: Array<() => Promise<any>> = [];
         let running = 0;
         function onTaskEnd() {
