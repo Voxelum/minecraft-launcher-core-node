@@ -437,7 +437,7 @@ export namespace Forge {
      * @param mod The mod path or data
      */
     export async function readModMetaData(mod: Uint8Array | string | FileSystem) {
-        const fs = mod instanceof FileSystem ? mod : await System.openFileSystem(mod);
+        const fs = await System.resolveFileSystem(mod);
         const modidTree: ModidTree = {};
         await jsonMetaData(fs, modidTree);
         const manifest = await tweakMetadata(fs, modidTree);

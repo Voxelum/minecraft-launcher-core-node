@@ -556,17 +556,6 @@ export namespace Version {
                         {
                             action: "allow",
                             os: {
-                                name: "osx",
-                            },
-                        },
-                    ],
-                    value: ["-XstartOnFirstThread",],
-                },
-                {
-                    rules: [
-                        {
-                            action: "allow",
-                            os: {
                                 name: "windows",
                             },
                         },

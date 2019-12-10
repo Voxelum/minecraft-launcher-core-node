@@ -14,6 +14,15 @@ function format(template: string, args: any) {
 }
 
 export namespace Launcher {
+    export const DEFAULT_EXTRA_JVM_ARGS = Object.freeze([
+        "-Xmx2G",
+        "-XX:+UnlockExperimentalVMOptions",
+        "-XX:+UseG1GC",
+        "-XX:G1NewSizePercent=20",
+        "-XX:G1ReservePercent=20",
+        "-XX:MaxGCPauseMillis=50",
+        "-XX:G1HeapRegionSize=32M"
+    ]);
     export interface EnabledFeatures {
         [featureName: string]: object | boolean | undefined;
         has_custom_resolution?: { resolution_width: string, resolution_height: string };
@@ -37,6 +46,18 @@ export namespace Launcher {
 
         launcherName?: string;
         launcherBrand?: string;
+
+        /**
+         * The full path of launched game icon
+         * Currently, this only supported on MacOS
+         */
+        gameIcon?: string;
+
+        /**
+         * The launched game name
+         * Currently, this only supported on MacOS
+         */
+        gameName?: string;
 
         /**
          * The path for saves/logs/configs
@@ -73,6 +94,7 @@ export namespace Launcher {
         resolution?: { width?: number, height?: number, fullscreen?: true };
         /**
          * Extra jvm options. This will append after to generated options.
+         * If this is empty, the `DEFAULT_EXTRA_JVM_ARGS` will be used.
          */
         extraJVMArgs?: string[];
         /**
@@ -247,7 +269,28 @@ export namespace Launcher {
         const launcherBrand = options.launcherBrand || "0.0.1";
         const nativeRoot = options.nativeRoot || mc.getNativesRoot(version.id);
 
+        let gameIcon = options.gameIcon;
+        if (!gameIcon) {
+            const index = mc.getAssetsIndex(version.assetIndex.id);
+            const indexContent = await vfs.readFile(index, { encoding: "utf-8" }).then((b) => JSON.parse(b.toString()));
+            if ("icons/minecraft.icns" in indexContent) {
+                gameIcon = mc.getAsset(indexContent["icons/minecraft.icns"].hash);
+            } else if ("minecraft/icons/minecraft.icns" in indexContent) {
+                gameIcon = mc.getAsset(indexContent["minecraft/icons/minecraft.icns"].hash);
+            } else {
+                gameIcon = "";
+            }
+        }
+        const gameName = options.gameName || "Minecraft";
+
         cmd.push(options.javaPath);
+
+        if (currentPlatform.name === "osx") {
+            cmd.push(`-Xdock:name=${gameName}`);
+            if (gameIcon) {
+                cmd.push(`-Xdock:icon=${gameIcon}`);
+            }
+        }
 
         if (options.minMemory) {
             cmd.push(`-Xms${(options.minMemory)}M`);
@@ -272,7 +315,7 @@ export namespace Launcher {
             launcher_name: launcherName,
             launcher_version: launcherBrand,
             classpath: `${[
-                ...version.libraries.map((lib) => mc.getLibraryByPath(lib.download.path)),
+                ...version.libraries.filter((lib) => !(lib instanceof ResolvedNative)).map((lib) => mc.getLibraryByPath(lib.download.path)),
                 mc.getVersionJar(version.client)
             ].join(path.delimiter)}`,
             ...featureValues,
@@ -286,6 +329,8 @@ export namespace Launcher {
                 throw new Error("Require extraJVMArgs be all string!");
             }
             cmd.push(...options.extraJVMArgs);
+        } else {
+            cmd.push(...DEFAULT_EXTRA_JVM_ARGS);
         }
 
         cmd.push(version.mainClass);

@@ -91,6 +91,13 @@ class BrowserSystem implements System {
         if (typeof basePath === "string") { throw new Error("Unsupported"); }
         return new JSZipFS(await JSZip.loadAsync(basePath));
     }
+    resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem> {
+        if (typeof base === "string" || base instanceof Uint8Array) {
+            return this.openFileSystem(base);
+        } else {
+            return Promise.resolve(base);
+        }
+    }
     decodeBase64(input: string): string {
         return atob(input);
     }

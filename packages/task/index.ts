@@ -12,23 +12,7 @@ function runTask<T>(context: Task.Context, task: TaskOrTaskObject<T>): Promise<T
     }
 }
 
-export class TaskRuntime<N extends Task.State = Task.State> extends EventEmitter {
-    constructor(readonly factory: Task.StateFactory<N>, readonly maxConcurrentTasks: number = (cpus().length / 2)) {
-        super();
-        this.on("execute", () => {
-            this.running += 1;
-        });
-        const onFinish = () => {
-            this.running -= 1;
-            this.unruned.pop()?.start();
-        };
-        this.on("fail", onFinish);
-        this.on("finish", onFinish);
-    }
-
-    protected unruned: { start(): unknown }[] = [];
-    protected running: number = 0;
-
+export interface TaskListener<N extends Task.State = Task.State> extends EventEmitter {
     on(event: "execute", listener: (node: N, parent?: N) => void): this;
     on(event: "fail", listener: (error: any, node: N) => void): this;
     on(event: "update", listener: (update: { progress: number, total?: number, message?: string }, node: N) => void): this;
@@ -36,9 +20,6 @@ export class TaskRuntime<N extends Task.State = Task.State> extends EventEmitter
     on(event: "pause", listener: (node: N) => void): this;
     on(event: "resume", listener: (node: N) => void): this;
     on(event: "cancel", listener: (node: N) => void): this;
-    on(event: string, listener: (...args: any[]) => void): this {
-        return super.on(event, listener);
-    }
 
     once(event: "execute", listener: (node: N, parent?: N) => void): this;
     once(event: "fail", listener: (error: any, node: N) => void): this;
@@ -47,156 +28,144 @@ export class TaskRuntime<N extends Task.State = Task.State> extends EventEmitter
     once(event: "pause", listener: (node: N) => void): this;
     once(event: "resume", listener: (node: N) => void): this;
     once(event: "cancel", listener: (node: N) => void): this;
+}
+
+/**
+ * An intergrated environment to run the task. If you want to manage all your tasks together, you should use this.
+ */
+export class TaskRuntime<N extends Task.State = Task.State> extends EventEmitter implements TaskListener<N> {
+    protected bridge: TaskBridge<N>;
+
+    constructor(readonly factory: Task.StateFactory<N>, readonly maxConcurrentTasks: number = (cpus().length / 2)) {
+        super();
+        this.bridge = new TaskBridge(this, factory, Task.createScheduler(maxConcurrentTasks));
+    }
+
+    on(event: string, listener: (...args: any[]) => void): this {
+        return super.on(event, listener);
+    }
+
     once(event: string, listener: (...args: any[]) => void): this {
         return super.once(event, listener);
     }
 
     submit<T>(task: TaskOrTaskObject<T>): TaskHandle<T, N> {
-        const context = new TaskRunContext(task, this, this.factory);
-        if (this.running < this.maxConcurrentTasks) {
-            context.start();
-        } else {
-            this.unruned.push(context);
-        }
-        return context.handle();
+        return this.bridge.submit(task);
     }
 }
 
-class TaskRunContext<T, N extends Task.State> {
-    _promise: Promise<T> = new Promise<T>((resolve, reject) => {
-        this._reject = reject;
-        this._resolve = resolve;
-    });
-    private _reject: any;
-    private _resolve: any;
+export class TaskSignal {
+    _paused: boolean = false;
+    _cancelled = false;
+    _started: boolean = false;
 
-    private _paused: boolean = false;
-    private _cancelled = false;
-    private _started: boolean = false;
+    _resumePauseCallback: null | (() => void) = null;
+    _onPause: null | (() => void) = null;
+    _onResume: null | (() => void) = null;
+}
 
-    private _resumeCallback: null | (() => void) = null;
-    private _onPause: null | (() => void) = null;
-    private _onResume: null | (() => void) = null;
-
-    private root!: N;
-
+export class TaskBridge<X extends Task.State = Task.State> {
     constructor(
-        readonly task: TaskOrTaskObject<T>,
-        readonly runtime: EventEmitter,
-        private factory: (state: Task.State) => N) {
+        readonly emitter: EventEmitter,
+        readonly factory: Task.StateFactory<X>,
+        readonly scheduler: <N>(r: () => Promise<N>) => Promise<N>) {
     }
 
-    handle(): TaskHandle<T, N> {
-        const _promise = this._promise;
-        const self = this;
-        return {
-            wait() { return _promise; },
+    submit<T>(task: TaskOrTaskObject<T>): TaskHandle<T, X> {
+        const signal = new TaskSignal();
+        const { node, promise } = this.enqueueTask(signal, task);
+        const handle: TaskHandle<T, X> = {
             pause() {
-                self._paused = true;
-                if (self._onPause) { self._onPause(); }
+                signal._paused = true;
+                if (signal._onPause) { signal._onPause(); }
             },
             resume() {
-                self._paused = false;
-                if (self._resumeCallback) {
-                    self._resumeCallback();
+                signal._paused = false;
+                if (signal._resumePauseCallback) {
+                    signal._resumePauseCallback();
                 }
-                if (self._onResume) {
-                    self._onResume();
+                if (signal._onResume) {
+                    signal._onResume();
                 }
-                self.runtime.emit("resume", self.root);
             },
-            cancel() { self._cancelled = true; },
-            get root() { return self.root },
-            get isCancelled() { return self._cancelled; },
-            get isPaused() { return self._paused; },
-            get isStarted() { return self._started; }
+            cancel() { signal._cancelled = true; },
+            get isCancelled() { return signal._cancelled; },
+            get isPaused() { return signal._paused; },
+            get isStarted() { return signal._started; },
+
+            wait() { return promise; },
+            get root() { return node },
         }
+        return handle;
     }
 
-    start(): any {
-        this._started = true;
-        this.root = this.factory({
-            name: this.task.name,
-            arguments: this.task.parameters,
-            path: this.task.name,
-        });
-        this.executeOnNode(
-            this.createContext(this.root),
-            this.task,
-            this.root).then((r) => this._resolve(r), (e) => this._reject(e));
-        return this._promise;
-    }
+    protected enqueueTask<T>(signal: TaskSignal, task: TaskOrTaskObject<T>, parent?: X): { node: X, promise: Promise<T> } {
+        const bridge = this;
+        const emitter = bridge.emitter;
 
-    private createContext(node: Task.State): Task.Context {
-        const self = this;
-        const runtime = this.runtime;
-        return {
+        const name = task.name;
+        const args: object | undefined = task.parameters;
+        const node: X = bridge.factory({
+            name,
+            arguments: parent ? Object.assign({}, parent.arguments, args || {}) : args,
+            path: parent ? parent.path + "." + name : name,
+        }, parent);
+
+        const context: Task.Context = {
             pausealbe(onPause, onResume) {
-                self._onPause = onPause || null;
-                self._onResume = onResume || null;
+                signal._onPause = onPause || null;
+                signal._onResume = onResume || null;
             },
             update(progress: number, total?: number, message?: string) {
-                runtime.emit("update", { progress, total, message }, node);
-                if (self._cancelled) {
-                    runtime.emit("cancelled", node);
+                emitter.emit("update", { progress, total, message }, node);
+                if (signal._cancelled) {
+                    emitter.emit("cancelled", node);
                     throw new Task.CancelledError();
                 }
             },
-            execute<X>(task: Task<X>): Promise<X> {
-                const name = task.name;
-                const args: object | undefined = task.parameters;
-
-                const nextPath = node.path + "." + name;
-                const nextNode: N = self.factory({
-                    name,
-                    arguments: Object.assign({}, node.arguments, args || {}),
-                    path: nextPath,
-                });
-                const context = self.createContext(nextNode);
-
-                return self.executeOnNode(context, task, nextNode, node);
+            async execute<Y>(task: Task<Y>): Promise<Y> {
+                const { promise } = bridge.enqueueTask(signal, task, node);
+                return promise;
             },
-        };
-    }
-
-    private async waitIfPause() {
-        if (this._paused) {
-            await new Promise<void>((resolve) => {
-                this._resumeCallback = () => {
-                    this._resumeCallback = null;
-                    resolve();
-                };
-            });
         }
-    }
 
-    private async executeOnNode<CT>(context: Task.Context, work: TaskOrTaskObject<CT>, node: Task.State, parent?: Task.State) {
-        await new Promise((resolve) => setImmediate(() => resolve()));
-        if (this._cancelled) {
-            this.runtime.emit("cancel", node);
+        if (signal._cancelled) {
+            emitter.emit("cancel", node);
             throw new Task.CancelledError();
         }
 
-        if (this._paused) {
-            this.runtime.emit("pause", node);
-        }
+        const promise = bridge.scheduler(async () => {
+            await new Promise((resolve) => setImmediate(resolve));
 
-        await this.waitIfPause();
-
-        this._started = true;
-
-        this.runtime.emit("execute", node, parent);
-        return runTask(context, work).then((r) => {
-            this.runtime.emit("finish", r, node);
-            return r;
-        }, (e) => {
-            if (e instanceof Task.CancelledError) {
-                this.runtime.emit("cancel", node);
-                throw e;
+            if (signal._paused) {
+                emitter.emit("pause", node);
+                await new Promise<void>((resolve) => {
+                    signal._resumePauseCallback = () => {
+                        signal._resumePauseCallback = null;
+                        emitter.emit("resume", node);
+                        resolve();
+                    };
+                });
             }
-            this.runtime.emit("fail", e, node);
-            throw e;
+
+            signal._started = true;
+
+            emitter.emit("execute", node, parent);
+
+            return runTask(context, task).then((r) => {
+                emitter.emit("finish", r, node);
+                return r;
+            }, (e) => {
+                if (e instanceof Task.CancelledError) {
+                    emitter.emit("cancel", node);
+                    throw e;
+                }
+                emitter.emit("fail", e, node);
+                throw e;
+            });
         });
+
+        return { node, promise };
     }
 }
 
@@ -214,10 +183,10 @@ export interface TaskHandle<T, N extends Task.State> {
      */
     pause(): void;
     resume(): void;
+    readonly root: N;
     readonly isCancelled: boolean;
     readonly isPaused: boolean;
     readonly isStarted: boolean;
-    readonly root: N | undefined;
 }
 
 type TaskOrTaskObject<T> = Task.Function<T> | Task.Object<T>;
@@ -234,8 +203,14 @@ export namespace Task {
         readonly parameters?: object;
         readonly run: (context: Task.Context) => (Promise<T> | T);
     }
+
+    /**
+     * You'll recive this if the task is cancelled.
+     */
     export class CancelledError extends Error {
     }
+
+    export type Schedualer = <N>(r: () => Promise<N>) => Promise<N>
 
     export interface Context {
         pausealbe(onPause?: () => void, onResume?: () => void): void;
@@ -243,26 +218,73 @@ export namespace Task {
         execute<T>(task: TaskOrTaskObject<T>): Promise<T>;
     }
 
-    export type StateFactory<X extends Task.State = Task.State> = (node: Task.State) => X;
+    export type StateFactory<X extends Task.State = Task.State> = (node: Task.State, parent?: X) => X;
 
     export const DEFAULT_STATE_FACTORY: StateFactory = (n) => n;
 
     /**
-     * Run the task immediately (next tick)
+     * Run the task immediately
      * @param task The task will be run
      */
-    export function execute<T>(task: TaskOrTaskObject<T>): Promise<T> {
-        return new TaskRunContext(task, { emit() { } } as any, DEFAULT_STATE_FACTORY).start();
+    export function execute<T>(task: TaskOrTaskObject<T>): TaskHandle<T, Task.State> & TaskListener {
+        const listener = new EventEmitter();
+        const handle = new TaskBridge(listener, DEFAULT_STATE_FACTORY, (r) => r()).submit(task);
+        for (const [k, v] of Object.entries(handle)) {
+            (listener as any)[k] = v;
+        }
+        return listener as any;
     }
 
-    export function createRuntime<X extends Task.State = Task.State>(factory: StateFactory<X> = DEFAULT_STATE_FACTORY as any, maxConcurrentTasks: number = cpus().length / 2): TaskRuntime {
+    /**
+     * Create a central managed runtime for task execution. You can listen the tasks status at one place.
+     * @param factory The state factory. It's used to customize your task state.
+     * @param maxConcurrentTasks The max concurrent tasks number
+     */
+    export function createRuntime<X extends Task.State = Task.State>(factory: StateFactory<X> = DEFAULT_STATE_FACTORY as any, maxConcurrentTasks: number = cpus().length / 2): TaskRuntime<X> {
         return new TaskRuntime(factory, maxConcurrentTasks);
+    }
+
+    /**
+     * Create a really simple scheduler to keep track there are no more than `maxConcurrentTasks` running tasks from this schedular.
+     * @param maxConcurrentTasks The max number of concurrent tasks
+     */
+    export function createScheduler(maxConcurrentTasks: number = cpus().length / 2): Schedualer {
+        maxConcurrentTasks = Math.max(maxConcurrentTasks, 1);
+        let unruned: Array<() => Promise<any>> = [];
+        let running = 0;
+        function onTaskEnd() {
+            running -= 1;
+            if (running < maxConcurrentTasks && unruned.length > 0) {
+                running += 1;
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                unruned.pop()!();
+            }
+        }
+        return <T>(t: () => Promise<T>) => {
+            if (running < maxConcurrentTasks) {
+                running += 1;
+                return t().finally(onTaskEnd);
+            } else {
+                let deferredResolve: (value?: any) => void;
+                let deferredReject: (reason?: any) => void;
+                const deferred = new Promise<any>((resolve, reject) => {
+                    deferredResolve = resolve;
+                    deferredReject = reject;
+                });
+                unruned.push(() => t().then(deferredResolve, deferredReject).finally(onTaskEnd));
+                return deferred;
+            }
+        }
     }
 
     export interface State {
         name: string;
         arguments?: { [key: string]: any };
         path: string;
+    }
+
+    export function create<T>(name: string, task: Task.Function<T>, parameters?: any): Task.Object<T> {
+        return { name, run: task, parameters };
     }
 }
 

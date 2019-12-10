@@ -2,7 +2,7 @@
   "name": "@xmcl/util",
   "version": "1.0.4",
   "main": "./index.js",
-  "description": "Common launcher utility",
+  "description": "Common launcher utility on NodeJS or Electron env",
   "engines": {
     "node": ">=10.0"
   },
