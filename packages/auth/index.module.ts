@@ -4,7 +4,7 @@ async function post(apiPath: string, body: any) {
     const response = await fetch(apiPath, {
         body: JSON.stringify(body),
         headers: {
-            Content-Type: "application/json"
+            "Content-Type": "application/json"
         },
         method: "POST"
     });
