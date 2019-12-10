@@ -249,6 +249,7 @@ export namespace Task {
      * @param maxConcurrentTasks The max number of concurrent tasks
      */
     export function createScheduler(maxConcurrentTasks: number = cpus().length / 2): Schedualer {
+        maxConcurrentTasks = Math.min(maxConcurrentTasks, 1);
         let unruned: Array<() => Promise<any>> = [];
         let running = 0;
         function onTaskEnd() {
@@ -256,21 +257,21 @@ export namespace Task {
             if (running < maxConcurrentTasks && unruned.length > 0) {
                 running += 1;
                 // eslint-disable-next-line @typescript-eslint/no-floating-promises
-                unruned.pop()!().finally(onTaskEnd);
+                unruned.pop()!();
             }
         }
         return <T>(t: () => Promise<T>) => {
-            let deferredResolve: (value?: any) => void;
-            let deferredReject: (reason?: any) => void;
-            const deferred = new Promise<any>((resolve, reject) => {
-                deferredResolve = resolve;
-                deferredReject = reject;
-            })
             if (running < maxConcurrentTasks) {
                 running += 1;
                 return t().finally(onTaskEnd);
             } else {
-                unruned.push(() => t().then(deferredResolve, deferredReject));
+                let deferredResolve: (value?: any) => void;
+                let deferredReject: (reason?: any) => void;
+                const deferred = new Promise<any>((resolve, reject) => {
+                    deferredResolve = resolve;
+                    deferredReject = reject;
+                });
+                unruned.push(() => t().then(deferredResolve, deferredReject).finally(onTaskEnd));
                 return deferred;
             }
         }
