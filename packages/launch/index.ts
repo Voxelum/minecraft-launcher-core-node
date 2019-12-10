@@ -49,11 +49,13 @@ export namespace Launcher {
 
         /**
          * The full path of launched game icon
+         * Currently, this only supported on MacOS
          */
         gameIcon?: string;
 
         /**
-         * The launched game process name
+         * The launched game name
+         * Currently, this only supported on MacOS
          */
         gameName?: string;
 
