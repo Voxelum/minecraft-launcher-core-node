@@ -2,7 +2,7 @@ import Auth, { setRequester } from "./auth";
 
 async function post(apiPath: string, body: any) {
     const response = await fetch(apiPath, {
-        JSON.stringify(body),
+        body: JSON.stringify(body),
         headers: {
             'Content-Type': 'application/json'
         },
