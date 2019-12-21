@@ -152,6 +152,7 @@ async function tomlMetadata(fs: FileSystem, modidTree: ModidTree, manifest: any)
                     displayName: tomlMod.displayName,
                     description: tomlMod.description,
                     loaderVersion: map.loaderVersion as string,
+                    acceptedMinecraftVersions: typeof map.loaderVersion === "string" ? map.loaderVersion : undefined,
                     url: typeof map.displayURL === "string" ? map.displayURL : undefined,
                 }
                 if (typeof modObject.modid === "string") {
