@@ -151,6 +151,7 @@ async function tomlMetadata(fs: FileSystem, modidTree: ModidTree, manifest: any)
                     name: typeof tomlMod.displayName === "string" ? tomlMod.displayName : "",
                     displayName: tomlMod.displayName,
                     description: tomlMod.description,
+                    loaderVersion: map.loaderVersion as string,
                     url: typeof map.displayURL === "string" ? map.displayURL : undefined,
                 }
                 if (typeof modObject.modid === "string") {
@@ -468,13 +469,13 @@ export namespace Forge {
         readonly modLoader?: string;
         /**
          * Only present in mods.toml
+         * A version range to match for said mod loader - for regular FML @Mod it will be the minecraft version (without the 1.)
          */
         readonly loaderVersion?: string;
         /**
         * Only present in mods.toml
         */
         readonly displayName?: string;
-
     }
     /**
      * Read metadata of the input mod.

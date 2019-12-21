@@ -17,6 +17,7 @@ describe("Forge", () => {
                 authorList: ["mezz"],
                 version: "6.0.0.26",
                 name: "Just Enough Items",
+                loaderVersion: "[14,)",
                 displayName: "Just Enough Items",
                 description: "JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n",
                 url: "https://minecraft.curseforge.com/projects/jei"
