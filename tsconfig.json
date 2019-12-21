@@ -9,10 +9,11 @@
       "dom"
     ],
     "outDir": "packages",
-    "module": "es2015",
+    "module": "commonjs",
     "moduleResolution": "node",
     "newLine": "LF",
-    "sourceMap": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
     "strict": true,
     "target": "es2018"
   },

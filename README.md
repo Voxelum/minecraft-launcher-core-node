@@ -139,6 +139,17 @@ Install fabric to the client. This installation process doesn't ensure the minec
 
 Please run `Installer.installDependencies` after that to install fully.
 
+### Parse Fabric Mod Metadata
+
+```ts
+    import { Fabric } from "@xmcl/fabric";
+    const modJarBinary = fs.readFileSync("your-fabric.jar");
+    const metadata: Fabric.ModMetadata = await Fabric.readModMetaData(modJarBinary);
+
+    // or directly read from path
+    const sameMetadata: Fabric.ModMetadata = await Fabric.readModMetaData("your-fabric.jar");
+```
+
 ### Forge Mod Parsing
 
 Read the forge mod metadata, including `@Mod` annotation and mcmods.info json data.
@@ -245,6 +256,47 @@ Get the report of the version. It can check if version missing assets/libraries.
     const minecraftVersionId: string;
 
     const report: VersionDiagnosis = await Installer.diagnose(minecraftLocation, minecraftVersionId);
+```
+
+### Install Java 8 From Mojang Source
+
+Scan java installation path from the disk. (Require a lzma unpacker, like [7zip-bin](https://www.npmjs.com/package/7zip-bin) or [lzma-native](https://www.npmjs.com/package/lzma-native))
+
+```ts
+    import { JavaInstaller } from "@xmcl/java-installer";
+
+    // this require a unpackLZMA util to work
+    // you can use `7zip-bin`
+    // or `lzma-native` for this
+    const unpackLZMA: (src: string, dest: string) => Promise<void>;
+
+    await JavaInstaller.installJreFromMojang({
+        destination: "your/java/home",
+        unpackLZMA,
+    });
+```
+
+### Scan Local Java
+
+This will scan the paths in arguments and some common places to install java in current os.
+
+So passing an empty array is OK.
+
+```ts
+    import { JavaInstaller, JavaInfo } from "@xmcl/java-installer";
+
+    const validJavaList: JavaInfo[] = await JavaInstaller.scanLocalJava([
+        "my/java/home"
+    ]);
+
+    // it can parse java major version, like `8` or `10`
+    const javaMajorVersion: number = validJavaList[0].majorVersion;
+
+    // also the java version
+    const javaVersion: string = validJavaList[0].version;
+
+    // also contain the path
+    const jPath: string = validJavaList[0].path;
 ```
 
 ### Install Liteloader

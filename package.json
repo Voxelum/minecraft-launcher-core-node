@@ -24,6 +24,7 @@
     "@xmcl/forge-installer": "file:packages\\forge-installer",
     "@xmcl/gamesetting": "file:packages\\gamesetting",
     "@xmcl/installer": "file:packages\\installer",
+    "@xmcl/java-installer": "file:packages\\java-installer",
     "@xmcl/language": "file:packages\\language",
     "@xmcl/launch": "file:packages\\launch",
     "@xmcl/liteloader": "file:packages\\liteloader",
@@ -68,7 +69,7 @@
     "three-orbitcontrols": "^2.110.1",
     "ts-jest": "^24.0.2",
     "ts-md5": "^1.2.7",
-    "typescript": "^3.6.3"
+    "typescript": "^3.7.2"
   },
   "browserslist": [
     "last 1 Chrome versions"
@@ -88,7 +89,7 @@
       "packages"
     ],
     "preset": "ts-jest",
-    "testEnvironment": "node",
+    "testEnvironment": "./scripts/test-env.js",
     "testRegex": "packages/.*test\\.ts",
     "testSequencer": "./scripts/test-sequencer.js",
     "transform": {

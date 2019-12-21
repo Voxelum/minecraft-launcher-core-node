@@ -1,8 +1,8 @@
 {
-  "name": "@xmcl/resourcepack",
-  "version": "1.0.4",
+  "name": "@xmcl/java-installer",
+  "version": "0.0.1",
   "main": "./index.js",
-  "description": "Minecraft resource pack parsing",
+  "description": "Detect local Java or install Java from Mojang source",
   "engines": {
     "node": ">=10.0"
   },
@@ -10,7 +10,10 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common"
+    "@xmcl/net": "file:../net",
+    "@xmcl/task": "file:../task",
+    "@xmcl/util": "file:../util",
+    "got": "^9.6.0"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

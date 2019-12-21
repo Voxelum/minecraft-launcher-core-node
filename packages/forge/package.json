@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/forge",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "main": "./index.js",
   "module": "./index.js",
   "description": "Forge mod parser",

@@ -130,8 +130,8 @@ class ResourcePackImpl implements ResourcePack {
 }
 
 export namespace ResourcePack {
-    export async function open(resourcePack: string | Buffer): Promise<ResourcePack> {
-        return new ResourcePackImpl(await System.openFileSystem(resourcePack));
+    export async function open(resourcePack: string | Uint8Array | FileSystem): Promise<ResourcePack> {
+        return new ResourcePackImpl(await System.resolveFileSystem(resourcePack));
     }
     /**
      * Read the resource pack metadata from zip file or directory.
@@ -142,8 +142,8 @@ export namespace ResourcePack {
      * @param buffer The zip file data Buffer you read.
      * @param cacheIcon If cache the icon in to the resource pack object
      */
-    export async function head(resourcePack: string | Buffer, cacheIcon?: boolean): Promise<{ metadata: PackMeta.Pack, icon?: string }> {
-        const system = await System.openFileSystem(resourcePack);
+    export async function head(resourcePack: string | Uint8Array | FileSystem, cacheIcon?: boolean): Promise<{ metadata: PackMeta.Pack, icon?: string }> {
+        const system = await System.resolveFileSystem(resourcePack);
         if (!await system.existsFile("pack.mcmeta")) {
             throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!");
         }

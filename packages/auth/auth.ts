@@ -15,9 +15,11 @@ export interface GameProfile {
 let requester: PostRequester & {
     extends(option: { baseUrl: string }): PostRequester;
 };
+let wrappedReq: ReturnType<typeof wrap>;
 
 export function setRequester(req: typeof requester) {
     requester = req;
+    wrappedReq = wrap(requester);
 }
 
 interface PostRequester {
@@ -200,7 +202,6 @@ export namespace Auth {
             signout: "/signout",
         };
 
-        const fetch = wrap(requester);
 
         /**
          * Login to the server by username and password. Notice that the auth server usually have the cooldown time for login.
@@ -211,7 +212,7 @@ export namespace Auth {
          * @throws This may throw the error object with `statusCode`, `statusMessage`, `type` (error type), and `message`
          */
         export async function login(option: LoginOption & { clientToken?: string }, api: API = API_MOJANG): Promise<Auth.Response> {
-            return fetch(api.hostName + api.authenticate, loginPayload(option.clientToken || newToken(), option));
+            return wrappedReq(api.hostName + api.authenticate, loginPayload(option.clientToken || newToken(), option));
         }
 
         /**
@@ -224,7 +225,7 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export function refresh(option: { clientToken: string, accessToken: string, requestUser?: boolean }, api: API = API_MOJANG): Promise<Auth.Response> {
-            return fetch(api.hostName + api.refresh, refreshPayload(option));
+            return wrappedReq(api.hostName + api.refresh, refreshPayload(option));
         }
         /**
          * Determine whether the access/client token pair is valid.
@@ -234,7 +235,7 @@ export namespace Auth {
          */
         export async function validate(option: { accessToken: string, clientToken?: string }, api: API = API_MOJANG): Promise<boolean> {
             try {
-                await fetch(api.hostName + api.validate, { ...option });
+                await wrappedReq(api.hostName + api.validate, { ...option });
                 return true;
             }
             catch (e) {
@@ -249,7 +250,7 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export async function invalidate(option: { accessToken: string, clientToken: string }, api: API = API_MOJANG): Promise<void> {
-            await fetch(api.hostName + api.invalidate, option);
+            await wrappedReq(api.hostName + api.invalidate, option);
         }
         /**
          * Signout user by username and password
@@ -258,7 +259,7 @@ export namespace Auth {
          * @param api The API of the auth server
          */
         export async function signout(option: { username: string, password: string }, api: API = API_MOJANG): Promise<void> {
-            await fetch(api.hostName + api.signout, option);
+            await wrappedReq(api.hostName + api.signout, option);
         }
     }
 
