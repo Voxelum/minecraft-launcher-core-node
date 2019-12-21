@@ -32,6 +32,6 @@ jobs:
       uses: crazy-max/ghaction-github-pages@v1
       with:
         target_branch: gh-pages
-        build_dir: .github/pages/build
+        build_dir: docs/build
       env:
         GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
