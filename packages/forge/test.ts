@@ -9,6 +9,21 @@ describe("Forge", () => {
         expect(metadata.length).toEqual(3);
     });
 
+    test("should read >1.13 forge mod jar", async () => {
+        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod-1.13.jar`);
+        expect(metadata).toEqual([
+            {
+                modid: "jei",
+                authorList: ["mezz"],
+                version: "6.0.0.26",
+                name: "Just Enough Items",
+                displayName: "Just Enough Items",
+                description: "JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n",
+                url: "https://minecraft.curseforge.com/projects/jei"
+            }
+        ])
+    });
+
     test("should read mcmod.info in jar", async () => {
         const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
         expect(metadata.some((m) =>
