@@ -1,9 +1,14 @@
 import { System, FileSystem } from "@xmcl/common";
+import { parse as parseToml } from "@iarna/toml";
 import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from "java-asm";
 class ModAnnotationVisitor extends AnnotationVisitor {
     constructor(readonly map: { [key: string]: any }) { super(Opcodes.ASM5); }
     public visit(s: string, o: any) {
-        this.map[s] = o;
+        if (s === "value") {
+            this.map.modid = o
+        } else {
+            this.map[s] = o;
+        }
     }
 }
 class DummyModConstructorVisitor extends MethodVisitor {
@@ -128,6 +133,36 @@ async function tweakMetadata(fs: FileSystem, modidTree: ModidTree) {
         modidTree[metadata.modid] = metadata;
     }
     return manifest;
+}
+
+async function tomlMetadata(fs: FileSystem, modidTree: ModidTree, manifest: any) {
+    const existed = await fs.existsFile("META-INF/mods.toml");
+    if (existed) {
+        const str = await fs.readFile("META-INF/mods.toml", "utf-8");
+        const map = parseToml(str);
+        if (map.mods instanceof Array) {
+            for (const mod of map.mods) {
+                const tomlMod = mod as any;
+                const modObject: Partial<Forge.ModMetaData> = {
+                    modid: tomlMod.modId,
+                    authorList: typeof map.authors === "string" ? [map.authors] : [],
+                    version: tomlMod.version === "${file.jarVersion}"
+                        ? manifest?.["Implementation-Version"] : tomlMod.version,
+                    name: typeof tomlMod.displayName === "string" ? tomlMod.displayName : "",
+                    displayName: tomlMod.displayName,
+                    description: tomlMod.description,
+                    url: typeof map.displayURL === "string" ? map.displayURL : undefined,
+                }
+                if (typeof modObject.modid === "string") {
+                    if (modObject.modid in modidTree) {
+                        Object.assign(modidTree[modObject.modid], modObject);
+                    } else {
+                        modidTree[modObject.modid] = modObject;
+                    }
+                }
+            }
+        }
+    }
 }
 
 async function asmMetaData(fs: FileSystem, modidTree: ModidTree, manifest?: Record<string, string>) {
@@ -427,6 +462,19 @@ export namespace Forge {
         readonly acceptSaveVersions?: string;
         readonly isClientOnly?: boolean;
         readonly isServerOnly?: boolean;
+        /**
+        * Only present in mods.toml
+        */
+        readonly modLoader?: string;
+        /**
+         * Only present in mods.toml
+         */
+        readonly loaderVersion?: string;
+        /**
+        * Only present in mods.toml
+        */
+        readonly displayName?: string;
+
     }
     /**
      * Read metadata of the input mod.
@@ -441,6 +489,7 @@ export namespace Forge {
         const modidTree: ModidTree = {};
         await jsonMetaData(fs, modidTree);
         const manifest = await tweakMetadata(fs, modidTree);
+        await tomlMetadata(fs, modidTree, manifest);
         await asmMetaData(fs, modidTree, manifest);
         const modids = Object.keys(modidTree);
         if (modids.length === 0) { throw { type: "NonmodTypeFile" }; }
