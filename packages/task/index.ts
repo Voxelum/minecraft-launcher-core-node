@@ -238,10 +238,10 @@ export namespace Task {
     /**
      * Create a central managed runtime for task execution. You can listen the tasks status at one place.
      * @param factory The state factory. It's used to customize your task state.
-     * @param maxConcurrentTasks The max concurrent tasks number
+     * @param schedular The task schedular provided
      */
-    export function createRuntime<X extends Task.State = Task.State>(factory: StateFactory<X> = DEFAULT_STATE_FACTORY as any): TaskRuntime<X> {
-        return new TaskRuntime(factory, (t) => t());
+    export function createRuntime<X extends Task.State = Task.State>(factory: StateFactory<X> = DEFAULT_STATE_FACTORY as any, schedular: Schedualer = (t) => t()): TaskRuntime<X> {
+        return new TaskRuntime(factory, schedular);
     }
 
     export interface State {
