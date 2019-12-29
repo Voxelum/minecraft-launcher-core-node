@@ -36,9 +36,9 @@ export interface TaskListener<N extends Task.State = Task.State> extends EventEm
 export class TaskRuntime<N extends Task.State = Task.State> extends EventEmitter implements TaskListener<N> {
     protected bridge: TaskBridge<N>;
 
-    constructor(readonly factory: Task.StateFactory<N>, readonly maxConcurrentTasks: number = (cpus().length / 2)) {
+    constructor(readonly factory: Task.StateFactory<N>, schedular: Task.Schedualer) {
         super();
-        this.bridge = new TaskBridge(this, factory, Task.createScheduler(maxConcurrentTasks));
+        this.bridge = new TaskBridge(this, factory, schedular);
     }
 
     on(event: string, listener: (...args: any[]) => void): this {
@@ -240,41 +240,8 @@ export namespace Task {
      * @param factory The state factory. It's used to customize your task state.
      * @param maxConcurrentTasks The max concurrent tasks number
      */
-    export function createRuntime<X extends Task.State = Task.State>(factory: StateFactory<X> = DEFAULT_STATE_FACTORY as any, maxConcurrentTasks: number = cpus().length / 2): TaskRuntime<X> {
-        return new TaskRuntime(factory, maxConcurrentTasks);
-    }
-
-    /**
-     * Create a really simple scheduler to keep track there are no more than `maxConcurrentTasks` running tasks from this schedular.
-     * @param maxConcurrentTasks The max number of concurrent tasks
-     */
-    export function createScheduler(maxConcurrentTasks: number = cpus().length / 2): Schedualer {
-        maxConcurrentTasks = Math.max(maxConcurrentTasks, 1);
-        let unruned: Array<() => Promise<any>> = [];
-        let running = 0;
-        function onTaskEnd() {
-            running -= 1;
-            if (running < maxConcurrentTasks && unruned.length > 0) {
-                running += 1;
-                // eslint-disable-next-line @typescript-eslint/no-floating-promises
-                unruned.pop()!();
-            }
-        }
-        return <T>(t: () => Promise<T>) => {
-            if (running < maxConcurrentTasks) {
-                running += 1;
-                return t().finally(onTaskEnd);
-            } else {
-                let deferredResolve: (value?: any) => void;
-                let deferredReject: (reason?: any) => void;
-                const deferred = new Promise<any>((resolve, reject) => {
-                    deferredResolve = resolve;
-                    deferredReject = reject;
-                });
-                unruned.push(() => t().then(deferredResolve, deferredReject).finally(onTaskEnd));
-                return deferred;
-            }
-        }
+    export function createRuntime<X extends Task.State = Task.State>(factory: StateFactory<X> = DEFAULT_STATE_FACTORY as any): TaskRuntime<X> {
+        return new TaskRuntime(factory, (t) => t());
     }
 
     export interface State {
