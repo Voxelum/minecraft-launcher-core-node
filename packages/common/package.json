@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "jszip": "^3.2.2",
-    "long": "^3.2.0"
+    "long": "^3.2.0",
+    "@xmcl/unzip": "file:packages/unzip"
   },
   "scripts": {
     "test": "",
