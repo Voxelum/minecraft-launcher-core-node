@@ -107,9 +107,6 @@ export function openDownloadStream(option: DownloadOption) {
         retry: option.retry,
     }).on("response", (resp) => {
         response = resp;
-    }).on("error", (e) => {
-        console.error(`Unable to download ${option.url}`);
-        throw e;
     }).on("downloadProgress", (progress) => {
         if (onProgress(progress.transferred, progress.total || -1)) {
             response.destroy();
