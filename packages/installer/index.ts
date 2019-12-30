@@ -560,22 +560,42 @@ function installAssetsByClusterTask(version: string, objects: Array<{ name: stri
 
             const file = join(dir, hash);
             const valid = await vfs.validateSha1(file, hash);
-            if (!valid) {
-                if (option.downloader) {
-                    await option.downloader({
-                        url: `${assetsHost}/${head}/${hash}`,
-                        destination: file,
-                    })
-                } else {
-                    await downloadFile({
-                        url: `${assetsHost}/${head}/${hash}`,
-                        destination: file,
-                        progress(written) {
-                            context.update(lastProgress + written);
-                        },
-                    });
+            try {
+                if (!valid) {
+                    if (option.downloader) {
+                        await option.downloader({
+                            url: `${assetsHost}/${head}/${hash}`,
+                            destination: file,
+                        })
+                    } else {
+                        await downloadFile({
+                            url: `${assetsHost}/${head}/${hash}`,
+                            destination: file,
+                            progress(written) {
+                                context.update(lastProgress + written);
+                            },
+                        });
+                    }
+                }
+            } catch (e) {
+                if (assetsHost !== Installer.DEFAULT_RESOURCE_ROOT_URL) {
+                    if (option.downloader) {
+                        await option.downloader({
+                            url: `${Installer.DEFAULT_RESOURCE_ROOT_URL}/${head}/${hash}`,
+                            destination: file,
+                        })
+                    } else {
+                        await downloadFile({
+                            url: `${Installer.DEFAULT_RESOURCE_ROOT_URL}/${head}/${hash}`,
+                            destination: file,
+                            progress(written) {
+                                context.update(lastProgress + written);
+                            },
+                        });
+                    }
                 }
             }
+
             lastProgress += size;
             context.update(lastProgress);
         }
