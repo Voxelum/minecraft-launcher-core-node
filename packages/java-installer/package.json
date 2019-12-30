@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/java-installer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "./index.js",
   "description": "Detect local Java or install Java from Mojang source",
   "engines": {
