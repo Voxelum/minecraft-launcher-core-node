@@ -1,8 +1,8 @@
 {
-  "name": "@xmcl/java-installer",
-  "version": "0.0.2",
+  "name": "@xmcl/forge-site-parser",
+  "version": "2.0.0",
   "main": "./index.js",
-  "description": "Detect local Java or install Java from Mojang source",
+  "description": "Forge web page parser",
   "engines": {
     "node": ">=10.0"
   },
@@ -10,8 +10,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/task": "file:../task",
-    "got": "^9.6.0"
+    "fast-html-parser": "^1.0.1"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

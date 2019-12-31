@@ -1,4 +1,4 @@
-import { FileSystem, System } from "@xmcl/common";
+import { FileSystem, System } from "@xmcl/system";
 import { PackMeta } from "./format";
 
 export class ResourceLocation {

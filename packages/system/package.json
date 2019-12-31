@@ -1,8 +1,9 @@
 {
-  "name": "@xmcl/java-installer",
-  "version": "0.0.2",
+  "name": "@xmcl/system",
+  "version": "1.0.4",
   "main": "./index.js",
-  "description": "Detect local Java or install Java from Mojang source",
+  "module": "./index.module.js",
+  "description": "Minecraft common concepts",
   "engines": {
     "node": ">=10.0"
   },
@@ -10,10 +11,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/task": "file:../task",
-    "got": "^9.6.0"
+    "jszip": "^3.2.2",
+    "@xmcl/unzip": "file:../unzip"
   },
   "scripts": {
+    "test": "",
     "compile": "tsc --build tsconfig.json",
     "build": "npm run compile"
   },

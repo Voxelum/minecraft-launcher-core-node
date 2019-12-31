@@ -10,7 +10,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common",
+    "@xmcl/system": "file:../system",
     "@xmcl/nbt": "file:../nbt",
     "file-type": "^11.0.0"
   },

@@ -1,4 +1,4 @@
-import { System, FileSystem } from "@xmcl/common";
+import { System, FileSystem } from "@xmcl/system";
 import ByteBuffer from "bytebuffer";
 import { NBT } from "@xmcl/nbt";
 

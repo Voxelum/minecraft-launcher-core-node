@@ -1,9 +1,11 @@
 import { exec } from "child_process";
-import { vfs, currentPlatform, Platform } from "@xmcl/util";
-import { downloadFileIfAbsentWork, fetchJson } from "@xmcl/net";
 import Task from "@xmcl/task";
+import { promises } from "fs";
+import { extend } from "got";
 import { join, basename, resolve } from "path";
-import { EOL, tmpdir } from "os";
+import { EOL, tmpdir, platform, arch } from "os";
+
+const fetchJson = extend({ json: true });
 
 export interface JavaInfo {
     path: string;
@@ -12,11 +14,7 @@ export interface JavaInfo {
 }
 
 export namespace JavaInstaller {
-    /**
-     * Install JRE from Mojang offical resource. It should install jdk 8.
-     * @param options The install options
-     */
-    export function installJreFromMojangTask(options: {
+    export interface InstallOption {
         /**
          * The destination of this installation
          */
@@ -27,18 +25,30 @@ export namespace JavaInstaller {
          */
         cacheDir?: string;
         /**
-         * The platform will be installed. It will use detected platform by default.
-         */
-        platform?: Platform;
-        /**
          * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
          */
         unpackLZMA: (src: string, dest: string) => Promise<void>;
-    }) {
+
+        downloader: (option: {
+            url: string;
+            destination: string;
+            checksum: {
+                algorithm: string;
+                hash: string;
+            };
+            progress?: (written: number, total: number, url: string) => boolean | void;
+            pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
+        }) => Promise<void>;
+    }
+    /**
+     * Install JRE from Mojang offical resource. It should install jdk 8.
+     * @param options The install options
+     */
+    export function installJreFromMojangTask(options: InstallOption) {
         const {
-            platform = currentPlatform,
             destination,
             unpackLZMA,
+            downloader,
             cacheDir = tmpdir(),
         } = options;
         async function installJreFromMojang(context: Task.Context) {
@@ -49,48 +59,46 @@ export namespace JavaInstaller {
                 });
             const system = platform.name;
             function resolveArch() {
-                switch (platform.arch) {
+                switch (arch()) {
                     case "x86":
                     case "x32": return "32";
                     case "x64": return "64";
                     default: return "32";
                 }
             }
-            const arch = resolveArch();
+            const currentArch = resolveArch();
 
             if (system === "unknown" || system === "linux") {
                 return;
             }
-            const { sha1, url } = info[system][arch].jre;
+            const { sha1, url } = info[system][currentArch].jre;
             const filename = basename(url);
             const downloadDestination = resolve(cacheDir, filename);
 
-            if (!await vfs.validateSha1(downloadDestination, sha1)) {
-                await vfs.ensureFile(downloadDestination);
-                await context.execute({
-                    name: "download",
-                    run: downloadFileIfAbsentWork({
-                        url,
-                        destination: downloadDestination,
-                        checksum: {
-                            algorithm: "sha1",
-                            hash: sha1,
-                        },
-                    }),
-                });
-            }
+            await context.execute({
+                name: "download",
+                run: (context) => downloader({
+                    url,
+                    destination: downloadDestination,
+                    checksum: {
+                        algorithm: "sha1",
+                        hash: sha1,
+                    },
+                    progress: context.update,
+                    pausable: context.pausealbe,
+                }),
+            });
 
             const javaRoot = destination;
             await context.execute({
                 name: "decompress",
                 run: async () => {
-                    await vfs.ensureDir(javaRoot);
                     await unpackLZMA(downloadDestination, javaRoot);
                 },
             });
             await context.execute({
                 name: "cleanup",
-                run: async () => { await vfs.unlink(downloadDestination); },
+                run: async () => { await promises.unlink(downloadDestination); },
             });
         }
 
@@ -101,25 +109,7 @@ export namespace JavaInstaller {
      * Install JRE from Mojang offical resource. It should install jdk 8.
      * @param options The install options
      */
-    export function installJreFromMojang(options: {
-        /**
-         * The destination of this installation
-         */
-        destination: string;
-        /**
-         * The cached directory which compressed java lzma will be download to.
-         * @default os.tempdir()
-         */
-        cacheDir?: string;
-        /**
-         * The platform will be installed. It will use detected platform by default.
-         */
-        platform?: Platform;
-        /**
-         * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
-         */
-        unpackLZMA: (src: string, dest: string) => Promise<void>;
-    }) {
+    export function installJreFromMojang(options: InstallOption) {
         return Task.execute(installJreFromMojangTask(options)).wait();
     }
 
@@ -128,7 +118,7 @@ export namespace JavaInstaller {
      * @param path The java exectuable path.
      */
     export async function resolveJava(path: string): Promise<JavaInfo | undefined> {
-        const exists = await vfs.exists(path);
+        const exists = await promises.stat(path).then(() => true, () => false);
         if (!exists) { return undefined; }
         const parseJavaVersion = (str?: string) => {
             if (!str) { return undefined; }
@@ -168,9 +158,9 @@ export namespace JavaInstaller {
      * @param locations The location (like java_home) want to check if it's a
      * @param platform The providing operating system
      */
-    export async function scanLocalJava(locations: string[], platform = currentPlatform) {
+    export async function scanLocalJava(locations: string[]) {
         const unchecked = new Set<string>();
-        const javaFile = currentPlatform.name === "windows" ? "javaw.exe" : "java";
+        const javaFile = platform() === "win32" ? "javaw.exe" : "java";
 
         for (const p of locations) {
             unchecked.add(join(p, "bin", javaFile));

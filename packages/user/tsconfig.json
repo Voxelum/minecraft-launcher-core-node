@@ -1,12 +1,9 @@
 {
     "files": [
         "index.ts",
-        "minecraft.ts",
-        "forge.ts",
-        "liteloader.ts",
-        "fabric.ts",
-        "net.ts",
-        "java.ts"
+        "index.module.ts",
+        "auth.ts",
+        "service.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

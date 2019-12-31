@@ -30,14 +30,17 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
 ## Getting Started
 
 - [Minecraft Launcher Core](#minecraft-launcher-core)
-  - [Installation & Usage](#installation--usage)
+  - [Installation &amp; Usage](#installation-amp-usage)
   - [Getting Started](#getting-started)
-    - [User Login & Auth (Official/Offline)](#user-login--auth-officialoffline)
+    - [User Login &amp; Auth (Official/Offline)](#user-login-amp-auth-officialoffline)
     - [Minecraft Client Ping Server](#minecraft-client-ping-server)
-    - [Fetch & Install Fabric](#fetch--install-fabric)
+    - [Fetch &amp; Install Fabric](#fetch-amp-install-fabric)
+    - [Parse Fabric Mod Metadata](#parse-fabric-mod-metadata)
     - [Forge Mod Parsing](#forge-mod-parsing)
     - [Forge Installation](#forge-installation)
     - [Minecraft Install](#minecraft-install)
+    - [Install Java 8 From Mojang Source](#install-java-8-from-mojang-source)
+    - [Scan Local Java](#scan-local-java)
     - [Install Liteloader](#install-liteloader)
     - [Build THREE.js model for block and player (PREVIEW, not available yet)](#build-threejs-model-for-block-and-player-preview-not-available-yet)
     - [Mojang Account Info](#mojang-account-info)
@@ -57,7 +60,7 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
     - [How to Dev](#how-to-dev)
     - [Design Principle](#design-principle)
     - [Before Submit PR](#before-submit-pr)
-  - [Dependencies & Module Coupling](#dependencies--module-coupling)
+  - [Dependencies &amp; Module Coupling](#dependencies-amp-module-coupling)
     - [Core Features (Node/Electron Only)](#core-features-nodeelectron-only)
     - [General Gaming Features (Node/Electron/Browser)](#general-gaming-features-nodeelectronbrowser)
     - [User Authorization Features (Node/Electron/Browser)](#user-authorization-features-nodeelectronbrowser)
@@ -69,7 +72,7 @@ Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
 You can do official or offline login:
 
 ```ts
-    import { Auth } from "@xmcl/auth";
+    import { Auth } from "@xmcl/user";
     const username: string;
     const password: string;
     const authFromMojang: Auth = await Auth.Yggdrasil.login({ username, password }); // official login
@@ -81,7 +84,7 @@ You can do official or offline login:
 Validate/Refresh/Invalidate access token. This is majorly used for reduce user login and login again.
 
 ```ts
-    import { Auth } from "@xmcl/auth";
+    import { Auth } from "@xmcl/user";
     const accessToken: string;
     const clientToken: string;
     const valid: boolean = await Auth.Yggdrasil.validate({ accessToken, clientToken });
@@ -94,7 +97,7 @@ Validate/Refresh/Invalidate access token. This is majorly used for reduce user l
 Use third party Yggdrasil API to auth:
 
 ```ts
-    import { Auth } from "@xmcl/auth";
+    import { Auth } from "@xmcl/user";
     const username: string;
     const password: string;
     const yourAPI: Auth.Yggdrasil.API;
@@ -201,7 +204,7 @@ Fully install vanilla minecraft client including assets and libs.
 ```ts
     import { Installer } from "@xmcl/installer";
     import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion } from "@xmcl/version";
+    import { ResolvedVersion } from "@xmcl/core";
 
     const minecraft: MinecraftLocation;
     const list: Installer.VersionMetaList = await Installer.updateVersionMeta();
@@ -214,7 +217,7 @@ Just install libraries:
 ```ts
     import { Installer } from "@xmcl/installer";
     import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion, Version } from "@xmcl/version";
+    import { ResolvedVersion, Version } from "@xmcl/core";
 
     const minecraft: MinecraftLocation;
     const version: string; // version string like 1.13
@@ -227,7 +230,7 @@ Just install assets:
 ```ts
     import { Installer } from "@xmcl/installer";
     import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion, Version } from "@xmcl/version";
+    import { ResolvedVersion, Version } from "@xmcl/core";
 
     const minecraft: MinecraftLocation;
     const version: string; // version string like 1.13
@@ -240,7 +243,7 @@ Just ensure all assets and libraries are installed:
 ```ts
     import { Installer } from "@xmcl/installer";
     import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion, Version } from "@xmcl/version";
+    import { ResolvedVersion, Version } from "@xmcl/core";
 
     const minecraft: MinecraftLocation;
     const version: string; // version string like 1.13
@@ -251,7 +254,7 @@ Just ensure all assets and libraries are installed:
 Get the report of the version. It can check if version missing assets/libraries.
 
 ```ts
-    import { Installer, VersionDiagnosis } from "@xmcl/version";
+    import { Installer, VersionDiagnosis } from "@xmcl/core";
     const minecraftLocation: string;
     const minecraftVersionId: string;
 
@@ -482,7 +485,7 @@ You can use this to load Minecraft block model and texture.
 
 ```ts
     import { ResourceManager, ModelLoader, TextureRegistry, ModelRegistry } from "@xmcl/resource-manager";
-    import { BlockModel } from "@xmcl/common";
+    import { BlockModel } from "@xmcl/system";
 
     const man = new ResourceManager();
     // setup resource manager
@@ -589,7 +592,7 @@ Render the TextComponent to css
 Parse minecraft version as a resolved version, which is used for launching process. You can also read version info from it if you want.
 
 ```ts
-    import { Versoin } from "@xmcl/version";
+    import { Versoin } from "@xmcl/core";
     const minecraftLocation: string;
     const minecraftVersionId: string;
 
@@ -599,7 +602,7 @@ Parse minecraft version as a resolved version, which is used for launching proce
 Get the report of the version. It can also check if the version is missing assets/libraries.
 
 ```ts
-    import { Versoin, VersionDiagnosis } from "@xmcl/version";
+    import { Versoin, VersionDiagnosis } from "@xmcl/core";
     const minecraftLocation: string;
     const minecraftVersionId: string;
 
@@ -716,14 +719,14 @@ Just depict some big idea for the module design here. They may not be totally ac
 
 The features like version parsing, installing, diagnosing, are in this group:
 
-- @xmcl/version
+- @xmcl/core
   - @xmcl/installer
   - @xmcl/launch
   - @xmcl/forge-installer
   - @xmcl/liteloader
-  - *@xmcl/fabric (fabric module is too simple; it dones't really depends on @xmcl/version module)*
+  - *@xmcl/fabric (fabric module is too simple; it dones't really depends on @xmcl/core module)*
 
-They all depends on `@xmcl/version` module, which providing the basic version parsing system. This feature group is nodejs/electron only, as it definity requires file read/write, downloading to file functions, which are no sense on browser in my opinion.
+They all depends on `@xmcl/core` module, which providing the basic version parsing system. This feature group is nodejs/electron only, as it definity requires file read/write, downloading to file functions, which are no sense on browser in my opinion.
 
 These module use such modules as helper:
 
@@ -738,7 +741,7 @@ The features like parsing game setting, parsing forge mod metadata, NBT parsing,
 - @xmcl/forge
 - @xmcl/gamesetting
 - @xmcl/text-component
-- @xmcl/common
+- @xmcl/system
   - @xmcl/resource-manager
   - @xmcl/world
   - @xmcl/resourcepack
@@ -748,7 +751,7 @@ The features like parsing game setting, parsing forge mod metadata, NBT parsing,
 
 The features like login, fetch user info/textures goes here:
 
-- @xmcl/auth
+- @xmcl/user
 - @xmcl/profile-service
 
 ### Client Only Features (Browser Only)

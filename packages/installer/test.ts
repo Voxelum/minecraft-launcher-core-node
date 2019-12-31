@@ -1,5 +1,4 @@
-import { MinecraftFolder, MinecraftLocation } from "@xmcl/util";
-import { Version } from "@xmcl/version";
+import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import assert from "assert";
 import * as fs from "fs";
 import * as path from "path";

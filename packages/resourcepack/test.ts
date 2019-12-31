@@ -1,4 +1,4 @@
-import { vfs } from "@xmcl/util";
+import { ensureDir } from "@xmcl/core/fs";
 import * as fs from "fs";
 import * as path from "path";
 import { ResourcePack } from "./index";
@@ -45,7 +45,7 @@ describe("Resourcepack", () => {
             expect(pack.icon).toBeTruthy();
         });
         test("should throw if there is no pack.meta in directory", async () => {
-            await vfs.ensureDir(`${root}/resourcepacks/empty-resourcepack`);
+            await ensureDir(`${root}/resourcepacks/empty-resourcepack`);
             await expect(ResourcePack.head(`${root}/resourcepacks/empty-resourcepack`))
                 .rejects
                 .toThrowError(new Error("Illegal Resourcepack: Cannot find pack.mcmeta!"));

@@ -10,10 +10,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/net": "file:../net",
     "@xmcl/task": "file:../task",
-    "@xmcl/util": "file:../util",
-    "@xmcl/version": "file:../version",
+    "@xmcl/forge-site-parser": "file:../forge-site-parser",
     "got": "^9.6.0"
   },
   "scripts": {

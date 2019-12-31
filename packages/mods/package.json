@@ -1,8 +1,8 @@
 {
-  "name": "@xmcl/java-installer",
-  "version": "0.0.2",
+  "name": "@xmcl/mods",
+  "version": "1.0.5",
   "main": "./index.js",
-  "description": "Detect local Java or install Java from Mojang source",
+  "description": "Minecraft Mod parser. Provide the utilities to parse forge/liteloader/fabric mod metadata.",
   "engines": {
     "node": ">=10.0"
   },
@@ -10,8 +10,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/task": "file:../task",
-    "got": "^9.6.0"
+    "@xmcl/system": "file:../system",
+    "@iarna/toml": "2.2.3",
+    "java-asm": "0.0.6"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

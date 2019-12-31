@@ -1,5 +1,15 @@
 import { BlockModel, PackMeta } from "@xmcl/resourcepack";
-import { BoxGeometry, Group, LinearFilter, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, NearestFilter, Object3D, TextureLoader, Vector2, Vector3 } from "three";
+import { Material } from "three";
+import { LinearFilter, NearestFilter } from "three/src/constants";
+import { Object3D } from "three/src/core/Object3D";
+import { TextureLoader } from "three/src/loaders/TextureLoader";
+import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
+import { MeshLambertMaterial } from "three/src/materials/MeshLambertMaterial";
+import { Mesh } from "three/src/objects/Mesh";
+import { Group } from "three/src/objects/Group";
+import { BoxGeometry } from "three/src/geometries/BoxGeometry";
+import { Vector3 } from "three/src/math/Vector3";
+import { Vector2 } from "three/src/math/Vector2";
 
 interface Texture {
     url: string;

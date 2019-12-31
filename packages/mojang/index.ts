@@ -1,5 +1,6 @@
-import { fetchJson } from "@xmcl/net";
-import { Response } from "got";
+import { Response, extend } from "got";
+
+const fetchJson = extend({ json: true });
 
 export interface MojangAccount {
     readonly id: string;
