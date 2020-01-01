@@ -1,7 +1,7 @@
-test.d.ts
-test.js
-test.js.map
-test.ts
+*.test.d.ts
+*.test.js
+*.test.js.map
+*.test.ts
 *.ts
 !*.d.ts
 *.log
