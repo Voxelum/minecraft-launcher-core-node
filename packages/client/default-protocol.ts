@@ -1,7 +1,7 @@
 import Long from "long";
-import { Server, ServerStatusFrame } from "../../index";
-import Coders from "../coders";
-import { Field, Packet } from "../packet";
+import Coders from "./coders";
+import { ServerStatusFrame } from "./index";
+import { Field, Packet } from "./packet";
 
 @Packet("client", 0x00, "handshake")
 export class Handshake {

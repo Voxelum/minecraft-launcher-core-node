@@ -1,6 +1,11 @@
 {
     "include": [
-        "index.ts"
+        "index.ts",
+        "client.ts",
+        "coders.ts",
+        "packet.ts",
+        "status-client.ts",
+        "default-protocol.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

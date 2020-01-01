@@ -10,7 +10,6 @@ class PacketInBound extends Transform {
     private buffer: ByteBuffer = ByteBuffer.allocate(1024);
 
     _transform(chunk: Buffer, encoding: string, callback: TransformCallback) {
-
         // console.log("INBOUND");
         // console.log(chunk);
         this.buffer.ensureCapacity(chunk.length + this.buffer.offset);

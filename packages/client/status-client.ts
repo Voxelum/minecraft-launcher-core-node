@@ -1,9 +1,8 @@
 import { Channel } from "./client";
 import { Packet } from "./packet";
-import { Handshake, Ping, Pong, ServerQuery, ServerStatus } from "./protocols/default";
+import { Handshake, Ping, Pong, ServerQuery, ServerStatus } from "./default-protocol";
 
 export class StatusClient {
-
     public static create(protocol: number, timeout?: number) {
         return new StatusClient(protocol, timeout);
     }

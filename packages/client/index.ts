@@ -1,6 +1,6 @@
 import NBT from "@xmcl/nbt";
 import { TextComponent, TextComponentFrame } from "@xmcl/text-component";
-import { StatusClient } from "./net/status-client";
+import { StatusClient } from "./status-client";
 
 export enum ResourceMode {
     ENABLED,
@@ -232,7 +232,7 @@ export namespace Server {
     export type Info = ServerInfoFrame;
 }
 
-export * from "./net/coders";
-export * from "./net/packet";
-export * from "./net/status-client";
-export * from "./net/client";
+export * from "./coders";
+export * from "./packet";
+export * from "./status-client";
+export * from "./client";
