@@ -8,7 +8,7 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 
 ## Usage
 
-### Read/Write NBT
+### Read and Write NBT
 
 You can simply deserialize/serialize nbt.
 

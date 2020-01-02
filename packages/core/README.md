@@ -8,7 +8,7 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 
 ## Usage
 
-### Minecraft Version Parsing
+### Parse Version JSON 
 
 Parse minecraft version as a resolved version, which is used for launching process. You can also read version info from it if you want.
 

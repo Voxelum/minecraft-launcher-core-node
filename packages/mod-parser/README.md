@@ -17,7 +17,7 @@
     const sameMetadata: Fabric.ModMetadata = await Fabric.readModMetaData("your-fabric.jar");
 ```
 
-### Forge Mod/Config Parsing
+### Parse Forge Mod/Config
 
 Read the forge mod metadata, including `@Mod` annotation, mcmods.info, and toml metadata.
 
@@ -37,7 +37,7 @@ Read the forge mod config file (.cfg)
     const serializedBack: string = Forge.Config.stringify(config);
 ```
 
-### Liteloader Mod Parsing
+### Parse Liteloader Mod
 
 Read .litemod metadata:
 

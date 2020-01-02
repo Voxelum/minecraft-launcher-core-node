@@ -8,7 +8,7 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 
 ## Usage
 
-### Minecraft Install
+### Install Minecraft
 
 Fully install vanilla minecraft client including assets and libs.
 
@@ -80,7 +80,7 @@ Get the report of the version. It can check if version missing assets/libraries.
     const report: Diagnosis.Report = await Diagnosis.diagnose(minecraftLocation, minecraftVersionId);
 ```
 
-### Forge Installation
+### Install Forge
 
 Get the forge version info and install forge from it. 
 
@@ -103,7 +103,7 @@ or you can assign java location by `ForgeInstaller.install(forgeVersionMeta, min
 If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
 Consider support him to maintains forge.
 
-### Fetch & Install Fabric
+### Install Fabric
 
 Fetch the new fabric version list.
 

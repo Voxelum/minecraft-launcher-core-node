@@ -8,7 +8,7 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 
 ## Usage
 
-### Minecraft Client Ping Server
+### Ping Minecraft Server  
 
 Read sever info (server ip, port) and fetch its status (ping, server motd):
 

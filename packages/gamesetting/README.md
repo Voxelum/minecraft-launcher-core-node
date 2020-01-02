@@ -6,7 +6,9 @@
 
 This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
 
-### Usage Read/Write GameSetting (options.txt)
+### Usage 
+
+### Parse GameSetting (options.txt)
 
 Serialize/Deserialize the minecraft game setting string.
 

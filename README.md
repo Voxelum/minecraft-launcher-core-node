@@ -5,7 +5,7 @@
 [![Convensional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://www.conventionalcommits.org)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Release%20Pre-Check/badge.svg)](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Release%20Pre-Check/badge.svg)
 
-Provide several useful functions for Minecraft.
+Provide several useful functions to build a Minecraft Launcher.
 
 Most packages are targeting the [Electron](https://electronjs.org) environment. Feel free to report issues related to it.
 
@@ -13,314 +13,68 @@ Most packages are targeting the [Electron](https://electronjs.org) environment. 
 
 This repo maintaining multiple mini packages for specific functions.
 
-If you use electron to write a launcher, you can install all of them in a single package: `@xmcl/minecraft-launcher-core` like:
+If you use electron to write a minimum launcher, you can install `@xmcl/core` which only has such functions:
 
-`import { NBT, ServerInfo, ...so on...} from '@xmcl/minecraft-launcher-core'`
+- Parse existed Minecraft version
+- Launch the game
 
-Or you can import them seperately, if you want to add specific package to dependency, like just using `@xmcl/nbt`:
+If you have bigger ambition on your launcher, you want it be able to download/install Minecraft, then you can have `@xmcl/installer`, which contains the functions of:
 
-`import { NBT } from '@xmcl/nbt'`
+- Get the version information of Minecraft/Forge/Liteloader/Fabric
+- Install Minecraft/Forge/Liteloader/Fabric to the game folder
+
+If you still not satisfied, as you want even provide the function to parse existed resource pack and mods under game folder, then you will have `@xmcl/mod-parser` and `@xmcl/resourcepack` modules, which contain such functions:
+
+- Parse Forge/Liteloader/Fabric mods metadata
+- Parse resource pack metadata
+
+There are more packages for advantage usages, and you can check out the getting started section to navigate.
+
+## Browser Only Module
 
 The `@xmcl/model` is a browser only package, as it's using [THREE.js](https://threejs.org/) to create model. You can see it in the section - [Build THREE.js model for block and player](#build-threejs-model-for-block-and-player).
-
-Currently, I'm planning make several packages usable in **both browser and node environments**, like `@xmcl/resource-manager`, which can load minecraft model in minecraft resource packs. 
-
-Or even `@xmcl/nbt` package, someone might need to parse nbt in browser.
 
 ## Getting Started
 
 - [Minecraft Launcher Core](#minecraft-launcher-core)
   - [Installation &amp; Usage](#installation-amp-usage)
+  - [Browser Only Module](#browser-only-module)
   - [Getting Started](#getting-started)
-    - [User Login &amp; Auth (Official/Offline)](#user-login-amp-auth-officialoffline)
-    - [Minecraft Client Ping Server](#minecraft-client-ping-server)
-    - [Fetch &amp; Install Fabric](#fetch-amp-install-fabric)
-    - [Parse Fabric Mod Metadata](#parse-fabric-mod-metadata)
-    - [Forge Mod Parsing](#forge-mod-parsing)
-    - [Forge Installation](#forge-installation)
-    - [Minecraft Install](#minecraft-install)
-    - [Install Java 8 From Mojang Source](#install-java-8-from-mojang-source)
-    - [Scan Local Java](#scan-local-java)
-    - [Install Liteloader](#install-liteloader)
     - [Build THREE.js model for block and player (PREVIEW, not available yet)](#build-threejs-model-for-block-and-player-preview-not-available-yet)
-    - [Mojang Account Info](#mojang-account-info)
-    - [Read/Write NBT](#readwrite-nbt)
-    - [Game Profile](#game-profile)
-    - [Load Minecraft Resource](#load-minecraft-resource)
+    - [Install Fabric](#install-fabric)
+    - [Install Forge](#install-forge)
+    - [Install Java 8 From Mojang Source](#install-java-8-from-mojang-source)
+    - [Install Minecraft](#install-minecraft)
+    - [Launch](#launch)
     - [Load Minecraft Block Model](#load-minecraft-block-model)
-    - [Read ResourcePack Basic Info](#read-resourcepack-basic-info)
+    - [Load Minecraft Resource](#load-minecraft-resource)
+    - [Mojang Security API](#mojang-security-api)
+    - [Parse Fabric Mod Metadata](#parse-fabric-mod-metadata)
+    - [Parse Forge Mod/Config](#parse-forge-modconfig)
+    - [Parse Liteloader Mod](#parse-liteloader-mod)
+    - [Parse ResourcePack Basic Info](#parse-resourcepack-basic-info)
+    - [Parse Version JSON](#parse-version-json)
+    - [Ping Minecraft Server](#ping-minecraft-server)
     - [Progress Moniting](#progress-moniting)
-    - [TextComponent](#textcomponent)
-    - [Minecraft Version Parsing](#minecraft-version-parsing)
+    - [Read and Write NBT](#read-and-write-nbt)
+    - [Read ResourcePack Content](#read-resourcepack-content)
     - [Save/World Data Loading](#saveworld-data-loading)
-  - [Experiental Features](#experiental-features)
-    - [Caching Request](#caching-request)
+    - [Scan Local Java](#scan-local-java)
+    - [TextComponent](#textcomponent)
+    - [User Login (Official/Offline)](#user-login-officialoffline)
+    - [User Skin Operation](#user-skin-operation)
+  - [Caching Request](#caching-request)
+  - [Treeshaking](#treeshaking)
   - [Contribute](#contribute)
     - [Setup Dev Workspace](#setup-dev-workspace)
     - [How to Dev](#how-to-dev)
-    - [Design Principle](#design-principle)
     - [Before Submit PR](#before-submit-pr)
   - [Dependencies &amp; Module Coupling](#dependencies-amp-module-coupling)
     - [Core Features (Node/Electron Only)](#core-features-nodeelectron-only)
-    - [General Gaming Features (Node/Electron/Browser)](#general-gaming-features-nodeelectronbrowser)
     - [User Authorization Features (Node/Electron/Browser)](#user-authorization-features-nodeelectronbrowser)
+    - [General Gaming Features (Node/Electron/Browser)](#general-gaming-features-nodeelectronbrowser)
     - [Client Only Features (Browser Only)](#client-only-features-browser-only)
   - [Credit](#credit)
-
-### User Login & Auth (Official/Offline)
-
-You can do official or offline login:
-
-```ts
-    import { Auth } from "@xmcl/user";
-    const username: string;
-    const password: string;
-    const authFromMojang: Auth = await Auth.Yggdrasil.login({ username, password }); // official login
-    const authOffline: Auth = Auth.offline(username); // offline login
-
-    const accessToken: string = authFromMojang.accessToken;
-```
-
-Validate/Refresh/Invalidate access token. This is majorly used for reduce user login and login again.
-
-```ts
-    import { Auth } from "@xmcl/user";
-    const accessToken: string;
-    const clientToken: string;
-    const valid: boolean = await Auth.Yggdrasil.validate({ accessToken, clientToken });
-    if (!valid) {
-        const newAuth: Auth = await Auth.Yggdrasil.refresh({ accessToken, clientToken });
-    }
-    await Auth.Yggdrasil.invalidate({ accessToken, clientToken });
-```
-
-Use third party Yggdrasil API to auth:
-
-```ts
-    import { Auth } from "@xmcl/user";
-    const username: string;
-    const password: string;
-    const yourAPI: Auth.Yggdrasil.API;
-    const authFromMojang: Auth = await Auth.Yggdrasil.login({ username, password }, yourAPI); // official login
-```
-
-### Minecraft Client Ping Server
-
-Read sever info (server ip, port) and fetch its status (ping, server motd):
-
-```ts
-    import { Server } from '@xmcl/client'
-    const seversDatBuffer: Buffer; // this is the servers.dat under .minecraft folder
-    const infos: Server.Info[] = await Server.readInfo(seversDatBuffer);
-    const info: Server.Info = infos[0]
-    // fetch the server status
-    const promise: Promise<Server.Status> = Server.fetchStatus(info);
-    // or you want the raw json
-    const rawJsonPromise: Promise<Server.StatusFrame> = Server.fetchStatusFrame(info);
-```
-
-### Fetch & Install Fabric
-
-Fetch the new fabric version list.
-
-```ts
-    import { Fabric } from "@xmcl/fabric";
-    const versionList: Fabric.VersionList = await Fabric.updateVersionList();
-    const latestYarnVersion = versionList.yarnVersions[0]; // yarn version is combined by mcversion+yarn build number
-    const latestLoaderVersion = versionList.loaderVersions[0];
-```
-
-Install fabric to the client. This installation process doesn't ensure the minecraft libraries.
-
-```ts
-    import { Fabric } from "@xmcl/fabric";
-    const minecraftLocation: MinecraftLocation;
-    const yarnVersion: string; // e.g. "1.14.1+build.10"
-    const loaderVersion: string; // e.g. "0.4.7+build.147"
-    const installPromise: Promise<void> = Fabric.install(yarnVersion, loaderVersion, minecraftLocation)
-```
-
-Please run `Installer.installDependencies` after that to install fully.
-
-### Parse Fabric Mod Metadata
-
-```ts
-    import { Fabric } from "@xmcl/fabric";
-    const modJarBinary = fs.readFileSync("your-fabric.jar");
-    const metadata: Fabric.ModMetadata = await Fabric.readModMetaData(modJarBinary);
-
-    // or directly read from path
-    const sameMetadata: Fabric.ModMetadata = await Fabric.readModMetaData("your-fabric.jar");
-```
-
-### Forge Mod Parsing
-
-Read the forge mod metadata, including `@Mod` annotation and mcmods.info json data.
-
-```ts
-    import { Forge } from "@xmcl/forge";
-    const forgeModJarBuff: Buffer;
-    const metadata: Forge.MetaData[] = Forge.readModMetaData(forgeModJarBuff);
-
-    const modid = metadata[0].modid; // get modid of first mods
-```
-
-Read the forge mod config file (.cfg)
-
-```ts
-    const modConfigString: string;
-    const config: Forge.Config = Forge.Config.parse(modConfigString);
-    const serializedBack: string = Forge.Config.stringify(config);
-```
-
-### Forge Installation
-
-Get the forge version info and install forge from it. 
-
-```ts
-    import { ForgeInstaller, ForgeWebPage } from "@xmcl/forge-installer";
-    import { MinecraftLocation } from "@xmcl/util";
-    const page: ForgeWebPage = await ForgeWebPage.getWebPage();
-    const minecraftLocation: MinecraftLocation;
-    const mcversion = page.mcversion; // mc version
-    const firstVersionOnPage: ForgeWebPage.Version = page.versions[0];
-    await ForgeInstaller.install(firstVersionOnPage, minecraftLocation);
-```
-
-Notice that this installation doesn't ensure full libraries installation.
-Please run `Installer.installDependencies` afther that.
-
-The new 1.13 forge installation process requires java to run. 
-Either you have `java` executable in your environment variable PATH,
-or you can assign java location by `ForgeInstaller.install(forgeVersionMeta, minecraftLocation, { java: yourJavaExecutablePath });`.
-
-If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
-Consider support him to maintains forge.
-
-### Minecraft Install
-
-Fully install vanilla minecraft client including assets and libs.
-
-```ts
-    import { Installer } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion } from "@xmcl/core";
-
-    const minecraft: MinecraftLocation;
-    const list: Installer.VersionMetaList = await Installer.updateVersionMeta();
-    const aVersion: Installer.VersionMeta = list[0]; // i just pick the first version in list here
-    await Installer.install("client", aVersion, minecraft);
-```
-
-Just install libraries:
-
-```ts
-    import { Installer } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion, Version } from "@xmcl/core";
-
-    const minecraft: MinecraftLocation;
-    const version: string; // version string like 1.13
-    const resolvedVersion: ResolvedVersion = await Version.parse(version);
-    await Installer.installLibraries(resolvedVersion);
-```
-
-Just install assets:
-
-```ts
-    import { Installer } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion, Version } from "@xmcl/core";
-
-    const minecraft: MinecraftLocation;
-    const version: string; // version string like 1.13
-    const resolvedVersion: ResolvedVersion = await Version.parse(version);
-    await Installer.installAssets(resolvedVersion);
-```
-
-Just ensure all assets and libraries are installed:
-
-```ts
-    import { Installer } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion, Version } from "@xmcl/core";
-
-    const minecraft: MinecraftLocation;
-    const version: string; // version string like 1.13
-    const resolvedVersion: ResolvedVersion = await Version.parse(version);
-    await Installer.installDependencies(resolvedVersion);
-```
-
-Get the report of the version. It can check if version missing assets/libraries.
-
-```ts
-    import { Installer, VersionDiagnosis } from "@xmcl/core";
-    const minecraftLocation: string;
-    const minecraftVersionId: string;
-
-    const report: VersionDiagnosis = await Installer.diagnose(minecraftLocation, minecraftVersionId);
-```
-
-### Install Java 8 From Mojang Source
-
-Scan java installation path from the disk. (Require a lzma unpacker, like [7zip-bin](https://www.npmjs.com/package/7zip-bin) or [lzma-native](https://www.npmjs.com/package/lzma-native))
-
-```ts
-    import { JavaInstaller } from "@xmcl/java-installer";
-
-    // this require a unpackLZMA util to work
-    // you can use `7zip-bin`
-    // or `lzma-native` for this
-    const unpackLZMA: (src: string, dest: string) => Promise<void>;
-
-    await JavaInstaller.installJreFromMojang({
-        destination: "your/java/home",
-        unpackLZMA,
-    });
-```
-
-### Scan Local Java
-
-This will scan the paths in arguments and some common places to install java in current os.
-
-So passing an empty array is OK.
-
-```ts
-    import { JavaInstaller, JavaInfo } from "@xmcl/java-installer";
-
-    const validJavaList: JavaInfo[] = await JavaInstaller.scanLocalJava([
-        "my/java/home"
-    ]);
-
-    // it can parse java major version, like `8` or `10`
-    const javaMajorVersion: number = validJavaList[0].majorVersion;
-
-    // also the java version
-    const javaVersion: string = validJavaList[0].version;
-
-    // also contain the path
-    const jPath: string = validJavaList[0].path;
-```
-
-### Install Liteloader
-
-Fetch liteloader version and install:
-
-```ts
-    import { LiteLoader } from "@xmcl/liteloader";
-
-    const root: string; // minecraft root
-    const list = await LiteLoader.VersionMetaList.update();
-    const meta = list.versions['some-version'].release!;
-    await LiteLoader.installAndCheck(meta, new MinecraftFolder(root));
-```
-
-Read .litemod metadata:
-
-```ts
-    import { LiteLoader } from "@xmcl/liteloader";
-    const metadata: LiteLoader.MetaData = await LiteLoader.meta(`${mock}/mods/sample-mod.litemod`);
-```
 
 ### Build THREE.js model for block and player (PREVIEW, not available yet)
 
@@ -352,81 +106,185 @@ Create THREE.js player model:
     // add o3d to your three scene
 ```
 
-### Mojang Account Info
+### Install Fabric
 
-Get personal info from mojang.
+Fetch the new fabric version list.
 
 ```ts
-    import { MojangService } from "@xmcl/mojang";
-    const accessToken: string;
-    const info: Promise<MojangAccount> = MojangService.getAccountInfo(accessToken);
+    import { FabricInstaller } from "@xmcl/installer";
+    const versionList: Fabric.VersionList = await FabricInstaller.updateVersionList();
+    const latestYarnVersion = versionList.yarnVersions[0]; // yarn version is combined by mcversion+yarn build number
+    const latestLoaderVersion = versionList.loaderVersions[0];
 ```
 
-Validate if user have a validated IP address, and get & answer challenges to validate player's identity.
+Install fabric to the client. This installation process doesn't ensure the minecraft libraries.
 
 ```ts
-    import { MojangService } from "@xmcl/mojang";
-    const accessToken: string;
-    const validIp: boolean = await MojangService.checkLocation(accessToken);
-
-    if (!validIp) {
-        const challenges: MojangChallenge[] = await MojangService.getChallenges(accessToken);
-        // after your answer the challenges
-        const responses: MojangChallengeResponse[];
-        await MojangService.responseChallenges(accessToken, responses);
-    }
+    import { FabricInstaller } from "@xmcl/fabric";
+    const minecraftLocation: MinecraftLocation;
+    const yarnVersion: string; // e.g. "1.14.1+build.10"
+    const loaderVersion: string; // e.g. "0.4.7+build.147"
+    const installPromise: Promise<void> = FabricInstaller.install(yarnVersion, loaderVersion, minecraftLocation)
 ```
 
-### Read/Write NBT
+Please run `Installer.installDependencies` after that to install fully.
 
-You can simply deserialize/serialize nbt.
+### Install Forge
+
+Get the forge version info and install forge from it. 
 
 ```ts
-    import { NBT } from "@xmcl/nbt";
-    const fileData: Buffer;
-    // compressed = undefined will not perform compress algorithm
-    // compressed = true will use gzip algorithm
-    const compressed: true | "gzip" | "deflate" | undefined;
-    const readed: NBT.TypedObject = await NBT.deserialize(fileData, { compressed });
-    // NBT.Persistence.TypedObject is just a object with __nbtPrototype__ defining its nbt type
-    // After you do the modification on it, you can serialize it back to NBT
-    const buf: Buffer = await NBT.serialize(readed, { compressed });
-
-    // or use serializer style
-    const serial = NBT.createSerializer()
-        .register("server", {
-            name: NBT.TagType.String,
-            host: NBT.TagType.String,
-            port: NBT.TagType.Int,
-            icon: NBT.TagType.String,
-        });
-    const serverInfo: any; // this doesn't require the js object to be a TypedObject
-    const serialized: Buffer = await serial.serialize(serverInfo, "server");
+    import { ForgeInstaller, MinecraftLocation } from "@xmcl/installer";
+    const list: ForgeInstaller.VersionMetaList = await ForgeInstaller.getVersionMetaList();
+    const minecraftLocation: MinecraftLocation;
+    const mcversion = page.mcversion; // mc version
+    const firstVersionOnPage: ForgeInstaller.VersionMeta = page.versions[0];
+    await ForgeInstaller.install(firstVersionOnPage, minecraftLocation);
 ```
 
-### Game Profile 
+Notice that this installation doesn't ensure full libraries installation.
+Please run `Installer.installDependencies` afther that.
 
-Or lookup profile by name:
+The new 1.13 forge installation process requires java to run. 
+Either you have `java` executable in your environment variable PATH,
+or you can assign java location by `ForgeInstaller.install(forgeVersionMeta, minecraftLocation, { java: yourJavaExecutablePath });`.
+
+If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
+Consider support him to maintains forge.
+
+
+### Install Java 8 From Mojang Source
+
+Scan java installation path from the disk. (Require a lzma unpacker, like [7zip-bin](https://www.npmjs.com/package/7zip-bin) or [lzma-native](https://www.npmjs.com/package/lzma-native))
 
 ```ts
-    const username: string;
-    const gameProfilePromise: Promise<GameProfile> = ProfileService.lookup(username);
+    import { JavaInstaller } from "@xmcl/java-installer";
+
+    // this require a unpackLZMA util to work
+    // you can use `7zip-bin`
+    // or `lzma-native` for this
+    const unpackLZMA: (src: string, dest: string) => Promise<void>;
+
+    await JavaInstaller.installJreFromMojang({
+        destination: "your/java/home",
+        unpackLZMA,
+    });
 ```
 
-Fetch the user game profile by uuid. (This could also be used for get skin)
 
+### Install Minecraft
+
+Fully install vanilla minecraft client including assets and libs.
 
 ```ts
-    import { ProfileService, GameProfile } from "@xmcl/profile-service"
-    const userUUID: string;
-    const gameProfilePromise: GameProfile = await ProfileService.fetch(userUUID);
+    import { Installer } from "@xmcl/installer";
+    import { ResolvedVersion, MinecraftLocation } from "@xmcl/core";
+
+    const minecraft: MinecraftLocation;
+    const list: Installer.VersionList = await Installer.getVersionList();
+    const aVersion: Installer.Version = list[0]; // i just pick the first version in list here
+    await Installer.install("client", aVersion, minecraft);
 ```
 
-Get player texture:
+Treeshake friendly import:
 
 ```ts
-    const gameProfilePromise: GameProfile;
-    const texturesPromise: Promise<GameProfile.Textures> = ProfileService.fetchProfileTexture(gameProfilePromise);
+    import { install, getVersionList, Version, VersionList } from "@xmcl/installer/minecraft";
+    import { ResolvedVersion, MinecraftLocation } from "@xmcl/core";
+
+    const minecraft: MinecraftLocation;
+    const list: VersionList = await getVersionList();
+    const aVersion: Version = list[0]; // i just pick the first version in list here
+    await install("client", aVersion, minecraft);
+```
+
+Just install libraries:
+
+```ts
+    import { Installer } from "@xmcl/installer";
+    import { ResolvedVersion, MinecraftLocation, Version } from "@xmcl/core";
+
+    const minecraft: MinecraftLocation;
+    const version: string; // version string like 1.13
+    const resolvedVersion: ResolvedVersion = await Version.parse(version);
+    await Installer.installLibraries(resolvedVersion);
+```
+
+Just install assets:
+
+```ts
+    import { Installer } from "@xmcl/installer";
+    import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
+
+    const minecraft: MinecraftLocation;
+    const version: string; // version string like 1.13
+    const resolvedVersion: ResolvedVersion = await Version.parse(version);
+    await Installer.installAssets(resolvedVersion);
+```
+
+Just ensure all assets and libraries are installed:
+
+```ts
+    import { Installer } from "@xmcl/installer";
+    import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
+
+    const minecraft: MinecraftLocation;
+    const version: string; // version string like 1.13
+    const resolvedVersion: ResolvedVersion = await Version.parse(version);
+    await Installer.installDependencies(resolvedVersion);
+```
+
+Get the report of the version. It can check if version missing assets/libraries.
+
+```ts
+    import { Diagnosis } from "@xmcl/core";
+    const minecraftLocation: string;
+    const minecraftVersionId: string;
+
+    const report: Diagnosis.Report = await Diagnosis.diagnose(minecraftLocation, minecraftVersionId);
+```
+
+
+### Launch
+
+Launch minecraft from a version:
+
+```ts
+    import { launch } from "@xmcl/core"
+    const version: string; // full version id, like 1.13, or your forge version like, 1.13-forge-<someForgeVersion>
+    const javaPath: string; // java executable path
+    const gamePath: string; // .minecraft path
+    const proc: Promise<ChildProcess> = launch({ gamePath, javaPath, version });
+```
+
+Detach from the parent process. So your launcher's exit/crash won't affact the Minecraft running.
+
+```ts
+    const proc: Promise<ChildProcess> = Launcher.launch({ gamePath, javaPath, version, extraExecOption: { detached: true } });
+```
+
+### Load Minecraft Block Model
+
+You can use this to load Minecraft block model and texture.
+
+```ts
+    import { ResourceManager, ModelLoader, TextureRegistry, ModelRegistry } from "@xmcl/resource-manager";
+    import { BlockModel } from "@xmcl/system";
+
+    const man = new ResourceManager();
+    // setup resource manager
+    man.addResourceSource(new YourCustomizedResourceSource());
+
+    const loader = new ModelLoader(man);
+
+    await loader.loadModel("block/grass"); // load grass model
+    await loader.loadModel("block/stone"); // load stone model
+    // ... load whatever you want model
+
+    const textures: TextureRegistry = loader.textures;
+    const models: ModelRegistry = loader.models;
+
+    const resolvedModel: BlockModel.Resolved = models["block/grass"];
 ```
 
 ### Load Minecraft Resource
@@ -479,46 +337,133 @@ You can clear the cache by:
 manager.clearCache();
 ```
 
-### Load Minecraft Block Model
+### Mojang Security API
 
-You can use this to load Minecraft block model and texture.
+Validate if user have a validated IP address, and get & answer challenges to validate player's identity.
 
 ```ts
-    import { ResourceManager, ModelLoader, TextureRegistry, ModelRegistry } from "@xmcl/resource-manager";
-    import { BlockModel } from "@xmcl/system";
+    import { checkLocation, getChallenges, responseChallenges } from "@xmcl/user";
+    const accessToken: string;
+    const validIp: boolean = await checkLocation(accessToken);
 
-    const man = new ResourceManager();
-    // setup resource manager
-    man.addResourceSource(new YourCustomizedResourceSource());
-
-    const loader = new ModelLoader(man);
-
-    await loader.loadModel("block/grass"); // load grass model
-    await loader.loadModel("block/stone"); // load stone model
-    // ... load whatever you want model
-
-    const textures: TextureRegistry = loader.textures;
-    const models: ModelRegistry = loader.models;
-
-    const resolvedModel: BlockModel.Resolved = models["block/grass"];
+    if (!validIp) {
+        const challenges: MojangChallenge[] = await getChallenges(accessToken);
+        // after your answer the challenges
+        const responses: MojangChallengeResponse[];
+        await responseChallenges(accessToken, responses);
+    }
 ```
 
-### Read ResourcePack Basic Info
-
-Read ResourcePack from filePath
+### Parse Fabric Mod Metadata
 
 ```ts
-    import { ResourcePack } from "@xmcl/resourcepack"
+    import { Fabric } from "@xmcl/mods";
+    const modJarBinary = fs.readFileSync("your-fabric.jar");
+    const metadata: Fabric.ModMetadata = await Fabric.readModMetaData(modJarBinary);
+
+    // or directly read from path
+    const sameMetadata: Fabric.ModMetadata = await Fabric.readModMetaData("your-fabric.jar");
+```
+
+
+### Parse Forge Mod/Config
+
+Read the forge mod metadata, including `@Mod` annotation, mcmods.info, and toml metadata.
+
+```ts
+    import { Forge } from "@xmcl/mods";
+    const forgeModJarBuff: Buffer;
+    const metadata: Forge.MetaData[] = Forge.readModMetaData(forgeModJarBuff);
+
+    const modid = metadata[0].modid; // get modid of first mods
+```
+
+Read the forge mod config file (.cfg)
+
+```ts
+    const modConfigString: string;
+    const config: Forge.Config = Forge.Config.parse(modConfigString);
+    const serializedBack: string = Forge.Config.stringify(config);
+```
+
+
+### Parse Liteloader Mod
+
+Read .litemod metadata:
+
+```ts
+    import { LiteLoader } from "@xmcl/mods";
+    const metadata: LiteLoader.MetaData = await LiteLoader.readModMetaData(`${mock}/mods/sample-mod.litemod`);
+```
+
+### Parse ResourcePack Basic Info
+
+Read pack metadata from file:
+
+```ts
+    import { ResourcePack, PackMeta } from "@xmcl/resourcepack"
     const fileFullPath = "path/to/pack/some-pack.zip";
-    const pack: ResourcePack = await ResourcePack.read(fileFullPath);
+    const pack: PackMeta.Pack = await ResourcePack.readPackMeta(fileFullPath);
     // or you want read from folder, same function call
     const dirFullPath = "path/to/pack/some-pack";
-    const fromFolder: ResourcePack = await ResourcePack.read(dirFullPath);
+    const fromFolder: PackMeta.Pack = await ResourcePack.readPackMeta(dirFullPath);
 
     // if you have already read the file, don't want to reopen the file
     // the file path will be only used for resource pack name
     const fileContentBuffer: Buffer;
-    const packPromise: ResourcePack = await ResourcePack.read(fileFullPath, fileContentBuffer);
+    const fromBuff: PackMeta.Pack = await ResourcePack.readPackMeta(fileFullPath, fileContentBuffer);
+```
+
+Read pack icon:
+
+```ts
+    import { ResourcePack, PackMeta } from "@xmcl/resourcepack"
+    const fileFullPath = "path/to/pack/some-pack.zip";
+    const pack: Uint8Array = await ResourcePack.readIcon(fileFullPath);
+```
+
+Put them together in efficent way (don't open resource pack again and again):
+
+```ts
+    import { ResourcePack, PackMeta } from "@xmcl/resourcepack"
+    const fileFullPath = "path/to/pack/some-pack.zip";
+    const res = await ResourcePack.open(fileFullPath);
+    const pack: PackMeta.Pack = await ResourcePack.readPackMeta(res);
+    const icon: Uint8Array = await ResourcePack.readIcon(res);
+
+    // or
+
+    const pack: PackMeta.Pack = await res.info();
+    const icon: Uint8Array = await res.icon();
+```
+
+
+### Parse Version JSON 
+
+Parse minecraft version as a resolved version, which is used for launching process. You can also read version info from it if you want.
+
+```ts
+    import { Versoin } from "@xmcl/core";
+    const minecraftLocation: string;
+    const minecraftVersionId: string;
+
+    const resolvedVersion: ResolvedVersion = await Version.parse(minecraftLocation, minecraftVersionId);
+```
+
+
+### Ping Minecraft Server  
+
+Read sever info (server ip, port) and fetch its status (ping, server motd):
+
+```ts
+    import { Server } from '@xmcl/client'
+    const seversDatBuffer: Buffer; // this is the servers.dat under .minecraft folder
+    const infos: Server.Info[] = await Server.readInfo(seversDatBuffer);
+    const info: Server.Info = infos[0]
+    // fetch the server status
+    const promise: Promise<Server.Status> = Server.fetchStatus(info);
+    // or you want the raw json
+    const rawJsonPromise: Promise<Server.StatusFrame> = Server.fetchStatusFrame(info);
 ```
 
 ### Progress Moniting
@@ -559,7 +504,7 @@ Therefore you can just treat the `TaskRuntime` object a stateless event emitter.
         // every node, parent or child will emit finish event when it finish
     });
 
-    runtime.on("node-error", (error, node) => {
+    runtime.on("fail", (error, node) => {
         // emit when a task node (parent or child) failed
     });
 
@@ -568,45 +513,54 @@ Therefore you can just treat the `TaskRuntime` object a stateless event emitter.
     // the error will still reject to the promise
 ```
 
-### TextComponent
+### Read and Write NBT
 
-Create TextComponent from string OR Minecraft's formatted string, like '§cThis is red'
+You can simply deserialize/serialize nbt.
 
 ```ts
-    import { TextComponent } from "@xmcl/text-component";
-    const fromString: TextComponent = TextComponent.str("from string");
-    const formattedString: string;
-    const fromFormatted: TextComponent = TextComponent.from(formattedString);
+    import { NBT } from "@xmcl/nbt";
+    const fileData: Buffer;
+    // compressed = undefined will not perform compress algorithm
+    // compressed = true will use gzip algorithm
+    const compressed: true | "gzip" | "deflate" | undefined;
+    const readed: NBT.TypedObject = await NBT.deserialize(fileData, { compressed });
+    // NBT.Persistence.TypedObject is just a object with __nbtPrototype__ defining its nbt type
+    // After you do the modification on it, you can serialize it back to NBT
+    const buf: Buffer = await NBT.serialize(readed, { compressed });
+
+    // or use serializer style
+    const serial = NBT.createSerializer()
+        .register("server", {
+            name: NBT.TagType.String,
+            host: NBT.TagType.String,
+            port: NBT.TagType.Int,
+            icon: NBT.TagType.String,
+        });
+    const serverInfo: any; // this doesn't require the js object to be a TypedObject
+    const serialized: Buffer = await serial.serialize(serverInfo, "server");
 ```
 
-Render the TextComponent to css
+### Read ResourcePack Content
+
+You can read resource pack content just like Minecraft:
 
 ```ts
-    import { TextComponent } from "@xmcl/text-component";
-    const yourComponent: TextComponent;
-    const hint: Array<{ style: string; text: string }> = TextComponent.render(yourComponent);
-```
+    import { ResourcePack, ResourceLocation } from "@xmcl/resourcepack"
+    const fileFullPath = "path/to/pack/some-pack.zip";
+    const pack: ResourcePack = await ResourcePack.open(fileFullPath);
 
-### Minecraft Version Parsing
+    // this is almost the same with original Minecraft
+    // this get the dirt texture png -> minecraft:textures/block/dirt.png
+    const resLocation: ResourceLocation = ResourceLocation.ofTexturePath("block/dirt");
 
-Parse minecraft version as a resolved version, which is used for launching process. You can also read version info from it if you want.
+    console.log(resLocation); // minecraft:textures/block/dirt.png
 
-```ts
-    import { Versoin } from "@xmcl/core";
-    const minecraftLocation: string;
-    const minecraftVersionId: string;
-
-    const resolvedVersion: ResolvedVersion = await Version.parse(minecraftLocation, minecraftVersionId);
-```
-
-Get the report of the version. It can also check if the version is missing assets/libraries.
-
-```ts
-    import { Versoin, VersionDiagnosis } from "@xmcl/core";
-    const minecraftLocation: string;
-    const minecraftVersionId: string;
-
-    const report: VersionDiagnosis = await Version.diagnose(minecraftLocation, minecraftVersionId);
+    const resource: Resource | void = pack.load(resLocation);
+    if (resource) {
+        const binaryContent: Uint8Array = resource.content;
+        // this is the metadata for resource, like animated texture metadata.
+        const metadata: PackMeta = resource.metadata;
+    }
 ```
 
 ### Save/World Data Loading
@@ -631,11 +585,172 @@ Read the level info from a buffer.
     const region: RegionDataFrame = await reader.getRegionData(chunkX, chunkZ);
 ```
 
-## Experiental Features
+### Scan Local Java
 
-They might be not stable.
+This will scan the paths in arguments and some common places to install java in current os.
 
-### Caching Request
+So passing an empty array is OK.
+
+```ts
+    import { JavaInstaller, JavaInfo } from "@xmcl/java-installer";
+
+    const validJavaList: JavaInfo[] = await JavaInstaller.scanLocalJava([
+        "my/java/home"
+    ]);
+
+    // it can parse java major version, like `8` or `10`
+    const javaMajorVersion: number = validJavaList[0].majorVersion;
+
+    // also the java version
+    const javaVersion: string = validJavaList[0].version;
+
+    // also contain the path
+    const jPath: string = validJavaList[0].path;
+```
+
+### TextComponent
+
+Create TextComponent from string OR Minecraft's formatted string, like '§cThis is red'
+
+```ts
+    import { TextComponent } from "@xmcl/text-component";
+    const fromString: TextComponent = TextComponent.str("from string");
+    const formattedString: string;
+    const fromFormatted: TextComponent = TextComponent.from(formattedString);
+```
+
+Render the TextComponent to css
+
+```ts
+    import { TextComponent } from "@xmcl/text-component";
+    const yourComponent: TextComponent;
+    const hint: Array<{ style: string; text: string }> = TextComponent.render(yourComponent);
+```
+
+### User Login (Official/Offline)
+
+You can do official or offline login:
+
+```ts
+    import { login, offline, Authentication } from "@xmcl/user";
+    const username: string;
+    const password: string;
+    const authFromMojang: Authentication = await login({ username, password }); // official login
+    const authOffline: Authentication = offline(username); // offline login
+
+    const accessToken: string = authFromMojang.accessToken;
+```
+
+Validate/Refresh/Invalidate access token. This is majorly used for reduce user login and login again.
+
+```ts
+    import { validate, refresh } from "@xmcl/user";
+    const accessToken: string;
+    const clientToken: string;
+    const valid: boolean = await validate({ accessToken, clientToken });
+    if (!valid) {
+        const newAuth: Auth = await refresh({ accessToken, clientToken });
+    }
+    await invalidate({ accessToken, clientToken });
+```
+
+Use third party Yggdrasil API to auth:
+
+```ts
+    import { login, YggdrasilAuthAPI } from "@xmcl/user";
+    const username: string;
+    const password: string;
+    const yourAPI: YggdrasilAuthAPI;
+    const authFromMojang = await login({ username, password }, yourAPI); // official login
+```
+
+
+### User Skin Operation
+
+Or lookup profile by name:
+
+```ts
+    import { lookupByName, GameProfile } from "@xmcl/user";
+
+    const username: string;
+    const gameProfile: GameProfile = await lookupByName(username);
+```
+
+Fetch the user game profile by uuid. (This could also be used for get skin)
+
+
+```ts
+    import { lookup, GameProfile } from "@xmcl/user";
+    const userUUID: string;
+    const gameProfile: GameProfile = await lookup(userUUID);
+```
+
+Get player skin:
+
+```ts
+    import { lookup, GameProfile, getTextures } from "@xmcl/user";
+    const userUUID: string;
+    const gameProfile: GameProfile = await lookup(userUUID);
+    const infos: GameProfile.TexturesInfo | undefined = getTextures(gameProfile);
+    const skin: GameProfile.Texture = infos!.textures.SKIN!;
+    const skinUrl: string = skin.url; // use url to display skin
+    const isSlim: boolean = GameProfile.Texture.isSlim(skin); // determine if model is slim or not
+```
+
+Set player skin from URL:
+
+```ts
+    import { lookup, GameProfile, setTexture } from "@xmcl/user";
+    const userUUID: string;
+    const userAccessToken: string;
+    const userNewSkinUrl: string;
+    await setTexture({
+        accessToken: userAccessToken,
+        uuid: userUUID,
+        type: "skin",
+        texture: {
+            url: userNewSkinUrl,
+            metadata: { model: "slim" }, 
+            // suppose this model is a slim model
+            // if this model is a normal model, this should be steve
+        }
+    });
+```
+
+Set player skin from binary (read file file):
+
+```ts
+    import { lookup, GameProfile, setTexture } from "@xmcl/user";
+    const userUUID: string;
+    const userAccessToken: string;
+    const userNewSkinData: Uint8Array; 
+    // in nodejs this can be a `Buffer` from file
+    // in browser this can come from a `Blob`
+    await setTexture({
+        accessToken: userAccessToken,
+        uuid: userUUID,
+        type: "skin",
+        texture: {
+            data: userNewSkinData,
+            metadata: { model: "steve" }, 
+        }
+    });
+```
+
+Delete player skin (reset to default):
+
+```ts
+    import { lookup, GameProfile, setTexture } from "@xmcl/user";
+    const userUUID: string;
+    const userAccessToken: string;
+    await setTexture({
+        accessToken: userAccessToken,
+        uuid: userUUID,
+        type: "skin",
+    });
+```
+
+## Caching Request
 
 The functions that request minecraft version manifest, forge version webpage, or liteload version manifest can have cache option.
 
@@ -644,24 +759,47 @@ You should save the old result from those functions and pass it as the fallback 
 For Minecraft:
 
 ```ts
-    const forceGetTheVersionMeta = Installer.updateVersionMeta();
-    const result = Installer.updateVersionMeta({ fallback: forceGetTheVersionMeta }); // this should not request the manifest url again, since the forceGetTheVersionMeta is not outdated.
+    const forceGetTheVersionMeta = Installer.getVersionList();
+    const result = Installer.getVersionList({ fallback: forceGetTheVersionMeta }); // this should not request the manifest url again, since the forceGetTheVersionMeta is not outdated.
 ```
 
 Normally you will load the last version manifest from file:
 
 ```ts
     const oldManifest = JSON.parse(fs.readFileSync("manifest-whatevername-cache.json").toString());
-    const result = Installer.updateVersionMeta({ fallback: oldManifest }); // the result should up-to-date.
+    const result = Installer.getVersionList({ fallback: oldManifest }); // the result should up-to-date.
 ```
 
 For Forge, it's the same:
 
 ```ts
-    const forgeGet = ForgeWebPage.getWebPage(); // force get
+    const forgeGet = ForgeInstaller.getVersionList(); // force get
 
     const oldWebPageCache = JSON.parse(fs.readFileSync("forge-anyname-cache.json").toString());
-    const updated = ForgeWebPage.getWebPage({ fallback: oldWebPageCache }); // this should be up-to-date
+    const updated = ForgeInstaller.getVersionList({ fallback: oldWebPageCache }); // this should be up-to-date
+```
+
+## Treeshaking
+
+If you care about the package size and you want to treeshake your bundle.
+
+You can import the certain module specificly:
+
+```ts
+import { install } from "@xmcl/installer/minecraft"; // direct import install Minecraft function
+```
+
+Some modules require a preload
+
+```ts
+// in nodejs/electron
+import "@xmcl/user/setup"; // preload to setup requester
+import { login } from "@xmcl/user/auth"; // direct import login function
+
+
+// in browser
+import "@xmcl/user/setup.module";
+import { login } from "@xmcl/user/auth"; // direct import login function
 ```
 
 ## Contribute
@@ -686,31 +824,10 @@ During this process, you can first run `npm run dev world`, and it will start to
 
 **Highly recommended to add test for the features,** ~~which I always lazy to add.~~
 
-### Design Principle
-
-There is no strict principle for this project. Just add sth you think is valuable for a Minecraft launcher.
-
-For code structure, personally, I prefer the usage of `namespace`, which means instead of just export a function out of module, I would like to wrap them in a namespace or object. 
-
-For example, for parsing Forge mod content, rather than just export a function `parseForgeMod` which will be come 
-
-```ts
-import { parseForgeMod } from "@xmcl/forge";
-parseForgeMod(mod);
-```
-
-I prefer to export `Forge` namespace and used by
-
-```ts
-import { Forge } from "@xmcl/forge";
-Forge.parseForgeMod(mod);
-```
-
-This decision is majorly influenced by the original project design - all the modules are in the same npm package, if all of them exporting the functions, the import will become messy.
-
 ### Before Submit PR
 
 Make sure you run `npm run build` to pass lint and compile at least. (I always forget this) 
+
 ## Dependencies & Module Coupling
 
 Just depict some big idea for the module design here. They may not be totally accurate. 
@@ -721,17 +838,22 @@ The features like version parsing, installing, diagnosing, are in this group:
 
 - @xmcl/core
   - @xmcl/installer
-  - @xmcl/launch
-  - @xmcl/forge-installer
-  - @xmcl/liteloader
-  - *@xmcl/fabric (fabric module is too simple; it dones't really depends on @xmcl/core module)*
 
 They all depends on `@xmcl/core` module, which providing the basic version parsing system. This feature group is nodejs/electron only, as it definity requires file read/write, downloading to file functions, which are no sense on browser in my opinion.
 
-These module use such modules as helper:
+The modules below are used as helper:
 
-- got, for downloader
-- yauzl, for decompress
+- `got`, for downloader
+- `yauzl`, for decompressing zip
+
+### User Authorization Features (Node/Electron/Browser)
+
+The features like login, fetch user info/textures goes here:
+
+- @xmcl/user
+
+In node, it will use `got` as requester.
+In browser, it will use `fetch` as requester.
 
 ### General Gaming Features (Node/Electron/Browser)
 
@@ -745,14 +867,7 @@ The features like parsing game setting, parsing forge mod metadata, NBT parsing,
   - @xmcl/resource-manager
   - @xmcl/world
   - @xmcl/resourcepack
-- *@xmcl/client (the module is design to be browser/node capable but it not ready now)* 
-
-### User Authorization Features (Node/Electron/Browser)
-
-The features like login, fetch user info/textures goes here:
-
-- @xmcl/user
-- @xmcl/profile-service
+- *@xmcl/client (this is node only module)* 
 
 ### Client Only Features (Browser Only)
 
