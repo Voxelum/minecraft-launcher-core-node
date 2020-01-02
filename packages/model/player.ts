@@ -1,4 +1,12 @@
-import { BoxGeometry, BoxHelper, CanvasTexture, Color, DoubleSide, Geometry, Mesh, MeshBasicMaterial, NearestFilter, Object3D } from "three";
+import { Geometry } from "three";
+import { DoubleSide, NearestFilter } from "three/src/constants";
+import { Object3D } from "three/src/core/Object3D";
+import { BoxGeometry } from "three/src/geometries/BoxGeometry";
+import { BoxHelper } from "three/src/helpers/BoxHelper";
+import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
+import { Color } from "three/src/math/Color";
+import { Mesh } from "three/src/objects/Mesh";
+import { CanvasTexture } from "three/src/textures/CanvasTexture";
 import format, { CubeUVMapping, ModelTemplate } from "./player-model";
 
 function convertLegacySkin(context: CanvasRenderingContext2D, width: number) {
