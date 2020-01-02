@@ -5,7 +5,7 @@
         "forge.ts",
         "liteloader.ts",
         "fabric.ts",
-        "net.ts",
+        "downloader.ts",
         "java.ts"
     ],
     "compilerOptions": {

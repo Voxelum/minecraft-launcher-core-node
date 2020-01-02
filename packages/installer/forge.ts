@@ -8,7 +8,7 @@ import { delimiter, join } from "path";
 import { Readable } from "stream";
 import { JavaExecutor } from "./java";
 import { Installer } from "./minecraft";
-import { downloadFileIfAbsentTask, downloadFileTask, getIfUpdate, UpdatedObject } from "./net";
+import { downloadFileIfAbsentTask, downloadFileTask, getIfUpdate, UpdatedObject } from "./downloader";
 
 async function findMainClass(lib: string) {
     const zip = await Unzip.open(lib, { lazyEntries: true });
@@ -365,6 +365,7 @@ export namespace ForgeInstaller {
                 ctx.update(i, profile.processors.length);
 
                 if (errs.length !== 0) {
+                    errs.forEach((e) => console.error(e));
                     throw new Error("Fail to post processing");
                 }
             });

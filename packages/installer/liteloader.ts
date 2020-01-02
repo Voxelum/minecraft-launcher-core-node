@@ -2,7 +2,7 @@ import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { ensureDir, missing, readFile, writeFile, validateMd5 } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { join } from "path";
-import { getIfUpdate, UpdatedObject } from "./net";
+import { getIfUpdate, UpdatedObject } from "./downloader";
 
 export namespace LiteLoaderInstaller {
     export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
@@ -127,14 +127,14 @@ export namespace LiteLoaderInstaller {
         return Task.execute(installTask(versionMeta, location, version)).wait();
     }
 
-    export function installTask(versionMeta: VersionMeta, location: MinecraftLocation, version?: string): Task<void> {
+    export function installTask(versionMeta: VersionMeta, location: MinecraftLocation, version?: string): Task<string> {
         return async function installLiteloader(context) {
             const mc: MinecraftFolder = MinecraftFolder.from(location);
             const mountVersion = version || versionMeta.mcversion;
             const id = `${mountVersion}-Liteloader${versionMeta.mcversion}-${versionMeta.version}`;
 
             if (await validateMd5(mc.getVersionJson(id), versionMeta.md5)) {
-                return;
+                return id;
             }
             const mountedJSON: any = await context.execute(async function resolveVersionJson() {
                 if (await missing(mc.getVersionJson(mountVersion))) {
@@ -151,11 +151,8 @@ export namespace LiteLoaderInstaller {
                 await writeFile(join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
                 return inf;
             });
+            return versionInf.id as string;
         };
-    }
-
-    export function installAndCheck(versionMeta: VersionMeta, location: MinecraftLocation, version?: string) {
-        return Task.execute(installTask(versionMeta, location, version)).wait();
     }
 }
 

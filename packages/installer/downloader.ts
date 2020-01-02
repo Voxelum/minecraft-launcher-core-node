@@ -103,25 +103,23 @@ export class Downloader {
             return stream;
         }
         let response: IncomingMessage;
-        return new Promise<ReturnType<typeof got.stream>>((resolve, reject) => {
-            const stream = got.stream(url, {
-                method: option.method,
-                headers: option.headers,
-                timeout: option.timeout,
-                followRedirect: true,
-                retry: option.retry,
-            }).on("response", (resp) => {
-                response = resp;
-                resolve(stream);
-            }).on("downloadProgress", (progress) => {
-                if (onProgress(progress.transferred, progress.total || -1, url)) {
-                    response.destroy();
-                }
-            }).on("error", reject);
-            if (option.pausable) {
-                option.pausable(stream.pause, stream.resume);
+        const stream = got.stream(url, {
+            method: option.method,
+            headers: option.headers,
+            timeout: option.timeout,
+            followRedirect: true,
+            retry: option.retry,
+        }).on("response", (resp) => {
+            response = resp;
+        }).on("downloadProgress", (progress) => {
+            if (onProgress(progress.transferred, progress.total || -1, url)) {
+                response.destroy();
             }
-        })
+        });
+        if (option.pausable) {
+            option.pausable(stream.pause, stream.resume);
+        }
+        return stream;
     }
     protected async shouldDownloadFile(destination: string, option?: DownloadAndCheckOption["checksum"]) {
         if (!option) {
@@ -148,8 +146,9 @@ export class Downloader {
         await ensureFile(option.destination);
         const stream = await this.openDownloadStream(option);
         return new Promise<string>((resolve, reject) => {
-            stream.pipe(createWriteStream(option.destination))
+            stream
                 .on("error", reject)
+                .pipe(createWriteStream(option.destination))
                 .on("close", () => resolve(option.destination));
         });
     }
@@ -166,6 +165,8 @@ export let downloader: Downloader;
 export function setDownloader(newDownloader: Downloader) {
     downloader = newDownloader;
 }
+
+setDownloader(new Downloader());
 
 export function downloadFileTask(option: DownloadToOption, worker: Downloader = downloader) {
     return async (context: Task.Context) => {

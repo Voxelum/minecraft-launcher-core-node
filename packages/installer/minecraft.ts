@@ -5,13 +5,11 @@ import { cpus } from "os";
 import { join } from "path";
 import {
     downloadFileIfAbsentTask,
-    downloadFileTask,
     getIfUpdate,
-    got,
     UpdatedObject,
     Downloader,
     downloader,
-} from "./net";
+} from "./downloader";
 
 /**
  * The minecraft installer
@@ -358,6 +356,15 @@ export namespace Installer {
      * @param minecraft The minecraft location
      */
     export function diagnoseTask(version: string, minecraftLocation: MinecraftLocation): Task<VersionDiagnosis> {
+        async function getStatus(file: string, sha1?: string) {
+            if (await missing(file)) {
+                return VersionDiagnoseStatus.Missing;
+            }
+            if (sha1 && (!await validateSha1(file, sha1))) {
+                return VersionDiagnoseStatus.Corrupted;
+            }
+            return VersionDiagnoseStatus.Good;
+        }
         const minecraft = MinecraftFolder.from(minecraftLocation);
         return async function diagnose(context: Task.Context) {
             let resolvedVersion: ResolvedVersion;
@@ -369,54 +376,88 @@ export namespace Installer {
                     minecraftLocation: minecraft,
                     version,
 
-                    missingVersionJson: e.version,
-                    missingVersionJar: false,
-                    missingAssetsIndex: false,
+                    versionJson: { value: e.version, status: VersionDiagnoseStatus.Unknown },
 
-                    missingLibraries: [],
-                    missingAssets: {},
-                };
+                    versionJar: VersionDiagnoseStatus.Unknown,
+                    assetsIndex: VersionDiagnoseStatus.Unknown,
+
+                    libraries: [],
+                    assets: [],
+                } as VersionDiagnosis;
             }
             const jarPath = minecraft.getVersionJar(resolvedVersion.client);
-            const missingJar = !await context.execute(function checkJar() { return validateSha1(jarPath, resolvedVersion.downloads.client.sha1); });
             const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
-            const missingAssetsIndex = !await context.execute(async function checkAssetIndex() { return validateSha1(assetsIndexPath, resolvedVersion.assetIndex.sha1); });
+
+            const missingJar = await context.execute(function checkJar() {
+                return getStatus(jarPath, resolvedVersion.downloads.client.sha1);
+            });
+            const assetsIndex = await context.execute(async function checkAssetIndex() {
+                return getStatus(assetsIndexPath, resolvedVersion.assetIndex.sha1);
+            });
             const libMask = await context.execute(function checkLibraries() {
                 return Promise.all(resolvedVersion.libraries.map(async (lib) => {
                     const libPath = minecraft.getLibraryByPath(lib.download.path);
-                    if (lib.download.sha1 === "") { return true; }
-                    return validateSha1(libPath, lib.download.sha1);
+                    return getStatus(libPath, lib.download.sha1);
                 }));
             });
-            const missingLibraries = resolvedVersion.libraries.filter((_, i) => !libMask[i]);
-            const missingAssets: { [object: string]: string } = {};
+            const libraries = resolvedVersion.libraries.map((l, i) => ({ value: l, status: libMask[i] }))
+                .filter((v) => v.status !== VersionDiagnoseStatus.Good);
+            // const assets: { [object: string]: string } = {};
 
-            if (!missingAssetsIndex) {
+            let assets: any[] = [];
+            if (assetsIndex === VersionDiagnoseStatus.Good) {
                 const objects = (await readFile(assetsIndexPath, "utf-8").then((b) => JSON.parse(b.toString()))).objects;
                 const files = Object.keys(objects);
                 const assetsMask = await context.execute(function checkAssets() {
                     return Promise.all(files.map(async (object) => {
                         const { hash } = objects[object];
                         const hashPath = minecraft.getAsset(hash);
-                        return validateSha1(hashPath, hash);
+                        return getStatus(hashPath, hash);
                     }));
                 });
-                files.filter((_, i) => !assetsMask[i]).forEach((file) => { missingAssets[file] = objects[file].hash; });
+                assets = files.map((path, i) => ({
+                    value: { file: path, hash: objects[path] },
+                    status: assetsMask[i]
+                })).filter((v) => v.status !== VersionDiagnoseStatus.Good);
             }
 
             return {
                 minecraftLocation: minecraft,
                 version,
 
-                missingVersionJson: "",
-                missingVersionJar: missingJar,
-                missingAssetsIndex,
+                versionJson: { value: "", status: VersionDiagnoseStatus.Good },
+                versionJar: missingJar,
+                assetsIndex,
 
-                missingLibraries,
-                missingAssets,
-            };
+                libraries,
+                assets,
+            } as VersionDiagnosis;
         };
     }
+}
+
+export enum VersionDiagnoseStatus {
+    /**
+     * File is missing
+     */
+    Missing = "missing",
+    /**
+     * File checksum not match
+     */
+    Corrupted = "corrupted",
+    /**
+     * Not checked
+     */
+    Unknown = "unknown",
+    /**
+     * File is good
+     */
+    Good = "",
+}
+
+export interface VersionDiagnoseItem<T> {
+    status: VersionDiagnoseStatus;
+    value: T;
 }
 
 /**
@@ -427,12 +468,11 @@ export interface VersionDiagnosis {
     minecraftLocation: MinecraftFolder;
     version: string;
 
-    missingVersionJson: string;
-    missingVersionJar: boolean;
-    missingAssetsIndex: boolean;
-
-    missingLibraries: ResolvedLibrary[];
-    missingAssets: { [file: string]: string };
+    versionJson: VersionDiagnoseItem<string>;
+    versionJar: VersionDiagnoseStatus;
+    assetsIndex: VersionDiagnoseStatus;
+    libraries: VersionDiagnoseItem<ResolvedLibrary>[];
+    assets: VersionDiagnoseItem<{ file: string; hash: string }>[];
 }
 
 function installVersionJsonTask(version: Installer.VersionMeta, minecraft: MinecraftLocation, option: Installer.Option) {
