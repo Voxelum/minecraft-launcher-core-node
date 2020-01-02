@@ -8,16 +8,16 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 
 ## Usage
 
-### User Login & Auth (Official/Offline)
+### User Login (Official/Offline)
 
 You can do official or offline login:
 
 ```ts
-    import { Auth } from "@xmcl/user";
+    import { login, offline, Authentication } from "@xmcl/user";
     const username: string;
     const password: string;
-    const authFromMojang: Auth = await Auth.Yggdrasil.login({ username, password }); // official login
-    const authOffline: Auth = Auth.offline(username); // offline login
+    const authFromMojang: Authentication = await login({ username, password }); // official login
+    const authOffline: Authentication = offline(username); // offline login
 
     const accessToken: string = authFromMojang.accessToken;
 ```
@@ -25,47 +25,125 @@ You can do official or offline login:
 Validate/Refresh/Invalidate access token. This is majorly used for reduce user login and login again.
 
 ```ts
-    import { Auth } from "@xmcl/user";
+    import { validate, refresh } from "@xmcl/user";
     const accessToken: string;
     const clientToken: string;
-    const valid: boolean = await Auth.Yggdrasil.validate({ accessToken, clientToken });
+    const valid: boolean = await validate({ accessToken, clientToken });
     if (!valid) {
-        const newAuth: Auth = await Auth.Yggdrasil.refresh({ accessToken, clientToken });
+        const newAuth: Auth = await refresh({ accessToken, clientToken });
     }
-    await Auth.Yggdrasil.invalidate({ accessToken, clientToken });
+    await invalidate({ accessToken, clientToken });
 ```
 
 Use third party Yggdrasil API to auth:
 
 ```ts
-    import { Auth } from "@xmcl/user";
+    import { login, YggdrasilAuthAPI } from "@xmcl/user";
     const username: string;
     const password: string;
-    const yourAPI: Auth.Yggdrasil.API;
-    const authFromMojang: Auth = await Auth.Yggdrasil.login({ username, password }, yourAPI); // official login
+    const yourAPI: YggdrasilAuthAPI;
+    const authFromMojang = await login({ username, password }, yourAPI); // official login
 ```
 
-### Game Profile 
+### User Skin Operation
 
 Or lookup profile by name:
 
 ```ts
+    import { lookupByName, GameProfile } from "@xmcl/user";
+
     const username: string;
-    const gameProfilePromise: Promise<GameProfile> = ProfileService.lookup(username);
+    const gameProfile: GameProfile = await lookupByName(username);
 ```
 
 Fetch the user game profile by uuid. (This could also be used for get skin)
 
 
 ```ts
-    import { ProfileService, GameProfile } from "@xmcl/profile-service"
+    import { lookup, GameProfile } from "@xmcl/user";
     const userUUID: string;
-    const gameProfilePromise: GameProfile = await ProfileService.fetch(userUUID);
+    const gameProfile: GameProfile = await lookup(userUUID);
 ```
 
-Get player texture:
+Get player skin:
 
 ```ts
-    const gameProfilePromise: GameProfile;
-    const texturesPromise: Promise<GameProfile.Textures> = ProfileService.fetchProfileTexture(gameProfilePromise);
+    import { lookup, GameProfile, getTextures } from "@xmcl/user";
+    const userUUID: string;
+    const gameProfile: GameProfile = await lookup(userUUID);
+    const infos: GameProfile.TexturesInfo | undefined = getTextures(gameProfile);
+    const skin: GameProfile.Texture = infos!.textures.SKIN!;
+    const skinUrl: string = skin.url; // use url to display skin
+    const isSlim: boolean = GameProfile.Texture.isSlim(skin); // determine if model is slim or not
 ```
+
+Set player skin from URL:
+
+```ts
+    import { lookup, GameProfile, setTexture } from "@xmcl/user";
+    const userUUID: string;
+    const userAccessToken: string;
+    const userNewSkinUrl: string;
+    await setTexture({
+        accessToken: userAccessToken,
+        uuid: userUUID,
+        type: "skin",
+        texture: {
+            url: userNewSkinUrl,
+            metadata: { model: "slim" }, 
+            // suppose this model is a slim model
+            // if this model is a normal model, this should be steve
+        }
+    });
+```
+
+Set player skin from binary (read file file):
+
+```ts
+    import { lookup, GameProfile, setTexture } from "@xmcl/user";
+    const userUUID: string;
+    const userAccessToken: string;
+    const userNewSkinData: Uint8Array; 
+    // in nodejs this can be a `Buffer` from file
+    // in browser this can come from a `Blob`
+    await setTexture({
+        accessToken: userAccessToken,
+        uuid: userUUID,
+        type: "skin",
+        texture: {
+            data: userNewSkinData,
+            metadata: { model: "steve" }, 
+        }
+    });
+```
+
+Delete player skin (reset to default):
+
+```ts
+    import { lookup, GameProfile, setTexture } from "@xmcl/user";
+    const userUUID: string;
+    const userAccessToken: string;
+    await setTexture({
+        accessToken: userAccessToken,
+        uuid: userUUID,
+        type: "skin",
+    });
+```
+
+### Mojang Security API
+
+Validate if user have a validated IP address, and get & answer challenges to validate player's identity.
+
+```ts
+    import { checkLocation, getChallenges, responseChallenges } from "@xmcl/user";
+    const accessToken: string;
+    const validIp: boolean = await checkLocation(accessToken);
+
+    if (!validIp) {
+        const challenges: MojangChallenge[] = await getChallenges(accessToken);
+        // after your answer the challenges
+        const responses: MojangChallengeResponse[];
+        await responseChallenges(accessToken, responses);
+    }
+```
+
