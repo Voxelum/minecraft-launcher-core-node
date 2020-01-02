@@ -1,5 +1,6 @@
 {
   "private": true,
+  "version": "2.0.0",
   "scripts": {
     "build": "npm run lint && npm run compile",
     "build:clean": "node scripts/clean.js",
@@ -16,17 +17,16 @@
     "dev:web": "parcel serve docs/site/index.html -d docs/build"
   },
   "dependencies": {
-    "@xmcl/user": "file:packages\\auth",
+    "@xmcl/user": "file:packages\\user",
     "@xmcl/client": "file:packages\\client",
     "@xmcl/system": "file:packages\\system",
-    "@xmcl/mods": "file:packages\\mods",
+    "@xmcl/mod-parser": "file:packages\\mod-parser",
     "@xmcl/core": "file:packages\\core",
     "@xmcl/gamesetting": "file:packages\\gamesetting",
     "@xmcl/forge-site-parser": "file:packages\\forge-site-parser",
     "@xmcl/installer": "file:packages\\installer",
     "@xmcl/java-installer": "file:packages\\java-installer",
     "@xmcl/model": "file:packages\\model",
-    "@xmcl/mojang": "file:packages\\mojang",
     "@xmcl/nbt": "file:packages\\nbt",
     "@xmcl/resource-manager": "file:packages\\resource-manager",
     "@xmcl/resourcepack": "file:packages\\resourcepack",
