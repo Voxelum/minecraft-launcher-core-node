@@ -12,13 +12,13 @@ describe("Liteloader", () => {
         test("should not be able to read other file", async () => {
             await expect(LiteLoader.readModMetaData(`${mock}/mods/sample-mod.jar`))
                 .rejects
-                .toHaveProperty("type", "IllegalInputType");
+                .toHaveProperty("error", "IllegalInputType");
             await expect(LiteLoader.readModMetaData(`${mock}/saves/sample-map.zip`))
                 .rejects
-                .toHaveProperty("type", "IllegalInputType");
+                .toHaveProperty("error", "IllegalInputType");
             await expect(LiteLoader.readModMetaData(`${mock}/resourcepacks/sample-resourcepack.zip`))
                 .rejects
-                .toHaveProperty("type", "IllegalInputType");
+                .toHaveProperty("error", "IllegalInputType");
             await expect(LiteLoader.readModMetaData(`${mock}/not-exist.zip`))
                 .rejects
                 .toBeTruthy();

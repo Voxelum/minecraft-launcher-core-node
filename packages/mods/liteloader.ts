@@ -34,8 +34,8 @@ export namespace LiteLoader {
         const text = await fs.readFile("litemod.json", "utf-8").catch(() => undefined);
         if (!text) {
             throw {
-                type: "IllegalInputType",
-                message: "Illegal input type! Expect a jar file contains litemod.json",
+                error: "IllegalInputType",
+                errorMessage: "Illegal input type! Expect a jar file contains litemod.json",
                 mod,
             };
         }
