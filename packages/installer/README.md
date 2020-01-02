@@ -14,21 +14,31 @@ Fully install vanilla minecraft client including assets and libs.
 
 ```ts
     import { Installer } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion } from "@xmcl/core";
+    import { ResolvedVersion, MinecraftLocation } from "@xmcl/core";
 
     const minecraft: MinecraftLocation;
-    const list: Installer.VersionMetaList = await Installer.updateVersionMeta();
-    const aVersion: Installer.VersionMeta = list[0]; // i just pick the first version in list here
+    const list: Installer.VersionList = await Installer.getVersionList();
+    const aVersion: Installer.Version = list[0]; // i just pick the first version in list here
     await Installer.install("client", aVersion, minecraft);
+```
+
+Treeshake friendly import:
+
+```ts
+    import { install, getVersionList, Version, VersionList } from "@xmcl/installer/minecraft";
+    import { ResolvedVersion, MinecraftLocation } from "@xmcl/core";
+
+    const minecraft: MinecraftLocation;
+    const list: VersionList = await getVersionList();
+    const aVersion: Version = list[0]; // i just pick the first version in list here
+    await install("client", aVersion, minecraft);
 ```
 
 Just install libraries:
 
 ```ts
     import { Installer } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion, Version } from "@xmcl/core";
+    import { ResolvedVersion, MinecraftLocation, Version } from "@xmcl/core";
 
     const minecraft: MinecraftLocation;
     const version: string; // version string like 1.13
@@ -40,8 +50,7 @@ Just install assets:
 
 ```ts
     import { Installer } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion, Version } from "@xmcl/core";
+    import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
 
     const minecraft: MinecraftLocation;
     const version: string; // version string like 1.13
@@ -53,8 +62,7 @@ Just ensure all assets and libraries are installed:
 
 ```ts
     import { Installer } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/util";
-    import { ResolvedVersion, Version } from "@xmcl/core";
+    import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
 
     const minecraft: MinecraftLocation;
     const version: string; // version string like 1.13
@@ -65,20 +73,43 @@ Just ensure all assets and libraries are installed:
 Get the report of the version. It can check if version missing assets/libraries.
 
 ```ts
-    import { Installer, VersionDiagnosis } from "@xmcl/core";
+    import { Diagnosis } from "@xmcl/core";
     const minecraftLocation: string;
     const minecraftVersionId: string;
 
-    const report: VersionDiagnosis = await Installer.diagnose(minecraftLocation, minecraftVersionId);
+    const report: Diagnosis.Report = await Diagnosis.diagnose(minecraftLocation, minecraftVersionId);
 ```
+
+### Forge Installation
+
+Get the forge version info and install forge from it. 
+
+```ts
+    import { ForgeInstaller, MinecraftLocation } from "@xmcl/installer";
+    const list: ForgeInstaller.VersionMetaList = await ForgeInstaller.getVersionMetaList();
+    const minecraftLocation: MinecraftLocation;
+    const mcversion = page.mcversion; // mc version
+    const firstVersionOnPage: ForgeInstaller.VersionMeta = page.versions[0];
+    await ForgeInstaller.install(firstVersionOnPage, minecraftLocation);
+```
+
+Notice that this installation doesn't ensure full libraries installation.
+Please run `Installer.installDependencies` afther that.
+
+The new 1.13 forge installation process requires java to run. 
+Either you have `java` executable in your environment variable PATH,
+or you can assign java location by `ForgeInstaller.install(forgeVersionMeta, minecraftLocation, { java: yourJavaExecutablePath });`.
+
+If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
+Consider support him to maintains forge.
 
 ### Fetch & Install Fabric
 
 Fetch the new fabric version list.
 
 ```ts
-    import { Fabric } from "@xmcl/fabric";
-    const versionList: Fabric.VersionList = await Fabric.updateVersionList();
+    import { FabricInstaller } from "@xmcl/installer";
+    const versionList: Fabric.VersionList = await FabricInstaller.updateVersionList();
     const latestYarnVersion = versionList.yarnVersions[0]; // yarn version is combined by mcversion+yarn build number
     const latestLoaderVersion = versionList.loaderVersions[0];
 ```
@@ -86,11 +117,33 @@ Fetch the new fabric version list.
 Install fabric to the client. This installation process doesn't ensure the minecraft libraries.
 
 ```ts
-    import { Fabric } from "@xmcl/fabric";
+    import { FabricInstaller } from "@xmcl/fabric";
     const minecraftLocation: MinecraftLocation;
     const yarnVersion: string; // e.g. "1.14.1+build.10"
     const loaderVersion: string; // e.g. "0.4.7+build.147"
-    const installPromise: Promise<void> = Fabric.install(yarnVersion, loaderVersion, minecraftLocation)
+    const installPromise: Promise<void> = FabricInstaller.install(yarnVersion, loaderVersion, minecraftLocation)
 ```
 
 Please run `Installer.installDependencies` after that to install fully.
+
+## New Forge Installing process
+
+The module have three stage for installing new forge *(mcversion >= 1.13)*
+
+1. Deploy forge installer jar
+   1. Download installer jar
+   2. Extract forge universal jar files in installer jar into `.minecraft/libraries`
+   3. Extract `version.json` into target version folder, `.minecraft/versions/<ver>/<ver>.json`
+   4. Extract `installer_profile.json` into target version folder, `.minecraft/versions/<ver>/installer_profile.json`
+2. Download Dependencies
+   1. Merge libraires in `installer_profile.json` and `<ver>.json`
+   2. Download them
+3. Post processing forge jar
+   1. Parse `installer_profile.json`
+   2. Get the processors info and execute all of them.
+
+The `ForgeInstaller.install` will do all of them.
+
+The `ForgeInstaller.installByInstallerPartial` will do 2 and 3.
+
+If you want to just do step 3, you can use `ForgeInstaller.diagnose` and find which libraries is break and use `ForgeInstaller.postProcess` to handle it.
