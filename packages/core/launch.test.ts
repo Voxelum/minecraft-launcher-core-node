@@ -4,7 +4,7 @@ import { ChildProcess, exec } from "child_process";
 import { existsSync } from "fs";
 import { EOL } from "os";
 import * as path from "path";
-import { DEFAULT_EXTRA_JVM_ARGS, LaunchOption, PrecheckService, generateArguments, generateArgumentsServer, launch, launchServer } from "./launch";
+import { DEFAULT_EXTRA_JVM_ARGS, LaunchOption, LaunchPrecheck, generateArguments, generateArgumentsServer, launch, launchServer } from "./launch";
 import { Version } from "./version";
 
 function getJavaVersion(javaPath: string) {
@@ -35,7 +35,6 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
     return new Promise((resolve, reject) => {
         process.stdout.on("data", (chunk) => {
             const content = chunk.toString();
-            // console.log(content);
             for (let i = 0; i < hints.length; i++) {
                 if (content.indexOf(hints[i]) !== -1) {
                     found[i] = true;
@@ -166,10 +165,10 @@ describe("Launcher", () => {
             expect(args[args.indexOf("--version") + 1]).toEqual("1.7.10-Forge10.13.3.1400-1.7.10");
             expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
             expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
-            const lversion = args.find((a) => a.startsWith("-Dminecraft.version"));
-            expect(lversion).toEqual("-Dminecraft.version=launcherVersion");
-            const lname = args.find((a) => a.startsWith("-Dminecraft.brand"));
-            expect(lname).toEqual("-Dminecraft.brand=launcherName");
+            const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
+            expect(lversion).toEqual("-Dminecraft.launcher.version=launcherVersion");
+            const lname = args.find((a) => a.startsWith("-Dminecraft.launcher.brand"));
+            expect(lname).toEqual("-Dminecraft.launcher.brand=launcherName");
         });
 
         test("should generate correct command for 1.14.4 with forge", async () => {
@@ -186,16 +185,16 @@ describe("Launcher", () => {
                 }
             });
             expect(args[0]).toEqual(jPath);
-            expect(args.indexOf("cpw.mods.modLauncher")).not.toEqual(-1);
+            expect(args.indexOf("cpw.mods.modlauncher.Launcher")).not.toEqual(-1);
             expect(args[args.indexOf("--username") + 1]).toEqual("username");
             expect(args[args.indexOf("--uuid") + 1]).toEqual("userid");
             expect(args[args.indexOf("--version") + 1]).toEqual("1.14.4-forge-28.0.45");
             expect(args[args.indexOf("--gameDir") + 1]).toEqual(path.resolve(gamePath));
             expect(args[args.indexOf("--assetsDir") + 1]).toEqual(path.resolve(gamePath, "assets"));
-            const lversion = args.find((a) => a.startsWith("-Dminecraft.version"));
-            expect(lversion).toEqual("-Dminecraft.version=launcherVersion");
-            const lname = args.find((a) => a.startsWith("-Dminecraft.brand"));
-            expect(lname).toEqual("-Dminecraft.brand=launcherName");
+            const lversion = args.find((a) => a.startsWith("-Dminecraft.launcher.version"));
+            expect(lversion).toEqual("-Dminecraft.launcher.version=launcherVersion");
+            const lname = args.find((a) => a.startsWith("-Dminecraft.launcher.brand"));
+            expect(lname).toEqual("-Dminecraft.launcher.brand=launcherName");
         });
 
         test("should generate correct command", async () => {
@@ -234,10 +233,10 @@ describe("Launcher", () => {
             expect(args[args.indexOf("--server") + 1]).toEqual("localhost");
             expect(args[args.indexOf("--port") + 1]).toEqual("10");
 
-            expect(args.find((a) => a.startsWith("-Dminecraft.version")))
-                .toEqual("-Dminecraft.version=launcherVersion");
-            expect(args.find((a) => a.startsWith("-Dminecraft.brand")))
-                .toEqual("-Dminecraft.brand=launcherName");
+            expect(args.find((a) => a.startsWith("-Dminecraft.launcher.version")))
+                .toEqual("-Dminecraft.launcher.version=launcherVersion");
+            expect(args.find((a) => a.startsWith("-Dminecraft.launcher.brand")))
+                .toEqual("-Dminecraft.launcher.brand=launcherName");
         });
         test("should use default jvm arguments", async () => {
             const jPath = "/test/java";
@@ -326,31 +325,31 @@ describe("Launcher", () => {
         });
     });
     describe("#ensureNative", () => {
-        test("should be able to extract natives", async () => {
+        test("should be able to extract natives 1.14.4", async () => {
             const loc = new MinecraftFolder(root);
             const ver = await Version.parse(loc, "1.14.4");
             const nativeRoot = loc.getNativesRoot(ver.id);
-            await PrecheckService.ensureNative(loc, ver);
+            await LaunchPrecheck.checkNatives(loc, ver, {} as any);
             expect(existsSync(path.join(nativeRoot, ".json")));
-            await PrecheckService.ensureNative(loc, ver);
-        })
-    })
-    // test("should be able to extract natives", async () => {
-    //     const loc = new MinecraftFolder(root);
-    //     const ver = await Version.parse(loc, "1.13.2");
-    //     await ensureNative(loc, ver);
-    // });
-    describe.skip("#launch", () => {
+            await LaunchPrecheck.checkNatives(loc, ver, {} as any);
+        });
+        test("should be able to extract natives 1.13.2", async () => {
+            const loc = new MinecraftFolder(root);
+            const ver = await Version.parse(loc, "1.13.2");
+            await LaunchPrecheck.checkNatives(loc, ver, {} as any);
+        });
+    });
+    describe("#launch", () => {
         describe("1.17.10", () => {
             testOnJava("should launch with forge", async () => {
-                const option = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath };
+                const option: LaunchOption = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "OpenAL initialized.");
             });
         });
 
         describe("1.12.2", () => {
             testOnJava("should launch normal minecraft", async () => {
-                const option = { version: "1.12.2", gamePath: root, javaPath };
+                const option: LaunchOption = { version: "1.12.2", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "[Client thread/INFO]: Created: 1024x512 textures-atlas");
             });
             testOnJava("should launch server", async () => {
@@ -363,29 +362,29 @@ describe("Launcher", () => {
                 await waitGameProcess(await launch(option), "[Client thread/INFO]: Connecting to 127.0.0.1, 25565");
             });
             testOnOldJava("should launch forge minecraft", async () => {
-                const option = { version: "1.12.2-forge1.12.2-14.23.5.2823", gamePath: root, javaPath };
-                await waitGameProcess(await launch(option), "[main/INFO] [FML]: Itemstack injection complete");
+                const option: LaunchOption = { version: "1.12.2-forge1.12.2-14.23.5.2823", gamePath: root, javaPath };
+                await waitGameProcess(await launch(option), "[main/INFO] [FML]:");
             });
             testOnOldJava("should launch liteloader minecraft", async () => {
-                const option = { version: "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
+                const option: LaunchOption = { version: "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "LiteLoader begin POSTINIT");
             });
             testOnOldJava("should launch forge liteloader minecraft", async () => {
-                const option = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
-                await waitGameProcess(await launch(option), "LiteLoader begin POSTINIT", "[main/INFO] [FML]: Itemstack injection complete");
+                const option: LaunchOption = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
+                await waitGameProcess(await launch(option), "LiteLoader begin POSTINIT", "[main/INFO] [FML]:");
             });
         });
 
         describe("1.13.2", () => {
             testOnJava("should launch normal minecraft", async () => {
-                const option = { version: "1.13.2", gamePath: root, javaPath };
+                const option: LaunchOption = { version: "1.13.2", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "[Client thread/INFO]: Created: 1024x512 textures-atlas");
             });
         });
         describe("1.14.4", () => {
             testOnJava("should launch normal minecraft", async () => {
-                const option = { version: "1.14.4", gamePath: root, javaPath };
-                await waitGameProcess(await launch(option), "[Client thread/INFO]: Built for minecraft version 1.14.4");
+                const option: LaunchOption = { version: "1.14.4", gamePath: root, javaPath };
+                await waitGameProcess(await launch(option), "[Client thread/INFO]: OpenAL initialized");
             });
         });
     });
