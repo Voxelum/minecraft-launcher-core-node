@@ -3,7 +3,7 @@
   "version": "1.0.4",
   "main": "./index.js",
   "module": "./index.module.js",
-  "description": "Minecraft authorization support",
+  "description": "Minecraft user related functions, including Yggdrasil authenticator, player skin fetcher, and Mojang security API",
   "engines": {
     "node": ">=10.0"
   },

@@ -4,21 +4,18 @@ import FormData from "form-data";
 import { setKernal, FormItems } from "./base";
 
 setKernal({
-    httpRequester(option) {
+    async httpRequester(option) {
         let body;
         let query;
-        let json = true;
         let headers: Record<string, string> = {};
         if (option.body) {
             switch (option.bodyType) {
                 case "json":
                     headers["Content-Type"] = "application/json";
-                    body = option.body;
-                    json = true;
+                    body = JSON.stringify(option.body);
                     break;
                 case "search":
                     query = new URLSearchParams(option.body as Record<string, string>);
-                    json = false;
                     break;
                 case "formMultiPart":
                     body = new FormData();
@@ -29,26 +26,33 @@ setKernal({
                             body.append(key, value.value, { contentType: value.type });
                         }
                     }
-                    json = false;
                     headers = { ...headers, ...body.getHeaders() };
                     break;
             }
         }
-        return got(option.url, {
+        const { body: respBody, statusCode, statusMessage } = await got(option.url, {
             method: option.method,
-            json: json as any,
             headers,
             body: body as any,
             query,
             encoding: "utf-8",
             throwHttpErrors: false,
         });
+        return {
+            body: respBody,
+            statusCode,
+            statusMessage
+        }
     },
     async verify(data: string, signature: string, pemKey: string | Uint8Array) {
         return createVerify("SHA1").update(data, "utf8").verify(pemKey, signature, "base64");
+    },
+    decodeBase64(s) {
+        return Buffer.from(s, "base64").toString();
     }
 });
 
 export * from "./auth";
 export * from "./service";
+export * from "./mojang";
 export { GameProfile, GameProfileWithProperties } from "./base";

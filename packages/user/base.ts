@@ -6,7 +6,13 @@
  * In `lookup` function, it will carry the `properties` property.
  */
 export interface GameProfile {
+    /**
+     * game profile unique id
+     */
     id: string;
+    /**
+     * This is in game displayed name
+     */
     name: string;
     properties?: { [name: string]: string };
     userId?: string;
@@ -99,6 +105,7 @@ export interface FormItems {
 interface Kernal {
     httpRequester: HttpRequester;
     verify: Verify;
+    decodeBase64(b64: string): string;
 }
 
 let kernal: Kernal;
@@ -115,4 +122,9 @@ export const request: HttpRequester = function (option) {
 export const verify: Verify = function (value: string, signature: string, pemKey: string) {
     if (!kernal.verify) { throw new Error("Illegal State"); }
     return kernal.verify(value, signature, pemKey);
+}
+
+export const decodeBase64 = function (s: string) {
+    if (!kernal.decodeBase64) { throw new Error("Illegal State"); }
+    return kernal.decodeBase64(s);
 }

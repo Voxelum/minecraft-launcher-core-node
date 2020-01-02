@@ -3,6 +3,7 @@
         "index.ts",
         "index.module.ts",
         "auth.ts",
+        "mojang.ts",
         "service.ts"
     ],
     "compilerOptions": {

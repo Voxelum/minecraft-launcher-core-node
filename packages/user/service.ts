@@ -1,4 +1,4 @@
-import { GameProfile, request, verify, GameProfileWithProperties, FormItems } from "./base";
+import { GameProfile, request, verify, GameProfileWithProperties, FormItems, decodeBase64 } from "./base";
 
 export interface ProfileLookupException {
     /**
@@ -90,12 +90,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
  */
 export function getTextures(profile: GameProfile): GameProfile.TexturesInfo | undefined {
     if (!profile.properties || !profile.properties.textures) { return undefined; }
-    let content: string;
-    if (Buffer) {
-        content = Buffer.from(profile.properties.textures, "base64").toString();
-    } else {
-        content = atob(profile.properties.textures);
-    }
+    const content: string = decodeBase64(profile.properties.textures);
     return JSON.parse(content);
 }
 /**
@@ -104,8 +99,9 @@ export function getTextures(profile: GameProfile): GameProfile.TexturesInfo | un
  * @param uuid The unique id of user/player
  * @param option the options for this function
  */
-export async function lookup(uuid: string, option: { api?: ProfileServiceAPI } = {}) {
+export async function lookup(uuid: string, option: { api?: ProfileServiceAPI, unsigned?: boolean } = {}) {
     const api = option.api || PROFILE_API_MOJANG;
+    const unsigned = "unsigned" in option ? option.unsigned : !api.publicKey;
     const {
         body,
         statusCode,
@@ -114,7 +110,7 @@ export async function lookup(uuid: string, option: { api?: ProfileServiceAPI } =
         url: ProfileServiceAPI.getProfileUrl(api, uuid),
         method: "GET",
         headers: {},
-        body: { unsigned: !api.publicKey },
+        body: { unsigned },
         bodyType: "search",
     });
     if (statusCode !== 200) {

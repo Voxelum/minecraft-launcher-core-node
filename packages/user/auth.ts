@@ -13,10 +13,10 @@ const loginPayload = (clientToken: string, option: LoginOption) => ({
     username: option.username,
     password: option.password,
 })
-const refreshPayload = (option: { accessToken: string; clientToken: string; requestUser?: boolean }) => ({
-    clientToken: option.clientToken,
+const refreshPayload = (clientToken: string, option: { accessToken: string; requestUser?: boolean }) => ({
+    clientToken,
     accessToken: option.accessToken,
-    requestUser: option.requestUser || false,
+    requestUser: typeof option.requestUser === "boolean" ? option.requestUser : false,
 });
 
 /**
@@ -24,7 +24,7 @@ const refreshPayload = (option: { accessToken: string; clientToken: string; requ
  *
  * Please refer https://wiki.vg/Authentication
  */
-export interface AuthResponse {
+export interface Authentication {
     /**
      * hexadecimal or JSON-Web-Token (unconfirmed) [The normal accessToken can be found in the payload of the JWT (second by '.' separated part as Base64 encoded JSON object), in key "yggt"]
      */
@@ -46,22 +46,22 @@ export interface AuthResponse {
      */
     user?: {
         id: string;
-        email: string;
         username: string;
-        registerIp: string;
-        migratedFrom: string;
-        migratedAt: number;
-        registeredAt: number;
-        passwordChangedAt: number;
-        dateOfBirth: number;
-        suspended: boolean;
-        blocked: boolean;
-        secured: boolean;
-        migrated: boolean;
-        emailVerified: boolean;
-        legacyUser: boolean;
-        verifiedByParent: boolean;
-        properties: object[];
+        email?: string;
+        registerIp?: string;
+        migratedFrom?: string;
+        migratedAt?: number;
+        registeredAt?: number;
+        passwordChangedAt?: number;
+        dateOfBirth?: number;
+        suspended?: boolean;
+        blocked?: boolean;
+        secured?: boolean;
+        migrated?: boolean;
+        emailVerified?: boolean;
+        legacyUser?: boolean;
+        verifiedByParent?: boolean;
+        properties?: object[];
     };
 }
 /**
@@ -91,45 +91,33 @@ export class Authenticator {
     constructor(readonly clientToken: string, readonly api: YggdrasilAuthAPI) { }
 
     protected post(endpoint: string, payload: object) {
-        return request({
-            url: this.api.hostName + endpoint,
-            method: "POST",
-            body: payload,
-            headers: {},
-            bodyType: "json",
-        }).then(({ statusCode, body }) => {
-            if (statusCode === 200) {
-                return JSON.parse(body);
-            } else {
-                throw JSON.parse(body);
-            }
-        });
+        return post(this.api.hostName + endpoint, payload);
     }
 
-    login(option: LoginOption): Promise<AuthResponse> {
+    login(option: LoginOption): Promise<Authentication> {
         return this.post(this.api.authenticate,
-            loginPayload(this.clientToken, option)) as Promise<AuthResponse>;
+            loginPayload(this.clientToken, option)) as Promise<Authentication>;
     }
     validate(option: { accessToken: string; }): Promise<boolean> {
         return this.post(this.api.validate, {
             clientToken: this.clientToken,
-            ...option,
+            accessToken: option.accessToken,
         }).then(() => true, () => false);
     }
     invalidate(option: { accessToken: string; }): Promise<void> {
         return this.post(this.api.invalidate, {
             clientToken: this.clientToken,
-            ...option,
+            accessToken: option.accessToken,
         }).then(() => { });
     }
-    refresh(option: { accessToken: string; profile?: string; }): Promise<Pick<AuthResponse, "accessToken" | "clientToken">> {
-        return this.post(this.api.refresh, refreshPayload({
-            clientToken: this.clientToken,
-            ...option,
-        })) as Promise<AuthResponse>;
+    refresh(option: { accessToken: string; requestUser?: boolean; }): Promise<Pick<Authentication, "accessToken" | "clientToken">> {
+        return this.post(this.api.refresh, refreshPayload(this.clientToken, option)) as Promise<Authentication>;
     }
     signout(option: { username: string; password: string; }): Promise<void> {
-        return this.post(this.api.signout, option).then(() => { });
+        return this.post(this.api.signout, {
+            username: option.username,
+            password: option.password,
+        }).then(() => { });
     }
 }
 
@@ -163,7 +151,7 @@ export interface YggdrasilAuthAPI {
 /**
  * The default Mojang API
  */
-export const API_MOJANG: YggdrasilAuthAPI = {
+export const AUTH_API_MOJANG: YggdrasilAuthAPI = {
     hostName: "https://authserver.mojang.com",
     authenticate: "/authenticate",
     refresh: "/refresh",
@@ -172,18 +160,38 @@ export const API_MOJANG: YggdrasilAuthAPI = {
     signout: "/signout",
 };
 
-function post(url: string, payload: object) {
+function post(url: string, payload: object): Promise<object | undefined> {
     return request({
         url,
         method: "POST",
         body: payload,
         headers: {},
         bodyType: "json",
-    }).then(({ statusCode, body }) => {
-        if (statusCode === 200) {
-            return JSON.parse(body);
-        } else {
-            throw JSON.parse(body);
+    }).then(({ statusCode, body, statusMessage }) => {
+        try {
+            if (statusCode >= 200 && statusCode < 300) {
+                if (!body) { return undefined; }
+                return JSON.parse(body);
+            } else {
+                const errorBody = JSON.parse(body);
+                const err = {
+                    ...errorBody,
+                    error: typeof errorBody.error === "string" ? errorBody.error : "General",
+                    statusCode,
+                    statusMessage,
+                };
+                throw err;
+            }
+        } catch (e) {
+            if (typeof e.error === "string") {
+                throw e;
+            }
+            throw {
+                error: "General",
+                statusCode,
+                statusMessage,
+                body,
+            }
         }
     });
 }
@@ -196,8 +204,8 @@ function post(url: string, payload: object) {
  * @param api The API of the auth server
  * @throws This may throw the error object with `statusCode`, `statusMessage`, `type` (error type), and `message`
  */
-export async function login(option: LoginOption & { clientToken?: string }, api: YggdrasilAuthAPI = API_MOJANG): Promise<AuthResponse> {
-    return post(api.hostName + api.authenticate, loginPayload(option.clientToken || newToken(), option)) as Promise<AuthResponse>;
+export async function login(option: LoginOption & { clientToken?: string }, api: YggdrasilAuthAPI = AUTH_API_MOJANG): Promise<Authentication> {
+    return post(api.hostName + api.authenticate, loginPayload(option.clientToken || newToken(), option)) as Promise<Authentication>;
 }
 
 /**
@@ -209,8 +217,8 @@ export async function login(option: LoginOption & { clientToken?: string }, api:
  * @param option The tokens
  * @param api The API of the auth server
  */
-export function refresh(option: { clientToken: string, accessToken: string, requestUser?: boolean }, api: YggdrasilAuthAPI = API_MOJANG): Promise<AuthResponse> {
-    return post(api.hostName + api.refresh, refreshPayload(option)) as Promise<AuthResponse>;
+export function refresh(option: { clientToken: string, accessToken: string, requestUser?: boolean }, api: YggdrasilAuthAPI = AUTH_API_MOJANG): Promise<Pick<Authentication, "accessToken" | "clientToken">> {
+    return post(api.hostName + api.refresh, refreshPayload(option.clientToken, option)) as Promise<Authentication>;
 }
 /**
  * Determine whether the access/client token pair is valid.
@@ -218,9 +226,12 @@ export function refresh(option: { clientToken: string, accessToken: string, requ
  * @param option The tokens
  * @param api The API of the auth server
  */
-export async function validate(option: { accessToken: string, clientToken?: string }, api: YggdrasilAuthAPI = API_MOJANG): Promise<boolean> {
+export async function validate(option: { accessToken: string, clientToken?: string }, api: YggdrasilAuthAPI = AUTH_API_MOJANG): Promise<boolean> {
     try {
-        await post(api.hostName + api.validate, { ...option });
+        await post(api.hostName + api.validate, {
+            accessToken: option.accessToken,
+            clientToken: option.clientToken,
+        });
         return true;
     }
     catch (e) {
@@ -234,8 +245,11 @@ export async function validate(option: { accessToken: string, clientToken?: stri
  * @param option The tokens
  * @param api The API of the auth server
  */
-export async function invalidate(option: { accessToken: string, clientToken: string }, api: YggdrasilAuthAPI = API_MOJANG): Promise<void> {
-    await post(api.hostName + api.invalidate, option);
+export async function invalidate(option: { accessToken: string, clientToken: string }, api: YggdrasilAuthAPI = AUTH_API_MOJANG): Promise<void> {
+    await post(api.hostName + api.invalidate, {
+        accessToken: option.accessToken,
+        clientToken: option.clientToken,
+    });
 }
 /**
  * Signout user by username and password
@@ -243,8 +257,11 @@ export async function invalidate(option: { accessToken: string, clientToken: str
  * @param option The username and password
  * @param api The API of the auth server
  */
-export async function signout(option: { username: string, password: string }, api: YggdrasilAuthAPI = API_MOJANG): Promise<void> {
-    await post(api.hostName + api.signout, option);
+export async function signout(option: { username: string, password: string }, api: YggdrasilAuthAPI = AUTH_API_MOJANG): Promise<void> {
+    await post(api.hostName + api.signout, {
+        username: option.username,
+        password: option.password,
+    });
 }
 
 /**
@@ -252,7 +269,7 @@ export async function signout(option: { username: string, password: string }, ap
  *
  * @param username The username you want to have in-game.
  */
-export function offline(username: string): Omit<AuthResponse, "user"> & { user: { id: string } } {
+export function offline(username: string): Authentication {
     const v5 = (s: string) => require("uuid/lib/v35")("", 50, require("uuid/lib/sha1"))(s, new (class A extends Array { concat(o: any[]) { return o; } })(16));
     const prof = {
         id: v5(username).replace(/-/g, "") as string,
@@ -265,6 +282,7 @@ export function offline(username: string): Omit<AuthResponse, "user"> & { user: 
         availableProfiles: [prof],
         user: {
             id: newToken(),
+            username: username,
         },
     };
 }

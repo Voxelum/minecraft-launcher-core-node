@@ -1,48 +1,15 @@
-import { ChildProcess, spawn } from "child_process";
-import * as path from "path";
 import { GameProfile, ProfileServiceAPI, lookup, lookupByName, getTextures, setTexture } from "./index";
 import nock from "nock";
 import { URLSearchParams } from "url";
+import { ProfileLookuper, PROFILE_API_MOJANG } from "./service";
 
-function sleep(time: number) {
-    return new Promise<void>((resolve, reject) => {
-        setTimeout(() => { resolve(); }, time);
-    });
-}
+const API: ProfileServiceAPI = {
+    texture: "http://localhost:25566/user/profile/${uuid}/${type}",
+    profile: "http://localhost:25566/sessionserver/session/minecraft/profile/${uuid}",
+    profileByName: "http://localhost:25566/api/profiles/minecraft/${name}",
+};
 
 describe("ProfileService", () => {
-    let proc: ChildProcess;
-    const MOCK: ProfileServiceAPI = {
-        texture: "http://localhost:25566/user/profile/${uuid}/${type}",
-        profile: "http://localhost:25566/sessionserver/session/minecraft/profile/${uuid}",
-        profileByName: "http://localhost:25566/api/profiles/minecraft/${name}",
-    };
-    const RATE = 1000;
-    const WAIT = 1500;
-    const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
-
-    beforeAll(async function () {
-        // jest.setTimeout(100000);
-        // try {
-        //     await new Promise((resolve, reject) => {
-        //         proc = spawn("java", ["-jar", path.join(root, "yggdrasil-mock-server-0.0.1-SNAPSHOT.jar")]);
-        //         proc.stdout.on("data", (b) => {
-        //             // console.log(b.toString());
-        //             if (b.toString().indexOf("moe.yushi.yggdrasil.mockserver.Main") !== -1 &&
-        //                 b.toString().indexOf("Started Main") !== -1) {
-        //                 resolve();
-        //             }
-        //         });
-        //     });
-        // } catch (e) {
-        //     console.error("Cannot start the yggdrasil mock server!");
-        //     console.error(e);
-        //     describe = describe.skip;
-        // }
-        // await sleep(1000);
-    });
-    afterAll(() => { proc.kill(); });
-    afterEach(() => sleep(RATE));
 
     // describe("#lookupAll", () => {
     //     test("should fetch profile by name", async () => {
@@ -78,10 +45,10 @@ describe("ProfileService", () => {
         test("should fetch profile by name", async () => {
             nock("https://api.mojang.com")
                 .get("/users/profiles/minecraft/lookup")
-                .reply(200, {
+                .reply(200, JSON.stringify({
                     id: "00000000000000000000000000000000",
                     name: "character1",
-                });
+                }));
             const s = await lookupByName("lookup");
             expect(s).toBeTruthy();
             expect(s.name).toBe("character1");
@@ -194,24 +161,24 @@ describe("ProfileService", () => {
         });
         test("should fetch the correct username and uuid", async () => {
             nock("http://localhost:25566")
-                .get("/sessionserver/session/minecraft/profile/00000000000000000000000000000000?unsigned=false")
+                .get("/sessionserver/session/minecraft/profile/00000000000000000000000000000000?unsigned=true")
                 .reply(200, {
                     id: "00000000000000000000000000000000",
                     name: "character1",
                 });
-            const s = await lookup("00000000000000000000000000000000", { api: MOCK });
+            const s = await lookup("00000000000000000000000000000000", { api: API });
             expect(s.name).toBe("character1");
             expect(s.id).toBe("00000000000000000000000000000000");
         });
         test("the game profile properties should be correct format", async () => {
             nock("http://localhost:25566")
-                .get("/sessionserver/session/minecraft/profile/00000000000000000000000000000000?unsigned=false")
+                .get("/sessionserver/session/minecraft/profile/00000000000000000000000000000000?unsigned=true")
                 .reply(200, {
                     id: "00000000000000000000000000000000",
                     name: "character1",
                     properties: [{ name: "textures", value: "eyJ0aW1lc3RhbXAiOjE1NDEzODY0MzI2OTksInByb2ZpbGVJZCI6ImFiZjgxZmU5OWYwZDQ5NDhhOTA5NzcyMWE4MTk4YWM0IiwicHJvZmlsZU5hbWUiOiJDSTAxMCIsInNpZ25hdHVyZVJlcXVpcmVkIjp0cnVlLCJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGYwMzE0NzJmYjg3MjgyNjA4MjdjMTY2NzA2ZTJiYTI0YTBmYzlhMmRhNThlM2MyZDVlNWMzMDI0ZDQxNTNlZSJ9fX0=" }],
                 });
-            const s = await lookup("00000000000000000000000000000000", { api: MOCK });
+            const s = await lookup("00000000000000000000000000000000", { api: API });
             expect(s.properties).toBeTruthy();
             expect(s.properties.textures).toBeTruthy();
             for (const key in s.properties) {
@@ -220,7 +187,7 @@ describe("ProfileService", () => {
             }
         });
         test("should catch error if the profile doesn't exists", async () => {
-            await expect(lookup("asd", { api: MOCK }))
+            await expect(lookup("asd", { api: API }))
                 .rejects
                 .toBeTruthy();
         });
@@ -259,6 +226,42 @@ describe("Texture", () => {
             expect(GameProfile.Texture.isSlim({
                 url: "",
             })).toEqual(false);
+        });
+    });
+});
+
+describe("ProfileLookuper", () => {
+    describe("#lookup", () => {
+        test("should be able to send lookup", async () => {
+            const lk = new ProfileLookuper(PROFILE_API_MOJANG);
+            nock("https://sessionserver.mojang.com")
+                .get("/session/minecraft/profile/uuid")
+                .query(new URLSearchParams({ unsigned: "false" }))
+                .reply(200, {
+                    id: "uuid",
+                    name: "character1",
+                });
+            await expect(lk.lookup("uuid"))
+                .resolves
+                .toBeTruthy();
+        });
+        test("should be able to defer lookup", async () => {
+            const lk = new ProfileLookuper(PROFILE_API_MOJANG);
+            nock("https://sessionserver.mojang.com")
+                .get("/session/minecraft/profile/uuid").twice()
+                .query(new URLSearchParams({ unsigned: "false" }))
+                .reply(200, {
+                    id: "uuid",
+                    name: "character1",
+                });
+            await Promise.all([
+                expect(lk.lookup("uuid"))
+                    .resolves
+                    .toBeTruthy(),
+                expect(lk.lookup("uuid"))
+                    .resolves
+                    .toBeTruthy(),
+            ]);
         });
     });
 });

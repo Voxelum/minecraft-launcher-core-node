@@ -56,8 +56,12 @@ setKernal({
         const key = await crypto.subtle.importKey("pkcs8", pemKey, option, false, ["verify"]);
         return crypto.subtle.verify(option, key, stringToBuffer(signature), stringToBuffer(data));
     },
+    decodeBase64(b) {
+        return atob(b);
+    },
 });
 
 export * from "./auth";
 export * from "./service";
+export * from "./mojang";
 export { GameProfile, GameProfileWithProperties } from "./base";
