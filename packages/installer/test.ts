@@ -1,13 +1,9 @@
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import { exists } from "@xmcl/core/fs";
-import assert from "assert";
 import { existsSync, readFileSync } from "fs";
-import { join, normalize, } from "path";
-import { FabricInstaller } from "./fabric";
-import ForgeInstaller from "./forge";
-import { Installer } from "./index";
+import { join, normalize } from "path";
+import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis } from "./index";
 import { JavaExecutor } from "./java";
-import LiteLoaderInstaller from "./liteloader";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
 const mockRoot = normalize(join(__dirname, "..", "..", "mock"));
@@ -17,7 +13,7 @@ describe("Install", () => {
     jest.setTimeout(100000000);
 
     async function assertNoError(version: string, loc: MinecraftLocation) {
-        const diag = await Installer.diagnose(version, loc);
+        const diag = await Diagnosis.diagnose(version, loc);
         expect(Object.keys(diag.assets)).toHaveLength(0);
         expect(diag.libraries).toHaveLength(0);
         expect(diag.assetsIndex).toBeFalsy();
@@ -25,11 +21,11 @@ describe("Install", () => {
         expect(diag.versionJson).toEqual(diag.versionJson);
     }
     describe("MinecraftClient", () => {
-        async function installVersionClient(version: Installer.VersionMeta, gameDirectory: string) {
+        async function installVersionClient(version: Installer.Version, gameDirectory: string) {
             const loc = MinecraftFolder.from(gameDirectory);
             await Installer.install("client", version, loc);
-            assert(existsSync(loc.getVersionJar(version.id)));
-            assert(existsSync(loc.getVersionJson(version.id)));
+            expect(existsSync(loc.getVersionJar(version.id))).toBeTruthy();
+            expect(existsSync(loc.getVersionJson(version.id))).toBeTruthy();
             await assertNoError(version.id, loc);
         }
         test("should fetch minecraft version", () => Installer.updateVersionMeta());
@@ -101,21 +97,12 @@ describe("Install", () => {
             },
         );
     });
+});
 
+describe("Diagnosis", () => {
     describe("#diagnose", () => {
-        test("should be able to diagnose minecraft folder", async () => {
-            await Version.parse(root, "1.7.10").catch((e) => {
-            });
-            // const mock = await Installer.diagnose("mock", root);
-            // expect(mock.version).toBe("mock");
-            // expect(mock.minecraftLocation.root).toBe(root);
-            // expect(mock.missingAssetsIndex).toBe(false);
-            // expect(v17.missingLibraries.length).toBeGreaterThan(0);
-            // expect(mock.missingVersionJar).toBeTruthy();
-            // expect(mock.missingVersionJson).toBe(false);
-        });
         test.skip("should be able to diagnose empty json folder", async () => {
-            const v17 = await Installer.diagnose("1.7.10", root);
+            await Diagnosis.diagnose("1.7.10", root);
             // expect(v17.version).toBe("1.7.0");
             // expect(v17.minecraftLocation.root).toBe(root);
             // expect(v17.missingAssetsIndex).toBe(false);
@@ -126,12 +113,11 @@ describe("Install", () => {
     });
 });
 
-
 describe("ForgeInstaller", () => {
     jest.setTimeout(100000000);
 
     test("should install forge on 1.7.10", async () => {
-        const meta: ForgeInstaller.VersionMeta = {
+        const meta: ForgeInstaller.Version = {
             version: "10.13.3.1400",
             installer: {
                 md5: "fb37fa073dce193f798ecf8987c25dba",
@@ -153,7 +139,7 @@ describe("ForgeInstaller", () => {
         await Installer.installDependencies(await Version.parse(root, result));
     });
     test("should install forge on 1.12.2", async () => {
-        const meta: ForgeInstaller.VersionMeta = {
+        const meta: ForgeInstaller.Version = {
             mcversion: "1.12.2",
             version: "14.23.5.2823",
             universal: {
@@ -176,7 +162,7 @@ describe("ForgeInstaller", () => {
         // await assertNoError(result, root);
     });
     test("should install forge 1.13.2-25.0.209", async () => {
-        const meta: ForgeInstaller.VersionMeta = {
+        const meta: ForgeInstaller.Version = {
             mcversion: "1.13.2",
             version: "25.0.209",
             universal: {
@@ -196,11 +182,10 @@ describe("ForgeInstaller", () => {
             .resolves
             .toBeTruthy();
         await Installer.installDependencies(await Version.parse(root, result));
-        // await assertNoError(result, root);
     });
 
     test("should install forge 1.14.4-forge-28.0.45", async () => {
-        const meta: ForgeInstaller.VersionMeta = {
+        const meta: ForgeInstaller.Version = {
             mcversion: "1.14.4",
             version: "28.0.45",
             universal: {
@@ -227,7 +212,7 @@ describe("ForgeInstaller", () => {
 describe("LiteloaderInstaller", () => {
     describe("#update", () => {
         test("should be able to fetch liteloader version json", async () => {
-            await LiteLoaderInstaller.VersionMetaList.update({}).then((list) => {
+            await LiteLoaderInstaller.getVersionList({}).then((list) => {
                 expect(list).toBeTruthy();
             }).catch((e) => {
                 if (e.error === "500: Internal Server Error") {
@@ -238,12 +223,12 @@ describe("LiteloaderInstaller", () => {
     });
     describe("#install", () => {
         test("should be able to install liteloader on 1.12.2", async () => {
-            const meta: LiteLoaderInstaller.VersionMeta = { url: "http://repo.mumfrey.com/content/repositories/snapshots/", type: "SNAPSHOT", file: "liteloader-1.12.2-SNAPSHOT.jar", version: "1.12.2-SNAPSHOT", md5: "1420785ecbfed5aff4a586c5c9dd97eb", timestamp: "1511880271", mcversion: "1.12.2", tweakClass: "com.mumfrey.liteloader.launch.LiteLoaderTweaker", libraries: [{ name: "net.minecraft:launchwrapper:1.12" }, { name: "org.ow2.asm:asm-all:5.2" }] };
+            const meta: LiteLoaderInstaller.Version = { url: "http://repo.mumfrey.com/content/repositories/snapshots/", type: "SNAPSHOT", file: "liteloader-1.12.2-SNAPSHOT.jar", version: "1.12.2-SNAPSHOT", md5: "1420785ecbfed5aff4a586c5c9dd97eb", timestamp: "1511880271", mcversion: "1.12.2", tweakClass: "com.mumfrey.liteloader.launch.LiteLoaderTweaker", libraries: [{ name: "net.minecraft:launchwrapper:1.12" }, { name: "org.ow2.asm:asm-all:5.2" }] };
             const result = await LiteLoaderInstaller.install(meta, MinecraftFolder.from(root));
             await Installer.installDependencies(await Version.parse(root, result));
         });
         test("should be able to install liteloader to forge", async () => {
-            const meta: LiteLoaderInstaller.VersionMeta = { url: "http://repo.mumfrey.com/content/repositories/snapshots/", type: "SNAPSHOT", file: "liteloader-1.12.2-SNAPSHOT.jar", version: "1.12.2-SNAPSHOT", md5: "1420785ecbfed5aff4a586c5c9dd97eb", timestamp: "1511880271", mcversion: "1.12.2", tweakClass: "com.mumfrey.liteloader.launch.LiteLoaderTweaker", libraries: [{ name: "net.minecraft:launchwrapper:1.12" }, { name: "org.ow2.asm:asm-all:5.2" }] };
+            const meta: LiteLoaderInstaller.Version = { url: "http://repo.mumfrey.com/content/repositories/snapshots/", type: "SNAPSHOT", file: "liteloader-1.12.2-SNAPSHOT.jar", version: "1.12.2-SNAPSHOT", md5: "1420785ecbfed5aff4a586c5c9dd97eb", timestamp: "1511880271", mcversion: "1.12.2", tweakClass: "com.mumfrey.liteloader.launch.LiteLoaderTweaker", libraries: [{ name: "net.minecraft:launchwrapper:1.12" }, { name: "org.ow2.asm:asm-all:5.2" }] };
             const result = await LiteLoaderInstaller.install(meta, MinecraftFolder.from(root), "1.12.2-forge1.12.2-14.23.5.2823");
             await Installer.installDependencies(await Version.parse(root, result));
         });
@@ -280,7 +265,7 @@ describe("FabricInstaller", () => {
     });
 
     test("#updateVersionList", async () => {
-        const list = await FabricInstaller.updateVersionList();
+        const list = await FabricInstaller.getVersionList();
         expect(list).toBeTruthy();
         if (list) {
             expect(typeof list.timestamp).toEqual("string");
