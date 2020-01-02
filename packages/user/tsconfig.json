@@ -4,7 +4,9 @@
         "index.module.ts",
         "auth.ts",
         "mojang.ts",
-        "service.ts"
+        "service.ts",
+        "setup.ts",
+        "setup.module.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
