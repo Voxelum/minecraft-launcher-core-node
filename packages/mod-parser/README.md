@@ -19,7 +19,7 @@
 
 ### Forge Mod/Config Parsing
 
-Read the forge mod metadata, including `@Mod` annotation and mcmods.info json data.
+Read the forge mod metadata, including `@Mod` annotation, mcmods.info, and toml metadata.
 
 ```ts
     import { Forge } from "@xmcl/mods";
@@ -43,5 +43,5 @@ Read .litemod metadata:
 
 ```ts
     import { LiteLoader } from "@xmcl/mods";
-    const metadata: LiteLoader.MetaData = await LiteLoader.meta(`${mock}/mods/sample-mod.litemod`);
+    const metadata: LiteLoader.MetaData = await LiteLoader.readModMetaData(`${mock}/mods/sample-mod.litemod`);
 ```
