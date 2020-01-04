@@ -2,7 +2,7 @@ import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson
 import { copyFile, ensureDir, ensureFile, exists, missing, readFile, stat, unlink, validateSha1, waitStream, writeFile } from "@xmcl/core/fs";
 import { parse as parseForge } from "@xmcl/forge-site-parser";
 import { Task } from "@xmcl/task";
-import { Unzip } from "@xmcl/unzip";
+import { ZipFile, Entry, open, LazyZipFile, createParseStream } from "@xmcl/unzip";
 import { createReadStream, createWriteStream } from "fs";
 import { delimiter, join } from "path";
 import { Readable } from "stream";
@@ -11,7 +11,7 @@ import { installLibrariesDirectTask, LibraryOption } from "./minecraft";
 import { downloadFileIfAbsentTask, downloadFileTask, getIfUpdate, UpdatedObject } from "./downloader";
 
 async function findMainClass(lib: string) {
-    const zip = await Unzip.open(lib, { lazyEntries: true });
+    const zip = await open(lib, { lazyEntries: true });
     const [manifest] = await zip.filterEntries(["META-INF/MANIFEST.MF"]);
     let mainClass: string | undefined;
     if (manifest) {
@@ -270,13 +270,13 @@ function installByInstallerTask(version: Version, minecraft: MinecraftLocation, 
                         algorithm: "sha1",
                     },
                 })(ctx);
-                return createReadStream(dest).pipe(Unzip.createParseStream({ lazyEntries: true })).wait();
+                return createReadStream(dest).pipe(createParseStream({ lazyEntries: true })).wait();
             };
         }
         /**
          * Unzip the installer_profile.json, bin patch file, and version json under the version folder
          */
-        async function processVersion(zip: Unzip.ZipFile, installProfileEntry: Unzip.Entry, versionEntry: Unzip.Entry, clientDataEntry: Unzip.Entry) {
+        async function processVersion(zip: ZipFile, installProfileEntry: Entry, versionEntry: Entry, clientDataEntry: Entry) {
             profile = await zip.readEntry(installProfileEntry).then((b) => b.toString()).then(JSON.parse);
             versionJson = await zip.readEntry(versionEntry).then((b) => b.toString()).then(JSON.parse);
             versionId = versionJson.id;
@@ -301,7 +301,7 @@ function installByInstallerTask(version: Version, minecraft: MinecraftLocation, 
         }
 
         try {
-            let zip: Unzip.LazyZipFile;
+            let zip: LazyZipFile;
             try {
                 zip = await context.execute(downloadInstallerTask(installerURL, installJar));
             } catch {
@@ -370,7 +370,7 @@ function installByUniversalTask(version: Version, minecraft: MinecraftLocation, 
         });
 
         await context.execute(async function installForgeJson() {
-            const zip = await Unzip.open(jarPath, { lazyEntries: true });
+            const zip = await open(jarPath, { lazyEntries: true });
             const [versionEntry] = await zip.filterEntries(["version.json"]);
 
             if (versionEntry) {

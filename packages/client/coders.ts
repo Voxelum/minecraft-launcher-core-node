@@ -1,6 +1,6 @@
 // tslint:disable: variable-name
 
-import NBT from "@xmcl/nbt";
+import { deserializeSync } from "@xmcl/nbt";
 import ByteBuffer from "bytebuffer";
 import Long from "long";
 import "uuid";
@@ -167,7 +167,7 @@ const Slot: Coder<SlotData> = {
             blockId,
             itemCount,
             itemDamage,
-            nbt: NBT.deserializeSync(Buffer.from(buffer.buffer)),
+            nbt: deserializeSync(Buffer.from(buffer.buffer)),
         };
     },
     encode: (buffer, inst) => {

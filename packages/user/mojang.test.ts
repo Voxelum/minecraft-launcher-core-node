@@ -1,6 +1,6 @@
 import { checkLocation } from "./index";
 import { getChallenges, responseChallenges } from "./mojang";
-import nock = require("nock");
+import nock from "nock";
 
 describe("MojangService", () => {
     describe("#checkLocation", () => {

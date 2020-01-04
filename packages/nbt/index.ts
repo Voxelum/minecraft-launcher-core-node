@@ -1,6 +1,6 @@
-import { deflate, deflateSync, gunzip, gunzipSync, gzip, gzipSync, inflate, inflateSync } from "zlib";
-import NBT, { setZlib } from "./nbt";
 import { promisify } from "util";
+import { setZlib } from "./utils";
+import { deflate, deflateSync, gunzip, gunzipSync, gzip, gzipSync, inflate, inflateSync } from "zlib";
 
 setZlib({
     gzip: promisify(gzip),
@@ -13,6 +13,4 @@ setZlib({
     deflateSync,
 });
 
-export { NBT };
-
-export default NBT;
+export * from "./nbt";

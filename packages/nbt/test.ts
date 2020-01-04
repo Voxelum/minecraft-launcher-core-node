@@ -1,64 +1,65 @@
 import assert from "assert";
 import Long from "long";
-import { NBT } from "./index";
+import * as NBT from "./index";
+import { TagType, TagTypeAlias } from "./nbt";
+
+class TestType {
+    @TagType(TagType.String)
+    name = "ci010";
+    @TagType(TagType.String)
+    type = "author";
+    @TagType(TagType.Byte)
+    byte = 10;
+    @TagType(TagType.Short)
+    short = 10;
+    @TagType(TagType.Int)
+    int = 10;
+    @TagType(TagType.LongArray)
+    longArray = [new Long(1, 2)];
+    @TagType(TagType.ByteArray)
+    byteArray = [1, 1];
+    @TagType(TagType.Long)
+    long = new Long(132);
+    @TagType(TagType.Float)
+    float = 0.25;
+    @TagType(TagType.Double)
+    double = 0.00001;
+    @TagType(TagType.IntArray)
+    intArray = [12, 3, 4, 512];
+    @TagType(TagType.Compound)
+    nested = {
+        name: "indexyz", type: "author", value: "ilauncher",
+    };
+}
 
 describe("NBT", () => {
     function matchBuffer(a: Uint8Array, b: Uint8Array) {
         if (a.length !== b.length) { return false; }
         return a.every((v, i) => v === b[i]);
     }
-    const src = {
-        name: "ci010",
-        type: "author",
-        byte: 10,
-        short: 10,
-        int: 10,
-        longArray: [new Long(1, 2)],
-        byteArray: [1, 1],
-        long: new Long(132),
-        float: 0.25,
-        double: 0.00001,
-        intArray: [12, 3, 4, 512],
-        nested: {
-            name: "indexyz", type: "author", value: "ilauncher",
-        },
-    };
-    const schema = {
-        name: NBT.TagType.String,
-        type: NBT.TagType.String,
-        short: NBT.TagType.Short,
-        int: NBT.TagType.Int,
-        value: NBT.TagType.String,
-        byte: NBT.TagType.Byte,
-        longArray: NBT.TagType.LongArray,
-        byteArray: NBT.TagType.ByteArray,
-        intArray: NBT.TagType.IntArray,
-        long: NBT.TagType.Long,
-        float: NBT.TagType.Float,
-        double: NBT.TagType.Double,
-        nested: "test",
-    };
+    const src = new TestType();
     function serializerFixture() {
-        return NBT.createSerializer().register("test", schema);
+        return new NBT.Serializer().register(TestType);
     }
-    describe("#register", () => {
-        test("should register the type", () => {
-            const type = "test";
-            const serializer = NBT.createSerializer().register(type, schema);
-            expect(serializer.getType(schema)).toEqual(type);
-            expect(serializer.getSchema(type)).toEqual(schema);
-        });
-        test("should throw error if the input is invalid", () => {
-            expect(() => NBT.createSerializer().register("type", undefined!))
-                .toThrow();
-        });
-    })
+
+    // describe("#register", () => {
+    //     test("should register the type", () => {
+    //         const type = "test";
+    //         const serializer = new NBT.Serializer().register(type, schema);
+    //         expect(serializer.getType(schema)).toEqual(type);
+    //         expect(serializer.getSchema(type)).toEqual(schema);
+    //     });
+    //     test("should throw error if the input is invalid", () => {
+    //         expect(() => new NBT.Serializer().register("type", undefined!))
+    //             .toThrow();
+    //     });
+    // })
 
     describe("#serialize/deserialize", () => {
         function testNBT(compress: "gzip" | "deflate" | undefined | true) {
             test("sync", () => {
                 const serializer = serializerFixture();
-                const buffer = serializer.serializeSync(src, "test", { compressed: compress });
+                const buffer = serializer.serializeSync(src, { compressed: compress });
                 expect(buffer).toBeTruthy();
                 const { value, type } = serializer.deserializeSync(buffer, { compressed: compress });
                 // expect(type).toStrictEqual(schema);
@@ -98,7 +99,7 @@ describe("NBT", () => {
         test("should not serialize the error input", async () => {
             const input = { name: "ci010" };
             const inputType = { name: NBT.TagType.Byte };
-            const serializer = NBT.createSerializer().register("test", inputType);
+            const serializer = new NBT.Serializer().register("test", inputType);
             assert.deepEqual((serializer as any).registry.test, inputType);
             try {
                 await serializer.serialize(input, "test");
@@ -119,7 +120,7 @@ describe("NBT", () => {
         test("should ignore the additional field in serialization", async () => {
             const unmatchedInput = { name: "ci010", age: 0 };
             const inputType = { name: NBT.TagType.String };
-            const serializer = NBT.createSerializer().register("test", inputType);
+            const serializer = new NBT.Serializer().register("test", inputType);
 
             const matchedInput = { name: "ci010" };
 
@@ -246,7 +247,7 @@ describe("NBT", () => {
             const object = {
                 value: [{ x: 1 }, { x: 2 }, { x: 3 }],
             };
-            const serializer = NBT.createSerializer();
+            const serializer = new NBT.Serializer();
             serializer.register("custom", { x: NBT.TagType.Int });
             serializer.register("type", { value: ["custom"] });
             test("save", async () => {

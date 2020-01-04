@@ -1,4 +1,4 @@
-import Unzip from "@xmcl/unzip";
+import { createExtractStream } from "@xmcl/unzip";
 import { checksum, ensureDir, validateSha1, readFile, writeFile, missing } from "./fs";
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
 import { createReadStream } from "fs";
@@ -192,7 +192,7 @@ export namespace LaunchPrecheck {
             const notInMetaInf = (p: string) => p.indexOf("META-INF/") === -1;
             const notSha1AndNotGit = (p: string) => !(p.endsWith(".sha1") || p.endsWith(".git"));
             const from = resource.getLibraryByPath(n.download.path);
-            await createReadStream(from).pipe(Unzip.createExtractStream(native, (entry) => {
+            await createReadStream(from).pipe(createExtractStream(native, (entry) => {
                 const filtered = containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ? entry.fileName : undefined;
                 if (filtered) {
                     extractedNatives.push({ file: entry.fileName, name: n.name, sha1: "" });

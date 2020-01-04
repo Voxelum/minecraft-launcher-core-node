@@ -1,4 +1,4 @@
-import NBT from "@xmcl/nbt";
+import { deserialize, serialize } from "@xmcl/nbt";
 import { TextComponent, TextComponentFrame } from "@xmcl/text-component";
 import { StatusClient } from "./status-client";
 
@@ -137,7 +137,7 @@ export namespace Server {
      * @param buff The binary data of .minecraft/server.dat
      */
     export async function readInfo(buff: Uint8Array): Promise<ServerInfoFrame[]> {
-        const value = await NBT.deserialize<any>(buff);
+        const value = await deserialize<any>(buff);
         if (!value.servers) {
             throw {
                 type: "InvalidServerSyntext",
@@ -176,7 +176,7 @@ export namespace Server {
                 ],
             },
         };
-        return NBT.serialize(object);
+        return serialize(object);
     }
 
     export interface FetchOptions {

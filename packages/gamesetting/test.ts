@@ -1,5 +1,5 @@
 import assert from "assert";
-import { GameSetting } from "./index";
+import * as GameSetting from "./index";
 
 describe("GameSetting", () => {
     test("should parse all options", () => {
