@@ -49,34 +49,27 @@ export const DEFAULT_VERSION_MANIFEST_URL = "https://launchermeta.mojang.com/mc/
  */
 export const DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.net";
 
-export function updateVersionMeta(): Promise<VersionList | undefined>;
-export function updateVersionMeta(option: {
-    remote?: string,
-}): Promise<VersionList | undefined>;
-export function updateVersionMeta(option: {
-    fallback?: VersionList,
-    remote?: string,
-}): Promise<VersionList | undefined>;
-export function updateVersionMeta(option: {
-    fallback: VersionList,
-    remote?: string,
-}): Promise<VersionList>;
 /**
- * Get/refresh a version metadata.
+ * Get and update the version list.
  * This try to send http GET request to offical Minecraft metadata endpoint by default.
  * You can swap the endpoint by passing url on `remote` in option.
+ *
+ * @returns The new list if there is
  */
-export function updateVersionMeta(option: {
+export function getVersionList(option: {
     /**
-     * fallback meta container if there is no internet
+     * If this presents, it will send request with the original list timestamp.
+     *
+     * If the server believes there is no modification after the original one,
+     * it will directly return the orignal one.
      */
-    fallback?: VersionList,
+    original?: VersionList,
     /**
      * remote url of this request
      */
     remote?: string,
-} = {}): Promise<VersionList | undefined> {
-    return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.fallback);
+} = {}): Promise<VersionList> {
+    return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.original);
 }
 export interface DownloaderOption {
     /**

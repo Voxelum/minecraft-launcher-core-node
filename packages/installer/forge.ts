@@ -441,57 +441,20 @@ export function installTask(version: Version, minecraft: MinecraftLocation, opti
  *
  * @param option The option can control querying minecraft version, and page caching.
  */
-export function getVersionList(): Promise<VersionList | undefined>;
-/**
- * Query the webpage content from files.minecraftforge.net.
- *
- * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
- * It will request a new page only when the fallback option is outdated.
- *
- * @param option The option can control querying minecraft version, and page caching.
- */
-export function getVersionList(option?: {
-    mcversion?: string;
-}): Promise<VersionList | undefined>;
-/**
- * Query the webpage content from files.minecraftforge.net.
- *
- * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
- * It will request a new page only when the fallback option is outdated.
- *
- * @param option The option can control querying minecraft version, and page caching.
- */
-export function getVersionList(option?: {
-    mcversion?: string;
-    fallback?: VersionList;
-}): Promise<VersionList | undefined>;
-/**
- * Query the webpage content from files.minecraftforge.net.
- *
- * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
- * It will request a new page only when the fallback option is outdated.
- *
- * @param option The option can control querying minecraft version, and page caching.
- */
-export function getVersionList(option?: {
-    mcversion?: string;
-    fallback: VersionList;
-}): Promise<VersionList>;
-
-/**
- * Query the webpage content from files.minecraftforge.net.
- *
- * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
- * It will request a new page only when the fallback option is outdated.
- *
- * @param option The option can control querying minecraft version, and page caching.
- */
 export async function getVersionList(option: {
-    mcversion?: string,
-    fallback?: VersionList,
-} = {}): Promise<VersionList | undefined> {
+    /**
+     * The minecraft version you are requesting
+     */
+    mcversion?: string;
+    /**
+     * If this presents, it will send request with the original list timestamp.
+     *
+     * If the server believes there is no modification after the original one,
+     * it will directly return the orignal one.
+     */
+    original?: VersionList;
+} = {}): Promise<VersionList> {
     const mcversion = option.mcversion || "";
     const url = mcversion === "" ? "http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html" : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`;
-    const page = await getIfUpdate(url, parseForge, option.fallback);
-    return page;
+    return getIfUpdate(url, parseForge, option.original);
 }
