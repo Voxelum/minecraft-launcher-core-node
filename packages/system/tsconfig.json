@@ -2,11 +2,13 @@
     "files": [
         "index.ts",
         "system.ts",
+        "index.browser.ts",
         "test.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "commonjs",
+        "module": "ES2015",
+        "outDir": "esm",
         "lib": [
             "dom"
         ],

@@ -2,6 +2,7 @@
   "name": "@xmcl/client",
   "version": "1.0.3",
   "main": "./index.js",
+  "module": "./esm/index.js",
   "description": "Minecraft client ping server",
   "engines": {
     "node": ">=10.0"

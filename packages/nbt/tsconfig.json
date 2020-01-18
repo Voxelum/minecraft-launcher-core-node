@@ -1,13 +1,15 @@
 {
     "files": [
         "index.ts",
-        "index.module.ts",
+        "index.browser.ts",
         "nbt.ts",
-        "utils.ts"
+        "utils.ts",
+        "test.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "commonjs",
+        "module": "ES2015",
+        "outDir": "esm",
         "lib": [
             "dom"
         ],
