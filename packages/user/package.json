@@ -2,7 +2,11 @@
   "name": "@xmcl/user",
   "version": "1.0.4",
   "main": "./index.js",
-  "module": "./index.module.js",
+  "module": "./esm/index.js",
+  "browser": {
+    "./index.js": "./index.browser.js",
+    "./esm/index.js" : "./esm/index.browser.js"
+  },
   "description": "Minecraft user related functions, including Yggdrasil authenticator, player skin fetcher, and Mojang security API",
   "engines": {
     "node": ">=10.0"
@@ -14,6 +18,10 @@
     "got": "^9.6.0",
     "uuid": "^3.2.1"
   },
+  "sideEffects": [
+    "setup.js",
+    "setup.browser.js"
+  ],
   "scripts": {
     "compile": "tsc --build tsconfig.json",
     "build": "npm run compile"

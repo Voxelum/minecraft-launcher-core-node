@@ -2,7 +2,8 @@
   "private": true,
   "version": "2.0.0",
   "scripts": {
-    "build": "npm run lint && npm run compile && node scripts/generate-definition.js",
+    "build": "npm run lint && npm run compile &&  node scripts/generate-definition.js",
+    "build:esm": "lerna run compile",
     "build:clean": "node scripts/clean.js",
     "build:web": "parcel build docs/site/index.html -d docs/build --public-url ./",
     "clean": "lerna clean --yes",
@@ -17,6 +18,7 @@
     "dev:web": "sh scripts/build_workers.sh && parcel serve docs/site/index.html -d docs/build"
   },
   "dependencies": {
+    "@xmcl/server-info": "file:packages\\server-info",
     "@xmcl/user": "file:packages\\user",
     "@xmcl/client": "file:packages\\client",
     "@xmcl/system": "file:packages\\system",

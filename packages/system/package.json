@@ -2,8 +2,12 @@
   "name": "@xmcl/system",
   "version": "1.0.4",
   "main": "./index.js",
-  "module": "./index.module.js",
-  "description": "Minecraft common concepts",
+  "module": "./esm/index.js",
+  "browser": {
+    "./index.js": "./index.browser.js",
+    "./esm/index.js" : "./esm/index.browser.js"
+  },
+  "description": "An abstract layer for system and fs",
   "engines": {
     "node": ">=10.0"
   },

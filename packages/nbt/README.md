@@ -41,8 +41,21 @@ You can use it with the type cast. Suppose you are reading the [servers.dat](htt
     const oneServer: ServerInfo = readed.servers[0];
 ```
 
+You can use class with annotation (decorator) to serialize/deserialize the type consistently
+
 ```ts
-import { Serializer } from "@xmcl/nbt";
+import { serialize, deserialize, TagType } from "@xmcl/nbt";
+
+class ServerInfo {
+    @TagType(TagType.String)
+    icon: string;
+    @TagType(TagType.String)
+    host: string;
+    @TagType(TagType.String)
+    name: string;
+    @TagType(TagType.Int)
+    icon: number
+}
 
 const serial = new Serializer()
     .register("server", {

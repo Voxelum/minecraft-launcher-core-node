@@ -1,9 +1,6 @@
 {
-    "files": [
-        "index.ts",
-        "system.ts",
-        "index.browser.ts",
-        "test.ts"
+    "include": [
+        "index.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
@@ -13,7 +10,8 @@
             "dom"
         ],
         "experimentalDecorators": true,
-        "declaration": true,"downlevelIteration": true,
+        "declaration": true,
+        "downlevelIteration": true,
         "strict": true,
         "inlineSourceMap": true,
         "inlineSources": true,

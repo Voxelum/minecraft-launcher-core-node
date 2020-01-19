@@ -2,6 +2,7 @@
   "name": "@xmcl/unzip",
   "version": "1.0.3",
   "main": "./index.js",
+  "module": "./esm/index.js",
   "description": "Unzip interface",
   "engines": {
     "node": ">=10.0"
