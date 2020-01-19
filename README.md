@@ -37,7 +37,7 @@ The `@xmcl/model` is a browser only package, as it's using [THREE.js](https://th
 ## Getting Started
 
 - [Minecraft Launcher Core](#minecraft-launcher-core)
-  - [Installation &amp; Usage](#installation-amp-usage)
+  - [Installation & Usage](#installation--usage)
   - [Browser Only Module](#browser-only-module)
   - [Getting Started](#getting-started)
     - [Build THREE.js model for block and player (PREVIEW, not available yet)](#build-threejs-model-for-block-and-player-preview-not-available-yet)
@@ -69,7 +69,7 @@ The `@xmcl/model` is a browser only package, as it's using [THREE.js](https://th
     - [Setup Dev Workspace](#setup-dev-workspace)
     - [How to Dev](#how-to-dev)
     - [Before Submit PR](#before-submit-pr)
-  - [Dependencies &amp; Module Coupling](#dependencies-amp-module-coupling)
+  - [Dependencies & Module Coupling](#dependencies--module-coupling)
     - [Core Features (Node/Electron Only)](#core-features-nodeelectron-only)
     - [User Authorization Features (Node/Electron/Browser)](#user-authorization-features-nodeelectronbrowser)
     - [General Gaming Features (Node/Electron/Browser)](#general-gaming-features-nodeelectronbrowser)
@@ -337,6 +337,7 @@ You can clear the cache by:
 manager.clearCache();
 ```
 
+
 ### Mojang Security API
 
 Validate if user have a validated IP address, and get & answer challenges to validate player's identity.
@@ -504,7 +505,7 @@ Therefore you can just treat the `TaskRuntime` object a stateless event emitter.
         // every node, parent or child will emit finish event when it finish
     });
 
-    runtime.on("fail", (error, node) => {
+    runtime.on("node-error", (error, node) => {
         // emit when a task node (parent or child) failed
     });
 
@@ -518,26 +519,62 @@ Therefore you can just treat the `TaskRuntime` object a stateless event emitter.
 You can simply deserialize/serialize nbt.
 
 ```ts
-    import { NBT } from "@xmcl/nbt";
+    import { serialize, deserialize } from "@xmcl/nbt";
     const fileData: Buffer;
     // compressed = undefined will not perform compress algorithm
     // compressed = true will use gzip algorithm
     const compressed: true | "gzip" | "deflate" | undefined;
-    const readed: NBT.TypedObject = await NBT.deserialize(fileData, { compressed });
-    // NBT.Persistence.TypedObject is just a object with __nbtPrototype__ defining its nbt type
+    const readed: any = await deserialize(fileData, { compressed });
+    // The deserialize return object contain __nbtPrototype__ property which define its nbt type
     // After you do the modification on it, you can serialize it back to NBT
-    const buf: Buffer = await NBT.serialize(readed, { compressed });
+    const buf: Buffer = await serialize(readed, { compressed });
+```
 
-    // or use serializer style
-    const serial = NBT.createSerializer()
-        .register("server", {
-            name: NBT.TagType.String,
-            host: NBT.TagType.String,
-            port: NBT.TagType.Int,
-            icon: NBT.TagType.String,
-        });
-    const serverInfo: any; // this doesn't require the js object to be a TypedObject
-    const serialized: Buffer = await serial.serialize(serverInfo, "server");
+You can use it with the type cast. Suppose you are reading the [servers.dat](https://minecraft.gamepedia.com/Servers.dat_format). You can have:
+
+```ts
+    interface ServerInfo { icon: string; ip: string; name: string; acceptTextures: number }
+    interface ServerNBTFormat {
+        servers: Array<ServerInfo>;
+    }
+    // this function will auto fit the typescript type
+    const readed: ServerNBTFormat = await deserialize(fileData);
+    // or 
+    const readed = await deserialize<ServerNBTFormat>(fileData);
+    // notice that this type cast can be unsafe, make sure you know the nbt structure!!!
+    
+    // the first server in servers.dat
+    const oneServer: ServerInfo = readed.servers[0];
+```
+
+You can use class with annotation (decorator) to serialize/deserialize the type consistently
+
+```ts
+import { serialize, deserialize, TagType } from "@xmcl/nbt";
+
+class ServerInfo {
+    @TagType(TagType.String)
+    icon: string = "";
+    @TagType(TagType.String)
+    ip: string = "";
+    @TagType(TagType.String)
+    name: string = "";
+    @TagType(TagType.Byte)
+    acceptTextures: number = 0;
+}
+
+class Servers {
+    @TagType([ServerInfo])
+    servers: ServerInfo[] = []
+}
+
+// read
+const servers = await deserialize(data, { type: Servers });
+const infos: ServerInfo[] = servers.servers;
+
+// write
+const servers: Servers;
+const binary = await serialize(servers);
 ```
 
 ### Read ResourcePack Content
@@ -749,6 +786,7 @@ Delete player skin (reset to default):
         type: "skin",
     });
 ```
+
 
 ## Caching Request
 
