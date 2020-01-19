@@ -5,7 +5,7 @@ let versionMetaList: Installer.VersionList;
 let minecraftLocation: string; "my/path/to/minecraft"
 
 async function updateVersionList() {
-    versionMetaList = await Installer.getVersionList({ fallback: versionMetaList });
+    versionMetaList = await Installer.getVersionList({ original: versionMetaList });
 }
 
 async function installVersion(versionMeta: Installer.Version) {
