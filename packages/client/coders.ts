@@ -12,6 +12,9 @@ export interface SlotData {
     nbt?: any;
 }
 
+/**
+ * The packet encode/decode algorithm
+ */
 export interface Coder<T> {
     readonly encode: (buffer: ByteBuffer, data: T, context?: any) => void;
     readonly decode: (buffer: ByteBuffer, context?: any) => T;

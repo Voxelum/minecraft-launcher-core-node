@@ -14,7 +14,7 @@ export class ServerInfo {
 /**
  * The servers.dat format server information, contains known host displayed in "Multipler" page.
  */
-export class ServersDataTag {
+export class ServersData {
     @TagType([ServerInfo])
     servers: ServerInfo[] = [];
 }
@@ -25,7 +25,7 @@ export class ServersDataTag {
  * @param buff The binary data of .minecraft/server.dat
  */
 export async function readInfo(buff: Uint8Array): Promise<ServerInfo[]> {
-    const value = await deserialize(buff, { type: ServersDataTag });
+    const value = await deserialize(buff, { type: ServersData });
     return value.servers;
 }
 
@@ -35,8 +35,9 @@ export async function readInfo(buff: Uint8Array): Promise<ServerInfo[]> {
  * @param infos The array of server information.
  */
 export function writeInfo(infos: ServerInfo[]): Promise<Uint8Array> {
-    const tag = new ServersDataTag();
+    const tag = new ServersData();
     tag.servers = infos;
+    // infos.forEach(info => Object.setPrototypeOf(info, ServerInfo.prototype));
     return serialize(tag);
 }
 
@@ -45,8 +46,8 @@ export function writeInfo(infos: ServerInfo[]): Promise<Uint8Array> {
  *
  * @param buff The binary data of .minecraft/server.dat
  */
-export async function readInfoSync(buff: Uint8Array): Promise<ServerInfo[]> {
-    const value = await deserializeSync(buff, { type: ServersDataTag });
+export function readInfoSync(buff: Uint8Array): ServerInfo[] {
+    const value = deserializeSync(buff, { type: ServersData });
     return value.servers;
 }
 
@@ -56,7 +57,8 @@ export async function readInfoSync(buff: Uint8Array): Promise<ServerInfo[]> {
  * @param infos The array of server information.
  */
 export function writeInfoSync(infos: ServerInfo[]): Uint8Array {
-    const tag = new ServersDataTag();
+    const tag = new ServersData();
     tag.servers = infos;
+    // infos.forEach(info => Object.setPrototypeOf(info, ServerInfo.prototype));
     return serializeSync(tag);
 }
