@@ -74,8 +74,8 @@ function injectRoot() {
     const rootReadme = fs.readFileSync('README.md').toString();
     const lines = rootReadme.split("\n");
 
-    const gettingStartedLine = lines.findIndex(l => l.trim().startsWith('-'));
-    const firstSampleLine = lines.findIndex((l, i) => i > gettingStartedLine && l.trim().length === 0) + 1;
+    const gettingStartedLine = lines.findIndex(l => l.trim().startsWith('## Getting Started'));
+    const firstSampleLine = lines.findIndex((l, i) => i > gettingStartedLine && l.trim().startsWith("### "));
     const endSampleLine = lines.findIndex((l, i) => i > firstSampleLine && l.trim().startsWith("## "));
 
     lines.splice(firstSampleLine, endSampleLine - firstSampleLine, ...allReadme);
