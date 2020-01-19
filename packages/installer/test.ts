@@ -28,12 +28,12 @@ describe("Install", () => {
             expect(existsSync(loc.getVersionJson(version.id))).toBeTruthy();
             await assertNoError(version.id, loc);
         }
-        test("should fetch minecraft version", () => Installer.updateVersionMeta());
+        test("should fetch minecraft version", () => Installer.getVersionList());
         test("should not fetch duplicate version", async () => {
-            const first = await Installer.updateVersionMeta();
-            const sec = await Installer.updateVersionMeta({ fallback: first });
+            const first = await Installer.getVersionList();
+            const sec = await Installer.getVersionList({ original: first });
             expect(first).toEqual(sec);
-            expect(first!.timestamp).toEqual(sec!.timestamp);
+            expect(first.timestamp).toEqual(sec.timestamp);
         });
         test("should be able to install 1.7.10", async () => {
             await installVersionClient({
@@ -265,13 +265,12 @@ describe("FabricInstaller", () => {
     });
 
     test("#updateVersionList", async () => {
-        const list = await FabricInstaller.getVersionList();
+        const list = await FabricInstaller.getYarnVersionList();
         expect(list).toBeTruthy();
         if (list) {
             expect(typeof list.timestamp).toEqual("string");
-            expect(list.yarnVersions).toBeInstanceOf(Array);
-            expect(list.yarnVersions.every((s) => typeof s === "string")).toBeTruthy();
-            expect(list.loaderVersions.every((s) => typeof s === "string")).toBeTruthy();
+            expect(list.versions).toBeInstanceOf(Array);
+            expect(list.versions.every((s) => typeof s === "string")).toBeTruthy();
         }
     });
 });

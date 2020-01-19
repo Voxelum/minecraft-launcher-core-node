@@ -4,15 +4,21 @@ import { ensureFile, writeFile } from "@xmcl/core/fs";
 
 export const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
-export interface VersionList extends UpdatedObject {
-    /**
-     * All the yarn versions
-     */
-    yarnVersions: string[];
-    /**
-     * All the loader versions
-     */
-    loaderVersions: string[];
+
+/**
+ * Fabric Yarn version list
+ * @see https://github.com/FabricMC/yarn
+ */
+export interface YarnVersionList extends UpdatedObject {
+    versions: string[];
+}
+
+/**
+ * Fabric mod loader version list
+ * @see https://fabricmc.net/
+ */
+export interface LoaderVersionList extends UpdatedObject {
+    versions: string[];
 }
 
 /**
@@ -31,25 +37,51 @@ export function parseVersionMavenXML(content: string) {
 }
 
 /**
- * Get or refresh the version list.
+ * Get or refresh the yarn version list.
  */
-export async function getVersionList(versionList?: VersionList): Promise<VersionList> {
-    const timestamp = versionList ? versionList.timestamp : undefined;
+export async function getYarnVersionList(option: {
+    /**
+     * If this presents, it will send request with the original list timestamp.
+     *
+     * If the server believes there is no modification after the original one,
+     * it will directly return the orignal one.
+     */
+    original?: YarnVersionList,
+    /**
+     * remote maven xml url of this request
+     */
+    remote?: string,
+} = {}): Promise<YarnVersionList> {
+    const timestamp = option.original?.timestamp;
     const yarn = await getRawIfUpdate(YARN_MAVEN_URL, timestamp);
-    const loader = await getRawIfUpdate(LOADER_MAVEN_URL, timestamp);
-    let yarnList;
-    let loaderList;
-    if (yarn.content) {
-        yarnList = parseVersionMavenXML(yarn.content);
-    }
-    if (loader.content) {
-        loaderList = parseVersionMavenXML(loader.content);
-    }
     return {
-        yarnVersions: yarnList || (versionList ? versionList.yarnVersions : []),
-        loaderVersions: loaderList || (versionList ? versionList.loaderVersions : []),
-        timestamp: new Date(yarn.timestamp) > new Date(loader.timestamp) ? yarn.timestamp : loader.timestamp,
-    }
+        versions: yarn.content ? parseVersionMavenXML(yarn.content) : option.original?.versions!,
+        timestamp: yarn.timestamp,
+    };
+}
+
+/**
+ * Get or refresh the fabric mod loader version list.
+ */
+export async function getLoaderVersionList(option: {
+    /**
+     * If this presents, it will send request with the original list timestamp.
+     *
+     * If the server believes there is no modification after the original one,
+     * it will directly return the orignal one.
+     */
+    original?: LoaderVersionList,
+    /**
+     * remote maven xml url of this request
+     */
+    remote?: string,
+}): Promise<LoaderVersionList> {
+    const timestamp = option.original?.timestamp;
+    const loader = await getRawIfUpdate(LOADER_MAVEN_URL, timestamp);
+    return {
+        versions: loader.content ? parseVersionMavenXML(loader.content) : option.original?.versions!,
+        timestamp: loader.timestamp,
+    };
 }
 
 /**
