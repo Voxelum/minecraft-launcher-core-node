@@ -1,5 +1,5 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
-import { copyFile, ensureDir, ensureFile, exists, missing, readFile, stat, unlink, validateSha1, waitStream, writeFile } from "@xmcl/core/fs";
+import { copyFile, ensureDir, ensureFile, exists, missing, readFile, unlink, validateSha1, waitStream, writeFile } from "@xmcl/core/fs";
 import { parse as parseForge } from "@xmcl/forge-site-parser";
 import { Task } from "@xmcl/task";
 import { ZipFile, Entry, open, LazyZipFile, createParseStream } from "@xmcl/unzip";
@@ -7,7 +7,7 @@ import { createReadStream, createWriteStream } from "fs";
 import { delimiter, join } from "path";
 import { Readable } from "stream";
 import { JavaExecutor } from "./java";
-import { installLibrariesDirectTask, LibraryOption } from "./minecraft";
+import { installResolvedLibrariesTask, LibraryOption } from "./minecraft";
 import { downloadFileIfAbsentTask, downloadFileTask, getIfUpdate, UpdatedObject } from "./downloader";
 
 async function findMainClass(lib: string) {
@@ -214,7 +214,7 @@ function installByInstallerPartialWork(mc: MinecraftFolder, profile: InstallProf
         profile = postProcessInstallProfile(mc, profile);
 
         const parsedLibs = VersionJson.resolveLibraries([...profile.libraries, ...versionJson.libraries]);
-        await context.execute(installLibrariesDirectTask(parsedLibs, mc, {
+        await context.execute(installResolvedLibrariesTask(parsedLibs, mc, {
             ...installLibOption,
             libraryHost: installLibOption.libraryHost ? (l) => {
                 if (l.artifactId === "forge" && l.groupId === "net.minecraftforge") {
