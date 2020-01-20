@@ -68,7 +68,7 @@ export class ResourcePack {
      * @param location The resource location
      * @param urlOnly Should only provide the url, no content
      */
-    load(location: ResourceLocation, urlOnly: true): Promise<Resource | void>;
+    load(location: ResourceLocation, urlOnly: boolean): Promise<Resource | void>;
     async load(location: ResourceLocation, urlOnly: boolean): Promise<Resource | void> {
         const p = this.getPath(location);
         const name = p.substring(0, p.lastIndexOf("."));
@@ -123,34 +123,46 @@ export class ResourcePack {
     static async open(resourcePack: string | Uint8Array | FileSystem): Promise<ResourcePack> {
         return new ResourcePack(await System.resolveFileSystem(resourcePack));
     }
-    /**
-     * Read the resource pack metadata from zip file or directory.
-     *
-     * If you have already read the data of the zip file, you can pass it as the second parameter. The second parameter will be ignored on reading directory.
-     *
-     * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
-     */
-    static async readPackMeta(resourcePack: string | Uint8Array | FileSystem): Promise<PackMeta.Pack> {
-        const system = await System.resolveFileSystem(resourcePack);
-        if (!await system.existsFile("pack.mcmeta")) {
-            throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!");
-        }
-        const metadata = JSON.parse(await system.readFile("pack.mcmeta", "utf-8"));
-        if (!metadata.pack) {
-            throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!");
-        }
-        return metadata.pack;
-    }
-
-    /**
-     * Read the resource pack icon png binary.
-     * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
-     */
-    static async readIcon(resourcePack: string | Uint8Array | FileSystem): Promise<Uint8Array> {
-        const system = await System.resolveFileSystem(resourcePack);
-        return system.readFile("pack.png");
-    }
 }
 
 export * from "./format";
-export default ResourcePack;
+
+/**
+ * Read the resource pack metadata from zip file or directory.
+ *
+ * If you have already read the data of the zip file, you can pass it as the second parameter. The second parameter will be ignored on reading directory.
+ *
+ * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
+ */
+export async function readPackMeta(resourcePack: string | Uint8Array | FileSystem): Promise<PackMeta.Pack> {
+    const system = await System.resolveFileSystem(resourcePack);
+    if (!await system.existsFile("pack.mcmeta")) {
+        throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!");
+    }
+    const metadata = JSON.parse(await system.readFile("pack.mcmeta", "utf-8"));
+    if (!metadata.pack) {
+        throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!");
+    }
+    return metadata.pack;
+}
+
+/**
+ * Read the resource pack icon png binary.
+ * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
+ */
+export async function readIcon(resourcePack: string | Uint8Array | FileSystem): Promise<Uint8Array> {
+    const system = await System.resolveFileSystem(resourcePack);
+    return system.readFile("pack.png");
+}
+
+/**
+ * Read both metadata and icon
+ */
+export async function readPackMetaAndIcon(resourcePack: string | Uint8Array | FileSystem) {
+    const system = await System.resolveFileSystem(resourcePack);
+    return {
+        metadata: await readPackMeta(system),
+        icon: await readIcon(system).catch(() => undefined),
+    };
+}
+

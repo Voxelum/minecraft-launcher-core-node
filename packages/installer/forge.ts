@@ -1,17 +1,17 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
-import { copyFile, ensureDir, ensureFile, exists, missing, readFile, stat, unlink, validateSha1, waitStream, writeFile } from "@xmcl/core/fs";
+import { copyFile, ensureDir, ensureFile, exists, missing, readFile, unlink, validateSha1, waitStream, writeFile } from "@xmcl/core/fs";
 import { parse as parseForge } from "@xmcl/forge-site-parser";
 import { Task } from "@xmcl/task";
-import { Unzip } from "@xmcl/unzip";
+import { ZipFile, Entry, open, LazyZipFile, createParseStream } from "@xmcl/unzip";
 import { createReadStream, createWriteStream } from "fs";
 import { delimiter, join } from "path";
 import { Readable } from "stream";
 import { JavaExecutor } from "./java";
-import { installLibrariesDirectTask, LibraryOption } from "./minecraft";
+import { installResolvedLibrariesTask, LibraryOption } from "./minecraft";
 import { downloadFileIfAbsentTask, downloadFileTask, getIfUpdate, UpdatedObject } from "./downloader";
 
 async function findMainClass(lib: string) {
-    const zip = await Unzip.open(lib, { lazyEntries: true });
+    const zip = await open(lib, { lazyEntries: true });
     const [manifest] = await zip.filterEntries(["META-INF/MANIFEST.MF"]);
     let mainClass: string | undefined;
     if (manifest) {
@@ -214,7 +214,7 @@ function installByInstallerPartialWork(mc: MinecraftFolder, profile: InstallProf
         profile = postProcessInstallProfile(mc, profile);
 
         const parsedLibs = VersionJson.resolveLibraries([...profile.libraries, ...versionJson.libraries]);
-        await context.execute(installLibrariesDirectTask(parsedLibs, mc, {
+        await context.execute(installResolvedLibrariesTask(parsedLibs, mc, {
             ...installLibOption,
             libraryHost: installLibOption.libraryHost ? (l) => {
                 if (l.artifactId === "forge" && l.groupId === "net.minecraftforge") {
@@ -270,13 +270,13 @@ function installByInstallerTask(version: Version, minecraft: MinecraftLocation, 
                         algorithm: "sha1",
                     },
                 })(ctx);
-                return createReadStream(dest).pipe(Unzip.createParseStream({ lazyEntries: true })).wait();
+                return createReadStream(dest).pipe(createParseStream({ lazyEntries: true })).wait();
             };
         }
         /**
          * Unzip the installer_profile.json, bin patch file, and version json under the version folder
          */
-        async function processVersion(zip: Unzip.ZipFile, installProfileEntry: Unzip.Entry, versionEntry: Unzip.Entry, clientDataEntry: Unzip.Entry) {
+        async function processVersion(zip: ZipFile, installProfileEntry: Entry, versionEntry: Entry, clientDataEntry: Entry) {
             profile = await zip.readEntry(installProfileEntry).then((b) => b.toString()).then(JSON.parse);
             versionJson = await zip.readEntry(versionEntry).then((b) => b.toString()).then(JSON.parse);
             versionId = versionJson.id;
@@ -301,7 +301,7 @@ function installByInstallerTask(version: Version, minecraft: MinecraftLocation, 
         }
 
         try {
-            let zip: Unzip.LazyZipFile;
+            let zip: LazyZipFile;
             try {
                 zip = await context.execute(downloadInstallerTask(installerURL, installJar));
             } catch {
@@ -370,7 +370,7 @@ function installByUniversalTask(version: Version, minecraft: MinecraftLocation, 
         });
 
         await context.execute(async function installForgeJson() {
-            const zip = await Unzip.open(jarPath, { lazyEntries: true });
+            const zip = await open(jarPath, { lazyEntries: true });
             const [versionEntry] = await zip.filterEntries(["version.json"]);
 
             if (versionEntry) {
@@ -441,57 +441,20 @@ export function installTask(version: Version, minecraft: MinecraftLocation, opti
  *
  * @param option The option can control querying minecraft version, and page caching.
  */
-export function getVersionList(): Promise<VersionList | undefined>;
-/**
- * Query the webpage content from files.minecraftforge.net.
- *
- * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
- * It will request a new page only when the fallback option is outdated.
- *
- * @param option The option can control querying minecraft version, and page caching.
- */
-export function getVersionList(option?: {
-    mcversion?: string;
-}): Promise<VersionList | undefined>;
-/**
- * Query the webpage content from files.minecraftforge.net.
- *
- * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
- * It will request a new page only when the fallback option is outdated.
- *
- * @param option The option can control querying minecraft version, and page caching.
- */
-export function getVersionList(option?: {
-    mcversion?: string;
-    fallback?: VersionList;
-}): Promise<VersionList | undefined>;
-/**
- * Query the webpage content from files.minecraftforge.net.
- *
- * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
- * It will request a new page only when the fallback option is outdated.
- *
- * @param option The option can control querying minecraft version, and page caching.
- */
-export function getVersionList(option?: {
-    mcversion?: string;
-    fallback: VersionList;
-}): Promise<VersionList>;
-
-/**
- * Query the webpage content from files.minecraftforge.net.
- *
- * You can put the last query result to the fallback option. It will check if your old result is up-to-date.
- * It will request a new page only when the fallback option is outdated.
- *
- * @param option The option can control querying minecraft version, and page caching.
- */
 export async function getVersionList(option: {
-    mcversion?: string,
-    fallback?: VersionList,
-} = {}): Promise<VersionList | undefined> {
+    /**
+     * The minecraft version you are requesting
+     */
+    mcversion?: string;
+    /**
+     * If this presents, it will send request with the original list timestamp.
+     *
+     * If the server believes there is no modification after the original one,
+     * it will directly return the orignal one.
+     */
+    original?: VersionList;
+} = {}): Promise<VersionList> {
     const mcversion = option.mcversion || "";
     const url = mcversion === "" ? "http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html" : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`;
-    const page = await getIfUpdate(url, parseForge, option.fallback);
-    return page;
+    return getIfUpdate(url, parseForge, option.original);
 }

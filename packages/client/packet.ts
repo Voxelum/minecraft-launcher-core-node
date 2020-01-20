@@ -1,7 +1,6 @@
-import { State } from "./client";
+import { State } from "./channel";
 import { Coder } from "./coders";
 
-const registry: PacketRegistryEntry[] = [];
 interface FieldRecord { name: string; type: Coder<any>; }
 
 export type Side = "server" | "client";
@@ -15,32 +14,51 @@ export interface PacketRegistryEntry {
 }
 
 export type FieldType<T> = (type: Coder<T>) => (target: any, key: string) => void;
-// tslint:disable-next-line: ban-types
 export type PacketType = (side: Side, id: number, state: State) => (constructor: Function) => void;
 
+
+export const PacketMetadata = Symbol("PacketMetadata");
+export const PacketFieldsMetadata = Symbol("PacketFieldsMetadata");
+
+/**
+ * Get a packet registry entry for a class
+ * @param clazz The class object
+ */
+export function getPacketRegistryEntry(clazz: new (...args: any) => any): PacketRegistryEntry {
+    return clazz.prototype[PacketMetadata];
+}
+
+/**
+ * Annotate the field type in your packet. Assign a coder for serialization/deserialization.
+ * This will generate a list of `FieldType` in your class prototype.
+ *
+ * @param type The coder to serialize/deserialize the field.
+ * @see "coders.ts"
+ */
 export function Field<T>(type: Coder<T>) {
     return (target: any, key: string) => {
-        const prototype = target.constructor;
-        if (!prototype.fields) {
-            prototype.fields = [];
+        const container = target;
+        if (!container[PacketFieldsMetadata]) {
+            container[PacketFieldsMetadata] = [];
         }
-        prototype.fields.push({ name: key, type });
+        container[PacketFieldsMetadata].push({ name: key, type });
     };
 }
-
-// https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
-function newCall(Cls: any) {
-    // tslint:disable-next-line: new-parens
-    return new (Function.prototype.bind.apply(Cls, arguments as any));
-}
-
-export function Packet(side: Side, id: number, state: State) {
-    // tslint:disable-next-line: ban-types
+/**
+ * Decoarte for you packet class.
+ * This will generate a `PacketRegistryEntry` in your class prototype.
+ *
+ * @param side The side of your packet
+ * @param id The id of your packet
+ * @param state The state of you packet should be
+ */
+export function Packet(side: Side, id: number, state: State, name = "") {
     return (constructor: Function) => {
-        const fields: FieldRecord[] = (constructor as any).fields || [];
-        registry.push({
+        const container = constructor.prototype;
+        const fields: FieldRecord[] = container[PacketFieldsMetadata] || [];
+        container[PacketMetadata] = {
             id,
-            name: constructor.name,
+            name: name || constructor.name,
             side,
             state,
             coder: {
@@ -62,27 +80,12 @@ export function Packet(side: Side, id: number, state: State) {
                     return value;
                 },
             },
-        });
+        } as PacketRegistryEntry;
     };
 }
 
-export namespace Packet {
-    export function clear() {
-        registry.splice(0, registry.length);
-    }
-
-    export function flush() {
-        return Array.from(registry);
-    }
-}
-
-
-export type Protocol = () => PacketRegistryEntry[];
-
-export class ProtocolManager {
-    private mapping: { [key: number]: Protocol } = {};
-
-    register(protocolId: number, protocol: Protocol) {
-        this.mapping[protocolId] = protocol;
-    }
+// https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+function newCall(Cls: any) {
+    // tslint:disable-next-line: new-parens
+    return new (Function.prototype.bind.apply(Cls, arguments as any));
 }

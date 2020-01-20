@@ -1,5 +1,5 @@
 import * as path from "path";
-import { Forge } from "./forge";
+import * as Forge from "./forge";
 
 describe("Forge", () => {
     const root = path.normalize(path.join(__dirname, "..", "..", "mock"));

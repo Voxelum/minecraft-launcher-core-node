@@ -190,7 +190,7 @@ export interface TaskHandle<T, N extends Task.State> {
 }
 
 type TaskOrTaskObject<T> = Task.Function<T> | Task.Object<T>;
-export type Task<T> = Task.Function<T>;
+export type Task<T> = Task.Function<T> | Task.Object<T>;
 
 export namespace Task {
     export interface Function<T> {

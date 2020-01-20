@@ -1,4 +1,4 @@
-import NBT, { setZlib } from "./nbt";
+import { setZlib } from "./utils";
 import pako from "pako";
 
 setZlib({
@@ -12,6 +12,4 @@ setZlib({
     deflateSync(buffer) { return pako.deflate(buffer); },
 });
 
-export { NBT };
-
-export default NBT;
+export * from "./nbt";

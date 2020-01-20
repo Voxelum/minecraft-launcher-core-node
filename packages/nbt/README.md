@@ -13,24 +13,46 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 You can simply deserialize/serialize nbt.
 
 ```ts
-    import { NBT } from "@xmcl/nbt";
+    import { serialize, deserialize } from "@xmcl/nbt";
     const fileData: Buffer;
     // compressed = undefined will not perform compress algorithm
     // compressed = true will use gzip algorithm
     const compressed: true | "gzip" | "deflate" | undefined;
-    const readed: NBT.TypedObject = await NBT.deserialize(fileData, { compressed });
-    // NBT.Persistence.TypedObject is just a object with __nbtPrototype__ defining its nbt type
+    const readed: any = await deserialize(fileData, { compressed });
+    // The deserialize return object contain __nbtPrototype__ property which define its nbt type
     // After you do the modification on it, you can serialize it back to NBT
-    const buf: Buffer = await NBT.serialize(readed, { compressed });
+    const buf: Buffer = await serialize(readed, { compressed });
+```
 
-    // or use serializer style
-    const serial = NBT.createSerializer()
-        .register("server", {
-            name: NBT.TagType.String,
-            host: NBT.TagType.String,
-            port: NBT.TagType.Int,
-            icon: NBT.TagType.String,
-        });
-    const serverInfo: any; // this doesn't require the js object to be a TypedObject
-    const serialized: Buffer = await serial.serialize(serverInfo, "server");
+You can use class with annotation (decorator) to serialize/deserialize the type consistently.
+
+Suppose you are reading the [servers.dat](https://minecraft.gamepedia.com/Servers.dat_format). You can have:
+
+```ts
+import { serialize, deserialize, TagType } from "@xmcl/nbt";
+
+class ServerInfo {
+    @TagType(TagType.String)
+    icon: string = "";
+    @TagType(TagType.String)
+    ip: string = "";
+    @TagType(TagType.String)
+    name: string = "";
+    @TagType(TagType.Byte)
+    acceptTextures: number = 0;
+}
+
+class Servers {
+    @TagType([ServerInfo])
+    servers: ServerInfo[] = []
+}
+
+// read
+// explict tell the function to deserialize into the type Servers
+const servers = await deserialize(data, { type: Servers });
+const infos: ServerInfo[] = servers.servers;
+
+// write
+const servers: Servers;
+const binary = await serialize(servers);
 ```

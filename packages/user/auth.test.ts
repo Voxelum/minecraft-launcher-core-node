@@ -1,4 +1,3 @@
-import * as path from "path";
 import nock from "nock";
 import {
     login,

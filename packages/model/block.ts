@@ -218,7 +218,7 @@ export class BlockModelFactory {
 
             const faces = ["east", "west", "up", "down", "south", "north"] as const;
             for (let i = 0; i < 6; i++) {
-                const face = element.faces![faces[i]];
+                const face = element.faces[faces[i]];
                 if (face) {
                     // get material index
                     const index = materialIndex[face.texture.substring(1, face.texture.length)];  // references.indexOf(ref[0] == '#' ? ref.substring(1) : ref)

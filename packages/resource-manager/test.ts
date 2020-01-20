@@ -1,6 +1,6 @@
 import { ResourceManager } from ".";
 import { join } from "path";
-import ResourcePack, { ResourceLocation } from "@xmcl/resourcepack";
+import { ResourcePack, ResourceLocation } from "@xmcl/resourcepack";
 import { ModelLoader } from "./model-loader";
 
 const mock = join(__dirname, "..", "..", "mock");

@@ -1,6 +1,6 @@
 import { MinecraftFolder } from "@xmcl/core";
 import { join, normalize } from "path";
-import { LiteLoader } from "./liteloader";
+import * as LiteLoader from "./liteloader";
 
 describe("Liteloader", () => {
     const root = normalize(join(__dirname, "..", "..", "temp"));

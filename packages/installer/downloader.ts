@@ -27,10 +27,9 @@ export const fetchBuffer = gotDefault.extend({
 
 
 export async function getRawIfUpdate(url: string, timestamp?: string): Promise<{ timestamp: string; content: string | undefined }> {
-    const lastModified = timestamp;
     const resp = await got(url, {
         encoding: "utf-8",
-        headers: lastModified ? { "If-Modified-Since": lastModified } : undefined,
+        headers: timestamp ? { "If-Modified-Since": timestamp } : undefined,
     });
     const lastModifiedReturn = resp.headers["last-modified"] || resp.headers["Last-Modified"] as string || "";
     if (resp.statusCode === 304) {
@@ -42,24 +41,15 @@ export async function getRawIfUpdate(url: string, timestamp?: string): Promise<{
     };
 }
 
-export async function getIfUpdate<T extends UpdatedObject = UpdatedObject>(url: string, parser: (s: string) => any, lastObj?: T): Promise<T | undefined> {
-    const lastModified = lastObj ? lastObj.timestamp : undefined;
-    try {
-        const resp = await got(url, {
-            encoding: "utf-8",
-            headers: lastModified ? { "If-Modified-Since": lastModified } : undefined,
-        });
-        if (resp.statusCode === 304) {
-            return lastObj;
-        }
+export async function getIfUpdate<T extends UpdatedObject>(url: string, parser: (s: string) => any, lastObject: T | undefined): Promise<T> {
+    const { content, timestamp } = await getRawIfUpdate(url, lastObject?.timestamp);
+    if (content) {
         return {
-            timestamp: resp.headers["last-modified"] as string,
-            ...parser(resp.body),
+            ...parser(content),
+            timestamp,
         };
-    } catch (e) {
-        if (lastObj) { return lastObj; }
-        throw e;
     }
+    return lastObject!; // this cannot be undefined as the content be null only and only if the lastObject is presented.
 }
 
 export interface DownloadOption {

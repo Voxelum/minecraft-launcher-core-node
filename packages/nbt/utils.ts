@@ -121,3 +121,20 @@ export function readUTF8(buff: ByteBuffer) {
     // The number of chars produced may be less than utflen
     return chararr.map((i) => String.fromCharCode(i)).join("");
 }
+
+export interface Zlib {
+    gzip(buffer: Uint8Array): Promise<Uint8Array>;
+    gzipSync(buffer: Uint8Array): Uint8Array;
+    ungzip(buffer: Uint8Array): Promise<Uint8Array>;
+    gunzipSync(buffer: Uint8Array): Uint8Array;
+    deflate(buffer: Uint8Array): Promise<Uint8Array>;
+    deflateSync(buffer: Uint8Array): Uint8Array;
+    inflate(buffer: Uint8Array): Promise<Uint8Array>;
+    inflateSync(buffer: Uint8Array): Uint8Array;
+}
+
+export let zlib: Zlib;
+
+export function setZlib(lib: Zlib) {
+    zlib = lib;
+}

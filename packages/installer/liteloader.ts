@@ -5,6 +5,9 @@ import { join } from "path";
 import { getIfUpdate, UpdatedObject } from "./downloader";
 
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
+/**
+ * The liteloader version list. Containing the minecraft version -> liteloader version info mapping.
+ */
 export interface VersionList extends UpdatedObject {
     meta: {
         description: string,
@@ -69,6 +72,9 @@ export namespace VersionList {
 
 }
 
+/**
+ * A liteloader remote version information
+ */
 export interface Version {
     version: string;
     url: string;
@@ -84,14 +90,38 @@ export interface Version {
 const snapshotRoot = "http://dl.liteloader.com/versions/";
 const releaseRoot = "http://repo.mumfrey.com/content/repositories/liteloader/";
 
-export function getVersionList(): Promise<VersionList>;
-export function getVersionList(option?: { fallback: VersionList, remote?: string }): Promise<VersionList>;
-export function getVersionList(option?: { remote?: string }): Promise<VersionList | undefined>;
-export function getVersionList(option?: { fallback: undefined, remote?: string }): Promise<VersionList | undefined>;
-export async function getVersionList(option: { fallback?: VersionList, remote?: string } = {}): Promise<VersionList | undefined> {
-    return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST, VersionList.parse, option.fallback);
+/**
+ * Get or update the LiteLoader version list.
+ *
+ * This will request liteloader offical json by default. You can replace the request by assigning the remote option.
+ */
+export function getVersionList(option: {
+    /**
+     * If this presents, it will send request with the original list timestamp.
+     *
+     * If the server believes there is no modification after the original one,
+     * it will directly return the orignal one.
+     */
+    original?: VersionList;
+    /**
+     * The optional requesting version json url.
+     */
+    remote?: string;
+} = {}): Promise<VersionList> {
+    return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST, VersionList.parse, option.original);
 }
 
+/**
+ * Install the liteloader to specific minecraft location.
+ *
+ * This will install the liteloader amount on the corresponded Minecraft version by default.
+ * If you want to install over the forge. You should first install forge and pass the installed forge version id to the third param,
+ * like `1.12-forge-xxxx`
+ *
+ * @param versionMeta The liteloader version metadata.
+ * @param location The minecraft location you want to install
+ * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
+ */
 export function install(versionMeta: Version, location: MinecraftLocation, version?: string) {
     return Task.execute(installTask(versionMeta, location, version)).wait();
 }
@@ -127,6 +157,17 @@ function buildVersionInfo(versionMeta: Version, mountedJSON: any) {
     return info;
 }
 
+/**
+ * Install the liteloader to specific minecraft location.
+ *
+ * This will install the liteloader amount on the corresponded Minecraft version by default.
+ * If you want to install over the forge. You should first install forge and pass the installed forge version id to the third param,
+ * like `1.12-forge-xxxx`
+ *
+ * @param versionMeta The liteloader version metadata.
+ * @param location The minecraft location you want to install
+ * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
+ */
 export function installTask(versionMeta: Version, location: MinecraftLocation, version?: string): Task<string> {
     return async function installLiteloader(context) {
         const mc: MinecraftFolder = MinecraftFolder.from(location);

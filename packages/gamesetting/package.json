@@ -2,6 +2,7 @@
   "name": "@xmcl/gamesetting",
   "version": "1.0.3",
   "main": "./index.js",
+  "module": "./esm/index.js",
   "description": "Minecraft gamesetting parsing",
   "engines": {
     "node": ">=10.0"

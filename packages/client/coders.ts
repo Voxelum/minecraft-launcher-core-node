@@ -1,6 +1,6 @@
 // tslint:disable: variable-name
 
-import NBT from "@xmcl/nbt";
+import { deserializeSync } from "@xmcl/nbt";
 import ByteBuffer from "bytebuffer";
 import Long from "long";
 import "uuid";
@@ -12,6 +12,9 @@ export interface SlotData {
     nbt?: any;
 }
 
+/**
+ * The packet encode/decode algorithm
+ */
 export interface Coder<T> {
     readonly encode: (buffer: ByteBuffer, data: T, context?: any) => void;
     readonly decode: (buffer: ByteBuffer, context?: any) => T;
@@ -167,7 +170,7 @@ const Slot: Coder<SlotData> = {
             blockId,
             itemCount,
             itemDamage,
-            nbt: NBT.deserializeSync(Buffer.from(buffer.buffer)),
+            nbt: deserializeSync(Buffer.from(buffer.buffer)),
         };
     },
     encode: (buffer, inst) => {

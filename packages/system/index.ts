@@ -1,4 +1,4 @@
-import { Unzip } from "@xmcl/unzip";
+import { open, CachedZipFile } from "@xmcl/unzip";
 import { promises } from "fs";
 import { join, sep } from "path";
 import { FileSystem, setSystem, System } from "./system";
@@ -87,7 +87,7 @@ class ZipFS extends FileSystem {
             }
         }
     }
-    constructor(readonly root: string, private zip: Unzip.CachedZipFile) { super(); }
+    constructor(readonly root: string, private zip: CachedZipFile) { super(); }
 }
 class NodeSystem implements System {
     fs: FileSystem = new DefaultFS("/");
@@ -104,11 +104,11 @@ class NodeSystem implements System {
             if (stat.isDirectory()) {
                 return new DefaultFS(basePath);
             } else {
-                const zip = await Unzip.open(basePath, { lazyEntries: false });
+                const zip = await open(basePath, { lazyEntries: false });
                 return new ZipFS(basePath, zip);
             }
         } else {
-            const zip = await Unzip.open(basePath as Buffer, { lazyEntries: false });
+            const zip = await open(basePath as Buffer, { lazyEntries: false });
             return new ZipFS("", zip);
         }
     }
