@@ -64,7 +64,7 @@ The `@xmcl/model` is a browser only package, as it's using [THREE.js](https://th
     - [User Login (Official/Offline)](#user-login-officialoffline)
     - [User Skin Operation](#user-skin-operation)
   - [Caching Request](#caching-request)
-  - [Treeshaking](#treeshaking)
+  - [Bundle & Treeshaking](#bundle--treeshaking)
   - [Contribute](#contribute)
     - [Setup Dev Workspace](#setup-dev-workspace)
     - [How to Dev](#how-to-dev)
@@ -817,9 +817,13 @@ For Forge, it's the same:
     const updated = ForgeInstaller.getVersionList({ fallback: oldWebPageCache }); // this should be up-to-date
 ```
 
-## Treeshaking
+## Bundle & Treeshaking
 
-If you care about the package size and you want to treeshake your bundle.
+The module built with `ES5` module option by typescript. Please make sure your bundle system support esm import/export.
+
+Some bundler like webpack, rollup support treeshake by default. But the some modules have `export * as SomeNamespace from ...`, which affact the treeshaking.
+
+Like the installer module, if you care about the package size and you want to treeshake your bundle.
 
 You can import the certain module specificly:
 
