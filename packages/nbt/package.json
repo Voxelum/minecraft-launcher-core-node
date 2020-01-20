@@ -2,10 +2,9 @@
   "name": "@xmcl/nbt",
   "version": "1.0.3",
   "main": "./index.js",
-  "module": "./esm/index.js",
+  "module": "./index.js",
   "browser": {
-    "./index.js": "./index.browser.js",
-    "./esm/index.js" : "./esm/index.browser.js"
+    "./index.js": "./index.browser.js"
   },
   "description": "NBT serialization and deserialization",
   "engines": {

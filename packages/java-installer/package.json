@@ -2,7 +2,7 @@
   "name": "@xmcl/java-installer",
   "version": "0.0.2",
   "main": "./index.js",
-  "module": "./esm/index.js",
+  "module": "./index.js",
   "description": "Detect local Java or install Java from Mojang source",
   "engines": {
     "node": ">=10.0"

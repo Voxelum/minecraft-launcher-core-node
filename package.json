@@ -6,7 +6,7 @@
     "build:clean": "node scripts/clean.js",
     "build:web": "parcel build docs/site/index.html -d docs/build --public-url ./",
     "clean": "lerna clean --yes",
-    "compile": "tsc && lerna run compile",
+    "compile": "tsc",
     "docs": "node scripts/build-readme.js",
     "lint": "eslint packages --ext .ts",
     "lint:fix": "eslint packages --ext .ts --fix",

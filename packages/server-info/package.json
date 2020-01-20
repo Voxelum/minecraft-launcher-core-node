@@ -2,7 +2,7 @@
   "name": "@xmcl/server-info",
   "version": "1.0.3",
   "main": "./index.js",
-  "module": "./esm/index.js",
+  "module": "./index.js",
   "description": "Read Minecraft servers.dat NBT file",
   "engines": {
     "node": ">=10.0"
