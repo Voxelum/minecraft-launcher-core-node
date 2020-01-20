@@ -1,4 +1,4 @@
-import { fetchJson, getRawIfUpdate, UpdatedObject } from "./downloader";
+import { fetchJson, getRawIfUpdate, UpdatedObject } from "./util";
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { ensureFile, writeFile } from "@xmcl/core/fs";
 

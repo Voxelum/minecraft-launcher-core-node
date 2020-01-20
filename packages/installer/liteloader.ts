@@ -2,7 +2,7 @@ import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { ensureDir, missing, readFile, writeFile, validateMd5 } from "@xmcl/core/fs";
 import { Task } from "@xmcl/task";
 import { join } from "path";
-import { getIfUpdate, UpdatedObject } from "./downloader";
+import { getIfUpdate, UpdatedObject } from "./util";
 
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
 /**
@@ -164,12 +164,14 @@ function buildVersionInfo(versionMeta: Version, mountedJSON: any) {
  * If you want to install over the forge. You should first install forge and pass the installed forge version id to the third param,
  * like `1.12-forge-xxxx`
  *
+ * @tasks installLiteloader, installLiteloader.resolveVersionJson installLiteloader.generateLiteloaderJson
+ *
  * @param versionMeta The liteloader version metadata.
  * @param location The minecraft location you want to install
  * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
  */
 export function installTask(versionMeta: Version, location: MinecraftLocation, version?: string): Task<string> {
-    return async function installLiteloader(context) {
+    return Task.create("installLiteloader", async function installLiteloader(context) {
         const mc: MinecraftFolder = MinecraftFolder.from(location);
         const mountVersion = version || versionMeta.mcversion;
         const id = `${mountVersion}-Liteloader${versionMeta.mcversion}-${versionMeta.version}`;
@@ -177,21 +179,21 @@ export function installTask(versionMeta: Version, location: MinecraftLocation, v
         if (await validateMd5(mc.getVersionJson(id), versionMeta.md5)) {
             return id;
         }
-        const mountedJSON: any = await context.execute(async function resolveVersionJson() {
+        const mountedJSON: any = await context.execute(Task.create("resolveVersionJson", async function resolveVersionJson() {
             if (await missing(mc.getVersionJson(mountVersion))) {
                 throw { type: "MissingVersionJson", version: mountVersion, location: mc.root };
             }
             return readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
-        });
+        }));
 
-        const versionInf = await context.execute(async function generateLiteloaderJson() {
+        const versionInf = await context.execute(Task.create("generateLiteloaderJson", async function generateLiteloaderJson() {
             const inf = buildVersionInfo(versionMeta, mountedJSON);
             const versionPath = mc.getVersionRoot(inf.id);
 
             await ensureDir(versionPath);
             await writeFile(join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
             return inf;
-        });
+        }));
         return versionInf.id as string;
-    };
+    });
 }

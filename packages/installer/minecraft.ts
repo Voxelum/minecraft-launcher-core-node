@@ -3,7 +3,7 @@ import { ensureDir, readFile } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { cpus } from "os";
 import { join } from "path";
-import { Downloader, downloader, downloadFileIfAbsentTask, getIfUpdate, UpdatedObject } from "./downloader";
+import { Downloader, downloader, downloadFileIfAbsentTask, getIfUpdate, UpdatedObject } from "./util";
 
 /**
  * The function to swap library host
@@ -120,6 +120,18 @@ export function install(type: "server" | "client", versionMeta: Version, minecra
 /**
  * Install the Minecraft game to a location by version metadata
  *
+ * Tasks emmitted:
+ * - install
+ *  - installVersion
+ *   - json
+ *   - jar
+ *  - installDependencies
+ *   - installAssets
+ *     - assetsJson
+ *     - asset
+ *   - installLibraries
+ *     - library
+ *
  * @param type The type of game, client or server
  * @param versionMeta The version metadata
  * @param minecraft The Minecraft location
@@ -151,6 +163,11 @@ export function installVersion(type: "client" | "server", versionMeta: Version, 
 /**
  * Only install the json/jar. Do not check dependencies;
  *
+ * Task emmitted:
+ * - installVersion
+ *   - json
+ *   - jar
+ *
  * @param type client or server
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
@@ -176,6 +193,14 @@ export function installDependencies(version: ResolvedVersion, option?: Option): 
 /**
  * Install the completeness of the Minecraft game assets and libraries.
  *
+ * Tasks emitted:
+ * - installDependencies
+ *  - installAssets
+ *   - assetsJson
+ *   - asset
+ *  - installLibraries
+ *   - library
+ *
  * @param version The resolved version produced by Version.parse
  * @param minecraft The minecraft location
  */
@@ -199,6 +224,12 @@ export function installAssets(version: ResolvedVersion, option?: AssetsOption): 
 }
 /**
  * Install or check the assets to resolved version
+ *
+ * Task emitted:
+ * - installAssets
+ *  - assetsJson
+ *  - asset
+ *
  * @param version The target version
  * @param option The option to replace assets host url
  */
@@ -268,6 +299,11 @@ export function installLibraries(version: ResolvedVersion, option: LibraryOption
 }
 /**
  * Install all the libraries of providing version
+ *
+ * Task emmitted:
+ * - installLibraries
+ *  - library
+ *
  * @param version The target version
  * @param option The library host swap option
  */
@@ -301,7 +337,12 @@ export function installResolvedLibraries(libraries: ResolvedLibrary[], minecraft
 }
 
 /**
- * Only install several resolved libraries
+ * Only install several resolved libraries.
+ *
+ * Task emmitted:
+ * - installLibraries
+ *  - library
+ *
  * @param libraries The resolved libraries
  * @param minecraft The minecraft location
  * @param option The install option

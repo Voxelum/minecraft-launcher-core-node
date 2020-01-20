@@ -5,8 +5,7 @@
         "forge.ts",
         "liteloader.ts",
         "fabric.ts",
-        "downloader.ts",
-        "java.ts"
+        "util.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
