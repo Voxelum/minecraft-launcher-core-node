@@ -227,7 +227,7 @@ const IO: IO[] = [
             }
 
             if (shouldInspectChildType) {
-                context.schema = childContext.schema;
+                context.inspect = childContext.inspect || [childContext.tagType];
             }
 
             return list;
@@ -291,15 +291,15 @@ const IO: IO[] = [
                 }
 
                 const shouldInspectChildType = !childContext.schema;
-                // console.log(`[read] ${shouldInspectChildType ? 'inspecting' : ''} -> ${key}: ${JSON.stringify(childContext.valueType)} ${TagType.getName(childContext.tagType)} ${TagType.getName(tag)}`);
+                // log(`[read] ${shouldInspectChildType ? 'inspecting' : ''} -> ${key}: ${JSON.stringify(childContext.schema)} ${TagType.getName(childContext.tagType)} ${TagType.getName(tag)}`);
                 object[key] = reader.read(buf, childContext);
-                // console.log(`[read] ${shouldInspectChildType ? 'inspecting' : ''} <- ${key}: ${JSON.stringify(childContext.valueType)} ${TagType.getName(childContext.tagType)} ${TagType.getName(tag)} ${JSON.stringify(object[key])}`);
+                // log(`[read] ${shouldInspectChildType ? 'inspecting' : ''} <- ${key}: ${JSON.stringify(childContext.schema)} ${TagType.getName(childContext.tagType)} ${TagType.getName(tag)} ${JSON.stringify(object[key])}`);
                 if (shouldInspectChildType) {
-                    nbtPrototype[key] = childContext.schema || childContext.tagType;
+                    nbtPrototype[key] = childContext.inspect || childContext.tagType;
                 }
             }
             if (!knowingType) {
-                context.schema = nbtPrototype;
+                context.inspect = nbtPrototype;
             }
 
             return object;
@@ -504,6 +504,7 @@ function assertTag(v: number): asserts v is TagType {
 }
 
 export class ReadContext {
+    public inspect: Schema | undefined;
     constructor(public schema: Schema | undefined, public tagType: TagType) { }
 
     fork(schemaOrTagType: TagType | Schema) {
