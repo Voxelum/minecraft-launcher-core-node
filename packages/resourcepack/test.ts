@@ -1,7 +1,7 @@
 import { ensureDir } from "@xmcl/core/fs";
 import * as fs from "fs";
 import * as path from "path";
-import { ResourcePack, readPackMetaAndIcon } from "./index";
+import { ResourcePack, readPackMetaAndIcon, readPackMeta } from "./index";
 
 describe("Resourcepack", () => {
     const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
@@ -9,18 +9,16 @@ describe("Resourcepack", () => {
     describe("#head", () => {
         test("should read resource pack zip buf", async () => {
             const buff = fs.readFileSync(`${root}/resourcepacks/sample-resourcepack.zip`);
-            const pack = await readPackMetaAndIcon(buff);
-            if (!pack) { throw new Error("Pack cannot be null"); }
-            expect(pack.metadata.description).toEqual("Vattic\u0027s Faithful 32x32 pack");
-            expect(pack.metadata.pack_format).toEqual(1);
-            expect(pack.icon).toBeFalsy();
+            const metadata = await readPackMeta(buff);
+            if (!metadata) { throw new Error("Pack cannot be null"); }
+            expect(metadata.description).toEqual("Vattic\u0027s Faithful 32x32 pack");
+            expect(metadata.pack_format).toEqual(1);
         });
         test("should read resource pack from zip path", async () => {
-            const pack = await readPackMetaAndIcon(`${root}/resourcepacks/sample-resourcepack.zip`);
-            if (!pack) { throw new Error("Pack cannot be null"); }
-            expect(pack.metadata.description).toEqual("Vattic\u0027s Faithful 32x32 pack");
-            expect(pack.metadata.pack_format).toEqual(1);
-            expect(pack.icon).toBeFalsy();
+            const metadata = await readPackMeta(`${root}/resourcepacks/sample-resourcepack.zip`);
+            if (!metadata) { throw new Error("Pack cannot be null"); }
+            expect(metadata.description).toEqual("Vattic\u0027s Faithful 32x32 pack");
+            expect(metadata.pack_format).toEqual(1);
         });
         test("should read resource pack zip with icon", async () => {
             const buff = fs.readFileSync(`${root}/resourcepacks/sample-resourcepack.zip`);
@@ -35,7 +33,7 @@ describe("Resourcepack", () => {
             if (!pack) { throw new Error("Pack cannot be null"); }
             expect(pack.metadata.description).toEqual("Vattic\u0027s Faithful 32x32 pack");
             expect(pack.metadata.pack_format).toEqual(1);
-            expect(pack.icon).toBeFalsy();
+            expect(pack.icon).toBeTruthy();
         });
         test("should read resource pack folder with icon", async () => {
             const pack = await readPackMetaAndIcon(`${root}/resourcepacks/sample-resourcepack`);

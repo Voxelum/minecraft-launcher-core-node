@@ -2,11 +2,12 @@ import got from "got";
 import { createVerify } from "crypto";
 import FormData from "form-data";
 import { setKernal, FormItems } from "./base";
+import { URLSearchParams } from "url";
 
 setKernal({
     async httpRequester(option) {
         let body;
-        let query;
+        let search: URLSearchParams | undefined;
         let headers: Record<string, string> = {};
         if (option.body) {
             switch (option.bodyType) {
@@ -15,7 +16,7 @@ setKernal({
                     body = JSON.stringify(option.body);
                     break;
                 case "search":
-                    query = new URLSearchParams(option.body as Record<string, string>);
+                    search = new URLSearchParams(option.body as Record<string, string>);
                     break;
                 case "formMultiPart":
                     body = new FormData();
@@ -31,17 +32,17 @@ setKernal({
             }
         }
         const { body: respBody, statusCode, statusMessage } = await got(option.url, {
-            method: option.method,
+            method: option.method as any,
             headers,
             body: body as any,
-            query,
-            encoding: "utf-8",
+            encoding: "utf8",
+            searchParams: search,
             throwHttpErrors: false,
         });
         return {
             body: respBody,
             statusCode,
-            statusMessage
+            statusMessage: statusMessage || "",
         }
     },
     async verify(data: string, signature: string, pemKey: string | Uint8Array) {

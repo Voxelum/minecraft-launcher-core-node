@@ -79,10 +79,10 @@ export function diagnoseTask(version: string, minecraftLocation: MinecraftLocati
         return false;
     }
     const minecraft = MinecraftFolder.from(minecraftLocation);
-    return async function diagnose(context: Task.Context) {
+    return Task.create("diagnose", async function diagnose(context: Task.Context) {
         let resolvedVersion: ResolvedVersion;
         try {
-            resolvedVersion = await context.execute(function checkVersionJson() { return Version.parse(minecraft, version) });
+            resolvedVersion = await context.execute(Task.create("checkVersionJson", function checkVersionJson() { return Version.parse(minecraft, version) }));
         } catch (e) {
             console.error(e);
             return {
@@ -101,18 +101,18 @@ export function diagnoseTask(version: string, minecraftLocation: MinecraftLocati
         const jarPath = minecraft.getVersionJar(resolvedVersion.client);
         const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
 
-        const missingJar = await context.execute(function checkJar() {
+        const missingJar = await context.execute(Task.create("checkJar", function checkJar() {
             return getStatus(jarPath, resolvedVersion.downloads.client.sha1);
-        });
-        const assetsIndex = await context.execute(async function checkAssetIndex() {
+        }));
+        const assetsIndex = await context.execute(Task.create("checkAssetIndex", async function checkAssetIndex() {
             return getStatus(assetsIndexPath, resolvedVersion.assetIndex.sha1);
-        });
-        const libMask = await context.execute(function checkLibraries() {
+        }));
+        const libMask = await context.execute(Task.create("checkLibraries", function checkLibraries() {
             return Promise.all(resolvedVersion.libraries.map(async (lib) => {
                 const libPath = minecraft.getLibraryByPath(lib.download.path);
                 return getStatus(libPath, lib.download.sha1);
             }));
-        });
+        }));
         const libraries = resolvedVersion.libraries.map((l, i) => ({ value: l, status: libMask[i] }))
             .filter((v) => v.status !== Status.Good);
         // const assets: { [object: string]: string } = {};
@@ -121,13 +121,13 @@ export function diagnoseTask(version: string, minecraftLocation: MinecraftLocati
         if (assetsIndex === Status.Good) {
             const objects = (await readFile(assetsIndexPath, "utf-8").then((b) => JSON.parse(b.toString()))).objects;
             const files = Object.keys(objects);
-            const assetsMask = await context.execute(function checkAssets() {
+            const assetsMask = await context.execute(Task.create("checkAssets", function checkAssets() {
                 return Promise.all(files.map(async (object) => {
                     const { hash } = objects[object];
                     const hashPath = minecraft.getAsset(hash);
                     return getStatus(hashPath, hash);
                 }));
-            });
+            }));
             assets = files.map((path, i) => ({
                 value: { file: path, hash: objects[path] },
                 status: assetsMask[i]
@@ -147,11 +147,11 @@ export function diagnoseTask(version: string, minecraftLocation: MinecraftLocati
         } as Report;
 
         if (hasNewForge(resolvedVersion)) {
-            diagnosis.forge = await context.execute({ name: "forge", run: () => diagnoseForgeVersion(version, minecraft) });
+            diagnosis.forge = await context.execute(Task.create("forge", () => diagnoseForgeVersion(version, minecraft)));
         }
 
         return diagnosis;
-    };
+    });
 }
 
 type Processor = InstallProfile["processors"][number];

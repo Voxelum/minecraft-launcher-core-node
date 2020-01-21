@@ -170,8 +170,8 @@ export function render(src: TextComponent): RenderNode {
  */
 export function flat(component: TextComponent): TextComponent[] {
     const arr: TextComponent[] = [component];
-    if (component.extra?.length !== 0) {
-        for (const s of component.extra!) {
+    if (component.extra && component.extra.length !== 0) {
+        for (const s of component.extra) {
             arr.push(...flat(s));
         }
     }

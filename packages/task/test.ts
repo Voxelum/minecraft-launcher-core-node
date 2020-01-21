@@ -11,7 +11,7 @@ function wait(time: number) {
 describe("Task", () => {
     describe("#create", () => {
         test("should return the correct root node in handle", async () => {
-            function test() { }
+            const test = Task.create("test", function test() { })
             const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY);
             const handle = runtime.submit(test);
             expect(handle.root).toBeTruthy();
@@ -19,7 +19,7 @@ describe("Task", () => {
             expect(handle.root.name).toEqual("test");
         });
         test("should be able to create task with string", async () => {
-            function test() { }
+            const test = Task.create("test", function test() { })
             const runtime = Task.createRuntime();
             runtime.once("execute", (n) => {
                 expect(n.path).toEqual("test");
@@ -28,8 +28,7 @@ describe("Task", () => {
             await runtime.submit(test).wait();
         });
         test("should be able to create task with arguments", async () => {
-            function test() { }
-            test.parameters = { x: 1 };
+            const test = Task.create("test", function test() { }, { x: 1 })
             const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY);
             runtime.once("execute", (n) => {
                 expect(n.arguments!.x).toBe(1);
@@ -39,12 +38,8 @@ describe("Task", () => {
             await runtime.submit(test).wait();
         });
         test("should be able to create child task with arguments", async () => {
-            function c() { }
-            c.parameters = { x: 2 };
-            function test(ctx: Task.Context) {
-                return ctx.execute(c);
-            }
-            test.parameters = { x: 1 };
+            const c = Task.create("c", function c() { }, { x: 2 });
+            const test = Task.create("test", function test(ctx) { return ctx.execute(c) }, { x: 1 })
 
             const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY);
             const onExec = jest.fn();
@@ -64,11 +59,9 @@ describe("Task", () => {
             expect(onSuccess).toBeCalledTimes(2);
         });
         test("should extends parent argument", async () => {
-            function c() { }
-            function test(ctx: Task.Context) {
-                return ctx.execute(c);
-            }
-            test.parameters = { x: 1 };
+            const c = Task.create("c", function c() { }, {});
+            const test = Task.create("test", function test(ctx) { return ctx.execute(c) }, { x: 1 })
+
             const onSuccess = jest.fn();
             const onExec = jest.fn();
 
@@ -93,7 +86,7 @@ describe("Task", () => {
             const runtime = Task.createRuntime();
             const monitor = jest.fn();
             runtime.on("finish", monitor);
-            await expect(runtime.submit(function test() { return 1; })
+            await expect(runtime.submit(Task.create("test", function test() { return 1; }))
                 .wait())
                 .resolves
                 .toEqual(1);
@@ -106,7 +99,7 @@ describe("Task", () => {
                 expect(e).toEqual(new Error("Fail"));
                 monitor();
             });
-            await expect(runtime.submit(function test() { throw new Error("Fail"); })
+            await expect(runtime.submit(Task.create("test", function test() { throw new Error("Fail"); }))
                 .wait())
                 .rejects
                 .toEqual(new Error("Fail"));
@@ -123,9 +116,9 @@ describe("Task", () => {
                 expect(message).toEqual("hello");
                 monitor();
             });
-            const handle = runtime.submit(function test(c) {
+            const handle = runtime.submit(Task.create("test", function test(c) {
                 c.update(2, 10, "hello");
-            });
+            }));
             await expect(handle.wait()).resolves.toBeUndefined();
             expect(monitor).toBeCalled();
         });
@@ -135,21 +128,21 @@ describe("Task", () => {
         test("should be able to cancel the task after execution", async () => {
             const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY);
             runtime.on("execute", (child, parent) => {
-                if (child.path === "") {
-                    expect(child.name).toEqual("");
-                } else {
+                if (parent) {
                     expect(child.name).toEqual("A");
+                } else {
+                    expect(child.name).toEqual("test");
                 }
             });
             const monitor = jest.fn();
             runtime.on("cancel", monitor);
             const monitorA = jest.fn();
             const monitorB = jest.fn();
-            const handle = runtime.submit(async (c) => {
-                await c.execute(function A() { return wait(1000).then(monitorA); });
+            const handle = runtime.submit(Task.create("test", async (c) => {
+                await c.execute(Task.create("A", function A() { return wait(1000).then(monitorA); }));
                 handle.cancel();
-                await c.execute(() => wait(1000).then(monitorB));
-            });
+                await c.execute(Task.create("", () => wait(1000).then(monitorB)));
+            }));
             await expect(handle.wait())
                 .rejects
                 .toEqual(new Task.CancelledError());
@@ -163,7 +156,7 @@ describe("Task", () => {
         test("should be paused the task before it execute", async () => {
             const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY);
             const monitor = jest.fn();
-            const task = runtime.submit(monitor);
+            const task = runtime.submit(Task.create("monitor", monitor));
             task.pause();
             await wait(100);
             expect(monitor).not.toBeCalled();
@@ -173,11 +166,11 @@ describe("Task", () => {
             const bFunc = jest.fn();
 
             const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY);
-            const task = runtime.submit(async function test(c) {
-                await c.execute(aFunc);
+            const task = runtime.submit(Task.create("test", async function test(c) {
+                await c.execute(Task.create("aFunc", aFunc));
                 task.pause();
-                await c.execute(bFunc);
-            });
+                await c.execute(Task.create("bFunc", bFunc));
+            }));
             await wait(100);
             expect(aFunc).toBeCalled();
             expect(bFunc).not.toBeCalled();
@@ -187,7 +180,7 @@ describe("Task", () => {
         test("should be able to resume task", async () => {
             const monitor = jest.fn();
             const runtime = Task.createRuntime();
-            const task = runtime.submit(monitor);
+            const task = runtime.submit(Task.create("monitor", monitor));
             task.pause();
             await wait(10);
             expect(monitor).not.toBeCalled();

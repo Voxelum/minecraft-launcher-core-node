@@ -1,6 +1,6 @@
 
 import * as path from "path";
-import { fetchStatus, ServerStatusFrame } from "./index";
+import { queryStatus, Status } from "./index";
 
 
 describe("Server", () => {
@@ -8,24 +8,24 @@ describe("Server", () => {
     describe("Ping", () => {
         // testContext.slow(3000);
         test("should fetch server frame", async () => {
-            const frame = await fetchStatus({ host: "mc.hypixel.net" });
+            const frame = await queryStatus({ host: "mc.hypixel.net" });
             expect(frame);
             expect(frame.ping !== -1).toBeTruthy();
         });
         test("should control the port", async () => {
-            await expect(fetchStatus({ host: "mc.hypixel.net", port: 138 }, { timeout: 500, retryTimes: 0 }))
+            await expect(queryStatus({ host: "mc.hypixel.net", port: 138 }, { timeout: 500, retryTimes: 0 }))
                 .rejects
                 .toBeTruthy();
         });
         test("should capture timeout exception", async () => {
-            await expect(fetchStatus({
+            await expect(queryStatus({
                 host: "crafterr.me",
             }, { timeout: 100 }))
                 .rejects
                 .toBeTruthy();
         });
         test("should fetch server info and ping", async () => {
-            const status = await fetchStatus({
+            const status = await queryStatus({
                 host: "mc.hypixel.net",
             }, { timeout: 10000 });
             expect(status.ping).not.toEqual(-1);

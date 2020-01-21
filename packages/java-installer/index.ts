@@ -1,11 +1,11 @@
 import { exec } from "child_process";
 import Task from "@xmcl/task";
 import { promises } from "fs";
-import { extend } from "got";
+import got from "got";
 import { join, basename, resolve } from "path";
 import { EOL, tmpdir, platform, arch } from "os";
 
-const fetchJson = extend({ json: true });
+const fetchJson = got.extend({ responseType: "json" });
 
 export interface JavaInfo {
     path: string;
@@ -50,12 +50,9 @@ export function installJreFromMojangTask(options: InstallOption) {
         downloader,
         cacheDir = tmpdir(),
     } = options;
-    async function installJreFromMojang(context: Task.Context) {
+    return Task.create("installJreFromMojang", async function installJreFromMojang(context: Task.Context) {
         const info: { [system: string]: { [arch: string]: { jre: { sha1: string; url: string; version: string } } } }
-            = await context.execute({
-                name: "fetchInfo",
-                run: () => fetchJson("https://launchermeta.mojang.com/mc/launcher.json").then((r) => r.body)
-            });
+            = await context.execute(Task.create("fetchInfo", () => fetchJson("https://launchermeta.mojang.com/mc/launcher.json").json()));
         const system = platform.name;
         function resolveArch() {
             switch (arch()) {
@@ -74,34 +71,23 @@ export function installJreFromMojangTask(options: InstallOption) {
         const filename = basename(url);
         const downloadDestination = resolve(cacheDir, filename);
 
-        await context.execute({
-            name: "download",
-            run: (context) => downloader({
-                url,
-                destination: downloadDestination,
-                checksum: {
-                    algorithm: "sha1",
-                    hash: sha1,
-                },
-                progress: context.update,
-                pausable: context.pausealbe,
-            }),
-        });
+        await context.execute(Task.create("download", (context) => downloader({
+            url,
+            destination: downloadDestination,
+            checksum: {
+                algorithm: "sha1",
+                hash: sha1,
+            },
+            progress: context.update,
+            pausable: context.pausealbe,
+        })));
 
         const javaRoot = destination;
-        await context.execute({
-            name: "decompress",
-            run: async () => {
-                await unpackLZMA(downloadDestination, javaRoot);
-            },
-        });
-        await context.execute({
-            name: "cleanup",
-            run: async () => { await promises.unlink(downloadDestination); },
-        });
-    }
-
-    return installJreFromMojang;
+        await context.execute(Task.create("decompress", async () => {
+            await unpackLZMA(downloadDestination, javaRoot);
+        }));
+        await context.execute(Task.create("cleanup", async () => { await promises.unlink(downloadDestination); }));
+    });
 }
 
 /**
