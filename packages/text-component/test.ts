@@ -1,121 +1,49 @@
-import { TextComponent, TextComponentFrame, TextComponentString } from "./index";
+import { TextComponent, toFormattedString, fromFormattedString, render, getSuggestedCss, flat } from "./index";
 
 describe("TextComponent", () => {
     describe("#from", () => {
         test("should convert normal string", () => {
             const raw = "testCommon tesxt";
-            const comp = TextComponent.from(raw);
-            expect(comp.text).toEqual(raw);
-            expect(comp.style.bold).toBeFalsy();
-            expect(comp.style.obfuscated).toBeFalsy();
-            expect(comp.style.strikethrough).toBeFalsy();
-            expect(comp.style.italic).toBeFalsy();
-            expect(comp.style.underlined).toBeFalsy();
-            expect(comp.style.color).toBeFalsy();
+            const comp = fromFormattedString(raw);
+            expect(comp).toEqual({
+                text: "testCommon tesxt"
+            });
         });
         test("should convert colored string", () => {
             const raw = "§1colored§r";
-            const comp = TextComponent.from(raw).siblings[0];
-            expect(comp.text).toEqual("colored");
-            expect(comp.style.color).toEqual("dark_blue");
-            expect(comp.style.bold).toBeFalsy();
-            expect(comp.style.obfuscated).toBeFalsy();
-            expect(comp.style.strikethrough).toBeFalsy();
-            expect(comp.style.italic).toBeFalsy();
-            expect(comp.style.underlined).toBeFalsy();
+            const root = fromFormattedString(raw);
+            expect(root).toEqual({
+                text: "",
+                extra: [
+                    {
+                        text: "colored",
+                        bold: false,
+                        obfuscated: false,
+                        strikethrough: false,
+                        underlined: false,
+                        italic: false,
+                        color: "dark_blue"
+                    }
+                ]
+            });
         });
         test("should convert styled string", () => {
             const raw = "§ostyled";
-            const comp = TextComponent.from(raw).siblings[0];
-            expect(comp.text).toEqual("styled");
-            expect(comp.style.color).toBeFalsy();
-            expect(comp.style.bold).toBeFalsy();
-            expect(comp.style.obfuscated).toBeFalsy();
-            expect(comp.style.strikethrough).toBeFalsy();
-            expect(comp.style.italic).toBeTruthy();
-            expect(comp.style.underlined).toBeFalsy();
-        });
-        test("should convert from text component frame", () => {
-            const raw: TextComponentFrame = {
-                text: "hello",
-            };
-            const comp = TextComponent.from(raw);
-            expect(comp.text).toEqual("hello");
-            expect(comp.style.color).toBeFalsy();
-            expect(comp.style.bold).toBeFalsy();
-            expect(comp.style.obfuscated).toBeFalsy();
-            expect(comp.style.strikethrough).toBeFalsy();
-            expect(comp.style.italic).toBeFalsy();
-            expect(comp.style.underlined).toBeFalsy();
-        });
-        test("should convert from styled text component frame", () => {
-            const raw: TextComponentFrame = {
-                text: "hello",
-                color: "red",
-                bold: true,
-                obfuscated: true,
-                strikethrough: true,
-                italic: true,
-                underlined: true
-            };
-            const comp = TextComponent.from(raw);
-            expect(comp.text).toEqual("hello");
-            expect(comp.style.color).toEqual("red");
-            expect(comp.style.bold).toBeTruthy();
-            expect(comp.style.obfuscated).toBeTruthy();
-            expect(comp.style.strikethrough).toBeTruthy();
-            expect(comp.style.italic).toBeTruthy();
-            expect(comp.style.underlined).toBeTruthy();
-        });
-        test("should convert from styled text component frame", () => {
-            const raw: TextComponentFrame = {
-                text: "hello",
-                color: "red",
-                bold: true,
-                obfuscated: true,
-                strikethrough: true,
-                italic: true,
-                underlined: true,
+            const comp = fromFormattedString(raw);
+            expect(comp).toEqual({
+                text: "",
                 extra: [
                     {
-                        text: "world",
-                        color: "blue",
-                        bold: true,
-                        obfuscated: true,
-                        strikethrough: true,
+                        text: "styled",
+                        color: undefined,
+                        bold: false,
                         italic: true,
-                        underlined: true,
-                    },
-                    {} as any,
-                ]
-            };
-            const comp = TextComponent.from(raw);
-            expect(comp.text).toEqual("hello");
-            expect(comp.style.color).toEqual("red");
-            expect(comp.style.bold).toBeTruthy();
-            expect(comp.style.obfuscated).toBeTruthy();
-            expect(comp.style.strikethrough).toBeTruthy();
-            expect(comp.style.italic).toBeTruthy();
-            expect(comp.style.underlined).toBeTruthy();
-
-            expect(comp.siblings).toHaveLength(2);
-            const child = comp.siblings[0];
-            expect(child.text).toEqual("world");
-            expect(child.style.color).toEqual("blue");
-            expect(child.style.bold).toBeTruthy();
-            expect(child.style.obfuscated).toBeTruthy();
-            expect(child.style.strikethrough).toBeTruthy();
-            expect(child.style.italic).toBeTruthy();
-            expect(child.style.underlined).toBeTruthy();
-
-            const empty = comp.siblings[1];
-            expect(empty.text).toEqual("");
-            expect(empty.style.color).toBeFalsy();
-            expect(empty.style.bold).toBeFalsy();
-            expect(empty.style.obfuscated).toBeFalsy();
-            expect(empty.style.strikethrough).toBeFalsy();
-            expect(empty.style.italic).toBeFalsy();
-            expect(empty.style.underlined).toBeFalsy();
+                        obfuscated: false,
+                        strikethrough: false,
+                        underlined: false,
+                    }
+                ],
+            });
         });
     });
     test("#getSuggestedCss", () => {
@@ -127,28 +55,24 @@ describe("TextComponent", () => {
             color: "red",
             obfuscated: true,
         };
-        const css = TextComponent.getSuggestedCss(style);
+        const css = getSuggestedCss(style);
         expect(css).toEqual("color: #FF5555; font-weight: bold; text-decoration:line-through; text-decoration: underline; font-style: italic;");
     });
     describe("#render", () => {
         test("should render string correctly", () => {
-            const node = TextComponent.render({
+            const node = render({
                 text: "hello",
-                siblings: [
+                extra: [
                     {
                         text: "world",
-                        siblings: [],
-                        style: {},
                     }
                 ],
-                style: {
-                    bold: true,
-                    underlined: true,
-                    strikethrough: true,
-                    italic: true,
-                    color: "red",
-                    obfuscated: true,
-                },
+                bold: true,
+                underlined: true,
+                strikethrough: true,
+                italic: true,
+                color: "red",
+                obfuscated: true,
             });
             expect(node.text).toEqual("hello");
             expect(node.style).toEqual("color: #FF5555; font-weight: bold; text-decoration:line-through; text-decoration: underline; font-style: italic;");
@@ -157,39 +81,30 @@ describe("TextComponent", () => {
             expect(node.children[0].style).toEqual("");
         });
     });
+    describe("#flat", () => {
+        test("should be able to flat no children component", () => {
+            expect(flat({ text: "hello" }))
+                .toEqual([{ text: "hello" }]);
+        });
+    });
     describe("#toFormattedString", () => {
-        const comp = {
+        const comp: TextComponent = {
             text: "hello",
-            siblings: [
+            extra: [
                 {
                     text: "world",
-                    siblings: [],
-                    style: {},
+                    extra: [],
                 }
             ],
-            style: {
-                bold: true,
-                underlined: true,
-                strikethrough: true,
-                italic: true,
-                color: "red",
-                obfuscated: true,
-            },
+            bold: true,
+            underlined: true,
+            strikethrough: true,
+            italic: true,
+            color: "red",
+            obfuscated: true,
         };
-        const str = TextComponent.toFormattedString(comp);
+        const str = toFormattedString(comp);
         expect(str).toEqual("§c§k§l§m§n§ohello§rworld§r");
-    });
-});
-
-describe("TextComponentString", () => {
-    describe("#toString", () => {
-        test("should equal to original one", () => {
-            const raw = "colored";
-            const str = TextComponentString.of(raw);
-            expect(str.text).toEqual("colored");
-            str.style.color = "red";
-            expect(str.toString()).toEqual("§ccolored§r");
-        });
     });
 });
 
