@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@xmcl/task": "file:../task",
-    "got": "^9.6.0"
+    "got": "^10.2.2"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",
