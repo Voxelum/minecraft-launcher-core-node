@@ -241,7 +241,7 @@ function installByInstallerPartialWork(mc: MinecraftFolder, profile: InstallProf
                     if (e) {
                         errs.push(e);
                     } else {
-                        errs.push(new Error(`Fail to post porcess ${proc.jar} ${proc.args.join(' ')}, ${proc.classpath.join(' ')}`))
+                        errs.push(new Error(`Fail to post porcess ${proc.jar} ${proc.args.join(" ")}, ${proc.classpath.join(" ")}`))
                     }
                 }
                 ctx.update(i += 1, profile.processors.length);
