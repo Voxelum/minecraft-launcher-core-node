@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "got": "^10.2.2",
+    "form-data": "^3.0.0",
     "uuid": "^3.2.1"
   },
   "sideEffects": [
