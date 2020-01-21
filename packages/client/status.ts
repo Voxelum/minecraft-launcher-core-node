@@ -1,4 +1,4 @@
-import { TextComponentFrame } from "@xmcl/text-component";
+import { TextComponent } from "@xmcl/text-component";
 import Long from "long";
 import { Channel } from "./channel";
 import Coders from "./coders";
@@ -20,7 +20,7 @@ export class Handshake {
 export class ServerQuery { }
 
 @Packet("server", 0x00, "status")
-export class ServerStatus { @Field(Coders.Json) status!: ServerStatusFrame; }
+export class ServerStatus { @Field(Coders.Json) status!: Status; }
 
 @Packet("client", 0x01, "status")
 export class Ping { @Field(Coders.Long) time = Long.fromNumber(Date.now()); }
@@ -31,25 +31,53 @@ export class Pong { @Field(Coders.Long) ping!: Long; }
 /**
  * The json format for Minecraft server handshake status query response
  */
-export interface ServerStatusFrame {
+export interface Status {
+    /**
+     * The version info of the server
+     */
     version: {
-        name: string,
-        protocol: number,
+        /**
+         * The name of the version, might be standard version, like 1.14.4.
+         * Or it can be modified content, just be any string the server hoster like.
+         */
+        name: string;
+        /**
+         * The protocol version
+         */
+        protocol: number;
     };
+    /**
+     * The player info in server
+     */
     players: {
-        max: number,
-        online: number,
-        sample?: Array<GameProfile>,
+        /**
+         * The server max player capacity
+         */
+        max: number;
+        /**
+         * The current online player number
+         */
+        online: number;
+        /**
+         * The online player info
+         */
+        sample?: Array<GameProfile>;
     };
     /**
      * The motd of server, which might be the raw TextComponent string or structurelized TextComponent JSON
      */
-    description: TextComponentFrame | string;
+    description: TextComponent | string;
+    /**
+     * The base 64 favicon data
+     */
     favicon: string | "";
     modinfo?: {
-        type: string | "FML",
-        modList: Array<ForgeModIdentity>,
+        type: string | "FML";
+        modList: Array<ForgeModIdentity>;
     };
+    /**
+     * The ping from server
+     */
     ping: number;
 }
 interface GameProfile {
@@ -61,7 +89,7 @@ interface ForgeModIdentity {
     readonly version: string;
 }
 
-export interface FetchOptions {
+export interface QueryOptions {
     /**
      * see http://wiki.vg/Protocol_version_numbers
      */
@@ -91,19 +119,19 @@ export function createChannel() {
 }
 
 /**
- * Fetch the server status in raw JSON format in one shot.
+ * Query the server status in raw JSON format in one shot.
  *
  * @param server The server information
- * @param options The fetch options
+ * @param options The query options
  */
-export async function fetchStatus(server: { host: string, port?: number }, options: FetchOptions = {}): Promise<ServerStatusFrame> {
+export async function queryStatus(server: { host: string, port?: number }, options: QueryOptions = {}): Promise<Status> {
     const host = server.host;
     const port = server.port || 25565;
     const timeout = options.timeout || 4000;
     const protocol = options.protocol || 210;
     const retry = typeof options.retryTimes === "number" ? options.retryTimes : 0;
 
-    let result: ServerStatusFrame | undefined;
+    let result: Status | undefined;
     let error: Error | undefined;
 
     const channel: Channel = createChannel();
@@ -138,7 +166,6 @@ export function createClient(protocol: number, timeout?: number) {
         }
     };
 }
-
 
 async function query(channel: Channel, host: string, port: number, timeout: number, protocol: number) {
     await channel.listen({
