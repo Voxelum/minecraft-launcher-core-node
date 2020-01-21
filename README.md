@@ -57,6 +57,7 @@ The `@xmcl/model` is a browser only package, as it's using [THREE.js](https://th
     - [Ping Minecraft Server](#ping-minecraft-server)
     - [Progress Moniting](#progress-moniting)
     - [Read and Write NBT](#read-and-write-nbt)
+    - [Read and Write Server Info](#read-and-write-server-info)
     - [Read ResourcePack Content](#read-resourcepack-content)
     - [Save/World Data Loading](#saveworld-data-loading)
     - [Scan Local Java](#scan-local-java)
@@ -457,14 +458,9 @@ Parse minecraft version as a resolved version, which is used for launching proce
 Read sever info (server ip, port) and fetch its status (ping, server motd):
 
 ```ts
-    import { Server } from '@xmcl/client'
-    const seversDatBuffer: Buffer; // this is the servers.dat under .minecraft folder
-    const infos: Server.Info[] = await Server.readInfo(seversDatBuffer);
-    const info: Server.Info = infos[0]
-    // fetch the server status
-    const promise: Promise<Server.Status> = Server.fetchStatus(info);
+    import { fetchStatus, Status } from '@xmcl/client'
     // or you want the raw json
-    const rawJsonPromise: Promise<Server.StatusFrame> = Server.fetchStatusFrame(info);
+    const rawStatusJson: Status = await fetchStatus(info);
 ```
 
 ### Progress Moniting
@@ -530,24 +526,9 @@ You can simply deserialize/serialize nbt.
     const buf: Buffer = await serialize(readed, { compressed });
 ```
 
-You can use it with the type cast. Suppose you are reading the [servers.dat](https://minecraft.gamepedia.com/Servers.dat_format). You can have:
+You can use class with annotation (decorator) to serialize/deserialize the type consistently.
 
-```ts
-    interface ServerInfo { icon: string; ip: string; name: string; acceptTextures: number }
-    interface ServerNBTFormat {
-        servers: Array<ServerInfo>;
-    }
-    // this function will auto fit the typescript type
-    const readed: ServerNBTFormat = await deserialize(fileData);
-    // or 
-    const readed = await deserialize<ServerNBTFormat>(fileData);
-    // notice that this type cast can be unsafe, make sure you know the nbt structure!!!
-    
-    // the first server in servers.dat
-    const oneServer: ServerInfo = readed.servers[0];
-```
-
-You can use class with annotation (decorator) to serialize/deserialize the type consistently
+Suppose you are reading the [servers.dat](https://minecraft.gamepedia.com/Servers.dat_format). You can have:
 
 ```ts
 import { serialize, deserialize, TagType } from "@xmcl/nbt";
@@ -569,12 +550,26 @@ class Servers {
 }
 
 // read
+// explict tell the function to deserialize into the type Servers
 const servers = await deserialize(data, { type: Servers });
 const infos: ServerInfo[] = servers.servers;
 
 // write
 const servers: Servers;
 const binary = await serialize(servers);
+```
+
+### Read and Write Server Info
+
+```ts
+import { readInfo, writeInfo, ServerInfo } from "@xmcl/server-info";
+
+const seversDatBuffer: Buffer; // this is the servers.dat under .minecraft folder
+const infos: ServerInfo[] = await readInfo(seversDatBuffer);
+const info: ServerInfo = infos[0];
+
+// info.ip -> server ip
+// info.name -> server name
 ```
 
 ### Read ResourcePack Content
@@ -647,21 +642,43 @@ So passing an empty array is OK.
 
 ### TextComponent
 
-Create TextComponent from string OR Minecraft's formatted string, like '§cThis is red'
+Create TextComponent from string OR Minecraft's formatted string, like `'§cThis is red'`:
 
 ```ts
-    import { TextComponent } from "@xmcl/text-component";
-    const fromString: TextComponent = TextComponent.str("from string");
+    import { TextComponent, fromFormattedString } from "@xmcl/text-component";
     const formattedString: string;
-    const fromFormatted: TextComponent = TextComponent.from(formattedString);
+    const fromFormatted: TextComponent = fromFormattedString(formattedString);
 ```
 
-Render the TextComponent to css
+Render the TextComponent to css:
 
 ```ts
-    import { TextComponent } from "@xmcl/text-component";
+    import { TextComponent, render, RenderNode } from "@xmcl/text-component";
     const yourComponent: TextComponent;
-    const hint: Array<{ style: string; text: string }> = TextComponent.render(yourComponent);
+    const node: RenderNode = render(yourComponent);
+
+    node.text; // the text of the node
+    node.style; // style of the node
+    node.children; // children
+
+    // you can render in dom like this:
+
+    function renderToDom(node: RenderNode) {
+        const span = document.createElement('span');
+        span.style = node.style;
+        span.textContent = node.text;
+        for (const child of node.children) {
+            span.appendChild(renderToDom(child));
+        }
+    } 
+```
+
+Iterate the TextComponent and its children:
+
+```ts
+    import { TextComponent, flat } from "@xmcl/text-component";
+    const yourComponent: TextComponent;
+    const selfAndAllChildren: Array<TextComponent> = flat(yourComponent);
 ```
 
 ### User Login (Official/Offline)

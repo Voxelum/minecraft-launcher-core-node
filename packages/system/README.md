@@ -4,14 +4,22 @@
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Release%20Pre-Check/badge.svg)](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Release%20Pre-Check/badge.svg)
 
-This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/package/@xmcl/minecraft-launcher-core) module. You can still use this individually.
+A unified API to read directory or zip.
 
-### Usage
+Support both nodejs and browser.
 
-This module majorly provide typescript type definitions for many Minecraft concepts. The docs of them are majorly from minecraft wiki. 
+You can do read operations for zip or directory in same API:
 
-- format of text component - `TextComponentFrame` 
-- format for resourcepack pack meta - `PackMeta`
-- format of minecraft block model - `BlockModel`
-- format of minecraft game setting - `GameSetting`
-- format of minecraft save files (level, region) - `LevelDataFrame` and `RegionDataFrame` 
+```ts
+import { System } from "@xmcl/system";
+
+let filePath = "/path/to/dir/"
+const fs = await System.openFileSystem(filePath);
+fs.readFile("a.txt"); // read /path/to/dir/a.txt
+
+let zipPath = "/path/to/file.zip"
+const fs = await System.openFileSystem(zipPath);
+fs.readFile("a.txt"); // read a.txt in the file.zip!
+```
+
+
