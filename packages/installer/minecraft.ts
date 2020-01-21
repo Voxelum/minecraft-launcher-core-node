@@ -239,7 +239,7 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
         const folder = MinecraftFolder.from(version.minecraftDirectory);
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
-        await context.execute(function assetsJson(work) {
+        await context.execute(Task.create("assetsJson", function assetsJson(work) {
             const worker = option.downloader || downloader;
 
             return downloadFileIfAbsentTask({
@@ -250,7 +250,7 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
                     hash: version.assetIndex.sha1,
                 },
             }, worker)(work);
-        });
+        }));
 
         interface AssetIndex {
             objects: {
@@ -350,13 +350,13 @@ export function installResolvedLibraries(libraries: ResolvedLibrary[], minecraft
 export function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Task<void> {
     return new Proxy(installLibrariesTask({ libraries, minecraftDirectory: typeof minecraft === "string" ? minecraft : minecraft.root }, option), {
         async apply(target, thisArgs, args) {
-            await (typeof target === "function" ? target(args[0]) : target.run(args[0]));
+            await target.run(args[0]);
         },
     }) as any;
 }
 
 function installVersionJsonTask(version: Version, minecraft: MinecraftLocation, option: Option) {
-    return Task.create("jar", async function jar(context: Task.Context) {
+    return Task.create("json", async function json(context: Task.Context) {
         const folder = MinecraftFolder.from(minecraft);
         await ensureDir(folder.getVersionRoot(version.id));
 
@@ -374,7 +374,7 @@ function installVersionJsonTask(version: Version, minecraft: MinecraftLocation, 
 }
 
 function installVersionJarTask(type: "client" | "server", version: ResolvedVersion, minecraft: MinecraftLocation, option: Option) {
-    return Task.create("json", async function json(context: Task.Context) {
+    return Task.create("jar", async function jar(context: Task.Context) {
         const folder = MinecraftFolder.from(minecraft);
         await ensureDir(folder.getVersionRoot(version.id));
 
@@ -395,7 +395,7 @@ function installVersionJarTask(type: "client" | "server", version: ResolvedVersi
 
 function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, option: Option) {
     return Task.create("library", async function library(context: Task.Context) {
-        const fallbackMavens = ["http://central.maven.org/maven2/"];
+        const fallbackMavens = ["https://repo1.maven.org/maven2/"];
 
         context.update(0, -1, lib.name);
 
@@ -450,7 +450,7 @@ function installAssetsByClusterTask(version: string, objects: Array<{ name: stri
                 },
                 destination: file,
                 pausable: context.pausealbe,
-                progress(p, t, m) { context.update(lastProgress + p, totalSize, m); }
+                progress(p, t, m) { return context.update(lastProgress + p, totalSize, m); }
             })
             context.pausealbe(undefined, undefined);
 
