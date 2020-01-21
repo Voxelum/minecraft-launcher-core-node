@@ -13,12 +13,40 @@ function runTask<T>(context: Task.Context, task: TaskOrTaskObject<T>): Promise<T
 }
 
 export interface TaskListener<N extends Task.State = Task.State> extends EventEmitter {
+    /**
+     * Emitted when the some task starts to execute. The listener will get both this task state and parent task state.
+     *
+     * If there is no parent, it will be undefined.
+     */
     on(event: "execute", listener: (node: N, parent?: N) => void): this;
+    /**
+     * Emitted when the some task failed.
+     */
     on(event: "fail", listener: (error: any, node: N) => void): this;
+    /**
+     * Emitted when the task has update.
+     *
+     * The progress and total are arbitary number which designed by task creator.
+     * You might want to convert them to percentage by yourself by directly dividing them.
+     *
+     * The message is a totally optional and arbitary string for hint.
+     */
     on(event: "update", listener: (update: { progress: number, total?: number, message?: string }, node: N) => void): this;
+    /**
+     * Emitted the when some task is finished
+     */
     on(event: "finish", listener: (result: any, node: N) => void): this;
+    /**
+     * Emitted the pause event after user toggle the `pause` in handle
+     */
     on(event: "pause", listener: (node: N) => void): this;
+    /**
+     * Emitted the resume event after use toggle the `resume` in handle
+     */
     on(event: "resume", listener: (node: N) => void): this;
+    /**
+     * Emitted the cancel event after some task is cancelled.
+     */
     on(event: "cancel", listener: (node: N) => void): this;
 
     once(event: "execute", listener: (node: N, parent?: N) => void): this;
@@ -119,8 +147,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
             update(progress: number, total?: number, message?: string) {
                 emitter.emit("update", { progress, total, message }, node);
                 if (signal._cancelled) {
-                    emitter.emit("cancelled", node);
-                    throw new Task.CancelledError();
+                    return true;
                 }
             },
             async execute<Y>(task: Task<Y>): Promise<Y> {
@@ -214,7 +241,7 @@ export namespace Task {
 
     export interface Context {
         pausealbe(onPause?: () => void, onResume?: () => void): void;
-        update(progres: number, total?: number, message?: string): void;
+        update(progres: number, total?: number, message?: string): void | boolean;
         execute<T>(task: TaskOrTaskObject<T>): Promise<T>;
     }
 
