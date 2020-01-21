@@ -102,6 +102,8 @@ export async function postProcess(mc: MinecraftFolder, proc: InstallProfile["pro
                 break;
             }
         }
+    } else {
+        shouldProcess = true;
     }
     if (!shouldProcess) { return; }
     const jarRealPath = mc.getLibraryByPath(LibraryInfo.resolve(proc.jar).path);
@@ -182,7 +184,7 @@ export function postProcessInstallProfile(mc: MinecraftFolder, installProfile: I
 export function installByInstallerPartialTask(version: string | InstallProfile, minecraft: MinecraftLocation, option: {
     java?: JavaExecutor,
 } & LibraryOption = {}) {
-    return async function installForge(context: Task.Context) {
+    return Task.create("installForge", async function installForge(context: Task.Context) {
         const mc = MinecraftFolder.from(minecraft);
         let prof: InstallProfile;
         let ver: VersionJson;
@@ -194,7 +196,7 @@ export function installByInstallerPartialTask(version: string | InstallProfile, 
         }
         ver = await readFile(mc.getVersionJson(prof.version)).then((b) => b.toString()).then(JSON.parse);
         await installByInstallerPartialWork(mc, prof, ver, option.java || JavaExecutor.createSimple("java"), option)(context);
-    };
+    });
 }
 
 /**
@@ -236,7 +238,11 @@ function installByInstallerPartialWork(mc: MinecraftFolder, profile: InstallProf
                 try {
                     await postProcess(mc, proc, java);
                 } catch (e) {
-                    errs.push(e);
+                    if (e) {
+                        errs.push(e);
+                    } else {
+                        errs.push(new Error(`Fail to post porcess ${proc.jar} ${proc.args.join(' ')}, ${proc.classpath.join(' ')}`))
+                    }
                 }
                 ctx.update(i += 1, profile.processors.length);
             }
@@ -244,8 +250,8 @@ function installByInstallerPartialWork(mc: MinecraftFolder, profile: InstallProf
             ctx.update(i, profile.processors.length);
 
             if (errs.length !== 0) {
-                errs.forEach((e) => console.error(e));
-                throw new Error("Fail to post processing");
+                errs.forEach((e) => e ? console.error(e) : void 0);
+                throw new Error(`Fail to post processing ${profile.version}`);
             }
         }));
     };
@@ -383,7 +389,7 @@ function installByUniversalTask(version: Version, minecraft: MinecraftLocation, 
             function downloadJar(ctx: Task.Context) {
                 return downloadFileTask({ url: universalURL, destination: jarPath })(ctx);
             }
-            await context.execute(downloadJar);
+            await context.execute(Task.create("downloadJar", downloadJar));
         }));
 
         await context.execute(Task.create("installForgeJson", async function installForgeJson() {
