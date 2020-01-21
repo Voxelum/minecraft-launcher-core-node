@@ -1,10 +1,14 @@
-import { checksum, ensureFile, missing, stat } from "@xmcl/core/fs";
+import { checksum, ensureFile, missing, stat, validateSha1 } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { ExecOptions, spawn } from "child_process";
 import { createReadStream, createWriteStream } from "fs";
-import * as gotDefault from "got";
+import gotDefault from "got";
 import { IncomingMessage } from "http";
 import { fileURLToPath, parse } from "url";
+import { pipeline as pip, PassThrough, Writable } from "stream";
+import { promisify } from "util";
+
+const pipeline = promisify(pip);
 
 const IS_ELECTRON = false; // process.versions.hasOwnProperty("electron");
 
@@ -17,19 +21,18 @@ export const got = gotDefault.extend({
 });
 
 export const fetchJson = gotDefault.extend({
-    json: true,
+    responseType: "json",
     useElectronNet: IS_ELECTRON,
 });
 
 export const fetchBuffer = gotDefault.extend({
-    encoding: null,
+    responseType: "buffer",
     useElectronNet: IS_ELECTRON,
 });
 
-
 export async function getRawIfUpdate(url: string, timestamp?: string): Promise<{ timestamp: string; content: string | undefined }> {
     const resp = await got(url, {
-        encoding: "utf-8",
+        encoding: "utf8",
         headers: timestamp ? { "If-Modified-Since": timestamp } : undefined,
     });
     const lastModifiedReturn = resp.headers["last-modified"] || resp.headers["Last-Modified"] as string || "";
@@ -56,7 +59,7 @@ export async function getIfUpdate<T extends UpdatedObject>(url: string, parser: 
 export interface DownloadOption {
     url: string | string[];
     retry?: number;
-    method?: string;
+    method?: "GET" | "POST" | "PUT" | "PATCH" | "HEAD" | "DELETE" | "OPTIONS" | "TRACE" | "get" | "post" | "put" | "patch" | "head" | "delete" | "options" | "trace";
     headers?: { [key: string]: string };
     timeout?: number;
     progress?: (written: number, total: number, url: string) => boolean | void;
@@ -75,16 +78,15 @@ export interface DownloadAndCheckOption extends DownloadOption {
 }
 
 export class Downloader {
-    protected async openDownloadStreamInternal(url: string, option: DownloadOption) {
+    protected openDownloadStreamInternal(url: string, option: DownloadOption) {
         const onProgress = option.progress || (() => { });
         const parsedURL = parse(url);
         if (parsedURL.protocol === "file:") {
             const path = fileURLToPath(url);
             let read = 0;
-            const fstat = await stat(path);
             const stream = createReadStream(path).on("data", (chunk) => {
                 read += chunk.length;
-                if (onProgress(read, fstat.size, url)) {
+                if (onProgress(read, stream.readableLength, url)) {
                     stream.destroy();
                 }
             });
@@ -104,7 +106,7 @@ export class Downloader {
             response = resp;
         }).on("downloadProgress", (progress) => {
             if (onProgress(progress.transferred, progress.total || -1, url)) {
-                response.destroy();
+                response.destroy(new Task.CancelledError());
             }
         });
         if (option.pausable) {
@@ -113,35 +115,33 @@ export class Downloader {
         return stream;
     }
     protected async shouldDownloadFile(destination: string, option?: DownloadAndCheckOption["checksum"]) {
+        let missed = await missing(destination);
+        if (missed) {
+            return true;
+        }
         if (!option) {
-            return missing(destination);
+            return missed;
         }
         const hash = await checksum(destination, option.algorithm);
         return hash !== option.hash;
     }
-    openDownloadStream(option: DownloadOption) {
+    async downloadToStream(option: DownloadOption, openWriteStream: () => Writable) {
         if (typeof option.url === "string") {
-            return this.openDownloadStreamInternal(option.url, option);
+            await pipeline(this.openDownloadStreamInternal(option.url, option), openWriteStream());
+            return;
         }
-        const chain = option.url.map((u) => () => this.openDownloadStreamInternal(u, option));
+        const chain = option.url.map((u) => () => pipeline(this.openDownloadStreamInternal(u, option), openWriteStream()));
         let promise = chain.shift()!();
         while (chain.length > 0) {
             const next = chain.shift();
-            if (next) {
-                promise = promise.catch(() => next());
-            }
+            if (next) { promise = promise.catch(() => next()); }
         }
         return promise;
     }
     async downloadFile(option: DownloadToOption): Promise<string> {
         await ensureFile(option.destination);
-        const stream = await this.openDownloadStream(option);
-        return new Promise<string>((resolve, reject) => {
-            stream
-                .on("error", reject)
-                .pipe(createWriteStream(option.destination))
-                .on("close", () => resolve(option.destination));
-        });
+        await this.downloadToStream(option, () => createWriteStream(option.destination));
+        return option.destination;
     }
     async downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption): Promise<string> {
         if (await this.shouldDownloadFile(option.destination, option.checksum)) {
@@ -176,7 +176,6 @@ export function downloadFileIfAbsentTask(option: DownloadAndCheckOption & Downlo
         context.pausealbe(undefined, undefined);
     };
 }
-
 
 export type JavaExecutor = (args: string[], option?: ExecOptions) => Promise<any>;
 
