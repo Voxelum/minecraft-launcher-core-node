@@ -1,7 +1,7 @@
 import { TextComponent, toFormattedString, fromFormattedString, render, getSuggestedCss, flat } from "./index";
 
 describe("TextComponent", () => {
-    describe("#from", () => {
+    describe("#fromFormattedString", () => {
         test("should convert normal string", () => {
             const raw = "testCommon tesxt";
             const comp = fromFormattedString(raw);
