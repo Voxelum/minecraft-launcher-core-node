@@ -10,19 +10,41 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 
 ### TextComponent
 
-Create TextComponent from string OR Minecraft's formatted string, like '§cThis is red'
+Create TextComponent from string OR Minecraft's formatted string, like `'§cThis is red'`:
 
 ```ts
-    import { TextComponent } from "@xmcl/text-component";
-    const fromString: TextComponent = TextComponent.str("from string");
+    import { TextComponent, fromFormattedString } from "@xmcl/text-component";
     const formattedString: string;
-    const fromFormatted: TextComponent = TextComponent.from(formattedString);
+    const fromFormatted: TextComponent = fromFormattedString(formattedString);
 ```
 
-Render the TextComponent to css
+Render the TextComponent to css:
 
 ```ts
-    import { TextComponent } from "@xmcl/text-component";
+    import { TextComponent, render, RenderNode } from "@xmcl/text-component";
     const yourComponent: TextComponent;
-    const hint: Array<{ style: string; text: string }> = TextComponent.render(yourComponent);
+    const node: RenderNode = render(yourComponent);
+
+    node.text; // the text of the node
+    node.style; // style of the node
+    node.children; // children
+
+    // you can render in dom like this:
+
+    function renderToDom(node: RenderNode) {
+        const span = document.createElement('span');
+        span.style = node.style;
+        span.textContent = node.text;
+        for (const child of node.children) {
+            span.appendChild(renderToDom(child));
+        }
+    } 
+```
+
+Iterate the TextComponent and its children:
+
+```ts
+    import { TextComponent, flat } from "@xmcl/text-component";
+    const yourComponent: TextComponent;
+    const selfAndAllChildren: Array<TextComponent> = flat(yourComponent);
 ```

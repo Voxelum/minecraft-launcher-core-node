@@ -13,12 +13,7 @@ This is a sub-module belong to [minecraft-launcher-core](https://www.npmjs.com/p
 Read sever info (server ip, port) and fetch its status (ping, server motd):
 
 ```ts
-    import { Server } from '@xmcl/client'
-    const seversDatBuffer: Buffer; // this is the servers.dat under .minecraft folder
-    const infos: Server.Info[] = await Server.readInfo(seversDatBuffer);
-    const info: Server.Info = infos[0]
-    // fetch the server status
-    const promise: Promise<Server.Status> = Server.fetchStatus(info);
+    import { fetchStatus, Status } from '@xmcl/client'
     // or you want the raw json
-    const rawJsonPromise: Promise<Server.StatusFrame> = Server.fetchStatusFrame(info);
+    const rawStatusJson: Status = await fetchStatus(info);
 ```
