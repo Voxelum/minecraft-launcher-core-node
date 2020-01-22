@@ -57,47 +57,32 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
     });
 }
 
+const IN_CI = process.env.CI || process.env.GITHUB_WORKFLOW;
 
 describe("Launcher", () => {
     const root = path.normalize(path.join(__dirname, "..", "..", "temp"));
     let javaPath: string;
     let javaVersion: number;
-    let testOnJava: typeof test = test;
-    let testOnOldJava: typeof test = test;
 
     jest.setTimeout(10000000);
 
     beforeAll(async function () {
-        if (process.env.CI || process.env.GITHUB_WORKFLOW) {
-            testOnJava = test.skip;
-            testOnOldJava = test.skip;
+        if (IN_CI) {
             return;
         }
         if (process.env.JAVA_HOME) {
             javaPath = `${process.env.JAVA_HOME}/bin/java`;
-            if (process.env.ENV && process.env.ENV === "TRAVIS") {
-                testOnJava = test.skip;
-            } else {
-                javaVersion = await getJavaVersion(javaPath);
-            }
+            javaVersion = await getJavaVersion(javaPath);
         } else {
-            try {
-                javaPath = "java";
-                javaVersion = await getJavaVersion(javaPath);
-            } catch {
-                testOnJava = test.skip;
-            }
-        }
-        if (javaVersion > 8) {
-            testOnOldJava = test.skip;
-        }
-        if (process.env.CI) {
-            testOnJava = test.skip;
-            testOnOldJava = test.skip;
+            javaPath = "java";
+            javaVersion = await getJavaVersion(javaPath).catch(() => {
+                javaPath = "";
+                return 0;
+            });
         }
     });
     describe("#generateArgumentsServer", () => {
-        testOnJava("should generate command arguments", async () => {
+        test("should generate command arguments", async () => {
             const args = await generateArgumentsServer({
                 javaPath: "/test/java",
                 path: root,
@@ -116,7 +101,7 @@ describe("Launcher", () => {
     //     });
     // });
     describe.skip("#launchServer", () => {
-        testOnJava("should launch server", async () => {
+        test("should launch server", async () => {
             const proc = await launchServer({
                 javaPath,
                 path: root,
@@ -341,18 +326,22 @@ describe("Launcher", () => {
     });
     describe("#launch", () => {
         describe("1.17.10", () => {
-            testOnJava("should launch with forge", async () => {
+            let t = test;
+            if ((javaVersion && javaVersion > 8) || !javaPath) { t = test.skip; }
+            t("should launch with forge", async () => {
                 const option: LaunchOption = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "OpenAL initialized.");
             });
         });
 
         describe("1.12.2", () => {
-            testOnJava("should launch normal minecraft", async () => {
+            let t = test;
+            if ((javaVersion && javaVersion > 8) || !javaPath) { t = test.skip; }
+            t("should launch normal minecraft", async () => {
                 const option: LaunchOption = { version: "1.12.2", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "[Client thread/INFO]: Created: 1024x512 textures-atlas");
             });
-            testOnJava("should launch server", async () => {
+            t("should launch server", async () => {
                 const option: LaunchOption = {
                     version: "1.12.2", gamePath: root, javaPath, server: {
                         ip: "127.0.0.1",
@@ -361,28 +350,32 @@ describe("Launcher", () => {
                 };
                 await waitGameProcess(await launch(option), "[Client thread/INFO]: Connecting to 127.0.0.1, 25565");
             });
-            testOnOldJava("should launch forge minecraft", async () => {
+            t("should launch forge minecraft", async () => {
                 const option: LaunchOption = { version: "1.12.2-forge1.12.2-14.23.5.2823", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "[main/INFO] [FML]:");
             });
-            testOnOldJava("should launch liteloader minecraft", async () => {
+            t("should launch liteloader minecraft", async () => {
                 const option: LaunchOption = { version: "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "LiteLoader begin POSTINIT");
             });
-            testOnOldJava("should launch forge liteloader minecraft", async () => {
+            t("should launch forge liteloader minecraft", async () => {
                 const option: LaunchOption = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "LiteLoader begin POSTINIT", "[main/INFO] [FML]:");
             });
         });
 
         describe("1.13.2", () => {
-            testOnJava("should launch normal minecraft", async () => {
+            let t = test;
+            if (!javaPath) { t = test.skip; }
+            t("should launch normal minecraft", async () => {
                 const option: LaunchOption = { version: "1.13.2", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "[Client thread/INFO]: Created: 1024x512 textures-atlas");
             });
         });
         describe("1.14.4", () => {
-            testOnJava("should launch normal minecraft", async () => {
+            let t = test;
+            if (!javaPath) { t = test.skip; }
+            t("should launch normal minecraft", async () => {
                 const option: LaunchOption = { version: "1.14.4", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "[Client thread/INFO]: OpenAL initialized");
             });
