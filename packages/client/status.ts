@@ -1,18 +1,18 @@
 import { TextComponent } from "@xmcl/text-component";
 import Long from "long";
 import { Channel } from "./channel";
-import Coders from "./coders";
+import { VarInt, String, Long as CLong, Short } from "./coders";
 import { Packet, Field } from "./packet";
 
 @Packet("client", 0x00, "handshake")
 export class Handshake {
-    @Field(Coders.VarInt)
+    @Field(VarInt)
     protocolVersion!: number;
-    @Field(Coders.String)
+    @Field(String)
     serverAddress!: string;
-    @Field(Coders.Short)
+    @Field(Short)
     serverPort!: number;
-    @Field(Coders.VarInt)
+    @Field(VarInt)
     nextState!: number;
 }
 
@@ -20,13 +20,13 @@ export class Handshake {
 export class ServerQuery { }
 
 @Packet("server", 0x00, "status")
-export class ServerStatus { @Field(Coders.Json) status!: Status; }
+export class ServerStatus { @Field(CLong) status!: Status; }
 
 @Packet("client", 0x01, "status")
-export class Ping { @Field(Coders.Long) time = Long.fromNumber(Date.now()); }
+export class Ping { @Field(CLong) time = Long.fromNumber(Date.now()); }
 
 @Packet("server", 0x01, "status")
-export class Pong { @Field(Coders.Long) ping!: Long; }
+export class Pong { @Field(CLong) ping!: Long; }
 
 /**
  * The json format for Minecraft server handshake status query response

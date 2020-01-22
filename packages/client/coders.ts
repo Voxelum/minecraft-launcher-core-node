@@ -1,8 +1,6 @@
-// tslint:disable: variable-name
-
-import { deserializeSync } from "@xmcl/nbt";
+import { deserializeSync, serializeSync } from "@xmcl/nbt";
 import ByteBuffer from "bytebuffer";
-import Long from "long";
+import long from "long";
 import "uuid";
 
 export interface SlotData {
@@ -20,37 +18,37 @@ export interface Coder<T> {
     readonly decode: (buffer: ByteBuffer, context?: any) => T;
 }
 
-const VarInt: Coder<number> = {
+export const VarInt: Coder<number> = {
     decode: (buffer, inst) => buffer.readVarint32(),
     encode: (buffer, inst) => { buffer.writeVarint32(inst); },
 };
 
-const Int: Coder<number> = {
+export const Int: Coder<number> = {
     decode: (buffer, inst) => buffer.readInt(),
     encode: (buffer, inst) => { buffer.writeInt(inst); },
 };
 
-const Byte: Coder<number> = {
+export const Byte: Coder<number> = {
     decode: (buffer, inst) => buffer.readByte(),
     encode: (buffer, inst) => { buffer.writeByte(inst); },
 };
 
-const UByte: Coder<number> = {
+export const UByte: Coder<number> = {
     decode: (buffer, inst) => buffer.readUint8(),
     encode: (buffer, inst) => { buffer.writeUint8(inst); },
 };
 
-const Bool: Coder<boolean> = {
+export const Bool: Coder<boolean> = {
     decode: (buffer, inst) => buffer.readByte() === 1,
     encode: (buffer, inst) => { buffer.writeByte(inst ? 1 : 0); },
 };
 
-const Float: Coder<number> = {
+export const Float: Coder<number> = {
     decode: (buffer, inst) => buffer.readFloat(),
     encode: (buffer, inst) => { buffer.writeFloat(inst); },
 };
 
-const Double: Coder<number> = {
+export const Double: Coder<number> = {
     decode: (buffer, inst) => buffer.readDouble(),
     encode: (buffer, inst) => { buffer.writeDouble(inst); },
 };
@@ -70,11 +68,10 @@ const Double: Coder<number> = {
 //     },
 // };
 
-const UUID: Coder<string> = {
+export const UUID: Coder<string> = {
     decode: (buffer, inst) => {
         const makeDigit = (hex: string, digit: number) => {
             if (hex.length < digit) {
-                // tslint:disable-next-line: no-shadowed-variable
                 let d = "";
                 for (let i = 0; i < digit - hex.length; i += 1) {
                     d += 0;
@@ -96,42 +93,42 @@ const UUID: Coder<string> = {
     encode: (buffer, inst) => {
         const components = inst.split("-");
         if (components.length !== 5) { throw new Error("Invalid UUID"); }
-        let hi = Long.fromString(components[0], false, 16);
+        let hi = long.fromString(components[0], false, 16);
         hi = hi.shiftLeft(16);
-        hi = hi.or(Long.fromString(components[1], false, 16));
+        hi = hi.or(long.fromString(components[1], false, 16));
         hi = hi.shiftLeft(16);
-        hi = hi.or(Long.fromString(components[2], false, 16));
+        hi = hi.or(long.fromString(components[2], false, 16));
 
-        let lo = Long.fromString(components[3], false, 16);
+        let lo = long.fromString(components[3], false, 16);
         lo = lo.shiftLeft(48);
-        lo = lo.or(Long.fromString(components[4], false, 16));
+        lo = lo.or(long.fromString(components[4], false, 16));
 
         buffer.writeUint64(hi);
         buffer.writeUint64(lo);
     },
 };
 
-const Short: Coder<number> = {
+export const Short: Coder<number> = {
     decode: (buffer, inst) => buffer.readShort(),
     encode: (buffer, inst) => { buffer.writeShort(inst); },
 };
 
-const UShort: Coder<number> = {
+export const UShort: Coder<number> = {
     decode: (buffer, inst) => buffer.readUint16(),
     encode: (buffer, inst) => { buffer.writeUint16(inst); },
 };
 
-const _Long: Coder<Long> = {
+export const Long: Coder<Long> = {
     decode: (buffer, inst) => buffer.readLong(),
     encode: (buffer, inst) => { buffer.writeInt64(inst); },
 };
 
-const VarLong: Coder<Long> = {
+export const VarLong: Coder<Long> = {
     decode: (buffer, inst) => buffer.readVarint64(),
     encode: (buffer, inst) => { buffer.writeVarint64(inst); },
 };
 
-const _String: Coder<string> = {
+export const String: Coder<string> = {
     decode: (buffer) => {
         const length = buffer.readVarint32();
         const u8 = buffer.slice(buffer.offset, buffer.offset + length).toUTF8();
@@ -143,22 +140,22 @@ const _String: Coder<string> = {
     },
 };
 
-const Json: Coder<any> = {
+export const Json: Coder<any> = {
     decode: (buffer, inst) => {
-        return JSON.parse(_String.decode(buffer, ""));
+        return JSON.parse(String.decode(buffer, ""));
     },
     encode: (buffer, inst) => {
-        _String.encode(buffer, JSON.stringify(inst));
+        String.encode(buffer, JSON.stringify(inst));
     },
 };
 
 
-const Slot: Coder<SlotData> = {
+export const Slot: Coder<SlotData> = {
     decode: (buffer, inst) => {
         const blockId = Short.decode(buffer, 0);
         if (blockId === -1) { return { blockId }; }
-        const itemCount = Byte.decode(buffer, 0);
-        const itemDamage = Short.decode(buffer, 0);
+        const itemCount = Byte.decode(buffer) || undefined;
+        const itemDamage = Short.decode(buffer) || undefined;
         if (Byte.decode(buffer, 0) === 0) {
             return {
                 blockId,
@@ -174,11 +171,19 @@ const Slot: Coder<SlotData> = {
         };
     },
     encode: (buffer, inst) => {
-        _String.encode(buffer, JSON.stringify(inst));
+        Short.encode(buffer, inst.blockId);
+        Byte.encode(buffer, inst.itemCount || 0);
+        Byte.encode(buffer, inst.itemDamage || 0);
+        if (inst.nbt) {
+            Byte.encode(buffer, 1);
+            buffer.writeBytes(serializeSync(inst.nbt));
+        } else {
+            Byte.encode(buffer, 0);
+        }
     },
 };
 
-const ByteArray: Coder<Int8Array> = {
+export const ByteArray: Coder<Int8Array> = {
     decode: (buffer, inst) => {
         const len = buffer.readVarint32();
         const arr = new Int8Array(len);
@@ -189,14 +194,9 @@ const ByteArray: Coder<Int8Array> = {
     },
     encode: (buffer, inst) => {
         const len = inst.length;
+        buffer.writeVarint32(len);
         for (let i = 0; i < len; i += 1) {
             buffer.writeByte(inst[i]);
         }
     },
 };
-
-const Coders = {
-    Json, VarInt, ByteArray, Long: _Long, Slot, VarLong, String: _String, Short, UByte, Byte, Bool, Float, Double, /* Position: _Position, */ UUID, Int,
-};
-
-export default Coders;
