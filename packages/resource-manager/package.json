@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/resource-manager",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "./index.js",
   "module": "./index.js",
   "description": "Minecraft resource manager",
@@ -11,8 +11,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/system": "file:../system",
-    "@xmcl/resourcepack": "file:../resourcepack"
+    "@xmcl/resourcepack": "file:../resourcepack",
+    "@xmcl/system": "file:../system"
   },
   "scripts": {
     "test": "",

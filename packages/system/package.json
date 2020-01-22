@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/system",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "./index.js",
   "module": "./index.js",
   "browser": {
@@ -14,8 +14,8 @@
     "access": "public"
   },
   "dependencies": {
-    "jszip": "^3.2.2",
-    "@xmcl/unzip": "file:../unzip"
+    "@xmcl/unzip": "file:../unzip",
+    "jszip": "^3.2.2"
   },
   "scripts": {
     "test": "",

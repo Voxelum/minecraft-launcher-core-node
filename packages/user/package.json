@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/user",
-  "version": "1.0.4",
+  "version": "2.0.0-alpha.0",
   "main": "./index.js",
   "module": "./index.js",
   "browser": {
@@ -14,8 +14,8 @@
     "access": "public"
   },
   "dependencies": {
-    "got": "^10.2.2",
     "form-data": "^3.0.0",
+    "got": "^10.2.2",
     "uuid": "^3.2.1"
   },
   "sideEffects": [
