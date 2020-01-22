@@ -9,5 +9,9 @@ export default {
             description: "All the things you might want to create a Minecraft Launcher",
         },
         "author": "Contant Author",
+        showCode: "Talk is cheap... Feel the code youself!",
+        modelDisplay: "Model Display Samples",
+        playerModel: "Player Model",
+        blockModel: "Block Model",
     }
 }
