@@ -228,14 +228,14 @@ function openInternal(target: yOpenTarget, options: yOptions = {}): Promise<yZip
     }
 }
 
-async function createCahcedZipFile(file: yOpenTarget, option: yOptions = {}): Promise<Unzip.CachedZipFile> {
+async function createCahcedZipFile(file: yOpenTarget, option: yOptions = {}): Promise<CachedZipFile> {
     const zip = await openInternal(file, { ...option, lazyEntries: true, autoClose: false });
     const entries: { [key: string]: yEntry } = {};
     await walkEntries(zip, (e) => { entries[e.fileName] = e; });
     return new CachedZip(zip, entries);
 }
 
-abstract class AbstractZip implements Unzip.ZipFile {
+abstract class AbstractZip implements ZipFile {
     get decodeStrings() { return this.delegate.decodeStrings; }
     get comment() { return this.delegate.comment; }
     get entryCount() { return this.delegate.entryCount; }
@@ -270,7 +270,7 @@ abstract class AbstractZip implements Unzip.ZipFile {
     }
 }
 
-class LazyZip extends AbstractZip implements Unzip.LazyZipFile {
+class LazyZip extends AbstractZip implements LazyZipFile {
     get entriesRead() { return this.delegate.entriesRead; }
     get readEntryCursor() { return this.delegate.readEntryCursor; }
     constructor(delegate: yZipFile) {
@@ -291,7 +291,7 @@ class LazyZip extends AbstractZip implements Unzip.LazyZipFile {
     }
 }
 
-class CachedZip extends AbstractZip implements Unzip.CachedZipFile {
+class CachedZip extends AbstractZip implements CachedZipFile {
     constructor(
         delegate: yZipFile,
         readonly entries: { [name: string]: yEntry; }) {
@@ -305,272 +305,264 @@ class CachedZip extends AbstractZip implements Unzip.CachedZipFile {
         await extractCachedInternal(this.delegate, dest, Object.values(this.entries), mapper);
     }
 }
-export declare namespace Unzip {
-    abstract class ZipFile { }
-    class CachedZipFile extends ZipFile { }
-    class LazyZipFile extends ZipFile { }
+export type OpenTarget = string | Buffer | number;
+export interface ZipFileOptions {
+    decompress?: boolean | null;
+    decrypt?: boolean | null;
+    start?: number | null;
+    end?: number | null;
 }
-export namespace Unzip {
-    export type OpenTarget = string | Buffer | number;
-    export interface ZipFileOptions {
-        decompress?: boolean | null;
-        decrypt?: boolean | null;
-        start?: number | null;
-        end?: number | null;
+export interface Entry {
+    readonly comment: string;
+    readonly compressedSize: number;
+    readonly compressionMethod: number;
+    readonly crc32: number;
+    readonly externalFileAttributes: number;
+    readonly extraFieldLength: number;
+    readonly extraFields: Array<{ id: number; data: Buffer }>;
+    readonly fileCommentLength: number;
+    readonly fileName: string;
+    readonly fileNameLength: number;
+    readonly generalPurposeBitFlag: number;
+    readonly internalFileAttributes: number;
+    readonly lastModFileDate: number;
+    readonly lastModFileTime: number;
+    readonly relativeOffsetOfLocalHeader: number;
+    readonly uncompressedSize: number;
+    readonly versionMadeBy: number;
+    readonly versionNeededToExtract: number;
+
+    getLastModDate(): Date;
+    isEncrypted(): boolean;
+    isCompressed(): boolean;
+}
+export interface Options {
+    lazyEntries?: boolean;
+    decodeStrings?: boolean;
+    validateEntrySizes?: boolean;
+    strictFileNames?: boolean;
+}
+interface LazyOptions extends Options {
+    lazyEntries: true;
+}
+interface CacheOptions extends Options {
+    lazyEntries?: false;
+}
+export interface ZipFile {
+    readonly comment: string;
+    readonly decodeStrings: boolean;
+    readonly entryCount: number;
+    readonly fileSize: number;
+    readonly isOpen: boolean;
+    readonly validateEntrySizes: boolean;
+
+    readEntry(entry: Entry, options?: ZipFileOptions): Promise<Buffer>;
+    openEntry(entry: Entry, options?: ZipFileOptions): Promise<Readable>;
+
+    extractEntries(dest: string, mapper?: (e: Entry) => undefined | string): Promise<void>;
+
+    close(): void;
+}
+export interface CachedZipFile extends ZipFile {
+    readonly entries: { [name: string]: Entry | undefined };
+
+    filterEntries(filter: (e: Entry) => boolean): Entry[];
+}
+
+export interface LazyZipFile extends ZipFile {
+    readonly entriesRead: number;
+    readonly readEntryCursor: boolean;
+
+    nextEntry(): Promise<Entry>;
+
+    /**
+     * When you know which entries you want, you can use this function to get the entries you want at once.
+     *
+     * For more complex requirement, please use walkEntries.
+     *
+     * @param entries The entries' names you want
+     */
+    filterEntries(entries: string[]): Promise<Entry[]>;
+
+    walkEntries(onEntry: (entry: Entry) => Promise<any> | boolean | void): Promise<void>;
+}
+
+export interface ParseStream extends Writable {
+    wait(): Promise<LazyZipFile>;
+}
+
+export interface ParseEntriesStream extends Writable {
+    wait(): Promise<CachedZipFile>;
+}
+
+export interface ExtractStream extends Writable {
+    wait(): Promise<void>;
+}
+
+export interface WalkEntriesStream extends Writable {
+    wait(): Promise<void>;
+}
+
+export function open(target: OpenTarget, options: CacheOptions): Promise<CachedZipFile>;
+export function open(target: OpenTarget, options: LazyOptions): Promise<LazyZipFile>;
+export function open(target: OpenTarget, options: CacheOptions | LazyOptions): Promise<LazyZipFile | CachedZipFile>;
+export function open(target: OpenTarget): Promise<CachedZipFile>;
+export async function open(target: OpenTarget, options: Options = {}) {
+    if (options.lazyEntries === true) {
+        return new LazyZip(await openInternal(target, { ...options, lazyEntries: true, autoClose: false })) as LazyZipFile;
+    } else {
+        return createCahcedZipFile(target, options);
     }
-    export interface Entry {
-        readonly comment: string;
-        readonly compressedSize: number;
-        readonly compressionMethod: number;
-        readonly crc32: number;
-        readonly externalFileAttributes: number;
-        readonly extraFieldLength: number;
-        readonly extraFields: Array<{ id: number; data: Buffer }>;
-        readonly fileCommentLength: number;
-        readonly fileName: string;
-        readonly fileNameLength: number;
-        readonly generalPurposeBitFlag: number;
-        readonly internalFileAttributes: number;
-        readonly lastModFileDate: number;
-        readonly lastModFileTime: number;
-        readonly relativeOffsetOfLocalHeader: number;
-        readonly uncompressedSize: number;
-        readonly versionMadeBy: number;
-        readonly versionNeededToExtract: number;
+}
 
-        getLastModDate(): Date;
-        isEncrypted(): boolean;
-        isCompressed(): boolean;
-    }
-    export interface Options {
-        lazyEntries?: boolean;
-        decodeStrings?: boolean;
-        validateEntrySizes?: boolean;
-        strictFileNames?: boolean;
-    }
-    interface LazyOptions extends Options {
-        lazyEntries: true;
-    }
-    interface CacheOptions extends Options {
-        lazyEntries?: false;
-    }
-    export interface ZipFile {
-        readonly comment: string;
-        readonly decodeStrings: boolean;
-        readonly entryCount: number;
-        readonly fileSize: number;
-        readonly isOpen: boolean;
-        readonly validateEntrySizes: boolean;
+export function createParseStream(options?: CacheOptions): ParseEntriesStream;
+export function createParseStream(options?: LazyOptions): ParseStream;
+export function createParseStream(options?: Options) {
+    return new ParseStreamImpl(options) as any; // sorry, ts cannot infer this i think
+}
 
-        readEntry(entry: Entry, options?: ZipFileOptions): Promise<Buffer>;
-        openEntry(entry: Entry, options?: ZipFileOptions): Promise<Readable>;
+export function createParseEntriesStream(entries: string[]): ParseEntriesStream {
+    return new ParseEntriesStreamImpl(entries);
+}
 
-        extractEntries(dest: string, mapper?: (e: Entry) => undefined | string): Promise<void>;
+export function createExtractStream(destination: string, entries?: string[] | ((entry: Entry) => string | undefined)): ExtractStream {
+    return new ExtractStreamImpl(destination, entries);
+}
 
-        close(): void;
-    }
-    export interface CachedZipFile extends ZipFile {
-        readonly entries: { [name: string]: Entry | undefined };
+export function createWalkEntriesStream(onEntry: (entry: Entry) => Promise<any> | boolean | undefined): WalkEntriesStream {
+    return new WalkEntriesStreamImpl(onEntry);
+}
 
-        filterEntries(filter: (e: Entry) => boolean): Entry[];
-    }
+class ZipFileStream<T> extends Writable {
+    protected buffer: Buffer[] = [];
+    protected _resolve!: (result: T | PromiseLike<T>) => void;
+    protected _reject!: (error: any) => void;
+    protected _promise = new Promise<T>((resolve, reject) => {
+        this._resolve = resolve;
+        this._reject = reject;
+    });
 
-    export interface LazyZipFile extends ZipFile {
-        readonly entriesRead: number;
-        readonly readEntryCursor: boolean;
-
-        nextEntry(): Promise<Entry>;
-
-        /**
-         * When you know which entries you want, you can use this function to get the entries you want at once.
-         *
-         * For more complex requirement, please use walkEntries.
-         *
-         * @param entries The entries' names you want
-         */
-        filterEntries(entries: string[]): Promise<Entry[]>;
-
-        walkEntries(onEntry: (entry: Entry) => Promise<any> | boolean | void): Promise<void>;
-    }
-
-    export interface ParseStream extends Writable {
-        wait(): Promise<LazyZipFile>;
-    }
-
-    export interface ParseEntriesStream extends Writable {
-        wait(): Promise<CachedZipFile>;
-    }
-
-    export interface ExtractStream extends Writable {
-        wait(): Promise<void>;
-    }
-
-    export interface WalkEntriesStream extends Writable {
-        wait(): Promise<void>;
-    }
-
-    export function open(target: OpenTarget, options: CacheOptions): Promise<CachedZipFile>;
-    export function open(target: OpenTarget, options: LazyOptions): Promise<LazyZipFile>;
-    export function open(target: OpenTarget, options: CacheOptions | LazyOptions): Promise<LazyZipFile | CachedZipFile>;
-    export function open(target: OpenTarget): Promise<CachedZipFile>;
-    export async function open(target: OpenTarget, options: Options = {}) {
-        if (options.lazyEntries === true) {
-            return new LazyZip(await openInternal(target, { ...options, lazyEntries: true, autoClose: false })) as LazyZipFile;
-        } else {
-            return createCahcedZipFile(target, options);
-        }
-    }
-
-    export function createParseStream(options?: CacheOptions): ParseEntriesStream;
-    export function createParseStream(options?: LazyOptions): ParseStream;
-    export function createParseStream(options?: Options) {
-        return new ParseStreamImpl(options) as any; // sorry, ts cannot infer this i think
-    }
-
-    export function createParseEntriesStream(entries: string[]): ParseEntriesStream {
-        return new ParseEntriesStreamImpl(entries);
-    }
-
-    export function createExtractStream(destination: string, entries?: string[] | ((entry: Entry) => string | undefined)): ExtractStream {
-        return new ExtractStreamImpl(destination, entries);
-    }
-
-    export function createWalkEntriesStream(onEntry: (entry: Entry) => Promise<any> | boolean | undefined): WalkEntriesStream {
-        return new WalkEntriesStreamImpl(onEntry);
-    }
-
-    class ZipFileStream<T> extends Writable {
-        protected buffer: Buffer[] = [];
-        protected _resolve!: (result: T | PromiseLike<T>) => void;
-        protected _reject!: (error: any) => void;
-        protected _promise = new Promise<T>((resolve, reject) => {
-            this._resolve = resolve;
-            this._reject = reject;
-        });
-
-        constructor() {
-            super();
-        }
-
-        public _write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
-            this.buffer.push(chunk);
-            callback();
-        }
-
-        public wait(): Promise<T> {
-            return this._promise;
-        }
+    constructor() {
+        super();
     }
 
-    class WalkEntriesStreamImpl extends ZipFileStream<void> implements WalkEntriesStream {
-        constructor(readonly onEntry: (entry: Entry) => Promise<any> | boolean | undefined) {
-            super();
-        }
-
-        public _final(callback: (error?: Error | null) => void) {
-            openInternal(Buffer.concat(this.buffer), { lazyEntries: true }).then((zip) => {
-                walkEntries(zip, this.onEntry).then(() => {
-                    callback();
-                    this._resolve();
-                }).catch(this._reject);
-            }).catch((e) => {
-                callback(e);
-                this._reject(e);
-            });
-        }
+    public _write(chunk: any, encoding: string, callback: (error?: Error | null) => void) {
+        this.buffer.push(chunk);
+        callback();
     }
 
-    class ParseStreamImpl extends ZipFileStream<LazyZipFile | CachedZipFile> {
-        constructor(private option?: Options) {
-            super();
-        }
+    public wait(): Promise<T> {
+        return this._promise;
+    }
+}
 
-        public _final(callback: (error?: Error | null) => void) {
-            const options = this.option || {};
-            open(Buffer.concat(this.buffer), options.lazyEntries ? options as LazyOptions : options as CacheOptions).then((zip) => {
+class WalkEntriesStreamImpl extends ZipFileStream<void> implements WalkEntriesStream {
+    constructor(readonly onEntry: (entry: Entry) => Promise<any> | boolean | undefined) {
+        super();
+    }
+
+    public _final(callback: (error?: Error | null) => void) {
+        openInternal(Buffer.concat(this.buffer), { lazyEntries: true }).then((zip) => {
+            walkEntries(zip, this.onEntry).then(() => {
                 callback();
-                this._resolve(zip);
-            }).catch((e) => {
-                callback(e);
-                this._reject(e);
-            });
-        }
-    }
-
-    class ParseEntriesStreamImpl extends ZipFileStream<CachedZipFile>  {
-        constructor(readonly entries: string[]) {
-            super();
-        }
-
-        public _final(callback: (error?: Error | null) => void) {
-            openInternal(Buffer.concat(this.buffer), { lazyEntries: true }).then((zip) => {
-                return parseEntriesInternal(zip, this.entries).then((entries) => {
-                    this._resolve(new CachedZip(zip, entries));
-                    callback();
-                });
-            }).catch((e) => {
-                callback(e);
-                this._reject(e);
-            });
-        }
-    }
-
-    class ExtractStreamImpl extends ZipFileStream<void> implements ExtractStream {
-        constructor(readonly destination: string, readonly entries?: string[] | ((entry: Entry) => string | undefined)) {
-            super();
-        }
-
-        public _final(callback: (error?: Error | null) => void) {
-            openInternal(Buffer.concat(this.buffer), { lazyEntries: true, autoClose: false }).then((zip) => {
-                let promise: Promise<any>;
-                if (this.entries instanceof Array) {
-                    promise = extractEntriesInternal(zip, this.destination, this.entries);
-                } else if (typeof this.entries === "function") {
-                    promise = extractInternal(zip, this.destination, this.entries);
-                } else {
-                    promise = extractInternal(zip, this.destination);
-                }
-                promise.then(() => {
-                    callback();
-                    this._resolve();
-                }, (e) => {
-                    callback(e);
-                    this._reject(e);
-                });
-            }).catch((e) => {
-                callback(e);
-                this._reject(e);
-            });
-        }
-    }
-
-    /**
-     * Extract the zip file with a filter into a folder. The default filter is filter nothing, which will unzip all the content in zip.
-     *
-     * @param zipfile The zip file
-     * @param dest The destination folder
-     * @param filter The entry filter
-     */
-    export async function extract(openFile: OpenTarget, dest: string, filter?: (entry: Entry) => string | undefined) {
-        const zipfile = await openInternal(openFile, { lazyEntries: true, autoClose: false });
-        return extractInternal(zipfile, dest, filter);
-    }
-
-    /**
-     * Extract the zipfile's entries into destiation folder. This will close the zip file finally.
-     *
-     * @param zipfile The zip file
-     * @param dest The destination folder
-     * @param entries The querying entries
-     */
-    export async function extractEntries(openFile: OpenTarget, dest: string, entries: string[]) {
-        const zipfile = await openInternal(openFile, { lazyEntries: true, autoClose: false });
-        return extractEntriesInternal(zipfile, dest, entries);
+                this._resolve();
+            }).catch(this._reject);
+        }).catch((e) => {
+            callback(e);
+            this._reject(e);
+        });
     }
 }
 
-Unzip.ZipFile = AbstractZip as any;
-Unzip.LazyZipFile = LazyZip as any;
-Unzip.CachedZipFile = CachedZip as any;
+class ParseStreamImpl extends ZipFileStream<LazyZipFile | CachedZipFile> {
+    constructor(private option?: Options) {
+        super();
+    }
 
-export default Unzip;
+    public _final(callback: (error?: Error | null) => void) {
+        const options = this.option || {};
+        open(Buffer.concat(this.buffer), options.lazyEntries ? options as LazyOptions : options as CacheOptions).then((zip) => {
+            callback();
+            this._resolve(zip);
+        }).catch((e) => {
+            callback(e);
+            this._reject(e);
+        });
+    }
+}
+
+class ParseEntriesStreamImpl extends ZipFileStream<CachedZipFile>  {
+    constructor(readonly entries: string[]) {
+        super();
+    }
+
+    public _final(callback: (error?: Error | null) => void) {
+        openInternal(Buffer.concat(this.buffer), { lazyEntries: true }).then((zip) => {
+            return parseEntriesInternal(zip, this.entries).then((entries) => {
+                this._resolve(new CachedZip(zip, entries));
+                callback();
+            });
+        }).catch((e) => {
+            callback(e);
+            this._reject(e);
+        });
+    }
+}
+
+class ExtractStreamImpl extends ZipFileStream<void> implements ExtractStream {
+    constructor(readonly destination: string, readonly entries?: string[] | ((entry: Entry) => string | undefined)) {
+        super();
+    }
+
+    public _final(callback: (error?: Error | null) => void) {
+        openInternal(Buffer.concat(this.buffer), { lazyEntries: true, autoClose: false }).then((zip) => {
+            let promise: Promise<any>;
+            if (this.entries instanceof Array) {
+                promise = extractEntriesInternal(zip, this.destination, this.entries);
+            } else if (typeof this.entries === "function") {
+                promise = extractInternal(zip, this.destination, this.entries);
+            } else {
+                promise = extractInternal(zip, this.destination);
+            }
+            promise.then(() => {
+                callback();
+                this._resolve();
+            }, (e) => {
+                callback(e);
+                this._reject(e);
+            });
+        }).catch((e) => {
+            callback(e);
+            this._reject(e);
+        });
+    }
+}
+
+/**
+ * Extract the zip file with a filter into a folder. The default filter is filter nothing, which will unzip all the content in zip.
+ *
+ * @param zipfile The zip file
+ * @param dest The destination folder
+ * @param filter The entry filter
+ */
+export async function extract(openFile: OpenTarget, dest: string, filter?: (entry: Entry) => string | undefined) {
+    const zipfile = await openInternal(openFile, { lazyEntries: true, autoClose: false });
+    return extractInternal(zipfile, dest, filter);
+}
+
+/**
+ * Extract the zipfile's entries into destiation folder. This will close the zip file finally.
+ *
+ * @param zipfile The zip file
+ * @param dest The destination folder
+ * @param entries The querying entries
+ */
+export async function extractEntries(openFile: OpenTarget, dest: string, entries: string[]) {
+    const zipfile = await openInternal(openFile, { lazyEntries: true, autoClose: false });
+    return extractEntriesInternal(zipfile, dest, entries);
+}
+
+// Unzip.ZipFile = AbstractZip as any;
+// Unzip.LazyZipFile = LazyZip as any;
+// Unzip.CachedZipFile = CachedZip as any;
+

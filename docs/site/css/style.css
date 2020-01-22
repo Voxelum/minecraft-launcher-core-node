@@ -82,3 +82,21 @@ canvas {
     margin-right: auto;
     display: block;
 }
+
+@media screen and (max-width: 1000px) { 
+    #inner-flex-container { 
+        flex-direction: column; 
+    }
+}
+
+.section .header {
+    text-align: center;
+}
+
+.monaco-editor {
+    border-radius: .28571429rem;;
+}
+
+#editor .overflow-guard {
+    border-radius: .28571429rem;;
+}

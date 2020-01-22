@@ -1,6 +1,6 @@
 import { BlockModel, Resource, ResourceLocation } from "@xmcl/resourcepack";
 import { ResourceManager } from "./index";
-import { System } from "@xmcl/common";
+import { System } from "@xmcl/system";
 
 /**
  * The model loader load the resource

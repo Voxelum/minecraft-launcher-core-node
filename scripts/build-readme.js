@@ -13,16 +13,11 @@ const readmeContents = fs.readdirSync('packages')
         return { ...r, content: '' };
     });
 
-const contents = readmeContents.filter(r => r.project !== 'launcher-core');
-
-const coreDepProjects = new Set(Object.values(JSON.parse(fs.readFileSync('packages/launcher-core/package.json').toString())
-    .dependencies)
-    .map(v => v.substring(v.indexOf('/') + 1)))
+const contents = readmeContents;
 
 let allReadme = [];
-let coreReadme = [];
 
-contents.forEach(c => {
+contents.map(c => {
     const content = c.content;
     if (content) {
         const lines = content.split("\n");
@@ -31,9 +26,12 @@ contents.forEach(c => {
 
         let usageStart = lines.findIndex((l, i) => l.trim() !== '' && i > usageLineIndex);
         let usageEnd = lines.findIndex((l, i) => l.startsWith('## ') && i > usageStart);
-        if (usageEnd === -1) usageEnd = lines.length - 1;
+        if (usageEnd === -1) usageEnd = lines.length;
 
-        let usageContent = lines.slice(usageStart, usageEnd + 1);
+        let usageContent = lines.slice(usageStart, usageEnd);
+
+        // console.log(usageContent[0]);
+
         let lastLineIndex = usageContent.length - 1
         for (let i = usageContent.length - 1; i > 0; --i) {
             if (usageContent[i] !== '') {
@@ -41,23 +39,43 @@ contents.forEach(c => {
                 break;
             }
         }
-        usageContent = usageContent.slice(0, lastLineIndex + 1)
+        usageContent = usageContent.slice(0, lastLineIndex + 1);
 
-        allReadme.push(...usageContent, '');
-        if (coreDepProjects.has(c.project)) {
-            coreReadme.push(...usageContent, '');
+        const topicIndex = [];
+        const topic = [];
+        let lastIndex = usageContent.findIndex(c => c.startsWith("### "));
+        let i;
+        for (i = lastIndex + 1;
+            i < usageContent.length; ++i) {
+            if (usageContent[i].startsWith('### ')) {
+                topicIndex.push(i);
+                topic.push(usageContent.slice(lastIndex, i));
+                lastIndex = i;
+            }
         }
-    } else {
-        console.log(`No README.md for ${c.project}`);
+
+        topicIndex.push(i);
+        topic.push(usageContent.slice(lastIndex, i));
+
+        topic.map(t => t[0]).forEach(t => console.log(t));
+
+        return topic;
     }
+    return undefined;
+}).filter(c => c !== undefined).reduce((p, c) => {
+    return [...p, ...c];
+}).sort((a, b) => {
+    return a[0].localeCompare(b[0]);
+}).forEach(c => {
+    allReadme.push(...c, '');
 });
 
 function injectRoot() {
     const rootReadme = fs.readFileSync('README.md').toString();
     const lines = rootReadme.split("\n");
 
-    const gettingStartedLine = lines.findIndex(l => l.trim().startsWith('-'));
-    const firstSampleLine = lines.findIndex((l, i) => i > gettingStartedLine && l.trim().length === 0) + 1;
+    const gettingStartedLine = lines.findIndex(l => l.trim().startsWith('## Getting Started'));
+    const firstSampleLine = lines.findIndex((l, i) => i > gettingStartedLine && l.trim().startsWith("### "));
     const endSampleLine = lines.findIndex((l, i) => i > firstSampleLine && l.trim().startsWith("## "));
 
     lines.splice(firstSampleLine, endSampleLine - firstSampleLine, ...allReadme);
@@ -65,20 +83,4 @@ function injectRoot() {
     fs.writeFileSync("README.md", lines.join('\n'));
 }
 
-function injectMinecraftLauncherCore() {
-    const rootReadme = fs.readFileSync('packages/launcher-core/README.md').toString();
-    const lines = rootReadme.split("\n");
-
-    const gettingStartedLine = lines.findIndex(l => l.trim() === '## Getting Started') + 1;
-    let firstSampleLine = lines.findIndex((l, i) => i > gettingStartedLine && l.trim().length === 0) + 1;
-    let endSampleLine = lines.findIndex((l, i) => i > firstSampleLine && l.trim().startsWith("## "));
-
-    if (endSampleLine === -1) endSampleLine = lines.length - 1;
-
-    lines.splice(firstSampleLine, endSampleLine - firstSampleLine, ...coreReadme);
-
-    fs.writeFileSync("packages/launcher-core/README.md", lines.join('\n'));
-}
-
 injectRoot();
-injectMinecraftLauncherCore();

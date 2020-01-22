@@ -2,6 +2,7 @@
   "name": "@xmcl/installer",
   "version": "1.0.5",
   "main": "./index.js",
+  "module": "./index.js",
   "description": "Minecraft installer",
   "engines": {
     "node": ">=10.0"
@@ -10,11 +11,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/net": "file:../net",
     "@xmcl/task": "file:../task",
-    "@xmcl/util": "file:../util",
-    "@xmcl/version": "file:../version",
-    "got": "^9.6.0"
+    "@xmcl/forge-site-parser": "file:../forge-site-parser",
+    "got": "^10.2.2"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

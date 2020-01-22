@@ -2,6 +2,7 @@
   "name": "@xmcl/resourcepack",
   "version": "1.0.4",
   "main": "./index.js",
+  "module": "./index.js",
   "description": "Minecraft resource pack parsing",
   "engines": {
     "node": ">=10.0"
@@ -10,7 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/common": "file:../common"
+    "@xmcl/system": "file:../system"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

@@ -2,6 +2,7 @@
   "name": "@xmcl/java-installer",
   "version": "0.0.2",
   "main": "./index.js",
+  "module": "./index.js",
   "description": "Detect local Java or install Java from Mojang source",
   "engines": {
     "node": ">=10.0"
@@ -10,10 +11,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/net": "file:../net",
     "@xmcl/task": "file:../task",
-    "@xmcl/util": "file:../util",
-    "got": "^9.6.0"
+    "got": "^10.2.2"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

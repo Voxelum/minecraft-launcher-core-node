@@ -1,0 +1,37 @@
+{
+  "name": "@xmcl/forge-site-parser",
+  "version": "2.0.0",
+  "main": "./index.js",
+  "module": "./index.js",
+  "description": "Forge web page parser",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "fast-html-parser": "^1.0.1"
+  },
+  "scripts": {
+    "compile": "tsc --build tsconfig.json",
+    "build": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
+  },
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+}

@@ -1,4 +1,4 @@
-import { FileSystem, System } from "@xmcl/common";
+import { FileSystem, System } from "@xmcl/system";
 import { PackMeta } from "./format";
 
 export class ResourceLocation {
@@ -61,35 +61,15 @@ export interface Resource<T = Uint8Array> {
     metadata: PackMeta;
 }
 
-export interface ResourcePack {
+export class ResourcePack {
+    constructor(private fs: FileSystem) { }
     /**
      * Load the resource
      * @param location The resource location
      * @param urlOnly Should only provide the url, no content
      */
-    load(location: ResourceLocation, urlOnly: true): Promise<Resource | void>;
     load(location: ResourceLocation, urlOnly: boolean): Promise<Resource | void>;
-    /**
-     * Does the resource source has the resource
-     */
-    has(location: ResourceLocation): Promise<boolean>;
-    /**
-     * The owned domain. You can think about the modids.
-     */
-    domains(): Promise<string[]>;
-    /**
-     * The pack info, just like resource pack
-     */
-    info(): Promise<PackMeta.Pack>;
-
-    /**
-     * The icon of the resource pack
-     */
-    icon(): Promise<Uint8Array>;
-}
-
-class ResourcePackImpl implements ResourcePack {
-    async load(location: ResourceLocation, urlOnly: any) {
+    async load(location: ResourceLocation, urlOnly: boolean): Promise<Resource | void> {
         const p = this.getPath(location);
         const name = p.substring(0, p.lastIndexOf("."));
         const metafileName = name + ".mcmeta";
@@ -103,9 +83,15 @@ class ResourcePackImpl implements ResourcePack {
         }
         return undefined;
     }
+    /**
+     * Does the resource source has the resource
+     */
     has(location: ResourceLocation): Promise<boolean> {
         return this.fs.existsFile(this.getPath(location));
     }
+    /**
+     * The owned domain. You can think about the modids.
+     */
     async domains(): Promise<string[]> {
         const files = await this.fs.listFiles("assets");
         const result: string[] = [];
@@ -116,48 +102,67 @@ class ResourcePackImpl implements ResourcePack {
         }
         return result;
     }
+    /**
+     * The pack info, just like resource pack
+     */
     async info(): Promise<PackMeta.Pack> {
         return JSON.parse(await this.fs.readFile("pack.mcmeta", "utf-8"));
     }
+
+    /**
+     * The icon of the resource pack
+     */
     icon(): Promise<Uint8Array> {
         return this.fs.readFile("pack.png");
     }
-    constructor(private fs: FileSystem) { }
 
     private getPath(location: ResourceLocation) {
         return `assets/${location.domain}/${location.path}`;
     }
-}
 
-export namespace ResourcePack {
-    export async function open(resourcePack: string | Uint8Array | FileSystem): Promise<ResourcePack> {
-        return new ResourcePackImpl(await System.resolveFileSystem(resourcePack));
-    }
-    /**
-     * Read the resource pack metadata from zip file or directory.
-     *
-     * If you have already read the data of the zip file, you can pass it as the second parameter. The second parameter will be ignored on reading directory.
-     *
-     * @param resourcePack The absolute path of the resource pack file
-     * @param buffer The zip file data Buffer you read.
-     * @param cacheIcon If cache the icon in to the resource pack object
-     */
-    export async function head(resourcePack: string | Uint8Array | FileSystem, cacheIcon?: boolean): Promise<{ metadata: PackMeta.Pack, icon?: string }> {
-        const system = await System.resolveFileSystem(resourcePack);
-        if (!await system.existsFile("pack.mcmeta")) {
-            throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!");
-        }
-        const metadata = JSON.parse(await system.readFile("pack.mcmeta", "utf-8"));
-        if (!metadata.pack) {
-            throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!");
-        }
-        let icon;
-        if (cacheIcon) {
-            icon = "data:image/png;base64, " + await system.readFile("pack.png", "base64");
-        }
-        return { metadata: metadata.pack, icon };
+    static async open(resourcePack: string | Uint8Array | FileSystem): Promise<ResourcePack> {
+        return new ResourcePack(await System.resolveFileSystem(resourcePack));
     }
 }
 
 export * from "./format";
-export default ResourcePack;
+
+/**
+ * Read the resource pack metadata from zip file or directory.
+ *
+ * If you have already read the data of the zip file, you can pass it as the second parameter. The second parameter will be ignored on reading directory.
+ *
+ * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
+ */
+export async function readPackMeta(resourcePack: string | Uint8Array | FileSystem): Promise<PackMeta.Pack> {
+    const system = await System.resolveFileSystem(resourcePack);
+    if (!await system.existsFile("pack.mcmeta")) {
+        throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!");
+    }
+    const metadata = JSON.parse(await system.readFile("pack.mcmeta", "utf-8"));
+    if (!metadata.pack) {
+        throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!");
+    }
+    return metadata.pack;
+}
+
+/**
+ * Read the resource pack icon png binary.
+ * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
+ */
+export async function readIcon(resourcePack: string | Uint8Array | FileSystem): Promise<Uint8Array> {
+    const system = await System.resolveFileSystem(resourcePack);
+    return system.readFile("pack.png");
+}
+
+/**
+ * Read both metadata and icon
+ */
+export async function readPackMetaAndIcon(resourcePack: string | Uint8Array | FileSystem) {
+    const system = await System.resolveFileSystem(resourcePack);
+    return {
+        metadata: await readPackMeta(system),
+        icon: await readIcon(system).catch(() => undefined),
+    };
+}
+

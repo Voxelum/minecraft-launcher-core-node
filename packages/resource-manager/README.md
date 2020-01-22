@@ -62,7 +62,7 @@ You can use this to load Minecraft block model and texture.
 
 ```ts
     import { ResourceManager, ModelLoader, TextureRegistry, ModelRegistry } from "@xmcl/resource-manager";
-    import { BlockModel } from "@xmcl/common";
+    import { BlockModel } from "@xmcl/system";
 
     const man = new ResourceManager();
     // setup resource manager

@@ -1,6 +1,6 @@
-import { System, FileSystem } from "@xmcl/common";
+import { System, FileSystem } from "@xmcl/system";
 import ByteBuffer from "bytebuffer";
-import { NBT } from "@xmcl/nbt";
+import { deserialize } from "@xmcl/nbt";
 
 export class WorldReader {
     static async create(path: string | Uint8Array) {
@@ -24,7 +24,7 @@ export class WorldReader {
         if (format !== 2) { throw new Error(`Cannot resolve chunk with format ${format}.`); }
 
         const chunkData = buffer.slice(off + 5, off + 5 + length);
-        const data: RegionDataFrame = await NBT.deserialize(chunkData, { compressed: "deflate" });
+        const data: RegionDataFrame = await deserialize(chunkData, { compressed: "deflate" });
         return data;
     }
 
@@ -33,20 +33,20 @@ export class WorldReader {
      */
     public async getLevelData(): Promise<LevelDataFrame> {
         return this.fs.readFile("level.dat")
-            .then((b) => NBT.deserialize(b, { compressed: "gzip" }))
+            .then((b) => deserialize(b, { compressed: "gzip" }))
             .then((d: any) => d.Data);
     }
 
     public async getPlayerData(): Promise<PlayerDataFrame[]> {
         const files = await this.fs.listFiles("playerdata");
         return Promise.all(files
-            .map((f) => this.fs.readFile(this.fs.join("playerdata", f)).then((b) => NBT.deserialize<PlayerDataFrame>(b))));
+            .map((f) => this.fs.readFile(this.fs.join("playerdata", f)).then((b) => deserialize<PlayerDataFrame>(b))));
     }
 
     public async getAdvancementsData(): Promise<AdvancementDataFrame[]> {
         const files = await this.fs.listFiles("advancements");
         return Promise.all(files
-            .map((f) => this.fs.readFile(this.fs.join("advancements", f)).then((b) => NBT.deserialize<AdvancementDataFrame>(b))));
+            .map((f) => this.fs.readFile(this.fs.join("advancements", f)).then((b) => deserialize<AdvancementDataFrame>(b))));
     }
 }
 

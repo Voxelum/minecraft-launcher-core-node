@@ -1,0 +1,42 @@
+{
+  "name": "@xmcl/system",
+  "version": "1.0.4",
+  "main": "./index.js",
+  "module": "./index.js",
+  "browser": {
+    "./index.js": "./index.browser.js"
+  },
+  "description": "An abstract layer for system and fs",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "jszip": "^3.2.2",
+    "@xmcl/unzip": "file:../unzip"
+  },
+  "scripts": {
+    "test": "",
+    "compile": "tsc --build tsconfig.json",
+    "build": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
+  },
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+}

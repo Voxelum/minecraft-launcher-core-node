@@ -243,5 +243,17 @@ export namespace BlockModel {
          */
         scale: Vec3;
     }
-    export type Resolved = Omit<Required<BlockModel>, "parent" | "override"> & { overrides?: BlockModel["overrides"] };
+    export type Resolved = Omit<Required<BlockModel>, "parent" | "override" | "elements"> & {
+        overrides?: BlockModel["overrides"];
+        elements: Array<Omit<Element, "faces"> & {
+            faces: {
+                up?: Face;
+                down?: Face;
+                north?: Face;
+                south?: Face;
+                east?: Face;
+                west?: Face;
+            }
+        }>
+    };
 }

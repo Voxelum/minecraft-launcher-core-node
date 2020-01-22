@@ -5,7 +5,8 @@
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "commonjs",
+        "module": "ES2015",
+        "outDir": "esm",
         "lib": [
             "dom"
         ],

@@ -1,0 +1,37 @@
+{
+  "name": "@xmcl/server-info",
+  "version": "1.0.3",
+  "main": "./index.js",
+  "module": "./index.js",
+  "description": "Read Minecraft servers.dat NBT file",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@xmcl/nbt": "file:../nbt"
+  },
+  "scripts": {
+    "compile": "tsc --build tsconfig.json",
+    "build": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
+  },
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+}

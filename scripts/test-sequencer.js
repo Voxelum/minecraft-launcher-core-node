@@ -1,30 +1,12 @@
 const TestSequencer = require('@jest/test-sequencer').default;
+const { sep } = require('path');
 
 class CustomSequencer extends TestSequencer {
     sort(tests) {
-        return tests.sort((testA, testB) => {
-            if (testA.path.indexOf('packages/installer') !== -1) {
-                return -1;
-            }
-            if (testB.path.indexOf('packages/installer') !== -1) {
-                return 1;
-            }
-            if (testA.path.indexOf('packages/forge-installer') !== -1
-                && testB.path.indexOf('packages/liteloader') !== -1) {
-                return -1;
-            }
-            if (testB.path.indexOf('packages/forge-installer') !== -1
-                && testA.path.indexOf('packages/liteloader') !== -1) {
-                return 1;
-            }
-            if (testA.path.indexOf('packages/launch') !== -1) {
-                return 1;
-            }
-            if (testB.path.indexOf('packages/launch') !== -1) {
-                return -1;
-            }
-            return testA.path.localeCompare(testB.path);
-        });
+        const index = tests.findIndex(t => t.path.indexOf(sep + 'installer') !== -1);
+        const elem = tests.splice(index, 1)[0];
+        tests.unshift(elem);
+        return tests;
     }
 }
 

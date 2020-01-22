@@ -78,7 +78,7 @@ export class ResourceManager {
         const cached = this.cache[`${location.domain}:${location.path}`];
         if (cached) { return cached; }
         for (const src of this.list) {
-            const loaded = await src.source.load(location, urlOnly);
+            const loaded = await src.source.load(location, urlOnly as any);
             if (!loaded) { continue; }
             this.putCache(loaded);
             return loaded;

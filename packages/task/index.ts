@@ -3,9 +3,9 @@ import { cpus } from "os";
 
 export type TaskNode = Task.State;
 
-function runTask<T>(context: Task.Context, task: TaskOrTaskObject<T>): Promise<T> {
+function runTask<T>(context: Task.Context, task: Task<T>): Promise<T> {
     try {
-        const result = typeof task === "function" ? task(context) : task.run(context);
+        const result = task.run(context);
         return result instanceof Promise ? result : Promise.resolve(result);
     } catch (e) {
         return Promise.reject(e);
@@ -13,12 +13,40 @@ function runTask<T>(context: Task.Context, task: TaskOrTaskObject<T>): Promise<T
 }
 
 export interface TaskListener<N extends Task.State = Task.State> extends EventEmitter {
+    /**
+     * Emitted when the some task starts to execute. The listener will get both this task state and parent task state.
+     *
+     * If there is no parent, it will be undefined.
+     */
     on(event: "execute", listener: (node: N, parent?: N) => void): this;
+    /**
+     * Emitted when the some task failed.
+     */
     on(event: "fail", listener: (error: any, node: N) => void): this;
+    /**
+     * Emitted when the task has update.
+     *
+     * The progress and total are arbitary number which designed by task creator.
+     * You might want to convert them to percentage by yourself by directly dividing them.
+     *
+     * The message is a totally optional and arbitary string for hint.
+     */
     on(event: "update", listener: (update: { progress: number, total?: number, message?: string }, node: N) => void): this;
+    /**
+     * Emitted the when some task is finished
+     */
     on(event: "finish", listener: (result: any, node: N) => void): this;
+    /**
+     * Emitted the pause event after user toggle the `pause` in handle
+     */
     on(event: "pause", listener: (node: N) => void): this;
+    /**
+     * Emitted the resume event after use toggle the `resume` in handle
+     */
     on(event: "resume", listener: (node: N) => void): this;
+    /**
+     * Emitted the cancel event after some task is cancelled.
+     */
     on(event: "cancel", listener: (node: N) => void): this;
 
     once(event: "execute", listener: (node: N, parent?: N) => void): this;
@@ -49,7 +77,7 @@ export class TaskRuntime<N extends Task.State = Task.State> extends EventEmitter
         return super.once(event, listener);
     }
 
-    submit<T>(task: TaskOrTaskObject<T>): TaskHandle<T, N> {
+    submit<T>(task: Task<T>): TaskHandle<T, N> {
         return this.bridge.submit(task);
     }
 }
@@ -71,7 +99,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
         readonly scheduler: <N>(r: () => Promise<N>) => Promise<N>) {
     }
 
-    submit<T>(task: TaskOrTaskObject<T>): TaskHandle<T, X> {
+    submit<T>(task: Task<T>): TaskHandle<T, X> {
         const signal = new TaskSignal();
         const { node, promise } = this.enqueueTask(signal, task);
         const handle: TaskHandle<T, X> = {
@@ -99,7 +127,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
         return handle;
     }
 
-    protected enqueueTask<T>(signal: TaskSignal, task: TaskOrTaskObject<T>, parent?: X): { node: X, promise: Promise<T> } {
+    protected enqueueTask<T>(signal: TaskSignal, task: Task<T>, parent?: X): { node: X, promise: Promise<T> } {
         const bridge = this;
         const emitter = bridge.emitter;
 
@@ -119,7 +147,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
             update(progress: number, total?: number, message?: string) {
                 emitter.emit("update", { progress, total, message }, node);
                 if (signal._cancelled) {
-                    emitter.emit("cancelled", node);
+                    emitter.emit("cancel", node);
                     throw new Task.CancelledError();
                 }
             },
@@ -189,13 +217,23 @@ export interface TaskHandle<T, N extends Task.State> {
     readonly isStarted: boolean;
 }
 
-type TaskOrTaskObject<T> = Task.Function<T> | Task.Object<T>;
-export type Task<T> = Task.Function<T>;
+export class Task<T> {
+    constructor(readonly name: string,
+        readonly parameters: object | undefined,
+        readonly run: (context: Task.Context) => (Promise<T> | T)) {
+    }
+
+    /**
+     * Execute this task immediately (not in runtime).
+     * This will have the same behavior like `Task.execute`.
+     *
+     * @see Task.execute
+     */
+    execute() { return Task.execute<T>(this); }
+}
 
 export namespace Task {
     export interface Function<T> {
-        readonly name: string;
-        readonly parameters?: object;
         (context: Task.Context): (Promise<T> | T);
     }
     export interface Object<T> {
@@ -208,14 +246,15 @@ export namespace Task {
      * You'll recive this if the task is cancelled.
      */
     export class CancelledError extends Error {
+        constructor() { super("Cancelled"); }
     }
 
     export type Schedualer = <N>(r: () => Promise<N>) => Promise<N>
 
     export interface Context {
         pausealbe(onPause?: () => void, onResume?: () => void): void;
-        update(progres: number, total?: number, message?: string): void;
-        execute<T>(task: TaskOrTaskObject<T>): Promise<T>;
+        update(progres: number, total?: number, message?: string): void | boolean;
+        execute<T>(task: Task<T>): Promise<T>;
     }
 
     export type StateFactory<X extends Task.State = Task.State> = (node: Task.State, parent?: X) => X;
@@ -223,10 +262,10 @@ export namespace Task {
     export const DEFAULT_STATE_FACTORY: StateFactory = (n) => n;
 
     /**
-     * Run the task immediately
+     * Run the task immediately without a integrated runtime
      * @param task The task will be run
      */
-    export function execute<T>(task: TaskOrTaskObject<T>): TaskHandle<T, Task.State> & TaskListener {
+    export function execute<T>(task: Task<T>): TaskHandle<T, Task.State> & TaskListener {
         const listener = new EventEmitter();
         const handle = new TaskBridge(listener, DEFAULT_STATE_FACTORY, (r) => r()).submit(task);
         for (const [k, v] of Object.entries(handle)) {
@@ -250,9 +289,13 @@ export namespace Task {
         path: string;
     }
 
-    export function create<T>(name: string, task: Task.Function<T>, parameters?: any): Task.Object<T> {
-        return { name, run: task, parameters };
+    export function create<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T> {
+        return new Task(name, parameters, task);
     }
+}
+
+export function newTask<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T> {
+    return new Task(name, parameters, task);
 }
 
 export default Task;

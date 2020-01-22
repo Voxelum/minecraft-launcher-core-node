@@ -1,5 +1,15 @@
 import { BlockModel, PackMeta } from "@xmcl/resourcepack";
-import { BoxGeometry, Group, LinearFilter, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, NearestFilter, Object3D, TextureLoader, Vector2, Vector3 } from "three";
+import { Material } from "three";
+import { LinearFilter, NearestFilter } from "three/src/constants";
+import { Object3D } from "three/src/core/Object3D";
+import { TextureLoader } from "three/src/loaders/TextureLoader";
+import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
+import { MeshLambertMaterial } from "three/src/materials/MeshLambertMaterial";
+import { Mesh } from "three/src/objects/Mesh";
+import { Group } from "three/src/objects/Group";
+import { BoxGeometry } from "three/src/geometries/BoxGeometry";
+import { Vector3 } from "three/src/math/Vector3";
+import { Vector2 } from "three/src/math/Vector2";
 
 interface Texture {
     url: string;
@@ -208,7 +218,7 @@ export class BlockModelFactory {
 
             const faces = ["east", "west", "up", "down", "south", "north"] as const;
             for (let i = 0; i < 6; i++) {
-                const face = element.faces![faces[i]];
+                const face = element.faces[faces[i]];
                 if (face) {
                     // get material index
                     const index = materialIndex[face.texture.substring(1, face.texture.length)];  // references.indexOf(ref[0] == '#' ? ref.substring(1) : ref)

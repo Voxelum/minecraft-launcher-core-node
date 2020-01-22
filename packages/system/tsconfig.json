@@ -1,0 +1,24 @@
+{
+    "files": [
+        "index.ts",
+        "system.ts",
+        "index.browser.ts",
+        "test.ts"
+    ],
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "ES2015",
+        "outDir": "esm",
+        "lib": [
+            "dom"
+        ],
+        "experimentalDecorators": true,
+        "declaration": true,"downlevelIteration": true,
+        "strict": true,
+        "inlineSourceMap": true,
+        "inlineSources": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    }
+}

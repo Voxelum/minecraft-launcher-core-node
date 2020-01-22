@@ -2,7 +2,8 @@
   "name": "@xmcl/client",
   "version": "1.0.3",
   "main": "./index.js",
-  "description": "Minecraft client ping server",
+  "module": "./index.js",
+  "description": "Minecraft socket client pipeline, containing server status query by default",
   "engines": {
     "node": ">=10.0"
   },

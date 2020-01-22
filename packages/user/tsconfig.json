@@ -1,0 +1,28 @@
+{
+    "files": [
+        "index.ts",
+        "index.browser.ts",
+        "auth.ts",
+        "mojang.ts",
+        "service.ts",
+        "setup.ts",
+        "setup.browser.ts"
+    ],
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "ES2015",
+        "outDir": "esm",
+        "lib": [
+            "dom"
+        ],
+        "experimentalDecorators": true,
+        "declaration": true,
+        "downlevelIteration": true,
+        "strict": true,
+        "inlineSourceMap": true,
+        "inlineSources": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    }
+}

@@ -1,10 +1,16 @@
 {
     "files": [
-        "index.ts"
+        "index.ts",
+        "minecraft.ts",
+        "forge.ts",
+        "liteloader.ts",
+        "fabric.ts",
+        "util.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "commonjs",
+        "module": "ES2015",
+        "outDir": "esm",
         "lib": [
             "dom"
         ],

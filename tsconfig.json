@@ -9,7 +9,7 @@
       "dom"
     ],
     "outDir": "packages",
-    "module": "commonjs",
+    "module": "ES2015",
     "moduleResolution": "node",
     "newLine": "LF",
     "inlineSourceMap": true,

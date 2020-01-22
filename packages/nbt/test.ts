@@ -1,79 +1,147 @@
-import assert from "assert";
 import Long from "long";
-import { NBT } from "./index";
+import * as NBT from "./index";
+import { TagType, serialize, deserialize, getPrototypeOf, NBTPrototype } from "./nbt";
+
+class NestedType {
+    @TagType(TagType.String)
+    hello = "s";
+}
+class TestType {
+    @TagType(TagType.String)
+    name = "ci010";
+    @TagType(TagType.String)
+    type = "author";
+    @TagType(TagType.Byte)
+    byte = 10;
+    @TagType(TagType.Short)
+    short = 10;
+    @TagType(TagType.Int)
+    int = 10;
+    @TagType(TagType.LongArray)
+    longArray = [new Long(1, 2)];
+    @TagType(TagType.ByteArray)
+    byteArray = [1, 1];
+    @TagType(TagType.Long)
+    long = new Long(132);
+    @TagType(TagType.Float)
+    float = 0.25;
+    @TagType(TagType.Double)
+    double = 0.00001;
+    @TagType(TagType.IntArray)
+    intArray = [12, 3, 4, 512];
+    @TagType({ name: TagType.String, type: TagType.String, value: TagType.String })
+    nestedAnonymous = {
+        name: "indexyz", type: "author", value: "ilauncher",
+    };
+    @TagType(NestedType)
+    nested = new NestedType()
+
+    @TagType([NestedType])
+    compoundList = [new NestedType(), new NestedType()]
+
+    @TagType([TagType.Int])
+    intList = [1, 23]
+}
+
+class AbsentType {
+    @TagType(TagType.String)
+    a = "";
+    b = "";
+}
+
+interface ThridPartyInterface {
+    hello: string;
+}
+
+class MyOwnNBTSchema implements ThridPartyInterface {
+    @TagType(TagType.String)
+    hello: string = "";
+}
 
 describe("NBT", () => {
     function matchBuffer(a: Uint8Array, b: Uint8Array) {
         if (a.length !== b.length) { return false; }
         return a.every((v, i) => v === b[i]);
     }
-    const src = {
-        name: "ci010",
-        type: "author",
-        byte: 10,
-        short: 10,
-        int: 10,
-        longArray: [new Long(1, 2)],
-        byteArray: [1, 1],
-        long: new Long(132),
-        float: 0.25,
-        double: 0.00001,
-        intArray: [12, 3, 4, 512],
-        nested: {
-            name: "indexyz", type: "author", value: "ilauncher",
-        },
-    };
-    const schema = {
-        name: NBT.TagType.String,
-        type: NBT.TagType.String,
-        short: NBT.TagType.Short,
-        int: NBT.TagType.Int,
-        value: NBT.TagType.String,
-        byte: NBT.TagType.Byte,
-        longArray: NBT.TagType.LongArray,
-        byteArray: NBT.TagType.ByteArray,
-        intArray: NBT.TagType.IntArray,
-        long: NBT.TagType.Long,
-        float: NBT.TagType.Float,
-        double: NBT.TagType.Double,
-        nested: "test",
-    };
-    function serializerFixture() {
-        return NBT.createSerializer().register("test", schema);
-    }
-    describe("#register", () => {
-        test("should register the type", () => {
-            const type = "test";
-            const serializer = NBT.createSerializer().register(type, schema);
-            expect(serializer.getType(schema)).toEqual(type);
-            expect(serializer.getSchema(type)).toEqual(schema);
+    describe("#getPrototypeOf", () => {
+        test("should be able to get prototype", () => {
+            expect(getPrototypeOf(new AbsentType()).a).toEqual(TagType.String);
+            expect(getPrototypeOf(AbsentType.prototype).a).toEqual(TagType.String);
+            expect(getPrototypeOf(AbsentType).a).toEqual(TagType.String);
         });
-        test("should throw error if the input is invalid", () => {
-            expect(() => NBT.createSerializer().register("type", undefined!))
-                .toThrow();
+        test("should be able to cache prototype", () => {
+            const proto = getPrototypeOf(TestType);
+            const object = proto[NBT.NBTConstructor]()
+            expect(Object.getPrototypeOf(object)).toEqual(TestType.prototype);
         });
-    })
+    });
 
-    describe("#serialize/deserialize", () => {
+    describe("#serialize", () => {
+        test("should be able to serialize the object with prototype", async () => {
+            const a: ThridPartyInterface = { hello: "1" };
+            Object.setPrototypeOf(a, MyOwnNBTSchema.prototype);
+            const buf = await serialize(a);
+            const result = await deserialize(buf);
+            expect(result).toEqual(a);
+            expect(Object.getPrototypeOf(result)).toEqual({});
+        });
+        test("should be able to serialize the object from prototype", async () => {
+            const object = new MyOwnNBTSchema();
+            const buf = await serialize(object);
+            const result = await deserialize(buf);
+            expect(result).toEqual(object);
+            expect(Object.getPrototypeOf(result)).toEqual({});
+        });
+        test("should be able to deserialize the object with prototype", async () => {
+            const object = new MyOwnNBTSchema();
+            const buf = await serialize(object);
+            const result = await deserialize(buf, { type: MyOwnNBTSchema });
+            expect(result).toEqual(object);
+            expect(Object.getPrototypeOf(result)).toEqual(MyOwnNBTSchema.prototype);
+        });
+        test("should ignore the unannotated field", async () => {
+            const src = new AbsentType();
+            src.a = "a";
+            src.b = "b";
+            const buf = await serialize(src);
+            const result: AbsentType = await deserialize(buf);
+            expect(result.a).toEqual("a");
+            expect(result.b).toBeUndefined();
+        });
+        test("should use default to write the fields if empty", async () => {
+            const src = new TestType();
+            for (const key of Object.keys(src)) {
+                (src as any)[key] = undefined;
+            }
+            const buf = await serialize(src);
+            const result: TestType = await deserialize(buf, { type: TestType });
+            expect(result.byte).toEqual(0);
+            expect(result.int).toEqual(0);
+            expect(result.short).toEqual(0);
+            expect(result.float).toEqual(0);
+            expect(result.name).toEqual("");
+            expect(result.nestedAnonymous).toEqual({});
+            expect(result.compoundList).toEqual([]);
+            expect(result.intList).toEqual([]);
+        });
+
         function testNBT(compress: "gzip" | "deflate" | undefined | true) {
             test("sync", () => {
-                const serializer = serializerFixture();
-                const buffer = serializer.serializeSync(src, "test", { compressed: compress });
+                const src = new TestType();
+                const buffer = NBT.serializeSync(src, { compressed: compress });
                 expect(buffer).toBeTruthy();
-                const { value, type } = serializer.deserializeSync(buffer, { compressed: compress });
-                // expect(type).toStrictEqual(schema);
-                // expect(type).toEqual("test");
+                const value = NBT.deserializeSync(buffer, { compressed: compress, type: TestType });
                 expect(value).toStrictEqual(src);
             });
             test("async", async () => {
-                const serializer = serializerFixture();
-                const buffer = await serializer.serialize(src, "test", { compressed: compress });
+                const src = new TestType();
+                const buffer = await NBT.serialize(src, { compressed: compress });
                 expect(buffer).toBeTruthy();
-                const { value, type } = await serializer.deserialize(buffer, { compressed: compress });
-                // expect(type).toStrictEqual(schema);
+                const value = await NBT.deserialize(buffer, { compressed: compress, type: TestType });
                 expect(value).toStrictEqual(src);
             });
         }
+
         describe("non-compressed", () => {
             testNBT(undefined);
         });
@@ -87,197 +155,5 @@ describe("NBT", () => {
             testNBT(true);
         });
 
-        test("should throw if the type is not found", async () => {
-            const serializer = serializerFixture();
-            expect(() => serializer.serializeSync({}, "noop")).toThrowError(new Error("Unknown type [noop]"))
-            await expect(serializer.serialize({}, "noop"))
-                .rejects
-                .toEqual(new Error("Unknown type [noop]"))
-        });
-
-        test("should not serialize the error input", async () => {
-            const input = { name: "ci010" };
-            const inputType = { name: NBT.TagType.Byte };
-            const serializer = NBT.createSerializer().register("test", inputType);
-            assert.deepEqual((serializer as any).registry.test, inputType);
-            try {
-                await serializer.serialize(input, "test");
-            } catch (e) {
-                expect(e.type).toEqual("IllegalInputType");
-                expect(e.message).toEqual("Require Byte but found string");
-            }
-            try {
-                await NBT.serialize({
-                    ...input,
-                    __nbtPrototype__: inputType,
-                });
-            } catch (e) {
-                expect(e.type).toEqual("IllegalInputType");
-                expect(e.message).toEqual("Require Byte but found string");
-            }
-        });
-        test("should ignore the additional field in serialization", async () => {
-            const unmatchedInput = { name: "ci010", age: 0 };
-            const inputType = { name: NBT.TagType.String };
-            const serializer = NBT.createSerializer().register("test", inputType);
-
-            const matchedInput = { name: "ci010" };
-
-            const matched = await serializer.serialize(matchedInput, "test");
-            const matchedDirect = await NBT.serialize({
-                ...matchedInput,
-                __nbtPrototype__: inputType,
-            });
-
-            const unmatched = await serializer.serialize(unmatchedInput, "test");
-            const unmatchedDirect = await NBT.serialize({
-                ...unmatchedInput,
-                __nbtPrototype__: inputType,
-            });
-
-            expect(matchBuffer(matched, matchedDirect)).toBeTruthy();
-            expect(matchBuffer(matched, unmatched)).toBeTruthy();
-            expect(matchBuffer(matched, unmatchedDirect)).toBeTruthy();
-
-            const reversed = await serializer.deserialize(unmatched);
-            const reversedDirect = await NBT.deserialize(unmatched);
-
-            assert.deepEqual(matchedInput, reversed.value, "reversed");
-            assert.deepEqual(matchedInput, reversedDirect, "reversed direct");
-        });
-    });
-    describe("#serialize/deserialize Direct", () => {
-        const customSchema: any = { ...schema };
-        delete customSchema.nested;
-        customSchema.nested = customSchema;
-        const typedObject = Object.assign({}, src, { __nbtPrototype__: customSchema });
-        function testNBT(compress: "gzip" | "deflate" | undefined | true) {
-            test("sync", () => {
-                const buffer = NBT.serializeSync(typedObject, { compressed: compress });
-                expect(buffer).toBeTruthy();
-                const value = NBT.deserializeSync(buffer, { compressed: compress });
-                expect(value).toStrictEqual(src);
-            });
-            test("async", async () => {
-                const buffer = await NBT.serialize(typedObject, { compressed: compress });
-                expect(buffer).toBeTruthy();
-                const value = await NBT.deserialize(buffer, { compressed: compress });
-                expect(value).toStrictEqual(src);
-            });
-        }
-
-        describe("non-compressed", () => {
-            testNBT(undefined);
-        });
-        describe("deflate", () => {
-            testNBT("deflate");
-        })
-        describe("gzip", () => {
-            testNBT("gzip");
-        });
-        describe("default", () => {
-            testNBT(true);
-        })
-        test("should be able to deserialize buffer", async () => {
-            const serializer = serializerFixture();
-            const buf = await serializer.serialize(src, "test");
-            const deserializedDirect = await NBT.deserialize(buf);
-            expect(deserializedDirect).toBeTruthy();
-        });
-        test("should produce the same results across two type of deserializations", async () => {
-            const serializer = serializerFixture();
-            const buf = await serializer.serialize(src, "test");
-            const deserializedDirect = await NBT.deserialize(buf);
-            const { value } = await serializer.deserialize(buf);
-            expect(deserializedDirect).toEqual(value);
-        });
-    });
-
-    // describe("TagByteArray", () => {
-    //     const object = {
-    //         value: new Uint8Array([1, 2, 3]),
-    //     };
-    //     Object.defineProperty(object, "__nbtPrototype__", {
-    //         value: { value: NBT.TagType.ByteArray },
-    //     });
-    //     test("read", () => {
-    //         NBT.serializeSync({} as any);
-    //     });
-    // });
-    describe("NBTTagListIO", () => {
-        describe("Primative type", () => {
-            let buffer: Uint8Array;
-            const object = {
-                value: [1, 2, 3],
-            };
-            Object.defineProperty(object, "__nbtPrototype__", {
-                value: { value: [NBT.TagType.Int] },
-            });
-            test("save", async () => {
-                buffer = await NBT.serialize(object as any);
-                expect(buffer).toBeTruthy();
-                expect(buffer).toBeInstanceOf(Buffer);
-            });
-            test("load", async () => {
-                const result = await NBT.deserialize(buffer);
-                expect(result).toStrictEqual(object);
-            });
-        });
-        describe("Object type", () => {
-            let buffer: Uint8Array;
-            const object = {
-                value: [{ x: 1 }, { x: 2 }, { x: 3 }],
-            };
-            Object.defineProperty(object, "__nbtPrototype__", {
-                value: { value: [{ x: NBT.TagType.Int }] },
-            });
-            test("save", async () => {
-                buffer = await NBT.serialize(object as any);
-                expect(buffer).toBeTruthy();
-                expect(buffer).toBeInstanceOf(Buffer);
-            });
-            test("load", async () => {
-                const result = await NBT.deserialize(buffer);
-                expect(result).toStrictEqual(object);
-            });
-        });
-        describe("Custom type", () => {
-            let buffer: Uint8Array;
-            const object = {
-                value: [{ x: 1 }, { x: 2 }, { x: 3 }],
-            };
-            const serializer = NBT.createSerializer();
-            serializer.register("custom", { x: NBT.TagType.Int });
-            serializer.register("type", { value: ["custom"] });
-            test("save", async () => {
-                buffer = await serializer.serialize(object, "type");
-                expect(buffer).toBeTruthy();
-                expect(buffer).toBeInstanceOf(Buffer);
-            });
-            test("load", async () => {
-                const result = await serializer.deserialize(buffer);
-                expect(result.value).toStrictEqual(object);
-            });
-        });
-        describe("Unknown type", () => {
-            const object = {
-                value: [{ x: 1 }, { x: 2 }, { x: 3 }],
-            };
-            Object.defineProperty(object, "__nbtPrototype__", {
-                value: { value: null },
-            });
-            test("save", async () => {
-                await expect(NBT.serialize(object as any))
-                    .rejects
-                    .toEqual({
-                        message: "Require Compound but found object",
-                        type: "IllegalInputType",
-                    });
-            });
-            // test("load", async () => {
-            //     const result = await NBT.Persistence.deserialize(buffer, false);
-            //     expect(result).not.toStrictEqual(object);
-            // });
-        });
     });
 });
