@@ -41,12 +41,12 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
     - name: Publish Tag
       run: |
-        node --eval "console.log(JSON.parse(require('fs').readFileSync('packages/launcher-core/package.json').toString()).version)" > tag.log
+        node --eval "console.log(JSON.parse(require('fs').readFileSync('package.json').toString()).version)" > tag.log
         git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/voxelum/minecraft-launcher-core-node.git"
         git config user.name ci010
         git config user.email cijhn@hotmail.com
-        git tag -f @xmcl/minecraft-launcher-core@$(cat tag.log)
-        git push origin tag @xmcl/minecraft-launcher-core@$(cat tag.log) -f
+        git tag -f $(cat tag.log)
+        git push origin tag $(cat tag.log) -f
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Delete PR head branch
