@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/unzip",
-  "version": "1.0.4",
+  "version": "1.0.5-alpha.0",
   "main": "./index.js",
   "module": "./index.js",
   "description": "Unzip interface",
