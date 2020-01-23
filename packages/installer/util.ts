@@ -1,11 +1,11 @@
-import { checksum, ensureFile, missing, stat, validateSha1 } from "@xmcl/core/fs";
+import { checksum, ensureFile, missing } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { ExecOptions, spawn } from "child_process";
 import { createReadStream, createWriteStream } from "fs";
 import gotDefault from "got";
 import { IncomingMessage } from "http";
+import { pipeline as pip, Writable } from "stream";
 import { fileURLToPath, parse } from "url";
-import { pipeline as pip, PassThrough, Writable } from "stream";
 import { promisify } from "util";
 
 const pipeline = promisify(pip);

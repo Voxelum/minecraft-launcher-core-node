@@ -59,6 +59,8 @@ export interface Version {
      * The forge version (without minecraft version)
      */
     version: string;
+
+    type?: "buggy" | "recommended" | "common" | "latest";
 }
 
 export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
