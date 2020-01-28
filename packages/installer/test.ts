@@ -3,7 +3,7 @@ import { exists } from "@xmcl/core/fs";
 import { existsSync, readFileSync } from "fs";
 import { join, normalize } from "path";
 import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis } from "./index";
-import { JavaExecutor } from "./java";
+import { JavaExecutor } from "./util";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
 const mockRoot = normalize(join(__dirname, "..", "..", "mock"));
