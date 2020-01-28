@@ -107,7 +107,9 @@ export interface JarOption extends DownloaderOption {
 export type Option = AssetsOption & JarOption & LibraryOption;
 
 /**
- * Install the Minecraft game to a location by version metadata
+ * Install the Minecraft game to a location by version metadata.
+ *
+ * This will install version json, version jar, and all dependencies (assets, libraries)
  *
  * @param type The type of game, client or server
  * @param versionMeta The version metadata
@@ -119,6 +121,8 @@ export function install(type: "server" | "client", versionMeta: Version, minecra
 }
 /**
  * Install the Minecraft game to a location by version metadata
+ *
+ * This will install version json, version jar, and all dependencies (assets, libraries)
  *
  * Tasks emmitted:
  * - install
@@ -150,7 +154,7 @@ export function installTask(type: "server" | "client", versionMeta: Version, min
 }
 
 /**
- * Only install the json/jar. Do not check dependencies;
+ * Only install the json/jar. Do not install dependencies.
  *
  * @param type client or server
  * @param versionMeta the version metadata; get from updateVersionMeta
@@ -182,7 +186,7 @@ export function installVersionTask(type: "client" | "server", versionMeta: Versi
 }
 
 /**
- * Install the completeness of the Minecraft game assets and libraries.
+ * Install the completeness of the Minecraft game assets and libraries on a existed version.
  *
  * @param version The resolved version produced by Version.parse
  * @param minecraft The minecraft location
