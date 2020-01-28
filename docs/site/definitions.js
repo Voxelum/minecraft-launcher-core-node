@@ -1340,6 +1340,7 @@ export interface Version {
      * The forge version (without minecraft version)
      */
     version: string;
+    type?: "buggy" | "recommended" | "common" | "latest";
 }
 export declare const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
 export interface InstallProfile {
@@ -1440,14 +1441,8 @@ import * as LiteLoaderInstaller from "./liteloader";
 import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
 import * as Diagnosis from "./diagnose";
+export { JavaExecutor } from "./util";
 export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis };
-`;
-module.exports['@xmcl/installer/java.d.ts'] = `/// <reference types="node" />
-import { ExecOptions } from "child_process";
-export declare type JavaExecutor = (args: string[], option?: ExecOptions) => Promise<any>;
-export declare namespace JavaExecutor {
-    function createSimple(javaPath: string, defaultOptions?: ExecOptions): JavaExecutor;
-}
 `;
 module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
@@ -1638,7 +1633,9 @@ export interface JarOption extends DownloaderOption {
 }
 export declare type Option = AssetsOption & JarOption & LibraryOption;
 /**
- * Install the Minecraft game to a location by version metadata
+ * Install the Minecraft game to a location by version metadata.
+ *
+ * This will install version json, version jar, and all dependencies (assets, libraries)
  *
  * @param type The type of game, client or server
  * @param versionMeta The version metadata
@@ -1648,6 +1645,8 @@ export declare type Option = AssetsOption & JarOption & LibraryOption;
 export declare function install(type: "server" | "client", versionMeta: Version, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion>;
 /**
  * Install the Minecraft game to a location by version metadata
+ *
+ * This will install version json, version jar, and all dependencies (assets, libraries)
  *
  * Tasks emmitted:
  * - install
@@ -1668,7 +1667,7 @@ export declare function install(type: "server" | "client", versionMeta: Version,
  */
 export declare function installTask(type: "server" | "client", versionMeta: Version, minecraft: MinecraftLocation, option?: Option): Task<ResolvedVersion>;
 /**
- * Only install the json/jar. Do not check dependencies;
+ * Only install the json/jar. Do not install dependencies.
  *
  * @param type client or server
  * @param versionMeta the version metadata; get from updateVersionMeta
@@ -1689,7 +1688,7 @@ export declare function installVersion(type: "client" | "server", versionMeta: V
  */
 export declare function installVersionTask(type: "client" | "server", versionMeta: Version, minecraft: MinecraftLocation, option?: JarOption): Task<ResolvedVersion>;
 /**
- * Install the completeness of the Minecraft game assets and libraries.
+ * Install the completeness of the Minecraft game assets and libraries on a existed version.
  *
  * @param version The resolved version produced by Version.parse
  * @param minecraft The minecraft location
