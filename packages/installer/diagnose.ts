@@ -84,12 +84,16 @@ export function diagnoseTask(version: string, minecraftLocation: MinecraftLocati
         try {
             resolvedVersion = await context.execute(Task.create("checkVersionJson", function checkVersionJson() { return Version.parse(minecraft, version) }));
         } catch (e) {
-            console.error(e);
             return {
                 minecraftLocation: minecraft,
                 version,
 
-                versionJson: { value: e.version, status: Status.Unknown },
+                versionJson: {
+                    value: e.version,
+                    status: e.error === "MissingVersionJson"
+                        ? Status.Missing
+                        : Status.Unknown,
+                },
 
                 versionJar: Status.Unknown,
                 assetsIndex: Status.Unknown,
