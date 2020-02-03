@@ -136,10 +136,10 @@ Get the forge version info and install forge from it.
 
 ```ts
     import { ForgeInstaller, MinecraftLocation } from "@xmcl/installer";
-    const list: ForgeInstaller.VersionMetaList = await ForgeInstaller.getVersionMetaList();
+    const list: ForgeInstaller.VersionList = await ForgeInstaller.getVersionList();
     const minecraftLocation: MinecraftLocation;
     const mcversion = page.mcversion; // mc version
-    const firstVersionOnPage: ForgeInstaller.VersionMeta = page.versions[0];
+    const firstVersionOnPage: ForgeInstaller.Version = page.versions[0];
     await ForgeInstaller.install(firstVersionOnPage, minecraftLocation);
 ```
 

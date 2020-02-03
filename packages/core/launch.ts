@@ -61,11 +61,11 @@ export interface LaunchOption {
     gameName?: string;
 
     /**
-     * The path for saves/logs/configs
+     * The path for saves/logs/configs/mods/resource packs
      */
     gamePath: string;
     /**
-     * The path for assets/mods/resource packs
+     * The path for assets/libraries
      */
     resourcePath?: string;
     /**
