@@ -119,7 +119,7 @@ export class Downloader {
         if (missed) {
             return true;
         }
-        if (!option) {
+        if (!option || option.hash.length === 0) {
             return missed;
         }
         const hash = await checksum(destination, option.algorithm);
