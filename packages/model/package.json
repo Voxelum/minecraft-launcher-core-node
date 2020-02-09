@@ -1,7 +1,7 @@
 {
   "name": "@xmcl/model",
   "version": "1.0.6",
-  "main": "./index.js",
+  "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Create Three.js model for player and block",
   "engines": {
@@ -24,6 +24,7 @@
     "type": "git",
     "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
   },
+  "sideEffects": false,
   "author": "cijhn@hotmail.com",
   "keywords": [
     "minecraft",

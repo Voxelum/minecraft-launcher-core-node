@@ -1,7 +1,7 @@
 {
   "name": "@xmcl/core",
   "version": "2.0.1-alpha.0",
-  "main": "./index.js",
+  "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Minecraft version parsing",
   "engines": {
@@ -26,6 +26,7 @@
     "nodejs",
     "electron"
   ],
+  "sideEffects": false,
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"

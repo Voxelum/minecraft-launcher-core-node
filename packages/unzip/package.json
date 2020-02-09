@@ -1,7 +1,7 @@
 {
   "name": "@xmcl/unzip",
   "version": "1.0.5-alpha.0",
-  "main": "./index.js",
+  "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Unzip interface",
   "engines": {
