@@ -1,4 +1,4 @@
-import { request } from "./base";
+import { httpRequester as request } from "./util";
 
 /**
  * Users defined question when they register this account

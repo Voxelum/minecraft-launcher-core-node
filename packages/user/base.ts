@@ -101,30 +101,3 @@ export interface ItemBlob {
 export interface FormItems {
     [name: string]: ItemBlob | string;
 }
-
-interface Kernal {
-    httpRequester: HttpRequester;
-    verify: Verify;
-    decodeBase64(b64: string): string;
-}
-
-let kernal: Kernal;
-
-export function setKernal(k: Kernal) {
-    kernal = k;
-}
-
-export const request: HttpRequester = function (option) {
-    if (!kernal.httpRequester) { throw new Error("Illegal State"); }
-    return kernal.httpRequester(option);
-}
-
-export const verify: Verify = function (value: string, signature: string, pemKey: string) {
-    if (!kernal.verify) { throw new Error("Illegal State"); }
-    return kernal.verify(value, signature, pemKey);
-}
-
-export const decodeBase64 = function (s: string) {
-    if (!kernal.decodeBase64) { throw new Error("Illegal State"); }
-    return kernal.decodeBase64(s);
-}

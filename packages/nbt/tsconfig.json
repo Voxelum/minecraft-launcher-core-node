@@ -1,10 +1,7 @@
 {
     "files": [
         "index.ts",
-        "index.browser.ts",
-        "nbt.ts",
-        "utils.ts",
-        "test.ts"
+        "utils.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

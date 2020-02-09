@@ -1,4 +1,5 @@
-import { GameProfile, request, verify, GameProfileWithProperties, FormItems, decodeBase64 } from "./base";
+import { GameProfile, GameProfileWithProperties, FormItems } from "./base";
+import { httpRequester as request, verify, decodeBase64 } from "./util";
 
 export interface ProfileLookupException {
     /**

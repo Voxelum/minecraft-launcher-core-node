@@ -1,7 +1,7 @@
 {
   "name": "@xmcl/nbt",
   "version": "2.0.1-alpha.0",
-  "main": "./index.js",
+  "main": "./cjs/index.js",
   "module": "./index.js",
   "browser": {
     "./index.js": "./index.browser.js"
@@ -14,7 +14,7 @@
     "access": "public"
   },
   "scripts": {
-    "compile": "tsc --build tsconfig.json",
+    "compile": "tsc --build ./zlib/tsconfig.json && tsc --build tsconfig.json",
     "build": "npm run compile"
   },
   "repository": {

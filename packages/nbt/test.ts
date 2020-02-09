@@ -1,6 +1,6 @@
 import Long from "long";
 import * as NBT from "./index";
-import { TagType, serialize, deserialize, getPrototypeOf, NBTPrototype } from "./nbt";
+import { TagType, serialize, deserialize, getPrototypeOf, NBTPrototype } from "./index";
 
 class NestedType {
     @TagType(TagType.String)

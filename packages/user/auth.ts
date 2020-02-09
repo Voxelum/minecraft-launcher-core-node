@@ -1,5 +1,6 @@
-import { v4 } from "uuid";
-import { GameProfile, request } from "./base";
+import v4 from "uuid/v4";
+import { GameProfile } from "./base";
+import { httpRequester as request } from "./util";
 
 type LoginWithUser = { username: string; password: string; requestUser: true }
     | { username: string; password: string; };

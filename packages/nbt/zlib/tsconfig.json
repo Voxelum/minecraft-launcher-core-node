@@ -1,9 +1,7 @@
 {
     "files": [
         "index.ts",
-        "auth.ts",
-        "mojang.ts",
-        "service.ts",
+        "index.browser.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
