@@ -1,7 +1,7 @@
 {
   "name": "@xmcl/installer",
   "version": "2.0.2-alpha.1",
-  "main": "./index.js",
+  "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Minecraft installer",
   "engines": {
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@xmcl/forge-site-parser": "file:../forge-site-parser",
+    "@xmcl/core": "file:../core",
     "@xmcl/task": "file:../task",
     "got": "^10.2.2"
   },
@@ -23,6 +24,7 @@
     "type": "git",
     "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
   },
+  "sideEffects": false,
   "author": "cijhn@hotmail.com",
   "keywords": [
     "minecraft",
