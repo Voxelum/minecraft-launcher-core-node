@@ -12,11 +12,11 @@ describe("Server", () => {
             expect(frame);
             expect(frame.ping !== -1).toBeTruthy();
         });
-        test("should control the port", async () => {
-            await expect(queryStatus({ host: "mc.hypixel.net", port: 138 }, { timeout: 500, retryTimes: 0 }))
-                .rejects
-                .toBeTruthy();
-        });
+        // test("should control the port", async () => {
+        //     await expect(queryStatus({ host: "mc.hypixel.net", port: 138 }, { timeout: 500, retryTimes: 0 }))
+        //         .rejects
+        //         .toBeTruthy();
+        // });
         test("should capture timeout exception", async () => {
             await expect(queryStatus({
                 host: "crafterr.me",
