@@ -124,6 +124,7 @@ function toposort(packageMapping, packages) {
  * @param { Array<Package> } packages
  */
 function bumpDependenciesPackage(affectedMapping, packages) {
+    let bumpTotalOrder = 2;
     function bump(package) {
         // only major & minor change affect the dependents packages update
         const allAffectedPackages = affectedMapping[package.name] || [];
@@ -151,6 +152,7 @@ function bumpDependenciesPackage(affectedMapping, packages) {
             affectedPackage.passive = true;
             affectedPackage.reasons.push(`Dependency ${package.package.name} bump **${bumpType}**`);
             if (affected) {
+                bumpTotalOrder = Math.min(bumpTotalOrder, bumpLevel);
                 bump(affectedPackage);
             }
         }
@@ -158,6 +160,8 @@ function bumpDependenciesPackage(affectedMapping, packages) {
     for (const package of packages.filter(package => package.newVersion && package.releaseType)) {
         bump(package);
     }
+
+    return bumpTotalOrder;
 }
 
 /**
@@ -170,6 +174,8 @@ function writeAllNewVersionsToPackageJson(packages) {
         if (!package.newVersion) continue;
         if (!DRY) {
             fs.writeFileSync(`packages/${package.name}/package.json`, JSON.stringify(Object.assign({}, package.package, { version: package.newVersion }), null, 2) + '\n');
+        } else {
+            console.log(`Mock write file packages/${package.name}/package.json ${package.newVersion}`);
         }
     }
 }
@@ -211,12 +217,25 @@ function commitMessage(version) {
 async function main(output) {
     const [affectedMapping, packages] = scanPackages();
     await bumpPackages(packages);
-    bumpDependenciesPackage(affectedMapping, packages);
+    const bumpLevel = bumpDependenciesPackage(affectedMapping, packages);
+
     console.log(info(packages));
-    writeAllNewVersionsToPackageJson(packages);
 
     const packageJSON = JSON.parse(fs.readFileSync(`package.json`).toString());
-    const newVersion = packageJSON.version;
+
+    const oldVersion = packageJSON.version;
+    const bumpType = ["major", "minor", "patch"][bumpLevel];
+    const newVersion = semver.inc(packageJSON.version, bumpType);
+    packageJSON.version = newVersion;
+    console.log(`Bump total version by [${bumpType}]: ${oldVersion} -> ${newVersion}`);
+
+    if (DRY) {
+        console.log(`Mock write file package.json`);
+    } else {
+        fs.writeFileSync(`package.json`, JSON.stringify(packageJSON, null, 4));
+    }
+    writeAllNewVersionsToPackageJson(packages);
+
 
     output('title', prTitle(newVersion));
     output('body', prBody(packages));
