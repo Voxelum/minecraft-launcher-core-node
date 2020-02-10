@@ -320,21 +320,21 @@ export namespace Version {
 
         if (!mainClass) {
             throw {
-                type: "CorruptedVersionJson",
+                error: "CorruptedVersionJson",
                 missing: "MainClass",
                 version: id,
             };
         }
         if (!assetIndex) {
             throw {
-                type: "CorruptedVersionJson",
+                error: "CorruptedVersionJson",
                 version: id,
                 missing: "AssetIndex",
             };
         }
         if (Object.keys(downloadsMap).length === 0) {
             throw {
-                type: "CorruptedVersionJson",
+                error: "CorruptedVersionJson",
                 version: id,
                 missing: "Downloads",
             };
@@ -453,7 +453,7 @@ export namespace Version {
             const jsonPath = folder.getVersionJson(versionName);
             if (!await exists(jsonPath)) {
                 return Promise.reject({
-                    type: "MissingVersionJson",
+                    error: "MissingVersionJson",
                     version: versionName,
                 });
             }

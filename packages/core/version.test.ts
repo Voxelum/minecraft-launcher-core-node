@@ -265,7 +265,7 @@ describe("Version", () => {
                 .toEqual({
                     missing: "MainClass",
                     version: "no-main-class",
-                    type: "CorruptedVersionJson",
+                    error: "CorruptedVersionJson",
                 });
 
         });
@@ -273,7 +273,7 @@ describe("Version", () => {
             await expect(Version.parse(root, "no-assets-json"))
                 .rejects
                 .toEqual({
-                    type: "CorruptedVersionJson",
+                    error: "CorruptedVersionJson",
                     version: "no-assets-json",
                     missing: "AssetIndex",
                 });
@@ -282,7 +282,7 @@ describe("Version", () => {
             await expect(Version.parse(root, "no-downloads"))
                 .rejects
                 .toEqual({
-                    type: "CorruptedVersionJson",
+                    error: "CorruptedVersionJson",
                     version: "no-downloads",
                     missing: "Downloads",
                 });
@@ -313,7 +313,7 @@ describe("Version", () => {
             await expect(Version.parse(root, "1.12"))
                 .rejects
                 .toStrictEqual({
-                    type: "MissingVersionJson",
+                    error: "MissingVersionJson",
                     version: "1.12",
                 });
         });
