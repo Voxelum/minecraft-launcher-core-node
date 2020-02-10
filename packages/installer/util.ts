@@ -1,4 +1,4 @@
-import { checksum, ensureFile, missing } from "@xmcl/core/fs";
+import { checksum, ensureFile, missing, writeFile } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { ExecOptions, spawn } from "child_process";
 import { createReadStream, createWriteStream } from "fs";
@@ -31,9 +31,15 @@ export const fetchBuffer = gotDefault.extend({
 });
 
 export async function getRawIfUpdate(url: string, timestamp?: string): Promise<{ timestamp: string; content: string | undefined }> {
+    const headers: Record<string, string> = {
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36 Edg/80.0.361.48",
+    };
+    if (typeof timestamp === "string") {
+        headers["If-Modified-Since"] = timestamp;
+    }
     const resp = await got(url, {
         encoding: "utf8",
-        headers: timestamp ? { "If-Modified-Since": timestamp } : undefined,
+        headers,
     });
     const lastModifiedReturn = resp.headers["last-modified"] || resp.headers["Last-Modified"] as string || "";
     if (resp.statusCode === 304) {
@@ -211,4 +217,24 @@ export namespace JavaExecutor {
             });
         };
     }
+}
+
+/**
+ * Shared install options
+ */
+export interface InstallOptions {
+    /**
+     * When you want to install a version over another one.
+     *
+     * Like, you want to install liteloader over a forge version.
+     * You should fill this with that forge version id.
+     */
+    inheritsFrom?: string;
+
+    /**
+     * Override the newly installed version id.
+     *
+     * If this is absent, the installed version id will be either generated or provided by installer.
+     */
+    versionId?: string;
 }

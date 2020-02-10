@@ -7,7 +7,7 @@ import { createReadStream, createWriteStream } from "fs";
 import { delimiter, join } from "path";
 import { Readable } from "stream";
 import { installResolvedLibrariesTask, LibraryOption } from "./minecraft";
-import { downloadFileIfAbsentTask, downloadFileTask, getIfUpdate, JavaExecutor, UpdatedObject } from "./util";
+import { downloadFileIfAbsentTask, downloadFileTask, getIfUpdate, JavaExecutor, UpdatedObject, InstallOptions as InstallOptionsBase } from "./util";
 
 async function findMainClass(lib: string) {
     const zip = await open(lib, { lazyEntries: true });
@@ -259,15 +259,16 @@ function installByInstallerPartialWork(mc: MinecraftFolder, profile: InstallProf
     };
 }
 
-export type TaskPath = "installForge" | "";
-
 /**
  * @task installForge
  * @child downloadInstaller
  * @child installForgeJar
  * @child installForgeJson
  */
-function installByInstallerTask(version: Version, minecraft: MinecraftLocation, maven: string, installLibOption: LibraryOption, java: JavaExecutor) {
+function installByInstallerTask(version: Version, minecraft: MinecraftLocation, options: InstallOptions) {
+    const maven = DEFAULT_FORGE_MAVEN || options.maven;
+    const installLibOption = options;
+    const java = options.java || JavaExecutor.createSimple("java");
     return Task.create("installForge", async function installForge(context: Task.Context) {
         const mc = MinecraftFolder.from(minecraft);
 
@@ -299,7 +300,11 @@ function installByInstallerTask(version: Version, minecraft: MinecraftLocation, 
         async function processVersion(zip: ZipFile, installProfileEntry: Entry, versionEntry: Entry, clientDataEntry: Entry) {
             profile = await zip.readEntry(installProfileEntry).then((b) => b.toString()).then(JSON.parse);
             versionJson = await zip.readEntry(versionEntry).then((b) => b.toString()).then(JSON.parse);
-            versionId = versionJson.id;
+
+            versionId = options.versionId || versionJson.id;
+
+            versionJson.id = versionId;
+            versionJson.inheritsFrom = options.inheritsFrom || versionJson.inheritsFrom;
 
             const rootPath = mc.getVersionRoot(versionJson.id);
             const jsonPath = join(rootPath, `${versionJson.id}.json`);
@@ -368,48 +373,43 @@ function installByInstallerTask(version: Version, minecraft: MinecraftLocation, 
  * @child installForgeJar
  * @child installForgeJson
  */
-function installByUniversalTask(version: Version, minecraft: MinecraftLocation, maven: string) {
+function installByUniversalTask(version: Version, minecraft: MinecraftLocation, option: InstallOptions) {
     return Task.create("installForge", async function installForge(context: Task.Context) {
         const mc = MinecraftFolder.from(minecraft);
-        const forgeVersion = `${version.mcversion}-${version.version}`;
         const paths = version.universal.path.split("/");
         const realForgeVersion = paths[paths.length - 2];
         const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${realForgeVersion}/forge-${realForgeVersion}.jar`);
-        let fullVersion: string;
+
+        let targetVersionId: string;
         let realJarPath: string;
 
-        const universalURLFallback = `${maven}/maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`;
+        const maven = option.maven || DEFAULT_FORGE_MAVEN;
         const universalURL = `${maven}${version.universal.path}`;
 
-        await context.execute(Task.create("installForgejar", async function installForgeJar() {
-            if (await exists(jarPath)) {
-                const valid = await validateSha1(jarPath, version.universal.sha1);
-                if (valid) {
-                    return;
-                }
+        await context.execute(Task.create("jar", async function installForgeJar(ctx) {
+            if (await validateSha1(jarPath, version.universal.sha1)) {
+                return;
             }
-            function downloadJar(ctx: Task.Context) {
-                return downloadFileTask({ url: universalURL, destination: jarPath })(ctx);
-            }
-            await context.execute(Task.create("downloadJar", downloadJar));
+            return downloadFileTask({ url: universalURL, destination: jarPath })(ctx)
         }));
 
-        await context.execute(Task.create("installForgeJson", async function installForgeJson() {
+        await context.execute(Task.create("json", async function installForgeJson() {
             const zip = await open(jarPath, { lazyEntries: true });
             const [versionEntry] = await zip.filterEntries(["version.json"]);
 
             if (versionEntry) {
                 const buf = await zip.readEntry(versionEntry);
                 const raw = JSON.parse(buf.toString());
-                const id = raw.id;
-                fullVersion = id;
-                const rootPath = mc.getVersionRoot(fullVersion);
+
+                targetVersionId = option.versionId || raw.id;
+                raw.id = targetVersionId;
                 realJarPath = mc.getLibraryByPath(LibraryInfo.resolve(raw.libraries.find((l: any) => l.name.startsWith("net.minecraftforge:forge"))).path);
 
+                const rootPath = mc.getVersionRoot(targetVersionId);
                 await ensureDir(rootPath);
-                const jsonPath = join(rootPath, `${id}.json`);
+                const jsonPath = join(rootPath, `${targetVersionId}.json`);
                 if (await missing(jsonPath)) {
-                    await writeFile(jsonPath, buf);
+                    await writeFile(jsonPath, JSON.stringify(raw, undefined, 4));
                 }
             } else {
                 throw new Error(`Cannot install forge json for ${version.version} since the version json is missing!`);
@@ -422,19 +422,28 @@ function installByUniversalTask(version: Version, minecraft: MinecraftLocation, 
             await unlink(jarPath);
         }
 
-        return fullVersion!;
+        return targetVersionId!;
     });
+}
+
+export interface InstallOptions extends InstallOptionsBase, LibraryOption {
+    /**
+     * You custom maven host url for the people have trouble to download
+     */
+    maven?: string,
+    /**
+     * The java executor to run java
+     */
+    java?: JavaExecutor,
 }
 
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
+ * @returns The installed version name.
  */
-export function install(version: Version, minecraft: MinecraftLocation, option?: {
-    maven?: string,
-    java?: JavaExecutor,
-}) {
+export function install(version: Version, minecraft: MinecraftLocation, option?: InstallOptions) {
     return Task.execute(installTask(version, minecraft, option)).wait();
 }
 
@@ -444,18 +453,15 @@ export function install(version: Version, minecraft: MinecraftLocation, option?:
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export function installTask(version: Version, minecraft: MinecraftLocation, option: {
-    maven?: string,
-    java?: JavaExecutor,
-} & LibraryOption = {}): Task<string> {
+export function installTask(version: Version, minecraft: MinecraftLocation, option: InstallOptions = {}): Task<string> {
     let byInstaller = true;
     try {
         const minorVersion = Number.parseInt(version.mcversion.split(".")[1], 10);
         byInstaller = minorVersion >= 13;
     } catch { }
     const work = byInstaller
-        ? installByInstallerTask(version, minecraft, option.maven || DEFAULT_FORGE_MAVEN, option, option.java || JavaExecutor.createSimple("java"))
-        : installByUniversalTask(version, minecraft, option.maven || DEFAULT_FORGE_MAVEN);
+        ? installByInstallerTask(version, minecraft, option)
+        : installByUniversalTask(version, minecraft, option);
     return work;
 }
 

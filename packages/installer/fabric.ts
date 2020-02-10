@@ -1,4 +1,4 @@
-import { fetchJson, getRawIfUpdate, UpdatedObject } from "./util";
+import { fetchJson, getRawIfUpdate, UpdatedObject, InstallOptions } from "./util";
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { ensureFile, writeFile } from "@xmcl/core/fs";
 
@@ -92,15 +92,18 @@ export async function getLoaderVersionList(option: {
  * @param minecraft The minecraft location
  * @returns The installed version id
  */
-export async function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation) {
+export async function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options: InstallOptions = {}) {
     const folder = MinecraftFolder.from(minecraft);
     const mcversion = yarnVersion.split("+")[0];
-    const id = `${mcversion}-fabric${yarnVersion}-${loaderVersion}`;
+    const id = options.versionId || `${mcversion}-fabric${yarnVersion}-${loaderVersion}`;
 
     const jsonFile = folder.getVersionJson(id);
 
     const { body } = await fetchJson(`https://fabricmc.net/download/technic/?yarn=${encodeURIComponent(yarnVersion)}&loader=${encodeURIComponent(loaderVersion)}`);
     body.id = id;
+    if (typeof options.inheritsFrom === "string") {
+        body.inheritsFrom = options.inheritsFrom;
+    }
     await ensureFile(jsonFile);
     await writeFile(jsonFile, JSON.stringify(body));
 
