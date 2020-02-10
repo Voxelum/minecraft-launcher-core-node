@@ -229,7 +229,7 @@ describe("LiteloaderInstaller", () => {
         });
         test("should be able to install liteloader to forge", async () => {
             const meta: LiteLoaderInstaller.Version = { url: "http://repo.mumfrey.com/content/repositories/snapshots/", type: "SNAPSHOT", file: "liteloader-1.12.2-SNAPSHOT.jar", version: "1.12.2-SNAPSHOT", md5: "1420785ecbfed5aff4a586c5c9dd97eb", timestamp: "1511880271", mcversion: "1.12.2", tweakClass: "com.mumfrey.liteloader.launch.LiteLoaderTweaker", libraries: [{ name: "net.minecraft:launchwrapper:1.12" }, { name: "org.ow2.asm:asm-all:5.2" }] };
-            const result = await LiteLoaderInstaller.install(meta, MinecraftFolder.from(root), "1.12.2-forge1.12.2-14.23.5.2823");
+            const result = await LiteLoaderInstaller.install(meta, MinecraftFolder.from(root), { inheritsFrom: "1.12.2-forge1.12.2-14.23.5.2823" });
             await Installer.installDependencies(await Version.parse(root, result));
         });
     });
@@ -264,13 +264,26 @@ describe("FabricInstaller", () => {
         })
     });
 
-    test("#updateVersionList", async () => {
-        const list = await FabricInstaller.getYarnVersionList();
-        expect(list).toBeTruthy();
-        if (list) {
-            expect(typeof list.timestamp).toEqual("string");
-            expect(list.versions).toBeInstanceOf(Array);
-            expect(list.versions.every((s) => typeof s === "string")).toBeTruthy();
-        }
+    describe("#updateVersionList", () => {
+        let freshList: FabricInstaller.YarnVersionList;
+        test("should be able to get fresh list", async () => {
+            freshList = await FabricInstaller.getYarnVersionList();
+            expect(freshList).toBeTruthy();
+            if (freshList) {
+                expect(typeof freshList.timestamp).toEqual("string");
+                expect(freshList.versions).toBeInstanceOf(Array);
+                expect(freshList.versions.every((s) => typeof s === "string")).toBeTruthy();
+            }
+        });
+        test("should be able to get 304", async () => {
+            const list = await FabricInstaller.getYarnVersionList({ original: freshList });
+            expect(list).toEqual(freshList);
+            expect(list).toBeTruthy();
+            if (list) {
+                expect(typeof list.timestamp).toEqual("string");
+                expect(list.versions).toBeInstanceOf(Array);
+                expect(list.versions.every((s) => typeof s === "string")).toBeTruthy();
+            }
+        });
     });
 });
