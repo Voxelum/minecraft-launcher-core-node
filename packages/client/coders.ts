@@ -1,7 +1,6 @@
 import { deserializeSync, serializeSync } from "@xmcl/nbt";
 import ByteBuffer from "bytebuffer";
 import long from "long";
-import "uuid";
 
 export interface SlotData {
     blockId: number;
@@ -82,11 +81,15 @@ export const UUID: Coder<string> = {
         };
         const hi = buffer.readUint64();
         const lo = buffer.readUint64();
-        const a = makeDigit(hi.shiftRight(32).toString(16), 8);
+        let a = makeDigit(hi.shiftRight(32).toString(16), 8);
         const b = makeDigit(hi.shiftRight(16).and(0xFFFF).toString(16), 4);
         const c = makeDigit(hi.and(0xFFFF).toString(16), 4);
         const d = makeDigit(lo.shiftRight(48).and(0xFFFF).toString(16), 4);
         const e = makeDigit(lo.and(0xFFFFFFFFFFFF).toString(16), 12);
+
+        if (a.length === 16) {
+            a = a.substring(8, 16);
+        }
 
         return `${a}-${b}-${c}-${d}-${e}`;
     },
