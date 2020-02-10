@@ -3,10 +3,11 @@ import { checksum, ensureDir, validateSha1, readFile, writeFile, missing } from 
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
 import { createReadStream } from "fs";
 import { join, isAbsolute, resolve, delimiter } from "path";
-import { v4 } from "uuid";
+import v4 from "uuid/v4";
 import { MinecraftFolder } from "./folder";
 import { currentPlatform, Platform } from "./platform";
 import { Version, ResolvedNative, ResolvedVersion } from "./version";
+import { EventEmitter } from "events";
 
 function format(template: string, args: any) {
     return template.replace(/\$\{(.*?)}/g, (key) => {
@@ -47,6 +48,19 @@ export interface LaunchOption {
 
     launcherName?: string;
     launcherBrand?: string;
+
+    /**
+     * Overwrite the version name of the current version.
+     * If this is absent, it will use version name from resolved version.
+     */
+    versionName?: string;
+    /**
+     * Overwrite the version type of the current version.
+     * If this is absent, it will use version type from resolved version.
+     *
+     * Some people use this to show fantastic message on the welcome screen.
+     */
+    versionType?: string;
 
     /**
      * The full path of launched game icon
@@ -254,16 +268,105 @@ export async function launchServer(options: ServerOptions) {
 }
 
 /**
+ * The Minecraft process watcher. You can inspect Minecraft launch state by this.
+ *
+ * Generally, there are several cases after you call `launch` and get `ChildProcess` object
+ *
+ * 1. child process fire an error, no real process start.
+ *
+ */
+export interface MinecraftProcessWatcher extends EventEmitter {
+    /**
+     * Fire when the process DOESN'T start at all, like "java not found".
+     *
+     * The minecraft-kill or minecraft-exit will NOT fire after this fired.
+     */
+    on(event: "error", listener: (error: any) => void): this;
+    /**
+     * Fire after Minecraft process exit.
+     */
+    on(event: "minecraft-exit", listener: (event: {
+        /**
+         * The code of the process exit. This is the nodejs child process "exit" event arg.
+         */
+        code: number;
+        /**
+         * The signal of the process exit. This is the nodejs child process "exit" event arg.
+         */
+        signal: string;
+        /**
+         * The crash report content
+         */
+        crashReport: string;
+        /**
+         * The location of the crash report
+         */
+        crashReportLocation: string;
+    }) => void): this;
+    /**
+     * Fire around the time when Minecraft window appeared in screen.
+     *
+     * Since the Minecraft window will take time to init, this event fire when it capture some keywords from stdout.
+     */
+    on(event: "minecraft-window-ready", listener: () => void): this;
+}
+
+/**
+ * Create a process watcher for a minecraft process.
+ *
+ * It will watch the stdout and the error event of the process to detect error and minecraft state.
+ * @param process The Minecraft process
+ * @param emitter The event emitter which will emit usefule event
+ */
+export function createMinecraftProcessWatcher(process: ChildProcess, emitter: EventEmitter = new EventEmitter()): MinecraftProcessWatcher {
+    let crashReport = "";
+    let crashReportLocation = "";
+    let waitForReady = true;
+    process.on("error", (e) => {
+        emitter.emit("error", e);
+    });
+    process.on("exit", (code, signal) => {
+        if (code !== 0 && (crashReport || crashReportLocation)) {
+            emitter.emit("minecraft-exit", {
+                code,
+                signal,
+                crashReport,
+                crashReportLocation,
+            });
+        } else {
+            emitter.emit("minecraft-exit", { code, signal });
+        }
+    });
+    process.stdout?.on("data", (s) => {
+        const string = s.toString();
+        if (string.indexOf("---- Minecraft Crash Report ----") !== -1) {
+            crashReport = string;
+        } else if (string.indexOf("Crash report saved to:") !== -1) {
+            crashReportLocation = string.substring(string.indexOf("Crash report saved to:") + "Crash report saved to: #@!@# ".length);
+        } else if (waitForReady && string.indexOf("Reloading ResourceManager") !== -1 || string.indexOf("LWJGL Version: ") !== -1) {
+            waitForReady = false;
+            emitter.emit("minecraft-window-ready");
+        }
+    });
+    return emitter;
+}
+
+/**
  * Launch the minecraft as a child process. This function use spawn to create child process. To use an alternative way, see function generateArguments.
  *
  * This function will also check if the runtime libs are completed, and will extract native libs if needed.
  * This function might throw exception when the version jar is missing/checksum not matched.
- * This function might throw if the libraries/natives are missing
+ * This function might throw if the libraries/natives are missing.
+ *
+ * Error Handling:
+ *
+ * The this function return a nodejs child process, which might have
  *
  * @param options The detail options for this launching.
  * @see ChildProcess
  * @see spawn
  * @see generateArguments
+ * @see createMinecraftProcessWatcher
  */
 export async function launch(options: LaunchOption & { prechecks?: LaunchPrecheck[] }): Promise<ChildProcess> {
     const gamePath = !isAbsolute(options.gamePath) ? resolve(options.gamePath) : options.gamePath;
@@ -395,9 +498,11 @@ export async function generateArguments(options: LaunchOption) {
     cmd.push(version.mainClass);
     const assetsDir = join(resourcePath, "assets");
     const resolution = options.resolution;
+    const versionName = options.versionName || version.id;
+    const versionType = options.versionType || version.type;
     const mcOptions = {
-        version_name: version.id,
-        version_type: version.type,
+        version_name: versionName,
+        version_type: versionType,
         assets_root: assetsDir,
         game_assets: assetsDir,
         assets_index_name: version.assets,
