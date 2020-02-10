@@ -24,6 +24,7 @@
     "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
   },
   "author": "cijhn@hotmail.com",
+  "sideEffects": false,
   "keywords": [
     "minecraft",
     "typescript",
