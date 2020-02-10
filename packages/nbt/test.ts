@@ -1,6 +1,5 @@
 import Long from "long";
-import * as NBT from "./index";
-import { TagType, serialize, deserialize, getPrototypeOf, NBTPrototype } from "./index";
+import { TagType, serialize, deserialize, getPrototypeOf, serializeSync, deserializeSync, NBTConstructor, NBTPrototype } from "./index";
 
 class NestedType {
     @TagType(TagType.String)
@@ -71,7 +70,7 @@ describe("NBT", () => {
         });
         test("should be able to cache prototype", () => {
             const proto = getPrototypeOf(TestType);
-            const object = proto[NBT.NBTConstructor]()
+            const object = proto[NBTConstructor]()
             expect(Object.getPrototypeOf(object)).toEqual(TestType.prototype);
         });
     });
@@ -128,16 +127,16 @@ describe("NBT", () => {
         function testNBT(compress: "gzip" | "deflate" | undefined | true) {
             test("sync", () => {
                 const src = new TestType();
-                const buffer = NBT.serializeSync(src, { compressed: compress });
+                const buffer = serializeSync(src, { compressed: compress });
                 expect(buffer).toBeTruthy();
-                const value = NBT.deserializeSync(buffer, { compressed: compress, type: TestType });
+                const value = deserializeSync(buffer, { compressed: compress, type: TestType });
                 expect(value).toStrictEqual(src);
             });
             test("async", async () => {
                 const src = new TestType();
-                const buffer = await NBT.serialize(src, { compressed: compress });
+                const buffer = await serialize(src, { compressed: compress });
                 expect(buffer).toBeTruthy();
-                const value = await NBT.deserialize(buffer, { compressed: compress, type: TestType });
+                const value = await deserialize(buffer, { compressed: compress, type: TestType });
                 expect(value).toStrictEqual(src);
             });
         }

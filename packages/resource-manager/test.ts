@@ -1,4 +1,4 @@
-import { ResourceManager } from ".";
+import { ResourceManager } from "./index";
 import { join } from "path";
 import { ResourcePack, ResourceLocation } from "@xmcl/resourcepack";
 import { ModelLoader } from "./model-loader";
