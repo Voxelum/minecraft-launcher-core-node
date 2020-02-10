@@ -42,7 +42,7 @@ jobs:
         npm run test:full
     - name: Update Documents
       run: |
-        npm run docs
+        npm run build:readme
     - name: Prepare Pull Request
       id: vars
       uses: ./.github/actions/prepare-pr
