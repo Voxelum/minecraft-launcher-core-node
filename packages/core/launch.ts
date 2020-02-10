@@ -373,11 +373,16 @@ export async function launch(options: LaunchOption & { prechecks?: LaunchPrechec
     const resourcePath = options.resourcePath || gamePath;
     const version = typeof options.version === "string" ? await Version.parse(resourcePath, options.version) : options.version;
 
-    const args = await generateArguments({ ...options, version, gamePath, resourcePath });
+    let args = await generateArguments({ ...options, version, gamePath, resourcePath });
+
     const minecraftFolder = MinecraftFolder.from(resourcePath);
     const prechecks: LaunchPrecheck[] = options.prechecks || LaunchPrecheck.Default;
     await Promise.all(prechecks.map((f) => f(minecraftFolder, version, options)));
     const spawnOption = { cwd: options.gamePath, ...(options.extraExecOption || {}) };
+
+    if (options.extraExecOption?.shell) {
+        args = args.map((a) => `"${a}"`);
+    }
 
     return spawn(args[0], args.slice(1), spawnOption);
 }
