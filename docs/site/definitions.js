@@ -63,7 +63,6 @@ export {};
 `;
 module.exports['@xmcl/client/coders.d.ts'] = `/// <reference types="long" />
 import ByteBuffer from "bytebuffer";
-import "uuid";
 export interface SlotData {
     blockId: number;
     itemCount?: number;
@@ -355,6 +354,7 @@ module.exports['@xmcl/core/launch.d.ts'] = `/// <reference types="node" />
 import { ChildProcess, SpawnOptions } from "child_process";
 import { MinecraftFolder } from "./folder";
 import { ResolvedVersion } from "./version";
+import { EventEmitter } from "events";
 export declare const DEFAULT_EXTRA_JVM_ARGS: readonly string[];
 export interface EnabledFeatures {
     [featureName: string]: object | boolean | undefined;
@@ -381,6 +381,18 @@ export interface LaunchOption {
     launcherName?: string;
     launcherBrand?: string;
     /**
+     * Overwrite the version name of the current version.
+     * If this is absent, it will use version name from resolved version.
+     */
+    versionName?: string;
+    /**
+     * Overwrite the version type of the current version.
+     * If this is absent, it will use version type from resolved version.
+     *
+     * Some people use this to show fantastic message on the welcome screen.
+     */
+    versionType?: string;
+    /**
      * The full path of launched game icon
      * Currently, this only supported on MacOS
      */
@@ -391,11 +403,11 @@ export interface LaunchOption {
      */
     gameName?: string;
     /**
-     * The path for saves/logs/configs
+     * The path for saves/logs/configs/mods/resource packs
      */
     gamePath: string;
     /**
-     * The path for assets/mods/resource packs
+     * The path for assets/libraries
      */
     resourcePath?: string;
     /**
@@ -498,16 +510,72 @@ export interface ServerOptions {
 }
 export declare function launchServer(options: ServerOptions): Promise<ChildProcess>;
 /**
+ * The Minecraft process watcher. You can inspect Minecraft launch state by this.
+ *
+ * Generally, there are several cases after you call \`launch\` and get \`ChildProcess\` object
+ *
+ * 1. child process fire an error, no real process start.
+ *
+ */
+export interface MinecraftProcessWatcher extends EventEmitter {
+    /**
+     * Fire when the process DOESN'T start at all, like "java not found".
+     *
+     * The minecraft-kill or minecraft-exit will NOT fire after this fired.
+     */
+    on(event: "error", listener: (error: any) => void): this;
+    /**
+     * Fire after Minecraft process exit.
+     */
+    on(event: "minecraft-exit", listener: (event: {
+        /**
+         * The code of the process exit. This is the nodejs child process "exit" event arg.
+         */
+        code: number;
+        /**
+         * The signal of the process exit. This is the nodejs child process "exit" event arg.
+         */
+        signal: string;
+        /**
+         * The crash report content
+         */
+        crashReport: string;
+        /**
+         * The location of the crash report
+         */
+        crashReportLocation: string;
+    }) => void): this;
+    /**
+     * Fire around the time when Minecraft window appeared in screen.
+     *
+     * Since the Minecraft window will take time to init, this event fire when it capture some keywords from stdout.
+     */
+    on(event: "minecraft-window-ready", listener: () => void): this;
+}
+/**
+ * Create a process watcher for a minecraft process.
+ *
+ * It will watch the stdout and the error event of the process to detect error and minecraft state.
+ * @param process The Minecraft process
+ * @param emitter The event emitter which will emit usefule event
+ */
+export declare function createMinecraftProcessWatcher(process: ChildProcess, emitter?: EventEmitter): MinecraftProcessWatcher;
+/**
  * Launch the minecraft as a child process. This function use spawn to create child process. To use an alternative way, see function generateArguments.
  *
  * This function will also check if the runtime libs are completed, and will extract native libs if needed.
  * This function might throw exception when the version jar is missing/checksum not matched.
- * This function might throw if the libraries/natives are missing
+ * This function might throw if the libraries/natives are missing.
+ *
+ * Error Handling:
+ *
+ * The this function return a nodejs child process, which might have
  *
  * @param options The detail options for this launching.
  * @see ChildProcess
  * @see spawn
  * @see generateArguments
+ * @see createMinecraftProcessWatcher
  */
 export declare function launch(options: LaunchOption & {
     prechecks?: LaunchPrecheck[];
@@ -1234,7 +1302,7 @@ export interface ForgeReport {
 export declare function diagnoseForgeVersion(versionOrProfile: string | InstallProfile, minecraft: MinecraftLocation): Promise<ForgeReport>;
 export {};
 `;
-module.exports['@xmcl/installer/fabric.d.ts'] = `import { UpdatedObject } from "./util";
+module.exports['@xmcl/installer/fabric.d.ts'] = `import { UpdatedObject, InstallOptions } from "./util";
 import { MinecraftLocation } from "@xmcl/core";
 export declare const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export declare const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
@@ -1299,12 +1367,12 @@ export declare function getLoaderVersionList(option: {
  * @param minecraft The minecraft location
  * @returns The installed version id
  */
-export declare function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation): Promise<string>;
+export declare function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options?: InstallOptions): Promise<string>;
 `;
 module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
 import { Task } from "@xmcl/task";
 import { LibraryOption } from "./minecraft";
-import { JavaExecutor, UpdatedObject } from "./util";
+import { JavaExecutor, UpdatedObject, InstallOptions as InstallOptionsBase } from "./util";
 export interface VersionList extends UpdatedObject {
     mcversion: string;
     versions: Version[];
@@ -1394,26 +1462,30 @@ export declare function installByInstallerPartialTask(version: string | InstallP
 export declare function installByInstallerPartial(version: string | InstallProfile, minecraft: MinecraftLocation, option?: {
     java?: JavaExecutor;
 } & LibraryOption): Promise<void>;
-export declare type TaskPath = "installForge" | "";
+export interface InstallOptions extends InstallOptionsBase, LibraryOption {
+    /**
+     * You custom maven host url for the people have trouble to download
+     */
+    maven?: string;
+    /**
+     * The java executor to run java
+     */
+    java?: JavaExecutor;
+}
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
+ * @returns The installed version name.
  */
-export declare function install(version: Version, minecraft: MinecraftLocation, option?: {
-    maven?: string;
-    java?: JavaExecutor;
-}): Promise<string>;
+export declare function install(version: Version, minecraft: MinecraftLocation, option?: InstallOptions): Promise<string>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export declare function installTask(version: Version, minecraft: MinecraftLocation, option?: {
-    maven?: string;
-    java?: JavaExecutor;
-} & LibraryOption): Task<string>;
+export declare function installTask(version: Version, minecraft: MinecraftLocation, option?: InstallOptions): Task<string>;
 /**
  * Query the webpage content from files.minecraftforge.net.
  *
@@ -1446,7 +1518,7 @@ export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagno
 `;
 module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
-import { UpdatedObject } from "./util";
+import { UpdatedObject, InstallOptions } from "./util";
 export declare const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
 /**
  * The liteloader version list. Containing the minecraft version -> liteloader version info mapping.
@@ -1518,7 +1590,7 @@ export declare function getVersionList(option?: {
  * @param location The minecraft location you want to install
  * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
  */
-export declare function install(versionMeta: Version, location: MinecraftLocation, version?: string): Promise<string>;
+export declare function install(versionMeta: Version, location: MinecraftLocation, options?: InstallOptions): Promise<string>;
 /**
  * Install the liteloader to specific minecraft location.
  *
@@ -1532,7 +1604,7 @@ export declare function install(versionMeta: Version, location: MinecraftLocatio
  * @param location The minecraft location you want to install
  * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
  */
-export declare function installTask(versionMeta: Version, location: MinecraftLocation, version?: string): Task<string>;
+export declare function installTask(versionMeta: Version, location: MinecraftLocation, options?: InstallOptions): Task<string>;
 `;
 module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core";
 import Task from "@xmcl/task";
@@ -1815,6 +1887,24 @@ export declare function downloadFileIfAbsentTask(option: DownloadAndCheckOption 
 export declare type JavaExecutor = (args: string[], option?: ExecOptions) => Promise<any>;
 export declare namespace JavaExecutor {
     function createSimple(javaPath: string, defaultOptions?: ExecOptions): JavaExecutor;
+}
+/**
+ * Shared install options
+ */
+export interface InstallOptions {
+    /**
+     * When you want to install a version over another one.
+     *
+     * Like, you want to install liteloader over a forge version.
+     * You should fill this with that forge version id.
+     */
+    inheritsFrom?: string;
+    /**
+     * Override the newly installed version id.
+     *
+     * If this is absent, the installed version id will be either generated or provided by installer.
+     */
+    versionId?: string;
 }
 `;
 module.exports['@xmcl/java-installer/index.d.ts'] = `import Task from "@xmcl/task";
@@ -2275,11 +2365,7 @@ export declare class PlayerModel {
 }
 export default PlayerModel;
 `;
-module.exports['@xmcl/nbt/index.browser.d.ts'] = `export * from "./nbt";
-`;
-module.exports['@xmcl/nbt/index.d.ts'] = `export * from "./nbt";
-`;
-module.exports['@xmcl/nbt/nbt.d.ts'] = `import ByteBuffer from "bytebuffer";
+module.exports['@xmcl/nbt/index.d.ts'] = `import ByteBuffer from "bytebuffer";
 declare type Constructor<T> = new (...args: any) => T;
 export declare const NBTPrototype: unique symbol;
 export declare const NBTConstructor: unique symbol;
@@ -2398,18 +2484,22 @@ module.exports['@xmcl/nbt/test.d.ts'] = `export {};
 module.exports['@xmcl/nbt/utils.d.ts'] = `/// <reference types="bytebuffer" />
 export declare function writeUTF8(out: ByteBuffer, str: string): number;
 export declare function readUTF8(buff: ByteBuffer): string;
-export interface Zlib {
-    gzip(buffer: Uint8Array): Promise<Uint8Array>;
-    gzipSync(buffer: Uint8Array): Uint8Array;
-    ungzip(buffer: Uint8Array): Promise<Uint8Array>;
-    gunzipSync(buffer: Uint8Array): Uint8Array;
-    deflate(buffer: Uint8Array): Promise<Uint8Array>;
-    deflateSync(buffer: Uint8Array): Uint8Array;
-    inflate(buffer: Uint8Array): Promise<Uint8Array>;
-    inflateSync(buffer: Uint8Array): Uint8Array;
-}
-export declare let zlib: Zlib;
-export declare function setZlib(lib: Zlib): void;
+`;
+module.exports['@xmcl/nbt/zlib/index.browser.d.ts'] = `export declare function gzip(buffer: Uint8Array): Promise<Uint8Array>;
+export declare function gzipSync(buffer: Uint8Array): Uint8Array;
+export declare function ungzip(buffer: Uint8Array): Promise<Uint8Array>;
+export declare function gunzipSync(buffer: Uint8Array): Uint8Array;
+export declare function inflate(buffer: Uint8Array): Promise<Uint8Array>;
+export declare function deflate(buffer: Uint8Array): Promise<Uint8Array>;
+export declare function inflateSync(buffer: Uint8Array): Uint8Array;
+export declare function deflateSync(buffer: Uint8Array): Uint8Array;
+`;
+module.exports['@xmcl/nbt/zlib/index.d.ts'] = `import { deflateSync, gunzipSync, gzipSync, inflateSync } from "zlib";
+export declare const gzip: (buf: Uint8Array) => Promise<Uint8Array>;
+export declare const ungzip: (buf: Uint8Array) => Promise<Uint8Array>;
+export declare const inflate: (buf: Uint8Array) => Promise<Uint8Array>;
+export declare const deflate: (buf: Uint8Array) => Promise<Uint8Array>;
+export { gzipSync, gunzipSync, inflateSync, deflateSync };
 `;
 module.exports['@xmcl/resource-manager/index.d.ts'] = `import { PackMeta, ResourcePack, Resource, ResourceLocation } from "@xmcl/resourcepack";
 interface ResourceSourceWrapper {
@@ -3629,25 +3719,8 @@ export interface ItemBlob {
 export interface FormItems {
     [name: string]: ItemBlob | string;
 }
-interface Kernal {
-    httpRequester: HttpRequester;
-    verify: Verify;
-    decodeBase64(b64: string): string;
-}
-export declare function setKernal(k: Kernal): void;
-export declare const request: HttpRequester;
-export declare const verify: Verify;
-export declare const decodeBase64: (s: string) => string;
-export {};
 `;
-module.exports['@xmcl/user/index.browser.d.ts'] = `import "./setup.browser";
-export * from "./auth";
-export { GameProfile, GameProfileWithProperties } from "./base";
-export * from "./mojang";
-export * from "./service";
-`;
-module.exports['@xmcl/user/index.d.ts'] = `import "./setup";
-export * from "./auth";
+module.exports['@xmcl/user/index.d.ts'] = `export * from "./auth";
 export { GameProfile, GameProfileWithProperties } from "./base";
 export * from "./mojang";
 export * from "./service";
@@ -3874,9 +3947,48 @@ export declare class ProfileLookuper {
 `;
 module.exports['@xmcl/user/service.test.d.ts'] = `export {};
 `;
-module.exports['@xmcl/user/setup.browser.d.ts'] = `export {};
+module.exports['@xmcl/user/util/base.d.ts'] = `/**
+ * Abstract layer for http requester.
+ */
+export declare type HttpRequester = (option: {
+    url: string;
+    method: string;
+    headers: {
+        [key: string]: string;
+    };
+    /**
+     * Search string
+     */
+    search?: {
+        [key: string]: string | string[] | undefined;
+    };
+    /**
+     * Either form multi part or json. Default is json.
+     */
+    bodyType?: "formMultiPart" | "json" | "search";
+    body?: FormItems | object | Record<string, string>;
+}) => Promise<{
+    body: string;
+    statusMessage: string;
+    statusCode: number;
+}>;
+export interface ItemBlob {
+    type: string;
+    value: Uint8Array;
+}
+export interface FormItems {
+    [name: string]: ItemBlob | string;
+}
 `;
-module.exports['@xmcl/user/setup.d.ts'] = `export {};
+module.exports['@xmcl/user/util/index.browser.d.ts'] = `import { HttpRequester } from "./base";
+export declare const httpRequester: HttpRequester;
+export declare function verify(data: string, signature: string, pemKey: string | Uint8Array): Promise<boolean>;
+export declare function decodeBase64(b: string): string;
+`;
+module.exports['@xmcl/user/util/index.d.ts'] = `import { HttpRequester } from "./base";
+export declare const httpRequester: HttpRequester;
+export declare function verify(data: string, signature: string, pemKey: string | Uint8Array): Promise<boolean>;
+export declare function decodeBase64(s: string): string;
 `;
 module.exports['@xmcl/world/index.d.ts'] = `import { FileSystem } from "@xmcl/system";
 export declare class WorldReader {
