@@ -55,7 +55,6 @@ async function bumpPackages(packages) {
         const result = await new Promise((resolve, reject) => {
             convBump({
                 path: `packages/${package}`,
-                lernaPackage: '@xmcl/minecraft-launcher-core',
                 whatBump(comments) {
                     const reasons = comments.filter(c => c.type === 'feat' || c.type === 'fix' || c.header.startsWith('BREAKING CHANGE:'));
                     if (comments.some(c => c.header.startsWith('BREAKING CHANGE:'))) {
