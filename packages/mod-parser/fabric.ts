@@ -193,5 +193,5 @@ export interface ModMetadata {
 export async function readModMetaData(file: FileSystem | string | Uint8Array): Promise<ModMetadata> {
     const fs = await System.resolveFileSystem(file);
     const content = await fs.readFile("fabric.mod.json", "utf-8");
-    return JSON.parse(content);
+    return JSON.parse(content.replace(/^\uFEFF/, ""));
 }

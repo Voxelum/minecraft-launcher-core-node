@@ -30,7 +30,7 @@ export interface VersionMeta {
 }
 export async function readModMetaData(mod: string | Uint8Array | FileSystem) {
     const fs = await System.resolveFileSystem(mod);
-    const text = await fs.readFile("litemod.json", "utf-8").catch(() => undefined);
+    const text = await fs.readFile("litemod.json", "utf-8").then((s) => s.replace(/^\uFEFF/, "")).catch(() => undefined);
     if (!text) {
         throw {
             error: "IllegalInputType",

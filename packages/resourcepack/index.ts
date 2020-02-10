@@ -78,7 +78,7 @@ export class ResourcePack {
                 location,
                 url: this.fs.type === "path" ? `file://${this.fs.root}${p}` : "",
                 content: await this.fs.readFile(p),
-                metadata: await this.fs.existsFile(metafileName) ? JSON.parse(await this.fs.readFile(metafileName, "utf-8")) : {}
+                metadata: await this.fs.existsFile(metafileName) ? JSON.parse((await this.fs.readFile(metafileName, "utf-8")).replace(/^\uFEFF/, "")) : {}
             };
         }
         return undefined;
@@ -106,7 +106,7 @@ export class ResourcePack {
      * The pack info, just like resource pack
      */
     async info(): Promise<PackMeta.Pack> {
-        return JSON.parse(await this.fs.readFile("pack.mcmeta", "utf-8"));
+        return JSON.parse((await this.fs.readFile("pack.mcmeta", "utf-8")).replace(/^\uFEFF/, ""));
     }
 
     /**
@@ -139,7 +139,7 @@ export async function readPackMeta(resourcePack: string | Uint8Array | FileSyste
     if (!await system.existsFile("pack.mcmeta")) {
         throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!");
     }
-    const metadata = JSON.parse(await system.readFile("pack.mcmeta", "utf-8"));
+    const metadata = JSON.parse((await system.readFile("pack.mcmeta", "utf-8")).replace(/^\uFEFF/, ""));
     if (!metadata.pack) {
         throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!");
     }

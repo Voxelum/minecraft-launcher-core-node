@@ -109,7 +109,7 @@ async function tweakMetadata(fs: FileSystem, modidTree: ModidTree) {
     if (manifest.TweakMetaFile) {
         const file = manifest.TweakMetaFile;
         if (await fs.existsFile(`META-INF/${file}`)) {
-            const metadataContent = await fs.readFile(`META-INF/${file}`, "utf-8").then(JSON.parse);
+            const metadataContent = await fs.readFile(`META-INF/${file}`, "utf-8").then((s) => s.replace(/^\uFEFF/, "")).then(JSON.parse);
             if (metadataContent.id) {
                 metadata.modid = metadataContent.id;
             }
@@ -242,7 +242,7 @@ async function jsonMetaData(fs: FileSystem, modidTree: ModidTree) {
     }
     if (await fs.existsFile("mcmod.info")) {
         try {
-            const json = JSON.parse(await fs.readFile("mcmod.info", "utf-8"));
+            const json = JSON.parse((await fs.readFile("mcmod.info", "utf-8")).replace(/^\uFEFF/, ""));
             readJsonMetadata(json);
         } catch (e) { }
     }
