@@ -1,4 +1,4 @@
-name: Release Pre-Check
+name: Build
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
         node-version: [10.x]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
@@ -33,32 +33,28 @@ jobs:
     - name: Lint
       run: |
         npm run lint
-    - name: Compile All
-      run: |
-        npm run compile -- --noEmit
     - name: Test
       run: |
-        npm run build:clean
         npm run test:full
-    - name: Update Documents
+    - name: Build
       run: |
-        npm run build:readme
+        npm run build
     - name: Prepare Pull Request
       id: vars
       uses: ./.github/actions/prepare-pr
       env:
         CI: true
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v1.4.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COMMIT_MESSAGE: ${{ steps.vars.outputs.message }}
-        PULL_REQUEST_TITLE: ${{ steps.vars.outputs.title }}
-        PULL_REQUEST_BODY: ${{ steps.vars.outputs.body }}
-        PULL_REQUEST_ASSIGNEES: ci010
-        PULL_REQUEST_REVIEWERS: ci010
-        PULL_REQUEST_BRANCH: prepare-release
-        BRANCH_SUFFIX: none
+      uses: peter-evans/create-pull-request@v2
+      with:
+        assignees: ci010
+        reviewers: ci010
+        branch: prepare-release
+        branch-suffix: none
+        title: ${{ steps.vars.outputs.title }}
+        body: ${{ steps.vars.outputs.body }}
+        commit-message: ${{ steps.vars.outputs.message }}
+        token: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload Coverage
       uses: actions/upload-artifact@master
       with:
