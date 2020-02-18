@@ -1,7 +1,7 @@
 import { TextComponent } from "@xmcl/text-component";
 import Long from "long";
 import { Channel } from "./channel";
-import { VarInt, String, Long as CLong, Short } from "./coders";
+import { VarInt, String, Long as CLong, Short, Json } from "./coders";
 import { Packet, Field } from "./packet";
 
 @Packet("client", 0x00, "handshake")
@@ -20,7 +20,7 @@ export class Handshake {
 export class ServerQuery { }
 
 @Packet("server", 0x00, "status")
-export class ServerStatus { @Field(CLong) status!: Status; }
+export class ServerStatus { @Field(Json) status!: Status; }
 
 @Packet("client", 0x01, "status")
 export class Ping { @Field(CLong) time = Long.fromNumber(Date.now()); }

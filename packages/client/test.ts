@@ -28,6 +28,8 @@ describe("Server", () => {
             const status = await queryStatus({
                 host: "mc.hypixel.net",
             }, { timeout: 10000 });
+            expect(typeof status === "object").toBeTruthy();
+            expect((typeof status.description === "object") || (typeof status.description === "string")).toBeTruthy();
             expect(status.ping).not.toEqual(-1);
         });
     });

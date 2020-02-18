@@ -57,12 +57,15 @@ async function bumpPackages(packages) {
                 path: `packages/${package}`,
                 whatBump(comments) {
                     const reasons = comments.filter(c => c.type === 'feat' || c.type === 'fix' || c.header.startsWith('BREAKING CHANGE:'));
+                    const feats = comments.filter(c => c.type === 'feat');
+                    const fixes = comments.filter(c => c.type === 'fix');
+                    const breakings = comments.filter(c => c.header.startsWith('BREAKING CHANGE:'));
                     if (comments.some(c => c.header.startsWith('BREAKING CHANGE:'))) {
-                        return { level: 0, reasons }; // major
+                        return { level: 0, reasons, feats, fixes, breakings }; // major
                     } else if (comments.some(c => c.type === 'feat')) {
-                        return { level: 1, reasons }; // minor
+                        return { level: 1, reasons, feats, fixes, breakings }; // minor
                     } else if (comments.some(c => c.type === 'fix')) {
-                        return { level: 2, reasons }; // patch
+                        return { level: 2, reasons, feats, fixes, breakings }; // patch
                     }
                 }
             }, function (err, result) {
@@ -82,6 +85,9 @@ async function bumpPackages(packages) {
             package.releaseType = result.releaseType;
             package.reasons = result.reasons;
             package.level = result.level;
+            package.feats = result.feats;
+            package.fixes = result.fixes;
+            package.breakings = result.breakings;
         }
     }
 }
@@ -200,6 +206,55 @@ function info(packages) {
     return body;
 }
 
+function writeChangelog(version, packages) {
+    let body = `\n## ${version}\n`;
+
+    function log(reason) {
+        return `- ${reason.header} ([${reason.hash}](https://github.com/voxelum/minecraft-launcher-core-node/commit/${reason.hash}))\n`
+    }
+
+    for (const package of packages.sort((a, b) => a.passive && !b.passive ? 1 : !a.passive && b.passive ? -1 : 0)) {
+        const packageJSON = package.package;
+        if (!package.newVersion) continue;
+        body += `### ${packageJSON.name}@${package.newVersion}\n`;
+        if (package.reasons) {
+            let { breakings, feats, fixes, reasons } = package;
+
+            if (breakings && breakings.length !== 0) {
+                body += '#### BREAKING CHANGES\n\n';
+                breakings.map(log).forEach(l => body += l);
+            }
+            if (feats && feats.length !== 0) {
+                body += '#### Features\n\n';
+                feats.map(log).forEach(l => body += l);
+            }
+            if (fixes && fixes.length !== 0) {
+                body += '#### Bug Fixes\n\n';
+                fixes.map(log).forEach(l => body += l);
+            }
+
+            let texts = reasons.filter(r => typeof r === 'string');
+
+            texts.forEach(l => body += `- ${l}\n`);
+        }
+    }
+
+    let changelog = fs.readFileSync('CHANGELOG.md').toString();
+
+    let logs = changelog.split('\n');
+
+    let head = logs.shift();
+    logs.unshift(body);
+    logs.unshift(head);
+
+    changelog = logs.join('\n');
+    // if (DRY) {
+    //     console.log(changelog);
+    // } else {
+    fs.writeFileSync('CHANGELOG.md', changelog);
+    // }
+}
+
 function prTitle(version) {
     return `Prepare Release ${version}`
 }
@@ -235,7 +290,7 @@ async function main(output) {
         fs.writeFileSync(`package.json`, JSON.stringify(packageJSON, null, 4));
     }
     writeAllNewVersionsToPackageJson(packages);
-
+    writeChangelog(newVersion, packages);
 
     output('title', prTitle(newVersion));
     output('body', prBody(packages));

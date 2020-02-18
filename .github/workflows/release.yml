@@ -16,7 +16,7 @@ jobs:
       matrix:
         node-version: [10.x]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
         ref: ${{ github.sha	}}
     - name: Use Node.js ${{ matrix.node-version }}
