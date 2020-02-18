@@ -50,7 +50,6 @@ jobs:
         assignees: ci010
         reviewers: ci010
         branch: prepare-release
-        branch-suffix: none
         title: ${{ steps.vars.outputs.title }}
         body: ${{ steps.vars.outputs.body }}
         commit-message: ${{ steps.vars.outputs.message }}
