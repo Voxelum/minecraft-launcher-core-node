@@ -155,6 +155,9 @@ export interface LaunchPrecheck {
 export namespace LaunchPrecheck {
     export const Default: LaunchPrecheck[] = [checkVersion, checkLibraries, checkNatives];
 
+    /**
+     * Quick check if Minecraft version jar is corrupted
+     */
     export async function checkVersion(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
         const jarPath = resource.getVersionJar(version.client);
         if (!await validateSha1(jarPath, version.downloads.client.sha1)) {
@@ -164,6 +167,9 @@ export namespace LaunchPrecheck {
             };
         }
     };
+    /**
+     * Quick check if there are missed libraries.
+     */
     export async function checkLibraries(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
         const missingMask = await Promise.all(version.libraries.map((lib) => missing(resource.getLibraryByPath(lib.download.path))));
         const missingLibs = version.libraries.filter((_, index) => missingMask[index]);
@@ -194,17 +200,31 @@ export namespace LaunchPrecheck {
         await ensureDir(native);
         const natives = version.libraries.filter((lib) => lib instanceof ResolvedNative) as ResolvedNative[];
         const checksumFile = join(native, ".json");
+        const includedLibs = natives.map((n) => n.name).sort();
 
+        interface ChecksumFile { entries: CheckEntry[]; libraries: string[] }
         interface CheckEntry { file: string; sha1: string; name: string; }
-        const shaEntries: CheckEntry[] = await readFile(checksumFile).then((b) => b.toString()).then(JSON.parse).catch((e) => undefined);
+
+        const checksumFileObject: ChecksumFile = await readFile(checksumFile).then((b) => b.toString()).then(JSON.parse).catch((e) => undefined);
+
+        let shaEntries: CheckEntry[] | undefined;
+        if (checksumFileObject && checksumFileObject.libraries) {
+            // only if the lib not change
+            // consider the case of os changed or java changed
+            if (checksumFileObject.libraries.sort().every((v, i) => v === includedLibs[i])) {
+                shaEntries = checksumFileObject.entries;
+            }
+        }
 
         const extractedNatives: CheckEntry[] = [];
         async function extractJar(n: ResolvedNative | undefined) {
             if (!n) { return; }
-            const excluded: string[] = n.extractExclude ? n.extractExclude : [];
+            const excluded: string[] = n.extractExclude || [];
+
             const containsExcludes = (p: string) => excluded.filter((s) => p.startsWith(s)).length === 0;
             const notInMetaInf = (p: string) => p.indexOf("META-INF/") === -1;
             const notSha1AndNotGit = (p: string) => !(p.endsWith(".sha1") || p.endsWith(".git"));
+
             const from = resource.getLibraryByPath(n.download.path);
             await createReadStream(from).pipe(createExtractStream(native, (entry) => {
                 const filtered = containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ? entry.fileName : undefined;
@@ -230,12 +250,15 @@ export namespace LaunchPrecheck {
             }
         } else {
             await Promise.all(natives.map(extractJar));
-            const checkSumContent = await Promise.all(extractedNatives.map(async (n) => ({
+            const entries = await Promise.all(extractedNatives.map(async (n) => ({
                 ...n,
                 sha1: await checksum(join(native, n.file))
             })));
-            const targetContent = JSON.stringify(checkSumContent);
-            await writeFile(checksumFile, targetContent);
+            const fileContent = JSON.stringify({
+                entries,
+                libraries: includedLibs,
+            });
+            await writeFile(checksumFile, fileContent);
         }
     }
 }

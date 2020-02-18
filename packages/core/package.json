@@ -14,6 +14,9 @@
     "compile": "tsc --build tsconfig.json",
     "build": "npm run compile"
   },
+  "dependencies": {
+    "@xmcl/unzip": "file:../unzip"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
