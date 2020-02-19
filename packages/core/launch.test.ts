@@ -381,4 +381,15 @@ describe("Launcher", () => {
             });
         });
     });
+    describe("#launchServer", () => {
+        test("should launch 1.12.2", async () => {
+            const process = await launchServer({
+                version: "1.12.2",
+                path: root,
+                javaPath,
+                cwd: path.resolve(".")
+            })
+            await waitGameProcess(process, "You need to agree to the EULA in order to run the server. Go to eula.txt for more info.");
+        });
+    });
 });

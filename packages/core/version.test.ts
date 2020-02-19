@@ -267,7 +267,6 @@ describe("Version", () => {
                     version: "no-main-class",
                     error: "CorruptedVersionJson",
                 });
-
         });
         test("should throw if no asset json", async () => {
             await expect(Version.parse(root, "no-assets-json"))
@@ -297,18 +296,9 @@ describe("Version", () => {
             expect(version.arguments.game).toBeInstanceOf(Array);
             expect(version.arguments.jvm).toBeInstanceOf(Array);
             expect(version.minecraftDirectory).toEqual(root);
+            expect(version.minecraftVersion).toEqual("1.7.10");
+            expect(version.inheritances).toEqual(["1.7.10"]);
         });
-        // test("should be able to parse 1.13.2 version", async () => {
-        //     const version = await parse(root, "1.13.2");
-        //     expect(version.id).toEqual("1.13.2");
-        //     expect(version.client).toEqual("1.13.2");
-        //     expect(version.mainClass).toBeTruthy();
-        //     expect(version.libraries).toBeInstanceOf(Array);
-        //     expect(version.arguments).toBeTruthy();
-        //     expect(version.arguments.game).toBeInstanceOf(Array);
-        //     expect(version.arguments.jvm).toBeInstanceOf(Array);
-        //     expect(version.minecraftDirectory).toEqual(root);
-        // });
         test("should be able to throw if version not existed", async () => {
             await expect(Version.parse(root, "1.12"))
                 .rejects
@@ -321,23 +311,26 @@ describe("Version", () => {
             const version = await Version.parse(root, "1.7.10-Forge10.13.3.1400-1.7.10");
             expect(version.id).toEqual("1.7.10-Forge10.13.3.1400-1.7.10");
             expect(version.client).toEqual("1.7.10");
-            expect(version.mainClass).toBeTruthy();
+            expect(version.mainClass).toEqual("net.minecraft.launchwrapper.Launch");
             expect(version.libraries).toBeInstanceOf(Array);
             expect(version.arguments).toBeTruthy();
             expect(version.arguments.game).toBeInstanceOf(Array);
             expect(version.arguments.jvm).toBeInstanceOf(Array);
             expect(version.minecraftDirectory).toEqual(root);
+            expect(version.minecraftVersion).toEqual("1.7.10");
+            expect(version.inheritances).toEqual(["1.7.10-Forge10.13.3.1400-1.7.10", "1.7.10"]);
         });
-        it("should be able to parse version chain", async function () {
-            // const ver = await Version.parse(root, "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT");
-            // expect(ver).toBeTruthy();
-            // expect(ver.pathChain).toBeInstanceOf(Array);
-            // expect(ver.pathChain).toHaveLength(2);
-            // expect(ver.pathChain[0]).toBe(mc.getVersionRoot("1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT")) ；
-            // const mc = new MinecraftFolder(this.gameDirectory);
-            // assert.equal(ver.pathChain.length, 2);
-            // assert.equal(ver.pathChain[0]);
-            // assert.equal(ver.pathChain[1], mc.getVersionRoot("1.12.2"));
+        it("should be able to parse extends version for forge & liteloader", async function () {
+            const version = await Version.parse(root, "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT");
+            expect(version).toBeTruthy();
+            expect(version.pathChain).toBeInstanceOf(Array);
+            expect(version.pathChain).toHaveLength(3);
+            expect(version.minecraftVersion).toEqual("1.12.2");
+            expect(version.inheritances).toEqual([
+                "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT",
+                "1.12.2-forge1.12.2-14.23.5.2823",
+                "1.12.2",
+            ]);
         });
     });
 
