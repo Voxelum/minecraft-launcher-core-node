@@ -48,7 +48,6 @@ export interface LaunchOption {
 
     launcherName?: string;
     launcherBrand?: string;
-
     /**
      * Overwrite the version name of the current version.
      * If this is absent, it will use version name from resolved version.
@@ -61,32 +60,28 @@ export interface LaunchOption {
      * Some people use this to show fantastic message on the welcome screen.
      */
     versionType?: string;
-
     /**
      * The full path of launched game icon
      * Currently, this only supported on MacOS
      */
     gameIcon?: string;
-
     /**
      * The launched game name
      * Currently, this only supported on MacOS
      */
     gameName?: string;
-
     /**
-     * The path for saves/logs/configs/mods/resource packs
+     * The path of parent directory of saves/logs/configs/mods/resourcepacks
      */
     gamePath: string;
     /**
-     * The path for assets/libraries
+     * The path of parent directory of assets/libraries
      */
     resourcePath?: string;
     /**
      * The java executable file path. (Not the java home direcotry!)
      */
     javaPath: string;
-
     /**
      * Min memory, this will add a jvm flag -Xms to the command result
      */
@@ -116,6 +111,12 @@ export interface LaunchOption {
      * Extra program arguments. This will append after to generated options.
      */
     extraMCArgs?: string[];
+    /**
+     * Assign the spawn options to the process.
+     *
+     * If you try to set `{ shell: true }`, you might want to make all argument rounded with "".
+     * The `launch` function will do it for you, but if you want to spawn process by yourself, remember to do that.
+     */
     extraExecOption?: SpawnOptions;
     isDemo?: boolean;
 
@@ -124,12 +125,10 @@ export interface LaunchOption {
      * You can replace this by your self.
      */
     nativeRoot?: string;
-
     /**
-     * Enable features.
+     * Enable features. Not really in used...
      */
     features?: EnabledFeatures;
-
     /**
      * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
      */
@@ -137,7 +136,6 @@ export interface LaunchOption {
         jar: string,
         server: string,
     };
-
     /**
      * Add `-Dfml.ignoreInvalidMinecraftCertificates=true` to jvm argument
      */
@@ -380,10 +378,6 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
  * This function will also check if the runtime libs are completed, and will extract native libs if needed.
  * This function might throw exception when the version jar is missing/checksum not matched.
  * This function might throw if the libraries/natives are missing.
- *
- * Error Handling:
- *
- * The this function return a nodejs child process, which might have
  *
  * @param options The detail options for this launching.
  * @see ChildProcess
