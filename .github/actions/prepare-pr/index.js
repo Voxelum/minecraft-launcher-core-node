@@ -305,7 +305,7 @@ async function main(output) {
     }
 }
 
-console.log(fs.readdir('.'));
+console.log(fs.readdirSync('.'));
 
 main(core ? core.setOutput : (k, v) => {
     console.log(k)
