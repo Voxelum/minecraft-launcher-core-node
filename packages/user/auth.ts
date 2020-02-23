@@ -95,22 +95,47 @@ export class Authenticator {
         return post(this.api.hostName + endpoint, payload);
     }
 
+    /**
+     * Login to the server by username and password. Notice that the auth server usually have the cooldown time for login.
+     * You have to wait for about a minute after one approch of login, to login again.
+     *
+     * @param option The login options, contains the username, password
+     * @throws This may throw the error object with `statusCode`, `statusMessage`, `type` (error type), and `message`
+     */
     login(option: LoginOption): Promise<Authentication> {
         return this.post(this.api.authenticate,
             loginPayload(this.clientToken, option)) as Promise<Authentication>;
     }
+    /**
+     * Determine whether the access/client token pair is valid.
+     *
+     * @param option The access token
+     */
     validate(option: { accessToken: string; }): Promise<boolean> {
         return this.post(this.api.validate, {
             clientToken: this.clientToken,
             accessToken: option.accessToken,
         }).then(() => true, () => false);
     }
+    /**
+     * Invalidate an access token and client token
+     *
+     * @param option The tokens
+     */
     invalidate(option: { accessToken: string; }): Promise<void> {
         return this.post(this.api.invalidate, {
             clientToken: this.clientToken,
             accessToken: option.accessToken,
         }).then(() => { });
     }
+    /**
+     * Refresh the current access token with specific client token.
+     * Notice that the client token and access token must match.
+     *
+     * You can use this function to get a new token when your old token is expired.
+     *
+     * @param option The access token
+     */
     refresh(option: { accessToken: string; requestUser?: boolean; }): Promise<Pick<Authentication, "accessToken" | "clientToken">> {
         return this.post(this.api.refresh, refreshPayload(this.clientToken, option)) as Promise<Authentication>;
     }
@@ -282,7 +307,7 @@ export function offline(username: string): Authentication {
         selectedProfile: prof,
         availableProfiles: [prof],
         user: {
-            id: newToken(),
+            id: v5(username),
             username: username,
         },
     };
