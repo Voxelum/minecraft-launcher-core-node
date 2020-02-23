@@ -81,10 +81,10 @@ describe("TextComponent", () => {
                 obfuscated: true,
             });
             expect(node.component.text).toEqual("hello");
-            expect(node.style).toEqual("color: #FF5555; font-weight: bold; text-decoration:line-through; text-decoration: underline; font-style: italic;");
+            expect(node.style).toEqual({ "color": "#FF5555", "font-style": "italic", "font-weight": "bold", "text-decoration": "underline" });
             expect(node.children).toHaveLength(1);
             expect(node.children[0].component.text).toEqual("world");
-            expect(node.children[0].style).toEqual("");
+            expect(node.children[0].style).toEqual({});
         });
     });
     describe("#flat", () => {
