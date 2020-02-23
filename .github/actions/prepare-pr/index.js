@@ -53,10 +53,12 @@ function scanPackages() {
 
 async function bumpPackages(packages) {
     async function getBumpSuggestion(package) {
+        console.log(`getBumpSuggestion ${package}`)
         const result = await new Promise((resolve, reject) => {
             convBump({
                 path: `packages/${package}`,
                 whatBump(comments) {
+                    console.log(comments);
                     const reasons = comments.filter(c => c.type === 'feat' || c.type === 'fix' || c.header.startsWith('BREAKING CHANGE:'));
                     const feats = comments.filter(c => c.type === 'feat');
                     const fixes = comments.filter(c => c.type === 'fix');
@@ -74,6 +76,7 @@ async function bumpPackages(packages) {
                 else resolve(result);
             });
         });
+        console.log(result);
         return result;
     }
     for (const package of packages) {
@@ -281,6 +284,8 @@ async function main(output) {
 
     console.log(info(packages));
 
+    console.log(packages);
+    console.log('info');
     const packageJSON = JSON.parse(fs.readFileSync(`package.json`).toString());
 
     if (bumpLevel < 3) {
