@@ -88,6 +88,7 @@ async function bumpPackages(packages) {
             package.feats = result.feats;
             package.fixes = result.fixes;
             package.breakings = result.breakings;
+            console.log(`${package.name}: ${package.newVersion} ${package.releaseType}`)
         }
     }
 }
@@ -130,7 +131,7 @@ function toposort(packageMapping, packages) {
  * @param { Array<Package> } packages
  */
 function bumpDependenciesPackage(affectedMapping, packages) {
-    let bumpTotalOrder = 2;
+    let bumpTotalOrder = 3;
     function bump(package) {
         // only major & minor change affect the dependents packages update
         const allAffectedPackages = affectedMapping[package.name] || [];
@@ -248,11 +249,10 @@ function writeChangelog(version, packages) {
     logs.unshift(head);
 
     changelog = logs.join('\n');
-    // if (DRY) {
-    //     console.log(changelog);
-    // } else {
-    fs.writeFileSync('CHANGELOG.md', changelog);
-    // }
+    console.log(changelog);
+    if (!DRY) {
+        fs.writeFileSync('CHANGELOG.md', changelog);
+    }
 }
 
 function prTitle(version) {
@@ -278,23 +278,28 @@ async function main(output) {
 
     const packageJSON = JSON.parse(fs.readFileSync(`package.json`).toString());
 
-    const oldVersion = packageJSON.version;
-    const bumpType = ["major", "minor", "patch"][bumpLevel];
-    const newVersion = semver.inc(packageJSON.version, bumpType);
-    packageJSON.version = newVersion;
-    console.log(`Bump total version by [${bumpType}]: ${oldVersion} -> ${newVersion}`);
+    if (bumpLevel < 3) {
+        const oldVersion = packageJSON.version;
+        const bumpType = ["major", "minor", "patch"][bumpLevel];
+        const newVersion = semver.inc(packageJSON.version, bumpType);
+        packageJSON.version = newVersion;
+        console.log(`Bump total version by [${bumpType}]: ${oldVersion} -> ${newVersion}`);
 
-    if (DRY) {
-        console.log(`Mock write file package.json`);
+        if (DRY) {
+            console.log(`Mock write file package.json`);
+        } else {
+            fs.writeFileSync(`package.json`, JSON.stringify(packageJSON, null, 4));
+        }
+        writeAllNewVersionsToPackageJson(packages);
+        writeChangelog(newVersion, packages);
+
+        output('title', prTitle(newVersion));
+        output('body', prBody(packages));
+        output('message', commitMessage(newVersion));
+        output('release', true);
     } else {
-        fs.writeFileSync(`package.json`, JSON.stringify(packageJSON, null, 4));
+        output('release', false);
     }
-    writeAllNewVersionsToPackageJson(packages);
-    writeChangelog(newVersion, packages);
-
-    output('title', prTitle(newVersion));
-    output('body', prBody(packages));
-    output('message', commitMessage(newVersion));
 }
 
 main(core ? core.setOutput : (k, v) => {
