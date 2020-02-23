@@ -1,4 +1,4 @@
-import { TextComponent, toFormattedString, fromFormattedString, render, getSuggestedCss, flat } from "./index";
+import { TextComponent, toFormattedString, fromFormattedString, render, getSuggestedStyle, flat } from "./index";
 
 describe("TextComponent", () => {
     describe("#fromFormattedString", () => {
@@ -55,8 +55,14 @@ describe("TextComponent", () => {
             color: "red",
             obfuscated: true,
         };
-        const css = getSuggestedCss(style);
-        expect(css).toEqual("color: #FF5555; font-weight: bold; text-decoration:line-through; text-decoration: underline; font-style: italic;");
+        const css = getSuggestedStyle(style);
+        expect(css).toEqual({
+            "color": "#FF5555",
+            "font-weight": "bold",
+            // "text-decoration": "line-through",
+            "text-decoration": "underline",
+            "font-style": "italic",
+        });
     });
     describe("#render", () => {
         test("should render string correctly", () => {
@@ -74,10 +80,10 @@ describe("TextComponent", () => {
                 color: "red",
                 obfuscated: true,
             });
-            expect(node.text).toEqual("hello");
+            expect(node.component.text).toEqual("hello");
             expect(node.style).toEqual("color: #FF5555; font-weight: bold; text-decoration:line-through; text-decoration: underline; font-style: italic;");
             expect(node.children).toHaveLength(1);
-            expect(node.children[0].text).toEqual("world");
+            expect(node.children[0].component.text).toEqual("world");
             expect(node.children[0].style).toEqual("");
         });
     });

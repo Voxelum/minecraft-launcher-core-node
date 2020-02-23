@@ -1,5 +1,5 @@
 /**
- * @see https://minecraft.gamepedia.com/Commands#Raw_JSON_text
+ * @see https://minecraft.gamepedia.com/Raw_JSON_text_format
  */
 export interface TextComponent {
     /**
@@ -11,17 +11,38 @@ export interface TextComponent {
      */
     translate?: string;
     /**
-     * A list of chat component arguments and/or string arguments to be used by  translate. Useless otherwise.
+     * A list of chat component arguments and/or string arguments to be used by translate. Useless otherwise.
      *
      * The arguments are text corresponding to the arguments used by the translation string in the current language, in order (for example, the first list element corresponds to "%1$s" in a translation string). Argument structure repeats this raw JSON text structure.
      */
     with?: string[];
+    /**
+     * A player's score in an objective. Displays nothing if the player is not tracked in the given objective.
+     * Ignored when any of the previous fields exist in the root object.
+     */
     score?: {
         name: string,
         objective: string,
         value: string,
     };
+    /**
+     * A string containing a selector (@p,@a,@r,@e or @s) and, optionally, selector arguments.
+     *
+     * Unlike text, the selector is translated into the correct player/entity names.
+     * If more than one player/entity is detected by the selector, it is displayed in a form such as 'Name1 and Name2' or 'Name1, Name2, Name3, and Name4'.
+     * Ignored when any of the previous fields exist in the root object.
+     *
+     * - Clicking a player's name inserted into a /tellraw command this way suggests a command to whisper to that player.
+     * - Shift-clicking a player's name inserts that name into chat.
+     * - Shift-clicking a non-player entity's name inserts its UUID into chat.
+     */
     selector?: string;
+    /**
+     * A string that can be used to display the key needed to preform a certain action.
+     * An example is `key.inventory` which always displays "E" unless the player has set a different key for opening their inventory.
+     *
+     * Ignored when any of the previous fields exist in the root object.
+     */
     keybind?: string;
     /**
      *  A string indicating the NBT path used for looking up NBT values from an entity or a block entity. Ignored when any of the previous fields exist in the root object.
@@ -128,11 +149,11 @@ export type RenderNode = {
     /**
      * The css style string
      */
-    style: string;
+    style: object;
     /**
-     * The text to render
+     * The text component backed by
      */
-    text: string;
+    component: TextComponent;
     /**
      * Children
      */
@@ -140,16 +161,16 @@ export type RenderNode = {
 };
 
 /**
- * Get suggest css style string for input style
+ * Get suggest css style object for input style
  */
-export function getSuggestedCss(style: TextComponent | Style): string {
-    const styles = [];
+export function getSuggestedStyle(style: TextComponent | Style): object {
+    const styledObject: object = {};
     for (const l of TextFormat.list) {
         if (l.matchStyle(style)) {
-            styles.push(l.cssForeground.trim());
+            Object.assign(styledObject, l.cssForeground);
         }
     }
-    return styles.filter((s) => s.length !== 0).join(" ");
+    return styledObject;
 }
 
 /**
@@ -161,7 +182,7 @@ export function render(src: TextComponent): RenderNode {
     for (const component of src.extra || []) {
         children.push(render(component));
     }
-    return { children, text: src.text, style: getSuggestedCss(src) };
+    return { children, component: src, style: getSuggestedStyle(src) };
 }
 
 /**
@@ -241,31 +262,31 @@ export function fromFormattedString(formatted: string): TextComponent {
 
 class TextFormat<T extends keyof Style> {
     static readonly CONTROL_STRING = "§";
-    constructor(readonly key: T, readonly value: Style[T], readonly name: string, readonly code: string, readonly cssForeground: string, readonly cssBackground?: string) { }
+    constructor(readonly key: T, readonly value: Style[T], readonly name: string, readonly code: string, readonly cssForeground: object, readonly cssBackground?: object) { }
     applyToStyle(style: Style) { style[this.key] = this.value; }
     matchStyle(style: Style) { return style[this.key] === this.value; }
 
-    static readonly BLACK = new TextFormat("color", "black", "BLACK", "0", "color: #000000;", "color: #000000;");
-    static readonly DARK_BLUE = new TextFormat("color", "dark_blue", "DARK_BLUE", "1", "color: #0000AA;", "color: #00002A;");
-    static readonly DARK_GREEN = new TextFormat("color", "DARK_GREEN", "DARK_GREEN", "2", "color: #00AA00;", "color: #002A00;");
-    static readonly DARK_AQUA = new TextFormat("color", "dark_aqua", "DARK_AQUA", "3", "color: #00AAAA;", "color: #002A2A;");
-    static readonly DARK_RED = new TextFormat("color", "dark_red", "DARK_RED", "4", "color: #AA0000;", "color: #2A0000;");
-    static readonly DARK_PURPLE = new TextFormat("color", "dark_purple", "DARK_PURPLE", "5", "color: #AA00AA;", "color: #2A002A;");
-    static readonly GOLD = new TextFormat("color", "gold", "GOLD", "6", "color: #FFAA00;", "color: #2A2A00;");
-    static readonly GRAY = new TextFormat("color", "gray", "GRAY", "7", "color: #AAAAAA;", "color: #2A2A2A;");
-    static readonly DARK_GRAY = new TextFormat("color", "dark_gray", "DARK_GRAY", "8", "color: #555555;", "color: #151515;");
-    static readonly BLUE = new TextFormat("color", "blue", "BLUE", "9", "color: #5555FF;", "color: #15153F;");
-    static readonly GREEN = new TextFormat("color", "green", "GREEN", "a", "color: #55FF55;", "color: #153F15;");
-    static readonly AQUA = new TextFormat("color", "aqua", "AQUA", "b", "color: #55FFFF;", "color: #153F3F;");
-    static readonly RED = new TextFormat("color", "red", "RED", "c", "color: #FF5555;", "color: #3F1515;");
-    static readonly LIGHT_PURPLE = new TextFormat("color", "light_purple", "LIGHT_PURPLE", "d", "color: #FF55FF;", "color: #3F153F;");
-    static readonly YELLOW = new TextFormat("color", "yellow", "YELLOW", "e", "color: #FFFF55;", "color: #3F3F15;");
-    static readonly WHITE = new TextFormat("color", "white", "WHITE", "f", "color: #FFFFFF;", "color: #3F3F3F;");
-    static readonly OBFUSCATED = new TextFormat("obfuscated", true, "OBFUSCATED", "k", "");
-    static readonly BOLD = new TextFormat("bold", true, "BOLD", "l", "font-weight: bold;");
-    static readonly STRIKETHROUGH = new TextFormat("strikethrough", true, "STRIKETHROUGH", "m", "text-decoration:line-through;");
-    static readonly UNDERLINE = new TextFormat("underlined", true, "UNDERLINE", "n", "text-decoration: underline;");
-    static readonly ITALIC = new TextFormat("italic", true, "ITALIC", "o", "font-style: italic;");
+    static readonly BLACK = new TextFormat("color", "black", "BLACK", "0", { color: "#000000" }, { color: "#000000" });
+    static readonly DARK_BLUE = new TextFormat("color", "dark_blue", "DARK_BLUE", "1", { color: "#0000AA" }, { color: "#00002A" });
+    static readonly DARK_GREEN = new TextFormat("color", "DARK_GREEN", "DARK_GREEN", "2", { color: "#00AA00" }, { color: "#002A00" });
+    static readonly DARK_AQUA = new TextFormat("color", "dark_aqua", "DARK_AQUA", "3", { color: "#00AAAA" }, { color: "#002A2A" });
+    static readonly DARK_RED = new TextFormat("color", "dark_red", "DARK_RED", "4", { color: "#AA0000" }, { color: "#2A0000" });
+    static readonly DARK_PURPLE = new TextFormat("color", "dark_purple", "DARK_PURPLE", "5", { color: "#AA00AA" }, { color: "#2A002A" });
+    static readonly GOLD = new TextFormat("color", "gold", "GOLD", "6", { color: "#FFAA00" }, { color: "#2A2A00" });
+    static readonly GRAY = new TextFormat("color", "gray", "GRAY", "7", { color: "#AAAAAA" }, { color: "#2A2A2A" });
+    static readonly DARK_GRAY = new TextFormat("color", "dark_gray", "DARK_GRAY", "8", { color: "#555555" }, { color: "#151515" });
+    static readonly BLUE = new TextFormat("color", "blue", "BLUE", "9", { color: "#5555FF" }, { color: "#15153F" });
+    static readonly GREEN = new TextFormat("color", "green", "GREEN", "a", { color: "#55FF55" }, { color: "#153F15" });
+    static readonly AQUA = new TextFormat("color", "aqua", "AQUA", "b", { color: "#55FFFF" }, { color: "#153F3F" });
+    static readonly RED = new TextFormat("color", "red", "RED", "c", { color: "#FF5555" }, { color: "#3F1515" });
+    static readonly LIGHT_PURPLE = new TextFormat("color", "light_purple", "LIGHT_PURPLE", "d", { color: "#FF55FF" }, { color: "#3F153F" });
+    static readonly YELLOW = new TextFormat("color", "yellow", "YELLOW", "e", { color: "#FFFF55" }, { color: "#3F3F15" });
+    static readonly WHITE = new TextFormat("color", "white", "WHITE", "f", { color: "#FFFFFF" }, { color: "#3F3F3F" });
+    static readonly OBFUSCATED = new TextFormat("obfuscated", true, "OBFUSCATED", "k", {});
+    static readonly BOLD = new TextFormat("bold", true, "BOLD", "l", { "font-weight": "bold" });
+    static readonly STRIKETHROUGH = new TextFormat("strikethrough", true, "STRIKETHROUGH", "m", { "text-decoration": "line-through" });
+    static readonly UNDERLINE = new TextFormat("underlined", true, "UNDERLINE", "n", { "text-decoration": "underline" });
+    static readonly ITALIC = new TextFormat("italic", true, "ITALIC", "o", { "font-style": "italic" });
     static readonly RESET = {
         name: "RESET",
         code: "r",
@@ -278,8 +299,8 @@ class TextFormat<T extends keyof Style> {
             style.color = undefined;
         },
         matchStyle(style: Style) { return false; },
-        cssBackground: "",
-        cssForeground: "",
+        cssBackground: {},
+        cssForeground: {},
         toString() { return `${TextFormat.CONTROL_STRING}r`; }
     };
 
