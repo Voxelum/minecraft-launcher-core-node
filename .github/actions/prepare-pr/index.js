@@ -53,7 +53,8 @@ function scanPackages() {
 
 async function bumpPackages(packages) {
     async function getBumpSuggestion(package) {
-        console.log(`getBumpSuggestion ${package}`)
+        let p = path.resolve(`packages/${package}`);
+        console.log(`getBumpSuggestion ${package} ${p}`)
         const result = await new Promise((resolve, reject) => {
             convBump({
                 path: path.resolve(`packages/${package}`),
