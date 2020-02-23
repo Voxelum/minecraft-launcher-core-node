@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/mod-parser",
-  "version": "2.0.1-alpha.1",
+  "version": "2.0.1",
   "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Minecraft Mod parser. Provide the utilities to parse forge/liteloader/fabric mod metadata.",
