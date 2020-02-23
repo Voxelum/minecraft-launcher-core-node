@@ -306,6 +306,8 @@ async function main(output) {
 }
 
 console.log(fs.readdirSync('.'));
+console.log(`${DRY ? 'DRY' : 'NO_DRY'}`);
+console.log(core);
 
 main(core ? core.setOutput : (k, v) => {
     console.log(k)
