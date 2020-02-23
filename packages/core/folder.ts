@@ -5,6 +5,9 @@ export interface MinecraftFolder {
 }
 
 export class MinecraftFolder {
+    /**
+     * Normal a Minecraft folder from a folder or string
+     */
     static from(location: MinecraftLocation) {
         return typeof location === "string"
             ? new MinecraftFolder(location)
