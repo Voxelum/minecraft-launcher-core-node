@@ -271,9 +271,13 @@ function commitMessage(version) {
 }
 
 async function main(output) {
+    console.log('MAIN');
     const [affectedMapping, packages] = scanPackages();
+    console.log('AFFECT');
     await bumpPackages(packages);
+    console.log('bumpPackages');
     const bumpLevel = bumpDependenciesPackage(affectedMapping, packages);
+    console.log('bumpDependenciesPackage');
 
     console.log(info(packages));
 
