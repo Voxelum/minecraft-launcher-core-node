@@ -28,13 +28,15 @@ export function exists(target: string) {
 export function missing(target: string) {
     return promises.access(target, constants.F_OK).then(() => false).catch(() => true);
 }
-export async function validateSha1(target: string, hash: string) {
+export async function validateSha1(target: string, hash?: string) {
     if (await missing(target)) { return false; }
+    if (!hash) { return true; }
     const sha1 = await checksum(target, "sha1");
     return sha1 === hash;
 }
-export async function validateMd5(target: string, hash: string) {
+export async function validateMd5(target: string, hash?: string) {
     if (await missing(target)) { return false; }
+    if (!hash) { return true; }
     const sha1 = await checksum(target, "md5");
     return sha1 === hash;
 }
