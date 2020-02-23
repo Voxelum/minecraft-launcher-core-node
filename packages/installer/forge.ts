@@ -63,6 +63,36 @@ export interface Version {
     type?: "buggy" | "recommended" | "common" | "latest";
 }
 
+type MiniVersion = {
+    /**
+     * The installer info
+     */
+    installer: {
+        sha1?: string;
+        /**
+         * The url path to concat with forge maven
+         */
+        path: string;
+    };
+    universal: {
+        sha1?: string;
+        /**
+         * The url path to concat with forge maven
+         */
+        path: string;
+    };
+    /**
+     * The minecraft version
+     */
+    mcversion: string;
+    /**
+     * The forge version (without minecraft version)
+     */
+    version: string;
+
+    type?: "buggy" | "recommended" | "common" | "latest";
+}
+
 export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
 
 export interface InstallProfile {
@@ -265,7 +295,7 @@ function installByInstallerPartialWork(mc: MinecraftFolder, profile: InstallProf
  * @child installForgeJar
  * @child installForgeJson
  */
-function installByInstallerTask(version: Version, minecraft: MinecraftLocation, options: InstallOptions) {
+function installByInstallerTask(version: MiniVersion, minecraft: MinecraftLocation, options: InstallOptions) {
     const maven = DEFAULT_FORGE_MAVEN || options.maven;
     const installLibOption = options;
     const java = options.java || JavaExecutor.createSimple("java");
@@ -286,10 +316,10 @@ function installByInstallerTask(version: Version, minecraft: MinecraftLocation, 
                 await downloadFileIfAbsentTask({
                     url: installer,
                     destination: dest,
-                    checksum: {
+                    checksum: version.installer.sha1 ? {
                         hash: version.installer.sha1,
                         algorithm: "sha1",
-                    },
+                    } : undefined,
                 })(ctx);
                 return createReadStream(dest).pipe(createParseStream({ lazyEntries: true })).wait();
             });
@@ -373,7 +403,7 @@ function installByInstallerTask(version: Version, minecraft: MinecraftLocation, 
  * @child installForgeJar
  * @child installForgeJson
  */
-function installByUniversalTask(version: Version, minecraft: MinecraftLocation, option: InstallOptions) {
+function installByUniversalTask(version: MiniVersion, minecraft: MinecraftLocation, option: InstallOptions) {
     return Task.create("installForge", async function installForge(context: Task.Context) {
         const mc = MinecraftFolder.from(minecraft);
         const paths = version.universal.path.split("/");
@@ -443,7 +473,7 @@ export interface InstallOptions extends InstallOptionsBase, LibraryOption {
  * @param version The forge version meta
  * @returns The installed version name.
  */
-export function install(version: Version, minecraft: MinecraftLocation, option?: InstallOptions) {
+export function install(version: MiniVersion, minecraft: MinecraftLocation, option?: InstallOptions) {
     return Task.execute(installTask(version, minecraft, option)).wait();
 }
 
@@ -453,7 +483,7 @@ export function install(version: Version, minecraft: MinecraftLocation, option?:
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export function installTask(version: Version, minecraft: MinecraftLocation, option: InstallOptions = {}): Task<string> {
+export function installTask(version: MiniVersion, minecraft: MinecraftLocation, option: InstallOptions = {}): Task<string> {
     let byInstaller = true;
     try {
         const minorVersion = Number.parseInt(version.mcversion.split(".")[1], 10);
