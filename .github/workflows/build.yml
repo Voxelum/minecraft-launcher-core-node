@@ -54,10 +54,10 @@ jobs:
         body: ${{ steps.vars.outputs.body }}
         commit-message: ${{ steps.vars.outputs.message }}
         token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Upload Coverage
-      uses: actions/upload-artifact@master
-      with:
-        name: coverage
-        path: coverage
+    # - name: Upload Coverage
+    #   uses: actions/upload-artifact@master
+    #   with:
+    #     name: coverage
+    #     path: coverage
 
 
