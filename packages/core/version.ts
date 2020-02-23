@@ -15,8 +15,22 @@ export interface PartialResolvedVersion extends Version {
  * It could be a combination of multiple versions as there might be some inheritions.
  */
 export interface ResolvedVersion {
-    inheritsFrom?: string;
+    /**
+     * The id of the version, should be identical to the version folder.
+     */
+    id: string;
+    arguments: {
+        game: Version.LaunchArgument[],
+        jvm: Version.LaunchArgument[],
+    };
+    /**
+     * The main class full qualified name
+     */
+    mainClass: string;
     assetIndex: Version.AssetIndex;
+    /**
+     * The asset index id of this version. Should be something like `1.14`, `1.12`
+     */
     assets: string;
     downloads: {
         client: Version.Download,
@@ -24,21 +38,11 @@ export interface ResolvedVersion {
         [key: string]: Version.Download,
     };
     libraries: ResolvedLibrary[];
-    id: string;
-    arguments: {
-        game: Version.LaunchArgument[],
-        jvm: Version.LaunchArgument[],
-    };
-    mainClass: string;
+
     minimumLauncherVersion: number;
     releaseTime: string;
     time: string;
     type: string;
-    /**
-     * The minecraft version of this version
-     */
-    client: string;
-    server: string;
     logging?: {
         [key: string]: {
             file: Version.Download,
@@ -47,8 +51,28 @@ export interface ResolvedVersion {
         },
     };
 
+    /**
+     * The minecraft version of this version
+     */
+    minecraftVersion: string;
+    /**
+     * The minecraft directory of this version
+     */
     minecraftDirectory: string;
+    /**
+     * The version inheritances of this whole resolved version.
+     *
+     * The first element is this version, and the last element is the root Minecraft version.
+     * The dependencies of [<a>, <b>, <c>] should be <a> -> <b> -> <c>, where c is a Minecraft version.
+     */
+    inheritances: string[];
 
+    /**
+     * All array of json file paths.
+     *
+     * It's the chain of inherits json path. The root json will be the last element of the array.
+     * The first element is the user provided version.
+     */
     pathChain: string[];
 }
 
@@ -271,20 +295,19 @@ export namespace Version {
         let time: string = "";
         let type: string = "";
         let logging: any;
-        let client: string = rootVersion.id;
+        let minecraftVersion: string = rootVersion.id;
         let location: string;
 
         const replaceMode = Reflect.get(rootVersion, "replace");
 
         const chains: string[] = hierarchy.map((j) => folder.getVersionRoot(j.id));
+        const inheritances = hierarchy.map((j) => j.id);
 
         let json: ResolvedVersion;
         do {
             json = hierarchy.pop() as ResolvedVersion;
             minimumLauncherVersion = Math.max(json.minimumLauncherVersion || 0, minimumLauncherVersion);
             location = json.minecraftDirectory;
-
-            client = (json as any).jar || client;
 
             if (!replaceMode) {
                 args.game.push(...json.arguments.game);
@@ -344,7 +367,8 @@ export namespace Version {
             id,
             assetIndex,
             assets,
-            client,
+            minecraftVersion,
+            inheritances,
             arguments: args,
             downloads: downloadsMap,
             libraries: Object.keys(librariesMap).map((k) => librariesMap[k]).concat(Object.keys(nativesMap).map((k) => nativesMap[k])),
@@ -455,6 +479,7 @@ export namespace Version {
                 return Promise.reject({
                     error: "MissingVersionJson",
                     version: versionName,
+                    path: jsonPath,
                 });
             }
             const contentString = await readFile(jsonPath, "utf-8").then((b) => b.toString());

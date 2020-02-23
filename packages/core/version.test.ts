@@ -3,6 +3,7 @@ import { join, normalize } from "path";
 import { ResolvedNative, LibraryInfo, Version } from "./version";
 
 const root = normalize(join(__dirname, "..", "..", "mock"));
+const tempRoot = normalize(join(__dirname, "..", "..", "temp"));
 
 describe("Version", () => {
     describe("#getLibraryInfo", () => {
@@ -289,7 +290,6 @@ describe("Version", () => {
         test("should be able to parse 1.17.10 version", async () => {
             const version = await Version.parse(root, "1.7.10");
             expect(version.id).toEqual("1.7.10");
-            expect(version.client).toEqual("1.7.10");
             expect(version.mainClass).toBeTruthy();
             expect(version.libraries).toBeInstanceOf(Array);
             expect(version.arguments).toBeTruthy();
@@ -302,7 +302,7 @@ describe("Version", () => {
         test("should be able to throw if version not existed", async () => {
             await expect(Version.parse(root, "1.12"))
                 .rejects
-                .toStrictEqual({
+                .toMatchObject({
                     error: "MissingVersionJson",
                     version: "1.12",
                 });
@@ -310,7 +310,6 @@ describe("Version", () => {
         test("should be able to parse extended profile for forge", async () => {
             const version = await Version.parse(root, "1.7.10-Forge10.13.3.1400-1.7.10");
             expect(version.id).toEqual("1.7.10-Forge10.13.3.1400-1.7.10");
-            expect(version.client).toEqual("1.7.10");
             expect(version.mainClass).toEqual("net.minecraft.launchwrapper.Launch");
             expect(version.libraries).toBeInstanceOf(Array);
             expect(version.arguments).toBeTruthy();
@@ -321,7 +320,7 @@ describe("Version", () => {
             expect(version.inheritances).toEqual(["1.7.10-Forge10.13.3.1400-1.7.10", "1.7.10"]);
         });
         it("should be able to parse extends version for forge & liteloader", async function () {
-            const version = await Version.parse(root, "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT");
+            const version = await Version.parse(tempRoot, "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT");
             expect(version).toBeTruthy();
             expect(version.pathChain).toBeInstanceOf(Array);
             expect(version.pathChain).toHaveLength(3);

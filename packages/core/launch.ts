@@ -157,11 +157,11 @@ export namespace LaunchPrecheck {
      * Quick check if Minecraft version jar is corrupted
      */
     export async function checkVersion(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
-        const jarPath = resource.getVersionJar(version.client);
+        const jarPath = resource.getVersionJar(version.minecraftVersion);
         if (!await validateSha1(jarPath, version.downloads.client.sha1)) {
             throw {
                 error: "CorruptedVersionJar",
-                version: version.client,
+                version: version.minecraftVersion,
             };
         }
     };
@@ -414,7 +414,7 @@ export async function generateArgumentsServer(options: ServerOptions) {
     const cmd = [
         javaPath, `-Xms${(minMemory)}M`, `-Xmx${(maxMemory)}M`, ...extraJVMArgs,
         "-jar",
-        mc.getVersionJar(resolvedVersion.client, "server"),
+        mc.getVersionJar(resolvedVersion.minecraftVersion, "server"),
         ...extraMCArgs,
     ];
     if (options.nogui) {
@@ -500,7 +500,7 @@ export async function generateArguments(options: LaunchOption) {
         launcher_version: launcherBrand,
         classpath: `${[
             ...version.libraries.filter((lib) => !(lib instanceof ResolvedNative)).map((lib) => mc.getLibraryByPath(lib.download.path)),
-            mc.getVersionJar(version.client)
+            mc.getVersionJar(version.minecraftVersion)
         ].join(delimiter)}`,
         ...featureValues,
     };

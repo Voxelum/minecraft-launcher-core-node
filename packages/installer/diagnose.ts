@@ -73,7 +73,7 @@ export function diagnose(version: string, minecraft: MinecraftLocation): Promise
  */
 export function diagnoseTask(version: string, minecraftLocation: MinecraftLocation): Task<Report> {
     function hasNewForge(version: ResolvedVersion) {
-        if (Number.parseInt(version.client.split(".")[1], 10) >= 13) {
+        if (Number.parseInt(version.minecraftVersion.split(".")[1], 10) >= 13) {
             return version.libraries.find((l) => l.name.startsWith("net.minecraftforge:forge")) !== undefined;
         }
         return false;
@@ -102,7 +102,7 @@ export function diagnoseTask(version: string, minecraftLocation: MinecraftLocati
                 assets: [],
             } as Report;
         }
-        const jarPath = minecraft.getVersionJar(resolvedVersion.client);
+        const jarPath = minecraft.getVersionJar(resolvedVersion.minecraftVersion);
         const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
 
         const missingJar = await context.execute(Task.create("checkJar", function checkJar() {
