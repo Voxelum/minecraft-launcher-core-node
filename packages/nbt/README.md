@@ -19,7 +19,7 @@ You can simply deserialize/serialize nbt.
     // compressed = true will use gzip algorithm
     const compressed: true | "gzip" | "deflate" | undefined;
     const readed: any = await deserialize(fileData, { compressed });
-    // The deserialize return object contain __nbtPrototype__ property which define its nbt type
+    // The deserialize return object contain NBTPrototype property which define its nbt type
     // After you do the modification on it, you can serialize it back to NBT
     const buf: Buffer = await serialize(readed, { compressed });
 ```

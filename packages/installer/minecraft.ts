@@ -6,9 +6,9 @@ import { join } from "path";
 import { Downloader, downloader, downloadFileIfAbsentTask, getIfUpdate, UpdatedObject } from "./util";
 
 /**
- * The function to swap library host
+ * The function to swap library host.
  */
-export type LibraryHost = (libId: ResolvedLibrary) => string | string[] | undefined;
+export type LibraryHost = (library: ResolvedLibrary) => string | string[] | undefined;
 
 /**
  * The version metadata containing the version information, like download url
@@ -83,6 +83,9 @@ export interface DownloaderOption {
  * Change the library host url
  */
 export interface LibraryOption extends DownloaderOption {
+    /**
+     * Assign this to swap library host.
+     */
     libraryHost?: LibraryHost;
 }
 /**
