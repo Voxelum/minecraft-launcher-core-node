@@ -56,7 +56,7 @@ async function bumpPackages(packages) {
         console.log(`getBumpSuggestion ${package}`)
         const result = await new Promise((resolve, reject) => {
             convBump({
-                path: `packages/${package}`,
+                path: path.resolve(`packages/${package}`),
                 whatBump(comments) {
                     console.log(comments);
                     const reasons = comments.filter(c => c.type === 'feat' || c.type === 'fix' || c.header.startsWith('BREAKING CHANGE:'));
