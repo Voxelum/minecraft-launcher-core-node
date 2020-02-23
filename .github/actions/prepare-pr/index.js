@@ -2,6 +2,7 @@ const fs = require('fs');
 const convBump = require('conventional-recommended-bump');
 const semver = require('semver');
 const core = require('@actions/core');
+const path = require('path');
 
 const DRY = !process.env.CI;
 
@@ -304,7 +305,11 @@ async function main(output) {
     }
 }
 
+console.log(fs.readdir('.'));
+
 main(core ? core.setOutput : (k, v) => {
     console.log(k)
     console.log(v)
 });
+
+
