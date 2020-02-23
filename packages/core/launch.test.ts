@@ -381,7 +381,7 @@ describe("Launcher", () => {
             });
         });
     });
-    describe("#launchServer", () => {
+    describe.skip("#launchServer", () => {
         test("should launch 1.12.2", async () => {
             const process = await launchServer({
                 version: "1.12.2",
