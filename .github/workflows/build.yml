@@ -3,10 +3,9 @@ name: Build
 on:
   push:
     branches: 
-      - master
-    paths:
-      - 'packages/*/*.ts'
-      - '.github/*'
+      - fix-ci
+  repository_dispatch:
+    types: do-something
 
 jobs:
   automation:
@@ -34,12 +33,12 @@ jobs:
     - name: Lint
       run: |
         npm run lint
-    - name: Test
-      run: |
-        npm run test:full
-    - name: Build
-      run: |
-        npm run build
+    # - name: Test
+    #   run: |
+    #     npm run test:full
+    # - name: Build
+    #   run: |
+    #     npm run build
     - name: Prepare Pull Request
       id: vars
       uses: ./.github/actions/prepare-pr

@@ -290,6 +290,8 @@ async function main(output) {
         } else {
             fs.writeFileSync(`package.json`, JSON.stringify(packageJSON, null, 4));
         }
+        console.log(`Write file package.json`);
+
         writeAllNewVersionsToPackageJson(packages);
         writeChangelog(newVersion, packages);
 
