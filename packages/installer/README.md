@@ -80,6 +80,41 @@ Get the report of the version. It can check if version missing assets/libraries.
     const report: Diagnosis.Report = await Diagnosis.diagnose(minecraftLocation, minecraftVersionId);
 ```
 
+### Install Library/Assets with Customized Host
+
+To swap the library to your self-host or other customized host, you can assign the `libraryHost` field in options.
+
+For example, if you want to download the library `commons-io:commons-io:2.5` from your self hosted server, you can have
+
+```ts
+    // the example for call `installLibraries`
+    // this option will also work for other functions involving libraries like `install`, `installDependencies`.
+    await Installer.installLibraries(resolvedVersion, {
+        libraryHost(library: ResolvedLibrary) {
+            if (library.name === "commons-io:commons-io:2.5") {
+                // the downloader will first try the first url in the array
+                // if this failed, it will try the 2nd.
+                // if it's still failed, it will try original url
+                return ["https://your-host.org/the/path/to/the/jar", "your-sencodary-url"];
+                // if you just have one url
+                // just return a string here...
+            }
+            // return undefined if you don't want to change lib url
+            return undefined;
+        }
+    });
+```
+
+To swap the assets host, you can just assign the assets host url to the options
+
+```ts
+    await Installer.installAssets(resolvedVersion, {
+        assetsHost: "https://www.your-url/assets"
+    });
+```
+
+The assets host should accept the get asset request like `GET https://www.your-url/assets/<hash-head>/<hash>`, where `hash-head` is the first two char in `<hash>`. The `<hash>` is the sha1 of the asset. 
+
 ### Install Forge
 
 Get the forge version info and install forge from it. 

@@ -2766,7 +2766,7 @@ import * as LiteLoaderInstaller from "./liteloader";
 import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
 import * as Diagnosis from "./diagnose";
-export { JavaExecutor } from "./util";
+export { JavaExecutor, DownloadOption, DownloadToOption, DownloadAndCheckOption, Downloader } from "./util";
 export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis };
 `;
 module.exports['@xmcl/installer/cjs/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
@@ -3124,11 +3124,29 @@ export interface DownloadAndCheckOption extends DownloadOption {
         hash: string;
     };
 }
+export interface Downloader {
+    /**
+     * Download file whatever the file existed or not.
+     * @returns The downloaded file full path
+     */
+    downloadFile(option: DownloadToOption): Promise<string>;
+    /**
+     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
+     * @returns The downloaded file full path
+     */
+    downloadFile(option: DownloadToOption): Promise<string>;
+}
 export declare class Downloader {
     protected openDownloadStreamInternal(url: string, option: DownloadOption): import("fs").ReadStream | import("got/dist/source").ResponseStream<unknown>;
     protected shouldDownloadFile(destination: string, option?: DownloadAndCheckOption["checksum"]): Promise<boolean>;
+    /**
+     * Download the file to the write stream
+     */
     downloadToStream(option: DownloadOption, openWriteStream: () => Writable): Promise<void>;
-    downloadFile(option: DownloadToOption): Promise<string>;
+    /**
+     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
+     * @returns The downloaded file full path
+     */
     downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption): Promise<string>;
 }
 export declare let downloader: Downloader;
@@ -3474,7 +3492,7 @@ import * as LiteLoaderInstaller from "./liteloader";
 import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
 import * as Diagnosis from "./diagnose";
-export { JavaExecutor } from "./util";
+export { JavaExecutor, DownloadOption, DownloadToOption, DownloadAndCheckOption, Downloader } from "./util";
 export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis };
 `;
 module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
@@ -3834,11 +3852,29 @@ export interface DownloadAndCheckOption extends DownloadOption {
         hash: string;
     };
 }
+export interface Downloader {
+    /**
+     * Download file whatever the file existed or not.
+     * @returns The downloaded file full path
+     */
+    downloadFile(option: DownloadToOption): Promise<string>;
+    /**
+     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
+     * @returns The downloaded file full path
+     */
+    downloadFile(option: DownloadToOption): Promise<string>;
+}
 export declare class Downloader {
     protected openDownloadStreamInternal(url: string, option: DownloadOption): import("fs").ReadStream | import("got/dist/source").ResponseStream<unknown>;
     protected shouldDownloadFile(destination: string, option?: DownloadAndCheckOption["checksum"]): Promise<boolean>;
+    /**
+     * Download the file to the write stream
+     */
     downloadToStream(option: DownloadOption, openWriteStream: () => Writable): Promise<void>;
-    downloadFile(option: DownloadToOption): Promise<string>;
+    /**
+     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
+     * @returns The downloaded file full path
+     */
     downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption): Promise<string>;
 }
 export declare let downloader: Downloader;
@@ -6345,7 +6381,7 @@ export default Task;
 module.exports['@xmcl/task/test.d.ts'] = `export {};
 `;
 module.exports['@xmcl/text-component/cjs/index.d.ts'] = `/**
- * @see https://minecraft.gamepedia.com/Commands#Raw_JSON_text
+ * @see https://minecraft.gamepedia.com/Raw_JSON_text_format
  */
 export interface TextComponent {
     /**
@@ -6357,17 +6393,38 @@ export interface TextComponent {
      */
     translate?: string;
     /**
-     * A list of chat component arguments and/or string arguments to be used by  translate. Useless otherwise.
+     * A list of chat component arguments and/or string arguments to be used by translate. Useless otherwise.
      *
      * The arguments are text corresponding to the arguments used by the translation string in the current language, in order (for example, the first list element corresponds to "%1\$s" in a translation string). Argument structure repeats this raw JSON text structure.
      */
     with?: string[];
+    /**
+     * A player's score in an objective. Displays nothing if the player is not tracked in the given objective.
+     * Ignored when any of the previous fields exist in the root object.
+     */
     score?: {
         name: string;
         objective: string;
         value: string;
     };
+    /**
+     * A string containing a selector (@p,@a,@r,@e or @s) and, optionally, selector arguments.
+     *
+     * Unlike text, the selector is translated into the correct player/entity names.
+     * If more than one player/entity is detected by the selector, it is displayed in a form such as 'Name1 and Name2' or 'Name1, Name2, Name3, and Name4'.
+     * Ignored when any of the previous fields exist in the root object.
+     *
+     * - Clicking a player's name inserted into a /tellraw command this way suggests a command to whisper to that player.
+     * - Shift-clicking a player's name inserts that name into chat.
+     * - Shift-clicking a non-player entity's name inserts its UUID into chat.
+     */
     selector?: string;
+    /**
+     * A string that can be used to display the key needed to preform a certain action.
+     * An example is \`key.inventory\` which always displays "E" unless the player has set a different key for opening their inventory.
+     *
+     * Ignored when any of the previous fields exist in the root object.
+     */
     keybind?: string;
     /**
      *  A string indicating the NBT path used for looking up NBT values from an entity or a block entity. Ignored when any of the previous fields exist in the root object.
@@ -6462,20 +6519,20 @@ export declare type RenderNode = {
     /**
      * The css style string
      */
-    style: string;
+    style: object;
     /**
-     * The text to render
+     * The text component backed by
      */
-    text: string;
+    component: TextComponent;
     /**
      * Children
      */
     children: RenderNode[];
 };
 /**
- * Get suggest css style string for input style
+ * Get suggest css style object for input style
  */
-export declare function getSuggestedCss(style: TextComponent | Style): string;
+export declare function getSuggestedStyle(style: TextComponent | Style): object;
 /**
  * Render a text component into html style object
  * @returns the render node hint for html/css info
@@ -6497,7 +6554,7 @@ export declare function toFormattedString(comp: TextComponent): string;
 export declare function fromFormattedString(formatted: string): TextComponent;
 `;
 module.exports['@xmcl/text-component/index.d.ts'] = `/**
- * @see https://minecraft.gamepedia.com/Commands#Raw_JSON_text
+ * @see https://minecraft.gamepedia.com/Raw_JSON_text_format
  */
 export interface TextComponent {
     /**
@@ -6509,17 +6566,38 @@ export interface TextComponent {
      */
     translate?: string;
     /**
-     * A list of chat component arguments and/or string arguments to be used by  translate. Useless otherwise.
+     * A list of chat component arguments and/or string arguments to be used by translate. Useless otherwise.
      *
      * The arguments are text corresponding to the arguments used by the translation string in the current language, in order (for example, the first list element corresponds to "%1\$s" in a translation string). Argument structure repeats this raw JSON text structure.
      */
     with?: string[];
+    /**
+     * A player's score in an objective. Displays nothing if the player is not tracked in the given objective.
+     * Ignored when any of the previous fields exist in the root object.
+     */
     score?: {
         name: string;
         objective: string;
         value: string;
     };
+    /**
+     * A string containing a selector (@p,@a,@r,@e or @s) and, optionally, selector arguments.
+     *
+     * Unlike text, the selector is translated into the correct player/entity names.
+     * If more than one player/entity is detected by the selector, it is displayed in a form such as 'Name1 and Name2' or 'Name1, Name2, Name3, and Name4'.
+     * Ignored when any of the previous fields exist in the root object.
+     *
+     * - Clicking a player's name inserted into a /tellraw command this way suggests a command to whisper to that player.
+     * - Shift-clicking a player's name inserts that name into chat.
+     * - Shift-clicking a non-player entity's name inserts its UUID into chat.
+     */
     selector?: string;
+    /**
+     * A string that can be used to display the key needed to preform a certain action.
+     * An example is \`key.inventory\` which always displays "E" unless the player has set a different key for opening their inventory.
+     *
+     * Ignored when any of the previous fields exist in the root object.
+     */
     keybind?: string;
     /**
      *  A string indicating the NBT path used for looking up NBT values from an entity or a block entity. Ignored when any of the previous fields exist in the root object.
@@ -6614,20 +6692,20 @@ export declare type RenderNode = {
     /**
      * The css style string
      */
-    style: string;
+    style: object;
     /**
-     * The text to render
+     * The text component backed by
      */
-    text: string;
+    component: TextComponent;
     /**
      * Children
      */
     children: RenderNode[];
 };
 /**
- * Get suggest css style string for input style
+ * Get suggest css style object for input style
  */
-export declare function getSuggestedCss(style: TextComponent | Style): string;
+export declare function getSuggestedStyle(style: TextComponent | Style): object;
 /**
  * Render a text component into html style object
  * @returns the render node hint for html/css info
