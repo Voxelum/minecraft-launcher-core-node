@@ -83,7 +83,20 @@ export interface DownloadAndCheckOption extends DownloadOption {
     };
 }
 
-export class Downloader {
+export interface Downloader {
+    /**
+     * Download file whatever the file existed or not.
+     * @returns The downloaded file full path
+     */
+    downloadFile(option: DownloadToOption): Promise<string>;
+    /**
+     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
+     * @returns The downloaded file full path
+     */
+    downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption): Promise<string>
+}
+
+export class DefaultDownloader {
     protected openDownloadStreamInternal(url: string, option: DownloadOption) {
         const onProgress = option.progress || (() => { });
         const parsedURL = parse(url);
@@ -131,6 +144,9 @@ export class Downloader {
         const hash = await checksum(destination, option.algorithm);
         return hash !== option.hash;
     }
+    /**
+     * Download the file to the write stream
+     */
     async downloadToStream(option: DownloadOption, openWriteStream: () => Writable) {
         if (typeof option.url === "string") {
             await pipeline(this.openDownloadStreamInternal(option.url, option), openWriteStream());
@@ -144,11 +160,19 @@ export class Downloader {
         }
         return promise;
     }
+    /**
+     * Download file whatever the file existed or not.
+     * @returns The downloaded file full path
+     */
     async downloadFile(option: DownloadToOption): Promise<string> {
         await ensureFile(option.destination);
         await this.downloadToStream(option, () => createWriteStream(option.destination));
         return option.destination;
     }
+    /**
+     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
+     * @returns The downloaded file full path
+     */
     async downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption): Promise<string> {
         if (await this.shouldDownloadFile(option.destination, option.checksum)) {
             return this.downloadFile(option);
@@ -157,14 +181,23 @@ export class Downloader {
     }
 }
 
+/**
+ * The default downloader of the library
+ */
 export let downloader: Downloader;
 
+/**
+ * Set default downloader of the library
+ */
 export function setDownloader(newDownloader: Downloader) {
     downloader = newDownloader;
 }
 
-setDownloader(new Downloader());
+setDownloader(new DefaultDownloader());
 
+/**
+ * Wrapped task form of the download file task
+ */
 export function downloadFileTask(option: DownloadToOption, worker: Downloader = downloader) {
     return async (context: Task.Context) => {
         option.pausable = context.pausealbe;
@@ -174,6 +207,9 @@ export function downloadFileTask(option: DownloadToOption, worker: Downloader = 
     };
 }
 
+/**
+ * Wrapped task form of download file if absent task
+ */
 export function downloadFileIfAbsentTask(option: DownloadAndCheckOption & DownloadToOption, worker: Downloader = downloader) {
     return async (context: Task.Context) => {
         option.pausable = context.pausealbe;

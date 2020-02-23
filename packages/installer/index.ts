@@ -4,6 +4,6 @@ import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
 import * as Diagnosis from "./diagnose";
 
-export { JavaExecutor } from "./util";
+export { JavaExecutor, DownloadOption, DownloadToOption, DownloadAndCheckOption, Downloader, DefaultDownloader } from "./util";
 
 export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis };
