@@ -28,7 +28,6 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
     return new Promise((resolve, reject) => {
         process.stdout.on("data", (chunk) => {
             const content = chunk.toString();
-            console.log(content);
             for (let i = 0; i < hints.length; i++) {
                 if (content.indexOf(hints[i]) !== -1) {
                     found[i] = true;
