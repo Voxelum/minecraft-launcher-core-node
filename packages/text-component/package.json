@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/text-component",
-  "version": "2.0.1-alpha.1",
+  "version": "2.1.0",
   "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Minecraft text component parsing",

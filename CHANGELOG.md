@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.0.1
+### @xmcl/text-component@2.1.0
+#### Features
+
+- feat: use style object instead of stream to release ([f2c5d951c6f6752801afc9bb79c5d9804d3d735a](https://github.com/voxelum/minecraft-launcher-core-node/commit/f2c5d951c6f6752801afc9bb79c5d9804d3d735a))
+### @xmcl/core@2.0.2
+#### Bug Fixes
+
+- fix: the wrong native metadata ([8789ca204cd895d612c743566b5b9792f3d42bdb](https://github.com/voxelum/minecraft-launcher-core-node/commit/8789ca204cd895d612c743566b5b9792f3d42bdb))
+- fix: support 1.15 launch log ([112188a084b3a337bf9a706954386d7b779ade2f](https://github.com/voxelum/minecraft-launcher-core-node/commit/112188a084b3a337bf9a706954386d7b779ade2f))
+- fix: make undefined bypass ([36d086752c5256aa39a033ec1e5d233912adc051](https://github.com/voxelum/minecraft-launcher-core-node/commit/36d086752c5256aa39a033ec1e5d233912adc051))
+### @xmcl/client@2.0.2
+- Dependency @xmcl/text-component bump **patch**
+### @xmcl/installer@2.1.0
+#### Features
+
+- feat: extract the downloader strategy ([b9cdcccb6e59205c4dd89bd2fb241188f4798827](https://github.com/voxelum/minecraft-launcher-core-node/commit/b9cdcccb6e59205c4dd89bd2fb241188f4798827))
+#### Bug Fixes
+
+- fix: support listen total library progress ([bdb238a5cf567dae1852b1d2543e2492cd3d1cd1](https://github.com/voxelum/minecraft-launcher-core-node/commit/bdb238a5cf567dae1852b1d2543e2492cd3d1cd1))
+- fix: minimize the required version ([9aa4cef104976adfa4a9236737d9da9c20cc4dac](https://github.com/voxelum/minecraft-launcher-core-node/commit/9aa4cef104976adfa4a9236737d9da9c20cc4dac))
+- fix: not force install provide full info ([27023065e31404b149cd34c928a1a3ec68dd6d89](https://github.com/voxelum/minecraft-launcher-core-node/commit/27023065e31404b149cd34c928a1a3ec68dd6d89))
+- fix: extract the default downloader ([6146bf80e4950a57d809dcf12a5633f569b4dcfd](https://github.com/voxelum/minecraft-launcher-core-node/commit/6146bf80e4950a57d809dcf12a5633f569b4dcfd))
+- Dependency @xmcl/core bump **patch**
+
+
 ## 2.0.0
 ### @xmcl/client@2.0.1
 #### Bug Fixes

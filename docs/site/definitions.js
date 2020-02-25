@@ -595,8 +595,8 @@ export declare const rename: typeof promises.rename;
 export declare function waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
 export declare function exists(target: string): Promise<boolean>;
 export declare function missing(target: string): Promise<boolean>;
-export declare function validateSha1(target: string, hash: string): Promise<boolean>;
-export declare function validateMd5(target: string, hash: string): Promise<boolean>;
+export declare function validateSha1(target: string, hash?: string): Promise<boolean>;
+export declare function validateMd5(target: string, hash?: string): Promise<boolean>;
 export declare function copyPassively(src: string, dest: string, filter?: (name: string) => boolean): Promise<void>;
 export declare function ensureDir(target: string): Promise<void>;
 export declare function ensureFile(target: string): Promise<void>;
@@ -1241,8 +1241,8 @@ export declare const rename: typeof promises.rename;
 export declare function waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
 export declare function exists(target: string): Promise<boolean>;
 export declare function missing(target: string): Promise<boolean>;
-export declare function validateSha1(target: string, hash: string): Promise<boolean>;
-export declare function validateMd5(target: string, hash: string): Promise<boolean>;
+export declare function validateSha1(target: string, hash?: string): Promise<boolean>;
+export declare function validateMd5(target: string, hash?: string): Promise<boolean>;
 export declare function copyPassively(src: string, dest: string, filter?: (name: string) => boolean): Promise<void>;
 export declare function ensureDir(target: string): Promise<void>;
 export declare function ensureFile(target: string): Promise<void>;
@@ -2663,6 +2663,34 @@ export interface Version {
     version: string;
     type?: "buggy" | "recommended" | "common" | "latest";
 }
+declare type MiniVersion = {
+    /**
+     * The installer info
+     */
+    installer: {
+        sha1?: string;
+        /**
+         * The url path to concat with forge maven
+         */
+        path: string;
+    };
+    universal: {
+        sha1?: string;
+        /**
+         * The url path to concat with forge maven
+         */
+        path: string;
+    };
+    /**
+     * The minecraft version
+     */
+    mcversion: string;
+    /**
+     * The forge version (without minecraft version)
+     */
+    version: string;
+    type?: "buggy" | "recommended" | "common" | "latest";
+};
 export declare const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
 export interface InstallProfile {
     spec: number;
@@ -2731,14 +2759,14 @@ export interface InstallOptions extends InstallOptionsBase, LibraryOption {
  * @param version The forge version meta
  * @returns The installed version name.
  */
-export declare function install(version: Version, minecraft: MinecraftLocation, option?: InstallOptions): Promise<string>;
+export declare function install(version: MiniVersion, minecraft: MinecraftLocation, option?: InstallOptions): Promise<string>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export declare function installTask(version: Version, minecraft: MinecraftLocation, option?: InstallOptions): Task<string>;
+export declare function installTask(version: MiniVersion, minecraft: MinecraftLocation, option?: InstallOptions): Task<string>;
 /**
  * Query the webpage content from files.minecraftforge.net.
  *
@@ -2760,13 +2788,14 @@ export declare function getVersionList(option?: {
      */
     original?: VersionList;
 }): Promise<VersionList>;
+export {};
 `;
 module.exports['@xmcl/installer/cjs/index.d.ts'] = `import * as FabricInstaller from "./fabric";
 import * as LiteLoaderInstaller from "./liteloader";
 import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
 import * as Diagnosis from "./diagnose";
-export { JavaExecutor, DownloadOption, DownloadToOption, DownloadAndCheckOption, Downloader } from "./util";
+export { JavaExecutor, DownloadOption, DownloadToOption, Downloader, DownloadStrategy, DefaultDownloader } from "./util";
 export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis };
 `;
 module.exports['@xmcl/installer/cjs/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
@@ -2861,11 +2890,11 @@ export declare function installTask(versionMeta: Version, location: MinecraftLoc
 `;
 module.exports['@xmcl/installer/cjs/minecraft.d.ts'] = `import { MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core";
 import Task from "@xmcl/task";
-import { Downloader, UpdatedObject } from "./util";
+import { Downloader, UpdatedObject, DownloadStrategy } from "./util";
 /**
- * The function to swap library host
+ * The function to swap library host.
  */
-export declare type LibraryHost = (libId: ResolvedLibrary) => string | string[] | undefined;
+export declare type LibraryHost = (library: ResolvedLibrary) => string | string[] | undefined;
 /**
  * The version metadata containing the version information, like download url
  */
@@ -2925,16 +2954,26 @@ export declare function getVersionList(option?: {
 }): Promise<VersionList>;
 export interface DownloaderOption {
     /**
-     * An external downloader. If this is assigned, the returned task won't be able to track progress.
+     * An external downloader.
      *
+     * If this is assigned, the returned task won't be able to track progress.
      * You should track the download progress by you self.
      */
     downloader?: Downloader;
+    /**
+     * An hook to decide should we download a resource.
+     *
+     * The default strategy will check the checksum and the existence of the file to decide should we download the file.
+     */
+    downloadStrategy?: DownloadStrategy;
 }
 /**
  * Change the library host url
  */
 export interface LibraryOption extends DownloaderOption {
+    /**
+     * Assign this to swap library host.
+     */
     libraryHost?: LibraryHost;
 }
 /**
@@ -2957,6 +2996,7 @@ export interface JarOption extends DownloaderOption {
     server?: string;
 }
 export declare type Option = AssetsOption & JarOption & LibraryOption;
+declare type RequiredVersion = Pick<Version, "id" | "url">;
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -2967,7 +3007,7 @@ export declare type Option = AssetsOption & JarOption & LibraryOption;
  * @param minecraft The Minecraft location
  * @param option
  */
-export declare function install(type: "server" | "client", versionMeta: Version, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion>;
+export declare function install(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion>;
 /**
  * Install the Minecraft game to a location by version metadata
  *
@@ -2990,7 +3030,7 @@ export declare function install(type: "server" | "client", versionMeta: Version,
  * @param minecraft The Minecraft location
  * @param option
  */
-export declare function installTask(type: "server" | "client", versionMeta: Version, minecraft: MinecraftLocation, option?: Option): Task<ResolvedVersion>;
+export declare function installTask(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: Option): Task<ResolvedVersion>;
 /**
  * Only install the json/jar. Do not install dependencies.
  *
@@ -3011,7 +3051,7 @@ export declare function installVersion(type: "client" | "server", versionMeta: V
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
  */
-export declare function installVersionTask(type: "client" | "server", versionMeta: Version, minecraft: MinecraftLocation, option?: JarOption): Task<ResolvedVersion>;
+export declare function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: JarOption): Task<ResolvedVersion>;
 /**
  * Install the completeness of the Minecraft game assets and libraries on a existed version.
  *
@@ -3088,6 +3128,7 @@ export declare function installResolvedLibraries(libraries: ResolvedLibrary[], m
  * @param option The install option
  */
 export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Task<void>;
+export {};
 `;
 module.exports['@xmcl/installer/cjs/util.d.ts'] = `/// <reference types="node" />
 import Task from "@xmcl/task";
@@ -3112,13 +3153,17 @@ export interface DownloadOption {
         [key: string]: string;
     };
     timeout?: number;
+    /**
+     * If user wants to know the progress, pass this in, and \`Downloader\` should call this when there is a progress.
+     */
     progress?: (written: number, total: number, url: string) => boolean | void;
+    /**
+     * If user wants to pause/resume the download, pass this in, and \`Downloader\` should call this to tell user how to pause and resume.
+     */
     pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
 }
 export interface DownloadToOption extends DownloadOption {
     destination: string;
-}
-export interface DownloadAndCheckOption extends DownloadOption {
     checksum?: {
         algorithm: string;
         hash: string;
@@ -3126,33 +3171,49 @@ export interface DownloadAndCheckOption extends DownloadOption {
 }
 export interface Downloader {
     /**
-     * Download file whatever the file existed or not.
+     * Download file to the disk
+     *
      * @returns The downloaded file full path
      */
-    downloadFile(option: DownloadToOption): Promise<string>;
-    /**
-     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
-     * @returns The downloaded file full path
-     */
-    downloadFile(option: DownloadToOption): Promise<string>;
+    downloadFile(option: DownloadToOption): Promise<void>;
 }
-export declare class Downloader {
+export interface DownloadStrategy {
+    /**
+     * Determine if the \`Downloader\` should download this resource.
+     *
+     * @returns Should \`Downloader\` download
+     */
+    shouldDownload(option: DownloadToOption): Promise<boolean>;
+}
+export declare class DefaultDownloader implements Downloader, DownloadStrategy {
     protected openDownloadStreamInternal(url: string, option: DownloadOption): import("fs").ReadStream | import("got/dist/source").ResponseStream<unknown>;
-    protected shouldDownloadFile(destination: string, option?: DownloadAndCheckOption["checksum"]): Promise<boolean>;
+    protected shouldDownloadFile(destination: string, option?: DownloadToOption["checksum"]): Promise<boolean>;
     /**
      * Download the file to the write stream
      */
     downloadToStream(option: DownloadOption, openWriteStream: () => Writable): Promise<void>;
     /**
-     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
+     * Download file whatever the file existed or not.
      * @returns The downloaded file full path
      */
-    downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption): Promise<string>;
+    downloadFile(option: DownloadToOption): Promise<void>;
+    shouldDownload(option: DownloadToOption): Promise<boolean>;
 }
-export declare let downloader: Downloader;
+/**
+ * Set default downloader of the library
+ */
 export declare function setDownloader(newDownloader: Downloader): void;
-export declare function downloadFileTask(option: DownloadToOption, worker?: Downloader): (context: Task.Context) => Promise<void>;
-export declare function downloadFileIfAbsentTask(option: DownloadAndCheckOption & DownloadToOption, worker?: Downloader): (context: Task.Context) => Promise<void>;
+export declare function setDownloadStrategy(newStrategy: DownloadStrategy): void;
+export declare function getDownloader(): Downloader;
+export declare function getDownloadStrategy(): DownloadStrategy;
+/**
+ * Wrapped task form of the download file task
+ */
+export declare function downloadFileTask(option: DownloadToOption, worker?: Downloader, stra?: DownloadStrategy): (context: Task.Context) => Promise<void>;
+/**
+ * Wrapped task form of download file if absent task
+ */
+export declare function downloadFileIfAbsentTask(option: DownloadToOption, worker?: Downloader, stra?: DownloadStrategy): (context: Task.Context) => Promise<void>;
 export declare type JavaExecutor = (args: string[], option?: ExecOptions) => Promise<any>;
 export declare namespace JavaExecutor {
     function createSimple(javaPath: string, defaultOptions?: ExecOptions): JavaExecutor;
@@ -3389,6 +3450,34 @@ export interface Version {
     version: string;
     type?: "buggy" | "recommended" | "common" | "latest";
 }
+declare type MiniVersion = {
+    /**
+     * The installer info
+     */
+    installer: {
+        sha1?: string;
+        /**
+         * The url path to concat with forge maven
+         */
+        path: string;
+    };
+    universal: {
+        sha1?: string;
+        /**
+         * The url path to concat with forge maven
+         */
+        path: string;
+    };
+    /**
+     * The minecraft version
+     */
+    mcversion: string;
+    /**
+     * The forge version (without minecraft version)
+     */
+    version: string;
+    type?: "buggy" | "recommended" | "common" | "latest";
+};
 export declare const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
 export interface InstallProfile {
     spec: number;
@@ -3457,14 +3546,14 @@ export interface InstallOptions extends InstallOptionsBase, LibraryOption {
  * @param version The forge version meta
  * @returns The installed version name.
  */
-export declare function install(version: Version, minecraft: MinecraftLocation, option?: InstallOptions): Promise<string>;
+export declare function install(version: MiniVersion, minecraft: MinecraftLocation, option?: InstallOptions): Promise<string>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export declare function installTask(version: Version, minecraft: MinecraftLocation, option?: InstallOptions): Task<string>;
+export declare function installTask(version: MiniVersion, minecraft: MinecraftLocation, option?: InstallOptions): Task<string>;
 /**
  * Query the webpage content from files.minecraftforge.net.
  *
@@ -3486,13 +3575,14 @@ export declare function getVersionList(option?: {
      */
     original?: VersionList;
 }): Promise<VersionList>;
+export {};
 `;
 module.exports['@xmcl/installer/index.d.ts'] = `import * as FabricInstaller from "./fabric";
 import * as LiteLoaderInstaller from "./liteloader";
 import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
 import * as Diagnosis from "./diagnose";
-export { JavaExecutor, DownloadOption, DownloadToOption, DownloadAndCheckOption, Downloader } from "./util";
+export { JavaExecutor, DownloadOption, DownloadToOption, Downloader, DownloadStrategy, DefaultDownloader } from "./util";
 export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis };
 `;
 module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
@@ -3587,11 +3677,11 @@ export declare function installTask(versionMeta: Version, location: MinecraftLoc
 `;
 module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core";
 import Task from "@xmcl/task";
-import { Downloader, UpdatedObject } from "./util";
+import { Downloader, UpdatedObject, DownloadStrategy } from "./util";
 /**
- * The function to swap library host
+ * The function to swap library host.
  */
-export declare type LibraryHost = (libId: ResolvedLibrary) => string | string[] | undefined;
+export declare type LibraryHost = (library: ResolvedLibrary) => string | string[] | undefined;
 /**
  * The version metadata containing the version information, like download url
  */
@@ -3651,16 +3741,26 @@ export declare function getVersionList(option?: {
 }): Promise<VersionList>;
 export interface DownloaderOption {
     /**
-     * An external downloader. If this is assigned, the returned task won't be able to track progress.
+     * An external downloader.
      *
+     * If this is assigned, the returned task won't be able to track progress.
      * You should track the download progress by you self.
      */
     downloader?: Downloader;
+    /**
+     * An hook to decide should we download a resource.
+     *
+     * The default strategy will check the checksum and the existence of the file to decide should we download the file.
+     */
+    downloadStrategy?: DownloadStrategy;
 }
 /**
  * Change the library host url
  */
 export interface LibraryOption extends DownloaderOption {
+    /**
+     * Assign this to swap library host.
+     */
     libraryHost?: LibraryHost;
 }
 /**
@@ -3683,6 +3783,7 @@ export interface JarOption extends DownloaderOption {
     server?: string;
 }
 export declare type Option = AssetsOption & JarOption & LibraryOption;
+declare type RequiredVersion = Pick<Version, "id" | "url">;
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -3693,7 +3794,7 @@ export declare type Option = AssetsOption & JarOption & LibraryOption;
  * @param minecraft The Minecraft location
  * @param option
  */
-export declare function install(type: "server" | "client", versionMeta: Version, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion>;
+export declare function install(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion>;
 /**
  * Install the Minecraft game to a location by version metadata
  *
@@ -3716,7 +3817,7 @@ export declare function install(type: "server" | "client", versionMeta: Version,
  * @param minecraft The Minecraft location
  * @param option
  */
-export declare function installTask(type: "server" | "client", versionMeta: Version, minecraft: MinecraftLocation, option?: Option): Task<ResolvedVersion>;
+export declare function installTask(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: Option): Task<ResolvedVersion>;
 /**
  * Only install the json/jar. Do not install dependencies.
  *
@@ -3737,7 +3838,7 @@ export declare function installVersion(type: "client" | "server", versionMeta: V
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
  */
-export declare function installVersionTask(type: "client" | "server", versionMeta: Version, minecraft: MinecraftLocation, option?: JarOption): Task<ResolvedVersion>;
+export declare function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: JarOption): Task<ResolvedVersion>;
 /**
  * Install the completeness of the Minecraft game assets and libraries on a existed version.
  *
@@ -3814,6 +3915,7 @@ export declare function installResolvedLibraries(libraries: ResolvedLibrary[], m
  * @param option The install option
  */
 export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Task<void>;
+export {};
 `;
 module.exports['@xmcl/installer/test.d.ts'] = `export {};
 `;
@@ -3840,13 +3942,17 @@ export interface DownloadOption {
         [key: string]: string;
     };
     timeout?: number;
+    /**
+     * If user wants to know the progress, pass this in, and \`Downloader\` should call this when there is a progress.
+     */
     progress?: (written: number, total: number, url: string) => boolean | void;
+    /**
+     * If user wants to pause/resume the download, pass this in, and \`Downloader\` should call this to tell user how to pause and resume.
+     */
     pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
 }
 export interface DownloadToOption extends DownloadOption {
     destination: string;
-}
-export interface DownloadAndCheckOption extends DownloadOption {
     checksum?: {
         algorithm: string;
         hash: string;
@@ -3854,33 +3960,49 @@ export interface DownloadAndCheckOption extends DownloadOption {
 }
 export interface Downloader {
     /**
-     * Download file whatever the file existed or not.
+     * Download file to the disk
+     *
      * @returns The downloaded file full path
      */
-    downloadFile(option: DownloadToOption): Promise<string>;
-    /**
-     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
-     * @returns The downloaded file full path
-     */
-    downloadFile(option: DownloadToOption): Promise<string>;
+    downloadFile(option: DownloadToOption): Promise<void>;
 }
-export declare class Downloader {
+export interface DownloadStrategy {
+    /**
+     * Determine if the \`Downloader\` should download this resource.
+     *
+     * @returns Should \`Downloader\` download
+     */
+    shouldDownload(option: DownloadToOption): Promise<boolean>;
+}
+export declare class DefaultDownloader implements Downloader, DownloadStrategy {
     protected openDownloadStreamInternal(url: string, option: DownloadOption): import("fs").ReadStream | import("got/dist/source").ResponseStream<unknown>;
-    protected shouldDownloadFile(destination: string, option?: DownloadAndCheckOption["checksum"]): Promise<boolean>;
+    protected shouldDownloadFile(destination: string, option?: DownloadToOption["checksum"]): Promise<boolean>;
     /**
      * Download the file to the write stream
      */
     downloadToStream(option: DownloadOption, openWriteStream: () => Writable): Promise<void>;
     /**
-     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
+     * Download file whatever the file existed or not.
      * @returns The downloaded file full path
      */
-    downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption): Promise<string>;
+    downloadFile(option: DownloadToOption): Promise<void>;
+    shouldDownload(option: DownloadToOption): Promise<boolean>;
 }
-export declare let downloader: Downloader;
+/**
+ * Set default downloader of the library
+ */
 export declare function setDownloader(newDownloader: Downloader): void;
-export declare function downloadFileTask(option: DownloadToOption, worker?: Downloader): (context: Task.Context) => Promise<void>;
-export declare function downloadFileIfAbsentTask(option: DownloadAndCheckOption & DownloadToOption, worker?: Downloader): (context: Task.Context) => Promise<void>;
+export declare function setDownloadStrategy(newStrategy: DownloadStrategy): void;
+export declare function getDownloader(): Downloader;
+export declare function getDownloadStrategy(): DownloadStrategy;
+/**
+ * Wrapped task form of the download file task
+ */
+export declare function downloadFileTask(option: DownloadToOption, worker?: Downloader, stra?: DownloadStrategy): (context: Task.Context) => Promise<void>;
+/**
+ * Wrapped task form of download file if absent task
+ */
+export declare function downloadFileIfAbsentTask(option: DownloadToOption, worker?: Downloader, stra?: DownloadStrategy): (context: Task.Context) => Promise<void>;
 export declare type JavaExecutor = (args: string[], option?: ExecOptions) => Promise<any>;
 export declare namespace JavaExecutor {
     function createSimple(javaPath: string, defaultOptions?: ExecOptions): JavaExecutor;
