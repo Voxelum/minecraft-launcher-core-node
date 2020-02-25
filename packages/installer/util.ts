@@ -68,15 +68,18 @@ export interface DownloadOption {
     method?: "GET" | "POST" | "PUT" | "PATCH" | "HEAD" | "DELETE" | "OPTIONS" | "TRACE" | "get" | "post" | "put" | "patch" | "head" | "delete" | "options" | "trace";
     headers?: { [key: string]: string };
     timeout?: number;
+    /**
+     * If user wants to know the progress, pass this in, and `Downloader` should call this when there is a progress.
+     */
     progress?: (written: number, total: number, url: string) => boolean | void;
+    /**
+     * If user wants to pause/resume the download, pass this in, and `Downloader` should call this to tell user how to pause and resume.
+     */
     pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
 }
 
 export interface DownloadToOption extends DownloadOption {
     destination: string;
-}
-
-export interface DownloadAndCheckOption extends DownloadOption {
     checksum?: {
         algorithm: string,
         hash: string,
@@ -85,18 +88,23 @@ export interface DownloadAndCheckOption extends DownloadOption {
 
 export interface Downloader {
     /**
-     * Download file whatever the file existed or not.
+     * Download file to the disk
+     *
      * @returns The downloaded file full path
      */
-    downloadFile(option: DownloadToOption): Promise<string>;
-    /**
-     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
-     * @returns The downloaded file full path
-     */
-    downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption): Promise<string>
+    downloadFile(option: DownloadToOption): Promise<void>;
 }
 
-export class DefaultDownloader {
+export interface DownloadStrategy {
+    /**
+     * Determine if the `Downloader` should download this resource.
+     *
+     * @returns Should `Downloader` download
+     */
+    shouldDownload(option: DownloadToOption): Promise<boolean>;
+}
+
+export class DefaultDownloader implements Downloader, DownloadStrategy {
     protected openDownloadStreamInternal(url: string, option: DownloadOption) {
         const onProgress = option.progress || (() => { });
         const parsedURL = parse(url);
@@ -133,7 +141,7 @@ export class DefaultDownloader {
         }
         return stream;
     }
-    protected async shouldDownloadFile(destination: string, option?: DownloadAndCheckOption["checksum"]) {
+    protected async shouldDownloadFile(destination: string, option?: DownloadToOption["checksum"]) {
         let missed = await missing(destination);
         if (missed) {
             return true;
@@ -164,27 +172,20 @@ export class DefaultDownloader {
      * Download file whatever the file existed or not.
      * @returns The downloaded file full path
      */
-    async downloadFile(option: DownloadToOption): Promise<string> {
+    async downloadFile(option: DownloadToOption): Promise<void> {
         await ensureFile(option.destination);
         await this.downloadToStream(option, () => createWriteStream(option.destination));
-        return option.destination;
     }
-    /**
-     * Download file only if the file is missing or the checksum not matched, if checksum is provided in option
-     * @returns The downloaded file full path
-     */
-    async downloadFileIfAbsent(option: DownloadAndCheckOption & DownloadToOption): Promise<string> {
-        if (await this.shouldDownloadFile(option.destination, option.checksum)) {
-            return this.downloadFile(option);
-        }
-        return option.destination;
+    shouldDownload(option: DownloadToOption): Promise<boolean> {
+        return this.shouldDownloadFile(option.destination, option.checksum);
     }
 }
 
 /**
  * The default downloader of the library
  */
-export let downloader: Downloader;
+let downloader: Downloader;
+let strategy: DownloadStrategy;
 
 /**
  * Set default downloader of the library
@@ -192,13 +193,22 @@ export let downloader: Downloader;
 export function setDownloader(newDownloader: Downloader) {
     downloader = newDownloader;
 }
+export function setDownloadStrategy(newStrategy: DownloadStrategy) {
+    strategy = newStrategy;
+}
+export function getDownloader() { return downloader; }
+export function getDownloadStrategy() { return strategy; }
 
-setDownloader(new DefaultDownloader());
+{
+    let temp = new DefaultDownloader();
+    setDownloader(temp);
+    setDownloadStrategy(temp);
+}
 
 /**
  * Wrapped task form of the download file task
  */
-export function downloadFileTask(option: DownloadToOption, worker: Downloader = downloader) {
+export function downloadFileTask(option: DownloadToOption, worker: Downloader = downloader, stra: DownloadStrategy = strategy) {
     return async (context: Task.Context) => {
         option.pausable = context.pausealbe;
         option.progress = (p, t, u) => context.update(p, t, u);
@@ -210,11 +220,13 @@ export function downloadFileTask(option: DownloadToOption, worker: Downloader = 
 /**
  * Wrapped task form of download file if absent task
  */
-export function downloadFileIfAbsentTask(option: DownloadAndCheckOption & DownloadToOption, worker: Downloader = downloader) {
+export function downloadFileIfAbsentTask(option: DownloadToOption, worker: Downloader = downloader, stra: DownloadStrategy = strategy) {
     return async (context: Task.Context) => {
         option.pausable = context.pausealbe;
         option.progress = (p, t, u) => context.update(p, t, u);
-        await worker.downloadFileIfAbsent(option);
+        if (await stra.shouldDownload(option)) {
+            await worker.downloadFile(option);
+        }
         context.pausealbe(undefined, undefined);
     };
 }
