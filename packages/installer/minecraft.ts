@@ -117,6 +117,7 @@ export interface JarOption extends DownloaderOption {
 }
 export type Option = AssetsOption & JarOption & LibraryOption;
 
+type RequiredVersion = Pick<Version, "id" | "url">
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -127,7 +128,7 @@ export type Option = AssetsOption & JarOption & LibraryOption;
  * @param minecraft The Minecraft location
  * @param option
  */
-export function install(type: "server" | "client", versionMeta: Version, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion> {
+export function install(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion> {
     return Task.execute(installTask(type, versionMeta, minecraft, option)).wait();
 }
 /**
@@ -152,7 +153,7 @@ export function install(type: "server" | "client", versionMeta: Version, minecra
  * @param minecraft The Minecraft location
  * @param option
  */
-export function installTask(type: "server" | "client", versionMeta: Version, minecraft: MinecraftLocation, option: Option = {}): Task<ResolvedVersion> {
+export function installTask(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option: Option = {}): Task<ResolvedVersion> {
     return Task.create("install", async function install(context: Task.Context) {
         const version = await context.execute(installVersionTask(type, versionMeta, minecraft, option));
         if (type === "client") {
@@ -187,7 +188,7 @@ export function installVersion(type: "client" | "server", versionMeta: Version, 
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
  */
-export function installVersionTask(type: "client" | "server", versionMeta: Version, minecraft: MinecraftLocation, option: JarOption = {}): Task<ResolvedVersion> {
+export function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option: JarOption = {}): Task<ResolvedVersion> {
     return Task.create("installVersion", async function installVersion(context: Task.Context) {
         await context.execute(installVersionJsonTask(versionMeta, minecraft, option));
         const version = await VersionJson.parse(minecraft, versionMeta.id);
@@ -376,7 +377,7 @@ export function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minec
     }) as any;
 }
 
-function installVersionJsonTask(version: Version, minecraft: MinecraftLocation, option: Option) {
+function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLocation, option: Option) {
     return Task.create("json", async function json(context: Task.Context) {
         const folder = MinecraftFolder.from(minecraft);
         await ensureDir(folder.getVersionRoot(version.id));
