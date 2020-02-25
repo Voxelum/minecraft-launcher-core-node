@@ -3,7 +3,7 @@ import { ensureDir, readFile } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { cpus } from "os";
 import { join } from "path";
-import { Downloader, downloader, downloadFileIfAbsentTask, getIfUpdate, UpdatedObject } from "./util";
+import { Downloader, downloadFileIfAbsentTask, getIfUpdate, UpdatedObject, DownloadStrategy } from "./util";
 
 /**
  * The function to swap library host.
@@ -73,11 +73,19 @@ export function getVersionList(option: {
 }
 export interface DownloaderOption {
     /**
-     * An external downloader. If this is assigned, the returned task won't be able to track progress.
+     * An external downloader.
      *
+     * If this is assigned, the returned task won't be able to track progress.
      * You should track the download progress by you self.
      */
     downloader?: Downloader;
+
+    /**
+     * An hook to decide should we download a resource.
+     *
+     * The default strategy will check the checksum and the existence of the file to decide should we download the file.
+     */
+    downloadStrategy?: DownloadStrategy;
 }
 /**
  * Change the library host url
@@ -230,6 +238,7 @@ export function installDependenciesTask(version: ResolvedVersion, option: Option
 export function installAssets(version: ResolvedVersion, option?: AssetsOption): Promise<ResolvedVersion> {
     return Task.execute(installAssetsTask(version, option)).wait();
 }
+
 /**
  * Install or check the assets to resolved version
  *
@@ -248,7 +257,8 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
         await context.execute(Task.create("assetsJson", function assetsJson(work) {
-            const worker = option.downloader || downloader;
+            const worker = option.downloader;
+            const strategy = option.downloadStrategy;
 
             return downloadFileIfAbsentTask({
                 url: version.assetIndex.url,
@@ -257,7 +267,7 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
                     algorithm: "sha1",
                     hash: version.assetIndex.sha1,
                 },
-            }, worker)(work);
+            }, worker, strategy)(work);
         }));
 
         interface AssetIndex {
@@ -273,22 +283,26 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
         const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
 
         const totalSize = objectArray.reduce((p, v) => p + v.size, 0);
-        const averageSize = totalSize / cores;
+        let downloadedSize = 0;
+
+        context.update(downloadedSize, totalSize);
+
+        const updateTotal = (size: number) => {
+            context.update(downloadedSize += size, totalSize);
+        };
+
+        function startWorker() {
+            const promise = context.execute(installAssetsWorkerTask(version.id, objectArray, folder, option, updateTotal));
+            promise.catch((e) => {
+                return startWorker();
+            });
+            return promise;
+        }
 
         const all = [];
-        let accumSize = 0;
-        let startIndex = 0;
-        for (let i = 0; i < objectArray.length; ++i) {
-            const obj = objectArray[i];
-            accumSize += obj.size;
-            if (accumSize > averageSize) {
-                all.push(context.execute(installAssetsByClusterTask(version.id, objectArray.slice(startIndex, i + 1), folder, option)));
-                startIndex = i + 1;
-                accumSize = 0;
-            }
-        }
-        if (startIndex < objectArray.length) {
-            all.push(context.execute(installAssetsByClusterTask(version.id, objectArray.slice(startIndex, objectArray.length), folder, option)));
+        for (let i = 0; i < cores; ++i) {
+            const promise = startWorker();
+            all.push(promise);
         }
         await Promise.all(all);
 
@@ -319,8 +333,8 @@ export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftD
     return Task.create("installLibraries", async function installLibraries(context: Task.Context) {
         const folder = MinecraftFolder.from(version.minecraftDirectory);
         try {
-            const promises = version.libraries.map((lib) =>
-                context.execute(installLibraryTask(lib, folder, option)).catch((e) => {
+            const promises = version.libraries.map((lib) => context.execute(installLibraryTask(lib, folder, option))
+                .catch((e) => {
                     console.error(`Error occured during downloading lib: ${lib.name}`);
                     console.error(e);
                     throw e;
@@ -371,13 +385,12 @@ function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLo
         const destination = folder.getVersionJson(version.id);
         const url = version.url;
         const expectSha1 = version.url.split("/")[5];
-        const worker = option.downloader || downloader;
 
         await downloadFileIfAbsentTask({
             url,
             checksum: { algorithm: "sha1", hash: expectSha1 },
             destination: destination,
-        }, worker)(context);
+        }, option.downloader, option.downloadStrategy)(context);
     });
 }
 
@@ -390,13 +403,12 @@ function installVersionJarTask(type: "client" | "server", version: ResolvedVersi
             type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar");
         const url = option[type] || version.downloads[type].url;
         const expectSha1 = version.downloads[type].sha1;
-        const worker = option.downloader || downloader;
 
         await downloadFileIfAbsentTask({
             url,
             checksum: { algorithm: "sha1", hash: expectSha1 },
             destination: destination,
-        }, worker)(context);
+        }, option.downloader, option.downloadStrategy)(context);
         return version;
     });
 }
@@ -409,13 +421,14 @@ function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, optio
 
         const libraryPath = lib.download.path;
         const filePath = join(folder.libraries, libraryPath);
-        const worker = option.downloader || downloader;
-
         const urls: string[] = [lib.download.url, ...fallbackMavens.map((m) => `${m}${lib.download.path}`)];
         // user defined alternative host to download
-        const extra = option.libraryHost?.(lib);
-        if (extra) {
-            urls.unshift(...(typeof extra === "string" ? [extra] : extra));
+        const libraryHosts = option.libraryHost?.(lib);
+
+        if (typeof libraryHosts === "string") {
+            urls.unshift(libraryHosts);
+        } else if (libraryHosts instanceof Array) {
+            urls.unshift(...libraryHosts);
         }
 
         const checksum = lib.download.sha1 === "" ? undefined : {
@@ -427,43 +440,40 @@ function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, optio
             url: urls,
             checksum,
             destination: filePath,
-        }, worker)(context);
+        }, option.downloader, option.downloadStrategy)(context);
     }, { lib: lib.name });
 }
 
-function installAssetsByClusterTask(version: string, objects: Array<{ name: string, hash: string, size: number }>, folder: MinecraftFolder, option: AssetsOption) {
+function installAssetsWorkerTask(version: string, pool: Array<{ name: string, hash: string, size: number }>, folder: MinecraftFolder, assetsOption: AssetsOption, finishCallback: (size: number) => void) {
     return Task.create("assets", async function assets(context: Task.Context) {
-        const totalSize = objects.map((c) => c.size).reduce((a, b) => a + b, 0);
-        context.update(0, totalSize);
-        const assetsHosts = [...(option.assetsHost || []), DEFAULT_RESOURCE_ROOT_URL];
-        const worker = option.downloader || downloader;
-        let lastProgress = 0;
+        const assetsHosts = [DEFAULT_RESOURCE_ROOT_URL];
 
-        for (const o of objects) {
-            const { hash, size, name } = o;
+        if (typeof assetsOption.assetsHost === "string") {
+            assetsHosts.unshift(assetsOption.assetsHost);
+        } else if (assetsOption.assetsHost instanceof Array) {
+            assetsHosts.unshift(...assetsOption.assetsHost);
+        }
+
+        while (pool.length > 0) {
+            const { hash, size } = pool.pop()!;
 
             const head = hash.substring(0, 2);
             const dir = folder.getPath("assets", "objects", head);
             const file = join(dir, hash);
             const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`);
 
-            await ensureDir(dir);
+            context.update(0, size, urls[0]);
 
-            context.update(lastProgress, totalSize, urls[0]);
-            await worker.downloadFileIfAbsent({
+            await ensureDir(dir);
+            await downloadFileIfAbsentTask({
                 url: urls,
                 checksum: {
                     hash,
                     algorithm: "sha1",
                 },
                 destination: file,
-                pausable: context.pausealbe,
-                progress(p, t, m) { return context.update(lastProgress + p, totalSize, m); }
-            })
-            context.pausealbe(undefined, undefined);
-
-            lastProgress += size;
-            context.update(lastProgress);
+            }, assetsOption.downloader, assetsOption.downloadStrategy)(context);
+            finishCallback(size);
         }
     }, { version });
 }
