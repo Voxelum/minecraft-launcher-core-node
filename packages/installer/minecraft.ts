@@ -332,9 +332,14 @@ export function installLibraries(version: ResolvedVersion, option: LibraryOption
 export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option: LibraryOption = {}): Task<T> {
     return Task.create("installLibraries", async function installLibraries(context: Task.Context) {
         const folder = MinecraftFolder.from(version.minecraftDirectory);
+        const total = version.libraries.length;
         try {
+            let done = 0;
+            context.update(0, total, "");
             const promises = version.libraries.map((lib) => context.execute(installLibraryTask(lib, folder, option))
-                .catch((e) => {
+                .then(() => {
+                    context.update(done += 1, total, "");
+                }, (e) => {
                     console.error(`Error occured during downloading lib: ${lib.name}`);
                     console.error(e);
                     throw e;
