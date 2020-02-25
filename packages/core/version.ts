@@ -516,7 +516,7 @@ export namespace Version {
                 const classifier = (lib.natives[platform.name]).replace("${arch}", platform.arch.substring(1));
                 const nativeArtifact = lib.downloads.classifiers[classifier];
                 if (!nativeArtifact) { return empty; }
-                return new ResolvedNative(lib.name, LibraryInfo.resolve(lib.name), lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
+                return new ResolvedNative(lib.name + ":" + classifier, LibraryInfo.resolve(lib.name + ":" + classifier), lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
             }
             const info = LibraryInfo.resolve(lib.name);
             if ("downloads" in lib) {
