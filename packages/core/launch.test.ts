@@ -1,6 +1,6 @@
 import { MinecraftFolder } from "./folder";
 import assert from "assert";
-import { ChildProcess, exec } from "child_process";
+import { ChildProcess, exec, spawnSync } from "child_process";
 import { existsSync } from "fs";
 import { EOL } from "os";
 import * as path from "path";
@@ -8,25 +8,18 @@ import { DEFAULT_EXTRA_JVM_ARGS, LaunchOption, LaunchPrecheck, generateArguments
 import { Version } from "./version";
 
 function getJavaVersion(javaPath: string) {
-    return new Promise<number>((resolve, reject) => {
-        exec(`"${javaPath}" -version`, { encoding: "utf8" }, (e, out, err) => {
-            if (e) {
-                reject(e);
-            } else {
-                if (err) {
-                    const line = err.split(EOL)[0];
-                    if (err.startsWith("java version")) {
-                        const strNumber = line.split(" ")[2].split(".")[0];
-                        resolve(Number.parseInt(strNumber.replace(/[^0-9]/g, ""), 10));
-                    } else {
-                        resolve(Number.parseInt(line.split(" ")[1].split(".")[0], 10));
-                    }
-                } else {
-                    reject(out);
-                }
-            }
-        });
-    });
+    const { stderr } = spawnSync(javaPath, ["-version"], { encoding: "utf8" });
+    const line = stderr.split(EOL)[0];
+    if (stderr.startsWith("java version")) {
+        const parts = line.split(" ")[2].replace(/"/g, "").split(".");
+        if (parts[0] === "1") {
+            return Number.parseInt(parts[1].replace(/[^0-9]/g, ""), 10);
+        } else {
+            return (Number.parseInt(parts[0].replace(/[^0-9]/g, ""), 10));
+        }
+    } else {
+        return (Number.parseInt(line.split(" ")[1].split(".")[0], 10));
+    }
 }
 
 function waitGameProcess(process: ChildProcess, ...hints: string[]) {
@@ -35,6 +28,7 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
     return new Promise((resolve, reject) => {
         process.stdout.on("data", (chunk) => {
             const content = chunk.toString();
+            console.log(content);
             for (let i = 0; i < hints.length; i++) {
                 if (content.indexOf(hints[i]) !== -1) {
                     found[i] = true;
@@ -66,21 +60,18 @@ describe("Launcher", () => {
 
     jest.setTimeout(10000000);
 
-    beforeAll(async function () {
-        if (IN_CI) {
-            return;
+    if (process.env.JAVA_HOME) {
+        javaPath = `${process.env.JAVA_HOME}/bin/java`;
+        javaVersion = getJavaVersion(javaPath);
+    } else {
+        javaPath = "java";
+        try {
+            javaVersion = getJavaVersion(javaPath);
+        } catch {
+            javaPath = "";
         }
-        if (process.env.JAVA_HOME) {
-            javaPath = `${process.env.JAVA_HOME}/bin/java`;
-            javaVersion = await getJavaVersion(javaPath);
-        } else {
-            javaPath = "java";
-            javaVersion = await getJavaVersion(javaPath).catch(() => {
-                javaPath = "";
-                return 0;
-            });
-        }
-    });
+    }
+
     describe("#generateArgumentsServer", () => {
         test("should generate command arguments", async () => {
             const args = await generateArgumentsServer({
@@ -324,7 +315,7 @@ describe("Launcher", () => {
             await LaunchPrecheck.checkNatives(loc, ver, {} as any);
         });
     });
-    describe("#launch", () => {
+    describe.skip("#launch", () => {
         describe("1.17.10", () => {
             let t = test;
             if ((javaVersion && javaVersion > 8) || !javaPath) { t = test.skip; }
@@ -378,6 +369,14 @@ describe("Launcher", () => {
             t("should launch normal minecraft", async () => {
                 const option: LaunchOption = { version: "1.14.4", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "[Client thread/INFO]: OpenAL initialized");
+            });
+        });
+        describe("1.15.2", () => {
+            let t = test;
+            if (!javaPath) { t = test.skip; }
+            t("should launch normal minecraft", async () => {
+                const option: LaunchOption = { version: "1.15.2", gamePath: root, javaPath };
+                await waitGameProcess(await launch(option), "OpenAL initialized.");
             });
         });
     });

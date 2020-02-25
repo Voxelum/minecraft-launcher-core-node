@@ -80,6 +80,15 @@ describe("Install", () => {
                 releaseTime: "2019-07-19T09:25:47+00:00",
             }, root);
         });
+        test("should be able to install 1.15.2", async () => {
+            await installVersionClient({
+                "id": "1.15.2",
+                "type": "release",
+                "url": "https://launchermeta.mojang.com/v1/packages/b2bc26bec3ed3d4763722941b75a25c0a043b744/1.15.2.json",
+                "time": "2020-01-24T11:23:24+00:00",
+                "releaseTime": "2020-01-17T10:03:52+00:00"
+            }, root);
+        });
     });
 
     describe("MinecraftServer", () => {
