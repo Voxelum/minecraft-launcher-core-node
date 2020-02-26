@@ -136,7 +136,7 @@ export class DefaultDownloader implements Downloader, DownloadStrategy {
             agent: {
                 http: this.agent,
                 https: this.httpsAgent,
-            }
+            } as any,
         }).on("response", (resp) => {
             response = resp;
         }).on("downloadProgress", (progress) => {
