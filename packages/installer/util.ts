@@ -7,6 +7,7 @@ import { IncomingMessage } from "http";
 import { pipeline as pip, Writable } from "stream";
 import { fileURLToPath, parse } from "url";
 import { promisify } from "util";
+import HttpAgent, { HttpsAgent } from "agentkeepalive";
 
 const pipeline = promisify(pip);
 
@@ -105,6 +106,9 @@ export interface DownloadStrategy {
 }
 
 export class DefaultDownloader implements Downloader, DownloadStrategy {
+    private agent = new HttpAgent();
+    private httpsAgent = new HttpsAgent();
+
     protected openDownloadStreamInternal(url: string, option: DownloadOption) {
         const onProgress = option.progress || (() => { });
         const parsedURL = parse(url);
@@ -129,6 +133,10 @@ export class DefaultDownloader implements Downloader, DownloadStrategy {
             timeout: option.timeout,
             followRedirect: true,
             retry: option.retry,
+            agent: {
+                http: this.agent,
+                https: this.httpsAgent,
+            } as any,
         }).on("response", (resp) => {
             response = resp;
         }).on("downloadProgress", (progress) => {

@@ -54,7 +54,7 @@
         "eslint": "^6.6.0",
         "git-semver-tags": "^3.0.0",
         "jest": "^24.9.0",
-        "lerna": "^3.18.3",
+        "lerna": "^3.20.2",
         "monaco-editor": "^0.19.2",
         "nock": "^11.7.0",
         "pako": "^1.0.10",
