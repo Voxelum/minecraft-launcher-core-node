@@ -101,6 +101,9 @@ export interface LibraryOption extends DownloaderOption {
  */
 export interface AssetsOption extends DownloaderOption {
     assetsHost?: string | string[];
+    /**
+     * Assign how many assets can download at the same time.
+     */
     assetsDownloadConcurrency?: number;
 }
 /**
