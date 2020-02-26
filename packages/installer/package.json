@@ -15,7 +15,7 @@
     "@xmcl/core": "file:../core",
     "@xmcl/task": "file:../task",
     "agentkeepalive": "^4.1.0",
-    "got": "^10.2.2"
+    "got": "^10.6.0"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",
