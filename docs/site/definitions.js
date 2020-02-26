@@ -2981,6 +2981,10 @@ export interface LibraryOption extends DownloaderOption {
  */
 export interface AssetsOption extends DownloaderOption {
     assetsHost?: string | string[];
+    /**
+     * Assign how many assets can download at the same time.
+     */
+    assetsDownloadConcurrency?: number;
 }
 /**
  * Replace the minecraft client or server jar download
@@ -3186,6 +3190,8 @@ export interface DownloadStrategy {
     shouldDownload(option: DownloadToOption): Promise<boolean>;
 }
 export declare class DefaultDownloader implements Downloader, DownloadStrategy {
+    private agent;
+    private httpsAgent;
     protected openDownloadStreamInternal(url: string, option: DownloadOption): import("fs").ReadStream | import("got/dist/source").ResponseStream<unknown>;
     protected shouldDownloadFile(destination: string, option?: DownloadToOption["checksum"]): Promise<boolean>;
     /**
@@ -3768,6 +3774,10 @@ export interface LibraryOption extends DownloaderOption {
  */
 export interface AssetsOption extends DownloaderOption {
     assetsHost?: string | string[];
+    /**
+     * Assign how many assets can download at the same time.
+     */
+    assetsDownloadConcurrency?: number;
 }
 /**
  * Replace the minecraft client or server jar download
@@ -3917,6 +3927,53 @@ export declare function installResolvedLibraries(libraries: ResolvedLibrary[], m
 export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Task<void>;
 export {};
 `;
+module.exports['@xmcl/installer/node_modules/agentkeepalive/index.d.ts'] = `declare module "agentkeepalive" {
+  import * as http from 'http';
+  import * as https from 'https';
+
+  export interface AgentStatus {
+    createSocketCount: number,
+    createSocketErrorCount: number,
+    closeSocketCount: number,
+    errorSocketCount: number,
+    timeoutSocketCount: number,
+    requestCount: number,
+    freeSockets: object,
+    sockets: object,
+    requests: object,
+  }
+
+  export interface HttpOptions extends http.AgentOptions {
+    keepAlive?: boolean;
+    freeSocketTimeout?: number;
+    freeSocketKeepAliveTimeout?: number;
+    timeout?: number;
+    socketActiveTTL?: number;
+  }
+
+  export interface HttpsOptions extends https.AgentOptions {
+    keepAlive?: boolean;
+    freeSocketTimeout?: number;
+    freeSocketKeepAliveTimeout?: number;
+    timeout?: number;
+    socketActiveTTL?: number;
+  }
+
+  export default class HttpAgent extends http.Agent {
+    constructor(opts?: HttpOptions);
+    readonly statusChanged: boolean;
+    createSocket(req: http.IncomingMessage, options: http.RequestOptions, cb: Function): void;
+    getCurrentStatus(): AgentStatus;
+  }
+
+  export class HttpsAgent extends https.Agent {
+    constructor(opts?: HttpsOptions);
+    readonly statusChanged: boolean;
+    createSocket(req: http.IncomingMessage, options: https.RequestOptions, cb: Function): void;
+    getCurrentStatus(): AgentStatus;
+  }
+}
+`;
 module.exports['@xmcl/installer/test.d.ts'] = `export {};
 `;
 module.exports['@xmcl/installer/util.d.ts'] = `/// <reference types="node" />
@@ -3975,6 +4032,8 @@ export interface DownloadStrategy {
     shouldDownload(option: DownloadToOption): Promise<boolean>;
 }
 export declare class DefaultDownloader implements Downloader, DownloadStrategy {
+    private agent;
+    private httpsAgent;
     protected openDownloadStreamInternal(url: string, option: DownloadOption): import("fs").ReadStream | import("got/dist/source").ResponseStream<unknown>;
     protected shouldDownloadFile(destination: string, option?: DownloadToOption["checksum"]): Promise<boolean>;
     /**
