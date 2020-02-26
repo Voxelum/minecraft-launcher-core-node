@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.1.0
+### @xmcl/installer@2.2.0
+#### Features
+
+- feat: add option to control concurrency and add keepalive agent (#84) ([c20904e52732cba3a0f947b20739990da05a86ab](https://github.com/voxelum/minecraft-launcher-core-node/commit/c20904e52732cba3a0f947b20739990da05a86ab))
+### @xmcl/java-installer@0.1.0
+#### Features
+
+- feat: add option to control concurrency and add keepalive agent (#84) ([c20904e52732cba3a0f947b20739990da05a86ab](https://github.com/voxelum/minecraft-launcher-core-node/commit/c20904e52732cba3a0f947b20739990da05a86ab))
+### @xmcl/user@2.1.0
+#### Features
+
+- feat: add option to control concurrency and add keepalive agent (#84) ([c20904e52732cba3a0f947b20739990da05a86ab](https://github.com/voxelum/minecraft-launcher-core-node/commit/c20904e52732cba3a0f947b20739990da05a86ab))
+
+
 ## 2.0.1
 ### @xmcl/text-component@2.1.0
 #### Features

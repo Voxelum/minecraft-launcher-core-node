@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/user",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Minecraft user related functions, including Yggdrasil authenticator, player skin fetcher, and Mojang security API",
