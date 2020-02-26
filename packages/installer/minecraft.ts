@@ -101,6 +101,7 @@ export interface LibraryOption extends DownloaderOption {
  */
 export interface AssetsOption extends DownloaderOption {
     assetsHost?: string | string[];
+    assetsDownloadConcurrency?: number;
 }
 /**
  * Replace the minecraft client or server jar download
@@ -252,7 +253,6 @@ export function installAssets(version: ResolvedVersion, option?: AssetsOption): 
  */
 export function installAssetsTask(version: ResolvedVersion, option: AssetsOption = {}): Task<ResolvedVersion> {
     async function installAssets(context: Task.Context) {
-        const cores = cpus().length || 4;
         const folder = MinecraftFolder.from(version.minecraftDirectory);
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
@@ -283,6 +283,7 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
         const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
 
         const totalSize = objectArray.reduce((p, v) => p + v.size, 0);
+        const totalCount = objectArray.length;
         let downloadedSize = 0;
 
         context.update(downloadedSize, totalSize);
@@ -294,11 +295,13 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
         function startWorker() {
             const promise = context.execute(installAssetsWorkerTask(version.id, objectArray, folder, option, updateTotal));
             promise.catch((e) => {
+                console.error(e);
                 return startWorker();
             });
             return promise;
         }
 
+        const cores = Math.min(totalCount, option.assetsDownloadConcurrency || cpus().length * 3);
         const all = [];
         for (let i = 0; i < cores; ++i) {
             const promise = startWorker();
@@ -469,7 +472,6 @@ function installAssetsWorkerTask(version: string, pool: Array<{ name: string, ha
 
             context.update(0, size, urls[0]);
 
-            await ensureDir(dir);
             await downloadFileIfAbsentTask({
                 url: urls,
                 checksum: {
