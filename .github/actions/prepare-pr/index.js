@@ -159,12 +159,12 @@ function bumpDependenciesPackage(affectedMapping, packages) {
             affectedPackage.passive = true;
             affectedPackage.reasons.push(`Dependency ${package.package.name} bump **${bumpType}**`);
             if (affected) {
-                bumpTotalOrder = Math.min(bumpTotalOrder, bumpLevel);
                 bump(affectedPackage);
             }
         }
     }
     for (const package of packages.filter(package => package.newVersion && package.releaseType)) {
+        bumpTotalOrder = Math.min(bumpTotalOrder, package.level);
         bump(package);
     }
 
@@ -277,6 +277,8 @@ async function main(output) {
     console.log(info(packages));
 
     const packageJSON = JSON.parse(fs.readFileSync(`package.json`).toString());
+
+    console.log(bumpLevel)
 
     if (bumpLevel < 3) {
         const oldVersion = packageJSON.version;
