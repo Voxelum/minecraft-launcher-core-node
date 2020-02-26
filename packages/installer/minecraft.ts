@@ -100,7 +100,13 @@ export interface LibraryOption extends DownloaderOption {
  * Change the host url of assets download
  */
 export interface AssetsOption extends DownloaderOption {
+    /**
+     * Swap customized assets download host.
+     */
     assetsHost?: string | string[];
+    /**
+     * Control how many assets download task should run at the same time.
+     */
     assetsDownloadConcurrency?: number;
 }
 /**
