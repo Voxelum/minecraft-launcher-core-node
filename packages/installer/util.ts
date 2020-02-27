@@ -225,7 +225,7 @@ export function getDownloadStrategy() { return strategy; }
 export function downloadFileTask(option: DownloadToOption, worker: Downloader = downloader, stra: DownloadStrategy = strategy) {
     return async (context: Task.Context) => {
         option.pausable = context.pausealbe;
-        option.progress = (p, t, u) => context.update(p, t, u);
+        option.progress = (c, p, t, u) => context.update(p, t, u);
         await worker.downloadFile(option);
         context.pausealbe(undefined, undefined);
     };
@@ -237,7 +237,7 @@ export function downloadFileTask(option: DownloadToOption, worker: Downloader = 
 export function downloadFileIfAbsentTask(option: DownloadToOption, worker: Downloader = downloader, stra: DownloadStrategy = strategy) {
     return async (context: Task.Context) => {
         option.pausable = context.pausealbe;
-        option.progress = (p, t, u) => context.update(p, t, u);
+        option.progress = (c, p, t, u) => context.update(p, t, u);
         if (await stra.shouldDownload(option)) {
             await worker.downloadFile(option);
         }
