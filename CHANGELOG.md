@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.2.0
+### @xmcl/task@2.1.0
+#### Features
+
+- feat(task): support parent/child progress propagation ([261d4f2b0949193cb6d96e45f736780ab0f13215](https://github.com/voxelum/minecraft-launcher-core-node/commit/261d4f2b0949193cb6d96e45f736780ab0f13215))
+### @xmcl/installer@2.2.1
+#### Bug Fixes
+
+- fix(installer): support progress for more tasks ([d8225b622754893af603da12fae3c78585061288](https://github.com/voxelum/minecraft-launcher-core-node/commit/d8225b622754893af603da12fae3c78585061288))
+- Dependency @xmcl/task bump **patch**
+### @xmcl/java-installer@0.1.1
+- Dependency @xmcl/task bump **patch**
+
+
 ## 2.1.0
 ### @xmcl/installer@2.2.0
 #### Features
