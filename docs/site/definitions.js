@@ -3162,8 +3162,12 @@ export interface DownloadOption {
     timeout?: number;
     /**
      * If user wants to know the progress, pass this in, and \`Downloader\` should call this when there is a progress.
+     * @param chunkLength The length of just transferred chunk
+     * @param written The chunk already written to the disk
+     * @param total The total bytes of the download file
+     * @param url The remote url of the file
      */
-    progress?: (written: number, total: number, url: string) => boolean | void;
+    progress?: (chunkLength: number, written: number, total: number, url: string) => boolean | void;
     /**
      * If user wants to pause/resume the download, pass this in, and \`Downloader\` should call this to tell user how to pause and resume.
      */
@@ -4007,8 +4011,12 @@ export interface DownloadOption {
     timeout?: number;
     /**
      * If user wants to know the progress, pass this in, and \`Downloader\` should call this when there is a progress.
+     * @param chunkLength The length of just transferred chunk
+     * @param written The chunk already written to the disk
+     * @param total The total bytes of the download file
+     * @param url The remote url of the file
      */
-    progress?: (written: number, total: number, url: string) => boolean | void;
+    progress?: (chunkLength: number, written: number, total: number, url: string) => boolean | void;
     /**
      * If user wants to pause/resume the download, pass this in, and \`Downloader\` should call this to tell user how to pause and resume.
      */
