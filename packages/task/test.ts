@@ -189,4 +189,173 @@ describe("Task", () => {
             expect(monitor).toBeCalled();
         });
     });
+    describe("monitoring", () => {
+        test("parent should update child progress", async () => {
+            const runtime = Task.createRuntime();
+            const progress = [] as string[];
+            runtime.on("update", (p, n) => {
+                progress.push(`${n.path}: ${p.progress}/${p.total}`);
+            });
+            const task = runtime.submit(Task.create("monitor", async (c) => {
+                await c.execute(Task.create("1", (ctx) => {
+                    let p = 0;
+                    let t = 10;
+                    return new Promise((resolve) => {
+                        let handle = setInterval(() => {
+                            ctx.update(p, t);
+                            p += 1;
+                            if (p === 10) {
+                                clearInterval(handle);
+                                resolve()
+                            }
+                        }, 1);
+                    })
+                }), 50);
+                await c.execute(Task.create("2", (ctx) => {
+                    let p = 0;
+                    let t = 10;
+                    return new Promise((resolve) => {
+                        let handle = setInterval(() => {
+                            ctx.update(p, t);
+                            p += 1;
+                            if (p === 10) {
+                                clearInterval(handle);
+                                resolve()
+                            }
+                        }, 1);
+                    })
+                }), 50);
+            }));
+            await task.wait();
+            expect(progress).toEqual([
+                "monitor.1: 0/10",
+                "monitor: 0/50",
+                "monitor.1: 1/10",
+                "monitor: 5/50",
+                "monitor.1: 2/10",
+                "monitor: 10/50",
+                "monitor.1: 3/10",
+                "monitor: 15/50",
+                "monitor.1: 4/10",
+                "monitor: 20/50",
+                "monitor.1: 5/10",
+                "monitor: 25/50",
+                "monitor.1: 6/10",
+                "monitor: 30/50",
+                "monitor.1: 7/10",
+                "monitor: 35/50",
+                "monitor.1: 8/10",
+                "monitor: 40/50",
+                "monitor.1: 9/10",
+                "monitor: 45/50",
+                "monitor: 50/50",
+                "monitor.2: 0/10",
+                "monitor: 50/100",
+                "monitor.2: 1/10",
+                "monitor: 55/100",
+                "monitor.2: 2/10",
+                "monitor: 60/100",
+                "monitor.2: 3/10",
+                "monitor: 65/100",
+                "monitor.2: 4/10",
+                "monitor: 70/100",
+                "monitor.2: 5/10",
+                "monitor: 75/100",
+                "monitor.2: 6/10",
+                "monitor: 80/100",
+                "monitor.2: 7/10",
+                "monitor: 85/100",
+                "monitor.2: 8/10",
+                "monitor: 90/100",
+                "monitor.2: 9/10",
+                "monitor: 95/100",
+                "monitor: 100/100",
+            ]);
+        });
+        test("parent should update child progress without preset", async () => {
+            const runtime = Task.createRuntime();
+            const progress = [] as string[];
+            runtime.on("update", (p, n) => {
+                progress.push(`${n.path}: ${p.progress}/${p.total}`);
+            });
+            const task = runtime.submit(Task.create("monitor", async (c) => {
+                c.update(0, 100);
+                await c.execute(Task.create("1", (ctx) => {
+                    let p = 0;
+                    let t = 10;
+                    return new Promise((resolve) => {
+                        let handle = setInterval(() => {
+                            ctx.update(p, t);
+                            p += 1;
+                            if (p === 10) {
+                                clearInterval(handle);
+                                resolve()
+                            }
+                        }, 1);
+                    })
+                }), 50);
+                await c.execute(Task.create("2", (ctx) => {
+                    let p = 0;
+                    let t = 10;
+                    return new Promise((resolve) => {
+                        let handle = setInterval(() => {
+                            ctx.update(p, t);
+                            p += 1;
+                            if (p === 10) {
+                                clearInterval(handle);
+                                resolve()
+                            }
+                        }, 1);
+                    })
+                }), 50);
+            }));
+            await task.wait();
+            expect(progress).toEqual([
+                "monitor: 0/100",
+                "monitor.1: 0/10",
+                "monitor: 0/100",
+                "monitor.1: 1/10",
+                "monitor: 5/100",
+                "monitor.1: 2/10",
+                "monitor: 10/100",
+                "monitor.1: 3/10",
+                "monitor: 15/100",
+                "monitor.1: 4/10",
+                "monitor: 20/100",
+                "monitor.1: 5/10",
+                "monitor: 25/100",
+                "monitor.1: 6/10",
+                "monitor: 30/100",
+                "monitor.1: 7/10",
+                "monitor: 35/100",
+                "monitor.1: 8/10",
+                "monitor: 40/100",
+                "monitor.1: 9/10",
+                "monitor: 45/100",
+                "monitor: 50/100",
+                "monitor.2: 0/10",
+                "monitor: 50/100",
+                "monitor.2: 1/10",
+                "monitor: 55/100",
+                "monitor.2: 2/10",
+                "monitor: 60/100",
+                "monitor.2: 3/10",
+                "monitor: 65/100",
+                "monitor.2: 4/10",
+                "monitor: 70/100",
+                "monitor.2: 5/10",
+                "monitor: 75/100",
+                "monitor.2: 6/10",
+                "monitor: 80/100",
+                "monitor.2: 7/10",
+                "monitor: 85/100",
+                "monitor.2: 8/10",
+                "monitor: 90/100",
+                "monitor.2: 9/10",
+                "monitor: 95/100",
+                "monitor: 100/100",
+            ]);
+        });
+    });
+
 });
