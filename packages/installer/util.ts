@@ -71,8 +71,12 @@ export interface DownloadOption {
     timeout?: number;
     /**
      * If user wants to know the progress, pass this in, and `Downloader` should call this when there is a progress.
+     * @param chunkLength The length of just transferred chunk
+     * @param written The chunk already written to the disk
+     * @param total The total bytes of the download file
+     * @param url The remote url of the file
      */
-    progress?: (written: number, total: number, url: string) => boolean | void;
+    progress?: (chunkLength: number, written: number, total: number, url: string) => boolean | void;
     /**
      * If user wants to pause/resume the download, pass this in, and `Downloader` should call this to tell user how to pause and resume.
      */
@@ -117,7 +121,7 @@ export class DefaultDownloader implements Downloader, DownloadStrategy {
             let read = 0;
             const stream = createReadStream(path).on("data", (chunk) => {
                 read += chunk.length;
-                if (onProgress(read, stream.readableLength, url)) {
+                if (onProgress(chunk.length, read, stream.readableLength, url)) {
                     stream.destroy();
                 }
             });
@@ -127,6 +131,7 @@ export class DefaultDownloader implements Downloader, DownloadStrategy {
             return stream;
         }
         let response: IncomingMessage;
+        let lastTransferred = 0;
         const stream = got.stream(url, {
             method: option.method,
             headers: option.headers,
@@ -140,7 +145,8 @@ export class DefaultDownloader implements Downloader, DownloadStrategy {
         }).on("response", (resp) => {
             response = resp;
         }).on("downloadProgress", (progress) => {
-            if (onProgress(progress.transferred, progress.total || -1, url)) {
+            const chunkLength = progress.transferred - lastTransferred;
+            if (onProgress(chunkLength, progress.transferred, progress.total || -1, url)) {
                 response.destroy(new Task.CancelledError());
             }
         });
