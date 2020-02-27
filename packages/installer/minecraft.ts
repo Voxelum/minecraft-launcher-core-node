@@ -3,7 +3,7 @@ import { ensureDir, readFile } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { cpus } from "os";
 import { join } from "path";
-import { Downloader, downloadFileIfAbsentTask, getIfUpdate, UpdatedObject, DownloadStrategy } from "./util";
+import { Downloader, downloadFileIfAbsentTask, DownloadStrategy, getIfUpdate, UpdatedObject } from "./util";
 
 /**
  * The function to swap library host.
@@ -162,11 +162,12 @@ export function install(type: "server" | "client", versionMeta: RequiredVersion,
  */
 export function installTask(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option: Option = {}): Task<ResolvedVersion> {
     return Task.create("install", async function install(context: Task.Context) {
-        const version = await context.execute(installVersionTask(type, versionMeta, minecraft, option));
+        context.update(0, 100);
+        const version = await context.execute(installVersionTask(type, versionMeta, minecraft, option), 20);
         if (type === "client") {
-            await context.execute(installDependenciesTask(version, option));
+            await context.execute(installDependenciesTask(version, option), 80);
         } else {
-            await context.execute(installLibrariesTask(version, option));
+            await context.execute(installLibrariesTask(version, option), 80);
         }
         return version;
     }, { version: versionMeta.id });
@@ -197,9 +198,10 @@ export function installVersion(type: "client" | "server", versionMeta: Version, 
  */
 export function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option: JarOption = {}): Task<ResolvedVersion> {
     return Task.create("installVersion", async function installVersion(context: Task.Context) {
-        await context.execute(installVersionJsonTask(versionMeta, minecraft, option));
+        context.update(0, 100);
+        await context.execute(installVersionJsonTask(versionMeta, minecraft, option), 40);
         const version = await VersionJson.parse(minecraft, versionMeta.id);
-        await context.execute(installVersionJarTask(type, version, minecraft, option));
+        await context.execute(installVersionJarTask(type, version, minecraft, option), 60);
         return version;
     }, { version: versionMeta.id });
 }
@@ -229,9 +231,10 @@ export function installDependencies(version: ResolvedVersion, option?: Option): 
  */
 export function installDependenciesTask(version: ResolvedVersion, option: Option = {}): Task<ResolvedVersion> {
     return Task.create("installDependencies", async function installDependencies(context: Task.Context) {
+        context.update(0, 100);
         await Promise.all([
-            context.execute(installAssetsTask(version, option)),
-            context.execute(installLibrariesTask(version, option)),
+            context.execute(installAssetsTask(version, option), 50),
+            context.execute(installLibrariesTask(version, option), 50),
         ]);
         return version;
     }, { version: version.id });
@@ -259,12 +262,12 @@ export function installAssets(version: ResolvedVersion, option?: AssetsOption): 
  */
 export function installAssetsTask(version: ResolvedVersion, option: AssetsOption = {}): Task<ResolvedVersion> {
     async function installAssets(context: Task.Context) {
-        const folder = MinecraftFolder.from(version.minecraftDirectory);
-        const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
+        let folder = MinecraftFolder.from(version.minecraftDirectory);
+        let jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
         await context.execute(Task.create("assetsJson", function assetsJson(work) {
-            const worker = option.downloader;
-            const strategy = option.downloadStrategy;
+            let worker = option.downloader;
+            let strategy = option.downloadStrategy;
 
             return downloadFileIfAbsentTask({
                 url: version.assetIndex.url,
@@ -284,36 +287,43 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
                 };
             };
         }
-        const { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
+        let { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
         await ensureDir(folder.getPath("assets", "objects"));
-        const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
+        let objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
 
-        const totalSize = objectArray.reduce((p, v) => p + v.size, 0);
-        const totalCount = objectArray.length;
+        let totalSize = objectArray.reduce((p, v) => p + v.size, 0);
+        let totalCount = objectArray.length;
         let downloadedSize = 0;
 
         context.update(downloadedSize, totalSize);
 
-        const updateTotal = (size: number) => {
+        let updateTotal = (size: number) => {
             context.update(downloadedSize += size, totalSize);
         };
 
+        let errors = [] as any[];
+
         function startWorker() {
-            const promise = context.execute(installAssetsWorkerTask(version.id, objectArray, folder, option, updateTotal));
-            promise.catch((e) => {
+            let promise = context.execute(installAssetsWorkerTask(version.id, objectArray, folder, option, updateTotal));
+            promise = promise.catch((e) => {
                 console.error(e);
+                errors.push(e);
                 return startWorker();
             });
             return promise;
         }
 
-        const cores = Math.min(totalCount, option.assetsDownloadConcurrency || cpus().length * 3);
-        const all = [];
+        let cores = Math.min(totalCount, option.assetsDownloadConcurrency || cpus().length * 3);
+        let all = [];
         for (let i = 0; i < cores; ++i) {
-            const promise = startWorker();
+            let promise = startWorker();
             all.push(promise);
         }
         await Promise.all(all);
+
+        if (errors.length !== 0) {
+            throw errors[0];
+        }
 
         return version;
     }
@@ -340,24 +350,15 @@ export function installLibraries(version: ResolvedVersion, option: LibraryOption
  */
 export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option: LibraryOption = {}): Task<T> {
     return Task.create("installLibraries", async function installLibraries(context: Task.Context) {
-        const folder = MinecraftFolder.from(version.minecraftDirectory);
-        const total = version.libraries.length;
-        try {
-            let done = 0;
-            context.update(0, total, "");
-            const promises = version.libraries.map((lib) => context.execute(installLibraryTask(lib, folder, option))
-                .then(() => {
-                    context.update(done += 1, total, "");
-                }, (e) => {
-                    console.error(`Error occured during downloading lib: ${lib.name}`);
-                    console.error(e);
-                    throw e;
-                }));
-            await Promise.all(promises);
-        } catch (e) {
-            console.error("Fail to download libraries.");
+        let folder = MinecraftFolder.from(version.minecraftDirectory);
+        let total = version.libraries.length * 10;
+        context.update(0, total);
+        let promises = version.libraries.map((lib) => context.execute(installLibraryTask(lib, folder, option), 10).catch((e) => {
+            console.error(`Error occured during downloading lib: ${lib.name}`);
+            console.error(e);
             throw e;
-        }
+        }));
+        await Promise.all(promises);
         return version;
     }, { version: Reflect.get(version, "id") || "" });
 }
@@ -393,12 +394,12 @@ export function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minec
 
 function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLocation, option: Option) {
     return Task.create("json", async function json(context: Task.Context) {
-        const folder = MinecraftFolder.from(minecraft);
+        let folder = MinecraftFolder.from(minecraft);
         await ensureDir(folder.getVersionRoot(version.id));
 
-        const destination = folder.getVersionJson(version.id);
-        const url = version.url;
-        const expectSha1 = version.url.split("/")[5];
+        let destination = folder.getVersionJson(version.id);
+        let url = version.url;
+        let expectSha1 = version.url.split("/")[5];
 
         await downloadFileIfAbsentTask({
             url,
