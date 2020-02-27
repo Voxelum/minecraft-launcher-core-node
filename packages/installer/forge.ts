@@ -217,17 +217,34 @@ export function installByInstallerPartialTask(version: string | InstallProfile, 
     java?: JavaExecutor,
 } & LibraryOption = {}) {
     return Task.create("installForge", async function installForge(context: Task.Context) {
-        const mc = MinecraftFolder.from(minecraft);
-        let prof: InstallProfile;
-        let ver: VersionJson;
+        const minecraftFolder = MinecraftFolder.from(minecraft);
+
+        let installProfile: InstallProfile;
         if (typeof version === "string") {
-            const versionRoot = mc.getVersionRoot(version);
-            prof = await readFile(join(versionRoot, "install_profile.json")).then((b) => b.toString()).then(JSON.parse);
+            const versionRoot = minecraftFolder.getVersionRoot(version);
+            installProfile = await readFile(join(versionRoot, "install_profile.json")).then((b) => b.toString()).then(JSON.parse);
         } else {
-            prof = version;
+            installProfile = version;
         }
-        ver = await readFile(mc.getVersionJson(prof.version)).then((b) => b.toString()).then(JSON.parse);
-        await installByInstallerPartialWork(mc, prof, ver, option.java || JavaExecutor.createSimple("java"), option)(context);
+
+        let versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse);
+        let java = option.java || JavaExecutor.createSimple("java");
+
+        installProfile = postProcessInstallProfile(minecraftFolder, installProfile);
+
+        let parsed = VersionJson.resolveLibraries([...installProfile.libraries, ...versionJson.libraries]);
+        let installLibraiesTask = installResolvedLibrariesTask(parsed, minecraft, {
+            ...option,
+            libraryHost(l) {
+                if (l.artifactId === "forge" && l.groupId === "net.minecraftforge") {
+                    return `file://${minecraftFolder.getLibraryByPath(l.path)}`;
+                }
+                return option.libraryHost?.(l);
+            },
+        });
+
+        await context.execute(installLibraiesTask, 50);
+        await context.execute(postProcessingTask(minecraftFolder, installProfile, java), 50);
     });
 }
 
@@ -242,51 +259,31 @@ export async function installByInstallerPartial(version: string | InstallProfile
     return Task.execute(installByInstallerPartialTask(version, minecraft, option)).wait();
 }
 
-/**
- * @child installLibraries
- * @child postProcessing
- */
-function installByInstallerPartialWork(mc: MinecraftFolder, profile: InstallProfile, versionJson: VersionJson, java: JavaExecutor, installLibOption: LibraryOption) {
-    return async (context: Task.Context) => {
-        profile = postProcessInstallProfile(mc, profile);
-
-        const parsedLibs = VersionJson.resolveLibraries([...profile.libraries, ...versionJson.libraries]);
-
-        await context.execute(installResolvedLibrariesTask(parsedLibs, mc, {
-            ...installLibOption,
-            libraryHost: installLibOption.libraryHost ? (l) => {
-                if (l.artifactId === "forge" && l.groupId === "net.minecraftforge") {
-                    return `file://${mc.getLibraryByPath(l.path)}`;
+function postProcessingTask(minecraft: MinecraftFolder, installProfile: InstallProfile, java: JavaExecutor) {
+    return Task.create("postProcessing", async function postProcessing(ctx) {
+        ctx.update(0, installProfile.processors.length);
+        let i = 0;
+        let errs: Error[] = [];
+        for (const proc of installProfile.processors) {
+            try {
+                await postProcess(minecraft, proc, java);
+            } catch (e) {
+                if (e) {
+                    errs.push(e);
+                } else {
+                    errs.push(new Error(`Fail to post porcess ${proc.jar} ${proc.args.join(" ")}, ${proc.classpath.join(" ")}`))
                 }
-                return installLibOption.libraryHost!(l);
-            } : undefined,
-        }));
-
-        await context.execute(Task.create("postProcessing", async function postProcessing(ctx) {
-            ctx.update(0, profile.processors.length);
-            let i = 0;
-            const errs: Error[] = [];
-            for (const proc of profile.processors) {
-                try {
-                    await postProcess(mc, proc, java);
-                } catch (e) {
-                    if (e) {
-                        errs.push(e);
-                    } else {
-                        errs.push(new Error(`Fail to post porcess ${proc.jar} ${proc.args.join(" ")}, ${proc.classpath.join(" ")}`))
-                    }
-                }
-                ctx.update(i += 1, profile.processors.length);
             }
-            i += 1;
-            ctx.update(i, profile.processors.length);
+            ctx.update(i += 1, installProfile.processors.length);
+        }
+        i += 1;
+        ctx.update(i, installProfile.processors.length);
 
-            if (errs.length !== 0) {
-                errs.forEach((e) => e ? console.error(e) : void 0);
-                throw new Error(`Fail to post processing ${profile.version}`);
-            }
-        }));
-    };
+        if (errs.length !== 0) {
+            errs.forEach((e) => e ? console.error(e) : void 0);
+            throw new Error(`Fail to post processing ${installProfile.version}`);
+        }
+    });
 }
 
 /**
@@ -358,9 +355,9 @@ function installByInstallerTask(version: MiniVersion, minecraft: MinecraftLocati
         try {
             let zip: LazyZipFile;
             try {
-                zip = await context.execute(downloadInstallerTask(installerURL, installJar));
+                zip = await context.execute(downloadInstallerTask(installerURL, installJar), 20);
             } catch {
-                zip = await context.execute(downloadInstallerTask(installerURLFallback, installJar));
+                zip = await context.execute(downloadInstallerTask(installerURLFallback, installJar), 20);
             }
 
             const [forgeEntry, forgeUniversalEntry, clientDataEntry, installProfileEntry, versionEntry] = await zip.filterEntries([
@@ -388,7 +385,21 @@ function installByInstallerTask(version: MiniVersion, minecraft: MinecraftLocati
             await processExtractLibrary(await zip.openEntry(forgeUniversalEntry), forgeUniversalEntry.fileName);
             await processVersion(zip, installProfileEntry, versionEntry, clientDataEntry);
 
-            await installByInstallerPartialWork(mc, profile, versionJson, java, installLibOption)(context);
+            profile = postProcessInstallProfile(mc, profile);
+
+            let parsed = VersionJson.resolveLibraries([...profile.libraries, ...versionJson.libraries]);
+            let installLibraiesTask = installResolvedLibrariesTask(parsed, mc, {
+                ...installLibOption,
+                libraryHost(l) {
+                    if (l.artifactId === "forge" && l.groupId === "net.minecraftforge") {
+                        return `file://${mc.getLibraryByPath(l.path)}`;
+                    }
+                    return installLibOption.libraryHost?.(l);
+                },
+            });
+
+            await context.execute(installLibraiesTask, 40);
+            await context.execute(postProcessingTask(mc, profile, java), 40);
 
             return versionId!;
         } catch (e) {
@@ -421,7 +432,7 @@ function installByUniversalTask(version: MiniVersion, minecraft: MinecraftLocati
                 return;
             }
             return downloadFileTask({ url: universalURL, destination: jarPath })(ctx)
-        }));
+        }), 80);
 
         await context.execute(Task.create("json", async function installForgeJson() {
             const zip = await open(jarPath, { lazyEntries: true });
@@ -444,7 +455,7 @@ function installByUniversalTask(version: MiniVersion, minecraft: MinecraftLocati
             } else {
                 throw new Error(`Cannot install forge json for ${version.version} since the version json is missing!`);
             }
-        }));
+        }), 20);
 
         if (realJarPath! !== jarPath) {
             await ensureFile(realJarPath!);

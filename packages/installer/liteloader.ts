@@ -180,7 +180,7 @@ export function installTask(versionMeta: Version, location: MinecraftLocation, o
                 throw { type: "MissingVersionJson", version: mountVersion, location: mc.root };
             }
             return readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
-        }));
+        }), 50);
 
         const versionInf = await context.execute(Task.create("generateLiteloaderJson", async function generateLiteloaderJson() {
             const inf = buildVersionInfo(versionMeta, mountedJSON);
@@ -194,7 +194,7 @@ export function installTask(versionMeta: Version, location: MinecraftLocation, o
             await writeFile(join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
 
             return inf;
-        }));
+        }), 50);
         return versionInf.id as string;
     });
 }
