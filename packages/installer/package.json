@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/installer",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Minecraft installer",

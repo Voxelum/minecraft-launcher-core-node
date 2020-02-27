@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.1
+### @xmcl/installer@2.2.2
+#### Bug Fixes
+
+- fix: (interal breaking change) add chunkLength for download ([dab5c65950386820a48b245023646b65f9fcb21a](https://github.com/voxelum/minecraft-launcher-core-node/commit/dab5c65950386820a48b245023646b65f9fcb21a))
+
+
 ## 2.2.0
 ### @xmcl/task@2.1.0
 #### Features
