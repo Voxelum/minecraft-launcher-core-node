@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-import { cpus } from "os";
 
 export type TaskNode = Task.State;
 
@@ -68,11 +67,52 @@ export class TaskRuntime<N extends Task.State = Task.State> extends EventEmitter
         super();
         this.bridge = new TaskBridge(this, factory, schedular);
     }
-
+    /**
+     * Emitted when the some task starts to execute. The listener will get both this task state and parent task state.
+     *
+     * If there is no parent, it will be undefined.
+     */
+    on(event: "execute", listener: (node: N, parent?: N) => void): this;
+    /**
+     * Emitted when the task has update.
+     *
+     * The progress and total are arbitary number which designed by task creator.
+     * You might want to convert them to percentage by yourself by directly dividing them.
+     *
+     * The message is a totally optional and arbitary string for hint.
+     */
+    on(event: "update", listener: (update: { progress: number, total?: number, message?: string }, node: N) => void): this;
+    /**
+     * Emitted the when some task is finished
+     */
+    on(event: "finish", listener: (result: any, node: N) => void): this;
+    /**
+     * Emitted when the some task failed.
+     */
+    on(event: "fail", listener: (error: any, node: N) => void): this;
+    /**
+     * Emitted the pause event after user toggle the `pause` in handle
+     */
+    on(event: "pause", listener: (node: N) => void): this;
+    /**
+     * Emitted the resume event after use toggle the `resume` in handle
+     */
+    on(event: "resume", listener: (node: N) => void): this;
+    /**
+     * Emitted the cancel event after some task is cancelled.
+     */
+    on(event: "cancel", listener: (node: N) => void): this;
     on(event: string, listener: (...args: any[]) => void): this {
         return super.on(event, listener);
     }
 
+    once(event: "execute", listener: (node: N, parent?: N) => void): this;
+    once(event: "fail", listener: (error: any, node: N) => void): this;
+    once(event: "update", listener: (update: { progress: number, total?: number, message?: string }, node: N) => void): this;
+    once(event: "finish", listener: (result: any, node: N) => void): this;
+    once(event: "pause", listener: (node: N) => void): this;
+    once(event: "resume", listener: (node: N) => void): this;
+    once(event: "cancel", listener: (node: N) => void): this;
     once(event: string, listener: (...args: any[]) => void): this {
         return super.once(event, listener);
     }
@@ -127,7 +167,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
         return handle;
     }
 
-    protected enqueueTask<T>(signal: TaskSignal, task: Task<T>, parent?: X): { node: X, promise: Promise<T> } {
+    protected enqueueTask<T>(signal: TaskSignal, task: Task<T>, parent?: { node: X; progressUpdate: (progress: number, total: number, message?: string) => void }): { node: X, promise: Promise<T> } {
         const bridge = this;
         const emitter = bridge.emitter;
 
@@ -135,24 +175,55 @@ export class TaskBridge<X extends Task.State = Task.State> {
         const args: object | undefined = task.parameters;
         const node: X = bridge.factory({
             name,
-            arguments: parent ? Object.assign({}, parent.arguments, args || {}) : args,
-            path: parent ? parent.path + "." + name : name,
-        }, parent);
+            arguments: parent ? Object.assign({}, parent.node.arguments, args || {}) : args,
+            path: parent ? parent.node.path + "." + name : name,
+        }, parent?.node);
+
+        let knownTotal = -1;
+        let subTotals: number[] = [];
+        let subProgress: number[] = [];
+
+        function subUpdate(message?: string) {
+            let progress = subProgress.reduce((a, b) => a + b);
+            let total = knownTotal === -1 ? subTotals.reduce((a, b) => a + b, 0) : knownTotal;
+            emitter.emit("update", { progress, total, message }, node);
+        }
 
         const context: Task.Context = {
             pausealbe(onPause, onResume) {
                 signal._onPause = onPause || null;
                 signal._onResume = onResume || null;
             },
-            update(progress: number, total?: number, message?: string) {
+            update(progress: number, total: number, message?: string) {
+                knownTotal = total || knownTotal;
+
                 emitter.emit("update", { progress, total, message }, node);
+
+                parent?.progressUpdate(progress, total, message);
+
                 if (signal._cancelled) {
                     emitter.emit("cancel", node);
                     throw new Task.CancelledError();
                 }
             },
-            async execute<Y>(task: Task<Y>): Promise<Y> {
-                const { promise } = bridge.enqueueTask(signal, task, node);
+            async execute<Y>(task: Task<Y>, total?: number): Promise<Y> {
+                let index = subProgress.length;
+                subProgress.push(0);
+                const { promise } = bridge.enqueueTask(signal, task, {
+                    node,
+                    progressUpdate(progress: number, subTotal, message) {
+                        if (total) {
+                            subTotals[index] = total;
+                            subProgress[index] = total * (progress / subTotal);
+                            subUpdate(message);
+                        }
+                    }
+                });
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                promise.then(() => {
+                    subProgress[index] = total || 0;
+                    subUpdate();
+                });
                 return promise;
             },
         }
@@ -254,7 +325,7 @@ export namespace Task {
     export interface Context {
         pausealbe(onPause?: () => void, onResume?: () => void): void;
         update(progres: number, total?: number, message?: string): void | boolean;
-        execute<T>(task: Task<T>): Promise<T>;
+        execute<T>(task: Task<T>, pushProgress?: number): Promise<T>;
     }
 
     export type StateFactory<X extends Task.State = Task.State> = (node: Task.State, parent?: X) => X;
