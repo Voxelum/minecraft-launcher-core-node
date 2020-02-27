@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/java-installer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Detect local Java or install Java from Mojang source",

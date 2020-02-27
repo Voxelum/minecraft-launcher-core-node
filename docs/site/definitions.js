@@ -2890,7 +2890,7 @@ export declare function installTask(versionMeta: Version, location: MinecraftLoc
 `;
 module.exports['@xmcl/installer/cjs/minecraft.d.ts'] = `import { MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core";
 import Task from "@xmcl/task";
-import { Downloader, UpdatedObject, DownloadStrategy } from "./util";
+import { Downloader, DownloadStrategy, UpdatedObject } from "./util";
 /**
  * The function to swap library host.
  */
@@ -3686,7 +3686,7 @@ export declare function installTask(versionMeta: Version, location: MinecraftLoc
 `;
 module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core";
 import Task from "@xmcl/task";
-import { Downloader, UpdatedObject, DownloadStrategy } from "./util";
+import { Downloader, DownloadStrategy, UpdatedObject } from "./util";
 /**
  * The function to swap library host.
  */
@@ -6301,8 +6301,56 @@ export declare class TaskRuntime<N extends Task.State = Task.State> extends Even
     readonly factory: Task.StateFactory<N>;
     protected bridge: TaskBridge<N>;
     constructor(factory: Task.StateFactory<N>, schedular: Task.Schedualer);
-    on(event: string, listener: (...args: any[]) => void): this;
-    once(event: string, listener: (...args: any[]) => void): this;
+    /**
+     * Emitted when the some task starts to execute. The listener will get both this task state and parent task state.
+     *
+     * If there is no parent, it will be undefined.
+     */
+    on(event: "execute", listener: (node: N, parent?: N) => void): this;
+    /**
+     * Emitted when the task has update.
+     *
+     * The progress and total are arbitary number which designed by task creator.
+     * You might want to convert them to percentage by yourself by directly dividing them.
+     *
+     * The message is a totally optional and arbitary string for hint.
+     */
+    on(event: "update", listener: (update: {
+        progress: number;
+        total?: number;
+        message?: string;
+    }, node: N) => void): this;
+    /**
+     * Emitted the when some task is finished
+     */
+    on(event: "finish", listener: (result: any, node: N) => void): this;
+    /**
+     * Emitted when the some task failed.
+     */
+    on(event: "fail", listener: (error: any, node: N) => void): this;
+    /**
+     * Emitted the pause event after user toggle the \`pause\` in handle
+     */
+    on(event: "pause", listener: (node: N) => void): this;
+    /**
+     * Emitted the resume event after use toggle the \`resume\` in handle
+     */
+    on(event: "resume", listener: (node: N) => void): this;
+    /**
+     * Emitted the cancel event after some task is cancelled.
+     */
+    on(event: "cancel", listener: (node: N) => void): this;
+    once(event: "execute", listener: (node: N, parent?: N) => void): this;
+    once(event: "fail", listener: (error: any, node: N) => void): this;
+    once(event: "update", listener: (update: {
+        progress: number;
+        total?: number;
+        message?: string;
+    }, node: N) => void): this;
+    once(event: "finish", listener: (result: any, node: N) => void): this;
+    once(event: "pause", listener: (node: N) => void): this;
+    once(event: "resume", listener: (node: N) => void): this;
+    once(event: "cancel", listener: (node: N) => void): this;
     submit<T>(task: Task<T>): TaskHandle<T, N>;
 }
 export declare class TaskSignal {
@@ -6319,7 +6367,10 @@ export declare class TaskBridge<X extends Task.State = Task.State> {
     readonly scheduler: <N>(r: () => Promise<N>) => Promise<N>;
     constructor(emitter: EventEmitter, factory: Task.StateFactory<X>, scheduler: <N>(r: () => Promise<N>) => Promise<N>);
     submit<T>(task: Task<T>): TaskHandle<T, X>;
-    protected enqueueTask<T>(signal: TaskSignal, task: Task<T>, parent?: X): {
+    protected enqueueTask<T>(signal: TaskSignal, task: Task<T>, parent?: {
+        node: X;
+        progressUpdate: (progress: number, total: number, message?: string) => void;
+    }): {
         node: X;
         promise: Promise<T>;
     };
@@ -6375,7 +6426,7 @@ export declare namespace Task {
     interface Context {
         pausealbe(onPause?: () => void, onResume?: () => void): void;
         update(progres: number, total?: number, message?: string): void | boolean;
-        execute<T>(task: Task<T>): Promise<T>;
+        execute<T>(task: Task<T>, pushProgress?: number): Promise<T>;
     }
     type StateFactory<X extends Task.State = Task.State> = (node: Task.State, parent?: X) => X;
     const DEFAULT_STATE_FACTORY: StateFactory;
@@ -6464,8 +6515,56 @@ export declare class TaskRuntime<N extends Task.State = Task.State> extends Even
     readonly factory: Task.StateFactory<N>;
     protected bridge: TaskBridge<N>;
     constructor(factory: Task.StateFactory<N>, schedular: Task.Schedualer);
-    on(event: string, listener: (...args: any[]) => void): this;
-    once(event: string, listener: (...args: any[]) => void): this;
+    /**
+     * Emitted when the some task starts to execute. The listener will get both this task state and parent task state.
+     *
+     * If there is no parent, it will be undefined.
+     */
+    on(event: "execute", listener: (node: N, parent?: N) => void): this;
+    /**
+     * Emitted when the task has update.
+     *
+     * The progress and total are arbitary number which designed by task creator.
+     * You might want to convert them to percentage by yourself by directly dividing them.
+     *
+     * The message is a totally optional and arbitary string for hint.
+     */
+    on(event: "update", listener: (update: {
+        progress: number;
+        total?: number;
+        message?: string;
+    }, node: N) => void): this;
+    /**
+     * Emitted the when some task is finished
+     */
+    on(event: "finish", listener: (result: any, node: N) => void): this;
+    /**
+     * Emitted when the some task failed.
+     */
+    on(event: "fail", listener: (error: any, node: N) => void): this;
+    /**
+     * Emitted the pause event after user toggle the \`pause\` in handle
+     */
+    on(event: "pause", listener: (node: N) => void): this;
+    /**
+     * Emitted the resume event after use toggle the \`resume\` in handle
+     */
+    on(event: "resume", listener: (node: N) => void): this;
+    /**
+     * Emitted the cancel event after some task is cancelled.
+     */
+    on(event: "cancel", listener: (node: N) => void): this;
+    once(event: "execute", listener: (node: N, parent?: N) => void): this;
+    once(event: "fail", listener: (error: any, node: N) => void): this;
+    once(event: "update", listener: (update: {
+        progress: number;
+        total?: number;
+        message?: string;
+    }, node: N) => void): this;
+    once(event: "finish", listener: (result: any, node: N) => void): this;
+    once(event: "pause", listener: (node: N) => void): this;
+    once(event: "resume", listener: (node: N) => void): this;
+    once(event: "cancel", listener: (node: N) => void): this;
     submit<T>(task: Task<T>): TaskHandle<T, N>;
 }
 export declare class TaskSignal {
@@ -6482,7 +6581,10 @@ export declare class TaskBridge<X extends Task.State = Task.State> {
     readonly scheduler: <N>(r: () => Promise<N>) => Promise<N>;
     constructor(emitter: EventEmitter, factory: Task.StateFactory<X>, scheduler: <N>(r: () => Promise<N>) => Promise<N>);
     submit<T>(task: Task<T>): TaskHandle<T, X>;
-    protected enqueueTask<T>(signal: TaskSignal, task: Task<T>, parent?: X): {
+    protected enqueueTask<T>(signal: TaskSignal, task: Task<T>, parent?: {
+        node: X;
+        progressUpdate: (progress: number, total: number, message?: string) => void;
+    }): {
         node: X;
         promise: Promise<T>;
     };
@@ -6538,7 +6640,7 @@ export declare namespace Task {
     interface Context {
         pausealbe(onPause?: () => void, onResume?: () => void): void;
         update(progres: number, total?: number, message?: string): void | boolean;
-        execute<T>(task: Task<T>): Promise<T>;
+        execute<T>(task: Task<T>, pushProgress?: number): Promise<T>;
     }
     type StateFactory<X extends Task.State = Task.State> = (node: Task.State, parent?: X) => X;
     const DEFAULT_STATE_FACTORY: StateFactory;
