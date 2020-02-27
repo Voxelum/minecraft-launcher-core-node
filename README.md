@@ -538,7 +538,7 @@ Therefore you can just treat the `TaskRuntime` object a stateless event emitter.
         // every node, parent or child will emit finish event when it finish
     });
 
-    runtime.on("node-error", (error, node) => {
+    runtime.on("fail", (error, node) => {
         // emit when a task node (parent or child) failed
     });
 
