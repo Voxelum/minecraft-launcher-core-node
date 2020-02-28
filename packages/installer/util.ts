@@ -146,6 +146,7 @@ export class DefaultDownloader implements Downloader, DownloadStrategy {
             response = resp;
         }).on("downloadProgress", (progress) => {
             const chunkLength = progress.transferred - lastTransferred;
+            lastTransferred = progress.transferred;
             if (onProgress(chunkLength, progress.transferred, progress.total || -1, url)) {
                 response.destroy(new Task.CancelledError());
             }
