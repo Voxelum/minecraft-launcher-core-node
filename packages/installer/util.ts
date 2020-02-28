@@ -1,13 +1,14 @@
 import { checksum, ensureFile, missing, writeFile } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { ExecOptions, spawn } from "child_process";
-import { createReadStream, createWriteStream } from "fs";
+import { createReadStream, createWriteStream, ReadStream } from "fs";
 import gotDefault from "got";
 import { IncomingMessage } from "http";
 import { pipeline as pip, Writable } from "stream";
 import { fileURLToPath, parse } from "url";
 import { promisify } from "util";
 import HttpAgent, { HttpsAgent } from "agentkeepalive";
+import { ProxyStream } from "got/dist/source/as-stream";
 
 const pipeline = promisify(pip);
 
@@ -109,90 +110,85 @@ export interface DownloadStrategy {
     shouldDownload(option: DownloadToOption): Promise<boolean>;
 }
 
+/**
+ * The default downloader based on gotjs
+ */
 export class DefaultDownloader implements Downloader, DownloadStrategy {
-    private agent = new HttpAgent();
-    private httpsAgent = new HttpsAgent();
+    constructor(readonly requster = got.extend({
+        agent: {
+            http: new HttpAgent(),
+            https: new HttpsAgent(),
+        } as any,
+        followRedirect: true,
+    })) { }
 
-    protected openDownloadStreamInternal(url: string, option: DownloadOption) {
-        const onProgress = option.progress || (() => { });
-        const parsedURL = parse(url);
+    protected openDownloadStream(url: string, option: DownloadOption) {
+        let onProgress = option.progress || (() => { });
+        let stream: ReadStream | ProxyStream;
+
+        let parsedURL = parse(url);
         if (parsedURL.protocol === "file:") {
-            const path = fileURLToPath(url);
+            let path = fileURLToPath(url);
             let read = 0;
-            const stream = createReadStream(path).on("data", (chunk) => {
+            stream = createReadStream(path).on("data", (chunk) => {
                 read += chunk.length;
                 if (onProgress(chunk.length, read, stream.readableLength, url)) {
                     stream.destroy();
                 }
             });
-            if (option.pausable) {
-                option.pausable(stream.pause, stream.resume);
-            }
-            return stream;
+        } else {
+            let response: IncomingMessage;
+            let lastTransferred = 0;
+            stream = this.requster.stream(url, {
+                method: option.method,
+                headers: option.headers,
+                timeout: option.timeout,
+                retry: option.retry,
+            }).on("response", (resp) => {
+                response = resp;
+            }).on("downloadProgress", (progress) => {
+                let chunkLength = progress.transferred - lastTransferred;
+                lastTransferred = progress.transferred;
+                if (onProgress(chunkLength, progress.transferred, progress.total || -1, url)) {
+                    response.destroy(new Task.CancelledError());
+                }
+            });
         }
-        let response: IncomingMessage;
-        let lastTransferred = 0;
-        const stream = got.stream(url, {
-            method: option.method,
-            headers: option.headers,
-            timeout: option.timeout,
-            followRedirect: true,
-            retry: option.retry,
-            agent: {
-                http: this.agent,
-                https: this.httpsAgent,
-            } as any,
-        }).on("response", (resp) => {
-            response = resp;
-        }).on("downloadProgress", (progress) => {
-            const chunkLength = progress.transferred - lastTransferred;
-            lastTransferred = progress.transferred;
-            if (onProgress(chunkLength, progress.transferred, progress.total || -1, url)) {
-                response.destroy(new Task.CancelledError());
-            }
-        });
-        if (option.pausable) {
-            option.pausable(stream.pause, stream.resume);
-        }
+        option.pausable?.(stream.pause, stream.resume);
         return stream;
     }
-    protected async shouldDownloadFile(destination: string, option?: DownloadToOption["checksum"]) {
-        let missed = await missing(destination);
-        if (missed) {
-            return true;
-        }
-        if (!option || option.hash.length === 0) {
-            return missed;
-        }
-        const hash = await checksum(destination, option.algorithm);
-        return hash !== option.hash;
-    }
     /**
-     * Download the file to the write stream
+     * Download file by the option provided.
      */
-    async downloadToStream(option: DownloadOption, openWriteStream: () => Writable) {
+    async downloadFile(option: DownloadToOption): Promise<void> {
+        await ensureFile(option.destination);
+
         if (typeof option.url === "string") {
-            await pipeline(this.openDownloadStreamInternal(option.url, option), openWriteStream());
+            await pipeline(this.openDownloadStream(option.url, option), createWriteStream(option.destination));
             return;
         }
-        const chain = option.url.map((u) => () => pipeline(this.openDownloadStreamInternal(u, option), openWriteStream()));
+        const chain = option.url.map((u) => () => pipeline(this.openDownloadStream(u, option), createWriteStream(option.destination)));
         let promise = chain.shift()!();
         while (chain.length > 0) {
             const next = chain.shift();
             if (next) { promise = promise.catch(() => next()); }
         }
-        return promise;
     }
     /**
-     * Download file whatever the file existed or not.
-     * @returns The downloaded file full path
+     * - If the file is not on the disk, it will return true.
+     * - If the checksum is not provided, it will return true if file existed.
+     * - If the checksum is provided, it will return true if the file checksum matched.
      */
-    async downloadFile(option: DownloadToOption): Promise<void> {
-        await ensureFile(option.destination);
-        await this.downloadToStream(option, () => createWriteStream(option.destination));
-    }
-    shouldDownload(option: DownloadToOption): Promise<boolean> {
-        return this.shouldDownloadFile(option.destination, option.checksum);
+    async shouldDownload(option: DownloadToOption): Promise<boolean> {
+        let missed = await missing(option.destination);
+        if (missed) {
+            return true;
+        }
+        if (!option.checksum || option.checksum.hash.length === 0) {
+            return false;
+        }
+        const hash = await checksum(option.destination, option.checksum.algorithm);
+        return hash !== option.checksum.hash;
     }
 }
 
