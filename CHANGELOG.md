@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.2
+### @xmcl/installer@2.2.3
+#### Bug Fixes
+
+- fix: wrong track for download chunk size ([11803bb0caf9e3b4f1a36f75b28069b8c5255920](https://github.com/voxelum/minecraft-launcher-core-node/commit/11803bb0caf9e3b4f1a36f75b28069b8c5255920))
+
+
 ## 2.2.1
 ### @xmcl/installer@2.2.2
 #### Bug Fixes
