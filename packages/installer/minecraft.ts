@@ -86,6 +86,11 @@ export interface DownloaderOption {
      * The default strategy will check the checksum and the existence of the file to decide should we download the file.
      */
     downloadStrategy?: DownloadStrategy;
+
+    /**
+     * Should hault the donwload process immediately after ANY resource download failed.
+     */
+    throwErrorImmediately?: boolean;
 }
 /**
  * Change the library host url
@@ -125,6 +130,13 @@ export interface JarOption extends DownloaderOption {
 export type Option = AssetsOption & JarOption & LibraryOption;
 
 type RequiredVersion = Pick<Version, "id" | "url">
+
+/**
+ * The collection of errors happened during a parallel process
+ */
+export class MultipleError extends Error {
+    constructor(public errors: any[]) { super(); };
+}
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -303,26 +315,31 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
 
         let errors = [] as any[];
 
-        function startWorker() {
-            let promise = context.execute(installAssetsWorkerTask(version.id, objectArray, folder, option, updateTotal));
-            promise = promise.catch((e) => {
-                console.error(e);
-                errors.push(e);
-                return startWorker();
-            });
-            return promise;
+        async function startWorker(): Promise<void> {
+            if (objectArray.length === 0) {
+                return Promise.resolve();
+            }
+            try {
+                await context.execute(installAssetsWorkerTask(version.id, objectArray, folder, option, updateTotal));
+            } catch (e) {
+                if (!option.throwErrorImmediately) {
+                    errors.push(e);
+                    return startWorker();
+                }
+                throw e;
+            }
         }
 
         let cores = Math.min(totalCount, option.assetsDownloadConcurrency || cpus().length * 3);
         let all = [];
         for (let i = 0; i < cores; ++i) {
-            let promise = startWorker();
-            all.push(promise);
+            all.push(startWorker());
         }
+
         await Promise.all(all);
 
         if (errors.length !== 0) {
-            throw errors[0];
+            throw new MultipleError(errors);
         }
 
         return version;
@@ -353,12 +370,18 @@ export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftD
         let folder = MinecraftFolder.from(version.minecraftDirectory);
         let total = version.libraries.length * 10;
         context.update(0, total);
+        let errors: any[] = [];
         let promises = version.libraries.map((lib) => context.execute(installLibraryTask(lib, folder, option), 10).catch((e) => {
-            console.error(`Error occured during downloading lib: ${lib.name}`);
-            console.error(e);
-            throw e;
+            if (option.throwErrorImmediately) {
+                throw e;
+            } else {
+                errors.push(e);
+            }
         }));
         await Promise.all(promises);
+        if (errors.length !== 0) {
+            throw new MultipleError(errors);
+        }
         return version;
     }, { version: Reflect.get(version, "id") || "" });
 }
