@@ -167,12 +167,13 @@ export class DefaultDownloader implements Downloader, DownloadStrategy {
             await pipeline(this.openDownloadStream(option.url, option), createWriteStream(option.destination));
             return;
         }
-        const chain = option.url.map((u) => () => pipeline(this.openDownloadStream(u, option), createWriteStream(option.destination)));
+        let chain = option.url.map((u) => () => pipeline(this.openDownloadStream(u, option), createWriteStream(option.destination)));
         let promise = chain.shift()!();
         while (chain.length > 0) {
             const next = chain.shift();
             if (next) { promise = promise.catch(() => next()); }
         }
+        await promise;
     }
     /**
      * - If the file is not on the disk, it will return true.

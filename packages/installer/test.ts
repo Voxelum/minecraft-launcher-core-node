@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "fs";
 import { join, normalize } from "path";
 import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis } from "./index";
 import { JavaExecutor } from "./util";
+import { MultipleError } from "./minecraft";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
 const mockRoot = normalize(join(__dirname, "..", "..", "mock"));
@@ -88,6 +89,18 @@ describe("Install", () => {
                 "time": "2020-01-24T11:23:24+00:00",
                 "releaseTime": "2020-01-17T10:03:52+00:00"
             }, root);
+        });
+        test("should throw immediately if throwErrorImmediately is enabled", async () => {
+            await expect(Installer.installAssets(await Version.parse(root, "1.12.2"), {
+                assetsHost: "no-op",
+                throwErrorImmediately: true,
+            })).rejects.not.toBeInstanceOf(MultipleError);
+        });
+        test("should throw all event if throwErrorImmediately is disabled", async () => {
+            await expect(Installer.installAssets(await Version.parse(root, "1.12.2"), {
+                assetsHost: "no-op",
+                throwErrorImmediately: false,
+            })).rejects.toBeInstanceOf(MultipleError);
         });
     });
 
