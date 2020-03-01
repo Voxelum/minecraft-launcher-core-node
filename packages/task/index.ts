@@ -209,7 +209,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
             async execute<Y>(task: Task<Y>, total?: number): Promise<Y> {
                 let index = subProgress.length;
                 subProgress.push(0);
-                const { promise } = bridge.enqueueTask(signal, task, {
+                let { promise } = bridge.enqueueTask(signal, task, {
                     node,
                     progressUpdate(progress: number, subTotal, message) {
                         if (total) {
@@ -219,10 +219,10 @@ export class TaskBridge<X extends Task.State = Task.State> {
                         }
                     }
                 });
-                // eslint-disable-next-line @typescript-eslint/no-floating-promises
-                promise.then(() => {
+                promise = promise.then((r) => {
                     subProgress[index] = total || 0;
                     subUpdate();
+                    return r;
                 });
                 return promise;
             },
