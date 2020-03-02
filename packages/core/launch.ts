@@ -224,12 +224,14 @@ export namespace LaunchPrecheck {
             const notSha1AndNotGit = (p: string) => !(p.endsWith(".sha1") || p.endsWith(".git"));
 
             const from = resource.getLibraryByPath(n.download.path);
-            await createReadStream(from).pipe(createExtractStream(native, (entry) => {
-                const filtered = containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ? entry.fileName : undefined;
-                if (filtered) {
-                    extractedNatives.push({ file: entry.fileName, name: n.name, sha1: "" });
+            await createReadStream(from).pipe(createExtractStream(native, {
+                entryHandler: (dest, entry) => {
+                    const filtered = containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ? entry.fileName : undefined;
+                    if (filtered) {
+                        extractedNatives.push({ file: entry.fileName, name: n.name, sha1: "" });
+                    }
+                    return filtered;
                 }
-                return filtered;
             })).wait();
         }
         if (shaEntries) {
