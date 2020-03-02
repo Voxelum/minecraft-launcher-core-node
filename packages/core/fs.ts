@@ -1,15 +1,34 @@
 import { createHash } from "crypto";
-import { constants, createReadStream, promises } from "fs";
+import {
+    constants,
+    createReadStream,
+    readFile as freadFile,
+    readdir as freaddir,
+    rename as frename,
+    readlink as freadlink,
+    stat as fstat,
+    copyFile as fcopyFile,
+    unlink as funlink,
+    writeFile as fwriteFile,
+    access as faccess,
+    mkdir as fmkdir,
+    rmdir as frmdir,
+} from "fs";
 import { dirname, resolve as presolve } from "path";
 import { finished } from "stream";
+import { promisify } from "util";
 
-export const readFile = promises.readFile;
-export const writeFile = promises.writeFile;
-export const stat = promises.stat;
-export const readlink = promises.readlink;
-export const copyFile = promises.copyFile;
-export const unlink = promises.unlink;
-export const rename = promises.rename;
+export const readFile = promisify(freadFile);
+export const writeFile = promisify(fwriteFile);
+export const stat = promisify(fstat);
+export const readlink = promisify(freadlink);
+export const copyFile = promisify(fcopyFile);
+export const unlink = promisify(funlink);
+export const rename = promisify(frename);
+export const readdir = promisify(freaddir);
+export const access = promisify(faccess);
+export const mkdir = promisify(fmkdir);
+export const rmdir = promisify(frmdir);
 
 export function waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream) {
     return new Promise<void>((resolve, reject) => {
@@ -23,10 +42,10 @@ export function waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream
     });
 }
 export function exists(target: string) {
-    return promises.access(target, constants.F_OK).then(() => true).catch(() => false);
+    return access(target, constants.F_OK).then(() => true).catch(() => false);
 }
 export function missing(target: string) {
-    return promises.access(target, constants.F_OK).then(() => false).catch(() => true);
+    return access(target, constants.F_OK).then(() => false).catch(() => true);
 }
 export async function validateSha1(target: string, hash?: string) {
     if (await missing(target)) { return false; }
@@ -41,22 +60,22 @@ export async function validateMd5(target: string, hash?: string) {
     return sha1 === hash;
 }
 export async function copyPassively(src: string, dest: string, filter: (name: string) => boolean = () => true) {
-    const s = await promises.stat(src).catch((_) => { });
+    const s = await stat(src).catch((_) => { });
     if (!s) { return; }
     if (!filter(src)) { return; }
     if (s.isDirectory()) {
         await ensureDir(dest);
-        const childs = await promises.readdir(src);
+        const childs = await readdir(src);
         await Promise.all(childs.map((p) => copyPassively(presolve(src, p), presolve(dest, p))));
     } else if (await missing(dest)) {
-        await promises.copyFile(src, dest);
+        await copyFile(src, dest);
     }
 }
 export async function ensureDir(target: string) {
     try {
-        await promises.mkdir(target);
+        await mkdir(target);
     } catch (e) {
-        if (await promises.stat(target).then((s) => s.isDirectory()).catch((e) => false)) { return; }
+        if (await stat(target).then((s) => s.isDirectory()).catch((e) => false)) { return; }
         if (e.code === "EEXIST") { return; }
         if (e.code === "ENOENT") {
             if (dirname(target) === target) {
@@ -64,9 +83,9 @@ export async function ensureDir(target: string) {
             }
             try {
                 await ensureDir(dirname(target));
-                await promises.mkdir(target);
+                await mkdir(target);
             } catch {
-                if (await promises.stat(target).then((s) => s.isDirectory()).catch((e) => false)) { return; }
+                if (await stat(target).then((s) => s.isDirectory()).catch((e) => false)) { return; }
                 throw e;
             }
             return;
@@ -79,13 +98,13 @@ export function ensureFile(target: string) {
 }
 export async function remove(f: string) {
     try {
-        const stat = await promises.stat(f);
-        if (stat.isDirectory()) {
-            const children = await promises.readdir(f);
+        const stats = await stat(f);
+        if (stats.isDirectory()) {
+            const children = await readdir(f);
             await Promise.all(children.map((child) => remove(presolve(f, child))));
-            await promises.rmdir(f);
+            await rmdir(f);
         } else {
-            await promises.unlink(f);
+            await unlink(f);
         }
     } catch {
 
