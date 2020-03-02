@@ -1,8 +1,8 @@
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
-import { exists } from "@xmcl/core/fs";
+import { exists, remove } from "@xmcl/core/fs";
 import { existsSync, readFileSync } from "fs";
 import { join, normalize } from "path";
-import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis } from "./index";
+import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis, CurseforgeInstaller } from "./index";
 import { JavaExecutor } from "./util";
 import { MultipleError } from "./minecraft";
 
@@ -91,13 +91,13 @@ describe("Install", () => {
             }, root);
         });
         test("should throw immediately if throwErrorImmediately is enabled", async () => {
-            await expect(Installer.installAssets(await Version.parse(root, "1.12.2"), {
+            await expect(Installer.installAssets(await Version.parse(mockRoot, "1.14.4"), {
                 assetsHost: "no-op",
                 throwErrorImmediately: true,
             })).rejects.not.toBeInstanceOf(MultipleError);
         });
         test("should throw all event if throwErrorImmediately is disabled", async () => {
-            await expect(Installer.installAssets(await Version.parse(root, "1.12.2"), {
+            await expect(Installer.installAssets(await Version.parse(mockRoot, "1.14.4"), {
                 assetsHost: "no-op",
                 throwErrorImmediately: false,
             })).rejects.toBeInstanceOf(MultipleError);
@@ -306,6 +306,49 @@ describe("FabricInstaller", () => {
                 expect(list.versions).toBeInstanceOf(Array);
                 expect(list.versions.every((s) => typeof s === "string")).toBeTruthy();
             }
+        });
+    });
+});
+
+describe("CurseforgeInstaller", () => {
+    describe("#install", () => {
+        test("should be able to install curseforge", async () => {
+            let dest = join(root, "modpack-test-root");
+            await remove(dest);
+            const manifest = await CurseforgeInstaller.installCurseforgeModpack(join(mockRoot, "modpack.zip"), dest, {});
+            expect(existsSync(join(dest, "mods", "# LibLoader.jar"))).toBeTruthy();
+            expect(existsSync(join(dest, "mods", "jei_1.12.2-4.15.0.291.jar"))).toBeTruthy();
+            expect(existsSync(join(dest, "mods", "RealisticTorches-1.12.2-2.1.1.jar"))).toBeTruthy();
+            expect(existsSync(join(dest, "resources", "minecraft", "textures", "gui", "options_background.png"))).toBeTruthy();
+            expect(manifest).toEqual({
+                "author": "Shivaxi",
+                "files": [
+                    {
+                        "fileID": 2803400,
+                        "projectID": 238222,
+                        "required": true,
+                    },
+                    {
+                        "fileID": 2520544,
+                        "projectID": 235729,
+                        "required": true,
+                    },
+                ],
+                "manifestType": "minecraftModpack",
+                "manifestVersion": 1,
+                "minecraft": {
+                    "modLoaders": [
+                        {
+                            "id": "forge-14.23.5.2838",
+                            "primary": true,
+                        },
+                    ],
+                    "version": "1.12.2",
+                },
+                "name": "RLCraft",
+                "overrides": "overrides",
+                "version": "v2.8.1",
+            });
         });
     });
 });
