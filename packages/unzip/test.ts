@@ -1,6 +1,6 @@
 import { createReadStream, existsSync } from "fs";
 import { join } from "path";
-import { extractEntries, createExtractStream, createParseEntriesStream } from ".";
+import { extract, createExtractStream } from ".";
 
 const mockRoot = join(__dirname, "..", "..", "mock");
 const tempRoot = join(__dirname, "..", "..", "temp");
@@ -8,25 +8,16 @@ const tempRoot = join(__dirname, "..", "..", "temp");
 describe("Unzip", () => {
     describe("#extractEntries", () => {
         test("should extract the exact entry", async () => {
-            await extractEntries(join(mockRoot, "mods", "sample-mod.jar"), tempRoot, ["mcmod.info"]);
+            await extract(join(mockRoot, "mods", "sample-mod.jar"), tempRoot, { entries: ["mcmod.info"] });
             expect(existsSync(join(tempRoot, "mcmod.info"))).toBeTruthy();
         });
     });
     describe("#createExtractStream", () => {
         test("should extract the exact entry", async () => {
             await createReadStream(join(mockRoot, "mods", "sample-mod.jar"))
-                .pipe(createExtractStream(tempRoot, ["Config.class"]))
+                .pipe(createExtractStream(tempRoot, { entries: ["Config.class"] }))
                 .wait();
             expect(existsSync(join(tempRoot, "Config.class"))).toBeTruthy();
-        });
-    });
-    describe("#createParseStream", () => {
-        test("should parse the exact entry", async () => {
-            const result = await createReadStream(join(mockRoot, "mods", "sample-mod.jar"))
-                .pipe(createParseEntriesStream(["Config.class"]))
-                .wait();
-            expect(result.entries["Config.class"]).toBeTruthy();
-            expect(Object.keys(result.entries)).toHaveLength(1);
         });
     });
 });
