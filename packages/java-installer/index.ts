@@ -1,11 +1,10 @@
-import { exec } from "child_process";
 import Task from "@xmcl/task";
-import { promises } from "fs";
+import { exec } from "child_process";
+import { stat as fstat, unlink as funlink } from "fs";
 import got from "got";
-import { join, basename, resolve } from "path";
-import { EOL, tmpdir, platform, arch } from "os";
-
-const fetchJson = got.extend({ responseType: "json" });
+import { arch, EOL, platform, tmpdir } from "os";
+import { basename, join, resolve } from "path";
+import { promisify } from "util";
 
 export interface JavaInfo {
     path: string;
@@ -50,6 +49,8 @@ export function installJreFromMojangTask(options: InstallOption) {
         downloader,
         cacheDir = tmpdir(),
     } = options;
+    const fetchJson = got.extend({ responseType: "json" });
+    const unlink = promisify(funlink);
     return Task.create("installJreFromMojang", async function installJreFromMojang(context: Task.Context) {
         const info: { [system: string]: { [arch: string]: { jre: { sha1: string; url: string; version: string } } } }
             = await context.execute(Task.create("fetchInfo", () => fetchJson("https://launchermeta.mojang.com/mc/launcher.json").json()));
@@ -86,7 +87,7 @@ export function installJreFromMojangTask(options: InstallOption) {
         await context.execute(Task.create("decompress", async () => {
             await unpackLZMA(downloadDestination, javaRoot);
         }));
-        await context.execute(Task.create("cleanup", async () => { await promises.unlink(downloadDestination); }));
+        await context.execute(Task.create("cleanup", async () => { await unlink(downloadDestination); }));
     });
 }
 
@@ -103,7 +104,8 @@ export function installJreFromMojang(options: InstallOption) {
  * @param path The java exectuable path.
  */
 export async function resolveJava(path: string): Promise<JavaInfo | undefined> {
-    const exists = await promises.stat(path).then(() => true, () => false);
+    const stat = promisify(fstat);
+    const exists = await stat(path).then(() => true, () => false);
     if (!exists) { return undefined; }
     const parseJavaVersion = (str?: string) => {
         if (!str) { return undefined; }
