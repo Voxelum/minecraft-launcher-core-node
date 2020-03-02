@@ -1,6 +1,6 @@
 import { missing, readFile, validateSha1, exists, stat } from "@xmcl/core/fs";
 import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary, ResolvedVersion } from "@xmcl/core";
-import { InstallProfile, postProcessInstallProfile } from "./forge";
+import { InstallProfile, linkInstallProfile } from "./forge";
 import { join } from "path";
 import Task from "@xmcl/task";
 
@@ -239,7 +239,7 @@ async function diagnoseForge(version: string, prof: InstallProfile | undefined, 
 
     if (prof) {
         // check processor in install profiles
-        const processedProfile = postProcessInstallProfile(mc, prof);
+        const processedProfile = linkInstallProfile(mc, prof);
         for (const proc of processedProfile.processors) {
             if (proc.outputs) {
                 let status = Status.Good;

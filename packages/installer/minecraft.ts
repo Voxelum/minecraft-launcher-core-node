@@ -135,7 +135,7 @@ type RequiredVersion = Pick<Version, "id" | "url">
  * The collection of errors happened during a parallel process
  */
 export class MultipleError extends Error {
-    constructor(public errors: any[]) { super(); };
+    constructor(public errors: any[], message?: string) { super(message); };
 }
 /**
  * Install the Minecraft game to a location by version metadata.
@@ -339,7 +339,7 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
         await Promise.all(all);
 
         if (errors.length !== 0) {
-            throw new MultipleError(errors);
+            throw new MultipleError(errors, `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}`);
         }
 
         return version;
@@ -380,7 +380,7 @@ export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftD
         }));
         await Promise.all(promises);
         if (errors.length !== 0) {
-            throw new MultipleError(errors);
+            throw new MultipleError(errors, `Errors during install Minecraft ${version.minecraftDirectory} libraries.`);
         }
         return version;
     }, { version: Reflect.get(version, "id") || "" });
