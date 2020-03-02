@@ -1,10 +1,10 @@
-import { checksum, ensureFile, missing, writeFile } from "@xmcl/core/fs";
+import { checksum, ensureFile, missing } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { ExecOptions, spawn } from "child_process";
 import { createReadStream, createWriteStream, ReadStream } from "fs";
 import gotDefault from "got";
 import { IncomingMessage } from "http";
-import { pipeline as pip, Writable } from "stream";
+import { pipeline as pip } from "stream";
 import { fileURLToPath, parse } from "url";
 import { promisify } from "util";
 import HttpAgent, { HttpsAgent } from "agentkeepalive";
