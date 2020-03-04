@@ -9,3 +9,4 @@ test.ts
 *.ts
 !*.d.ts
 *.log
+tsconfig.json
