@@ -6694,6 +6694,9 @@ export declare namespace Task {
     }
     function create<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T>;
 }
+/**
+ * Create new task
+ */
 export declare function newTask<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T>;
 export default Task;
 `;
@@ -6908,6 +6911,9 @@ export declare namespace Task {
     }
     function create<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T>;
 }
+/**
+ * Create new task
+ */
 export declare function newTask<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T>;
 export default Task;
 `;
