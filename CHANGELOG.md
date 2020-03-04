@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.3.1
+### @xmcl/task@2.1.2
+#### Bug Fixes
+
+- fix(task): wrong entry point ([cd086fcc318c679a48576ca8ab7a4e25f1cda461](https://github.com/voxelum/minecraft-launcher-core-node/commit/cd086fcc318c679a48576ca8ab7a4e25f1cda461))
+### @xmcl/installer@2.3.1
+- Dependency @xmcl/task bump **patch**
+### @xmcl/java-installer@0.1.3
+- Dependency @xmcl/task bump **patch**
+
+
 ## 2.3.0
 ### @xmcl/unzip@1.1.0
 #### Features
