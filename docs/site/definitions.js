@@ -584,14 +584,18 @@ export declare namespace MinecraftPath {
 export declare type MinecraftLocation = MinecraftFolder | string;
 `;
 module.exports['@xmcl/core/cjs/fs.d.ts'] = `/// <reference types="node" />
-import { promises } from "fs";
-export declare const readFile: typeof promises.readFile;
-export declare const writeFile: typeof promises.writeFile;
-export declare const stat: typeof promises.stat;
-export declare const readlink: typeof promises.readlink;
-export declare const copyFile: typeof promises.copyFile;
-export declare const unlink: typeof promises.unlink;
-export declare const rename: typeof promises.rename;
+import { readFile as freadFile, readdir as freaddir, rename as frename, readlink as freadlink, stat as fstat, copyFile as fcopyFile, unlink as funlink, writeFile as fwriteFile, access as faccess, mkdir as fmkdir, rmdir as frmdir } from "fs";
+export declare const readFile: typeof freadFile.__promisify__;
+export declare const writeFile: typeof fwriteFile.__promisify__;
+export declare const stat: typeof fstat.__promisify__;
+export declare const readlink: typeof freadlink.__promisify__;
+export declare const copyFile: typeof fcopyFile.__promisify__;
+export declare const unlink: typeof funlink.__promisify__;
+export declare const rename: typeof frename.__promisify__;
+export declare const readdir: typeof freaddir.__promisify__;
+export declare const access: typeof faccess.__promisify__;
+export declare const mkdir: typeof fmkdir.__promisify__;
+export declare const rmdir: typeof frmdir.__promisify__;
 export declare function waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
 export declare function exists(target: string): Promise<boolean>;
 export declare function missing(target: string): Promise<boolean>;
@@ -1230,14 +1234,18 @@ export declare type MinecraftLocation = MinecraftFolder | string;
 module.exports['@xmcl/core/folder.test.d.ts'] = `export {};
 `;
 module.exports['@xmcl/core/fs.d.ts'] = `/// <reference types="node" />
-import { promises } from "fs";
-export declare const readFile: typeof promises.readFile;
-export declare const writeFile: typeof promises.writeFile;
-export declare const stat: typeof promises.stat;
-export declare const readlink: typeof promises.readlink;
-export declare const copyFile: typeof promises.copyFile;
-export declare const unlink: typeof promises.unlink;
-export declare const rename: typeof promises.rename;
+import { readFile as freadFile, readdir as freaddir, rename as frename, readlink as freadlink, stat as fstat, copyFile as fcopyFile, unlink as funlink, writeFile as fwriteFile, access as faccess, mkdir as fmkdir, rmdir as frmdir } from "fs";
+export declare const readFile: typeof freadFile.__promisify__;
+export declare const writeFile: typeof fwriteFile.__promisify__;
+export declare const stat: typeof fstat.__promisify__;
+export declare const readlink: typeof freadlink.__promisify__;
+export declare const copyFile: typeof fcopyFile.__promisify__;
+export declare const unlink: typeof funlink.__promisify__;
+export declare const rename: typeof frename.__promisify__;
+export declare const readdir: typeof freaddir.__promisify__;
+export declare const access: typeof faccess.__promisify__;
+export declare const mkdir: typeof fmkdir.__promisify__;
+export declare const rmdir: typeof frmdir.__promisify__;
 export declare function waitStream(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
 export declare function exists(target: string): Promise<boolean>;
 export declare function missing(target: string): Promise<boolean>;
@@ -2450,6 +2458,104 @@ export {};
 `;
 module.exports['@xmcl/gamesetting/test.d.ts'] = `export {};
 `;
+module.exports['@xmcl/installer/cjs/curseforge.d.ts'] = `/// <reference types="node" />
+import { MinecraftLocation } from "@xmcl/core";
+import { Task } from "@xmcl/task";
+import { CachedZipFile } from "@xmcl/unzip";
+import { DownloaderOption } from "./minecraft";
+export interface Options extends DownloaderOption {
+    /**
+     * The function to query a curseforge project downloadable url.
+     */
+    queryFileUrl?: CurseforgeURLQuery;
+    /**
+     * Should it replace the override files if the file is existed.
+     */
+    replaceExisted?: boolean;
+    /**
+     * Overload the manifest for this installation.
+     * It will use this manifest instead of the read manifest from modpack zip to install.
+     */
+    mainifest?: Manifest;
+}
+export interface InstallFileOptions extends DownloaderOption {
+    /**
+     * The function to query a curseforge project downloadable url.
+     */
+    queryFileUrl?: CurseforgeURLQuery;
+}
+declare type InputType = string | Buffer | CachedZipFile;
+export interface Manifest {
+    manifestType: string;
+    manifestVersion: number;
+    minecraft: {
+        /**
+         * Minecraft version
+         */
+        version: string;
+        libraries?: string;
+        /**
+         * Can be forge
+         */
+        modLoaders: {
+            id: string;
+            primary: boolean;
+        }[];
+    };
+    name: string;
+    version: string;
+    author: string;
+    files: {
+        projectID: number;
+        fileID: number;
+        required: boolean;
+    }[];
+    overrides: string;
+}
+export interface File {
+    projectID: number;
+    fileID: number;
+}
+/**
+ * Read the mainifest data from modpack
+ */
+export declare function readManifestTask(zip: InputType): Task<Manifest>;
+/**
+ * Read the mainifest data from modpack
+ */
+export declare function readManifest(zip: InputType): Promise<Manifest>;
+export declare type CurseforgeURLQuery = (projectId: number, fileId: number) => Promise<string>;
+export declare type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "resourcepacks">;
+export declare const DEFAULT_QUERY: CurseforgeURLQuery;
+/**
+ * Install curseforge modpack to a specific Minecraft location.
+ *
+ * @param zip The curseforge modpack zip buffer or file path
+ * @param minecraft The minecraft location
+ * @param options The options for query curseforge
+ */
+export declare function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLocation, options?: Options): Promise<Manifest>;
+/**
+ * Install curseforge modpack to a specific Minecraft location.
+ *
+ * This will NOT install the Minecraft version in the modpack, and will NOT install the forge or other modload listed in modpack!
+ * Please resolve them by yourself.
+ *
+ * @param zip The curseforge modpack zip buffer or file path
+ * @param minecraft The minecraft location
+ * @param options The options for query curseforge
+ */
+export declare function installCurseforgeModpackTask(zip: InputType, minecraft: MinecraftLocation, options?: Options): Task<Manifest>;
+/**
+ * Install a cureseforge xml file to a specific locations
+ */
+export declare function installCurseforgeFile(file: File, destination: string, options?: InstallFileOptions): Promise<void>;
+/**
+ * Install a cureseforge xml file to a specific locations
+ */
+export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): Task<void>;
+export {};
+`;
 module.exports['@xmcl/installer/cjs/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary } from "@xmcl/core";
 import { InstallProfile } from "./forge";
 import Task from "@xmcl/task";
@@ -2624,8 +2730,8 @@ export declare function install(yarnVersion: string, loaderVersion: string, mine
 `;
 module.exports['@xmcl/installer/cjs/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
 import { Task } from "@xmcl/task";
-import { LibraryOption } from "./minecraft";
-import { JavaExecutor, UpdatedObject, InstallOptions as InstallOptionsBase } from "./util";
+import { DownloaderOption, LibraryOption } from "./minecraft";
+import { InstallOptions as InstallOptionsBase, JavaExecutor, UpdatedObject } from "./util";
 export interface VersionList extends UpdatedObject {
     mcversion: string;
     versions: Version[];
@@ -2663,7 +2769,7 @@ export interface Version {
     version: string;
     type?: "buggy" | "recommended" | "common" | "latest";
 }
-declare type MiniVersion = {
+declare type RequiredVersion = {
     /**
      * The installer info
      */
@@ -2716,6 +2822,19 @@ export interface InstallProfile {
     libraries: VersionJson.NormalLibrary[];
 }
 /**
+ * The options to install forge.
+ */
+export interface Options extends DownloaderOption, LibraryOption, InstallOptionsBase {
+    /**
+     * You custom maven host url for the people have trouble to download
+     */
+    maven?: string;
+    /**
+    * New forge (>=1.13) require java to install. Can be a executor or java executable path.
+    */
+    java?: JavaExecutor | string;
+}
+/**
  * Post processing function for new forge installer (mcversion >= 1.13). You can use this with \`ForgeInstaller.diagnose\`.
  *
  * @param mc The minecraft location
@@ -2726,47 +2845,33 @@ export declare function postProcess(mc: MinecraftFolder, proc: InstallProfile["p
 /**
  * @interal
  */
-export declare function postProcessInstallProfile(mc: MinecraftFolder, installProfile: InstallProfile): InstallProfile;
+export declare function linkInstallProfile(mc: MinecraftFolder, installProfile: InstallProfile): InstallProfile;
 /**
  * Install for forge installer step 2 and 3.
  * @param version The version string or installer profile
  * @param minecraft The minecraft location
  */
-export declare function installByInstallerPartialTask(version: string | InstallProfile, minecraft: MinecraftLocation, option?: {
-    java?: JavaExecutor;
-} & LibraryOption): Task<void>;
+export declare function installByInstallerPartialTask(version: string | InstallProfile, minecraft: MinecraftLocation, options?: Options): Task<void>;
 /**
  * Install for forge installer step 2 and 3.
  * @param version The version string or installer profile
  * @param minecraft The minecraft location
  */
-export declare function installByInstallerPartial(version: string | InstallProfile, minecraft: MinecraftLocation, option?: {
-    java?: JavaExecutor;
-} & LibraryOption): Promise<void>;
-export interface InstallOptions extends InstallOptionsBase, LibraryOption {
-    /**
-     * You custom maven host url for the people have trouble to download
-     */
-    maven?: string;
-    /**
-     * The java executor to run java
-     */
-    java?: JavaExecutor;
-}
+export declare function installByInstallerPartial(version: string | InstallProfile, minecraft: MinecraftLocation, option?: Options): Promise<void>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The installed version name.
  */
-export declare function install(version: MiniVersion, minecraft: MinecraftLocation, option?: InstallOptions): Promise<string>;
+export declare function install(version: RequiredVersion, minecraft: MinecraftLocation, option?: Options): Promise<string>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export declare function installTask(version: MiniVersion, minecraft: MinecraftLocation, option?: InstallOptions): Task<string>;
+export declare function installTask(version: RequiredVersion, minecraft: MinecraftLocation, option?: Options): Task<string>;
 /**
  * Query the webpage content from files.minecraftforge.net.
  *
@@ -2794,9 +2899,10 @@ module.exports['@xmcl/installer/cjs/index.d.ts'] = `import * as FabricInstaller 
 import * as LiteLoaderInstaller from "./liteloader";
 import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
+import * as CurseforgeInstaller from "./curseforge";
 import * as Diagnosis from "./diagnose";
 export { JavaExecutor, DownloadOption, DownloadToOption, Downloader, DownloadStrategy, DefaultDownloader } from "./util";
-export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis };
+export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller };
 `;
 module.exports['@xmcl/installer/cjs/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
@@ -2966,6 +3072,10 @@ export interface DownloaderOption {
      * The default strategy will check the checksum and the existence of the file to decide should we download the file.
      */
     downloadStrategy?: DownloadStrategy;
+    /**
+     * Should hault the donwload process immediately after ANY resource download failed.
+     */
+    throwErrorImmediately?: boolean;
 }
 /**
  * Change the library host url
@@ -3004,6 +3114,13 @@ export interface JarOption extends DownloaderOption {
 }
 export declare type Option = AssetsOption & JarOption & LibraryOption;
 declare type RequiredVersion = Pick<Version, "id" | "url">;
+/**
+ * The collection of errors happened during a parallel process
+ */
+export declare class MultipleError extends Error {
+    errors: any[];
+    constructor(errors: any[], message?: string);
+}
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -3140,7 +3257,8 @@ export {};
 module.exports['@xmcl/installer/cjs/util.d.ts'] = `/// <reference types="node" />
 import Task from "@xmcl/task";
 import { ExecOptions } from "child_process";
-import { Writable } from "stream";
+import { ReadStream } from "fs";
+import { ProxyStream } from "got/dist/source/as-stream";
 export interface UpdatedObject {
     timestamp: string;
 }
@@ -3196,20 +3314,22 @@ export interface DownloadStrategy {
      */
     shouldDownload(option: DownloadToOption): Promise<boolean>;
 }
+/**
+ * The default downloader based on gotjs
+ */
 export declare class DefaultDownloader implements Downloader, DownloadStrategy {
-    private agent;
-    private httpsAgent;
-    protected openDownloadStreamInternal(url: string, option: DownloadOption): import("fs").ReadStream | import("got/dist/source").ResponseStream<unknown>;
-    protected shouldDownloadFile(destination: string, option?: DownloadToOption["checksum"]): Promise<boolean>;
+    readonly requster: import("got/dist/source").Got;
+    constructor(requster?: import("got/dist/source").Got);
+    protected openDownloadStream(url: string, option: DownloadOption): ReadStream | ProxyStream<unknown>;
     /**
-     * Download the file to the write stream
-     */
-    downloadToStream(option: DownloadOption, openWriteStream: () => Writable): Promise<void>;
-    /**
-     * Download file whatever the file existed or not.
-     * @returns The downloaded file full path
+     * Download file by the option provided.
      */
     downloadFile(option: DownloadToOption): Promise<void>;
+    /**
+     * - If the file is not on the disk, it will return true.
+     * - If the checksum is not provided, it will return true if file existed.
+     * - If the checksum is provided, it will return true if the file checksum matched.
+     */
     shouldDownload(option: DownloadToOption): Promise<boolean>;
 }
 /**
@@ -3249,6 +3369,104 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
+`;
+module.exports['@xmcl/installer/curseforge.d.ts'] = `/// <reference types="node" />
+import { MinecraftLocation } from "@xmcl/core";
+import { Task } from "@xmcl/task";
+import { CachedZipFile } from "@xmcl/unzip";
+import { DownloaderOption } from "./minecraft";
+export interface Options extends DownloaderOption {
+    /**
+     * The function to query a curseforge project downloadable url.
+     */
+    queryFileUrl?: CurseforgeURLQuery;
+    /**
+     * Should it replace the override files if the file is existed.
+     */
+    replaceExisted?: boolean;
+    /**
+     * Overload the manifest for this installation.
+     * It will use this manifest instead of the read manifest from modpack zip to install.
+     */
+    mainifest?: Manifest;
+}
+export interface InstallFileOptions extends DownloaderOption {
+    /**
+     * The function to query a curseforge project downloadable url.
+     */
+    queryFileUrl?: CurseforgeURLQuery;
+}
+declare type InputType = string | Buffer | CachedZipFile;
+export interface Manifest {
+    manifestType: string;
+    manifestVersion: number;
+    minecraft: {
+        /**
+         * Minecraft version
+         */
+        version: string;
+        libraries?: string;
+        /**
+         * Can be forge
+         */
+        modLoaders: {
+            id: string;
+            primary: boolean;
+        }[];
+    };
+    name: string;
+    version: string;
+    author: string;
+    files: {
+        projectID: number;
+        fileID: number;
+        required: boolean;
+    }[];
+    overrides: string;
+}
+export interface File {
+    projectID: number;
+    fileID: number;
+}
+/**
+ * Read the mainifest data from modpack
+ */
+export declare function readManifestTask(zip: InputType): Task<Manifest>;
+/**
+ * Read the mainifest data from modpack
+ */
+export declare function readManifest(zip: InputType): Promise<Manifest>;
+export declare type CurseforgeURLQuery = (projectId: number, fileId: number) => Promise<string>;
+export declare type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "resourcepacks">;
+export declare const DEFAULT_QUERY: CurseforgeURLQuery;
+/**
+ * Install curseforge modpack to a specific Minecraft location.
+ *
+ * @param zip The curseforge modpack zip buffer or file path
+ * @param minecraft The minecraft location
+ * @param options The options for query curseforge
+ */
+export declare function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLocation, options?: Options): Promise<Manifest>;
+/**
+ * Install curseforge modpack to a specific Minecraft location.
+ *
+ * This will NOT install the Minecraft version in the modpack, and will NOT install the forge or other modload listed in modpack!
+ * Please resolve them by yourself.
+ *
+ * @param zip The curseforge modpack zip buffer or file path
+ * @param minecraft The minecraft location
+ * @param options The options for query curseforge
+ */
+export declare function installCurseforgeModpackTask(zip: InputType, minecraft: MinecraftLocation, options?: Options): Task<Manifest>;
+/**
+ * Install a cureseforge xml file to a specific locations
+ */
+export declare function installCurseforgeFile(file: File, destination: string, options?: InstallFileOptions): Promise<void>;
+/**
+ * Install a cureseforge xml file to a specific locations
+ */
+export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): Task<void>;
+export {};
 `;
 module.exports['@xmcl/installer/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary } from "@xmcl/core";
 import { InstallProfile } from "./forge";
@@ -3424,8 +3642,8 @@ export declare function install(yarnVersion: string, loaderVersion: string, mine
 `;
 module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
 import { Task } from "@xmcl/task";
-import { LibraryOption } from "./minecraft";
-import { JavaExecutor, UpdatedObject, InstallOptions as InstallOptionsBase } from "./util";
+import { DownloaderOption, LibraryOption } from "./minecraft";
+import { InstallOptions as InstallOptionsBase, JavaExecutor, UpdatedObject } from "./util";
 export interface VersionList extends UpdatedObject {
     mcversion: string;
     versions: Version[];
@@ -3463,7 +3681,7 @@ export interface Version {
     version: string;
     type?: "buggy" | "recommended" | "common" | "latest";
 }
-declare type MiniVersion = {
+declare type RequiredVersion = {
     /**
      * The installer info
      */
@@ -3516,6 +3734,19 @@ export interface InstallProfile {
     libraries: VersionJson.NormalLibrary[];
 }
 /**
+ * The options to install forge.
+ */
+export interface Options extends DownloaderOption, LibraryOption, InstallOptionsBase {
+    /**
+     * You custom maven host url for the people have trouble to download
+     */
+    maven?: string;
+    /**
+    * New forge (>=1.13) require java to install. Can be a executor or java executable path.
+    */
+    java?: JavaExecutor | string;
+}
+/**
  * Post processing function for new forge installer (mcversion >= 1.13). You can use this with \`ForgeInstaller.diagnose\`.
  *
  * @param mc The minecraft location
@@ -3526,47 +3757,33 @@ export declare function postProcess(mc: MinecraftFolder, proc: InstallProfile["p
 /**
  * @interal
  */
-export declare function postProcessInstallProfile(mc: MinecraftFolder, installProfile: InstallProfile): InstallProfile;
+export declare function linkInstallProfile(mc: MinecraftFolder, installProfile: InstallProfile): InstallProfile;
 /**
  * Install for forge installer step 2 and 3.
  * @param version The version string or installer profile
  * @param minecraft The minecraft location
  */
-export declare function installByInstallerPartialTask(version: string | InstallProfile, minecraft: MinecraftLocation, option?: {
-    java?: JavaExecutor;
-} & LibraryOption): Task<void>;
+export declare function installByInstallerPartialTask(version: string | InstallProfile, minecraft: MinecraftLocation, options?: Options): Task<void>;
 /**
  * Install for forge installer step 2 and 3.
  * @param version The version string or installer profile
  * @param minecraft The minecraft location
  */
-export declare function installByInstallerPartial(version: string | InstallProfile, minecraft: MinecraftLocation, option?: {
-    java?: JavaExecutor;
-} & LibraryOption): Promise<void>;
-export interface InstallOptions extends InstallOptionsBase, LibraryOption {
-    /**
-     * You custom maven host url for the people have trouble to download
-     */
-    maven?: string;
-    /**
-     * The java executor to run java
-     */
-    java?: JavaExecutor;
-}
+export declare function installByInstallerPartial(version: string | InstallProfile, minecraft: MinecraftLocation, option?: Options): Promise<void>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The installed version name.
  */
-export declare function install(version: MiniVersion, minecraft: MinecraftLocation, option?: InstallOptions): Promise<string>;
+export declare function install(version: RequiredVersion, minecraft: MinecraftLocation, option?: Options): Promise<string>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export declare function installTask(version: MiniVersion, minecraft: MinecraftLocation, option?: InstallOptions): Task<string>;
+export declare function installTask(version: RequiredVersion, minecraft: MinecraftLocation, option?: Options): Task<string>;
 /**
  * Query the webpage content from files.minecraftforge.net.
  *
@@ -3594,9 +3811,10 @@ module.exports['@xmcl/installer/index.d.ts'] = `import * as FabricInstaller from
 import * as LiteLoaderInstaller from "./liteloader";
 import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
+import * as CurseforgeInstaller from "./curseforge";
 import * as Diagnosis from "./diagnose";
 export { JavaExecutor, DownloadOption, DownloadToOption, Downloader, DownloadStrategy, DefaultDownloader } from "./util";
-export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis };
+export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller };
 `;
 module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
@@ -3766,6 +3984,10 @@ export interface DownloaderOption {
      * The default strategy will check the checksum and the existence of the file to decide should we download the file.
      */
     downloadStrategy?: DownloadStrategy;
+    /**
+     * Should hault the donwload process immediately after ANY resource download failed.
+     */
+    throwErrorImmediately?: boolean;
 }
 /**
  * Change the library host url
@@ -3804,6 +4026,13 @@ export interface JarOption extends DownloaderOption {
 }
 export declare type Option = AssetsOption & JarOption & LibraryOption;
 declare type RequiredVersion = Pick<Version, "id" | "url">;
+/**
+ * The collection of errors happened during a parallel process
+ */
+export declare class MultipleError extends Error {
+    errors: any[];
+    constructor(errors: any[], message?: string);
+}
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -3989,7 +4218,8 @@ module.exports['@xmcl/installer/test.d.ts'] = `export {};
 module.exports['@xmcl/installer/util.d.ts'] = `/// <reference types="node" />
 import Task from "@xmcl/task";
 import { ExecOptions } from "child_process";
-import { Writable } from "stream";
+import { ReadStream } from "fs";
+import { ProxyStream } from "got/dist/source/as-stream";
 export interface UpdatedObject {
     timestamp: string;
 }
@@ -4045,20 +4275,22 @@ export interface DownloadStrategy {
      */
     shouldDownload(option: DownloadToOption): Promise<boolean>;
 }
+/**
+ * The default downloader based on gotjs
+ */
 export declare class DefaultDownloader implements Downloader, DownloadStrategy {
-    private agent;
-    private httpsAgent;
-    protected openDownloadStreamInternal(url: string, option: DownloadOption): import("fs").ReadStream | import("got/dist/source").ResponseStream<unknown>;
-    protected shouldDownloadFile(destination: string, option?: DownloadToOption["checksum"]): Promise<boolean>;
+    readonly requster: import("got/dist/source").Got;
+    constructor(requster?: import("got/dist/source").Got);
+    protected openDownloadStream(url: string, option: DownloadOption): ReadStream | ProxyStream<unknown>;
     /**
-     * Download the file to the write stream
-     */
-    downloadToStream(option: DownloadOption, openWriteStream: () => Writable): Promise<void>;
-    /**
-     * Download file whatever the file existed or not.
-     * @returns The downloaded file full path
+     * Download file by the option provided.
      */
     downloadFile(option: DownloadToOption): Promise<void>;
+    /**
+     * - If the file is not on the disk, it will return true.
+     * - If the checksum is not provided, it will return true if file existed.
+     * - If the checksum is provided, it will return true if the file checksum matched.
+     */
     shouldDownload(option: DownloadToOption): Promise<boolean>;
 }
 /**
@@ -7081,7 +7313,7 @@ export interface ZipFile {
     readonly validateEntrySizes: boolean;
     readEntry(entry: Entry, options?: ZipFileOptions): Promise<Buffer>;
     openEntry(entry: Entry, options?: ZipFileOptions): Promise<Readable>;
-    extractEntries(dest: string, mapper?: (e: Entry) => undefined | string): Promise<void>;
+    extractEntries(dest: string, options?: ExtractOptions): Promise<void>;
     close(): void;
 }
 export interface CachedZipFile extends ZipFile {
@@ -7122,8 +7354,7 @@ export declare function open(target: OpenTarget, options: CacheOptions | LazyOpt
 export declare function open(target: OpenTarget): Promise<CachedZipFile>;
 export declare function createParseStream(options?: CacheOptions): ParseEntriesStream;
 export declare function createParseStream(options?: LazyOptions): ParseStream;
-export declare function createParseEntriesStream(entries: string[]): ParseEntriesStream;
-export declare function createExtractStream(destination: string, entries?: string[] | ((entry: Entry) => string | undefined)): ExtractStream;
+export declare function createExtractStream(destination: string, options?: ExtractOptions): ExtractStream;
 export declare function createWalkEntriesStream(onEntry: (entry: Entry) => Promise<any> | boolean | undefined): WalkEntriesStream;
 /**
  * Extract the zip file with a filter into a folder. The default filter is filter nothing, which will unzip all the content in zip.
@@ -7132,15 +7363,32 @@ export declare function createWalkEntriesStream(onEntry: (entry: Entry) => Promi
  * @param dest The destination folder
  * @param filter The entry filter
  */
-export declare function extract(openFile: OpenTarget, dest: string, filter?: (entry: Entry) => string | undefined): Promise<void>;
+export declare function extract(openFile: OpenTarget, dest: string, options?: ExtractOptions): Promise<void>;
 /**
- * Extract the zipfile's entries into destiation folder. This will close the zip file finally.
- *
- * @param zipfile The zip file
- * @param dest The destination folder
- * @param entries The querying entries
+ * @param destinationRoot The root dir of extraction
+ * @param entry The entry
+ * @returns The relative path related to the root to extract
  */
-export declare function extractEntries(openFile: OpenTarget, dest: string, entries: string[]): Promise<void>;
+export declare type EntryHandler = (destinationRoot: string, entry: Entry) => string | undefined | Promise<string | undefined>;
+export interface ExtractOptions {
+    /**
+     * Only extract on these entries
+     */
+    entries?: string[];
+    /**
+     * The handler to decide the entry extraction path
+     */
+    entryHandler?: EntryHandler;
+    /**
+     * \`true\` to replace the if the entry destination existed, \`false\` to not replace.
+     * @default false
+     */
+    replaceExisted?: boolean;
+    /**
+     * The hook called after a entry extracted.
+     */
+    onAfterExtracted?: (destination: string, entry: Entry) => void;
+}
 export {};
 `;
 module.exports['@xmcl/unzip/index.d.ts'] = `/// <reference types="node" />
@@ -7199,7 +7447,7 @@ export interface ZipFile {
     readonly validateEntrySizes: boolean;
     readEntry(entry: Entry, options?: ZipFileOptions): Promise<Buffer>;
     openEntry(entry: Entry, options?: ZipFileOptions): Promise<Readable>;
-    extractEntries(dest: string, mapper?: (e: Entry) => undefined | string): Promise<void>;
+    extractEntries(dest: string, options?: ExtractOptions): Promise<void>;
     close(): void;
 }
 export interface CachedZipFile extends ZipFile {
@@ -7240,8 +7488,7 @@ export declare function open(target: OpenTarget, options: CacheOptions | LazyOpt
 export declare function open(target: OpenTarget): Promise<CachedZipFile>;
 export declare function createParseStream(options?: CacheOptions): ParseEntriesStream;
 export declare function createParseStream(options?: LazyOptions): ParseStream;
-export declare function createParseEntriesStream(entries: string[]): ParseEntriesStream;
-export declare function createExtractStream(destination: string, entries?: string[] | ((entry: Entry) => string | undefined)): ExtractStream;
+export declare function createExtractStream(destination: string, options?: ExtractOptions): ExtractStream;
 export declare function createWalkEntriesStream(onEntry: (entry: Entry) => Promise<any> | boolean | undefined): WalkEntriesStream;
 /**
  * Extract the zip file with a filter into a folder. The default filter is filter nothing, which will unzip all the content in zip.
@@ -7250,15 +7497,32 @@ export declare function createWalkEntriesStream(onEntry: (entry: Entry) => Promi
  * @param dest The destination folder
  * @param filter The entry filter
  */
-export declare function extract(openFile: OpenTarget, dest: string, filter?: (entry: Entry) => string | undefined): Promise<void>;
+export declare function extract(openFile: OpenTarget, dest: string, options?: ExtractOptions): Promise<void>;
 /**
- * Extract the zipfile's entries into destiation folder. This will close the zip file finally.
- *
- * @param zipfile The zip file
- * @param dest The destination folder
- * @param entries The querying entries
+ * @param destinationRoot The root dir of extraction
+ * @param entry The entry
+ * @returns The relative path related to the root to extract
  */
-export declare function extractEntries(openFile: OpenTarget, dest: string, entries: string[]): Promise<void>;
+export declare type EntryHandler = (destinationRoot: string, entry: Entry) => string | undefined | Promise<string | undefined>;
+export interface ExtractOptions {
+    /**
+     * Only extract on these entries
+     */
+    entries?: string[];
+    /**
+     * The handler to decide the entry extraction path
+     */
+    entryHandler?: EntryHandler;
+    /**
+     * \`true\` to replace the if the entry destination existed, \`false\` to not replace.
+     * @default false
+     */
+    replaceExisted?: boolean;
+    /**
+     * The hook called after a entry extracted.
+     */
+    onAfterExtracted?: (destination: string, entry: Entry) => void;
+}
 export {};
 `;
 module.exports['@xmcl/unzip/test.d.ts'] = `export {};
