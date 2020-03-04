@@ -1,5 +1,4 @@
-import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
-import { copyFile, ensureDir, ensureFile, missing, readFile, unlink, validateSha1, waitStream, writeFile } from "@xmcl/core/fs";
+import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson, futils } from "@xmcl/core";
 import { parse as parseForge } from "@xmcl/forge-site-parser";
 import { Task } from "@xmcl/task";
 import { createParseStream, Entry, open } from "@xmcl/unzip";
@@ -7,6 +6,8 @@ import { createReadStream, createWriteStream } from "fs";
 import { delimiter, join } from "path";
 import { DownloaderOption, installResolvedLibrariesTask, LibraryOption, MultipleError } from "./minecraft";
 import { downloadFileIfAbsentTask, getIfUpdate, InstallOptions as InstallOptionsBase, JavaExecutor, UpdatedObject } from "./util";
+
+const { copyFile, ensureDir, ensureFile, missing, readFile, unlink, validateSha1, waitStream, writeFile } = futils;
 
 async function findMainClass(lib: string) {
     const zip = await open(lib, { lazyEntries: true });

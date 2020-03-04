@@ -1,9 +1,10 @@
-import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
-import { ensureDir, readFile } from "@xmcl/core/fs";
+import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson, futils } from "@xmcl/core";
 import Task from "@xmcl/task";
 import { cpus } from "os";
 import { join } from "path";
 import { Downloader, downloadFileIfAbsentTask, DownloadStrategy, getIfUpdate, UpdatedObject } from "./util";
+
+const { ensureDir, readFile } = futils;
 
 /**
  * The function to swap library host.

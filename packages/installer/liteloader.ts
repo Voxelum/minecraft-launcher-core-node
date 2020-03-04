@@ -1,9 +1,9 @@
-import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
-import { ensureDir, missing, readFile, writeFile, validateMd5 } from "@xmcl/core/fs";
+import { MinecraftFolder, MinecraftLocation, futils } from "@xmcl/core";
 import { Task } from "@xmcl/task";
 import { join } from "path";
 import { getIfUpdate, UpdatedObject, InstallOptions } from "./util";
 
+const { ensureDir, missing, readFile, writeFile } = futils;
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
 /**
  * The liteloader version list. Containing the minecraft version -> liteloader version info mapping.

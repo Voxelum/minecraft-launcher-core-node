@@ -1,8 +1,9 @@
-import { missing, readFile, validateSha1, exists, stat } from "@xmcl/core/fs";
-import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary, ResolvedVersion } from "@xmcl/core";
+import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary, ResolvedVersion, futils } from "@xmcl/core";
 import { InstallProfile, linkInstallProfile } from "./forge";
 import { join } from "path";
 import Task from "@xmcl/task";
+
+const { missing, readFile, validateSha1, exists, stat } = futils;
 
 export enum Status {
     /**

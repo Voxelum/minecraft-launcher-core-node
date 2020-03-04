@@ -1,4 +1,3 @@
-import { checksum, ensureFile, missing } from "@xmcl/core/fs";
 import Task from "@xmcl/task";
 import { ExecOptions, spawn } from "child_process";
 import { createReadStream, createWriteStream, ReadStream } from "fs";
@@ -9,6 +8,9 @@ import { fileURLToPath, parse } from "url";
 import { promisify } from "util";
 import HttpAgent, { HttpsAgent } from "agentkeepalive";
 import { ProxyStream } from "got/dist/source/as-stream";
+import { futils } from "@xmcl/core";
+
+const { checksum, ensureFile, missing } = futils;
 
 const pipeline = promisify(pip);
 
