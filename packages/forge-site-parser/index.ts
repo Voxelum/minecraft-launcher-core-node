@@ -1,5 +1,8 @@
 import * as parser from "fast-html-parser";
 
+/**
+ * One forge version download info
+ */
 interface Download {
     md5: string;
     sha1: string;
@@ -135,6 +138,9 @@ interface Version {
     type: "buggy" | "recommended" | "common" | "latest";
 }
 
+/**
+ * Forge webpack contains the forge versions for a Minecraft version.
+ */
 export interface ForgeWebPage {
     versions: Version[];
     mcversion: string;
