@@ -1,5 +1,53 @@
 # Changelog
 
+## 2.3.0
+### @xmcl/unzip@1.1.0
+#### Features
+
+- feat: add option to hook and replace to extract ([907741f728584b2045b879344edd48e6d59deb84](https://github.com/voxelum/minecraft-launcher-core-node/commit/907741f728584b2045b879344edd48e6d59deb84))
+### @xmcl/task@2.1.1
+#### Bug Fixes
+
+- fix(task): stupid uncaught error ([eafd11f0b9226b585c48f919d104ef346d17cc0d](https://github.com/voxelum/minecraft-launcher-core-node/commit/eafd11f0b9226b585c48f919d104ef346d17cc0d))
+### @xmcl/core@2.0.3
+#### Bug Fixes
+
+- fix: wrong import from other packages ([e4716cbd8bebf03c1526018bed60e34aae3b64c5](https://github.com/voxelum/minecraft-launcher-core-node/commit/e4716cbd8bebf03c1526018bed60e34aae3b64c5))
+- fix: make it compatible with older electron ([196f3dcaea53ddd8c7068eec6fdd09ac4336d678](https://github.com/voxelum/minecraft-launcher-core-node/commit/196f3dcaea53ddd8c7068eec6fdd09ac4336d678))
+- fix: adapt to new unzip api ([24ad2801dcd3ff0c67aa294e965437f45f80597c](https://github.com/voxelum/minecraft-launcher-core-node/commit/24ad2801dcd3ff0c67aa294e965437f45f80597c))
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/installer@2.3.0
+#### Features
+
+- feat: forge support the downloader in option ([b499e28f2b1025bfe732498762ebbbd06b26ac6a](https://github.com/voxelum/minecraft-launcher-core-node/commit/b499e28f2b1025bfe732498762ebbbd06b26ac6a))
+- feat: support install curseforge modpack ([b331f9636df4fa0ab626a8756f83647cf3b06cd7](https://github.com/voxelum/minecraft-launcher-core-node/commit/b331f9636df4fa0ab626a8756f83647cf3b06cd7))
+- feat(installer): add flag to throw immediately ([e909fe6904cfea8fb2a682eecb8a16a6e6c71175](https://github.com/voxelum/minecraft-launcher-core-node/commit/e909fe6904cfea8fb2a682eecb8a16a6e6c71175))
+#### Bug Fixes
+
+- fix: wrong import from other packages ([e4716cbd8bebf03c1526018bed60e34aae3b64c5](https://github.com/voxelum/minecraft-launcher-core-node/commit/e4716cbd8bebf03c1526018bed60e34aae3b64c5))
+- fix: simplify the default downloader ([a4699e6388dfcdee1521104e38c587ec8f433f6e](https://github.com/voxelum/minecraft-launcher-core-node/commit/a4699e6388dfcdee1521104e38c587ec8f433f6e))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/task bump **patch**
+### @xmcl/java-installer@0.1.2
+#### Bug Fixes
+
+- fix: make it compatible with older electron ([196f3dcaea53ddd8c7068eec6fdd09ac4336d678](https://github.com/voxelum/minecraft-launcher-core-node/commit/196f3dcaea53ddd8c7068eec6fdd09ac4336d678))
+- Dependency @xmcl/task bump **patch**
+### @xmcl/system@1.0.6
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/mod-parser@2.0.2
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.0.7
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@1.0.7
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@1.0.7
+- Dependency @xmcl/system bump **patch**
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/world@1.0.6
+- Dependency @xmcl/system bump **patch**
+
+
 ## 2.2.2
 ### @xmcl/installer@2.2.3
 #### Bug Fixes
