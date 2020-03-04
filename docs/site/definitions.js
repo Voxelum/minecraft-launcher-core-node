@@ -1824,7 +1824,10 @@ export interface Version {
 `;
 module.exports['@xmcl/core/version.test.d.ts'] = `export {};
 `;
-module.exports['@xmcl/forge-site-parser/cjs/index.d.ts'] = `interface Download {
+module.exports['@xmcl/forge-site-parser/cjs/index.d.ts'] = `/**
+ * One forge version download info
+ */
+interface Download {
     md5: string;
     sha1: string;
     path: string;
@@ -1860,13 +1863,19 @@ interface Version {
      */
     type: "buggy" | "recommended" | "common" | "latest";
 }
+/**
+ * Forge webpack contains the forge versions for a Minecraft version.
+ */
 export interface ForgeWebPage {
     versions: Version[];
     mcversion: string;
 }
 export {};
 `;
-module.exports['@xmcl/forge-site-parser/index.d.ts'] = `interface Download {
+module.exports['@xmcl/forge-site-parser/index.d.ts'] = `/**
+ * One forge version download info
+ */
+interface Download {
     md5: string;
     sha1: string;
     path: string;
@@ -1902,6 +1911,9 @@ interface Version {
      */
     type: "buggy" | "recommended" | "common" | "latest";
 }
+/**
+ * Forge webpack contains the forge versions for a Minecraft version.
+ */
 export interface ForgeWebPage {
     versions: Version[];
     mcversion: string;
