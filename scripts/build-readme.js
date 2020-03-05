@@ -71,7 +71,7 @@ contents.map(c => {
 });
 
 function injectRoot() {
-    const rootReadme = fs.readFileSync('README.md').toString();
+    const rootReadme = fs.readFileSync('USAGE.md').toString();
     const lines = rootReadme.split("\n");
 
     const gettingStartedLine = lines.findIndex(l => l.trim().startsWith('## Getting Started'));
@@ -80,7 +80,7 @@ function injectRoot() {
 
     lines.splice(firstSampleLine, endSampleLine - firstSampleLine, ...allReadme);
 
-    fs.writeFileSync("README.md", lines.join('\n'));
+    fs.writeFileSync("USAGE.md", lines.join('\n'));
 }
 
 injectRoot();
