@@ -1,7 +1,7 @@
 # Minecraft Launcher Core
 
 [![npm](https://img.shields.io/npm/l/@xmcl/core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
-[![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)
+[![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 [![Convensional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://www.conventionalcommits.org)
 [![lerna](https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg)](https://lerna.js.org/)
 
@@ -14,7 +14,7 @@ Most packages are targeting the [Electron](https://electronjs.org) environment. 
     - [Bundle & Treeshaking](#bundle--treeshaking)
     - [CommonJS](#commonjs)
     - [Electron Version](#electron-version)
-  - [Getting Start](#getting-start)
+  - [Getting Started](#getting-started)
   - [Active Packages](#active-packages)
   - [Featured Launcher](#featured-launcher)
   - [Contribute](#contribute)
@@ -63,9 +63,9 @@ Recommend to use the latest electron, so you don't need to setup babel with webp
 The dependency `got` use async generator in dist code. Therefore, the electron should at least support `async generator`.
 It requires electron have the minimum version of `v3.x` (node version `>= 10`).
 
-## Getting Start
+## Getting Started
 
-Go [Getting Start](/USAGE.md) page.
+Go [Getting Started](/USAGE.md) page.
 
 
 ## Active Packages
