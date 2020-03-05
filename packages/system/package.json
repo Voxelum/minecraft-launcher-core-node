@@ -4,7 +4,8 @@
   "main": "./cjs/index.js",
   "module": "./index.js",
   "browser": {
-    "./index.js": "./index.browser.js"
+    "./index.js": "./index.browser.js",
+    "./cjs/index.js": "./cjs/index.browser.js"
   },
   "description": "An abstract layer for system and fs",
   "engines": {
