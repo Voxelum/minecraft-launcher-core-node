@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.3.3
+### @xmcl/forge-site-parser@2.0.3
+#### Bug Fixes
+
+- fix: add doc and trigger build to release ([a7bd52614bcb094279c2cb043888edb9f32afe29](https://github.com/voxelum/minecraft-launcher-core-node/commit/a7bd52614bcb094279c2cb043888edb9f32afe29))
+### @xmcl/installer@2.3.3
+- Dependency @xmcl/forge-site-parser bump **patch**
+
+
+## 2.3.2
+### @xmcl/forge-site-parser@2.0.2
+#### Bug Fixes
+
+- fix: add doc and trigger build to release ([a7bd52614bcb094279c2cb043888edb9f32afe29](https://github.com/voxelum/minecraft-launcher-core-node/commit/a7bd52614bcb094279c2cb043888edb9f32afe29))
+### @xmcl/installer@2.3.2
+- Dependency @xmcl/forge-site-parser bump **patch**
+
+
 ## 2.3.1
 ### @xmcl/task@2.1.2
 #### Bug Fixes
