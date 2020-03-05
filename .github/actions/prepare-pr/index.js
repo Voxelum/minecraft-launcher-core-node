@@ -11,7 +11,7 @@ function scanPackages() {
         try {
             packageJSON = JSON.parse(fs.readFileSync(`packages/${package}/package.json`).toString());
         } catch (e) {
-            if (e.code === 'ENOTDIR')
+            if (e.code === 'ENOTDIR' || e.code === 'ENOENT')
                 return undefined;
             throw e;
         }
