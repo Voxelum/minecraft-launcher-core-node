@@ -1,8 +1,12 @@
-# Auth Module
+# User Module
 
 [![npm version](https://img.shields.io/npm/v/@xmcl/user.svg)](https://www.npmjs.com/package/@xmcl/user)
+[![Downloads](https://img.shields.io/npm/dm/@xmcl/user.svg)](https://npmjs.com/@xmcl/user)
+[![Install size](https://packagephobia.now.sh/badge?p=@xmcl/user)](https://packagephobia.now.sh/result?p=@xmcl/user)
+[![Downloads](https://img.shields.io/npm/dm/@xmcl/user.svg)](https://npmjs.com/@xmcl/user)
+[![Install size](https://packagephobia.now.sh/badge?p=@xmcl/user)](https://packagephobia.now.sh/result?p=@xmcl/user)
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
-[![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Release%20Pre-Check/badge.svg)](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Release%20Pre-Check/badge.svg)
+[![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 
 Provide Yggdrasil auth and profile service for Minecraft protocol.
 

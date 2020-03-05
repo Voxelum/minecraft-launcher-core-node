@@ -1,7 +1,9 @@
 # Unzip Module
 
 [![npm version](https://img.shields.io/npm/v/@xmcl/unzip.svg)](https://www.npmjs.com/package/@xmcl/unzip)
+[![Downloads](https://img.shields.io/npm/dm/@xmcl/unzip.svg)](https://npmjs.com/@xmcl/unzip)
+[![Install size](https://packagephobia.now.sh/badge?p=@xmcl/unzip)](https://packagephobia.now.sh/result?p=@xmcl/unzip)
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
-[![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Release%20Pre-Check/badge.svg)](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Release%20Pre-Check/badge.svg)
+[![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 
 A simple zip Unzip wrapper for yauzl in nodejs.
