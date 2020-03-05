@@ -305,7 +305,7 @@ function postProcessingTask(minecraft: MinecraftFolder, installProfile: InstallP
  * @child installForgeJson
  */
 function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLocation, options: Options) {
-    const maven = DEFAULT_FORGE_MAVEN || options.maven;
+    const maven = options.maven || DEFAULT_FORGE_MAVEN;
     const installLibOption = options;
     const java = typeof options.java === "string" ? JavaExecutor.createSimple(options.java) : typeof options.java === "function" ? options.java : JavaExecutor.createSimple("java");
     return Task.create("installForge", async function installForge(context: Task.Context) {
