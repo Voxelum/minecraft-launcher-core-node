@@ -78,7 +78,7 @@ describe("Auth", () => {
                     .toEqual({
                         error: "InvalidArguments",
                         statusCode: 400,
-                        statusMessage: "Bad Request",
+                        statusMessage: "",
                     });
             });
             test("should reject if get non error response", async () => {
@@ -96,7 +96,7 @@ describe("Auth", () => {
                     .toEqual({
                         error: "General",
                         statusCode: 400,
-                        statusMessage: "Bad Request",
+                        statusMessage: "",
                         hello: "world",
                     });
             });
@@ -115,7 +115,7 @@ describe("Auth", () => {
                     .toEqual({
                         error: "General",
                         statusCode: 400,
-                        statusMessage: "Bad Request",
+                        statusMessage: "",
                         body: "Not a JSON",
                     });
             });
@@ -134,7 +134,7 @@ describe("Auth", () => {
                     .toEqual({
                         error: "General",
                         statusCode: 200,
-                        statusMessage: "OK",
+                        statusMessage: "",
                         body: "Not a JSON",
                     });
             });
