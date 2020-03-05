@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.4
+### @xmcl/installer@2.3.4
+#### Bug Fixes
+
+- fix: wrong forge maven assigning ([74a931d4c3416a77ce5ac85a9b40f680c5ad6aef](https://github.com/voxelum/minecraft-launcher-core-node/commit/74a931d4c3416a77ce5ac85a9b40f680c5ad6aef))
+
+
 ## 2.3.3
 ### @xmcl/forge-site-parser@2.0.3
 #### Bug Fixes
