@@ -1,14 +1,16 @@
+import { futils } from "@xmcl/core";
 import Task from "@xmcl/task";
+import HttpAgent, { HttpsAgent } from "agentkeepalive";
 import { ExecOptions, spawn } from "child_process";
 import { createReadStream, createWriteStream, ReadStream } from "fs";
 import gotDefault from "got";
+import { ProxyStream } from "got/dist/source/as-stream";
 import { IncomingMessage } from "http";
+import { cpus } from "os";
 import { pipeline as pip } from "stream";
 import { fileURLToPath, parse } from "url";
 import { promisify } from "util";
-import HttpAgent, { HttpsAgent } from "agentkeepalive";
-import { ProxyStream } from "got/dist/source/as-stream";
-import { futils } from "@xmcl/core";
+import { MultipleError } from "./minecraft";
 
 const { checksum, ensureFile, missing } = futils;
 
@@ -278,6 +280,38 @@ export namespace JavaExecutor {
                 });
             });
         };
+    }
+}
+
+export async function batchedTask(context: Task.Context, tasks: Task<unknown>[], sizes: number[], maxConcurrency?: number, throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string) {
+    async function worker(): Promise<void> {
+        while (tasks.length > 0) {
+            try {
+                let sz = sizes.pop()!;
+                await context.execute(tasks.pop()!, sz);
+            } catch (e) {
+                if (!throwErrorImmediately) {
+                    errors.push(e);
+                } else {
+                    throw e;
+                }
+            }
+        }
+    }
+    let errors = [] as unknown[];
+    let promises: Promise<void>[] = [];
+
+    maxConcurrency = Math.min(tasks.length, maxConcurrency || cpus().length * 3);
+    throwErrorImmediately = throwErrorImmediately ?? false;
+    getErrorMessage = getErrorMessage ?? (() => "");
+
+    context.update(0, sizes.reduce((a, b) => a + b, 0));
+    for (let i = 0; i < maxConcurrency; ++i) {
+        promises.push(worker());
+    }
+    await Promise.all(promises);
+    if (errors.length > 0) {
+        throw new MultipleError(errors, getErrorMessage(errors));
     }
 }
 
