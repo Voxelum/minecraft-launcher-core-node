@@ -10,6 +10,9 @@ const stat = util.promisify(fs.stat);
 type yOpenTarget = string | Buffer | number;
 
 async function ensureFile(file: string) {
+    async function fexists() {
+        return new Promise<boolean>((resolve) => fs.access(file, (e) => { if (e) { resolve(false); } else { resolve(true); } }))
+    }
     async function ensure(name: string) {
         try {
             await mkdir0(name, { recursive: true });
@@ -29,12 +32,11 @@ async function ensureFile(file: string) {
             throw e;
         }
     }
-    async function exists() {
-        return new Promise<boolean>((resolve) => fs.access(file, (e) => { if (e) { resolve(false); } else { resolve(true); } }))
-    }
-    let existed = await exists();
+    let existed = await fexists();
     if (!existed) {
         const dir = path.dirname(file);
+        // console.log(`Ensure file ${file}`);
+        // console.log(`Ensure dir ${dir}`);
         await ensure(dir);
     }
     return existed;
@@ -86,13 +88,12 @@ function extractCached(zipfile: yZipFile, dest: string, entries: yEntry[], optio
             let file = path.join(dest, relativePath);
             let existed = await ensureFile(file);
             if (options.replaceExisted || !existed) {
-                return openEntryReadStream(zipfile, entry)
+                await openEntryReadStream(zipfile, entry)
                     .then((stream) => stream.pipe(fs.createWriteStream(file)))
                     .then(finishStream)
                     .then(() => { options.onAfterExtracted?.(file, entry) });
             }
         }
-        return Promise.resolve()
     }
 
     return Promise.all(entries.map((e) => {
@@ -113,7 +114,6 @@ function extractLazy(zipfile: yZipFile, destination: string, options: ExtractOpt
     const useRemaining = !!options.entries;
     const remaining = new Set(options.entries);
 
-    let promises: Promise<any>[] = [];
     function readIfLazy() {
         if (zipfile.lazyEntries) {
             zipfile.readEntry();
@@ -124,24 +124,29 @@ function extractLazy(zipfile: yZipFile, destination: string, options: ExtractOpt
             let file = path.join(destination, relativePath);
             let existed = await ensureFile(file);
             if (options.replaceExisted || !existed) {
-                return openEntryReadStream(zipfile, entry)
+                await openEntryReadStream(zipfile, entry)
                     .then((stream) => stream.pipe(fs.createWriteStream(file)))
                     .then(finishStream)
                     .then(() => { options.onAfterExtracted?.(file, entry) });
             }
         }
-        return Promise.resolve()
     }
 
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
+        let promises: Promise<void>[] = [];
+
         zipfile.once("end", () => {
-            resolve(Promise.all(promises).then(() => undefined));
+            Promise.all(promises).then(() => resolve(), reject);
         });
         zipfile.on("entry", (entry: yEntry) => {
+            if (entry.fileName.endsWith("/")) {
+                readIfLazy();
+                return;
+            }
             const relativePath = handler(destination, entry);
             if (useRemaining && remaining.size === 0) {
                 zipfile.removeAllListeners("entry");
-                resolve(Promise.all(promises).then(() => undefined));
+                Promise.all(promises).then(() => resolve(), reject);
             } else if (useRemaining && !remaining.has(entry.fileName)) {
                 readIfLazy();
             } else {
