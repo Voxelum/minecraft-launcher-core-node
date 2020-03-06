@@ -3,7 +3,7 @@ import Task from "@xmcl/task";
 import HttpAgent, { HttpsAgent } from "agentkeepalive";
 import { ExecOptions, spawn } from "child_process";
 import { createReadStream, createWriteStream, ReadStream } from "fs";
-import gotDefault from "got";
+import got from "got";
 import { ProxyStream } from "got/dist/source/as-stream";
 import { IncomingMessage } from "http";
 import { cpus } from "os";
@@ -16,25 +16,9 @@ const { checksum, ensureFile, missing } = futils;
 
 const pipeline = promisify(pip);
 
-const IS_ELECTRON = false; // process.versions.hasOwnProperty("electron");
-
 export interface UpdatedObject {
     timestamp: string;
 }
-
-export const got = gotDefault.extend({
-    useElectronNet: IS_ELECTRON,
-});
-
-export const fetchJson = gotDefault.extend({
-    responseType: "json",
-    useElectronNet: IS_ELECTRON,
-});
-
-export const fetchBuffer = gotDefault.extend({
-    responseType: "buffer",
-    useElectronNet: IS_ELECTRON,
-});
 
 export async function getRawIfUpdate(url: string, timestamp?: string): Promise<{ timestamp: string; content: string | undefined }> {
     const headers: Record<string, string> = {
@@ -86,14 +70,16 @@ export interface DownloadOption {
      * If user wants to pause/resume the download, pass this in, and `Downloader` should call this to tell user how to pause and resume.
      */
     pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
-}
 
-export interface DownloadToOption extends DownloadOption {
+    /**
+     * The destination of the download on the disk
+     */
     destination: string;
-    checksum?: {
-        algorithm: string,
-        hash: string,
-    };
+    /**
+     * The checksum info of the file
+     */
+    checksum?: { algorithm: string; hash: string; };
+    mode?: "checksumNotMatch" | "noChecksumProvided" | "always";
 }
 
 export interface Downloader {
@@ -102,22 +88,13 @@ export interface Downloader {
      *
      * @returns The downloaded file full path
      */
-    downloadFile(option: DownloadToOption): Promise<void>;
-}
-
-export interface DownloadStrategy {
-    /**
-     * Determine if the `Downloader` should download this resource.
-     *
-     * @returns Should `Downloader` download
-     */
-    shouldDownload(option: DownloadToOption): Promise<boolean>;
+    downloadFile(option: DownloadOption): Promise<void>;
 }
 
 /**
  * The default downloader based on gotjs
  */
-export class DefaultDownloader implements Downloader, DownloadStrategy {
+export class DefaultDownloader implements Downloader {
     constructor(readonly requster = got.extend({
         agent: {
             http: new HttpAgent(),
@@ -164,7 +141,7 @@ export class DefaultDownloader implements Downloader, DownloadStrategy {
     /**
      * Download file by the option provided.
      */
-    async downloadFile(option: DownloadToOption): Promise<void> {
+    async downloadFile(option: DownloadOption): Promise<void> {
         await ensureFile(option.destination);
 
         if (typeof option.url === "string") {
@@ -179,131 +156,81 @@ export class DefaultDownloader implements Downloader, DownloadStrategy {
         }
         await promise;
     }
-    /**
-     * - If the file is not on the disk, it will return true.
-     * - If the checksum is not provided, it will return true if file existed.
-     * - If the checksum is provided, it will return true if the file checksum matched.
-     */
-    async shouldDownload(option: DownloadToOption): Promise<boolean> {
-        let missed = await missing(option.destination);
-        if (missed) {
-            return true;
-        }
-        if (!option.checksum || option.checksum.hash.length === 0) {
-            return false;
-        }
-        const hash = await checksum(option.destination, option.checksum.algorithm);
-        return hash !== option.checksum.hash;
+}
+
+/**
+ * - If the file is not on the disk, it will return true.
+ * - If the checksum is not provided, it will return true if file existed.
+ * - If the checksum is provided, it will return true if the file checksum matched.
+ */
+async function shouldDownload(option: DownloadOption): Promise<boolean> {
+    if (option.mode === "always") {
+        return true;
     }
-}
-
-/**
- * The default downloader of the library
- */
-let downloader: Downloader;
-let strategy: DownloadStrategy;
-
-/**
- * Set default downloader of the library
- */
-export function setDownloader(newDownloader: Downloader) {
-    downloader = newDownloader;
-}
-export function setDownloadStrategy(newStrategy: DownloadStrategy) {
-    strategy = newStrategy;
-}
-export function getDownloader() { return downloader; }
-export function getDownloadStrategy() { return strategy; }
-
-{
-    let temp = new DefaultDownloader();
-    setDownloader(temp);
-    setDownloadStrategy(temp);
-}
-
-/**
- * Wrapped task form of the download file task
- */
-export function downloadFileTask(option: DownloadToOption, worker: Downloader = downloader, stra: DownloadStrategy = strategy) {
-    return async (context: Task.Context) => {
-        option.pausable = context.pausealbe;
-        option.progress = (c, p, t, u) => context.update(p, t, u);
-        await worker.downloadFile(option);
-        context.pausealbe(undefined, undefined);
-    };
+    let missed = await missing(option.destination);
+    if (missed) {
+        return true;
+    }
+    if (!option.checksum || option.checksum.hash.length === 0) {
+        return option.mode === "noChecksumProvided";
+    }
+    const hash = await checksum(option.destination, option.checksum.algorithm);
+    return hash !== option.checksum.hash;
 }
 
 /**
  * Wrapped task form of download file if absent task
  */
-export function downloadFileIfAbsentTask(option: DownloadToOption, worker: Downloader = downloader, stra: DownloadStrategy = strategy) {
+export function downloadFileTask(option: DownloadOption, worker: Downloader = new DefaultDownloader()) {
     return async (context: Task.Context) => {
         option.pausable = context.pausealbe;
         option.progress = (c, p, t, u) => context.update(p, t, u);
-        if (await stra.shouldDownload(option)) {
+        if (await shouldDownload(option)) {
             await worker.downloadFile(option);
         }
         context.pausealbe(undefined, undefined);
     };
 }
 
-export type JavaExecutor = (args: string[], option?: ExecOptions) => Promise<any>;
-
-export namespace JavaExecutor {
-    export function createSimple(javaPath: string, defaultOptions?: ExecOptions): JavaExecutor {
-        return function (args, options) {
-            return new Promise<void>((resolve, reject) => {
-                const process = spawn(javaPath, args, options || defaultOptions);
-                process.on("error", (error) => {
-                    reject(error);
-                });
-                process.on("close", (code, signal) => {
-                    if (code !== 0) {
-                        reject();
-                    } else {
-                        resolve();
-                    }
-                });
-                process.on("exit", (code, signal) => {
-                    if (code !== 0) {
-                        reject();
-                    } else {
-                        resolve();
-                    }
-                });
-                process.stdout.setEncoding("utf-8");
-                process.stdout.on("data", (buf) => {
-                });
-                process.stderr.setEncoding("utf-8");
-                process.stderr.on("data", (buf) => {
-                    console.error(buf.toString("utf-8"));
-                });
-            });
-        };
-    }
+export function spawnProcess(javaPath: string, args: string[], options?: ExecOptions) {
+    return new Promise<void>((resolve, reject) => {
+        let process = spawn(javaPath, args, options);
+        let errorMsg: string[] = [];
+        process.on("error", reject);
+        process.on("close", (code) => {
+            if (code !== 0) { reject(errorMsg.join("")); } else { resolve(); }
+        });
+        process.on("exit", (code) => {
+            if (code !== 0) { reject(errorMsg.join("")); } else { resolve(); }
+        });
+        process.stdout.setEncoding("utf-8");
+        process.stdout.on("data", (buf) => { });
+        process.stderr.setEncoding("utf-8");
+        process.stderr.on("data", (buf) => { errorMsg.push(buf.toString()) });
+    });
 }
 
 export async function batchedTask(context: Task.Context, tasks: Task<unknown>[], sizes: number[], maxConcurrency?: number, throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string) {
+    maxConcurrency = Math.max(Math.min(tasks.length, maxConcurrency ?? cpus().length * 3), 1);
+    throwErrorImmediately = throwErrorImmediately ?? false;
+    getErrorMessage = getErrorMessage ?? (() => "");
+
     async function worker(): Promise<void> {
         while (tasks.length > 0) {
             try {
                 let sz = sizes.pop()!;
                 await context.execute(tasks.pop()!, sz);
             } catch (e) {
-                if (!throwErrorImmediately) {
-                    errors.push(e);
-                } else {
+                if (throwErrorImmediately || e instanceof Task.CancelledError) {
                     throw e;
+                } else {
+                    errors.push(e);
                 }
             }
         }
     }
     let errors = [] as unknown[];
     let promises: Promise<void>[] = [];
-
-    maxConcurrency = Math.min(tasks.length, maxConcurrency || cpus().length * 3);
-    throwErrorImmediately = throwErrorImmediately ?? false;
-    getErrorMessage = getErrorMessage ?? (() => "");
 
     context.update(0, sizes.reduce((a, b) => a + b, 0));
     for (let i = 0; i < maxConcurrency; ++i) {
@@ -313,6 +240,20 @@ export async function batchedTask(context: Task.Context, tasks: Task<unknown>[],
     if (errors.length > 0) {
         throw new MultipleError(errors, getErrorMessage(errors));
     }
+}
+
+export function normalizeArray<T>(arr: T | T[] = []): T[] {
+    return arr instanceof Array ? arr : [arr];
+}
+
+export function joinUrl(a: string, b: string) {
+    if (a.endsWith("/") && b.startsWith("/")) {
+        return a + b.substring(1);
+    }
+    if (!a.endsWith("/") && !b.startsWith("/")) {
+        return a + "/" + b;
+    }
+    return a + b;
 }
 
 /**
