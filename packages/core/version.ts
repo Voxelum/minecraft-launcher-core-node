@@ -20,8 +20,8 @@ export interface ResolvedVersion {
      */
     id: string;
     arguments: {
-        game: Version.LaunchArgument[],
-        jvm: Version.LaunchArgument[],
+        game: Version.LaunchArgument[];
+        jvm: Version.LaunchArgument[];
     };
     /**
      * The main class full qualified name
@@ -33,9 +33,9 @@ export interface ResolvedVersion {
      */
     assets: string;
     downloads: {
-        client: Version.Download,
-        server: Version.Download,
-        [key: string]: Version.Download,
+        client: Version.Download;
+        server: Version.Download;
+        [key: string]: Version.Download;
     };
     libraries: ResolvedLibrary[];
 
@@ -45,10 +45,10 @@ export interface ResolvedVersion {
     type: string;
     logging?: {
         [key: string]: {
-            file: Version.Download,
-            argument: string,
-            type: string,
-        },
+            file: Version.Download;
+            argument: string;
+            type: string;
+        };
     };
 
     /**
@@ -178,7 +178,7 @@ export namespace Version {
     export interface NormalLibrary {
         name: string;
         downloads: {
-            artifact: Artifact,
+            artifact: Artifact;
         };
     }
     export interface Rule {
@@ -189,9 +189,9 @@ export namespace Version {
     export interface NativeLibrary {
         name: string;
         downloads: {
-            artifact: Artifact,
+            artifact: Artifact;
             classifiers: {
-                [os: string]: Artifact,
+                [os: string]: Artifact;
             },
         };
         rules: Rule[];
@@ -199,14 +199,14 @@ export namespace Version {
             exclude: string[],
         };
         natives: {
-            [os: string]: string,
+            [os: string]: string;
         };
     }
 
     export interface PlatformSpecificLibrary {
         name: string;
         downloads: {
-            artifact: Artifact,
+            artifact: Artifact;
         };
         rules: Rule[];
     }
@@ -640,8 +640,8 @@ export interface Version {
 
     minecraftArguments?: string;
     arguments?: {
-        game: Version.LaunchArgument[],
-        jvm: Version.LaunchArgument[],
+        game: Version.LaunchArgument[];
+        jvm: Version.LaunchArgument[];
     };
 
     mainClass: string;
@@ -652,18 +652,18 @@ export interface Version {
     assetIndex?: Version.AssetIndex;
     assets?: string;
     downloads?: {
-        client: Version.Download,
-        server: Version.Download,
-        [key: string]: Version.Download,
+        client: Version.Download;
+        server: Version.Download;
+        [key: string]: Version.Download;
     };
 
     client?: string;
     server?: string;
     logging?: {
         [key: string]: {
-            file: Version.Download,
-            argument: string,
-            type: string,
+            file: Version.Download;
+            argument: string;
+            type: string;
         },
     };
 }
