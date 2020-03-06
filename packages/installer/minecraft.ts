@@ -1,8 +1,7 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson, futils } from "@xmcl/core";
 import Task from "@xmcl/task";
-import { cpus } from "os";
 import { join } from "path";
-import { Downloader, downloadFileIfAbsentTask, DownloadStrategy, getIfUpdate, UpdatedObject } from "./util";
+import { Downloader, downloadFileIfAbsentTask, DownloadStrategy, getIfUpdate, UpdatedObject, DownloadToOption, batchedTask } from "./util";
 
 const { ensureDir, readFile } = futils;
 
@@ -80,38 +79,51 @@ export interface DownloaderOption {
      * You should track the download progress by you self.
      */
     downloader?: Downloader;
-
     /**
      * An hook to decide should we download a resource.
      *
      * The default strategy will check the checksum and the existence of the file to decide should we download the file.
      */
     downloadStrategy?: DownloadStrategy;
-
     /**
      * Should hault the donwload process immediately after ANY resource download failed.
      */
     throwErrorImmediately?: boolean;
+    /**
+     * The max concurrency of the download
+     */
+    maxConcurrency?: number;
 }
 /**
  * Change the library host url
  */
 export interface LibraryOption extends DownloaderOption {
     /**
-     * Assign this to swap library host.
+     * A more flexiable way to control library download url.
+     * @see mavenHost
      */
     libraryHost?: LibraryHost;
+    /**
+     * The alterative maven host to download library. It will try to use these host from the `[0]` to the `[maven.length - 1]`
+     */
+    mavenHost?: string | string[];
+    /**
+     * Control how many libraries download task should run at the same time.
+     * It will override the `maxConcurrencyOption` if this is presented.
+     */
+    librariesDownloadConcurrency?: number;
 }
 /**
  * Change the host url of assets download
  */
 export interface AssetsOption extends DownloaderOption {
     /**
-     * Swap customized assets download host.
+     * The alternative assets host to download asset. It will try to use these host from the `[0]` to the `[assetsHost.length - 1]`
      */
     assetsHost?: string | string[];
     /**
      * Control how many assets download task should run at the same time.
+     * It will override the `maxConcurrencyOption` if this is presented.
      */
     assetsDownloadConcurrency?: number;
 }
@@ -128,6 +140,7 @@ export interface JarOption extends DownloaderOption {
      */
     server?: string;
 }
+
 export type Option = AssetsOption & JarOption & LibraryOption;
 
 type RequiredVersion = Pick<Version, "id" | "url">
@@ -136,7 +149,7 @@ type RequiredVersion = Pick<Version, "id" | "url">
  * The collection of errors happened during a parallel process
  */
 export class MultipleError extends Error {
-    constructor(public errors: any[], message?: string) { super(message); };
+    constructor(public errors: unknown[], message?: string) { super(message); };
 }
 /**
  * Install the Minecraft game to a location by version metadata.
@@ -278,20 +291,16 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
         let folder = MinecraftFolder.from(version.minecraftDirectory);
         let jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
-        await context.execute(Task.create("assetsJson", function assetsJson(work) {
-            let worker = option.downloader;
-            let strategy = option.downloadStrategy;
+        await context.execute(Task.create("assetsJson", downloadFileIfAbsentTask({
+            url: version.assetIndex.url,
+            destination: jsonPath,
+            checksum: {
+                algorithm: "sha1",
+                hash: version.assetIndex.sha1,
+            },
+        }, option.downloader, option.downloadStrategy)));
 
-            return downloadFileIfAbsentTask({
-                url: version.assetIndex.url,
-                destination: jsonPath,
-                checksum: {
-                    algorithm: "sha1",
-                    hash: version.assetIndex.sha1,
-                },
-            }, worker, strategy)(work);
-        }));
-
+        await ensureDir(folder.getPath("assets", "objects"));
         interface AssetIndex {
             objects: {
                 [key: string]: {
@@ -300,48 +309,14 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
                 };
             };
         }
+
         let { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
-        await ensureDir(folder.getPath("assets", "objects"));
         let objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
+        let tasks = objectArray.map((o) => installAssetTask(version.id, o, folder, option));
+        let sizes = objectArray.map((a) => a.size).map((a, b) => a + b, 0);
 
-        let totalSize = objectArray.reduce((p, v) => p + v.size, 0);
-        let totalCount = objectArray.length;
-        let downloadedSize = 0;
-
-        context.update(downloadedSize, totalSize);
-
-        let updateTotal = (size: number) => {
-            context.update(downloadedSize += size, totalSize);
-        };
-
-        let errors = [] as any[];
-
-        async function startWorker(): Promise<void> {
-            if (objectArray.length === 0) {
-                return Promise.resolve();
-            }
-            try {
-                await context.execute(installAssetsWorkerTask(version.id, objectArray, folder, option, updateTotal));
-            } catch (e) {
-                if (!option.throwErrorImmediately) {
-                    errors.push(e);
-                    return startWorker();
-                }
-                throw e;
-            }
-        }
-
-        let cores = Math.min(totalCount, option.assetsDownloadConcurrency || cpus().length * 3);
-        let all = [];
-        for (let i = 0; i < cores; ++i) {
-            all.push(startWorker());
-        }
-
-        await Promise.all(all);
-
-        if (errors.length !== 0) {
-            throw new MultipleError(errors, `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}`);
-        }
+        await batchedTask(context, tasks, sizes, option.assetsDownloadConcurrency || option.maxConcurrency, option.throwErrorImmediately,
+            () => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}`);
 
         return version;
     }
@@ -369,20 +344,9 @@ export function installLibraries(version: ResolvedVersion, option: LibraryOption
 export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option: LibraryOption = {}): Task<T> {
     return Task.create("installLibraries", async function installLibraries(context: Task.Context) {
         let folder = MinecraftFolder.from(version.minecraftDirectory);
-        let total = version.libraries.length * 10;
-        context.update(0, total);
-        let errors: any[] = [];
-        let promises = version.libraries.map((lib) => context.execute(installLibraryTask(lib, folder, option), 10).catch((e) => {
-            if (option.throwErrorImmediately) {
-                throw e;
-            } else {
-                errors.push(e);
-            }
-        }));
-        await Promise.all(promises);
-        if (errors.length !== 0) {
-            throw new MultipleError(errors, `Errors during install Minecraft ${version.minecraftDirectory} libraries.`);
-        }
+        let tasks = version.libraries.map((lib) => installLibraryTask(lib, folder, option));
+        await batchedTask(context, tasks, tasks.map(() => 10), option.librariesDownloadConcurrency || option.maxConcurrency, option.throwErrorImmediately,
+            () => `Errors during install Minecraft ${version.minecraftDirectory} libraries.`);
         return version;
     }, { version: Reflect.get(version, "id") || "" });
 }
@@ -436,8 +400,6 @@ function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLo
 function installVersionJarTask(type: "client" | "server", version: ResolvedVersion, minecraft: MinecraftLocation, option: Option) {
     return Task.create("jar", async function jar(context: Task.Context) {
         const folder = MinecraftFolder.from(minecraft);
-        await ensureDir(folder.getVersionRoot(version.id));
-
         const destination = join(folder.getVersionRoot(version.id),
             type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar");
         const url = option[type] || version.downloads[type].url;
@@ -455,20 +417,19 @@ function installVersionJarTask(type: "client" | "server", version: ResolvedVersi
 function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, option: Option) {
     return Task.create("library", async function library(context: Task.Context) {
         const fallbackMavens = ["https://repo1.maven.org/maven2/"];
-
         context.update(0, -1, lib.name);
 
         const libraryPath = lib.download.path;
         const filePath = join(folder.libraries, libraryPath);
-        const urls: string[] = [lib.download.url, ...fallbackMavens.map((m) => `${m}${lib.download.path}`)];
-        // user defined alternative host to download
         const libraryHosts = option.libraryHost?.(lib);
 
-        if (typeof libraryHosts === "string") {
-            urls.unshift(libraryHosts);
-        } else if (libraryHosts instanceof Array) {
-            urls.unshift(...libraryHosts);
-        }
+        const urls: string[] = [
+            // user defined alternative host to download
+            ...normalizeArray(libraryHosts),
+            ...normalizeArray(option.mavenHost).map((m) => m + lib.download.path),
+            lib.download.url,
+            ...fallbackMavens.map((m) => m + lib.download.path),
+        ];
 
         const checksum = lib.download.sha1 === "" ? undefined : {
             algorithm: "sha1",
@@ -483,35 +444,32 @@ function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, optio
     }, { lib: lib.name });
 }
 
-function installAssetsWorkerTask(version: string, pool: Array<{ name: string, hash: string, size: number }>, folder: MinecraftFolder, assetsOption: AssetsOption, finishCallback: (size: number) => void) {
+function installAssetTask(version: string, asset: { name: string, hash: string, size: number }, folder: MinecraftFolder, assetsOption: AssetsOption) {
     return Task.create("assets", async function assets(context: Task.Context) {
-        const assetsHosts = [DEFAULT_RESOURCE_ROOT_URL];
+        const assetsHosts = [
+            ...normalizeArray(assetsOption.assetsHost),
+            DEFAULT_RESOURCE_ROOT_URL,
+        ];
 
-        if (typeof assetsOption.assetsHost === "string") {
-            assetsHosts.unshift(assetsOption.assetsHost);
-        } else if (assetsOption.assetsHost instanceof Array) {
-            assetsHosts.unshift(...assetsOption.assetsHost);
-        }
+        const { hash, size, name } = asset;
 
-        while (pool.length > 0) {
-            const { hash, size } = pool.pop()!;
+        const head = hash.substring(0, 2);
+        const dir = folder.getPath("assets", "objects", head);
+        const file = join(dir, hash);
+        const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`);
 
-            const head = hash.substring(0, 2);
-            const dir = folder.getPath("assets", "objects", head);
-            const file = join(dir, hash);
-            const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`);
-
-            context.update(0, size, urls[0]);
-
-            await downloadFileIfAbsentTask({
-                url: urls,
-                checksum: {
-                    hash,
-                    algorithm: "sha1",
-                },
-                destination: file,
-            }, assetsOption.downloader, assetsOption.downloadStrategy)(context);
-            finishCallback(size);
-        }
+        context.update(0, size, name);
+        await downloadFileIfAbsentTask({
+            url: urls,
+            checksum: {
+                hash,
+                algorithm: "sha1",
+            },
+            destination: file,
+        }, assetsOption.downloader, assetsOption.downloadStrategy)(context);
     }, { version });
+}
+
+function normalizeArray<T>(arr: T | T[] = []): T[] {
+    return arr instanceof Array ? arr : [arr];
 }
