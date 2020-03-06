@@ -22,6 +22,85 @@ export interface LoaderVersionList extends UpdatedObject {
     versions: string[];
 }
 
+export interface FabricArtifactVersion {
+    gameVersion?: string; // "20w10a",
+    separator?: string;
+    build?: number,
+    maven: string; // "net.fabricmc:yarn:20w10a+build.7",
+    version: string; // "20w10a+build.7",
+    stable: boolean;
+}
+
+export interface FabricArtifacts {
+    mappings: FabricArtifactVersion[];
+    loader: FabricArtifactVersion[];
+}
+
+export interface LoaderArtifact {
+    loader: FabricArtifactVersion;
+    launcherMeta: {
+        version: number;
+        libraries: {
+            client: { name: string; url: string; }[];
+            common: { name: string; url: string; }[];
+            server: { name: string; url: string; }[];
+        },
+        mainClass: {
+            client: string;
+            server: string;
+        };
+    };
+}
+
+export const DEFAULT_FABRIC_API = "https://meta.fabricmc.net/v2";
+
+/**
+ * Get all the artifacts provided by fabric
+ * @param remote The fabric API host
+ */
+export function getArtifacts(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifacts> {
+    return fetchJson(remote + "/versions").json();
+}
+/**
+ * Get fabric-yarn artifact list
+ * @param remote The fabric API host
+ */
+export function getYarnArtifactList(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
+    return fetchJson(remote + "/versions/yarn").json();
+}
+/**
+ * Get fabric-yarn artifact list by Minecraft version
+ * @param minecraft The Minecraft version
+ * @param remote The fabric API host
+ */
+export function getYarnArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
+    return fetchJson(remote + "/versions/yarn/" + minecraft).json();
+}
+/**
+ * Get fabric-loader artifact list
+ * @param remote The fabric API host
+ */
+export function getLoaderArtifactList(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
+    return fetchJson(remote + "/versions/loader").json();
+}
+/**
+ * Get fabric-loader artifact list by Minecraft version
+ * @param minecraft The minecraft version
+ * @param remote The fabric API host
+ */
+export function getLoaderArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<LoaderArtifact[]> {
+    return fetchJson(remote + "/versions/loader/" + minecraft).json();
+}
+/**
+ * Get fabric-loader artifact list by Minecraft version
+ * @param minecraft The minecraft version
+ * @param loader The yarn-loader version
+ * @param remote The fabric API host
+ */
+export function getLoaderArtifact(minecraft: string, loader: string, remote: string = DEFAULT_FABRIC_API): Promise<LoaderArtifact> {
+    return fetchJson(remote + "/versions/loader/" + minecraft + "/" + loader).json();
+}
+
 /**
  * Parse the maven xml provided by Fabric. This is pretty tricky. I don't want to include another lib to parse xml.
  * Therefore I just use RegExp here to match.
@@ -107,6 +186,56 @@ export async function install(yarnVersion: string, loaderVersion: string, minecr
     }
     await ensureFile(jsonFile);
     await writeFile(jsonFile, JSON.stringify(body));
+
+    return id;
+}
+
+/**
+ * Generate fabric version json to the disk according to yarn and loader
+ * @param side Client or server
+ * @param yarnVersion The yarn version string or artifact
+ * @param loader The loader artifact
+ * @param minecraft The Minecraft Location
+ * @param options The options
+ */
+export async function installFromVersionMeta(side: "client" | "server", yarnVersion: string | FabricArtifactVersion, loader: LoaderArtifact, minecraft: MinecraftLocation, options: InstallOptions = {}) {
+    const folder = MinecraftFolder.from(minecraft);
+
+    let yarn: string;
+    let id = options.versionId;
+    let mcversion: string;
+    if (typeof yarnVersion === "string") {
+        yarn = yarnVersion;
+        mcversion = yarn.split("+")[0];
+    } else {
+        yarn = yarnVersion.version;
+        mcversion = yarnVersion.gameVersion || yarn.split("+")[0];
+    }
+    id = id || `${mcversion}-fabric${yarnVersion}-${loader.loader.version}`;
+    let libraries = [
+        { name: loader.loader.maven, url: "https://maven.fabricmc.net/" },
+        { name: `net.fabricmc:yarn:${yarn}`, url: "https://maven.fabricmc.net/" },
+        ...loader.launcherMeta.libraries.common,
+        ...loader.launcherMeta.libraries[side],
+    ];
+    let mainClass = loader.launcherMeta.mainClass[side];
+    let inheritsFrom = options.inheritsFrom || mcversion;
+
+    let jsonFile = folder.getVersionJson(id);
+
+    await ensureFile(jsonFile);
+    await writeFile(jsonFile, JSON.stringify({
+        id,
+        inheritsFrom,
+        mainClass,
+        libraries,
+        arguments: {
+            game: [],
+            jvm: [],
+        },
+        releaseTime: new Date().toJSON(),
+        time: new Date().toJSON(),
+    }));
 
     return id;
 }
