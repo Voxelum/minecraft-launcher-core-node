@@ -1,5 +1,6 @@
-import { fetchJson, getRawIfUpdate, UpdatedObject, InstallOptions } from "./util";
-import { MinecraftFolder, MinecraftLocation, futils } from "@xmcl/core";
+import { futils, MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
+import got from "got";
+import { getRawIfUpdate, InstallOptions, UpdatedObject } from "./util";
 
 const { ensureFile, writeFile } = futils;
 
@@ -59,14 +60,14 @@ export const DEFAULT_FABRIC_API = "https://meta.fabricmc.net/v2";
  * @param remote The fabric API host
  */
 export function getArtifacts(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifacts> {
-    return fetchJson(remote + "/versions").json();
+    return got(remote + "/versions").json();
 }
 /**
  * Get fabric-yarn artifact list
  * @param remote The fabric API host
  */
 export function getYarnArtifactList(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
-    return fetchJson(remote + "/versions/yarn").json();
+    return got(remote + "/versions/yarn").json();
 }
 /**
  * Get fabric-yarn artifact list by Minecraft version
@@ -74,14 +75,14 @@ export function getYarnArtifactList(remote: string = DEFAULT_FABRIC_API): Promis
  * @param remote The fabric API host
  */
 export function getYarnArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
-    return fetchJson(remote + "/versions/yarn/" + minecraft).json();
+    return got(remote + "/versions/yarn/" + minecraft).json();
 }
 /**
  * Get fabric-loader artifact list
  * @param remote The fabric API host
  */
 export function getLoaderArtifactList(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
-    return fetchJson(remote + "/versions/loader").json();
+    return got(remote + "/versions/loader").json();
 }
 /**
  * Get fabric-loader artifact list by Minecraft version
@@ -89,7 +90,7 @@ export function getLoaderArtifactList(remote: string = DEFAULT_FABRIC_API): Prom
  * @param remote The fabric API host
  */
 export function getLoaderArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<LoaderArtifact[]> {
-    return fetchJson(remote + "/versions/loader/" + minecraft).json();
+    return got(remote + "/versions/loader/" + minecraft).json();
 }
 /**
  * Get fabric-loader artifact list by Minecraft version
@@ -98,7 +99,7 @@ export function getLoaderArtifactListFor(minecraft: string, remote: string = DEF
  * @param remote The fabric API host
  */
 export function getLoaderArtifact(minecraft: string, loader: string, remote: string = DEFAULT_FABRIC_API): Promise<LoaderArtifact> {
-    return fetchJson(remote + "/versions/loader/" + minecraft + "/" + loader).json();
+    return got(remote + "/versions/loader/" + minecraft + "/" + loader).json();
 }
 
 /**
@@ -179,7 +180,7 @@ export async function install(yarnVersion: string, loaderVersion: string, minecr
 
     const jsonFile = folder.getVersionJson(id);
 
-    const { body } = await fetchJson(`https://fabricmc.net/download/technic/?yarn=${encodeURIComponent(yarnVersion)}&loader=${encodeURIComponent(loaderVersion)}`);
+    const body: Version = await got(`https://fabricmc.net/download/technic/?yarn=${encodeURIComponent(yarnVersion)}&loader=${encodeURIComponent(loaderVersion)}`).json();
     body.id = id;
     if (typeof options.inheritsFrom === "string") {
         body.inheritsFrom = options.inheritsFrom;

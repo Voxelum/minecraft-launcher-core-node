@@ -4,6 +4,7 @@
         "minecraft.ts",
         "forge.ts",
         "liteloader.ts",
+        "curseforge.ts",
         "fabric.ts",
         "util.ts"
     ],

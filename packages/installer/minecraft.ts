@@ -1,9 +1,10 @@
-import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson, futils } from "@xmcl/core";
+import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson, futils, LibraryInfo } from "@xmcl/core";
 import Task from "@xmcl/task";
-import { join } from "path";
-import { Downloader, downloadFileIfAbsentTask, DownloadStrategy, getIfUpdate, UpdatedObject, DownloadToOption, batchedTask } from "./util";
+import { join, delimiter } from "path";
+import { Downloader, downloadFileTask, getIfUpdate, UpdatedObject, batchedTask, spawnProcess, joinUrl, normalizeArray } from "./util";
+import { open } from "@xmcl/unzip";
 
-const { ensureDir, readFile } = futils;
+const { ensureDir, readFile, validateSha1 } = futils;
 
 /**
  * The function to swap library host.
@@ -38,6 +39,55 @@ export interface VersionList extends UpdatedObject {
      * All the vesrsion list
      */
     versions: Version[];
+}
+
+export interface InstallProfile {
+    spec?: number;
+    /**
+     * The type of this installation, like "forge"
+     */
+    profile: string;
+    /**
+     * The version of this installation
+     */
+    version: string;
+    /**
+     * The version json path
+     */
+    json: string;
+    /**
+     * The maven artifact name: <org>:<artifact-id>:<version>
+     */
+    path: string;
+    /**
+     * The minecraft version
+     */
+    minecraft: string;
+    /**
+     * The processor shared variables. The key is the name of variable to replace.
+     *
+     * The value of client/server is the value of the variable.
+     */
+    data: { [key: string]: { client: string; server: string; }; };
+    /**
+     * The post processor. Which require java to run.
+     */
+    processors: Array<{
+        /**
+         * The executable jar path
+         */
+        jar: string;
+        /**
+         * The classpath to run
+         */
+        classpath: string[];
+        args: string[];
+        outputs?: { [key: string]: string; };
+    }>;
+    /**
+     * The required install profile libraries
+     */
+    libraries: VersionJson.NormalLibrary[];
 }
 
 /**
@@ -80,11 +130,15 @@ export interface DownloaderOption {
      */
     downloader?: Downloader;
     /**
-     * An hook to decide should we download a resource.
+     * Decide should downloader redownload and overwrite existed file.
      *
-     * The default strategy will check the checksum and the existence of the file to decide should we download the file.
+     * It has such options:
+     *
+     * - `checksumNotMatch`: Only the file with checksum provided and not matched will be redownload.
+     * - `noChecksumProvided`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
+     * - `always`: Always redownload files.
      */
-    downloadStrategy?: DownloadStrategy;
+    overwriteWhen?: "checksumNotMatch" | "noChecksumProvided" | "always";
     /**
      * Should hault the donwload process immediately after ANY resource download failed.
      */
@@ -291,14 +345,15 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
         let folder = MinecraftFolder.from(version.minecraftDirectory);
         let jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
-        await context.execute(Task.create("assetsJson", downloadFileIfAbsentTask({
+        await context.execute(Task.create("assetsJson", downloadFileTask({
             url: version.assetIndex.url,
             destination: jsonPath,
             checksum: {
                 algorithm: "sha1",
                 hash: version.assetIndex.sha1,
             },
-        }, option.downloader, option.downloadStrategy)));
+            mode: option.overwriteWhen,
+        }, option.downloader)));
 
         await ensureDir(folder.getPath("assets", "objects"));
         interface AssetIndex {
@@ -328,7 +383,7 @@ export function installAssetsTask(version: ResolvedVersion, option: AssetsOption
  * @param version The target version
  * @param option The library host swap option
  */
-export function installLibraries(version: ResolvedVersion, option: LibraryOption = {}): Promise<ResolvedVersion> {
+export function installLibraries(version: ResolvedVersion, option: LibraryOption = {}): Promise<void> {
     return Task.execute(installLibrariesTask(version, option)).wait();
 }
 /**
@@ -341,13 +396,12 @@ export function installLibraries(version: ResolvedVersion, option: LibraryOption
  * @param version The target version
  * @param option The library host swap option
  */
-export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option: LibraryOption = {}): Task<T> {
+export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option: LibraryOption = {}): Task<void> {
     return Task.create("installLibraries", async function installLibraries(context: Task.Context) {
         let folder = MinecraftFolder.from(version.minecraftDirectory);
         let tasks = version.libraries.map((lib) => installLibraryTask(lib, folder, option));
         await batchedTask(context, tasks, tasks.map(() => 10), option.librariesDownloadConcurrency || option.maxConcurrency, option.throwErrorImmediately,
             () => `Errors during install Minecraft ${version.minecraftDirectory} libraries.`);
-        return version;
     }, { version: Reflect.get(version, "id") || "" });
 }
 
@@ -373,11 +427,165 @@ export function installResolvedLibraries(libraries: ResolvedLibrary[], minecraft
  * @param option The install option
  */
 export function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Task<void> {
-    return new Proxy(installLibrariesTask({ libraries, minecraftDirectory: typeof minecraft === "string" ? minecraft : minecraft.root }, option), {
-        async apply(target, thisArgs, args) {
-            await target.run(args[0]);
+    return installLibrariesTask({ libraries, minecraftDirectory: typeof minecraft === "string" ? minecraft : minecraft.root }, option);
+}
+
+export interface InstallProfileOption extends LibraryOption {
+    /**
+     * New forge (>=1.13) require java to install. Can be a executor or java executable path.
+     */
+    java?: string;
+    /**
+     * The installation side
+     */
+    side?: "client" | "server";
+}
+
+/**
+ * Resolve processors in install profile
+ */
+export function resolveProcessors(side: "client" | "server", installProfile: InstallProfile, minecraft: MinecraftFolder) {
+    function normalizePath(val: string) {
+        if (val && val.match(/^\[.+\]$/g)) { // match sth like [net.minecraft:client:1.15.2:slim]
+            let name = val.substring(1, val.length - 1);
+            return minecraft.getLibraryByPath(LibraryInfo.resolve(name).path);
+        }
+        return val;
+    }
+    function normalizeVariable(val: string) {
+        if (val && val.match(/^{.+}$/g)) { // match sth like {MAPPINGS}
+            let key = val.substring(1, val.length - 1);
+            val = variables[key][side];
+        }
+        return val;
+    }
+    // store the mapping of {VARIABLE_NAME} -> real path in disk
+    let variables: Record<string, { client: string; server: string }> = {
+        MINECRAFT_JAR: {
+            client: minecraft.getVersionJar(installProfile.minecraft),
+            server: minecraft.getVersionJar(installProfile.minecraft, "server"),
         },
-    }) as any;
+    };
+    for (let key in installProfile.data) {
+        let { client, server } = installProfile.data[key];
+        variables[key] = {
+            client: normalizePath(client),
+            server: normalizePath(server),
+        };
+    }
+    let processors = installProfile.processors.map((proc) => ({
+        ...proc,
+        args: proc.args.map(normalizePath).map(normalizeVariable),
+        outputs: proc.outputs ? Object.entries(proc.outputs).map(([k, v]) => ({ [normalizeVariable(k)]: normalizeVariable(v) }))
+            .reduce((a, b) => ({ ...a, ...b }), {}) : proc.outputs,
+    }));
+    return processors;
+}
+
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ */
+export function installByProfile(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
+    return installByProfileTask(installProfile, minecraft, options).execute().wait();
+}
+
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ */
+export function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
+    async function findMainClass(lib: string) {
+        const zip = await open(lib, { lazyEntries: true });
+        const [manifest] = await zip.filterEntries(["META-INF/MANIFEST.MF"]);
+        let mainClass: string | undefined;
+        if (manifest) {
+            const content = await zip.readEntry(manifest).then((b) => b.toString());
+            mainClass = content.split("\n")
+                .map((l) => l.split(": "))
+                .find((arr) => arr[0] === "Main-Class")?.[1].trim();
+        }
+        zip.close();
+        return mainClass;
+    }
+    async function postProcess(mc: MinecraftFolder, proc: InstallProfile["processors"][number], java: string) {
+        let shouldProcess = false;
+        if (proc.outputs) {
+            for (const file in proc.outputs) {
+                if (! await validateSha1(file, proc.outputs[file].replace(/'/g, ""))) {
+                    shouldProcess = true;
+                    break;
+                }
+            }
+        } else {
+            shouldProcess = true;
+        }
+        if (!shouldProcess) { return; }
+        const jarRealPath = mc.getLibraryByPath(LibraryInfo.resolve(proc.jar).path);
+        const mainClass = await findMainClass(jarRealPath);
+        if (!mainClass) { throw new Error(`Cannot find main class for processor ${proc.jar}.`); }
+        const cp = [...proc.classpath, proc.jar].map(LibraryInfo.resolve).map((p) => mc.getLibraryByPath(p.path)).join(delimiter);
+        const cmd = ["-cp", cp, mainClass, ...proc.args];
+        try {
+            await spawnProcess(java, cmd);
+        } catch (e) {
+            throw new Error(`Fail on execute processor ${proc.jar}: ${JSON.stringify(cmd)}`)
+        }
+        let failed = false;
+        if (proc.outputs) {
+            for (const file in proc.outputs) {
+                if (! await validateSha1(file, proc.outputs[file].replace(/'/g, ""))) {
+                    console.error(`Fail to process ${proc.jar} @ ${file} since its validation failed.`);
+                    failed = true;
+                }
+            }
+        }
+        if (failed) {
+            console.error(`Java arguments: ${JSON.stringify(cmd)}`);
+            throw new Error("Fail to process post processing since its validation failed.");
+        }
+    }
+    function postProcessingTask(minecraft: MinecraftFolder, processors: InstallProfile["processors"], java: string, failImmediately: boolean) {
+        return Task.create("postProcessing", async function postProcessing(ctx) {
+            if (!processors || processors.length === 0) {
+                return;
+            }
+
+            ctx.update(0, processors.length);
+            let done = 0;
+            for (let proc of processors) {
+                try {
+                    await postProcess(minecraft, proc, java);
+                } catch (e) {
+                    e = e || new Error(`Fail to post porcess ${proc.jar}: ${proc.args.join(" ")}, ${proc.classpath.join(" ")}`);
+                    throw e;
+                }
+                ctx.update(done += 1, processors.length);
+            }
+
+            done += 1;
+            ctx.update(done, processors.length);
+        });
+    }
+
+    return Task.create("install", async function install(context: Task.Context) {
+        const minecraftFolder = MinecraftFolder.from(minecraft);
+        const java = options.java || "java";
+
+        let processor = resolveProcessors(options.side || "client", installProfile, minecraftFolder);
+
+        let versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse);
+        let libraries = VersionJson.resolveLibraries([...installProfile.libraries, ...versionJson.libraries]);
+
+        await context.execute(installResolvedLibrariesTask(libraries, minecraft, options), 50);
+        await context.execute(postProcessingTask(minecraftFolder, processor, java, options.throwErrorImmediately || false), 50);
+    });
 }
 
 function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLocation, option: Option) {
@@ -389,11 +597,12 @@ function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLo
         let url = version.url;
         let expectSha1 = version.url.split("/")[5];
 
-        await downloadFileIfAbsentTask({
+        await downloadFileTask({
             url,
             checksum: { algorithm: "sha1", hash: expectSha1 },
             destination: destination,
-        }, option.downloader, option.downloadStrategy)(context);
+            mode: option.overwriteWhen,
+        }, option.downloader)(context);
     });
 }
 
@@ -405,49 +614,43 @@ function installVersionJarTask(type: "client" | "server", version: ResolvedVersi
         const url = option[type] || version.downloads[type].url;
         const expectSha1 = version.downloads[type].sha1;
 
-        await downloadFileIfAbsentTask({
+        await downloadFileTask({
             url,
             checksum: { algorithm: "sha1", hash: expectSha1 },
             destination: destination,
-        }, option.downloader, option.downloadStrategy)(context);
+            mode: option.overwriteWhen,
+        }, option.downloader)(context);
         return version;
     });
 }
 
 function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, option: Option) {
     return Task.create("library", async function library(context: Task.Context) {
-        const fallbackMavens = ["https://repo1.maven.org/maven2/"];
         context.update(0, -1, lib.name);
 
         const libraryPath = lib.download.path;
         const filePath = join(folder.libraries, libraryPath);
-        const libraryHosts = option.libraryHost?.(lib);
 
-        const urls: string[] = [
-            // user defined alternative host to download
-            ...normalizeArray(libraryHosts),
-            ...normalizeArray(option.mavenHost).map((m) => m + lib.download.path),
-            lib.download.url,
-            ...fallbackMavens.map((m) => m + lib.download.path),
-        ];
+        const urls: string[] = resolveLibraryDownloadUrls(lib, option);
 
         const checksum = lib.download.sha1 === "" ? undefined : {
             algorithm: "sha1",
             hash: lib.download.sha1,
         }
 
-        await downloadFileIfAbsentTask({
+        await downloadFileTask({
             url: urls,
             checksum,
             destination: filePath,
-        }, option.downloader, option.downloadStrategy)(context);
+            mode: option.overwriteWhen,
+        }, option.downloader)(context);
     }, { lib: lib.name });
 }
 
-function installAssetTask(version: string, asset: { name: string, hash: string, size: number }, folder: MinecraftFolder, assetsOption: AssetsOption) {
+function installAssetTask(version: string, asset: { name: string, hash: string, size: number }, folder: MinecraftFolder, option: AssetsOption) {
     return Task.create("assets", async function assets(context: Task.Context) {
         const assetsHosts = [
-            ...normalizeArray(assetsOption.assetsHost),
+            ...normalizeArray(option.assetsHost),
             DEFAULT_RESOURCE_ROOT_URL,
         ];
 
@@ -459,17 +662,34 @@ function installAssetTask(version: string, asset: { name: string, hash: string, 
         const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`);
 
         context.update(0, size, name);
-        await downloadFileIfAbsentTask({
+        await downloadFileTask({
             url: urls,
+            mode: option.overwriteWhen,
             checksum: {
                 hash,
                 algorithm: "sha1",
             },
             destination: file,
-        }, assetsOption.downloader, assetsOption.downloadStrategy)(context);
+        }, option.downloader)(context);
     }, { version });
 }
 
-function normalizeArray<T>(arr: T | T[] = []): T[] {
-    return arr instanceof Array ? arr : [arr];
+const DEFAULT_MAVENS = ["https://repo1.maven.org/maven2/"];
+
+/**
+ * Resolve a library download urls with fallback.
+ *
+ * @param library The resolved library
+ * @param libraryOptions The library install options
+ */
+export function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOption) {
+    const libraryHosts = libraryOptions.libraryHost?.(library);
+
+    return [
+        // user defined alternative host to download
+        ...normalizeArray(libraryHosts),
+        ...normalizeArray(libraryOptions.mavenHost).map((m) => joinUrl(m, library.download.path)),
+        library.download.url,
+        ...DEFAULT_MAVENS.map((m) => joinUrl(m, library.download.path)),
+    ];
 }

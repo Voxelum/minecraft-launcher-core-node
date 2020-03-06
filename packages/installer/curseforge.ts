@@ -3,7 +3,7 @@ import { Task } from "@xmcl/task";
 import { CachedZipFile, open } from "@xmcl/unzip";
 import got from "got";
 import { basename, join } from "path";
-import { downloadFileIfAbsentTask, batchedTask } from "./util";
+import { downloadFileTask, batchedTask } from "./util";
 import { DownloaderOption } from "./minecraft";
 
 export interface Options extends DownloaderOption {
@@ -127,7 +127,7 @@ export function installCurseforgeModpackTask(zip: InputType, minecraft: Minecraf
             let requestor = options?.queryFileUrl || DEFAULT_QUERY;
             let urls = await Promise.all(mainfest.files.map((f) => requestor(f.projectID, f.fileID)))
             let sizes = urls.map(() => 10);
-            let tasks = urls.map((u) => Task.create("file", downloadFileIfAbsentTask({ destination: mc.getMod(basename(u)), url: u })));
+            let tasks = urls.map((u) => Task.create("file", downloadFileTask({ destination: mc.getMod(basename(u)), url: u })));
             await batchedTask(c, tasks, sizes, options?.maxConcurrency, options?.throwErrorImmediately, () => `Fail to install curseforge modpack to ${mc.root}.`);
         }), 80);
 
@@ -167,6 +167,6 @@ export function installCurseforgeFileTask(file: File, destination: string, optio
     return Task.create("curseforge-file", async (context) => {
         let requestor = options?.queryFileUrl ?? DEFAULT_QUERY;
         let url = await requestor(file.projectID, file.fileID);
-        return downloadFileIfAbsentTask({ destination: join(destination, basename(url)), url }, options?.downloader, options?.downloadStrategy)(context);
+        return downloadFileTask({ destination: join(destination, basename(url)), url }, options?.downloader)(context);
     });
 }

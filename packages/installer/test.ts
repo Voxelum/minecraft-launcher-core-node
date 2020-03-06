@@ -3,7 +3,6 @@ import { exists, remove } from "@xmcl/core/fs";
 import { existsSync, readFileSync } from "fs";
 import { join, normalize } from "path";
 import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis, CurseforgeInstaller } from "./index";
-import { JavaExecutor } from "./util";
 import { MultipleError } from "./minecraft";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
@@ -198,7 +197,7 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.13.2-25.0.209/forge-1.13.2-25.0.209-installer.jar",
             },
         };
-        const result = await ForgeInstaller.install(meta, MinecraftFolder.from(root), { java: JavaExecutor.createSimple(javaPath) });
+        const result = await ForgeInstaller.install(meta, MinecraftFolder.from(root), { java: javaPath });
         expect(result).toEqual("1.13.2-forge-25.0.209");
         await expect(exists(join(root, "versions", "1.13.2-forge-25.0.209", "1.13.2-forge-25.0.209.json")))
             .resolves
@@ -221,7 +220,7 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.14.4-28.0.45/forge-1.14.4-28.0.45-installer.jar",
             },
         };
-        const result = await ForgeInstaller.install(meta, MinecraftFolder.from(root), { java: JavaExecutor.createSimple(javaPath) });
+        const result = await ForgeInstaller.install(meta, MinecraftFolder.from(root), { java: javaPath });
         expect(result).toEqual("1.14.4-forge-28.0.45");
         await expect(exists(join(root, "versions", "1.14.4-forge-28.0.45", "1.14.4-forge-28.0.45.json")))
             .resolves

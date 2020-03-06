@@ -1,7 +1,7 @@
 import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary, ResolvedVersion, futils } from "@xmcl/core";
-import { InstallProfile, linkInstallProfile } from "./forge";
 import { join } from "path";
 import Task from "@xmcl/task";
+import { InstallProfile, resolveProcessors } from "./minecraft";
 
 const { missing, readFile, validateSha1, exists, stat } = futils;
 
@@ -224,10 +224,10 @@ export async function diagnoseForgeVersion(versionOrProfile: string | InstallPro
 }
 
 
-async function diagnoseForge(version: string, prof: InstallProfile | undefined, mc: MinecraftFolder) {
-    const versionJsonPath = mc.getVersionJson(version);
+async function diagnoseForge(version: string, processedProfile: InstallProfile | undefined, mc: MinecraftFolder) {
+    let versionJsonPath = mc.getVersionJson(version);
 
-    const diag: ForgeReport = {
+    let report: ForgeReport = {
         unprocessed: [],
         libraries: [],
         badVersionJson: false,
@@ -238,40 +238,40 @@ async function diagnoseForge(version: string, prof: InstallProfile | undefined, 
         missingForgePatchesJar: false,
     };
 
-    if (prof) {
+    if (processedProfile) {
         // check processor in install profiles
-        const processedProfile = linkInstallProfile(mc, prof);
-        for (const proc of processedProfile.processors) {
+        let processors = resolveProcessors("client", processedProfile, mc);
+        for (let proc of processors) {
             if (proc.outputs) {
                 let status = Status.Good;
-                for (const file in proc.outputs) {
-                    const nStatus = await getStatus(file, proc.outputs[file].replace(/'/g, ""));
+                for (let file in proc.outputs) {
+                    let nStatus = await getStatus(file, proc.outputs[file].replace(/'/g, ""));
                     if (nStatus !== Status.Good) {
                         status = Status.Corrupted;
                         break;
                     }
                 }
                 if (status !== Status.Good) {
-                    diag.unprocessed.push(proc);
+                    report.unprocessed.push(proc);
                 }
             }
         }
         // if we have to process file, we have to check if the forge deps are ready
-        if (diag.unprocessed.length !== 0) {
-            const libValidMask = await Promise.all(processedProfile.libraries.map(async (lib) => {
-                const artifact = lib.downloads.artifact;
-                const libPath = mc.getLibraryByPath(artifact.path);
+        if (report.unprocessed.length !== 0) {
+            let libValidMask = await Promise.all(processedProfile.libraries.map(async (lib) => {
+                let artifact = lib.downloads.artifact;
+                let libPath = mc.getLibraryByPath(artifact.path);
                 return getStatus(libPath, artifact.sha1);
             }));
-            const missingLibraries = processedProfile.libraries
+            let missingLibraries = processedProfile.libraries
                 .map((l, s) => ({ value: l, status: libValidMask[s] }))
                 .filter((v) => v.status !== Status.Good);
-            diag.libraries.push(...missingLibraries);
+            report.libraries.push(...missingLibraries);
 
-            const validClient = await stat(processedProfile.data.BINPATCH.client).then((s) => s.size !== 0).catch((_) => false);
+            let validClient = await stat(processedProfile.data.BINPATCH.client).then((s) => s.size !== 0).catch((_) => false);
             if (!validClient) {
-                diag.binpatch = Status.Missing;
-                diag.badInstall = true;
+                report.binpatch = Status.Missing;
+                report.badInstall = true;
             }
         }
     }
@@ -284,28 +284,28 @@ async function diagnoseForge(version: string, prof: InstallProfile | undefined, 
                 const mcVersion = args.indexOf("--fml.mcVersion") + 1;
                 const mcpVersion = args.indexOf("--fml.mcpVersion") + 1;
                 if (!forgeVersion || !mcVersion || !mcpVersion) {
-                    diag.badVersionJson = true;
-                    diag.badInstall = true;
+                    report.badVersionJson = true;
+                    report.badInstall = true;
                 } else {
                     const srgPath = mc.getLibraryByPath(`net/minecraft/client/${mcVersion}-${mcpVersion}/client-${mcVersion}-${mcpVersion}-srg.jar`);
                     const extraPath = mc.getLibraryByPath(`net/minecraft/client/${mcVersion}/client-${mcVersion}-extra.jar`);
                     const forgePatchPath = mc.getLibraryByPath(`net/minecraftforge/forge/${mcVersion}-${forgeVersion}/forge-${mcVersion}-${forgeVersion}-client.jar`);
-                    diag.missingSrgJar = await missing(srgPath);
-                    diag.missingMinecraftExtraJar = await missing(extraPath);
-                    diag.missingForgePatchesJar = await missing(forgePatchPath);
+                    report.missingSrgJar = await missing(srgPath);
+                    report.missingMinecraftExtraJar = await missing(extraPath);
+                    report.missingForgePatchesJar = await missing(forgePatchPath);
                 }
             } else {
-                diag.badVersionJson = true;
-                diag.badInstall = true;
+                report.badVersionJson = true;
+                report.badInstall = true;
             }
         } else {
-            diag.badVersionJson = true;
-            diag.badInstall = true;
+            report.badVersionJson = true;
+            report.badInstall = true;
         }
     } else {
-        diag.badVersionJson = true;
-        diag.badInstall = true;
+        report.badVersionJson = true;
+        report.badInstall = true;
     }
 
-    return diag;
+    return report;
 }
