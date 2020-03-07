@@ -58,6 +58,7 @@ export const DEFAULT_FABRIC_API = "https://meta.fabricmc.net/v2";
 /**
  * Get all the artifacts provided by fabric
  * @param remote The fabric API host
+ * @beta
  */
 export function getArtifacts(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifacts> {
     return got(remote + "/versions").json();
@@ -65,6 +66,7 @@ export function getArtifacts(remote: string = DEFAULT_FABRIC_API): Promise<Fabri
 /**
  * Get fabric-yarn artifact list
  * @param remote The fabric API host
+ * @beta
  */
 export function getYarnArtifactList(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
     return got(remote + "/versions/yarn").json();
@@ -73,6 +75,7 @@ export function getYarnArtifactList(remote: string = DEFAULT_FABRIC_API): Promis
  * Get fabric-yarn artifact list by Minecraft version
  * @param minecraft The Minecraft version
  * @param remote The fabric API host
+ * @beta
  */
 export function getYarnArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
     return got(remote + "/versions/yarn/" + minecraft).json();
@@ -80,6 +83,7 @@ export function getYarnArtifactListFor(minecraft: string, remote: string = DEFAU
 /**
  * Get fabric-loader artifact list
  * @param remote The fabric API host
+ * @beta
  */
 export function getLoaderArtifactList(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
     return got(remote + "/versions/loader").json();
@@ -88,6 +92,7 @@ export function getLoaderArtifactList(remote: string = DEFAULT_FABRIC_API): Prom
  * Get fabric-loader artifact list by Minecraft version
  * @param minecraft The minecraft version
  * @param remote The fabric API host
+ * @beta
  */
 export function getLoaderArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<LoaderArtifact[]> {
     return got(remote + "/versions/loader/" + minecraft).json();
@@ -97,6 +102,7 @@ export function getLoaderArtifactListFor(minecraft: string, remote: string = DEF
  * @param minecraft The minecraft version
  * @param loader The yarn-loader version
  * @param remote The fabric API host
+ * @beta
  */
 export function getLoaderArtifact(minecraft: string, loader: string, remote: string = DEFAULT_FABRIC_API): Promise<LoaderArtifact> {
     return got(remote + "/versions/loader/" + minecraft + "/" + loader).json();
@@ -198,6 +204,7 @@ export async function install(yarnVersion: string, loaderVersion: string, minecr
  * @param loader The loader artifact
  * @param minecraft The Minecraft Location
  * @param options The options
+ * @beta
  */
 export async function installFromVersionMeta(side: "client" | "server", yarnVersion: string | FabricArtifactVersion, loader: LoaderArtifact, minecraft: MinecraftLocation, options: InstallOptions = {}) {
     const folder = MinecraftFolder.from(minecraft);
