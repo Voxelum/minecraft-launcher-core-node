@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/resource-manager",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "main": "./cjs/index.js",
   "module": "./index.js",
   "description": "Minecraft resource manager",

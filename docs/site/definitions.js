@@ -1110,6 +1110,7 @@ export declare namespace Version {
      * @returns All the version required to run this version, including this version
      */
     function resolveDependency(path: MinecraftLocation, version: string): Promise<PartialResolvedVersion[]>;
+    function resolveLibrary(lib: Library, platform?: Platform): ResolvedLibrary | undefined;
     /**
      * Resolve all these library and filter out os specific libs
      * @param libs All raw lib
@@ -1764,6 +1765,7 @@ export declare namespace Version {
      * @returns All the version required to run this version, including this version
      */
     function resolveDependency(path: MinecraftLocation, version: string): Promise<PartialResolvedVersion[]>;
+    function resolveLibrary(lib: Library, platform?: Platform): ResolvedLibrary | undefined;
     /**
      * Resolve all these library and filter out os specific libs
      * @param libs All raw lib
@@ -2573,8 +2575,8 @@ export declare function installCurseforgeFileTask(file: File, destination: strin
 export {};
 `;
 module.exports['@xmcl/installer/cjs/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary } from "@xmcl/core";
-import { InstallProfile } from "./forge";
 import Task from "@xmcl/task";
+import { InstallProfile } from "./minecraft";
 export declare enum Status {
     /**
      * File is missing
@@ -2677,8 +2679,8 @@ export interface ForgeReport {
 export declare function diagnoseForgeVersion(versionOrProfile: string | InstallProfile, minecraft: MinecraftLocation): Promise<ForgeReport>;
 export {};
 `;
-module.exports['@xmcl/installer/cjs/fabric.d.ts'] = `import { UpdatedObject, InstallOptions } from "./util";
-import { MinecraftLocation } from "@xmcl/core";
+module.exports['@xmcl/installer/cjs/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
+import { InstallOptions, UpdatedObject } from "./util";
 export declare const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export declare const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
 /**
@@ -2695,6 +2697,83 @@ export interface YarnVersionList extends UpdatedObject {
 export interface LoaderVersionList extends UpdatedObject {
     versions: string[];
 }
+export interface FabricArtifactVersion {
+    gameVersion?: string;
+    separator?: string;
+    build?: number;
+    maven: string;
+    version: string;
+    stable: boolean;
+}
+export interface FabricArtifacts {
+    mappings: FabricArtifactVersion[];
+    loader: FabricArtifactVersion[];
+}
+export interface LoaderArtifact {
+    loader: FabricArtifactVersion;
+    launcherMeta: {
+        version: number;
+        libraries: {
+            client: {
+                name: string;
+                url: string;
+            }[];
+            common: {
+                name: string;
+                url: string;
+            }[];
+            server: {
+                name: string;
+                url: string;
+            }[];
+        };
+        mainClass: {
+            client: string;
+            server: string;
+        };
+    };
+}
+export declare const DEFAULT_FABRIC_API = "https://meta.fabricmc.net/v2";
+/**
+ * Get all the artifacts provided by fabric
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getArtifacts(remote?: string): Promise<FabricArtifacts>;
+/**
+ * Get fabric-yarn artifact list
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getYarnArtifactList(remote?: string): Promise<FabricArtifactVersion[]>;
+/**
+ * Get fabric-yarn artifact list by Minecraft version
+ * @param minecraft The Minecraft version
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getYarnArtifactListFor(minecraft: string, remote?: string): Promise<FabricArtifactVersion[]>;
+/**
+ * Get fabric-loader artifact list
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getLoaderArtifactList(remote?: string): Promise<FabricArtifactVersion[]>;
+/**
+ * Get fabric-loader artifact list by Minecraft version
+ * @param minecraft The minecraft version
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getLoaderArtifactListFor(minecraft: string, remote?: string): Promise<LoaderArtifact[]>;
+/**
+ * Get fabric-loader artifact list by Minecraft version
+ * @param minecraft The minecraft version
+ * @param loader The yarn-loader version
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getLoaderArtifact(minecraft: string, loader: string, remote?: string): Promise<LoaderArtifact>;
 /**
  * Parse the maven xml provided by Fabric. This is pretty tricky. I don't want to include another lib to parse xml.
  * Therefore I just use RegExp here to match.
@@ -2743,11 +2822,21 @@ export declare function getLoaderVersionList(option: {
  * @returns The installed version id
  */
 export declare function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options?: InstallOptions): Promise<string>;
+/**
+ * Generate fabric version json to the disk according to yarn and loader
+ * @param side Client or server
+ * @param yarnVersion The yarn version string or artifact
+ * @param loader The loader artifact
+ * @param minecraft The Minecraft Location
+ * @param options The options
+ * @beta
+ */
+export declare function installFromVersionMeta(side: "client" | "server", yarnVersion: string | FabricArtifactVersion, loader: LoaderArtifact, minecraft: MinecraftLocation, options?: InstallOptions): Promise<string>;
 `;
-module.exports['@xmcl/installer/cjs/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
+module.exports['@xmcl/installer/cjs/forge.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
-import { DownloaderOption, LibraryOption } from "./minecraft";
-import { InstallOptions as InstallOptionsBase, JavaExecutor, UpdatedObject } from "./util";
+import { DownloaderOption, InstallProfileOption, LibraryOption } from "./minecraft";
+import { InstallOptions as InstallOptionsBase, UpdatedObject } from "./util";
 export interface VersionList extends UpdatedObject {
     mcversion: string;
     versions: Version[];
@@ -2811,69 +2900,13 @@ declare type RequiredVersion = {
      * The forge version (without minecraft version)
      */
     version: string;
-    type?: "buggy" | "recommended" | "common" | "latest";
 };
-export declare const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
-export interface InstallProfile {
-    spec: number;
-    profile: string;
-    version: string;
-    json: string;
-    path: string;
-    minecraft: string;
-    data: {
-        [key: string]: {
-            client: string;
-            server: string;
-        };
-    };
-    processors: Array<{
-        jar: string;
-        classpath: string[];
-        args: string[];
-        outputs?: {
-            [key: string]: string;
-        };
-    }>;
-    libraries: VersionJson.NormalLibrary[];
-}
+export declare const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
 /**
  * The options to install forge.
  */
-export interface Options extends DownloaderOption, LibraryOption, InstallOptionsBase {
-    /**
-     * You custom maven host url for the people have trouble to download
-     */
-    maven?: string;
-    /**
-    * New forge (>=1.13) require java to install. Can be a executor or java executable path.
-    */
-    java?: JavaExecutor | string;
+export interface Options extends DownloaderOption, LibraryOption, InstallOptionsBase, InstallProfileOption {
 }
-/**
- * Post processing function for new forge installer (mcversion >= 1.13). You can use this with \`ForgeInstaller.diagnose\`.
- *
- * @param mc The minecraft location
- * @param proc The processor
- * @param java The java executor
- */
-export declare function postProcess(mc: MinecraftFolder, proc: InstallProfile["processors"][number], java: JavaExecutor): Promise<void>;
-/**
- * @interal
- */
-export declare function linkInstallProfile(mc: MinecraftFolder, installProfile: InstallProfile): InstallProfile;
-/**
- * Install for forge installer step 2 and 3.
- * @param version The version string or installer profile
- * @param minecraft The minecraft location
- */
-export declare function installByInstallerPartialTask(version: string | InstallProfile, minecraft: MinecraftLocation, options?: Options): Task<void>;
-/**
- * Install for forge installer step 2 and 3.
- * @param version The version string or installer profile
- * @param minecraft The minecraft location
- */
-export declare function installByInstallerPartial(version: string | InstallProfile, minecraft: MinecraftLocation, option?: Options): Promise<void>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
@@ -2917,7 +2950,7 @@ import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
 import * as CurseforgeInstaller from "./curseforge";
 import * as Diagnosis from "./diagnose";
-export { JavaExecutor, DownloadOption, DownloadToOption, Downloader, DownloadStrategy, DefaultDownloader } from "./util";
+export { DownloadOption, Downloader, DefaultDownloader } from "./util";
 export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller };
 `;
 module.exports['@xmcl/installer/cjs/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
@@ -3010,9 +3043,9 @@ export declare function install(versionMeta: Version, location: MinecraftLocatio
  */
 export declare function installTask(versionMeta: Version, location: MinecraftLocation, options?: InstallOptions): Task<string>;
 `;
-module.exports['@xmcl/installer/cjs/minecraft.d.ts'] = `import { MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core";
+module.exports['@xmcl/installer/cjs/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
 import Task from "@xmcl/task";
-import { Downloader, DownloadStrategy, UpdatedObject } from "./util";
+import { Downloader, UpdatedObject } from "./util";
 /**
  * The function to swap library host.
  */
@@ -3045,6 +3078,61 @@ export interface VersionList extends UpdatedObject {
      * All the vesrsion list
      */
     versions: Version[];
+}
+export interface InstallProfile {
+    spec?: number;
+    /**
+     * The type of this installation, like "forge"
+     */
+    profile: string;
+    /**
+     * The version of this installation
+     */
+    version: string;
+    /**
+     * The version json path
+     */
+    json: string;
+    /**
+     * The maven artifact name: <org>:<artifact-id>:<version>
+     */
+    path: string;
+    /**
+     * The minecraft version
+     */
+    minecraft: string;
+    /**
+     * The processor shared variables. The key is the name of variable to replace.
+     *
+     * The value of client/server is the value of the variable.
+     */
+    data: {
+        [key: string]: {
+            client: string;
+            server: string;
+        };
+    };
+    /**
+     * The post processor. Which require java to run.
+     */
+    processors: Array<{
+        /**
+         * The executable jar path
+         */
+        jar: string;
+        /**
+         * The classpath to run
+         */
+        classpath: string[];
+        args: string[];
+        outputs?: {
+            [key: string]: string;
+        };
+    }>;
+    /**
+     * The required install profile libraries
+     */
+    libraries: VersionJson.NormalLibrary[];
 }
 /**
  * Default minecraft version manifest url.
@@ -3083,35 +3171,54 @@ export interface DownloaderOption {
      */
     downloader?: Downloader;
     /**
-     * An hook to decide should we download a resource.
+     * Decide should downloader redownload and overwrite existed file.
      *
-     * The default strategy will check the checksum and the existence of the file to decide should we download the file.
+     * It has such options:
+     *
+     * - \`checksumNotMatch\`: Only the file with checksum provided and not matched will be redownload.
+     * - \`noChecksumProvided\`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
+     * - \`always\`: Always redownload files.
      */
-    downloadStrategy?: DownloadStrategy;
+    overwriteWhen?: "checksumNotMatch" | "noChecksumProvided" | "always";
     /**
      * Should hault the donwload process immediately after ANY resource download failed.
      */
     throwErrorImmediately?: boolean;
+    /**
+     * The max concurrency of the download
+     */
+    maxConcurrency?: number;
 }
 /**
  * Change the library host url
  */
 export interface LibraryOption extends DownloaderOption {
     /**
-     * Assign this to swap library host.
+     * A more flexiable way to control library download url.
+     * @see mavenHost
      */
     libraryHost?: LibraryHost;
+    /**
+     * The alterative maven host to download library. It will try to use these host from the \`[0]\` to the \`[maven.length - 1]\`
+     */
+    mavenHost?: string | string[];
+    /**
+     * Control how many libraries download task should run at the same time.
+     * It will override the \`maxConcurrencyOption\` if this is presented.
+     */
+    librariesDownloadConcurrency?: number;
 }
 /**
  * Change the host url of assets download
  */
 export interface AssetsOption extends DownloaderOption {
     /**
-     * Swap customized assets download host.
+     * The alternative assets host to download asset. It will try to use these host from the \`[0]\` to the \`[assetsHost.length - 1]\`
      */
     assetsHost?: string | string[];
     /**
      * Control how many assets download task should run at the same time.
+     * It will override the \`maxConcurrencyOption\` if this is presented.
      */
     assetsDownloadConcurrency?: number;
 }
@@ -3134,8 +3241,8 @@ declare type RequiredVersion = Pick<Version, "id" | "url">;
  * The collection of errors happened during a parallel process
  */
 export declare class MultipleError extends Error {
-    errors: any[];
-    constructor(errors: any[], message?: string);
+    errors: unknown[];
+    constructor(errors: unknown[], message?: string);
 }
 /**
  * Install the Minecraft game to a location by version metadata.
@@ -3237,7 +3344,7 @@ export declare function installAssetsTask(version: ResolvedVersion, option?: Ass
  * @param version The target version
  * @param option The library host swap option
  */
-export declare function installLibraries(version: ResolvedVersion, option?: LibraryOption): Promise<ResolvedVersion>;
+export declare function installLibraries(version: ResolvedVersion, option?: LibraryOption): Promise<void>;
 /**
  * Install all the libraries of providing version
  *
@@ -3248,7 +3355,7 @@ export declare function installLibraries(version: ResolvedVersion, option?: Libr
  * @param version The target version
  * @param option The library host swap option
  */
-export declare function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option?: LibraryOption): Task<T>;
+export declare function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option?: LibraryOption): Task<void>;
 /**
  * Only install several resolved libraries
  * @param libraries The resolved libraries
@@ -3268,6 +3375,56 @@ export declare function installResolvedLibraries(libraries: ResolvedLibrary[], m
  * @param option The install option
  */
 export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Task<void>;
+export interface InstallProfileOption extends LibraryOption {
+    /**
+     * New forge (>=1.13) require java to install. Can be a executor or java executable path.
+     */
+    java?: string;
+    /**
+     * The installation side
+     */
+    side?: "client" | "server";
+}
+/**
+ * Resolve processors in install profile
+ */
+export declare function resolveProcessors(side: "client" | "server", installProfile: InstallProfile, minecraft: MinecraftFolder): {
+    args: string[];
+    outputs: {
+        [x: string]: string;
+    } | undefined;
+    /**
+     * The executable jar path
+     */
+    jar: string;
+    /**
+     * The classpath to run
+     */
+    classpath: string[];
+}[];
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ */
+export declare function installByProfile(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): Promise<void>;
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ */
+export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): Task<void>;
+/**
+ * Resolve a library download urls with fallback.
+ *
+ * @param library The resolved library
+ * @param libraryOptions The library install options
+ */
+export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOption): string[];
 export {};
 `;
 module.exports['@xmcl/installer/cjs/util.d.ts'] = `/// <reference types="node" />
@@ -3278,9 +3435,6 @@ import { ProxyStream } from "got/dist/source/as-stream";
 export interface UpdatedObject {
     timestamp: string;
 }
-export declare const got: import("got/dist/source").Got;
-export declare const fetchJson: import("got/dist/source").Got;
-export declare const fetchBuffer: import("got/dist/source").Got;
 export declare function getRawIfUpdate(url: string, timestamp?: string): Promise<{
     timestamp: string;
     content: string | undefined;
@@ -3306,13 +3460,18 @@ export interface DownloadOption {
      * If user wants to pause/resume the download, pass this in, and \`Downloader\` should call this to tell user how to pause and resume.
      */
     pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
-}
-export interface DownloadToOption extends DownloadOption {
+    /**
+     * The destination of the download on the disk
+     */
     destination: string;
+    /**
+     * The checksum info of the file
+     */
     checksum?: {
         algorithm: string;
         hash: string;
     };
+    mode?: "checksumNotMatch" | "noChecksumProvided" | "always";
 }
 export interface Downloader {
     /**
@@ -3320,53 +3479,28 @@ export interface Downloader {
      *
      * @returns The downloaded file full path
      */
-    downloadFile(option: DownloadToOption): Promise<void>;
-}
-export interface DownloadStrategy {
-    /**
-     * Determine if the \`Downloader\` should download this resource.
-     *
-     * @returns Should \`Downloader\` download
-     */
-    shouldDownload(option: DownloadToOption): Promise<boolean>;
+    downloadFile(option: DownloadOption): Promise<void>;
 }
 /**
  * The default downloader based on gotjs
  */
-export declare class DefaultDownloader implements Downloader, DownloadStrategy {
+export declare class DefaultDownloader implements Downloader {
     readonly requster: import("got/dist/source").Got;
     constructor(requster?: import("got/dist/source").Got);
     protected openDownloadStream(url: string, option: DownloadOption): ReadStream | ProxyStream<unknown>;
     /**
      * Download file by the option provided.
      */
-    downloadFile(option: DownloadToOption): Promise<void>;
-    /**
-     * - If the file is not on the disk, it will return true.
-     * - If the checksum is not provided, it will return true if file existed.
-     * - If the checksum is provided, it will return true if the file checksum matched.
-     */
-    shouldDownload(option: DownloadToOption): Promise<boolean>;
+    downloadFile(option: DownloadOption): Promise<void>;
 }
-/**
- * Set default downloader of the library
- */
-export declare function setDownloader(newDownloader: Downloader): void;
-export declare function setDownloadStrategy(newStrategy: DownloadStrategy): void;
-export declare function getDownloader(): Downloader;
-export declare function getDownloadStrategy(): DownloadStrategy;
-/**
- * Wrapped task form of the download file task
- */
-export declare function downloadFileTask(option: DownloadToOption, worker?: Downloader, stra?: DownloadStrategy): (context: Task.Context) => Promise<void>;
 /**
  * Wrapped task form of download file if absent task
  */
-export declare function downloadFileIfAbsentTask(option: DownloadToOption, worker?: Downloader, stra?: DownloadStrategy): (context: Task.Context) => Promise<void>;
-export declare type JavaExecutor = (args: string[], option?: ExecOptions) => Promise<any>;
-export declare namespace JavaExecutor {
-    function createSimple(javaPath: string, defaultOptions?: ExecOptions): JavaExecutor;
-}
+export declare function downloadFileTask(option: DownloadOption, worker?: Downloader): (context: Task.Context) => Promise<void>;
+export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
+export declare function batchedTask(context: Task.Context, tasks: Task<unknown>[], sizes: number[], maxConcurrency?: number, throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<void>;
+export declare function normalizeArray<T>(arr?: T | T[]): T[];
+export declare function joinUrl(a: string, b: string): string;
 /**
  * Shared install options
  */
@@ -3485,8 +3619,8 @@ export declare function installCurseforgeFileTask(file: File, destination: strin
 export {};
 `;
 module.exports['@xmcl/installer/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary } from "@xmcl/core";
-import { InstallProfile } from "./forge";
 import Task from "@xmcl/task";
+import { InstallProfile } from "./minecraft";
 export declare enum Status {
     /**
      * File is missing
@@ -3589,8 +3723,8 @@ export interface ForgeReport {
 export declare function diagnoseForgeVersion(versionOrProfile: string | InstallProfile, minecraft: MinecraftLocation): Promise<ForgeReport>;
 export {};
 `;
-module.exports['@xmcl/installer/fabric.d.ts'] = `import { UpdatedObject, InstallOptions } from "./util";
-import { MinecraftLocation } from "@xmcl/core";
+module.exports['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
+import { InstallOptions, UpdatedObject } from "./util";
 export declare const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export declare const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
 /**
@@ -3607,6 +3741,83 @@ export interface YarnVersionList extends UpdatedObject {
 export interface LoaderVersionList extends UpdatedObject {
     versions: string[];
 }
+export interface FabricArtifactVersion {
+    gameVersion?: string;
+    separator?: string;
+    build?: number;
+    maven: string;
+    version: string;
+    stable: boolean;
+}
+export interface FabricArtifacts {
+    mappings: FabricArtifactVersion[];
+    loader: FabricArtifactVersion[];
+}
+export interface LoaderArtifact {
+    loader: FabricArtifactVersion;
+    launcherMeta: {
+        version: number;
+        libraries: {
+            client: {
+                name: string;
+                url: string;
+            }[];
+            common: {
+                name: string;
+                url: string;
+            }[];
+            server: {
+                name: string;
+                url: string;
+            }[];
+        };
+        mainClass: {
+            client: string;
+            server: string;
+        };
+    };
+}
+export declare const DEFAULT_FABRIC_API = "https://meta.fabricmc.net/v2";
+/**
+ * Get all the artifacts provided by fabric
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getArtifacts(remote?: string): Promise<FabricArtifacts>;
+/**
+ * Get fabric-yarn artifact list
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getYarnArtifactList(remote?: string): Promise<FabricArtifactVersion[]>;
+/**
+ * Get fabric-yarn artifact list by Minecraft version
+ * @param minecraft The Minecraft version
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getYarnArtifactListFor(minecraft: string, remote?: string): Promise<FabricArtifactVersion[]>;
+/**
+ * Get fabric-loader artifact list
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getLoaderArtifactList(remote?: string): Promise<FabricArtifactVersion[]>;
+/**
+ * Get fabric-loader artifact list by Minecraft version
+ * @param minecraft The minecraft version
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getLoaderArtifactListFor(minecraft: string, remote?: string): Promise<LoaderArtifact[]>;
+/**
+ * Get fabric-loader artifact list by Minecraft version
+ * @param minecraft The minecraft version
+ * @param loader The yarn-loader version
+ * @param remote The fabric API host
+ * @beta
+ */
+export declare function getLoaderArtifact(minecraft: string, loader: string, remote?: string): Promise<LoaderArtifact>;
 /**
  * Parse the maven xml provided by Fabric. This is pretty tricky. I don't want to include another lib to parse xml.
  * Therefore I just use RegExp here to match.
@@ -3655,11 +3866,21 @@ export declare function getLoaderVersionList(option: {
  * @returns The installed version id
  */
 export declare function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options?: InstallOptions): Promise<string>;
+/**
+ * Generate fabric version json to the disk according to yarn and loader
+ * @param side Client or server
+ * @param yarnVersion The yarn version string or artifact
+ * @param loader The loader artifact
+ * @param minecraft The Minecraft Location
+ * @param options The options
+ * @beta
+ */
+export declare function installFromVersionMeta(side: "client" | "server", yarnVersion: string | FabricArtifactVersion, loader: LoaderArtifact, minecraft: MinecraftLocation, options?: InstallOptions): Promise<string>;
 `;
-module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
+module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
-import { DownloaderOption, LibraryOption } from "./minecraft";
-import { InstallOptions as InstallOptionsBase, JavaExecutor, UpdatedObject } from "./util";
+import { DownloaderOption, InstallProfileOption, LibraryOption } from "./minecraft";
+import { InstallOptions as InstallOptionsBase, UpdatedObject } from "./util";
 export interface VersionList extends UpdatedObject {
     mcversion: string;
     versions: Version[];
@@ -3723,69 +3944,13 @@ declare type RequiredVersion = {
      * The forge version (without minecraft version)
      */
     version: string;
-    type?: "buggy" | "recommended" | "common" | "latest";
 };
-export declare const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net";
-export interface InstallProfile {
-    spec: number;
-    profile: string;
-    version: string;
-    json: string;
-    path: string;
-    minecraft: string;
-    data: {
-        [key: string]: {
-            client: string;
-            server: string;
-        };
-    };
-    processors: Array<{
-        jar: string;
-        classpath: string[];
-        args: string[];
-        outputs?: {
-            [key: string]: string;
-        };
-    }>;
-    libraries: VersionJson.NormalLibrary[];
-}
+export declare const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
 /**
  * The options to install forge.
  */
-export interface Options extends DownloaderOption, LibraryOption, InstallOptionsBase {
-    /**
-     * You custom maven host url for the people have trouble to download
-     */
-    maven?: string;
-    /**
-    * New forge (>=1.13) require java to install. Can be a executor or java executable path.
-    */
-    java?: JavaExecutor | string;
+export interface Options extends DownloaderOption, LibraryOption, InstallOptionsBase, InstallProfileOption {
 }
-/**
- * Post processing function for new forge installer (mcversion >= 1.13). You can use this with \`ForgeInstaller.diagnose\`.
- *
- * @param mc The minecraft location
- * @param proc The processor
- * @param java The java executor
- */
-export declare function postProcess(mc: MinecraftFolder, proc: InstallProfile["processors"][number], java: JavaExecutor): Promise<void>;
-/**
- * @interal
- */
-export declare function linkInstallProfile(mc: MinecraftFolder, installProfile: InstallProfile): InstallProfile;
-/**
- * Install for forge installer step 2 and 3.
- * @param version The version string or installer profile
- * @param minecraft The minecraft location
- */
-export declare function installByInstallerPartialTask(version: string | InstallProfile, minecraft: MinecraftLocation, options?: Options): Task<void>;
-/**
- * Install for forge installer step 2 and 3.
- * @param version The version string or installer profile
- * @param minecraft The minecraft location
- */
-export declare function installByInstallerPartial(version: string | InstallProfile, minecraft: MinecraftLocation, option?: Options): Promise<void>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
@@ -3829,7 +3994,7 @@ import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
 import * as CurseforgeInstaller from "./curseforge";
 import * as Diagnosis from "./diagnose";
-export { JavaExecutor, DownloadOption, DownloadToOption, Downloader, DownloadStrategy, DefaultDownloader } from "./util";
+export { DownloadOption, Downloader, DefaultDownloader } from "./util";
 export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller };
 `;
 module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
@@ -3922,9 +4087,9 @@ export declare function install(versionMeta: Version, location: MinecraftLocatio
  */
 export declare function installTask(versionMeta: Version, location: MinecraftLocation, options?: InstallOptions): Task<string>;
 `;
-module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core";
+module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
 import Task from "@xmcl/task";
-import { Downloader, DownloadStrategy, UpdatedObject } from "./util";
+import { Downloader, UpdatedObject } from "./util";
 /**
  * The function to swap library host.
  */
@@ -3957,6 +4122,61 @@ export interface VersionList extends UpdatedObject {
      * All the vesrsion list
      */
     versions: Version[];
+}
+export interface InstallProfile {
+    spec?: number;
+    /**
+     * The type of this installation, like "forge"
+     */
+    profile: string;
+    /**
+     * The version of this installation
+     */
+    version: string;
+    /**
+     * The version json path
+     */
+    json: string;
+    /**
+     * The maven artifact name: <org>:<artifact-id>:<version>
+     */
+    path: string;
+    /**
+     * The minecraft version
+     */
+    minecraft: string;
+    /**
+     * The processor shared variables. The key is the name of variable to replace.
+     *
+     * The value of client/server is the value of the variable.
+     */
+    data: {
+        [key: string]: {
+            client: string;
+            server: string;
+        };
+    };
+    /**
+     * The post processor. Which require java to run.
+     */
+    processors: Array<{
+        /**
+         * The executable jar path
+         */
+        jar: string;
+        /**
+         * The classpath to run
+         */
+        classpath: string[];
+        args: string[];
+        outputs?: {
+            [key: string]: string;
+        };
+    }>;
+    /**
+     * The required install profile libraries
+     */
+    libraries: VersionJson.NormalLibrary[];
 }
 /**
  * Default minecraft version manifest url.
@@ -3995,35 +4215,54 @@ export interface DownloaderOption {
      */
     downloader?: Downloader;
     /**
-     * An hook to decide should we download a resource.
+     * Decide should downloader redownload and overwrite existed file.
      *
-     * The default strategy will check the checksum and the existence of the file to decide should we download the file.
+     * It has such options:
+     *
+     * - \`checksumNotMatch\`: Only the file with checksum provided and not matched will be redownload.
+     * - \`noChecksumProvided\`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
+     * - \`always\`: Always redownload files.
      */
-    downloadStrategy?: DownloadStrategy;
+    overwriteWhen?: "checksumNotMatch" | "noChecksumProvided" | "always";
     /**
      * Should hault the donwload process immediately after ANY resource download failed.
      */
     throwErrorImmediately?: boolean;
+    /**
+     * The max concurrency of the download
+     */
+    maxConcurrency?: number;
 }
 /**
  * Change the library host url
  */
 export interface LibraryOption extends DownloaderOption {
     /**
-     * Assign this to swap library host.
+     * A more flexiable way to control library download url.
+     * @see mavenHost
      */
     libraryHost?: LibraryHost;
+    /**
+     * The alterative maven host to download library. It will try to use these host from the \`[0]\` to the \`[maven.length - 1]\`
+     */
+    mavenHost?: string | string[];
+    /**
+     * Control how many libraries download task should run at the same time.
+     * It will override the \`maxConcurrencyOption\` if this is presented.
+     */
+    librariesDownloadConcurrency?: number;
 }
 /**
  * Change the host url of assets download
  */
 export interface AssetsOption extends DownloaderOption {
     /**
-     * Swap customized assets download host.
+     * The alternative assets host to download asset. It will try to use these host from the \`[0]\` to the \`[assetsHost.length - 1]\`
      */
     assetsHost?: string | string[];
     /**
      * Control how many assets download task should run at the same time.
+     * It will override the \`maxConcurrencyOption\` if this is presented.
      */
     assetsDownloadConcurrency?: number;
 }
@@ -4046,8 +4285,8 @@ declare type RequiredVersion = Pick<Version, "id" | "url">;
  * The collection of errors happened during a parallel process
  */
 export declare class MultipleError extends Error {
-    errors: any[];
-    constructor(errors: any[], message?: string);
+    errors: unknown[];
+    constructor(errors: unknown[], message?: string);
 }
 /**
  * Install the Minecraft game to a location by version metadata.
@@ -4149,7 +4388,7 @@ export declare function installAssetsTask(version: ResolvedVersion, option?: Ass
  * @param version The target version
  * @param option The library host swap option
  */
-export declare function installLibraries(version: ResolvedVersion, option?: LibraryOption): Promise<ResolvedVersion>;
+export declare function installLibraries(version: ResolvedVersion, option?: LibraryOption): Promise<void>;
 /**
  * Install all the libraries of providing version
  *
@@ -4160,7 +4399,7 @@ export declare function installLibraries(version: ResolvedVersion, option?: Libr
  * @param version The target version
  * @param option The library host swap option
  */
-export declare function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option?: LibraryOption): Task<T>;
+export declare function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option?: LibraryOption): Task<void>;
 /**
  * Only install several resolved libraries
  * @param libraries The resolved libraries
@@ -4180,6 +4419,56 @@ export declare function installResolvedLibraries(libraries: ResolvedLibrary[], m
  * @param option The install option
  */
 export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Task<void>;
+export interface InstallProfileOption extends LibraryOption {
+    /**
+     * New forge (>=1.13) require java to install. Can be a executor or java executable path.
+     */
+    java?: string;
+    /**
+     * The installation side
+     */
+    side?: "client" | "server";
+}
+/**
+ * Resolve processors in install profile
+ */
+export declare function resolveProcessors(side: "client" | "server", installProfile: InstallProfile, minecraft: MinecraftFolder): {
+    args: string[];
+    outputs: {
+        [x: string]: string;
+    } | undefined;
+    /**
+     * The executable jar path
+     */
+    jar: string;
+    /**
+     * The classpath to run
+     */
+    classpath: string[];
+}[];
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ */
+export declare function installByProfile(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): Promise<void>;
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ */
+export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): Task<void>;
+/**
+ * Resolve a library download urls with fallback.
+ *
+ * @param library The resolved library
+ * @param libraryOptions The library install options
+ */
+export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOption): string[];
 export {};
 `;
 module.exports['@xmcl/installer/node_modules/agentkeepalive/index.d.ts'] = `declare module "agentkeepalive" {
@@ -4239,9 +4528,6 @@ import { ProxyStream } from "got/dist/source/as-stream";
 export interface UpdatedObject {
     timestamp: string;
 }
-export declare const got: import("got/dist/source").Got;
-export declare const fetchJson: import("got/dist/source").Got;
-export declare const fetchBuffer: import("got/dist/source").Got;
 export declare function getRawIfUpdate(url: string, timestamp?: string): Promise<{
     timestamp: string;
     content: string | undefined;
@@ -4267,13 +4553,18 @@ export interface DownloadOption {
      * If user wants to pause/resume the download, pass this in, and \`Downloader\` should call this to tell user how to pause and resume.
      */
     pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
-}
-export interface DownloadToOption extends DownloadOption {
+    /**
+     * The destination of the download on the disk
+     */
     destination: string;
+    /**
+     * The checksum info of the file
+     */
     checksum?: {
         algorithm: string;
         hash: string;
     };
+    mode?: "checksumNotMatch" | "noChecksumProvided" | "always";
 }
 export interface Downloader {
     /**
@@ -4281,53 +4572,28 @@ export interface Downloader {
      *
      * @returns The downloaded file full path
      */
-    downloadFile(option: DownloadToOption): Promise<void>;
-}
-export interface DownloadStrategy {
-    /**
-     * Determine if the \`Downloader\` should download this resource.
-     *
-     * @returns Should \`Downloader\` download
-     */
-    shouldDownload(option: DownloadToOption): Promise<boolean>;
+    downloadFile(option: DownloadOption): Promise<void>;
 }
 /**
  * The default downloader based on gotjs
  */
-export declare class DefaultDownloader implements Downloader, DownloadStrategy {
+export declare class DefaultDownloader implements Downloader {
     readonly requster: import("got/dist/source").Got;
     constructor(requster?: import("got/dist/source").Got);
     protected openDownloadStream(url: string, option: DownloadOption): ReadStream | ProxyStream<unknown>;
     /**
      * Download file by the option provided.
      */
-    downloadFile(option: DownloadToOption): Promise<void>;
-    /**
-     * - If the file is not on the disk, it will return true.
-     * - If the checksum is not provided, it will return true if file existed.
-     * - If the checksum is provided, it will return true if the file checksum matched.
-     */
-    shouldDownload(option: DownloadToOption): Promise<boolean>;
+    downloadFile(option: DownloadOption): Promise<void>;
 }
-/**
- * Set default downloader of the library
- */
-export declare function setDownloader(newDownloader: Downloader): void;
-export declare function setDownloadStrategy(newStrategy: DownloadStrategy): void;
-export declare function getDownloader(): Downloader;
-export declare function getDownloadStrategy(): DownloadStrategy;
-/**
- * Wrapped task form of the download file task
- */
-export declare function downloadFileTask(option: DownloadToOption, worker?: Downloader, stra?: DownloadStrategy): (context: Task.Context) => Promise<void>;
 /**
  * Wrapped task form of download file if absent task
  */
-export declare function downloadFileIfAbsentTask(option: DownloadToOption, worker?: Downloader, stra?: DownloadStrategy): (context: Task.Context) => Promise<void>;
-export declare type JavaExecutor = (args: string[], option?: ExecOptions) => Promise<any>;
-export declare namespace JavaExecutor {
-    function createSimple(javaPath: string, defaultOptions?: ExecOptions): JavaExecutor;
-}
+export declare function downloadFileTask(option: DownloadOption, worker?: Downloader): (context: Task.Context) => Promise<void>;
+export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
+export declare function batchedTask(context: Task.Context, tasks: Task<unknown>[], sizes: number[], maxConcurrency?: number, throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<void>;
+export declare function normalizeArray<T>(arr?: T | T[]): T[];
+export declare function joinUrl(a: string, b: string): string;
 /**
  * Shared install options
  */
