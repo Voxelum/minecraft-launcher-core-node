@@ -1,5 +1,44 @@
 # Changelog
 
+## 2.4.0
+### @xmcl/unzip@1.1.1
+#### Bug Fixes
+
+- fix: skip dir for lazy unzip ([e027bd4fe99d35008a88f07fb938bdd07f8423e7](https://github.com/voxelum/minecraft-launcher-core-node/commit/e027bd4fe99d35008a88f07fb938bdd07f8423e7))
+### @xmcl/user@2.1.1
+#### Bug Fixes
+
+- fix: remove got ([a8702a16cb14b74b44cb24ef63fe83a99ad1c63b](https://github.com/voxelum/minecraft-launcher-core-node/commit/a8702a16cb14b74b44cb24ef63fe83a99ad1c63b))
+### @xmcl/core@2.0.4
+#### Bug Fixes
+
+- fix: extract the resolveLibrary api ([1bc71ef4594af92d82bbd991c634ef19c67d430d](https://github.com/voxelum/minecraft-launcher-core-node/commit/1bc71ef4594af92d82bbd991c634ef19c67d430d))
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/installer@2.4.0
+#### Features
+
+- feat: install by installer profile function and refactor ([13dc9ba3b99d7e852fd0f0c9730660fb2578761d](https://github.com/voxelum/minecraft-launcher-core-node/commit/13dc9ba3b99d7e852fd0f0c9730660fb2578761d))
+- feat: support fabric meta api ([b62d6586a9a4cec018dd83b4b96fefaa6e187fc4](https://github.com/voxelum/minecraft-launcher-core-node/commit/b62d6586a9a4cec018dd83b4b96fefaa6e187fc4))
+- feat: library support concurrency ([5bd91fdd48ac7b77af5abbee8ebb719375e70b0e](https://github.com/voxelum/minecraft-launcher-core-node/commit/5bd91fdd48ac7b77af5abbee8ebb719375e70b0e))
+#### Bug Fixes
+
+- fix: wrong forge maven assigning ([74a931d4c3416a77ce5ac85a9b40f680c5ad6aef](https://github.com/voxelum/minecraft-launcher-core-node/commit/74a931d4c3416a77ce5ac85a9b40f680c5ad6aef))
+- Dependency @xmcl/core bump **patch**
+### @xmcl/system@1.0.7
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/mod-parser@2.0.3
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.0.8
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@1.0.8
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@1.0.8
+- Dependency @xmcl/system bump **patch**
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/world@1.0.7
+- Dependency @xmcl/system bump **patch**
+
+
 ## 2.3.3
 ### @xmcl/forge-site-parser@2.0.3
 #### Bug Fixes
