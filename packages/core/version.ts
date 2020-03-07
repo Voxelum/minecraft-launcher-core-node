@@ -500,42 +500,43 @@ export namespace Version {
         return stack;
     }
 
+    export function resolveLibrary(lib: Library, platform: Platform = currentPlatform): ResolvedLibrary | undefined {
+        if ("rules" in lib && !checkAllowed(lib.rules, platform)) {
+            return undefined;
+        }
+        if ("natives" in lib) {
+            if (!lib.natives[platform.name]) { return undefined; }
+            const classifier = (lib.natives[platform.name]).replace("${arch}", platform.arch.substring(1));
+            const nativeArtifact = lib.downloads.classifiers[classifier];
+            if (!nativeArtifact) { return undefined; }
+            return new ResolvedNative(lib.name + ":" + classifier, LibraryInfo.resolve(lib.name + ":" + classifier), lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
+        }
+        const info = LibraryInfo.resolve(lib.name);
+        if ("downloads" in lib) {
+            if (!lib.downloads.artifact.url) {
+                lib.downloads.artifact.url = info.groupId === "net.minecraftforge"
+                    ? "https://files.minecraftforge.net/maven/" + lib.downloads.artifact.path
+                    : "https://libraries.minecraft.net/" + lib.downloads.artifact.path;
+            }
+            return new ResolvedLibrary(lib.name, info, lib.downloads.artifact);
+        }
+        const maven = lib.url || "https://libraries.minecraft.net/";
+        const artifact: Artifact = {
+            size: -1,
+            sha1: lib.checksums ? lib.checksums[0] : "",
+            path: info.path,
+            url: maven + info.path,
+        };
+        return new ResolvedLibrary(lib.name, info, artifact, lib.checksums, lib.serverreq, lib.clientreq);
+    }
+
     /**
      * Resolve all these library and filter out os specific libs
      * @param libs All raw lib
      * @param platform The platform
      */
     export function resolveLibraries(libs: Library[], platform: Platform = currentPlatform): ResolvedLibrary[] {
-        const empty: ResolvedLibrary = null!;
-        return libs.map((lib) => {
-            if ("rules" in lib && !checkAllowed(lib.rules, platform)) {
-                return empty;
-            }
-            if ("natives" in lib) {
-                if (!lib.natives[platform.name]) { return empty; }
-                const classifier = (lib.natives[platform.name]).replace("${arch}", platform.arch.substring(1));
-                const nativeArtifact = lib.downloads.classifiers[classifier];
-                if (!nativeArtifact) { return empty; }
-                return new ResolvedNative(lib.name + ":" + classifier, LibraryInfo.resolve(lib.name + ":" + classifier), lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
-            }
-            const info = LibraryInfo.resolve(lib.name);
-            if ("downloads" in lib) {
-                if (!lib.downloads.artifact.url) {
-                    lib.downloads.artifact.url = info.groupId === "net.minecraftforge"
-                        ? "https://files.minecraftforge.net/maven/" + lib.downloads.artifact.path
-                        : "https://libraries.minecraft.net/" + lib.downloads.artifact.path;
-                }
-                return new ResolvedLibrary(lib.name, info, lib.downloads.artifact);
-            }
-            const maven = lib.url || "https://libraries.minecraft.net/";
-            const artifact: Artifact = {
-                size: -1,
-                sha1: lib.checksums ? lib.checksums[0] : "",
-                path: info.path,
-                url: maven + info.path,
-            };
-            return new ResolvedLibrary(lib.name, info, artifact, lib.checksums, lib.serverreq, lib.clientreq);
-        }).filter((l) => l !== empty);
+        return libs.map((lib) => resolveLibrary(lib, platform)).filter((l) => l !== undefined) as ResolvedLibrary[];
     }
 
     /**
