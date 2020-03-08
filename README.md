@@ -10,16 +10,27 @@ Provide several useful functions to build a Minecraft Launcher.
 Most packages are targeting the [Electron](https://electronjs.org) environment. Feel free to report issues related to it.
 
 - [Minecraft Launcher Core](#minecraft-launcher-core)
+    - [Looking for C# Launcher Core?](#looking-for-c-launcher-core)
+    - [Featured Launcher](#featured-launcher)
   - [Installation & Usage](#installation--usage)
     - [Bundle & Treeshaking](#bundle--treeshaking)
     - [CommonJS](#commonjs)
     - [Electron Version](#electron-version)
   - [Getting Started](#getting-started)
   - [Active Packages](#active-packages)
-  - [Featured Launcher](#featured-launcher)
-  - [An Awesome C# Launcher Core](#an-awesome-c-launcher-core)
   - [Contribute](#contribute)
   - [Credit](#credit)
+
+### Looking for C# Launcher Core?
+
+Introduce the awesome .net framework launcher core, [ProjBobcat](https://github.com/Corona-Studio/ProjBobcat).
+
+It's the next generation Minecraft launcher core written in C# providing the freest, fastest and the most complete experience. https://craftmine.fun
+
+### Featured Launcher
+
+- [PureLauncher](https://github.com/Apisium/PureLauncher): An awesome Minecraft Launcher using React to build beautiful UI.
+
 
 ## Installation & Usage
 
@@ -91,16 +102,6 @@ Go [Getting Started](/USAGE.md) page.
 | @xmcl/task              | Util package to create task       | [![npm version](https://img.shields.io/npm/v/@xmcl/task.svg)](https://www.npmjs.com/package/@xmcl/task)                           | [packages/task             ](/packages/task)              | Node                |
 | @xmcl/system            | A fs middleware for browser/node  | [![npm version](https://img.shields.io/npm/v/@xmcl/system.svg)](https://www.npmjs.com/package/@xmcl/system)                       | [packages/system           ](/packages/system)            | Node/Browser        |
 | @xmcl/unzip             | yauzl unzip wrapper               | [![npm version](https://img.shields.io/npm/v/@xmcl/unzip.svg)](https://www.npmjs.com/package/@xmcl/unzip)                         | [packages/unzip            ](/packages/unzip)             | Node                |
-
-## Featured Launcher
-
-- [PureLauncher](https://github.com/Apisium/PureLauncher): An awesome Minecraft Launcher using React to build beautiful UI.
-
-## An Awesome C# Launcher Core
-
-[Repo Link](https://github.com/Corona-Studio/ProjBobcat)
-
-The next generation Minecraft launcher core written in C# providing the freest, fastest and the most complete experience. https://craftmine.fun
 
 ## Contribute
 
