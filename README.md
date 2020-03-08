@@ -17,6 +17,7 @@ Most packages are targeting the [Electron](https://electronjs.org) environment. 
   - [Getting Started](#getting-started)
   - [Active Packages](#active-packages)
   - [Featured Launcher](#featured-launcher)
+  - [An Awesome C# Launcher Core](#an-awesome-c-launcher-core)
   - [Contribute](#contribute)
   - [Credit](#credit)
 
@@ -94,6 +95,12 @@ Go [Getting Started](/USAGE.md) page.
 ## Featured Launcher
 
 - [PureLauncher](https://github.com/Apisium/PureLauncher): An awesome Minecraft Launcher using React to build beautiful UI.
+
+## An Awesome C# Launcher Core
+
+[Repo Link](https://github.com/Corona-Studio/ProjBobcat)
+
+The next generation Minecraft launcher core written in C# providing the freest, fastest and the most complete experience. https://craftmine.fun
 
 ## Contribute
 
