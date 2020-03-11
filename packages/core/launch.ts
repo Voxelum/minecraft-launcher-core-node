@@ -133,8 +133,18 @@ export interface LaunchOption {
      * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
      */
     yggdrasilAgent?: {
-        jar: string,
-        server: string,
+        /**
+         * The jar file path of the authlib-injector
+         */
+        jar: string;
+        /**
+         * The auth server host
+         */
+        server: string;
+        /**
+         * The prefetched base64
+         */
+        prefetched?: string;
     };
     /**
      * Add `-Dfml.ignoreInvalidMinecraftCertificates=true` to jvm argument
@@ -494,6 +504,10 @@ export async function generateArguments(options: LaunchOption) {
 
     if (options.yggdrasilAgent) {
         cmd.push(`-javaagent:${options.yggdrasilAgent.jar}=${options.yggdrasilAgent.server}`);
+        cmd.push("-Dauthlibinjector.side=client");
+        if (options.yggdrasilAgent.prefetched) {
+            cmd.push(`-Dauthlibinjector.yggdrasil.prefetched=${options.yggdrasilAgent.prefetched}`);
+        }
     }
 
     const jvmOptions = {
