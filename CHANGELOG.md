@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.4.1
+### @xmcl/core@2.0.5
+#### Bug Fixes
+
+- fix: authlib-injector not correctly work ([d1b117a0cb36102151ead8bdb9d0ec66b1c94e5f](https://github.com/voxelum/minecraft-launcher-core-node/commit/d1b117a0cb36102151ead8bdb9d0ec66b1c94e5f))
+### @xmcl/installer@2.4.1
+#### Bug Fixes
+
+- fix: use agent on curseforge query ([b7dc132c2223a9835dfec98328ab9ecf6e36ee6a](https://github.com/voxelum/minecraft-launcher-core-node/commit/b7dc132c2223a9835dfec98328ab9ecf6e36ee6a))
+- fix: batch the query url for curseforge ([3d5e4079bfb9adbf0c1cc7a32899b35da7b1c4cb](https://github.com/voxelum/minecraft-launcher-core-node/commit/3d5e4079bfb9adbf0c1cc7a32899b35da7b1c4cb))
+- fix: normalize the downloader option ([e18b5df61287b171c63382725851ef69bfd0bb75](https://github.com/voxelum/minecraft-launcher-core-node/commit/e18b5df61287b171c63382725851ef69bfd0bb75))
+- Dependency @xmcl/core bump **patch**
+
+
 ## 2.4.0
 ### @xmcl/unzip@1.1.1
 #### Bug Fixes

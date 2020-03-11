@@ -736,8 +736,18 @@ export interface LaunchOption {
      * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
      */
     yggdrasilAgent?: {
+        /**
+         * The jar file path of the authlib-injector
+         */
         jar: string;
+        /**
+         * The auth server host
+         */
         server: string;
+        /**
+         * The prefetched base64
+         */
+        prefetched?: string;
     };
     /**
      * Add \`-Dfml.ignoreInvalidMinecraftCertificates=true\` to jvm argument
@@ -1389,8 +1399,18 @@ export interface LaunchOption {
      * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
      */
     yggdrasilAgent?: {
+        /**
+         * The jar file path of the authlib-injector
+         */
         jar: string;
+        /**
+         * The auth server host
+         */
         server: string;
+        /**
+         * The prefetched base64
+         */
+        prefetched?: string;
     };
     /**
      * Add \`-Dfml.ignoreInvalidMinecraftCertificates=true\` to jvm argument
@@ -2544,7 +2564,7 @@ export declare function readManifestTask(zip: InputType): Task<Manifest>;
 export declare function readManifest(zip: InputType): Promise<Manifest>;
 export declare type CurseforgeURLQuery = (projectId: number, fileId: number) => Promise<string>;
 export declare type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "resourcepacks">;
-export declare const DEFAULT_QUERY: CurseforgeURLQuery;
+export declare function createDefaultCurseforgeQuery(): CurseforgeURLQuery;
 /**
  * Install curseforge modpack to a specific Minecraft location.
  *
@@ -2913,14 +2933,14 @@ export interface Options extends DownloaderOption, LibraryOption, InstallOptions
  * @param version The forge version meta
  * @returns The installed version name.
  */
-export declare function install(version: RequiredVersion, minecraft: MinecraftLocation, option?: Options): Promise<string>;
+export declare function install(version: RequiredVersion, minecraft: MinecraftLocation, options?: Options): Promise<string>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export declare function installTask(version: RequiredVersion, minecraft: MinecraftLocation, option?: Options): Task<string>;
+export declare function installTask(version: RequiredVersion, minecraft: MinecraftLocation, options?: Options): Task<string>;
 /**
  * Query the webpage content from files.minecraftforge.net.
  *
@@ -3164,10 +3184,7 @@ export declare function getVersionList(option?: {
 }): Promise<VersionList>;
 export interface DownloaderOption {
     /**
-     * An external downloader.
-     *
-     * If this is assigned, the returned task won't be able to track progress.
-     * You should track the download progress by you self.
+     * An customized downloader to swap default downloader.
      */
     downloader?: Downloader;
     /**
@@ -3298,7 +3315,7 @@ export declare function installVersion(type: "client" | "server", versionMeta: V
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
  */
-export declare function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: JarOption): Task<ResolvedVersion>;
+export declare function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, options?: JarOption): Task<ResolvedVersion>;
 /**
  * Install the completeness of the Minecraft game assets and libraries on a existed version.
  *
@@ -3320,13 +3337,13 @@ export declare function installDependencies(version: ResolvedVersion, option?: O
  * @param version The resolved version produced by Version.parse
  * @param minecraft The minecraft location
  */
-export declare function installDependenciesTask(version: ResolvedVersion, option?: Option): Task<ResolvedVersion>;
+export declare function installDependenciesTask(version: ResolvedVersion, options?: Option): Task<ResolvedVersion>;
 /**
  * Install or check the assets to resolved version
  * @param version The target version
- * @param option The option to replace assets host url
+ * @param options The option to replace assets host url
  */
-export declare function installAssets(version: ResolvedVersion, option?: AssetsOption): Promise<ResolvedVersion>;
+export declare function installAssets(version: ResolvedVersion, options?: AssetsOption): Promise<ResolvedVersion>;
 /**
  * Install or check the assets to resolved version
  *
@@ -3336,9 +3353,9 @@ export declare function installAssets(version: ResolvedVersion, option?: AssetsO
  *  - asset
  *
  * @param version The target version
- * @param option The option to replace assets host url
+ * @param options The option to replace assets host url
  */
-export declare function installAssetsTask(version: ResolvedVersion, option?: AssetsOption): Task<ResolvedVersion>;
+export declare function installAssetsTask(version: ResolvedVersion, options?: AssetsOption): Task<ResolvedVersion>;
 /**
  * Install all the libraries of providing version
  * @param version The target version
@@ -3496,7 +3513,7 @@ export declare class DefaultDownloader implements Downloader {
 /**
  * Wrapped task form of download file if absent task
  */
-export declare function downloadFileTask(option: DownloadOption, worker?: Downloader): (context: Task.Context) => Promise<void>;
+export declare function downloadFileTask(option: DownloadOption, worker: Downloader): (context: Task.Context) => Promise<void>;
 export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
 export declare function batchedTask(context: Task.Context, tasks: Task<unknown>[], sizes: number[], maxConcurrency?: number, throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<void>;
 export declare function normalizeArray<T>(arr?: T | T[]): T[];
@@ -3519,6 +3536,12 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
+export declare function normailzeDownloader<T extends {
+    downloader?: Downloader;
+}>(options: T): asserts options is HasDownloader<T>;
+export declare type HasDownloader<T> = T & {
+    downloader: Downloader;
+};
 `;
 module.exports['@xmcl/installer/curseforge.d.ts'] = `/// <reference types="node" />
 import { MinecraftLocation } from "@xmcl/core";
@@ -3588,7 +3611,7 @@ export declare function readManifestTask(zip: InputType): Task<Manifest>;
 export declare function readManifest(zip: InputType): Promise<Manifest>;
 export declare type CurseforgeURLQuery = (projectId: number, fileId: number) => Promise<string>;
 export declare type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "resourcepacks">;
-export declare const DEFAULT_QUERY: CurseforgeURLQuery;
+export declare function createDefaultCurseforgeQuery(): CurseforgeURLQuery;
 /**
  * Install curseforge modpack to a specific Minecraft location.
  *
@@ -3957,14 +3980,14 @@ export interface Options extends DownloaderOption, LibraryOption, InstallOptions
  * @param version The forge version meta
  * @returns The installed version name.
  */
-export declare function install(version: RequiredVersion, minecraft: MinecraftLocation, option?: Options): Promise<string>;
+export declare function install(version: RequiredVersion, minecraft: MinecraftLocation, options?: Options): Promise<string>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export declare function installTask(version: RequiredVersion, minecraft: MinecraftLocation, option?: Options): Task<string>;
+export declare function installTask(version: RequiredVersion, minecraft: MinecraftLocation, options?: Options): Task<string>;
 /**
  * Query the webpage content from files.minecraftforge.net.
  *
@@ -4208,10 +4231,7 @@ export declare function getVersionList(option?: {
 }): Promise<VersionList>;
 export interface DownloaderOption {
     /**
-     * An external downloader.
-     *
-     * If this is assigned, the returned task won't be able to track progress.
-     * You should track the download progress by you self.
+     * An customized downloader to swap default downloader.
      */
     downloader?: Downloader;
     /**
@@ -4342,7 +4362,7 @@ export declare function installVersion(type: "client" | "server", versionMeta: V
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
  */
-export declare function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: JarOption): Task<ResolvedVersion>;
+export declare function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, options?: JarOption): Task<ResolvedVersion>;
 /**
  * Install the completeness of the Minecraft game assets and libraries on a existed version.
  *
@@ -4364,13 +4384,13 @@ export declare function installDependencies(version: ResolvedVersion, option?: O
  * @param version The resolved version produced by Version.parse
  * @param minecraft The minecraft location
  */
-export declare function installDependenciesTask(version: ResolvedVersion, option?: Option): Task<ResolvedVersion>;
+export declare function installDependenciesTask(version: ResolvedVersion, options?: Option): Task<ResolvedVersion>;
 /**
  * Install or check the assets to resolved version
  * @param version The target version
- * @param option The option to replace assets host url
+ * @param options The option to replace assets host url
  */
-export declare function installAssets(version: ResolvedVersion, option?: AssetsOption): Promise<ResolvedVersion>;
+export declare function installAssets(version: ResolvedVersion, options?: AssetsOption): Promise<ResolvedVersion>;
 /**
  * Install or check the assets to resolved version
  *
@@ -4380,9 +4400,9 @@ export declare function installAssets(version: ResolvedVersion, option?: AssetsO
  *  - asset
  *
  * @param version The target version
- * @param option The option to replace assets host url
+ * @param options The option to replace assets host url
  */
-export declare function installAssetsTask(version: ResolvedVersion, option?: AssetsOption): Task<ResolvedVersion>;
+export declare function installAssetsTask(version: ResolvedVersion, options?: AssetsOption): Task<ResolvedVersion>;
 /**
  * Install all the libraries of providing version
  * @param version The target version
@@ -4589,7 +4609,7 @@ export declare class DefaultDownloader implements Downloader {
 /**
  * Wrapped task form of download file if absent task
  */
-export declare function downloadFileTask(option: DownloadOption, worker?: Downloader): (context: Task.Context) => Promise<void>;
+export declare function downloadFileTask(option: DownloadOption, worker: Downloader): (context: Task.Context) => Promise<void>;
 export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
 export declare function batchedTask(context: Task.Context, tasks: Task<unknown>[], sizes: number[], maxConcurrency?: number, throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<void>;
 export declare function normalizeArray<T>(arr?: T | T[]): T[];
@@ -4612,6 +4632,12 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
+export declare function normailzeDownloader<T extends {
+    downloader?: Downloader;
+}>(options: T): asserts options is HasDownloader<T>;
+export declare type HasDownloader<T> = T & {
+    downloader: Downloader;
+};
 `;
 module.exports['@xmcl/java-installer/cjs/index.d.ts'] = `import Task from "@xmcl/task";
 export interface JavaInfo {
