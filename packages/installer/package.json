@@ -3,7 +3,7 @@
   "version": "2.4.1",
   "main": "./cjs/index.js",
   "module": "./index.js",
-  "description": "Minecraft installer",
+  "description": "Provide Minecraft/Forge/Fabric/Liteloader installers",
   "engines": {
     "node": ">=10.0"
   },
