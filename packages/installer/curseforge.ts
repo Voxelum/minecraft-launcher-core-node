@@ -1,6 +1,7 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
 import { CachedZipFile, open } from "@xmcl/unzip";
+import { HttpsAgent } from "agentkeepalive";
 import got from "got";
 import { basename, join } from "path";
 import { DownloaderOption } from "./minecraft";
@@ -91,10 +92,10 @@ export function readManifest(zip: InputType) {
 export type CurseforgeURLQuery = (projectId: number, fileId: number) => Promise<string>;
 export type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "resourcepacks">;
 
-export const DEFAULT_QUERY: CurseforgeURLQuery = (projectId, fileId) => {
-    return got.get(`https://addons-ecs.forgesvc.net/api/v2/addon/${projectId}/file/${fileId}/download-url`).text();
-};
-
+export function createDefaultCurseforgeQuery(): CurseforgeURLQuery {
+    let agent = new HttpsAgent();
+    return (projectId, fileId) => got.get(`https://addons-ecs.forgesvc.net/api/v2/addon/${projectId}/file/${fileId}/download-url`, { agent }).text();
+}
 /**
  * Install curseforge modpack to a specific Minecraft location.
  *
@@ -125,7 +126,7 @@ export function installCurseforgeModpackTask(zip: InputType, minecraft: Minecraf
         let mainfest = options?.mainifest ?? await context.execute(readManifestTask(zipFile), 10);
 
         await context.execute(Task.create("download", async (c) => {
-            let requestor = options?.queryFileUrl || DEFAULT_QUERY;
+            let requestor = options?.queryFileUrl || createDefaultCurseforgeQuery();
             let sizes = mainfest.files.map(() => 10);
             let tasks = mainfest.files.map((f) => Task.create("file", async (c) => {
                 let u = await requestor(f.projectID, f.fileID);
@@ -169,7 +170,7 @@ export function installCurseforgeFile(file: File, destination: string, options?:
 export function installCurseforgeFileTask(file: File, destination: string, options: InstallFileOptions = {}) {
     return Task.create("curseforge-file", async (context) => {
         normailzeDownloader(options);
-        let requestor = options.queryFileUrl ?? DEFAULT_QUERY;
+        let requestor = options.queryFileUrl || createDefaultCurseforgeQuery();
         let url = await requestor(file.projectID, file.fileID);
         return downloadFileTask({ destination: join(destination, basename(url)), url }, options.downloader)(context);
     });
