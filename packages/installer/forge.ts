@@ -5,7 +5,7 @@ import { Entry, open } from "@xmcl/unzip";
 import { createWriteStream } from "fs";
 import { join } from "path";
 import { DownloaderOption, installByProfileTask, InstallProfile, InstallProfileOption, LibraryOption, resolveLibraryDownloadUrls } from "./minecraft";
-import { downloadFileTask, getIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject } from "./util";
+import { downloadFileTask, getIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, DefaultDownloader, HasDownloader, normailzeDownloader } from "./util";
 
 const { copyFile, ensureDir, ensureFile, unlink, waitStream, writeFile } = futils;
 
@@ -84,7 +84,7 @@ export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
 export interface Options extends DownloaderOption, LibraryOption, InstallOptionsBase, InstallProfileOption {
 }
 
-function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLocation, options: Options) {
+function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLocation, options: HasDownloader<Options>) {
     const mc = MinecraftFolder.from(minecraft);
     const forgeVersion = `${version.mcversion}-${version.version}`;
 
@@ -188,7 +188,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
  * @child installForgeJar
  * @child installForgeJson
  */
-function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLocation, options: Options) {
+function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLocation, options: HasDownloader<Options>) {
     return Task.create("installForge", async function installForge(context: Task.Context) {
         const mc = MinecraftFolder.from(minecraft);
 
@@ -256,8 +256,8 @@ function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLo
  * @param version The forge version meta
  * @returns The installed version name.
  */
-export function install(version: RequiredVersion, minecraft: MinecraftLocation, option?: Options) {
-    return Task.execute(installTask(version, minecraft, option)).wait();
+export function install(version: RequiredVersion, minecraft: MinecraftLocation, options?: Options) {
+    return Task.execute(installTask(version, minecraft, options)).wait();
 }
 
 /**
@@ -266,16 +266,16 @@ export function install(version: RequiredVersion, minecraft: MinecraftLocation, 
  * @param version The forge version meta
  * @returns The task to install the forge
  */
-export function installTask(version: RequiredVersion, minecraft: MinecraftLocation, option: Options = {}): Task<string> {
+export function installTask(version: RequiredVersion, minecraft: MinecraftLocation, options: Options = {}): Task<string> {
     let byInstaller = true;
     try {
-        const minorVersion = Number.parseInt(version.mcversion.split(".")[1], 10);
+        let minorVersion = Number.parseInt(version.mcversion.split(".")[1], 10);
         byInstaller = minorVersion >= 13;
     } catch { }
-    const work = byInstaller
-        ? installByInstallerTask(version, minecraft, option)
-        : installByUniversalTask(version, minecraft, option);
-    return work;
+    normailzeDownloader(options);
+    return byInstaller
+        ? installByInstallerTask(version, minecraft, options)
+        : installByUniversalTask(version, minecraft, options);
 }
 
 /**
