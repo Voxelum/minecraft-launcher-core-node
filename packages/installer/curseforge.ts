@@ -3,8 +3,8 @@ import { Task } from "@xmcl/task";
 import { CachedZipFile, open } from "@xmcl/unzip";
 import got from "got";
 import { basename, join } from "path";
-import { downloadFileTask, batchedTask } from "./util";
 import { DownloaderOption } from "./minecraft";
+import { batchedTask, downloadFileTask, normailzeDownloader } from "./util";
 
 export interface Options extends DownloaderOption {
     /**
@@ -116,7 +116,8 @@ export function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLoc
  * @param minecraft The minecraft location
  * @param options The options for query curseforge
  */
-export function installCurseforgeModpackTask(zip: InputType, minecraft: MinecraftLocation, options?: Options) {
+export function installCurseforgeModpackTask(zip: InputType, minecraft: MinecraftLocation, options: Options = {}) {
+    normailzeDownloader(options);
     return Task.create("installCurseforgeModpack", async (context: Task.Context) => {
         let mc = MinecraftFolder.from(minecraft);
         let zipFile = typeof zip === "string" || zip instanceof Buffer ? await open(zip) : zip;
@@ -125,10 +126,12 @@ export function installCurseforgeModpackTask(zip: InputType, minecraft: Minecraf
 
         await context.execute(Task.create("download", async (c) => {
             let requestor = options?.queryFileUrl || DEFAULT_QUERY;
-            let urls = await Promise.all(mainfest.files.map((f) => requestor(f.projectID, f.fileID)))
-            let sizes = urls.map(() => 10);
-            let tasks = urls.map((u) => Task.create("file", downloadFileTask({ destination: mc.getMod(basename(u)), url: u })));
-            await batchedTask(c, tasks, sizes, options?.maxConcurrency, options?.throwErrorImmediately, () => `Fail to install curseforge modpack to ${mc.root}.`);
+            let sizes = mainfest.files.map(() => 10);
+            let tasks = mainfest.files.map((f) => Task.create("file", async (c) => {
+                let u = await requestor(f.projectID, f.fileID);
+                return downloadFileTask({ destination: mc.getMod(basename(u)), url: u }, options.downloader)(c);
+            }));
+            await batchedTask(c, tasks, sizes, options.maxConcurrency, options.throwErrorImmediately, () => `Fail to install curseforge modpack to ${mc.root}.`);
         }), 80);
 
         await context.execute(Task.create("deploy", async (c) => {
@@ -136,7 +139,7 @@ export function installCurseforgeModpackTask(zip: InputType, minecraft: Minecraf
             let processed = 0;
             c.update(processed, total);
             await zipFile.extractEntries(mc.root, {
-                replaceExisted: options?.replaceExisted,
+                replaceExisted: options.replaceExisted,
                 entryHandler(root, e) {
                     if (e.fileName.startsWith(mainfest.overrides)) {
                         return e.fileName.substring(mainfest.overrides.length);
@@ -163,10 +166,11 @@ export function installCurseforgeFile(file: File, destination: string, options?:
 /**
  * Install a cureseforge xml file to a specific locations
  */
-export function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions) {
+export function installCurseforgeFileTask(file: File, destination: string, options: InstallFileOptions = {}) {
     return Task.create("curseforge-file", async (context) => {
-        let requestor = options?.queryFileUrl ?? DEFAULT_QUERY;
+        normailzeDownloader(options);
+        let requestor = options.queryFileUrl ?? DEFAULT_QUERY;
         let url = await requestor(file.projectID, file.fileID);
-        return downloadFileTask({ destination: join(destination, basename(url)), url }, options?.downloader)(context);
+        return downloadFileTask({ destination: join(destination, basename(url)), url }, options.downloader)(context);
     });
 }
