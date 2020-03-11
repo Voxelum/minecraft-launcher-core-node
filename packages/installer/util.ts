@@ -181,7 +181,7 @@ async function shouldDownload(option: DownloadOption): Promise<boolean> {
 /**
  * Wrapped task form of download file if absent task
  */
-export function downloadFileTask(option: DownloadOption, worker: Downloader = new DefaultDownloader()) {
+export function downloadFileTask(option: DownloadOption, worker: Downloader) {
     return async (context: Task.Context) => {
         option.pausable = context.pausealbe;
         option.progress = (c, p, t, u) => context.update(p, t, u);
@@ -275,3 +275,12 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
+
+export function normailzeDownloader<T extends { downloader?: Downloader }>(options: T): asserts options is HasDownloader<T> {
+    if (!options.downloader) {
+        options.downloader = new DefaultDownloader();
+    }
+}
+
+export type HasDownloader<T> = T & { downloader: Downloader }
+
