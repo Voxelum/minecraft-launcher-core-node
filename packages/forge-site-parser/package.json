@@ -27,7 +27,11 @@
     "typescript",
     "minecraft-launcher",
     "nodejs",
-    "electron"
+    "electron",
+    "forge",
+    "minecraftforge",
+    "liteloader",
+    "fabric"
   ],
   "license": "MIT",
   "bugs": {
