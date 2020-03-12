@@ -115,6 +115,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
                 hash: version.installer.sha1,
                 algorithm: "sha1",
             } : undefined,
+            mode: options.overwriteWhen,
         }, options.downloader));
 
         await context.execute(downloadTask, 20);
@@ -215,6 +216,7 @@ function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLo
             destination: jarPath,
             url: urls,
             checksum: version.universal.sha1 ? { hash: version.universal.sha1, algorithm: "sha1" } : undefined,
+            mode: options.overwriteWhen,
         }, options.downloader)), 80);
 
         let json = await context.execute(Task.create("json", async function installForgeJson() {

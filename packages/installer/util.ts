@@ -79,7 +79,7 @@ export interface DownloadOption {
      * The checksum info of the file
      */
     checksum?: { algorithm: string; hash: string; };
-    mode?: "checksumNotMatch" | "noChecksumProvided" | "always";
+    mode?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
 }
 
 export interface Downloader {
@@ -172,7 +172,7 @@ async function shouldDownload(option: DownloadOption): Promise<boolean> {
         return true;
     }
     if (!option.checksum || option.checksum.hash.length === 0) {
-        return option.mode === "noChecksumProvided";
+        return option.mode === "checksumNotMatchOrEmpty";
     }
     const hash = await checksum(option.destination, option.checksum.algorithm);
     return hash !== option.checksum.hash;
