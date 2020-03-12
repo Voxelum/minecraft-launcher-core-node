@@ -1,7 +1,13 @@
 import { open, CachedZipFile } from "@xmcl/unzip";
-import { promises } from "fs";
+import { stat, writeFile, readFile, readdir } from "fs";
 import { join, sep } from "path";
 import { FileSystem, setSystem, System } from "./system";
+import { promisify } from "util";
+
+const pstat = promisify(stat);
+const pwriteFile = promisify(writeFile);
+const preadFile = promisify(readFile);
+const preaddir = promisify(readdir);
 
 class DefaultFS extends FileSystem {
     sep = sep;
@@ -11,19 +17,19 @@ class DefaultFS extends FileSystem {
         return join(...paths);
     }
     isDirectory(name: string): Promise<boolean> {
-        return promises.stat(join(this.root, name)).then((s) => s.isDirectory());
+        return pstat(join(this.root, name)).then((s) => s.isDirectory());
     }
     writeFile(name: string, data: Uint8Array): Promise<void> {
-        return promises.writeFile(join(this.root, name), data);
+        return pwriteFile(join(this.root, name), data);
     }
     existsFile(name: string): Promise<boolean> {
-        return promises.stat(join(this.root, name)).then(() => true, () => false);
+        return pstat(join(this.root, name)).then(() => true, () => false);
     }
     readFile(name: any, encoding?: any) {
-        return promises.readFile(join(this.root, name), { encoding }) as any;
+        return preadFile(join(this.root, name), { encoding }) as any;
     }
     listFiles(name: string): Promise<string[]> {
-        return promises.readdir(join(this.root, name));
+        return preaddir(join(this.root, name));
     }
     constructor(readonly root: string) { super(); }
 }
@@ -100,7 +106,7 @@ class NodeSystem implements System {
     }
     async openFileSystem(basePath: string | Uint8Array): Promise<FileSystem> {
         if (typeof basePath === "string") {
-            const stat = await promises.stat(basePath);
+            const stat = await pstat(basePath);
             if (stat.isDirectory()) {
                 return new DefaultFS(basePath);
             } else {
