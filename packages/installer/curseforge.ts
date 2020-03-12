@@ -16,12 +16,17 @@ export interface Options extends DownloaderOption {
      * Should it replace the override files if the file is existed.
      */
     replaceExisted?: boolean;
-
     /**
      * Overload the manifest for this installation.
      * It will use this manifest instead of the read manifest from modpack zip to install.
      */
-    mainifest?: Manifest;
+    manifest?: Manifest;
+    /**
+     * The function to resolve the file path from url and other.
+     *
+     * By default this will install all the file
+     */
+    filePathResolver?: FilePathResolver;
 }
 
 export interface InstallFileOptions extends DownloaderOption {
@@ -89,6 +94,7 @@ export function readManifest(zip: InputType) {
     return readManifestTask(zip).execute().wait();
 }
 
+export type FilePathResolver = (projectId: number, fileId: number, minecraft: MinecraftFolder, url: string) => string | Promise<string>;
 export type CurseforgeURLQuery = (projectId: number, fileId: number) => Promise<string>;
 export type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "resourcepacks">;
 
@@ -123,14 +129,19 @@ export function installCurseforgeModpackTask(zip: InputType, minecraft: Minecraf
         let mc = MinecraftFolder.from(minecraft);
         let zipFile = typeof zip === "string" || zip instanceof Buffer ? await open(zip) : zip;
 
-        let mainfest = options?.mainifest ?? await context.execute(readManifestTask(zipFile), 10);
+        let mainfest = options?.manifest ?? await context.execute(readManifestTask(zipFile), 10);
 
         await context.execute(Task.create("download", async (c) => {
             let requestor = options?.queryFileUrl || createDefaultCurseforgeQuery();
+            let resolver = options?.filePathResolver || ((p, f, m, u) => m.getMod(basename(u)));
             let sizes = mainfest.files.map(() => 10);
             let tasks = mainfest.files.map((f) => Task.create("file", async (c) => {
                 let u = await requestor(f.projectID, f.fileID);
-                return downloadFileTask({ destination: mc.getMod(basename(u)), url: u }, options.downloader)(c);
+                let dest = resolver(f.projectID, f.fileID, mc, u);
+                if (typeof dest !== "string") {
+                    dest = await dest;
+                }
+                return downloadFileTask({ destination: dest, url: u, mode: options.overwriteWhen }, options.downloader)(c);
             }));
             await batchedTask(c, tasks, sizes, options.maxConcurrency, options.throwErrorImmediately, () => `Fail to install curseforge modpack to ${mc.root}.`);
         }), 80);
@@ -172,6 +183,6 @@ export function installCurseforgeFileTask(file: File, destination: string, optio
         normailzeDownloader(options);
         let requestor = options.queryFileUrl || createDefaultCurseforgeQuery();
         let url = await requestor(file.projectID, file.fileID);
-        return downloadFileTask({ destination: join(destination, basename(url)), url }, options.downloader)(context);
+        return downloadFileTask({ destination: join(destination, basename(url)), url, mode: options.overwriteWhen }, options.downloader)(context);
     });
 }
