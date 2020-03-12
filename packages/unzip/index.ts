@@ -451,6 +451,9 @@ export interface CachedZipFile extends ZipFile {
 }
 
 export interface LazyZipFile extends ZipFile {
+    /**
+     * How many entries you have read
+     */
     readonly entriesRead: number;
     readonly readEntryCursor: boolean;
 
@@ -465,6 +468,10 @@ export interface LazyZipFile extends ZipFile {
      */
     filterEntries(entries: string[]): Promise<Entry[]>;
 
+    /**
+     * Start to walk all the unread entries.
+     * @param onEntry The function to handle an entry. Return true to stop the walk.
+     */
     walkEntries(onEntry: (entry: Entry) => Promise<any> | boolean | void): Promise<void>;
 }
 
