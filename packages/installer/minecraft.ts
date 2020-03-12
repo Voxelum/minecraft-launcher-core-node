@@ -132,10 +132,12 @@ export interface DownloaderOption {
      * It has such options:
      *
      * - `checksumNotMatch`: Only the file with checksum provided and not matched will be redownload.
-     * - `noChecksumProvided`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
+     * - `checksumNotMatchOrEmpty`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
      * - `always`: Always redownload files.
+     *
+     * @default "checksumNotMatch"
      */
-    overwriteWhen?: "checksumNotMatch" | "noChecksumProvided" | "always";
+    overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
     /**
      * Should hault the donwload process immediately after ANY resource download failed.
      */
