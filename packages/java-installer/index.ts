@@ -147,11 +147,9 @@ export async function resolveJava(path: string): Promise<JavaInfo | undefined> {
  */
 export async function scanLocalJava(locations: string[]) {
     const unchecked = new Set<string>();
-    const javaFile = platform() === "win32" ? "javaw.exe" : "java";
+    const currentPlatform = platform();
+    const javaFile = currentPlatform === "win32" ? "javaw.exe" : "java";
 
-    for (const p of locations) {
-        unchecked.add(join(p, "bin", javaFile));
-    }
     if (process.env.JAVA_HOME) {
         unchecked.add(join(process.env.JAVA_HOME, "bin", javaFile));
     }
@@ -167,7 +165,7 @@ export async function scanLocalJava(locations: string[]) {
         });
     });
 
-    if (platform.name === "windows") {
+    if (currentPlatform === "win32") {
         const out = await new Promise<string[]>((resolve) => {
             exec("REG QUERY HKEY_LOCAL_MACHINE\\Software\\JavaSoft\\ /s /v JavaHome", (error, stdout) => {
                 if (!stdout) { resolve([]); }
@@ -180,7 +178,8 @@ export async function scanLocalJava(locations: string[]) {
         for (const o of [...out, ...await where()]) {
             unchecked.add(o);
         }
-    } else if (platform.name === "osx") {
+        unchecked.add("C:\\Program Files (x86)\\Minecraft Launcher\\runtime\\jre-x64/X86");
+    } else if (currentPlatform === "darwin") {
         unchecked.add("/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java");
         unchecked.add(await which());
     } else {
