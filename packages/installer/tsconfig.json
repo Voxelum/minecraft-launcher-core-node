@@ -5,6 +5,7 @@
         "forge.ts",
         "liteloader.ts",
         "curseforge.ts",
+        "optifine.ts",
         "fabric.ts",
         "util.ts"
     ],
