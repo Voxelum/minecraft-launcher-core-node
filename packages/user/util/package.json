@@ -2,11 +2,15 @@
   "name": "base",
   "private": true,
   "version": "0.0.0",
-  "main": "./cjs/index.js",
+  "main": "./index.cjs.js",
   "module": "./index.js",
   "browser": {
     "./index.js": "./index.browser.js",
-    "./cjs/index.js": "./cjs/index.browser.js"
+    "./index.cjs.js": "./index.browser.cjs.js"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "form-data": "^3.0.0",
+    "uuid": "^3.2.1"
+  }
 }

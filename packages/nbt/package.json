@@ -1,11 +1,8 @@
 {
   "name": "@xmcl/nbt",
   "version": "2.0.1-alpha.1",
-  "main": "./cjs/index.js",
+  "main": "./index.cjs.js",
   "module": "./index.js",
-  "browser": {
-    "./index.js": "./index.browser.js"
-  },
   "description": "NBT serialization and deserialization",
   "engines": {
     "node": ">=10.0"
@@ -30,14 +27,11 @@
     "electron"
   ],
   "license": "MIT",
-  "optionalDependencies": {
-    "pako": "^1.0.10"
-  },
   "dependencies": {
     "bytebuffer": "^5.0.1",
     "file-type": "^11.0.0",
     "long": "^3.2.0",
-    "typescript-optional": "^2.0.1"
+    "pako": "^1.0.10"
   },
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"

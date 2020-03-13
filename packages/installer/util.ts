@@ -10,7 +10,6 @@ import { cpus } from "os";
 import { pipeline as pip } from "stream";
 import { fileURLToPath, parse } from "url";
 import { promisify } from "util";
-import { MultipleError } from "./minecraft";
 
 const { checksum, ensureFile, missing } = futils;
 
@@ -284,3 +283,9 @@ export function normailzeDownloader<T extends { downloader?: Downloader }>(optio
 
 export type HasDownloader<T> = T & { downloader: Downloader }
 
+/**
+ * The collection of errors happened during a parallel process
+ */
+export class MultipleError extends Error {
+    constructor(public errors: unknown[], message?: string) { super(message); };
+}

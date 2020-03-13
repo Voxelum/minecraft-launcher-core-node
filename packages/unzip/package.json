@@ -1,7 +1,7 @@
 {
   "name": "@xmcl/unzip",
   "version": "1.1.1",
-  "main": "./cjs/index.js",
+  "main": "./index.cjs.js",
   "module": "./index.js",
   "description": "A (hopefully) easy unzip interface based on yauzl",
   "engines": {
