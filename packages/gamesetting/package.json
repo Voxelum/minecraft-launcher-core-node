@@ -3,7 +3,7 @@
   "version": "2.0.1-alpha.1",
   "main": "./index.cjs.js",
   "module": "./index.js",
-  "description": "Minecraft gamesetting parsing",
+  "description": "Minecraft gamesetting (options.txt) parsing.",
   "engines": {
     "node": ">=10.0"
   },

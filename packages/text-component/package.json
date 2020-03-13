@@ -3,7 +3,7 @@
   "version": "2.1.0",
   "main": "./index.cjs.js",
   "module": "./index.js",
-  "description": "Minecraft text component parsing",
+  "description": "Minecraft text component parsing and rendering.",
   "engines": {
     "node": ">=10.0"
   },

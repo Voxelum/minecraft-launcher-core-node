@@ -3,7 +3,7 @@
   "version": "2.0.3",
   "main": "./index.cjs.js",
   "module": "./index.js",
-  "description": "Minecraft Mod parser. Provide the utilities to parse forge/liteloader/fabric mod metadata.",
+  "description": "Minecraft Mod parser. Provides the utilities to parse forge/liteloader/fabric mod metadata.",
   "engines": {
     "node": ">=10.0"
   },
