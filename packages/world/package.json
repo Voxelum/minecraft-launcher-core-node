@@ -1,7 +1,7 @@
 {
   "name": "@xmcl/world",
   "version": "1.0.7",
-  "main": "./cjs/index.js",
+  "main": "./index.cjs.js",
   "module": "./index.js",
   "description": "Minecraft world dat parsing",
   "engines": {
@@ -13,7 +13,7 @@
   "dependencies": {
     "@xmcl/nbt": "file:../nbt",
     "@xmcl/system": "file:../system",
-    "file-type": "^11.0.0"
+    "bytebuffer": "^5.0.1"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

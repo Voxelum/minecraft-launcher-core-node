@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/task",
-  "main": "./cjs/index.js",
+  "main": "./index.cjs.js",
   "module": "./index.js",
   "author": {
     "name": "cijhn@hotmail.com"

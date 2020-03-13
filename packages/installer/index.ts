@@ -6,6 +6,6 @@ import * as CurseforgeInstaller from "./curseforge";
 import * as OptifineInstaller from "./optifine";
 import * as Diagnosis from "./diagnose";
 
-export { DownloadOption, Downloader, DefaultDownloader } from "./util";
+export { DownloadOption, Downloader, DefaultDownloader, MultipleError } from "./util";
 
 export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller, OptifineInstaller };

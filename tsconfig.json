@@ -12,8 +12,6 @@
     "module": "ES2015",
     "moduleResolution": "node",
     "newLine": "LF",
-    "inlineSourceMap": true,
-    "inlineSources": true,
     "strict": true,
     "target": "es2018"
   },

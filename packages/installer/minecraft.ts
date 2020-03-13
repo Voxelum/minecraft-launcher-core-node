@@ -199,12 +199,6 @@ export type Option = AssetsOption & JarOption & LibraryOption;
 type RequiredVersion = Pick<Version, "id" | "url">
 
 /**
- * The collection of errors happened during a parallel process
- */
-export class MultipleError extends Error {
-    constructor(public errors: unknown[], message?: string) { super(message); };
-}
-/**
  * Install the Minecraft game to a location by version metadata.
  *
  * This will install version json, version jar, and all dependencies (assets, libraries)
