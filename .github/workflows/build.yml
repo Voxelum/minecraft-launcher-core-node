@@ -42,7 +42,7 @@ jobs:
         npm run test:full
     - name: Build
       run: |
-        npm run build
+        export NODE_OPTIONS=--max_old_space_size=4096 npm run build
     - name: Prepare Pull Request
       id: vars
       uses: ./.github/actions/prepare-pr
