@@ -29,7 +29,9 @@
     "typescript",
     "minecraft-launcher",
     "nodejs",
-    "electron"
+    "electron",
+    "yggdrasil-authentication",
+    "minecraft-skin"
   ],
   "license": "MIT",
   "bugs": {
