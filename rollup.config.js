@@ -4,8 +4,6 @@ import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import json from '@rollup/plugin-json';
 
-let packages = fs.readdirSync('packages')
-
 function generate(dir) {
     let typescriptPlugin = typescript({
         tsconfigOverride: { compilerOptions: { declaration: false } }
@@ -50,6 +48,7 @@ function generate(dir) {
 }
 
 let configs = [];
+
 /**
  * @param {string} dirName 
  */
@@ -63,6 +62,14 @@ function getConfig(dirName) {
     }
 }
 
-packages.forEach(getConfig)
+
+let dirName = process.env.PACKAGE_NAME;
+
+if (dirName) {
+    getConfig(dirName);
+} else {
+    let packages = fs.readdirSync('packages')
+    packages.forEach(getConfig)
+}
 
 export default configs;
