@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/core",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "main": "./index.cjs.js",
   "module": "./index.js",
   "description": "Minecraft version parsing and game launching.",

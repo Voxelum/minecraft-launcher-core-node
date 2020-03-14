@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/forge-site-parser",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "main": "./index.cjs.js",
   "module": "./index.js",
   "description": "Forge web page parser",
