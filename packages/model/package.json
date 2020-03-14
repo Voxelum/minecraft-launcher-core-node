@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/model",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "main": "./index.cjs.js",
   "module": "./index.js",
   "description": "Create Three.js model for player and block",

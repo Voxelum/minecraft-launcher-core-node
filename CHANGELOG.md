@@ -1,5 +1,103 @@
 # Changelog
 
+## 2.6.0
+### @xmcl/nbt@2.0.2
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+### @xmcl/text-component@2.1.2
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+### @xmcl/unzip@1.1.3
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+### @xmcl/forge-site-parser@2.0.5
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+### @xmcl/gamesetting@2.0.2
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+### @xmcl/task@2.1.4
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+### @xmcl/user@2.1.3
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+### @xmcl/client@2.0.4
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- Dependency @xmcl/nbt bump **patch**
+- Dependency @xmcl/text-component bump **patch**
+### @xmcl/core@2.0.7
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/installer@2.6.0
+#### Features
+
+- feat: file name resolver ([3834a7b8d244cdc1fa67e8979a7531208700c25a](https://github.com/voxelum/minecraft-launcher-core-node/commit/3834a7b8d244cdc1fa67e8979a7531208700c25a))
+- feat: optifine installer ([e00536155f81c770435528c15cc4466df4e5f8d3](https://github.com/voxelum/minecraft-launcher-core-node/commit/e00536155f81c770435528c15cc4466df4e5f8d3))
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- fix: correctly overwrite ([84559efd2a3047e732a1c70b74a52aef853cf004](https://github.com/voxelum/minecraft-launcher-core-node/commit/84559efd2a3047e732a1c70b74a52aef853cf004))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/forge-site-parser bump **patch**
+- Dependency @xmcl/task bump **patch**
+### @xmcl/java-installer@0.1.5
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- fix: wrong platform check and remove redundent check ([e08131ddd505c0065a82b86154d741200ca8f134](https://github.com/voxelum/minecraft-launcher-core-node/commit/e08131ddd505c0065a82b86154d741200ca8f134))
+- Dependency @xmcl/task bump **patch**
+### @xmcl/system@1.0.9
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- fix: compatible with old njs ([16cc85c0c8456649d275d4080ef5d27572ff3f76](https://github.com/voxelum/minecraft-launcher-core-node/commit/16cc85c0c8456649d275d4080ef5d27572ff3f76))
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/mod-parser@2.0.5
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.0.10
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@1.0.10
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@1.0.10
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- Dependency @xmcl/system bump **patch**
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/server-info@2.0.2
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- Dependency @xmcl/nbt bump **patch**
+### @xmcl/world@1.0.9
+#### Bug Fixes
+
+- fix: use rollup to build and fix wrong import module ([c1b5582ecafc4cdfe96481b305013850d9e13cb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b5582ecafc4cdfe96481b305013850d9e13cb5))
+- Dependency @xmcl/nbt bump **patch**
+- Dependency @xmcl/system bump **patch**
+
+
 ## 2.5.0
 ### @xmcl/nbt@2.0.1
 #### Bug Fixes
