@@ -1,5 +1,40 @@
 # Changelog
 
+## 2.6.0
+### @xmcl/unzip@1.1.3
+#### Bug Fixes
+
+- fix: remove dead code & force bump ([8b1a4122b021f51fff8482d2705efdbc60b06d65](https://github.com/voxelum/minecraft-launcher-core-node/commit/8b1a4122b021f51fff8482d2705efdbc60b06d65))
+### @xmcl/task@2.1.4
+#### Bug Fixes
+
+- fix: shorten the name and use correct export ([b40af8a46cbf316883491445d10493ea9ec6ef1b](https://github.com/voxelum/minecraft-launcher-core-node/commit/b40af8a46cbf316883491445d10493ea9ec6ef1b))
+### @xmcl/core@2.0.7
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/installer@2.6.0
+#### Features
+
+- feat: include java installer ([5bcce2320d48f3a11a01e568f9207540d7d73d91](https://github.com/voxelum/minecraft-launcher-core-node/commit/5bcce2320d48f3a11a01e568f9207540d7d73d91))
+#### Bug Fixes
+
+- fix: add progress status and mark beta ([4d6dbe96397b3e16b179343954c8b8928c6cc358](https://github.com/voxelum/minecraft-launcher-core-node/commit/4d6dbe96397b3e16b179343954c8b8928c6cc358))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/task bump **patch**
+### @xmcl/system@1.0.9
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/mod-parser@2.0.5
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.0.10
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@1.0.10
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@1.0.10
+- Dependency @xmcl/system bump **patch**
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/world@1.0.9
+- Dependency @xmcl/system bump **patch**
+
+
 ## 2.5.0
 ### @xmcl/nbt@2.0.1
 #### Bug Fixes
