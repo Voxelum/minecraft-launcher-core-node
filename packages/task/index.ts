@@ -368,8 +368,6 @@ export namespace Task {
 /**
  * Create new task
  */
-export function newTask<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T> {
+export function task<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T> {
     return new Task(name, parameters, task);
 }
-
-export default Task;

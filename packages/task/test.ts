@@ -1,4 +1,4 @@
-import Task from "./index";
+import { Task } from "./index";
 
 function wait(time: number) {
     return new Promise<void>((resolve, reject) => {
