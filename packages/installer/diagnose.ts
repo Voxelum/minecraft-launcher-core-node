@@ -1,6 +1,6 @@
 import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary, ResolvedVersion, futils } from "@xmcl/core";
 import { join } from "path";
-import Task from "@xmcl/task";
+import { Task } from "@xmcl/task";
 import { InstallProfile, resolveProcessors } from "./minecraft";
 
 const { missing, readFile, validateSha1, exists, stat } = futils;

@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "fs";
 import { join, normalize } from "path";
 import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis, CurseforgeInstaller } from "./index";
 import { MultipleError } from "./util";
+import { parseJavaVersion } from "./java";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
 const mockRoot = normalize(join(__dirname, "..", "..", "mock"));

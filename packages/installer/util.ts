@@ -1,5 +1,5 @@
 import { futils } from "@xmcl/core";
-import Task from "@xmcl/task";
+import { Task } from "@xmcl/task";
 import HttpAgent, { HttpsAgent } from "agentkeepalive";
 import { ExecOptions, spawn } from "child_process";
 import { createReadStream, createWriteStream, ReadStream } from "fs";
@@ -78,7 +78,6 @@ export interface DownloadOption {
      * The checksum info of the file
      */
     checksum?: { algorithm: string; hash: string; };
-    mode?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
 }
 
 export interface Downloader {
@@ -162,8 +161,8 @@ export class DefaultDownloader implements Downloader {
  * - If the checksum is not provided, it will return true if file existed.
  * - If the checksum is provided, it will return true if the file checksum matched.
  */
-async function shouldDownload(option: DownloadOption): Promise<boolean> {
-    if (option.mode === "always") {
+async function shouldDownload(option: DownloadOption, downloaderOptions: DownloaderOptions): Promise<boolean> {
+    if (downloaderOptions.overwriteWhen === "always") {
         return true;
     }
     let missed = await missing(option.destination);
@@ -171,21 +170,21 @@ async function shouldDownload(option: DownloadOption): Promise<boolean> {
         return true;
     }
     if (!option.checksum || option.checksum.hash.length === 0) {
-        return option.mode === "checksumNotMatchOrEmpty";
+        return downloaderOptions.overwriteWhen === "checksumNotMatchOrEmpty";
     }
     const hash = await checksum(option.destination, option.checksum.algorithm);
     return hash !== option.checksum.hash;
 }
 
 /**
- * Wrapped task form of download file if absent task
+ * Wrapped task function of download file if absent task
  */
-export function downloadFileTask(option: DownloadOption, worker: Downloader) {
+export function downloadFileTask(option: DownloadOption, downloaderOptions: HasDownloader<DownloaderOptions>): Task.Function<void> {
     return async (context: Task.Context) => {
         option.pausable = context.pausealbe;
         option.progress = (c, p, t, u) => context.update(p, t, u);
-        if (await shouldDownload(option)) {
-            await worker.downloadFile(option);
+        if (await shouldDownload(option, downloaderOptions)) {
+            await downloaderOptions.downloader.downloadFile(option);
         }
         context.pausealbe(undefined, undefined);
     };
@@ -288,4 +287,31 @@ export type HasDownloader<T> = T & { downloader: Downloader }
  */
 export class MultipleError extends Error {
     constructor(public errors: unknown[], message?: string) { super(message); };
+}
+
+export interface DownloaderOptions {
+    /**
+     * An customized downloader to swap default downloader.
+     */
+    downloader?: Downloader;
+    /**
+     * Decide should downloader redownload and overwrite existed file.
+     *
+     * It has such options:
+     *
+     * - `checksumNotMatch`: Only the file with checksum provided and not matched will be redownload.
+     * - `checksumNotMatchOrEmpty`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
+     * - `always`: Always redownload files.
+     *
+     * @default "checksumNotMatch"
+     */
+    overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
+    /**
+     * Should hault the donwload process immediately after ANY resource download failed.
+     */
+    throwErrorImmediately?: boolean;
+    /**
+     * The max concurrency of the download
+     */
+    maxConcurrency?: number;
 }

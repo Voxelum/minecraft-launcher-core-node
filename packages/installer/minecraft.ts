@@ -1,8 +1,8 @@
-import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson, futils, LibraryInfo } from "@xmcl/core";
-import Task from "@xmcl/task";
-import { join, delimiter } from "path";
-import { Downloader, downloadFileTask, getIfUpdate, UpdatedObject, batchedTask, spawnProcess, joinUrl, normalizeArray, normailzeDownloader, HasDownloader } from "./util";
+import { futils, LibraryInfo, MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
+import { Task, task } from "@xmcl/task";
 import { open } from "@xmcl/unzip";
+import { delimiter, join } from "path";
+import { batchedTask, DownloaderOptions, downloadFileTask, getIfUpdate, HasDownloader, joinUrl, normailzeDownloader, normalizeArray, spawnProcess, UpdatedObject } from "./util";
 
 const { ensureDir, readFile, validateSha1 } = futils;
 
@@ -121,36 +121,13 @@ export function getVersionList(option: {
 } = {}): Promise<VersionList> {
     return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.original);
 }
-export interface DownloaderOption {
-    /**
-     * An customized downloader to swap default downloader.
-     */
-    downloader?: Downloader;
-    /**
-     * Decide should downloader redownload and overwrite existed file.
-     *
-     * It has such options:
-     *
-     * - `checksumNotMatch`: Only the file with checksum provided and not matched will be redownload.
-     * - `checksumNotMatchOrEmpty`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
-     * - `always`: Always redownload files.
-     *
-     * @default "checksumNotMatch"
-     */
-    overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
-    /**
-     * Should hault the donwload process immediately after ANY resource download failed.
-     */
-    throwErrorImmediately?: boolean;
-    /**
-     * The max concurrency of the download
-     */
-    maxConcurrency?: number;
-}
+
+export type DownloaderOption = DownloaderOptions;
+
 /**
  * Change the library host url
  */
-export interface LibraryOption extends DownloaderOption {
+export interface LibraryOption extends DownloaderOptions {
     /**
      * A more flexiable way to control library download url.
      * @see mavenHost
@@ -169,7 +146,7 @@ export interface LibraryOption extends DownloaderOption {
 /**
  * Change the host url of assets download
  */
-export interface AssetsOption extends DownloaderOption {
+export interface AssetsOption extends DownloaderOptions {
     /**
      * The alternative assets host to download asset. It will try to use these host from the `[0]` to the `[assetsHost.length - 1]`
      */
@@ -183,7 +160,7 @@ export interface AssetsOption extends DownloaderOption {
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloaderOption {
+export interface JarOption extends DownloaderOptions {
     /**
      * The client jar url
      */
@@ -192,6 +169,11 @@ export interface JarOption extends DownloaderOption {
      * The server jar url
      */
     server?: string;
+
+    /**
+     * The version json url replacement
+     */
+    jsonUrl?: string;
 }
 
 export type Option = AssetsOption & JarOption & LibraryOption;
@@ -235,7 +217,7 @@ export function install(type: "server" | "client", versionMeta: RequiredVersion,
  */
 export function installTask(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option: Option = {}): Task<ResolvedVersion> {
     normailzeDownloader(option);
-    return Task.create("install", async function install(context: Task.Context) {
+    return task("install", async function install(context: Task.Context) {
         context.update(0, 100);
         const version = await context.execute(installVersionTask(type, versionMeta, minecraft, option), 20);
         if (type === "client") {
@@ -272,7 +254,7 @@ export function installVersion(type: "client" | "server", versionMeta: Version, 
  */
 export function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, options: JarOption = {}): Task<ResolvedVersion> {
     normailzeDownloader(options);
-    return Task.create("installVersion", async function installVersion(context: Task.Context) {
+    return task("installVersion", async function installVersion(context: Task.Context) {
         context.update(0, 100);
         await context.execute(installVersionJsonTask(versionMeta, minecraft, options), 40);
         const version = await VersionJson.parse(minecraft, versionMeta.id);
@@ -306,7 +288,7 @@ export function installDependencies(version: ResolvedVersion, option?: Option): 
  */
 export function installDependenciesTask(version: ResolvedVersion, options: Option = {}): Task<ResolvedVersion> {
     normailzeDownloader(options);
-    return Task.create("installDependencies", async function installDependencies(context: Task.Context) {
+    return task("installDependencies", async function installDependencies(context: Task.Context) {
         context.update(0, 100);
         await Promise.all([
             context.execute(installAssetsTask(version, options), 50),
@@ -342,15 +324,14 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
         let folder = MinecraftFolder.from(version.minecraftDirectory);
         let jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
-        await context.execute(Task.create("assetsJson", downloadFileTask({
+        await context.execute(task("assetsJson", downloadFileTask({
             url: version.assetIndex.url,
             destination: jsonPath,
             checksum: {
                 algorithm: "sha1",
                 hash: version.assetIndex.sha1,
             },
-            mode: options.overwriteWhen,
-        }, options.downloader)));
+        }, options)));
 
         await ensureDir(folder.getPath("assets", "objects"));
         interface AssetIndex {
@@ -372,7 +353,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
 
         return version;
     }
-    return Task.create("installAssets", installAssets, { version: version.id })
+    return task("installAssets", installAssets, { version: version.id })
 }
 
 /**
@@ -395,7 +376,7 @@ export function installLibraries(version: ResolvedVersion, option: LibraryOption
  */
 export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option: LibraryOption = {}): Task<void> {
     normailzeDownloader(option);
-    return Task.create("installLibraries", async function installLibraries(context: Task.Context) {
+    return task("installLibraries", async function installLibraries(context: Task.Context) {
         let folder = MinecraftFolder.from(version.minecraftDirectory);
         let tasks = version.libraries.map((lib) => installLibraryTask(lib, folder, option));
         await batchedTask(context, tasks, tasks.map(() => 10), option.librariesDownloadConcurrency || option.maxConcurrency, option.throwErrorImmediately,
@@ -551,7 +532,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         }
     }
     function postProcessingTask(minecraft: MinecraftFolder, processors: InstallProfile["processors"], java: string, failImmediately: boolean) {
-        return Task.create("postProcessing", async function postProcessing(ctx) {
+        return task("postProcessing", async function postProcessing(ctx) {
             if (!processors || processors.length === 0) {
                 return;
             }
@@ -573,7 +554,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         });
     }
 
-    return Task.create("install", async function install(context: Task.Context) {
+    return task("install", async function install(context: Task.Context) {
         const minecraftFolder = MinecraftFolder.from(minecraft);
         const java = options.java || "java";
 
@@ -588,7 +569,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
 }
 
 function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLocation, options: HasDownloader<Option>) {
-    return Task.create("json", async function json(context: Task.Context) {
+    return task("json", async function json(context: Task.Context) {
         let folder = MinecraftFolder.from(minecraft);
         await ensureDir(folder.getVersionRoot(version.id));
 
@@ -600,13 +581,12 @@ function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLo
             url,
             checksum: { algorithm: "sha1", hash: expectSha1 },
             destination: destination,
-            mode: options.overwriteWhen,
-        }, options.downloader)(context);
+        }, options)(context);
     });
 }
 
 function installVersionJarTask(type: "client" | "server", version: ResolvedVersion, minecraft: MinecraftLocation, options: HasDownloader<Option>) {
-    return Task.create("jar", async function jar(context: Task.Context) {
+    return task("jar", async function jar(context: Task.Context) {
         const folder = MinecraftFolder.from(minecraft);
         const destination = join(folder.getVersionRoot(version.id),
             type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar");
@@ -617,14 +597,13 @@ function installVersionJarTask(type: "client" | "server", version: ResolvedVersi
             url,
             checksum: { algorithm: "sha1", hash: expectSha1 },
             destination: destination,
-            mode: options.overwriteWhen,
-        }, options.downloader)(context);
+        }, options)(context);
         return version;
     });
 }
 
 function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, options: HasDownloader<Option>) {
-    return Task.create("library", async function library(context: Task.Context) {
+    return task("library", async function library(context: Task.Context) {
         context.update(0, -1, lib.name);
 
         const libraryPath = lib.download.path;
@@ -641,13 +620,12 @@ function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, optio
             url: urls,
             checksum,
             destination: filePath,
-            mode: options.overwriteWhen,
-        }, options.downloader)(context);
+        }, options)(context);
     }, { lib: lib.name });
 }
 
 function installAssetTask(version: string, asset: { name: string, hash: string, size: number }, folder: MinecraftFolder, option: HasDownloader<AssetsOption>) {
-    return Task.create("assets", async function assets(context: Task.Context) {
+    return task("assets", async function assets(context: Task.Context) {
         const assetsHosts = [
             ...normalizeArray(option.assetsHost),
             DEFAULT_RESOURCE_ROOT_URL,
@@ -663,13 +641,12 @@ function installAssetTask(version: string, asset: { name: string, hash: string, 
         context.update(0, size, name);
         await downloadFileTask({
             url: urls,
-            mode: option.overwriteWhen,
             checksum: {
                 hash,
                 algorithm: "sha1",
             },
             destination: file,
-        }, option.downloader)(context);
+        }, option)(context);
     }, { version });
 }
 

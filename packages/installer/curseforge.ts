@@ -141,7 +141,7 @@ export function installCurseforgeModpackTask(zip: InputType, minecraft: Minecraf
                 if (typeof dest !== "string") {
                     dest = await dest;
                 }
-                return downloadFileTask({ destination: dest, url: u, mode: options.overwriteWhen }, options.downloader)(c);
+                return downloadFileTask({ destination: dest, url: u }, options)(c);
             }));
             await batchedTask(c, tasks, sizes, options.maxConcurrency, options.throwErrorImmediately, () => `Fail to install curseforge modpack to ${mc.root}.`);
         }), 80);
@@ -183,6 +183,6 @@ export function installCurseforgeFileTask(file: File, destination: string, optio
         normailzeDownloader(options);
         let requestor = options.queryFileUrl || createDefaultCurseforgeQuery();
         let url = await requestor(file.projectID, file.fileID);
-        return downloadFileTask({ destination: join(destination, basename(url)), url, mode: options.overwriteWhen }, options.downloader)(context);
+        return downloadFileTask({ destination: join(destination, basename(url)), url }, options)(context);
     });
 }
