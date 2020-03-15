@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - 'packages/*/*.ts'
-      - 'packages/*/package.json'
       - '.github/*'
 
 jobs:
