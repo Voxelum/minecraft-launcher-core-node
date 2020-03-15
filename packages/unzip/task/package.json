@@ -1,0 +1,11 @@
+{
+    "name": "task-unzip",
+    "private": true,
+    "version": "0.0.0",
+    "main": "./index.cjs.js",
+    "module": "./index.js",
+    "dependencies": {
+        "yauzl": "^2.10.0",
+        "../index": "0.0.0"
+    }
+}
