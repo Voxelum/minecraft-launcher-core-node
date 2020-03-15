@@ -347,24 +347,6 @@ class ParseStreamImpl extends ZipFileStream<LazyZipFile | CachedZipFile> {
     }
 }
 
-class ParseEntriesStreamImpl extends ZipFileStream<CachedZipFile>  {
-    constructor(readonly entries: string[]) {
-        super();
-    }
-
-    public _final(callback: (error?: Error | null) => void) {
-        openZipFile(Buffer.concat(this.buffer), { lazyEntries: true }).then((zip) => {
-            return parseEntries(zip, this.entries).then((entries) => {
-                this._resolve(new CachedZip(zip, entries));
-                callback();
-            });
-        }).catch((e) => {
-            callback(e);
-            this._reject(e);
-        });
-    }
-}
-
 class ExtractStreamImpl extends ZipFileStream<void> {
     constructor(readonly destination: string, readonly options?: ExtractOptions) {
         super();
