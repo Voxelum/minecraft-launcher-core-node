@@ -24,7 +24,6 @@
         "@xmcl/forge-site-parser": "file:packages\\forge-site-parser",
         "@xmcl/gamesetting": "file:packages\\gamesetting",
         "@xmcl/installer": "file:packages\\installer",
-        "@xmcl/java-installer": "file:packages\\java-installer",
         "@xmcl/mod-parser": "file:packages\\mod-parser",
         "@xmcl/model": "file:packages\\model",
         "@xmcl/nbt": "file:packages\\nbt",

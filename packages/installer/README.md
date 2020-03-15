@@ -184,3 +184,22 @@ The `ForgeInstaller.install` will do all of them.
 The `ForgeInstaller.installByInstallerPartial` will do 2 and 3.
 
 If you want to just do step 3, you can use `ForgeInstaller.diagnose` and find which libraries is break and use `ForgeInstaller.postProcess` to handle it.
+
+
+### Install Java 8 From Mojang Source
+
+Scan java installation path from the disk. (Require a lzma unpacker, like [7zip-bin](https://www.npmjs.com/package/7zip-bin) or [lzma-native](https://www.npmjs.com/package/lzma-native))
+
+```ts
+    import { JavaInstaller } from "@xmcl/installer";
+
+    // this require a unpackLZMA util to work
+    // you can use `7zip-bin`
+    // or `lzma-native` for this
+    const unpackLZMA: (src: string, dest: string) => Promise<void>;
+
+    await JavaInstaller.installJreFromMojang({
+        destination: "your/java/home",
+        unpackLZMA,
+    });
+```
