@@ -1360,7 +1360,7 @@ export declare function installCurseforgeFileTask(file: File, destination: strin
 export {};
 `;
 module.exports['@xmcl/installer/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary } from "@xmcl/core";
-import Task from "@xmcl/task";
+import { Task } from "@xmcl/task";
 import { InstallProfile } from "./minecraft";
 export declare enum Status {
     /**
@@ -1735,9 +1735,86 @@ import * as ForgeInstaller from "./forge";
 import * as Installer from "./minecraft";
 import * as CurseforgeInstaller from "./curseforge";
 import * as OptifineInstaller from "./optifine";
+import * as JavaInstaller from "./java";
 import * as Diagnosis from "./diagnose";
-export { DownloadOption, Downloader, DefaultDownloader, MultipleError } from "./util";
-export { Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller, OptifineInstaller };
+export { DownloadOption, Downloader, DefaultDownloader, MultipleError, downloadFileTask, InstallOptions, DownloaderOptions } from "./util";
+export { JavaInstaller, Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller, OptifineInstaller };
+`;
+module.exports['@xmcl/installer/java.d.ts'] = `import { Task } from "@xmcl/task";
+import { DownloaderOption } from "./minecraft";
+export interface JavaInfo {
+    /**
+     * Full java executable path
+     */
+    path: string;
+    /**
+     * Java version string
+     */
+    version: string;
+    /**
+     * Major version of java
+     */
+    majorVersion: number;
+}
+export interface Options extends DownloaderOption {
+    /**
+     * The destination of this installation
+     */
+    destination: string;
+    /**
+     * The cached directory which compressed java lzma will be download to.
+     * @default os.tempdir()
+     */
+    cacheDir?: string;
+    /**
+     * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
+     */
+    unpackLZMA: (src: string, dest: string) => Promise<void>;
+}
+/**
+ * Install JRE from Mojang offical resource. It should install jdk 8.
+ * @param options The install options
+ */
+export declare function installJreFromMojangTask(options: Options): Task<void>;
+/**
+ * Install JRE from Mojang offical resource. It should install jdk 8.
+ * @param options The install options
+ */
+export declare function installJreFromMojang(options: Options): Promise<void>;
+/**
+ * Try to resolve a java info at this path. This will call \`java -version\`
+ * @param path The java exectuable path.
+ */
+export declare function resolveJava(path: string): Promise<JavaInfo | undefined>;
+/**
+ * Parse version string and major version number from stderr of java process.
+ *
+ * @param versionText The stderr for \`java -version\`
+ */
+export declare function parseJavaVersion(versionText: string): {
+    version: string;
+    majorVersion: number;
+} | undefined;
+/**
+ * Get all potential java locations for Minecraft.
+ *
+ * On mac/linux, it will perform \`which java\`. On win32, it will perform \`where java\`
+ *
+ * @returns The absolute java locations path
+ */
+export declare function getPotentialJavaLocations(): Promise<string[]>;
+/**
+ * Scan local java version on the disk.
+ *
+ * It will check if the passed \`locations\` are the home of java.
+ * Notice that the locations should not be the executable, but the path of java installation, like JAVA_HOME.
+ *
+ * This will call \`getPotentialJavaLocations\` and then \`resolveJava\`
+ *
+ * @param locations The location (like java_home) want to check.
+ * @returns All validate java info
+ */
+export declare function scanLocalJava(locations: string[]): Promise<JavaInfo[]>;
 `;
 module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
@@ -1830,8 +1907,8 @@ export declare function install(versionMeta: Version, location: MinecraftLocatio
 export declare function installTask(versionMeta: Version, location: MinecraftLocation, options?: InstallOptions): Task<string>;
 `;
 module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
-import Task from "@xmcl/task";
-import { Downloader, UpdatedObject } from "./util";
+import { Task } from "@xmcl/task";
+import { DownloaderOptions, UpdatedObject } from "./util";
 /**
  * The function to swap library host.
  */
@@ -1948,36 +2025,11 @@ export declare function getVersionList(option?: {
      */
     remote?: string;
 }): Promise<VersionList>;
-export interface DownloaderOption {
-    /**
-     * An customized downloader to swap default downloader.
-     */
-    downloader?: Downloader;
-    /**
-     * Decide should downloader redownload and overwrite existed file.
-     *
-     * It has such options:
-     *
-     * - \`checksumNotMatch\`: Only the file with checksum provided and not matched will be redownload.
-     * - \`checksumNotMatchOrEmpty\`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
-     * - \`always\`: Always redownload files.
-     *
-     * @default "checksumNotMatch"
-     */
-    overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
-    /**
-     * Should hault the donwload process immediately after ANY resource download failed.
-     */
-    throwErrorImmediately?: boolean;
-    /**
-     * The max concurrency of the download
-     */
-    maxConcurrency?: number;
-}
+export declare type DownloaderOption = DownloaderOptions;
 /**
  * Change the library host url
  */
-export interface LibraryOption extends DownloaderOption {
+export interface LibraryOption extends DownloaderOptions {
     /**
      * A more flexiable way to control library download url.
      * @see mavenHost
@@ -1996,7 +2048,7 @@ export interface LibraryOption extends DownloaderOption {
 /**
  * Change the host url of assets download
  */
-export interface AssetsOption extends DownloaderOption {
+export interface AssetsOption extends DownloaderOptions {
     /**
      * The alternative assets host to download asset. It will try to use these host from the \`[0]\` to the \`[assetsHost.length - 1]\`
      */
@@ -2010,7 +2062,7 @@ export interface AssetsOption extends DownloaderOption {
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloaderOption {
+export interface JarOption extends DownloaderOptions {
     /**
      * The client jar url
      */
@@ -2019,6 +2071,10 @@ export interface JarOption extends DownloaderOption {
      * The server jar url
      */
     server?: string;
+    /**
+     * The version json url replacement
+     */
+    jsonUrl?: string;
 }
 export declare type Option = AssetsOption & JarOption & LibraryOption;
 declare type RequiredVersion = Pick<Version, "id" | "url">;
@@ -2253,7 +2309,7 @@ module.exports['@xmcl/installer/node_modules/agentkeepalive/index.d.ts'] = `decl
 }
 `;
 module.exports['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core";
-import Task from "@xmcl/task";
+import { Task } from "@xmcl/task";
 import { InstallOptions } from "./util";
 /**
  * Generate the optifine version json from provided info.
@@ -2261,6 +2317,7 @@ import { InstallOptions } from "./util";
  * @param minecraftVersion The minecraft version
  * @param launchWrapperVersion The launch wrapper version
  * @param options The install options
+ * @beta Might be changed and don't break the major version
  */
 export declare function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion: string, options?: InstallOptions): Version;
 export interface InstallOptifineOptions extends InstallOptions {
@@ -2270,26 +2327,28 @@ export interface InstallOptifineOptions extends InstallOptions {
     java?: string;
 }
 /**
- * Install optifine from optifine installer
+ * Install optifine by optifine installer
  *
  * @param installer The installer jar file path
  * @param minecraft The minecraft location
  * @param options The option to install
+ * @beta Might be changed and don't break the major version
  */
-export declare function installOptifine(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Promise<void>;
+export declare function installByInstaller(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Promise<void>;
 /**
- * Install optifine from optifine installer task
+ * Install optifine by optifine installer task
  *
  * @param installer The installer jar file path
  * @param minecraft The minecraft location
  * @param options The option to install
+ * @beta Might be changed and don't break the major version
  */
-export declare function installOptifineTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Task<void>;
+export declare function installByInstallerTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Task<void>;
 `;
 module.exports['@xmcl/installer/test.d.ts'] = `export {};
 `;
 module.exports['@xmcl/installer/util.d.ts'] = `/// <reference types="node" />
-import Task from "@xmcl/task";
+import { Task } from "@xmcl/task";
 import { ExecOptions } from "child_process";
 import { ReadStream } from "fs";
 import { ProxyStream } from "got/dist/source/as-stream";
@@ -2332,7 +2391,6 @@ export interface DownloadOption {
         algorithm: string;
         hash: string;
     };
-    mode?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
 }
 export interface Downloader {
     /**
@@ -2355,9 +2413,9 @@ export declare class DefaultDownloader implements Downloader {
     downloadFile(option: DownloadOption): Promise<void>;
 }
 /**
- * Wrapped task form of download file if absent task
+ * Wrapped task function of download file if absent task
  */
-export declare function downloadFileTask(option: DownloadOption, worker: Downloader): (context: Task.Context) => Promise<void>;
+export declare function downloadFileTask(option: DownloadOption, downloaderOptions: HasDownloader<DownloaderOptions>): Task.Function<void>;
 export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
 export declare function batchedTask(context: Task.Context, tasks: Task<unknown>[], sizes: number[], maxConcurrency?: number, throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<void>;
 export declare function normalizeArray<T>(arr?: T | T[]): T[];
@@ -2393,67 +2451,32 @@ export declare class MultipleError extends Error {
     errors: unknown[];
     constructor(errors: unknown[], message?: string);
 }
-`;
-module.exports['@xmcl/java-installer/index.d.ts'] = `import Task from "@xmcl/task";
-export interface JavaInfo {
-    path: string;
-    version: string;
-    majorVersion: number;
+export interface DownloaderOptions {
+    /**
+     * An customized downloader to swap default downloader.
+     */
+    downloader?: Downloader;
+    /**
+     * Decide should downloader redownload and overwrite existed file.
+     *
+     * It has such options:
+     *
+     * - \`checksumNotMatch\`: Only the file with checksum provided and not matched will be redownload.
+     * - \`checksumNotMatchOrEmpty\`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
+     * - \`always\`: Always redownload files.
+     *
+     * @default "checksumNotMatch"
+     */
+    overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
+    /**
+     * Should hault the donwload process immediately after ANY resource download failed.
+     */
+    throwErrorImmediately?: boolean;
+    /**
+     * The max concurrency of the download
+     */
+    maxConcurrency?: number;
 }
-export interface InstallOption {
-    /**
-     * The destination of this installation
-     */
-    destination: string;
-    /**
-     * The cached directory which compressed java lzma will be download to.
-     * @default os.tempdir()
-     */
-    cacheDir?: string;
-    /**
-     * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
-     */
-    unpackLZMA: (src: string, dest: string) => Promise<void>;
-    downloader: (option: {
-        url: string;
-        destination: string;
-        checksum: {
-            algorithm: string;
-            hash: string;
-        };
-        progress?: (written: number, total: number, url: string) => boolean | void;
-        pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
-    }) => Promise<void>;
-}
-/**
- * Install JRE from Mojang offical resource. It should install jdk 8.
- * @param options The install options
- */
-export declare function installJreFromMojangTask(options: InstallOption): Task<void>;
-/**
- * Install JRE from Mojang offical resource. It should install jdk 8.
- * @param options The install options
- */
-export declare function installJreFromMojang(options: InstallOption): Promise<void>;
-/**
- * Try to resolve a java info at this path.
- * @param path The java exectuable path.
- */
-export declare function resolveJava(path: string): Promise<JavaInfo | undefined>;
-/**
- * Scan local java version on the disk.
- *
- * It will check if the passed \`locations\` are the home of java.
- * Notice that the locations should not be the executable, but the path of java installation, like JAVA_HOME.
- *
- * On mac/linux, it will perform \`which java\`. On win32, it will perform \`where java\`
- *
- * @param locations The location (like java_home) want to check if it's a
- * @param platform The providing operating system
- */
-export declare function scanLocalJava(locations: string[]): Promise<JavaInfo[]>;
-`;
-module.exports['@xmcl/java-installer/test.d.ts'] = `export {};
 `;
 module.exports['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system";
 declare type Person = {
@@ -3690,8 +3713,7 @@ export declare namespace Task {
 /**
  * Create new task
  */
-export declare function newTask<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T>;
-export default Task;
+export declare function task<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T>;
 `;
 module.exports['@xmcl/task/test.d.ts'] = `export {};
 `;
@@ -4010,6 +4032,14 @@ export interface ExtractOptions {
     onAfterExtracted?: (destination: string, entry: Entry) => void;
 }
 export {};
+`;
+module.exports['@xmcl/unzip/task/index.d.ts'] = `import { OpenTarget, ExtractOptions } from "../index";
+import { Task } from "@xmcl/task";
+/**
+ * This might be released as a seperate package, or removed later since this is a reversed dependency
+ * @internal
+ */
+export declare function extractTaskFunction(openFile: OpenTarget, dest: string, options?: ExtractOptions): Task.Function<void>;
 `;
 module.exports['@xmcl/unzip/test.d.ts'] = `export {};
 `;
