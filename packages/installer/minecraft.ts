@@ -345,7 +345,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
 
         let { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
         let objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
-        let tasks = objectArray.map((o) => installAssetTask(version.id, o, folder, options));
+        let tasks = objectArray.map((o) => installAssetTask(o, folder, options));
         let sizes = objectArray.map((a) => a.size).map((a, b) => a + b, 0);
 
         await batchedTask(context, tasks, sizes, options.assetsDownloadConcurrency || options.maxConcurrency, options.throwErrorImmediately,
@@ -382,6 +382,44 @@ export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftD
         await batchedTask(context, tasks, tasks.map(() => 10), option.librariesDownloadConcurrency || option.maxConcurrency, option.throwErrorImmediately,
             () => `Errors during install Minecraft ${version.minecraftDirectory} libraries.`);
     }, { version: Reflect.get(version, "id") || "" });
+}
+
+/**
+ * Only install several resolved assets.
+ * @param assets The assets to install
+ * @param folder The minecraft folder
+ * @param options The asset option
+ */
+export function installResolvedAssetsTask(assets: {
+    name: string;
+    hash: string;
+    size: number;
+}[], folder: MinecraftFolder, options: AssetsOption = {}) {
+    async function installAssets(context: Task.Context) {
+        normailzeDownloader(options);
+        await ensureDir(folder.getPath("assets", "objects"));
+
+        let tasks = assets.map((o) => installAssetTask(o, folder, options));
+        let sizes = assets.map((a) => a.size).map((a, b) => a + b, 0);
+
+        await batchedTask(context, tasks, sizes, options.assetsDownloadConcurrency || options.maxConcurrency, options.throwErrorImmediately,
+            () => `Errors during install assets at ${folder.root}`);
+    }
+    return task("installAssets", installAssets);
+}
+
+/**
+ * Only install several resolved assets.
+ * @param assets The assets to install
+ * @param folder The minecraft folder
+ * @param options The asset option
+ */
+export function installResolvedAssets(assets: {
+    name: string;
+    hash: string;
+    size: number;
+}[], folder: MinecraftFolder, options: AssetsOption = {}) {
+    return installResolvedAssetsTask(assets, folder, options).execute().wait();
 }
 
 /**
@@ -602,7 +640,10 @@ function installVersionJarTask(type: "client" | "server", version: ResolvedVersi
     });
 }
 
-function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, options: HasDownloader<Option>) {
+/**
+ * Install single library task.
+ */
+function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, options: HasDownloader<LibraryOption>) {
     return task("library", async function library(context: Task.Context) {
         context.update(0, -1, lib.name);
 
@@ -624,7 +665,10 @@ function installLibraryTask(lib: ResolvedLibrary, folder: MinecraftFolder, optio
     }, { lib: lib.name });
 }
 
-function installAssetTask(version: string, asset: { name: string, hash: string, size: number }, folder: MinecraftFolder, option: HasDownloader<AssetsOption>) {
+/**
+ * Install single asset task.
+ */
+function installAssetTask(asset: { name: string, hash: string, size: number }, folder: MinecraftFolder, option: HasDownloader<AssetsOption>) {
     return task("assets", async function assets(context: Task.Context) {
         const assetsHosts = [
             ...normalizeArray(option.assetsHost),
@@ -647,7 +691,7 @@ function installAssetTask(version: string, asset: { name: string, hash: string, 
             },
             destination: file,
         }, option)(context);
-    }, { version });
+    });
 }
 
 const DEFAULT_MAVENS = ["https://repo1.maven.org/maven2/"];
