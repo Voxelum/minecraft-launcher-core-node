@@ -574,12 +574,12 @@ function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLo
         await ensureDir(folder.getVersionRoot(version.id));
 
         let destination = folder.getVersionJson(version.id);
-        let url = version.url;
-        let expectSha1 = version.url.split("/")[5];
+        let url = options.jsonUrl ?? version.url;
+        let expectSha1 = url.split("/")[5];
 
         await downloadFileTask({
             url,
-            checksum: { algorithm: "sha1", hash: expectSha1 },
+            checksum: expectSha1 ? { algorithm: "sha1", hash: expectSha1 } : undefined,
             destination: destination,
         }, options)(context);
     });
