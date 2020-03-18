@@ -1,4 +1,4 @@
-import { Task } from "./index";
+import { Task, task } from "./index";
 
 function wait(time: number) {
     return new Promise<void>((resolve, reject) => {
@@ -91,6 +91,37 @@ describe("Task", () => {
                 .resolves
                 .toEqual(1);
             expect(monitor).toBeCalledTimes(1);
+        });
+        test("should get correct parent execute event", async () => {
+            const runtime = Task.createRuntime();
+            const monitor = jest.fn();
+            runtime.on("execute", (n, p) => {
+                if (p) { monitor(p); }
+            });
+            await expect(runtime.submit(Task.create("test", async function test(c) {
+                await c.execute(task("child", () => { }));
+                return 1;
+            }))
+                .wait())
+                .resolves
+                .toEqual(1);
+            expect(monitor).toBeCalledTimes(1);
+            expect(monitor).toBeCalledWith({ arguments: undefined, name: "test", path: "test" });
+        });
+        test("should get correct execute event", async () => {
+            const runtime = Task.createRuntime();
+            const monitor = jest.fn();
+            runtime.on("execute", (n, p) => {
+                monitor(n, p);
+            });
+            await expect(runtime.submit(Task.create("test", async function test(c) {
+                return 1;
+            }))
+                .wait())
+                .resolves
+                .toEqual(1);
+            expect(monitor).toBeCalledTimes(1);
+            expect(monitor).toBeCalledWith({ arguments: undefined, name: "test", path: "test" }, undefined);
         });
         test("should be able to catch error", async () => {
             const runtime = Task.createRuntime();
