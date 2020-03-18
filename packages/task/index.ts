@@ -249,7 +249,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
 
             signal._started = true;
 
-            emitter.emit("execute", node, parent);
+            emitter.emit("execute", node, parent?.node);
 
             return runTask(context, task).then((r) => {
                 emitter.emit("finish", r, node);
