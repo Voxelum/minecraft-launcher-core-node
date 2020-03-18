@@ -78,7 +78,7 @@ export interface AssetIssue extends Issue {
     /**
      * The problematic asset
      */
-    asset: { file: string; hash: string };
+    asset: { name: string; hash: string; size: number; };
 }
 export interface AssetIndexIssue extends Issue {
     role: "assetIndex";
@@ -194,13 +194,13 @@ export function diagnoseTask(version: string, minecraftLocation: MinecraftLocati
             let filenames = Object.keys(objects);
             await context.execute(task("checkAssets", function checkAssets() {
                 return Promise.all(filenames.map(async (filename) => {
-                    let { hash } = objects[filename];
+                    let { hash, size } = objects[filename];
                     let assetPath = minecraft.getAsset(hash);
 
                     let issue: AssetIssue | undefined = await diagnoseSingleFile("asset", assetPath, hash,
                         "Problem on asset! Please consider to use Installer.installAssets to fix.");
                     if (issue) {
-                        issue.asset = { file: filename, hash };
+                        issue.asset = { name: filename, hash, size };
                         issues.push(issue);
                     }
                 }));
