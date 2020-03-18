@@ -45,21 +45,23 @@ export interface Version {
      */
     version: string;
 
-    type?: "buggy" | "recommended" | "common" | "latest";
+    type: "buggy" | "recommended" | "common" | "latest";
 }
 
 type RequiredVersion = {
     /**
-     * The installer info
+     * The installer info.
+     *
+     * If this is not presented, it will genreate from mcversion and forge version.
      */
-    installer: {
+    installer?: {
         sha1?: string;
         /**
          * The url path to concat with forge maven
          */
         path: string;
     };
-    universal: {
+    universal?: {
         sha1?: string;
         /**
          * The url path to concat with forge maven
@@ -89,9 +91,12 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
     const forgeVersion = `${version.mcversion}-${version.version}`;
 
     return Task.create("installForge", async function installForge(context: Task.Context) {
-        let installJarPath = mc.getLibraryByPath(version.installer.path.substring(version.installer.path.substring(1).indexOf("/") + 1));
+        let inf = version.installer;
+        let path = inf ? inf.path : `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
 
-        let forgeMavenPath = version.installer.path.replace("/maven", "").replace("maven", "");
+        let installJarPath = mc.getLibraryByPath(path.substring(path.substring(1).indexOf("/") + 1));
+
+        let forgeMavenPath = path.replace("/maven", "").replace("maven", "");
         let library = VersionJson.resolveLibrary({
             name: `net.minecraftforge:forge:${forgeVersion}:installer`,
             downloads: {
@@ -99,7 +104,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
                     url: `${DEFAULT_FORGE_MAVEN}${forgeMavenPath}`,
                     path: `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`,
                     size: -1,
-                    sha1: version.installer.sha1 || "",
+                    sha1: version.installer?.sha1 || "",
                 }
             }
         })!;
@@ -111,7 +116,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
         let downloadTask = Task.create("downloadInstaller", downloadFileTask({
             url: urls,
             destination: installJarPath,
-            checksum: version.installer.sha1 ? {
+            checksum: version.installer?.sha1 ? {
                 hash: version.installer.sha1,
                 algorithm: "sha1",
             } : undefined,
@@ -189,22 +194,32 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
  * @child installForgeJson
  */
 function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLocation, options: HasDownloader<Options>) {
+    function getForgeArtifactVersion() {
+        let [_, minor] = version.mcversion.split(".");
+        let minorVersion = Number.parseInt(minor);
+        if (minorVersion >= 7 && minorVersion <= 8) {
+            return `${version.mcversion}-${version.version}-${version.mcversion}`;
+        }
+        return `${version.mcversion}-${version.version}`;
+    }
     return Task.create("installForge", async function installForge(context: Task.Context) {
         const mc = MinecraftFolder.from(minecraft);
 
-        const paths = version.universal.path.split("/");
-        const forgeVersion = paths[paths.length - 2];
-        const jarPath = mc.getLibraryByPath(`net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`);
+        let forgeVersion = getForgeArtifactVersion();
+        let inf = version.universal;
+        let path = inf ? inf.path : `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`;
 
-        let forgeMavenPath = version.universal.path.replace("/maven", "").replace("maven", "");
+        let jarPath = mc.getLibraryByPath(path);
+
+        let forgeMavenPath = path.replace("/maven", "").replace("maven", "");
         let library = VersionJson.resolveLibrary({
             name: `net.minecraftforge:forge:${forgeVersion}:universal`,
             downloads: {
                 artifact: {
                     url: `${DEFAULT_FORGE_MAVEN}${forgeMavenPath}`,
-                    path: `/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`,
+                    path,
                     size: -1,
-                    sha1: version.universal.sha1 || "",
+                    sha1: version.universal?.sha1 || "",
                 }
             }
         })!;
@@ -214,7 +229,7 @@ function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLo
         await context.execute(Task.create("jar", downloadFileTask({
             destination: jarPath,
             url: urls,
-            checksum: version.universal.sha1 ? { hash: version.universal.sha1, algorithm: "sha1" } : undefined,
+            checksum: version.universal?.sha1 ? { hash: version.universal.sha1, algorithm: "sha1" } : undefined,
         }, options)), 80);
 
         let json = await context.execute(Task.create("json", async function installForgeJson() {
