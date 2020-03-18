@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.6.1
+### @xmcl/task@2.1.5
+#### Bug Fixes
+
+- fix: wrong parent event emitted ([3833ba08c05b93e2a3c0c8d848e33d4d0cdf23ca](https://github.com/voxelum/minecraft-launcher-core-node/commit/3833ba08c05b93e2a3c0c8d848e33d4d0cdf23ca))
+### @xmcl/installer@2.6.1
+#### Bug Fixes
+
+- fix: rewrite the diagnose and mark beta ([f66ca038a6578032505d30421d8fdb4a784ea0e2](https://github.com/voxelum/minecraft-launcher-core-node/commit/f66ca038a6578032505d30421d8fdb4a784ea0e2))
+- fix: enable jsonUrl replacement ([54674b3e6bb48761c3402abf40556855800157b1](https://github.com/voxelum/minecraft-launcher-core-node/commit/54674b3e6bb48761c3402abf40556855800157b1))
+- fix: simplify the install version requirement ([e3ace2626a37e9859252ce4a2e80112dc90dfe5f](https://github.com/voxelum/minecraft-launcher-core-node/commit/e3ace2626a37e9859252ce4a2e80112dc90dfe5f))
+- Dependency @xmcl/task bump **patch**
+
+
 ## 2.6.0
 ### @xmcl/unzip@1.1.3
 #### Bug Fixes

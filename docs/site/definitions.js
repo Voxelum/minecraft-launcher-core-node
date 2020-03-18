@@ -1359,109 +1359,129 @@ export declare function installCurseforgeFile(file: File, destination: string, o
 export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): Task<void>;
 export {};
 `;
-module.exports['@xmcl/installer/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary } from "@xmcl/core";
+module.exports['@xmcl/installer/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary } from "@xmcl/core";
 import { Task } from "@xmcl/task";
 import { InstallProfile } from "./minecraft";
-export declare enum Status {
+declare type Processor = InstallProfile["processors"][number];
+export interface Issue {
     /**
-     * File is missing
+     * The type of the issue.
      */
-    Missing = "missing",
+    type: "missing" | "corrupted";
     /**
-     * File checksum not match
+     * The role of the file in Minecraft.
      */
-    Corrupted = "corrupted",
+    role: "minecraftJar" | "versionJson" | "library" | "asset" | "assetIndex" | "processor";
     /**
-     * Not checked
+     * The path of the problematic file.
      */
-    Unknown = "unknown",
+    file: string;
     /**
-     * File is good
+     * The useful hint to fix this issue. This should be a human readable string.
      */
-    Good = ""
+    hint: string;
+    /**
+     * The expected checksum of the file
+     */
+    expectedChecksum: string;
+    /**
+     * The actual checksum of the file
+     */
+    receivedChecksum: string;
 }
-export interface StatusItem<T> {
-    status: Status;
-    value: T;
+export declare type MinecraftIssues = LibraryIssue | MinecraftJarIssue | VersionJsonIssue | AssetIssue | AssetIndexIssue;
+export declare type InstallIssues = Issue;
+export interface ProcessorIssue extends Issue {
+    role: "processor";
+    /**
+     * The processor
+     */
+    processor: Processor;
 }
-/**
- * General diagnosis of the version.
- * The missing diagnosis means either the file not existed, or the file not valid (checksum not matched)
- */
-export interface Report {
-    minecraftLocation: MinecraftFolder;
+export interface LibraryIssue extends Issue {
+    role: "library";
+    /**
+     * The problematic library
+     */
+    library: ResolvedLibrary;
+}
+export interface MinecraftJarIssue extends Issue {
+    role: "minecraftJar";
+    /**
+     * The minecraft version for that jar
+     */
     version: string;
-    versionJson: StatusItem<string>;
-    versionJar: Status;
-    assetsIndex: Status;
-    libraries: StatusItem<ResolvedLibrary>[];
-    assets: StatusItem<{
+}
+export interface VersionJsonIssue extends Issue {
+    role: "versionJson";
+    /**
+     * The version of version json that has problem.
+     */
+    version: string;
+}
+export interface AssetIssue extends Issue {
+    role: "asset";
+    /**
+     * The problematic asset
+     */
+    asset: {
         file: string;
         hash: string;
-    }>[];
-    forge?: ForgeReport;
+    };
+}
+export interface AssetIndexIssue extends Issue {
+    role: "assetIndex";
+    /**
+     * The minecraft version of the asset index
+     */
+    version: string;
+}
+export interface MinecraftIssueReport {
+    minecraftLocation: MinecraftFolder;
+    version: string;
+    issues: MinecraftIssues[];
+}
+export interface InstallProfileIssueReport {
+    minecraftLocation: MinecraftFolder;
+    installProfile: InstallProfile;
+    issues: ProcessorIssue[];
 }
 /**
  * Diagnose the version. It will check the version json/jar, libraries and assets.
  *
  * @param version The version id string
  * @param minecraft The minecraft location
+ * @beta
  */
-export declare function diagnose(version: string, minecraft: MinecraftLocation): Promise<Report>;
+export declare function diagnoseTask(version: string, minecraftLocation: MinecraftLocation): Task<MinecraftIssueReport>;
 /**
  * Diagnose the version. It will check the version json/jar, libraries and assets.
+ * @beta
  *
  * @param version The version id string
  * @param minecraft The minecraft location
  */
-export declare function diagnoseTask(version: string, minecraftLocation: MinecraftLocation): Task<Report>;
-declare type Processor = InstallProfile["processors"][number];
+export declare function diagnose(version: string, minecraft: MinecraftLocation): Promise<MinecraftIssueReport>;
 /**
- * The forge diagnosis report. It may have some intersection with \`Version.Diagnosis\`.
- */
-export interface ForgeReport {
-    /**
-     * When this flag is true, please reinstall totally.
-     */
-    badInstall: boolean;
-    /**
-     * This will be true if the forge version json doesn't contain correct argument or it does not exist.
-     */
-    badVersionJson: boolean;
-    /**
-     * Determine whether the forge binary patch existed.
-     */
-    binpatch: Status.Missing | Status.Good | Status.Unknown;
-    /**
-     * When this is not empty, please use \`postProcessInstallProfile\`
-     */
-    libraries: StatusItem<Version.NormalLibrary>[];
-    /**
-     * Existed some unprocess processors or fail to process processor.
-     * You can use \`postProcess\` to process these Processors.
-     */
-    unprocessed: Processor[];
-    /**
-     * Forge launch require a srg jar, but it might missing here. Missing it require a full re-install.
-     */
-    missingSrgJar: boolean;
-    /**
-     * Alt for badProcessedFiles
-     */
-    missingMinecraftExtraJar: boolean;
-    /**
-     * Alt for badProcessedFiles
-     */
-    missingForgePatchesJar: boolean;
-}
-/**
- * Diagnose for specific forge version. Majorly for the current installer forge. (mcversion >= 1.13)
+ * Diagnose a install profile status. Check if it processor output correctly processed.
  *
- * Don't use this with the version less than 1.13
- * @param versionOrProfile If the version string present, it will try to find the installer profile under version folder. Otherwise it will use presented installer profile to diagnose
- * @param minecraft The minecraft location.
+ * This can be used for check if forge correctly installed when minecraft >= 1.13
+ * @beta
+ *
+ * @param installProfile The install profile.
+ * @param minecraftLocation The minecraft location
  */
-export declare function diagnoseForgeVersion(versionOrProfile: string | InstallProfile, minecraft: MinecraftLocation): Promise<ForgeReport>;
+export declare function diagnoseInstallTask(installProfile: InstallProfile, minecraftLocation: MinecraftLocation): Task<InstallProfileIssueReport>;
+/**
+ * Diagnose a install profile status. Check if it processor output correctly processed.
+ *
+ * This can be used for check if forge correctly installed when minecraft >= 1.13
+ * @beta
+ *
+ * @param installProfile The install profile.
+ * @param minecraftLocation The minecraft location
+ */
+export declare function diagnoseInstall(installProfile: InstallProfile, minecraftLocation: MinecraftLocation): Promise<InstallProfileIssueReport>;
 export {};
 `;
 module.exports['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
@@ -1657,20 +1677,22 @@ export interface Version {
      * The forge version (without minecraft version)
      */
     version: string;
-    type?: "buggy" | "recommended" | "common" | "latest";
+    type: "buggy" | "recommended" | "common" | "latest";
 }
 declare type RequiredVersion = {
     /**
-     * The installer info
+     * The installer info.
+     *
+     * If this is not presented, it will genreate from mcversion and forge version.
      */
-    installer: {
+    installer?: {
         sha1?: string;
         /**
          * The url path to concat with forge maven
          */
         path: string;
     };
-    universal: {
+    universal?: {
         sha1?: string;
         /**
          * The url path to concat with forge maven
