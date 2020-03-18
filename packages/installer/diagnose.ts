@@ -1,311 +1,283 @@
-import { MinecraftFolder, MinecraftLocation, Version, ResolvedLibrary, ResolvedVersion, futils } from "@xmcl/core";
-import { join } from "path";
-import { Task } from "@xmcl/task";
+import { futils, MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version } from "@xmcl/core";
+import { Task, task } from "@xmcl/task";
 import { InstallProfile, resolveProcessors } from "./minecraft";
 
-const { missing, readFile, validateSha1, exists, stat } = futils;
+const { checksum, readFile, exists } = futils;
 
-export enum Status {
+async function getSha1(file: string) {
+    return checksum(file, "sha1");
+}
+type Processor = InstallProfile["processors"][number];
+
+export interface Issue {
     /**
-     * File is missing
+     * The type of the issue.
      */
-    Missing = "missing",
+    type: "missing" | "corrupted";
     /**
-     * File checksum not match
+     * The role of the file in Minecraft.
      */
-    Corrupted = "corrupted",
+    role: "minecraftJar" | "versionJson" | "library" | "asset" | "assetIndex" | "processor";
     /**
-     * Not checked
+     * The path of the problematic file.
      */
-    Unknown = "unknown",
+    file: string;
     /**
-     * File is good
+     * The useful hint to fix this issue. This should be a human readable string.
      */
-    Good = "",
+    hint: string;
+    /**
+     * The expected checksum of the file
+     */
+    expectedChecksum: string;
+    /**
+     * The actual checksum of the file
+     */
+    receivedChecksum: string;
 }
 
-async function getStatus(file: string, sha1?: string) {
-    if (await missing(file)) {
-        return Status.Missing;
-    }
-    if (sha1 && (!await validateSha1(file, sha1))) {
-        return Status.Corrupted;
-    }
-    return Status.Good;
+export type MinecraftIssues = LibraryIssue | MinecraftJarIssue | VersionJsonIssue | AssetIssue | AssetIndexIssue;
+export type InstallIssues = Issue;
+
+export interface ProcessorIssue extends Issue {
+    role: "processor";
+
+    /**
+     * The processor
+     */
+    processor: Processor;
 }
 
-export interface StatusItem<T> {
-    status: Status;
-    value: T;
+export interface LibraryIssue extends Issue {
+    role: "library";
+
+    /**
+     * The problematic library
+     */
+    library: ResolvedLibrary;
+}
+export interface MinecraftJarIssue extends Issue {
+    role: "minecraftJar";
+
+    /**
+     * The minecraft version for that jar
+     */
+    version: string;
+}
+export interface VersionJsonIssue extends Issue {
+    role: "versionJson";
+
+    /**
+     * The version of version json that has problem.
+     */
+    version: string;
+}
+export interface AssetIssue extends Issue {
+    role: "asset";
+
+    /**
+     * The problematic asset
+     */
+    asset: { file: string; hash: string };
+}
+export interface AssetIndexIssue extends Issue {
+    role: "assetIndex";
+
+    /**
+     * The minecraft version of the asset index
+     */
+    version: string;
 }
 
-/**
- * General diagnosis of the version.
- * The missing diagnosis means either the file not existed, or the file not valid (checksum not matched)
- */
-export interface Report {
+export interface MinecraftIssueReport {
     minecraftLocation: MinecraftFolder;
     version: string;
-
-    versionJson: StatusItem<string>;
-    versionJar: Status;
-    assetsIndex: Status;
-    libraries: StatusItem<ResolvedLibrary>[];
-    assets: StatusItem<{ file: string; hash: string }>[];
-
-    forge?: ForgeReport;
+    issues: MinecraftIssues[];
 }
 
-/**
- * Diagnose the version. It will check the version json/jar, libraries and assets.
- *
- * @param version The version id string
- * @param minecraft The minecraft location
- */
-export function diagnose(version: string, minecraft: MinecraftLocation): Promise<Report> {
-    return Task.execute(diagnoseTask(version, minecraft)).wait();
+export interface InstallProfileIssueReport {
+    minecraftLocation: MinecraftFolder;
+    installProfile: InstallProfile;
+    issues: ProcessorIssue[];
 }
 
-/**
- * Diagnose the version. It will check the version json/jar, libraries and assets.
- *
- * @param version The version id string
- * @param minecraft The minecraft location
- */
-export function diagnoseTask(version: string, minecraftLocation: MinecraftLocation): Task<Report> {
-    function hasNewForge(version: ResolvedVersion) {
-        if (Number.parseInt(version.minecraftVersion.split(".")[1], 10) >= 13) {
-            return version.libraries.find((l) => l.name.startsWith("net.minecraftforge:forge")) !== undefined;
-        }
-        return false;
+async function diagnoseSingleFile(role: Issue["role"], file: string, expectedChecksum: string, hint: string) {
+    let issue = false;
+    let fileExisted = await exists(file);
+    let receivedChecksum = "";
+    if (!fileExisted) {
+        issue = true;
+    } else if (expectedChecksum !== "") {
+        receivedChecksum = await getSha1(file);
+        issue = receivedChecksum !== expectedChecksum;
     }
+    if (issue) {
+        return {
+            type: fileExisted ? "corrupted" : "missing",
+            role,
+            file,
+            expectedChecksum,
+            receivedChecksum,
+            hint,
+        } as any;
+    }
+    return undefined;
+}
+
+/**
+ * Diagnose the version. It will check the version json/jar, libraries and assets.
+ *
+ * @param version The version id string
+ * @param minecraft The minecraft location
+ * @beta
+ */
+export function diagnoseTask(version: string, minecraftLocation: MinecraftLocation): Task<MinecraftIssueReport> {
     const minecraft = MinecraftFolder.from(minecraftLocation);
-    return Task.create("diagnose", async function diagnose(context: Task.Context) {
+    return task("diagnose", async function diagnose(context: Task.Context) {
+        let report: MinecraftIssueReport = {
+            minecraftLocation: minecraft,
+            version: version,
+            issues: [],
+        }
+        let issues: Issue[] = report.issues;
+
         let resolvedVersion: ResolvedVersion;
         try {
-            resolvedVersion = await context.execute(Task.create("checkVersionJson", function checkVersionJson() { return Version.parse(minecraft, version) }));
+            resolvedVersion = await context.execute(task("checkVersionJson", () => Version.parse(minecraft, version)));
         } catch (e) {
-            return {
-                minecraftLocation: minecraft,
-                version,
-
-                versionJson: {
-                    value: e.version,
-                    status: e.error === "MissingVersionJson"
-                        ? Status.Missing
-                        : Status.Unknown,
-                },
-
-                versionJar: Status.Unknown,
-                assetsIndex: Status.Unknown,
-
-                libraries: [],
-                assets: [],
-            } as Report;
+            if (e.type === "CorruptedVersionJson") {
+                issues.push({ type: "corrupted", role: "versionJson", file: minecraft.getVersionJson(e.version), expectedChecksum: "", receivedChecksum: "", hint: "Re-install the minecraft!" });
+            } else if (e.type === "MissingVersionJson") {
+                issues.push({ type: "missing", role: "versionJson", file: minecraft.getVersionJson(e.version), expectedChecksum: "", receivedChecksum: "", hint: "Re-install the minecraft!" });
+            }
+            return report;
         }
-        const jarPath = minecraft.getVersionJar(resolvedVersion.minecraftVersion);
-        const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
 
-        const missingJar = await context.execute(Task.create("checkJar", function checkJar() {
-            return getStatus(jarPath, resolvedVersion.downloads.client.sha1);
+        await context.execute(task("checkJar", async function checkJar() {
+            let jarPath = minecraft.getVersionJar(resolvedVersion.minecraftVersion);
+            let issue: MinecraftJarIssue | undefined = await diagnoseSingleFile("minecraftJar",
+                jarPath,
+                resolvedVersion.downloads.client.sha1,
+                "Problem on Minecraft jar! Please consider to use Installer.instalVersion to fix.");
+            if (issue) {
+                issue.version = resolvedVersion.minecraftVersion;
+                issues.push(issue);
+            }
         }));
-        const assetsIndex = await context.execute(Task.create("checkAssetIndex", async function checkAssetIndex() {
-            return getStatus(assetsIndexPath, resolvedVersion.assetIndex.sha1);
+
+        let assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
+        let validAssetIndex = await context.execute(task("checkAssetIndex", async function checkAssetIndex() {
+            let issue: AssetIndexIssue | undefined = await diagnoseSingleFile("assetIndex",
+                assetsIndexPath,
+                resolvedVersion.assetIndex.sha1,
+                "Problem on assets index file! Please consider to use Installer.installAssets to fix.");
+            if (issue) {
+                issue.version = resolvedVersion.minecraftVersion;
+                issues.push(issue);
+                return false;
+            }
+            return true;
         }));
-        const libMask = await context.execute(Task.create("checkLibraries", function checkLibraries() {
+        await context.execute(task("checkLibraries", function checkLibraries() {
             return Promise.all(resolvedVersion.libraries.map(async (lib) => {
-                const libPath = minecraft.getLibraryByPath(lib.download.path);
-                return getStatus(libPath, lib.download.sha1);
+                let libPath = minecraft.getLibraryByPath(lib.download.path);
+                let issue: LibraryIssue | undefined = await diagnoseSingleFile("library", libPath, lib.download.sha1,
+                    "Problem on library! Please consider to use Installer.installLibraries to fix.");
+                if (issue) {
+                    issue.library = lib;
+                    issues.push(issue);
+                }
             }));
         }));
-        const libraries = resolvedVersion.libraries.map((l, i) => ({ value: l, status: libMask[i] }))
-            .filter((v) => v.status !== Status.Good);
-        // const assets: { [object: string]: string } = {};
+        if (validAssetIndex) {
+            let objects = (await readFile(assetsIndexPath, "utf-8").then((b) => JSON.parse(b.toString()))).objects;
+            let filenames = Object.keys(objects);
+            await context.execute(task("checkAssets", function checkAssets() {
+                return Promise.all(filenames.map(async (filename) => {
+                    let { hash } = objects[filename];
+                    let assetPath = minecraft.getAsset(hash);
 
-        let assets: any[] = [];
-        if (assetsIndex === Status.Good) {
-            const objects = (await readFile(assetsIndexPath, "utf-8").then((b) => JSON.parse(b.toString()))).objects;
-            const files = Object.keys(objects);
-            const assetsMask = await context.execute(Task.create("checkAssets", function checkAssets() {
-                return Promise.all(files.map(async (object) => {
-                    const { hash } = objects[object];
-                    const hashPath = minecraft.getAsset(hash);
-                    return getStatus(hashPath, hash);
+                    let issue: AssetIssue | undefined = await diagnoseSingleFile("asset", assetPath, hash,
+                        "Problem on asset! Please consider to use Installer.installAssets to fix.");
+                    if (issue) {
+                        issue.asset = { file: filename, hash };
+                        issues.push(issue);
+                    }
                 }));
             }));
-            assets = files.map((path, i) => ({
-                value: { file: path, hash: objects[path] },
-                status: assetsMask[i]
-            })).filter((v) => v.status !== Status.Good);
         }
 
-        const diagnosis = {
-            minecraftLocation: minecraft,
-            version,
-
-            versionJson: { value: "", status: Status.Good },
-            versionJar: missingJar,
-            assetsIndex,
-
-            libraries,
-            assets,
-        } as Report;
-
-        if (hasNewForge(resolvedVersion)) {
-            diagnosis.forge = await context.execute(Task.create("forge", () => diagnoseForgeVersion(version, minecraft)));
-        }
-
-        return diagnosis;
+        return report;
     });
 }
 
-type Processor = InstallProfile["processors"][number];
-
 /**
- * The forge diagnosis report. It may have some intersection with `Version.Diagnosis`.
- */
-export interface ForgeReport {
-    /**
-     * When this flag is true, please reinstall totally.
-     */
-    badInstall: boolean;
-    /**
-     * This will be true if the forge version json doesn't contain correct argument or it does not exist.
-     */
-    badVersionJson: boolean;
-    /**
-     * Determine whether the forge binary patch existed.
-     */
-    binpatch: Status.Missing | Status.Good | Status.Unknown;
-    /**
-     * When this is not empty, please use `postProcessInstallProfile`
-     */
-    libraries: StatusItem<Version.NormalLibrary>[];
-    /**
-     * Existed some unprocess processors or fail to process processor.
-     * You can use `postProcess` to process these Processors.
-     */
-    unprocessed: Processor[];
-    /**
-     * Forge launch require a srg jar, but it might missing here. Missing it require a full re-install.
-     */
-    missingSrgJar: boolean;
-    /**
-     * Alt for badProcessedFiles
-     */
-    missingMinecraftExtraJar: boolean;
-    /**
-     * Alt for badProcessedFiles
-     */
-    missingForgePatchesJar: boolean;
-}
-
-/**
- * Diagnose for specific forge version. Majorly for the current installer forge. (mcversion >= 1.13)
+ * Diagnose the version. It will check the version json/jar, libraries and assets.
+ * @beta
  *
- * Don't use this with the version less than 1.13
- * @param versionOrProfile If the version string present, it will try to find the installer profile under version folder. Otherwise it will use presented installer profile to diagnose
- * @param minecraft The minecraft location.
+ * @param version The version id string
+ * @param minecraft The minecraft location
  */
-export async function diagnoseForgeVersion(versionOrProfile: string | InstallProfile, minecraft: MinecraftLocation): Promise<ForgeReport> {
-    const version = typeof versionOrProfile === "string" ? versionOrProfile : versionOrProfile.version;
-    const mc = MinecraftFolder.from(minecraft);
-    const verRoot = mc.getVersionRoot(version);
-    let prof: InstallProfile | undefined;
-    if (typeof versionOrProfile === "string") {
-        const installProfPath = join(verRoot, "install_profile.json");
-        if (await exists(installProfPath)) {
-            prof = JSON.parse(await readFile(installProfPath).then((b) => b.toString()));
-        }
-    } else {
-        prof = versionOrProfile;
-    }
-    return diagnoseForge(version, prof, mc);
+export function diagnose(version: string, minecraft: MinecraftLocation): Promise<MinecraftIssueReport> {
+    return Task.execute(diagnoseTask(version, minecraft)).wait();
 }
 
 
-async function diagnoseForge(version: string, processedProfile: InstallProfile | undefined, mc: MinecraftFolder) {
-    let versionJsonPath = mc.getVersionJson(version);
+/**
+ * Diagnose a install profile status. Check if it processor output correctly processed.
+ *
+ * This can be used for check if forge correctly installed when minecraft >= 1.13
+ * @beta
+ *
+ * @param installProfile The install profile.
+ * @param minecraftLocation The minecraft location
+ */
+export function diagnoseInstallTask(installProfile: InstallProfile, minecraftLocation: MinecraftLocation) {
+    const mc = MinecraftFolder.from(minecraftLocation);
+    return task("diagnoseInstallProfile", async (c) => {
+        let report: InstallProfileIssueReport = {
+            minecraftLocation: mc,
+            installProfile,
+            issues: [],
+        };
+        let processors: Processor[];
+        try {
+            processors = resolveProcessors("client", installProfile, mc);
+        } catch (e) {
+            return report;
+        }
 
-    let report: ForgeReport = {
-        unprocessed: [],
-        libraries: [],
-        badVersionJson: false,
-        binpatch: Status.Unknown,
-        badInstall: false,
-        missingSrgJar: false,
-        missingMinecraftExtraJar: false,
-        missingForgePatchesJar: false,
-    };
-
-    if (processedProfile) {
-        // check processor in install profiles
-        let processors = resolveProcessors("client", processedProfile, mc);
+        let done = 0;
+        let total = processors.length;
+        let issues = report.issues;
+        c.update(done, total);
         for (let proc of processors) {
             if (proc.outputs) {
-                let status = Status.Good;
                 for (let file in proc.outputs) {
-                    let nStatus = await getStatus(file, proc.outputs[file].replace(/'/g, ""));
-                    if (nStatus !== Status.Good) {
-                        status = Status.Corrupted;
-                        break;
+                    let issue: ProcessorIssue = await diagnoseSingleFile("processor", file, proc.outputs[file].replace(/'/g, ""), "Re-install this installer profile!");
+                    if (issue) {
+                        issue.processor = proc;
+                        issues.push(issue);
                     }
                 }
-                if (status !== Status.Good) {
-                    report.unprocessed.push(proc);
-                }
             }
+            c.update(done += 1, total, proc.jar);
         }
-        // if we have to process file, we have to check if the forge deps are ready
-        if (report.unprocessed.length !== 0) {
-            let libValidMask = await Promise.all(processedProfile.libraries.map(async (lib) => {
-                let artifact = lib.downloads.artifact;
-                let libPath = mc.getLibraryByPath(artifact.path);
-                return getStatus(libPath, artifact.sha1);
-            }));
-            let missingLibraries = processedProfile.libraries
-                .map((l, s) => ({ value: l, status: libValidMask[s] }))
-                .filter((v) => v.status !== Status.Good);
-            report.libraries.push(...missingLibraries);
 
-            let validClient = await stat(processedProfile.data.BINPATCH.client).then((s) => s.size !== 0).catch((_) => false);
-            if (!validClient) {
-                report.binpatch = Status.Missing;
-                report.badInstall = true;
-            }
-        }
-    }
-    if (await exists(versionJsonPath)) {
-        const versionJSON: Version = JSON.parse(await readFile(versionJsonPath).then((b) => b.toString()), () => undefined);
-        if (versionJSON) {
-            if (versionJSON.arguments && versionJSON.arguments.game) {
-                const args = versionJSON.arguments.game;
-                const forgeVersion = args.indexOf("--fml.forgeVersion") + 1;
-                const mcVersion = args.indexOf("--fml.mcVersion") + 1;
-                const mcpVersion = args.indexOf("--fml.mcpVersion") + 1;
-                if (!forgeVersion || !mcVersion || !mcpVersion) {
-                    report.badVersionJson = true;
-                    report.badInstall = true;
-                } else {
-                    const srgPath = mc.getLibraryByPath(`net/minecraft/client/${mcVersion}-${mcpVersion}/client-${mcVersion}-${mcpVersion}-srg.jar`);
-                    const extraPath = mc.getLibraryByPath(`net/minecraft/client/${mcVersion}/client-${mcVersion}-extra.jar`);
-                    const forgePatchPath = mc.getLibraryByPath(`net/minecraftforge/forge/${mcVersion}-${forgeVersion}/forge-${mcVersion}-${forgeVersion}-client.jar`);
-                    report.missingSrgJar = await missing(srgPath);
-                    report.missingMinecraftExtraJar = await missing(extraPath);
-                    report.missingForgePatchesJar = await missing(forgePatchPath);
-                }
-            } else {
-                report.badVersionJson = true;
-                report.badInstall = true;
-            }
-        } else {
-            report.badVersionJson = true;
-            report.badInstall = true;
-        }
-    } else {
-        report.badVersionJson = true;
-        report.badInstall = true;
-    }
-
-    return report;
+        return report;
+    });
 }
+
+/**
+ * Diagnose a install profile status. Check if it processor output correctly processed.
+ *
+ * This can be used for check if forge correctly installed when minecraft >= 1.13
+ * @beta
+ *
+ * @param installProfile The install profile.
+ * @param minecraftLocation The minecraft location
+ */
+export function diagnoseInstall(installProfile: InstallProfile, minecraftLocation: MinecraftLocation) {
+    return Task.execute(diagnoseInstallTask(installProfile, minecraftLocation)).wait();
+}
+

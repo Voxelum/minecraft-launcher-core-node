@@ -15,11 +15,7 @@ describe("Install", () => {
 
     async function assertNoError(version: string, loc: MinecraftLocation) {
         const diag = await Diagnosis.diagnose(version, loc);
-        expect(Object.keys(diag.assets)).toHaveLength(0);
-        expect(diag.libraries).toHaveLength(0);
-        expect(diag.assetsIndex).toBeFalsy();
-        expect(diag.versionJar).toBeFalsy();
-        expect(diag.versionJson).toEqual(diag.versionJson);
+        expect(diag.issues).toHaveLength(0);
     }
     describe("MinecraftClient", () => {
         async function installVersionClient(version: Installer.Version, gameDirectory: string) {
@@ -152,6 +148,7 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.7.10-10.13.3.1400-1.7.10/forge-1.7.10-10.13.3.1400-1.7.10-universal.jar",
             },
             mcversion: "1.7.10",
+            type: "common",
         };
         const result = await ForgeInstaller.install(meta, root);
         expect(result).toEqual("1.7.10-Forge10.13.3.1400-1.7.10");
@@ -174,6 +171,7 @@ describe("ForgeInstaller", () => {
                 sha1: "3dd9ecd967edbdb0993c9c7e6b8c55cca294f447",
                 path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-installer.jar",
             },
+            type: "common",
         };
         const result = await ForgeInstaller.install(meta, MinecraftFolder.from(root));
         expect(result).toEqual("1.12.2-forge1.12.2-14.23.5.2823");
@@ -197,6 +195,7 @@ describe("ForgeInstaller", () => {
                 sha1: "36a0bb39da14d29f9dfec61d7538937ae8af7ab9",
                 path: "/maven/net/minecraftforge/forge/1.13.2-25.0.209/forge-1.13.2-25.0.209-installer.jar",
             },
+            type: "common",
         };
         const result = await ForgeInstaller.install(meta, MinecraftFolder.from(root), { java: javaPath });
         expect(result).toEqual("1.13.2-forge-25.0.209");
@@ -220,6 +219,7 @@ describe("ForgeInstaller", () => {
                 sha1: "ee1f3a8268894134d9b37b7469e5cf07021bbac1",
                 path: "/maven/net/minecraftforge/forge/1.14.4-28.0.45/forge-1.14.4-28.0.45-installer.jar",
             },
+            type: "common",
         };
         const result = await ForgeInstaller.install(meta, MinecraftFolder.from(root), { java: javaPath });
         expect(result).toEqual("1.14.4-forge-28.0.45");
