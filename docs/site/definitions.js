@@ -1425,8 +1425,9 @@ export interface AssetIssue extends Issue {
      * The problematic asset
      */
     asset: {
-        file: string;
+        name: string;
         hash: string;
+        size: number;
     };
 }
 export interface AssetIndexIssue extends Issue {
@@ -2212,6 +2213,28 @@ export declare function installLibraries(version: ResolvedVersion, option?: Libr
  * @param option The library host swap option
  */
 export declare function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option?: LibraryOption): Task<void>;
+/**
+ * Only install several resolved assets.
+ * @param assets The assets to install
+ * @param folder The minecraft folder
+ * @param options The asset option
+ */
+export declare function installResolvedAssetsTask(assets: {
+    name: string;
+    hash: string;
+    size: number;
+}[], folder: MinecraftFolder, options?: AssetsOption): Task<void>;
+/**
+ * Only install several resolved assets.
+ * @param assets The assets to install
+ * @param folder The minecraft folder
+ * @param options The asset option
+ */
+export declare function installResolvedAssets(assets: {
+    name: string;
+    hash: string;
+    size: number;
+}[], folder: MinecraftFolder, options?: AssetsOption): Promise<void>;
 /**
  * Only install several resolved libraries
  * @param libraries The resolved libraries

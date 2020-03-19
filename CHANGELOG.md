@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.6.2
+### @xmcl/installer@2.6.2
+#### Bug Fixes
+
+- fix: wrong error catching ([8c1900e8c1d1e6e70a575b84d29e35164b7ce429](https://github.com/voxelum/minecraft-launcher-core-node/commit/8c1900e8c1d1e6e70a575b84d29e35164b7ce429))
+- fix: expose the resolved assets install task ([4fa88ba6a3bb51921055d1ae36613d58741adc8f](https://github.com/voxelum/minecraft-launcher-core-node/commit/4fa88ba6a3bb51921055d1ae36613d58741adc8f))
+
+
 ## 2.6.1
 ### @xmcl/task@2.1.5
 #### Bug Fixes
