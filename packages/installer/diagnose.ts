@@ -145,9 +145,9 @@ export function diagnoseTask(version: string, minecraftLocation: MinecraftLocati
         try {
             resolvedVersion = await context.execute(task("checkVersionJson", () => Version.parse(minecraft, version)));
         } catch (e) {
-            if (e.type === "CorruptedVersionJson") {
+            if (e.error === "CorruptedVersionJson") {
                 issues.push({ type: "corrupted", role: "versionJson", file: minecraft.getVersionJson(e.version), expectedChecksum: "", receivedChecksum: "", hint: "Re-install the minecraft!" });
-            } else if (e.type === "MissingVersionJson") {
+            } else {
                 issues.push({ type: "missing", role: "versionJson", file: minecraft.getVersionJson(e.version), expectedChecksum: "", receivedChecksum: "", hint: "Re-install the minecraft!" });
             }
             return report;
