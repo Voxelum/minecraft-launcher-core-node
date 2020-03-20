@@ -3,7 +3,7 @@ import { exists, remove } from "@xmcl/core/fs";
 import { existsSync, readFileSync } from "fs";
 import { join, normalize } from "path";
 import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis, CurseforgeInstaller } from "./index";
-import { MultipleError } from "./util";
+import { MultipleError, DefaultDownloader, batchedTask } from "./util";
 import { parseJavaVersion } from "./java";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
@@ -87,16 +87,22 @@ describe("Install", () => {
             }, root);
         });
         test("should throw immediately if throwErrorImmediately is enabled", async () => {
-            await expect(Installer.installAssets(await Version.parse(mockRoot, "1.14.4"), {
-                assetsHost: "no-op",
-                throwErrorImmediately: true,
-            })).rejects.not.toBeInstanceOf(MultipleError);
+            let task = batchedTask({
+                execute() {
+                    throw new Error();
+                },
+                update() { },
+            } as any, [0 as any], [1], 1, true);
+            await expect(task).rejects.not.toBeInstanceOf(MultipleError);
         });
         test("should throw all event if throwErrorImmediately is disabled", async () => {
-            await expect(Installer.installAssets(await Version.parse(mockRoot, "1.14.4"), {
-                assetsHost: "no-op",
-                throwErrorImmediately: false,
-            })).rejects.toBeInstanceOf(MultipleError);
+            let task = batchedTask({
+                execute() {
+                    throw new Error();
+                },
+                update() { },
+            } as any, [0 as any], [1]);
+            await expect(task).rejects.toBeInstanceOf(MultipleError);
         });
     });
 
@@ -377,3 +383,15 @@ describe("JavaInstaller", () => {
     });
 });
 
+describe("DefaultDownloader", () => {
+    describe("download", () => {
+        test("should use fallback urls", async () => {
+            let downloader = new DefaultDownloader();
+            try {
+                await downloader.downloadFile({ destination: root + "/temp", url: ["h/abc", "z/abc"] });
+            } catch (e) {
+                expect(e.message).toEqual("Invalid URL: z/abc");
+            }
+        });
+    });
+});
