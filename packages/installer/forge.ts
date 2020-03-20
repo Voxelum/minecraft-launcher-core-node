@@ -5,7 +5,7 @@ import { Entry, open } from "@xmcl/unzip";
 import { createWriteStream } from "fs";
 import { join } from "path";
 import { DownloaderOption, installByProfileTask, InstallProfile, InstallProfileOption, LibraryOption, resolveLibraryDownloadUrls } from "./minecraft";
-import { downloadFileTask, getIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, DefaultDownloader, HasDownloader, normailzeDownloader } from "./util";
+import { downloadFileTask, getIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, DefaultDownloader, HasDownloader, normailzeDownloader, normalizeArray } from "./util";
 
 const { copyFile, ensureDir, ensureFile, unlink, waitStream, writeFile } = futils;
 
@@ -108,7 +108,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
                 }
             }
         })!;
-        let mavenHost = options.mavenHost ? [...options.mavenHost, DEFAULT_FORGE_MAVEN] : [DEFAULT_FORGE_MAVEN];
+        let mavenHost = options.mavenHost ? [...normalizeArray(options.mavenHost), DEFAULT_FORGE_MAVEN] : [DEFAULT_FORGE_MAVEN];
         let urls = resolveLibraryDownloadUrls(library, { ...options, mavenHost });
 
         context.update(0, 120);
@@ -223,7 +223,7 @@ function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLo
                 }
             }
         })!;
-        let mavenHost = options.mavenHost ? [...options.mavenHost, DEFAULT_FORGE_MAVEN] : [DEFAULT_FORGE_MAVEN];
+        let mavenHost = options.mavenHost ? [... normalizeArray(options.mavenHost), DEFAULT_FORGE_MAVEN] : [DEFAULT_FORGE_MAVEN];
         let urls = resolveLibraryDownloadUrls(library, { ...options, mavenHost });
 
         await context.execute(Task.create("jar", downloadFileTask({
