@@ -146,7 +146,13 @@ export class DefaultDownloader implements Downloader {
             await pipeline(this.openDownloadStream(option.url, option), createWriteStream(option.destination));
             return;
         }
-        let chain = option.url.map((u) => () => pipeline(this.openDownloadStream(u, option), createWriteStream(option.destination)));
+        let chain = option.url.map((u) => () => {
+            try {
+                return pipeline(this.openDownloadStream(u, option), createWriteStream(option.destination))
+            } catch (e) {
+                return Promise.reject(e);
+            }
+        });
         let promise = chain.shift()!();
         while (chain.length > 0) {
             const next = chain.shift();
