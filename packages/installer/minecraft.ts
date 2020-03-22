@@ -337,8 +337,8 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
         interface AssetIndex {
             objects: {
                 [key: string]: {
-                    hash: string,
-                    size: number,
+                    hash: string;
+                    size: number;
                 };
             };
         }
@@ -353,7 +353,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
 
         return version;
     }
-    return task("installAssets", installAssets, { version: version.id })
+    return task("installAssets", installAssets, { version: version.id });
 }
 
 /**
@@ -553,7 +553,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         try {
             await spawnProcess(java, cmd);
         } catch (e) {
-            throw new Error(`Fail on execute processor ${proc.jar}: ${JSON.stringify(cmd)}`)
+            throw new Error(`Fail on execute processor ${proc.jar}: ${JSON.stringify(cmd)}`);
         }
         let failed = false;
         if (proc.outputs) {
