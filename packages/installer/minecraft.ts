@@ -500,25 +500,24 @@ export function resolveProcessors(side: "client" | "server", installProfile: Ins
 }
 
 /**
- * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ * Post process the post processors from `InstallProfile`.
  *
- * @param installProfile The install profile
+ * @param processors The processor info
  * @param minecraft The minecraft location
- * @param options The options to install
+ * @param java The java executable path
  */
-export function installByProfile(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
-    return installByProfileTask(installProfile, minecraft, options).execute().wait();
+export function postProcess(processors: InstallProfile["processors"], minecraft: MinecraftFolder, java: string) {
+    return postProcessTask(processors, minecraft, java).execute().wait();
 }
 
 /**
- * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ * Post process the post processors from `InstallProfile`.
  *
- * @param installProfile The install profile
+ * @param processors The processor info
  * @param minecraft The minecraft location
- * @param options The options to install
+ * @param java The java executable path
  */
-export function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
-    normailzeDownloader(options);
+export function postProcessTask(processors: InstallProfile["processors"], minecraft: MinecraftFolder, java: string) {
     async function findMainClass(lib: string) {
         const zip = await open(lib, { lazyEntries: true });
         const [manifest] = await zip.filterEntries(["META-INF/MANIFEST.MF"]);
@@ -569,29 +568,48 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
             throw new Error("Fail to process post processing since its validation failed.");
         }
     }
-    function postProcessingTask(minecraft: MinecraftFolder, processors: InstallProfile["processors"], java: string, failImmediately: boolean) {
-        return task("postProcessing", async function postProcessing(ctx) {
-            if (!processors || processors.length === 0) {
-                return;
+    return task("postProcessing", async function postProcessing(ctx) {
+        if (!processors || processors.length === 0) {
+            return;
+        }
+
+        ctx.update(0, processors.length);
+        let done = 0;
+        for (let proc of processors) {
+            try {
+                await postProcess(minecraft, proc, java);
+            } catch (e) {
+                e = e || new Error(`Fail to post porcess ${proc.jar}: ${proc.args.join(" ")}, ${proc.classpath.join(" ")}`);
+                throw e;
             }
+            ctx.update(done += 1, processors.length);
+        }
 
-            ctx.update(0, processors.length);
-            let done = 0;
-            for (let proc of processors) {
-                try {
-                    await postProcess(minecraft, proc, java);
-                } catch (e) {
-                    e = e || new Error(`Fail to post porcess ${proc.jar}: ${proc.args.join(" ")}, ${proc.classpath.join(" ")}`);
-                    throw e;
-                }
-                ctx.update(done += 1, processors.length);
-            }
+        done += 1;
+        ctx.update(done, processors.length);
+    });
+}
 
-            done += 1;
-            ctx.update(done, processors.length);
-        });
-    }
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ */
+export function installByProfile(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
+    return installByProfileTask(installProfile, minecraft, options).execute().wait();
+}
 
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ */
+export function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
+    normailzeDownloader(options);
     return task("install", async function install(context: Task.Context) {
         const minecraftFolder = MinecraftFolder.from(minecraft);
         const java = options.java || "java";
@@ -602,7 +620,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         let libraries = VersionJson.resolveLibraries([...installProfile.libraries, ...versionJson.libraries]);
 
         await context.execute(installResolvedLibrariesTask(libraries, minecraft, options), 50);
-        await context.execute(postProcessingTask(minecraftFolder, processor, java, options.throwErrorImmediately || false), 50);
+        await context.execute(postProcessTask(processor, minecraftFolder, java), 50);
     });
 }
 
