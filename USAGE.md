@@ -94,6 +94,14 @@ Get the forge version info and install forge from it.
     await ForgeInstaller.install(firstVersionOnPage, minecraftLocation);
 ```
 
+If you know forge version and minecraft version. You can directly do such:
+
+```ts
+    import { ForgeInstaller } from "@xmcl/installer";
+    const forgeVersion = 'a-forge-version'; // like 31.1.27
+    await ForgeInstaller.install({ version: forgeVersion, mcversion: '1.15.2' }, minecraftLocation);
+```
+
 Notice that this installation doesn't ensure full libraries installation.
 Please run `Installer.installDependencies` afther that.
 
@@ -126,8 +134,11 @@ For example, if you want to download the library `commons-io:commons-io:2.5` fro
             }
             // return undefined if you don't want to change lib url
             return undefined;
-        }
+        },
+        mavenHost: ['https://www.your-other-maven.org'], // you still can use this to add other maven
     });
+
+    // it will first try you libraryHost url and then try mavenHost url.
 ```
 
 To swap the assets host, you can just assign the assets host url to the options
@@ -210,7 +221,19 @@ Get the report of the version. It can check if version missing assets/libraries.
     const minecraftLocation: string;
     const minecraftVersionId: string;
 
-    const report: Diagnosis.Report = await Diagnosis.diagnose(minecraftLocation, minecraftVersionId);
+    const report: Diagnosis.MinecraftIssueReport = await Diagnosis.diagnose(minecraftLocation, minecraftVersionId);
+
+    const issues: Diagnosis.MinecraftIssues[] = report.issues;
+
+    for (let issue of issues) {
+        switch (issue.role) {
+            case "minecraftJar": // your jar has problem
+            case "versionJson": // your json has problem
+            case "library": // your lib might be missing or corrupted
+            case "assets": // some assets are missing or corrupted
+            // and so on
+        }
+    }
 ```
 
 
@@ -426,9 +449,18 @@ Parse minecraft version as a resolved version, which is used for launching proce
 Read sever info (server ip, port) and fetch its status (ping, server motd):
 
 ```ts
-    import { fetchStatus, Status } from '@xmcl/client'
-    // or you want the raw json
-    const rawStatusJson: Status = await fetchStatus(info);
+    import { queryStatus, Status, QueryOptions } from '@xmcl/client'
+    const serverInfo = {
+        host: 'your host',
+        port: 25565, // be default
+    };
+    const options: QueryOptions = {
+        /**
+         * see http://wiki.vg/Protocol_version_numbers
+         */
+        protocol: 203,
+    };
+    const rawStatusJson: Status = await fetchStatus(info, options);
 ```
 
 ### Progress Moniting
@@ -477,6 +509,112 @@ Therefore you can just treat the `TaskRuntime` object a stateless event emitter.
     await handle.wait();
     // the error will still reject to the promise
 ```
+
+### Progress Moniting on Installation
+
+Most install function has a corresponding task function. For example, `install` function has the function name `installTask` which is the task version monitor the progress of install.
+
+Here is the example of just moniting the install task overall progress: 
+
+```ts
+
+let task: Task<ResolvedVersion> = installTask('client', versionMetadata, mcLocation);
+let taskHandle: TaskHandle<ResolvedVersion> = task.execute();
+
+let rootTask: Task.State;
+taskHandle.on('execute', (task, parentTask) => {
+    if (parentTask) {
+        // remember which is the root tas
+        rootTask = task;
+    } else {
+        // other child task executed
+    }
+});
+taskHandle.on('update', ({ progress, total, message }, taskState) => {
+    if (rootTask === taskState) {
+        // root task update
+        // you should update your ui progress
+    } else {
+        // other task update
+    }
+});
+
+// wait task finish
+await taskHandle.wait();
+
+```
+
+The task is designed to organize the all the works in a tree like structure.
+
+The `installTask` has such parent/child structure
+
+- install
+  - installVersion
+    - json
+    - jar
+  - installDependencies
+    - installAssets
+      - assetsJson
+      - asset
+    - installLibraries
+      - library
+
+To generally display this tree in UI. You can identify the task by its `path`.
+
+```ts
+function updateTaskUI(task: Task.State, progress: number, total?: number) {
+    // you can use task.path as identifier
+    // and update the task on UI
+}
+
+// taskHandle is the installTask handle
+taskHandle.on('update', ({ progress, total, message }, taskState) => {
+    let path = taskState.path;
+    // the path is concated from each tasks' name
+    // it can be "install", "install.installVersion", "install.installVersion.jar"
+    // "install.installDependencies.installAssets.assetsJson" or so on...
+    updateTaskUI(taskState, progress, total);
+});
+```
+
+If you think that's not good enough, you can assign the id to the task state by yourself.
+
+In this simple case, you will enconter type error in typescript!
+
+```ts
+taskHandle.on('execute', (task, parentTask) => {
+    task.id = 'your-generated-id'; // type error
+});
+taskHandle.on('update', ({ progress, total, message }, taskState) => {
+    updateTaskUI(taskState, progress, total);
+});
+function updateTaskUI(task: Task.State, progress: number, total?: number) {
+    // update the task by task.id
+}
+```
+
+You can override the type by yourself, or you can use task state factory:
+
+```ts
+interface TaskState extends Task.State {
+    id: string;
+}
+const factory: Task.StateFactory<TaskState> = n => ({
+    ...n,
+    id: generateIdByYourselft(),
+});
+
+const runtime: TaskRuntime<TaskState> = Task.createRuntime(factory);
+const task: Task<ResolvedVersion> = installTask('client', versionMetadata, mcLocation);
+
+runtime.submit(task); // use runtime submit!
+
+// listen the task event from runtime!
+runtime.on('update', ({progress, total}, state) => {
+    task.id; // this will not have type error!
+});
+```
+
 
 ### Read and Write NBT
 
