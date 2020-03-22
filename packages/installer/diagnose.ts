@@ -37,7 +37,7 @@ export interface Issue {
 }
 
 export type MinecraftIssues = LibraryIssue | MinecraftJarIssue | VersionJsonIssue | AssetIssue | AssetIndexIssue;
-export type InstallIssues = Issue;
+export type InstallIssues = ProcessorIssue | LibraryIssue;
 
 export interface ProcessorIssue extends Issue {
     role: "processor";
@@ -98,7 +98,7 @@ export interface MinecraftIssueReport {
 export interface InstallProfileIssueReport {
     minecraftLocation: MinecraftFolder;
     installProfile: InstallProfile;
-    issues: ProcessorIssue[];
+    issues: InstallIssues[];
 }
 
 async function diagnoseSingleFile(role: Issue["role"], file: string, expectedChecksum: string, hint: string) {
@@ -240,17 +240,24 @@ export function diagnoseInstallTask(installProfile: InstallProfile, minecraftLoc
             installProfile,
             issues: [],
         };
-        let processors: Processor[];
-        try {
-            processors = resolveProcessors("client", installProfile, mc);
-        } catch (e) {
-            return report;
-        }
+        let issues = report.issues;
+        let processors: Processor[] = resolveProcessors("client", installProfile, mc);
 
         let done = 0;
-        let total = processors.length;
-        let issues = report.issues;
+        let total = installProfile.libraries.length + processors.length;
         c.update(done, total);
+
+        await Promise.all(Version.resolveLibraries(installProfile.libraries).map(async (lib) => {
+            let libPath = mc.getLibraryByPath(lib.download.path);
+            let issue: LibraryIssue | undefined = await diagnoseSingleFile("library", libPath, lib.download.sha1,
+                "Problem on install_profile! Please consider to use Installer.installByProfile to fix.");
+            if (issue) {
+                issue.library = lib;
+                issues.push(issue);
+            }
+            c.update(done += 1, total, lib.name);
+        }));
+
         for (let proc of processors) {
             if (proc.outputs) {
                 for (let file in proc.outputs) {
