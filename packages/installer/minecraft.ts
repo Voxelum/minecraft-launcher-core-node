@@ -552,7 +552,7 @@ export function postProcessTask(processors: InstallProfile["processors"], minecr
         try {
             await spawnProcess(java, cmd);
         } catch (e) {
-            throw new Error(`Fail on execute processor ${proc.jar}: ${JSON.stringify(cmd)}`);
+            throw new Error(`Fail on execute processor ${proc.jar}: ${JSON.stringify(cmd)}\n stderr: ${e}`)
         }
         let failed = false;
         if (proc.outputs) {
