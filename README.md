@@ -92,7 +92,6 @@ Go [Getting Started](/USAGE.md) page.
 | @xmcl/client            | Ping Minecraft Server             | [![npm version](https://img.shields.io/npm/v/@xmcl/client.svg)](https://www.npmjs.com/package/@xmcl/client)                       | [packages/client           ](/packages/client)            | Node                |
 | @xmcl/model             | Display player/block model        | [![npm version](https://img.shields.io/npm/v/@xmcl/model.svg)](https://www.npmjs.com/package/@xmcl/model)                         | [packages/model            ](/packages/model)             | Browser             |
 | @xmcl/gamesetting       | Parse game setting                | [![npm version](https://img.shields.io/npm/v/@xmcl/gamesetting.svg)](https://www.npmjs.com/package/@xmcl/gamesetting)             | [packages/gamesetting      ](/packages/gamesetting)       | Node/Browser        |
-| @xmcl/java-installer    | Install Java from Mojang          | [![npm version](https://img.shields.io/npm/v/@xmcl/java-installer.svg)](https://www.npmjs.com/package/@xmcl/java-installer)       | [packages/java-installer   ](/packages/java-installer)    | Node                |
 | @xmcl/nbt               | Parse NBT                         | [![npm version](https://img.shields.io/npm/v/@xmcl/nbt.svg)](https://www.npmjs.com/package/@xmcl/nbt)                             | [packages/nbt              ](/packages/nbt)               | Node/Browser        |
 | @xmcl/text-component    | Parse and render Minecraft Text   | [![npm version](https://img.shields.io/npm/v/@xmcl/text-component.svg)](https://www.npmjs.com/package/@xmcl/text-component   )    | [packages/text-component   ](/packages/text-component)    | Node/Browser        |
 | @xmcl/resource-manager  | Load model from resource pack     | [![npm version](https://img.shields.io/npm/v/@xmcl/resource-manager.svg)](https://www.npmjs.com/package/@xmcl/resource-manager )  | [packages/resource-manager ](/packages/resource-manager)  | Node/Browser        |
@@ -109,7 +108,7 @@ See [Contribute.md](/CONTRIBUTE.md)
 
 ## Credit
 
-[Yu Xuanchi](https://github.com/yuxuanchiadm), co-worker, quality control of this project.
+[Yu Xuanchi](https://github.com/yuxuanchiadm), provide some idea about NBT module.
 
 [Haowei Wen](https://github.com/yushijinhun), the author of [JMCCC](https://github.com/to2mbn/JMCCC), [Authlib Injector](https://github.com/to2mbn/authlib-injector), and [Indexyz](https://github.com/Indexyz), help me a lot on Minecraft launching, authing.
 
