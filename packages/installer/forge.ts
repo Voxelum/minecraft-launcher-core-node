@@ -94,8 +94,6 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
         let inf = version.installer;
         let path = inf ? inf.path : `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
 
-        let installJarPath = mc.getLibraryByPath(path.substring(path.substring(1).indexOf("/") + 1));
-
         let forgeMavenPath = path.replace("/maven", "").replace("maven", "");
         let library = VersionJson.resolveLibrary({
             name: `net.minecraftforge:forge:${forgeVersion}:installer`,
@@ -113,6 +111,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
 
         context.update(0, 120);
 
+        let installJarPath = mc.getLibraryByPath(library.path);
         let downloadTask = Task.create("downloadInstaller", downloadFileTask({
             url: urls,
             destination: installJarPath,
