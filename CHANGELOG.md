@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.6.3
+### @xmcl/installer@2.6.3
+#### Bug Fixes
+
+- fix: diagnose libraries for install profile ([f4df3752c6781fff43de562419063477fa85e39c](https://github.com/voxelum/minecraft-launcher-core-node/commit/f4df3752c6781fff43de562419063477fa85e39c))
+- fix: wrong forge installer maven path ([d5babfdbf18fc3c384b09f65e3d02e21ab0c0c44](https://github.com/voxelum/minecraft-launcher-core-node/commit/d5babfdbf18fc3c384b09f65e3d02e21ab0c0c44))
+- fix: catch the error in sync code ([bb9942988be2e66a2a09373052d200d6571a4ef3](https://github.com/voxelum/minecraft-launcher-core-node/commit/bb9942988be2e66a2a09373052d200d6571a4ef3))
+- fix: ensure forge url normalized ([b7240061d41733d83cad79994dfc265df42d288f](https://github.com/voxelum/minecraft-launcher-core-node/commit/b7240061d41733d83cad79994dfc265df42d288f))
+
+
 ## 2.6.2
 ### @xmcl/installer@2.6.2
 #### Bug Fixes

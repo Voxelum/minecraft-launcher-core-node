@@ -1390,7 +1390,7 @@ export interface Issue {
     receivedChecksum: string;
 }
 export declare type MinecraftIssues = LibraryIssue | MinecraftJarIssue | VersionJsonIssue | AssetIssue | AssetIndexIssue;
-export declare type InstallIssues = Issue;
+export declare type InstallIssues = ProcessorIssue | LibraryIssue;
 export interface ProcessorIssue extends Issue {
     role: "processor";
     /**
@@ -1445,7 +1445,7 @@ export interface MinecraftIssueReport {
 export interface InstallProfileIssueReport {
     minecraftLocation: MinecraftFolder;
     installProfile: InstallProfile;
-    issues: ProcessorIssue[];
+    issues: InstallIssues[];
 }
 /**
  * Diagnose the version. It will check the version json/jar, libraries and assets.
