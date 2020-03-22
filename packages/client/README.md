@@ -15,7 +15,16 @@ Provide some functions to query Minecraft server status.
 Read sever info (server ip, port) and fetch its status (ping, server motd):
 
 ```ts
-    import { fetchStatus, Status } from '@xmcl/client'
-    // or you want the raw json
-    const rawStatusJson: Status = await fetchStatus(info);
+    import { queryStatus, Status, QueryOptions } from '@xmcl/client'
+    const serverInfo = {
+        host: 'your host',
+        port: 25565, // be default
+    };
+    const options: QueryOptions = {
+        /**
+         * see http://wiki.vg/Protocol_version_numbers
+         */
+        protocol: 203,
+    };
+    const rawStatusJson: Status = await fetchStatus(info, options);
 ```
