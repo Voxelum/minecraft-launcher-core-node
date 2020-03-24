@@ -554,19 +554,6 @@ export function postProcessTask(processors: InstallProfile["processors"], minecr
         } catch (e) {
             throw new Error(`Fail on execute processor ${proc.jar}: ${JSON.stringify(cmd)}\n stderr: ${e}`)
         }
-        let failed = false;
-        if (proc.outputs) {
-            for (const file in proc.outputs) {
-                if (! await validateSha1(file, proc.outputs[file].replace(/'/g, ""))) {
-                    console.error(`Fail to process ${proc.jar} @ ${file} since its validation failed.`);
-                    failed = true;
-                }
-            }
-        }
-        if (failed) {
-            console.error(`Java arguments: ${JSON.stringify(cmd)}`);
-            throw new Error("Fail to process post processing since its validation failed.");
-        }
     }
     return task("postProcessing", async function postProcessing(ctx) {
         if (!processors || processors.length === 0) {
