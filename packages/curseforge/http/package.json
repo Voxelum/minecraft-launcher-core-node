@@ -1,0 +1,14 @@
+{
+  "name": "util",
+  "private": true,
+  "version": "0.0.0",
+  "main": "./index.cjs.js",
+  "module": "./index.js",
+  "browser": {
+    "./index.js": "./index.browser.js",
+    "./index.cjs.js": "./index.browser.cjs.js"
+  },
+  "sideEffects": false,
+  "dependencies": {
+  }
+}
