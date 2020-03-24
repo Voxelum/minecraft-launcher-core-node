@@ -13,11 +13,17 @@ After you cloned the project, you can just install it like normal node project b
 
 The code are splited into seperated projects, which layed in under `packages` folder. Most of them are really simple (only one `index.ts` file or few files).
 
-If you want to write some code for specific module, the command `npm run dev` might help you.
+The simplest way to run the code is write a test and then run it.
 
-For example, you want to add a functions to parse minecraft chunk data, you can add some code in `packages/world/index.ts`. You might also want to add some test related to your new features, just add sth. in `packages/world/test.ts`. 
+And, the simplest way to run a test is `npx jest packages/<the-package>/<the-test-file.test.ts>`.
+
+Also you can use the command `npm run dev`.
+
+For example, you want to add a functions to parse minecraft chunk data, you can add some code in `packages/world/index.ts`. You might also want to add some test related to your new features, just add somthing in `packages/world/test.ts`. 
 
 During this process, you can first run `npm run dev world`, and it will start to auto compile & test the code for world module. You can see the result immediately.
+
+**Please make sure you clean all built js files before you run your test! The test will fail if there are built js file! You can run `npm run build:clean` to clean all js!** 
 
 **Highly recommended to add test for the features,** ~~which I always lazy to add.~~
 
@@ -49,7 +55,7 @@ The features like login, fetch user info/textures goes here:
 
 - @xmcl/user
 
-In node, it will use `got` as requester.
+In node, it will use nodejs http/https module as requester.
 In browser, it will use `fetch` as requester.
 
 ### General Gaming Features (Node/Electron/Browser)
@@ -57,7 +63,7 @@ In browser, it will use `fetch` as requester.
 The features like parsing game setting, parsing forge mod metadata, NBT parsing, game saves parsing, they don't really have any strong connection.
 
 - @xmcl/nbt
-- @xmcl/forge
+- @xmcl/mod-parser
 - @xmcl/gamesetting
 - @xmcl/text-component
 - @xmcl/system

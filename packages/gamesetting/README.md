@@ -8,7 +8,7 @@
 
 Provide function to parse Minecraft game settings
 
-### Usage 
+## Usage 
 
 ### Parse GameSetting (options.txt)
 
