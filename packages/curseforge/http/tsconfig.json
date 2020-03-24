@@ -1,0 +1,24 @@
+{
+    "files": [
+        "index.ts",
+        "index.browser.ts",
+        "base.ts"
+    ],
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "CommonJS",
+        "outDir": "cjs",
+        "lib": [
+            "dom"
+        ],
+        "experimentalDecorators": true,
+        "declaration": true,
+        "downlevelIteration": true,
+        "strict": true,
+        "inlineSourceMap": true,
+        "inlineSources": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    }
+}
