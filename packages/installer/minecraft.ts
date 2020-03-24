@@ -610,7 +610,7 @@ export function installByProfile(installProfile: InstallProfile, minecraft: Mine
  */
 export function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
     normailzeDownloader(options);
-    return task("install", async function install(context: Task.Context) {
+    return task("installByProfile", async function install(context: Task.Context) {
         const minecraftFolder = MinecraftFolder.from(minecraft);
         const java = options.java || "java";
 
