@@ -21,6 +21,7 @@
     "dependencies": {
         "@xmcl/client": "file:packages\\client",
         "@xmcl/core": "file:packages\\core",
+        "@xmcl/curseforge": "file:packages\\curseforge",
         "@xmcl/forge-site-parser": "file:packages\\forge-site-parser",
         "@xmcl/gamesetting": "file:packages\\gamesetting",
         "@xmcl/installer": "file:packages\\installer",
