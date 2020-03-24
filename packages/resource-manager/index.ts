@@ -7,8 +7,7 @@ interface ResourceSourceWrapper {
 }
 
 /**
- * The resource manager. Design to be able to use in both nodejs and browser environment.
- * @template T The type of the resource content. If you use this in node, it's probably `Buffer`. If you are in browser, it might be `string`. Just align this with your `ResourceSource`
+ * The resource manager just like Minecraft. Design to be able to use in both nodejs and browser environment.
  */
 export class ResourceManager {
     get allResourcePacks() { return this.list.map((l) => l.info); }
