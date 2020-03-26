@@ -1,6 +1,7 @@
 import { MinecraftFolder, MinecraftLocation } from "./folder"
 import { Platform, currentPlatform } from "./platform";
 import { readFile, exists } from "./fs";
+import { extname } from "path";
 
 export interface PartialResolvedVersion extends Version {
     libraries: ResolvedLibrary[];
@@ -88,6 +89,44 @@ export interface LibraryInfo {
 }
 
 export namespace LibraryInfo {
+    export function resolveFromPath(path: string): LibraryInfo {
+        let parts = path.split("/");
+        let file = parts[parts.length - 1];
+        let version = parts[parts.length - 2];
+        let artifactId = parts[parts.length - 3];
+        let groupId = parts.slice(0, parts.length - 3).join(".");
+
+        let filePrefix = `${artifactId}-${version}`;
+        let ext = extname(file);
+        let type = ext.substring(1);
+
+        let isSnapshot = file.startsWith(version);
+
+        let classifier = file.substring(isSnapshot ? version.length : filePrefix.length, file.length - ext.length);
+
+        if (classifier.startsWith("-")) {
+            classifier = classifier.slice(1);
+        }
+
+        let name = `${groupId}:${artifactId}:${version}`;
+        if (classifier) {
+            name += `:${classifier}`;
+        }
+        if (type !== "jar") {
+            name += `@${type}`;
+        }
+
+        return {
+            type,
+            groupId,
+            artifactId,
+            version,
+            classifier,
+            name,
+            path,
+            isSnapshot,
+        }
+    }
     /**
      * Get the base info of the library from its name
      *
@@ -192,11 +231,11 @@ export namespace Version {
             artifact: Artifact;
             classifiers: {
                 [os: string]: Artifact;
-            },
+            };
         };
         rules: Rule[];
         extract: {
-            exclude: string[],
+            exclude: string[];
         };
         natives: {
             [os: string]: string;
@@ -504,14 +543,16 @@ export namespace Version {
         if ("rules" in lib && !checkAllowed(lib.rules, platform)) {
             return undefined;
         }
+        // official natives foramt
         if ("natives" in lib) {
             if (!lib.natives[platform.name]) { return undefined; }
             const classifier = (lib.natives[platform.name]).replace("${arch}", platform.arch.substring(1));
             const nativeArtifact = lib.downloads.classifiers[classifier];
             if (!nativeArtifact) { return undefined; }
-            return new ResolvedNative(lib.name + ":" + classifier, LibraryInfo.resolve(lib.name + ":" + classifier), lib.downloads.classifiers[classifier], lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
+            return new ResolvedNative(lib.name + ":" + classifier, LibraryInfo.resolve(lib.name + ":" + classifier), nativeArtifact, lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
         }
         const info = LibraryInfo.resolve(lib.name);
+        // normal library
         if ("downloads" in lib) {
             if (!lib.downloads.artifact.url) {
                 lib.downloads.artifact.url = info.groupId === "net.minecraftforge"
