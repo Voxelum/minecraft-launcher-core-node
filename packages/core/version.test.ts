@@ -6,6 +6,53 @@ const root = normalize(join(__dirname, "..", "..", "mock"));
 const tempRoot = normalize(join(__dirname, "..", "..", "temp"));
 
 describe("Version", () => {
+    describe("#resolveFromPath", () => {
+        test("should be able to infer from path", () => {
+            let path = "org/lwjgl/lwjgl-stb/3.2.1/lwjgl-stb-3.2.1.jar";
+            let info = LibraryInfo.resolveFromPath(path)
+            expect(info.path).toEqual(path);
+            expect(info.groupId).toEqual("org.lwjgl");
+            expect(info.artifactId).toEqual("lwjgl-stb");
+            expect(info.version).toEqual("3.2.1");
+            expect(info.name).toEqual("org.lwjgl:lwjgl-stb:3.2.1");
+            expect(info.classifier).toEqual("");
+            expect(info.type).toEqual("jar");
+        });
+        test("should be able to infer from path with classifier", () => {
+            let path = "org/lwjgl/lwjgl-stb/3.2.1/lwjgl-stb-3.2.1-javadoc.jar";
+            let info = LibraryInfo.resolveFromPath(path)
+            expect(info.path).toEqual(path);
+            expect(info.groupId).toEqual("org.lwjgl");
+            expect(info.artifactId).toEqual("lwjgl-stb");
+            expect(info.version).toEqual("3.2.1");
+            expect(info.name).toEqual("org.lwjgl:lwjgl-stb:3.2.1:javadoc");
+            expect(info.classifier).toEqual("javadoc");
+            expect(info.type).toEqual("jar");
+        });
+        test("should be able to infer from path with other file type", () => {
+            let path = "org/lwjgl/lwjgl-stb/3.2.1/lwjgl-stb-3.2.1-javadoc.zip";
+            let info = LibraryInfo.resolveFromPath(path)
+            expect(info.path).toEqual(path);
+            expect(info.groupId).toEqual("org.lwjgl");
+            expect(info.artifactId).toEqual("lwjgl-stb");
+            expect(info.version).toEqual("3.2.1");
+            expect(info.name).toEqual("org.lwjgl:lwjgl-stb:3.2.1:javadoc@zip");
+            expect(info.classifier).toEqual("javadoc");
+            expect(info.type).toEqual("zip");
+        });
+        test("should be able to infer from path with other file type and snapshot", () => {
+            let path = "org/lwjgl/lwjgl-stb/3.2.1/3.2.1-javadoc.zip";
+            let info = LibraryInfo.resolveFromPath(path)
+            expect(info.path).toEqual(path);
+            expect(info.groupId).toEqual("org.lwjgl");
+            expect(info.artifactId).toEqual("lwjgl-stb");
+            expect(info.version).toEqual("3.2.1");
+            expect(info.name).toEqual("org.lwjgl:lwjgl-stb:3.2.1:javadoc@zip");
+            expect(info.classifier).toEqual("javadoc");
+            expect(info.type).toEqual("zip");
+            expect(info.isSnapshot).toEqual(true);
+        });
+    });
     describe("#getLibraryInfo", () => {
         test("should be able to parse normal minecraft library", () => {
             const name = "com.mojang:patchy:1.1";
