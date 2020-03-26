@@ -1,4 +1,3 @@
-
 declare module "rusha" {
     function createWorker(): Worker;
 
