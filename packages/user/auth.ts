@@ -1,4 +1,4 @@
-import v4 from "uuid/v4";
+import uuid from "uuid/v4";
 import { GameProfile } from "./base";
 import { httpRequester as request } from "./util";
 
@@ -70,7 +70,7 @@ export interface Authentication {
  * @returns a new token
  */
 export function newToken() {
-    return v4().replace(/-/g, "");
+    return uuid().replace(/-/g, "");
 }
 
 export interface AuthException {

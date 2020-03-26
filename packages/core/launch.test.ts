@@ -26,7 +26,7 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
     const found = new Array<boolean>(hints.length);
     found.fill(false);
     return new Promise((resolve, reject) => {
-        process.stdout.on("data", (chunk) => {
+        process.stdout!!.on("data", (chunk) => {
             const content = chunk.toString();
             for (let i = 0; i < hints.length; i++) {
                 if (content.indexOf(hints[i]) !== -1) {
@@ -37,7 +37,7 @@ function waitGameProcess(process: ChildProcess, ...hints: string[]) {
                 process.kill("SIGINT");
             }
         });
-        process.stderr.on("data", (chunk) => {
+        process.stderr!!.on("data", (chunk) => {
             console.warn(chunk.toString());
         });
         process.on("exit", (code, signal) => {
@@ -98,7 +98,7 @@ describe("Launcher", () => {
                 version: "1.12.2",
             });
             await new Promise((resolve, reject) => {
-                proc.stdout.on("data", (buf) => {
+                proc.stdout!!.on("data", (buf) => {
                     const str = buf.toString();
                     console.warn(str);
                     if (str.indexOf("Starting minecraft server version 1.12.2") !== -1) {
