@@ -32,6 +32,7 @@
 			"**/*.test.ts",
 			"**/test.ts"
 		],
-		"hideGenerator": true
+		"hideGenerator": true,
+		"readme": "./README.md"
 	}
 }
