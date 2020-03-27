@@ -21,5 +21,9 @@
   "include": [
     "packages/**/*.ts",
     "global.d.ts"
-  ]
+  ],
+  "typedocOptions": {
+	  "mode": "modules",
+	  "out": "docs/docs"
+  }
 }

@@ -16,7 +16,8 @@
         "test:full": "jest packages --coverage --verbose --runInBand",
         "update": "lerna bootstrap",
         "dev": "node scripts/dev.js",
-        "dev:web": "sh scripts/build_workers.sh && parcel serve docs/site/index.html -d docs/build"
+        "dev:web": "sh scripts/build_workers.sh && parcel serve docs/site/index.html -d docs/build",
+		"dev:docs": "typedoc"
     },
     "dependencies": {
         "@xmcl/client": "file:packages\\client",
@@ -70,6 +71,7 @@
         "three-orbitcontrols": "^2.110.1",
         "ts-jest": "^25.2.1",
         "ts-md5": "^1.2.7",
+        "typedoc": "^0.17.3",
         "typescript": "^3.8.3"
     },
     "browserslist": [
