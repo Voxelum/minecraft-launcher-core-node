@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.7.0
+### @xmcl/core@2.1.0
+#### Features
+
+- feat: add resolveFromPath ([890f70aa4f492d97e5e7513afcfc71b424962bf2](https://github.com/voxelum/minecraft-launcher-core-node/commit/890f70aa4f492d97e5e7513afcfc71b424962bf2))
+### @xmcl/curseforge@0.1.0
+#### Features
+
+- feat: curseforge support ([922948df3987fad92299af3c5dd5f02d06c97d76](https://github.com/voxelum/minecraft-launcher-core-node/commit/922948df3987fad92299af3c5dd5f02d06c97d76))
+### @xmcl/installer@2.6.4
+#### Bug Fixes
+
+- fix: remove redundent check ([9ee553dd5e04f7fbdd89274d1c4d2dbc19973114](https://github.com/voxelum/minecraft-launcher-core-node/commit/9ee553dd5e04f7fbdd89274d1c4d2dbc19973114))
+- fix: correct the task name ([408d35d5f77bc6da558d45ac74e308014f8802ae](https://github.com/voxelum/minecraft-launcher-core-node/commit/408d35d5f77bc6da558d45ac74e308014f8802ae))
+- fix: expose error to outer ([5c5a0fa89605b1a0babe2fc5e681134cd749bf4f](https://github.com/voxelum/minecraft-launcher-core-node/commit/5c5a0fa89605b1a0babe2fc5e681134cd749bf4f))
+- fix: expose post postProcess task ([2933d576feff0c4e0aa66b4a242903ea20b45d7e](https://github.com/voxelum/minecraft-launcher-core-node/commit/2933d576feff0c4e0aa66b4a242903ea20b45d7e))
+- Dependency @xmcl/core bump **patch**
+
+
 ## 2.6.3
 ### @xmcl/installer@2.6.3
 #### Bug Fixes
