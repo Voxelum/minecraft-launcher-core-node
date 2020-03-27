@@ -28,6 +28,9 @@ jobs:
     - name: Build Github Pages
       run: |
         npm run build:web
+    - name: Build Typedoc documentation
+      run: |
+        npm run build:docs
     - name: Deploy to Github Pages
       uses: crazy-max/ghaction-github-pages@v1
       with:
