@@ -23,13 +23,14 @@
 		"global.d.ts"
 	],
 	"typedocOptions": {
-		"mode": "module",
+		"mode": "library",
 		"out": "docs/docs",
 		"inputFiles": [
 			"./packages"
 		],
 		"exclude": [
-			"**/*.test.ts"
+			"**/*.test.ts",
+			"**/test.ts"
 		],
 		"hideGenerator": true
 	}
