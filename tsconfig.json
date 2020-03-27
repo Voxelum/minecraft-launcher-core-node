@@ -24,7 +24,7 @@
 	],
 	"typedocOptions": {
 		"mode": "library",
-		"out": "docs/docs",
+		"out": "docs/build/docs",
 		"inputFiles": [
 			"./packages"
 		],
