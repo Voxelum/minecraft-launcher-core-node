@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/curseforge",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "./index.cjs.js",
   "module": "./index.js",
   "sideEffects": false,
@@ -30,8 +30,7 @@
     "twitchappapi"
   ],
   "license": "MIT",
-  "dependencies": {
-  },
+  "dependencies": {},
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },

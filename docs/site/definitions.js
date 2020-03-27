@@ -718,6 +718,7 @@ export interface LibraryInfo {
     readonly name: string;
 }
 export declare namespace LibraryInfo {
+    function resolveFromPath(path: string): LibraryInfo;
     /**
      * Get the base info of the library from its name
      *
@@ -926,6 +927,451 @@ export interface Version {
 }
 `;
 module.exports['@xmcl/core/version.test.d.ts'] = `export {};
+`;
+module.exports['@xmcl/curseforge/http/base.d.ts'] = `/// <reference types="node" />
+import { Agent } from "https";
+/**
+ * Abstract layer for http requester.
+ */
+export declare type HttpRequester = (option: {
+    url: string;
+    method: string;
+    headers: {
+        [key: string]: string;
+    };
+    /**
+     * Search string
+     */
+    search?: {
+        [key: string]: string | string[] | undefined;
+    };
+    body?: object;
+    userAgent?: Agent;
+}) => Promise<{
+    body: string;
+    statusMessage: string;
+    statusCode: number;
+}>;
+`;
+module.exports['@xmcl/curseforge/http/index.browser.d.ts'] = `import { HttpRequester } from "./base";
+export declare const httpRequester: HttpRequester;
+`;
+module.exports['@xmcl/curseforge/http/index.d.ts'] = `import { HttpRequester } from "./base";
+export declare const httpRequester: HttpRequester;
+`;
+module.exports['@xmcl/curseforge/index.d.ts'] = `/// <reference types="node" />
+import { Agent } from "https";
+export interface AddonInfo {
+    /**
+     * The addon id. You can use this in many functions required the \`addonID\`
+     */
+    id: number;
+    /**
+     * The display name of the addon
+     */
+    name: string;
+    /**
+     * The list of authors
+     */
+    authors: Author[];
+    /**
+     * The attachments. Usually include the project icon and the exmaple images.
+     */
+    attachments: Attachment[];
+    websiteUrl: string;
+    /**
+     * Game id. Minecraft is 432.
+     */
+    gameId: number;
+    /**
+     * One line summery
+     */
+    summary: string;
+    /**
+     * The default download file id
+     */
+    defaultFileId: number;
+    downloadCount: number;
+    latestFiles: File[];
+    /**
+     * The category of the project
+     */
+    categories: ProjectCategory[];
+    status: number;
+    primaryCategoryId: number;
+    /**
+     * The big category section
+     */
+    categorySection: CategorySection;
+    slug: string;
+    gameVersionLatestFiles: GameVersionLatestFile[];
+    isFeatured: boolean;
+    popularityScore: number;
+    gamePopularityRank: number;
+    primaryLanguage: string;
+    gameSlug: string;
+    gameName: string;
+    portalName: string;
+    dateModified: string;
+    dateCreated: string;
+    dateReleased: string;
+    isAvailable: boolean;
+    isExperiemental: boolean;
+}
+export interface GameVersionLatestFile {
+    gameVersion: string;
+    projectFileId: number;
+    projectFileName: string;
+    fileType: number;
+}
+export interface CategorySection {
+    id: number;
+    gameId: number;
+    name: string;
+    packageType: number;
+    path: string;
+    initialInclusionPattern: string;
+    extraIncludePattern?: any;
+    gameCategoryId: number;
+}
+export interface File {
+    /**
+     * The fileID
+     */
+    id: number;
+    /**
+     * Display name
+     */
+    displayName: string;
+    /**
+     * File name. Might be the same with \`displayName\`
+     */
+    fileName: string;
+    /**
+     * The date of this file uploaded
+     */
+    fileDate: string;
+    /**
+     * # bytes of this file.
+     */
+    fileLength: number;
+    /**
+     * Release or type.
+     * - \`1\` is the release
+     * - \`\`
+     */
+    releaseType: number;
+    fileStatus: number;
+    /**
+     * Url to download
+     */
+    downloadUrl: string;
+    isAlternate: boolean;
+    alternateFileId: number;
+    dependencies: any[];
+    isAvailable: boolean;
+    /**
+     * What files inside?
+     */
+    modules: Module[];
+    packageFingerprint: number;
+    /**
+     * Game version string array, like \`["1.12.2"]\`
+     */
+    gameVersion: string[];
+    sortableGameVersion?: SortableGameVersion[];
+    installMetadata?: any;
+    changelog?: any;
+    hasInstallScript: boolean;
+    isCompatibleWithClient: boolean;
+    categorySectionPackageType: number;
+    restrictProjectFileAccess: number;
+    projectStatus: number;
+    renderCacheId: number;
+    fileLegacyMappingId?: any;
+    /**
+     * The projectId (addonId)
+     */
+    projectId: number;
+    parentProjectFileId?: any;
+    parentFileLegacyMappingId?: any;
+    fileTypeId?: any;
+    exposeAsAlternative?: any;
+    packageFingerprintId: number;
+    gameVersionDateReleased: string;
+    gameVersionMappingId: number;
+    /**
+     * A number represents the game version id from curseforge (Not the same with Minecraft version string id).
+     */
+    gameVersionId: number;
+    gameId: number;
+    isServerPack: boolean;
+    serverPackFileId?: any;
+}
+export interface SortableGameVersion {
+    gameVersionPadded: string;
+    gameVersion: string;
+    gameVersionReleaseDate: string;
+    gameVersionName: string;
+}
+/**
+ * Represent a file in a \`File\`.
+ */
+export interface Module {
+    /**
+     * Actually the file name, not the folder
+     */
+    foldername: string;
+    /**
+     * A number represent fingerprint
+     */
+    fingerprint: number;
+    type: number;
+}
+export interface Attachment {
+    id: number;
+    projectId: number;
+    description: string;
+    isDefault: boolean;
+    /**
+     * Small icon
+     */
+    thumbnailUrl: string;
+    /**
+     * The title of this attachment
+     */
+    title: string;
+    /**
+     * The url. Usually the image url.
+     */
+    url: string;
+    status: number;
+}
+/**
+ * The author info
+ */
+export interface Author {
+    /**
+     * The project id of this query
+     */
+    projectId: number;
+    projectTitleId?: any;
+    projectTitleTitle?: any;
+    /**
+     * Display name of the author
+     */
+    name: string;
+    /**
+     * The full url of author homepage in curseforge
+     */
+    url: string;
+    /**
+     * The id of this author
+     */
+    id: number;
+    userId: number;
+    twitchId: number;
+}
+export interface ProjectCategory {
+    categoryId: number;
+    name: string;
+    url: string;
+    avatarUrl: string;
+    parentId: number;
+    rootId: number;
+    projectId: number;
+    avatarId: number;
+    gameId: number;
+}
+/**
+ * The category in curseforge. For example, "World", "Resource Packs", "Modpacks", "Mods"... and so on..
+ */
+export interface Category {
+    /**
+     * The number id of the category. e.g. \`4471\`
+     */
+    id: number;
+    /**
+     * The display name of the category. For example, "Resource Packs", "Modpacks", "Mods"...
+     */
+    name: string;
+    /**
+     * The slug is used on url path. It should looks like, "modpacks", "texture-packs", "mc-mods"...
+     */
+    slug: string;
+    /**
+     * The display icon of the category
+     */
+    avatarUrl: string;
+    /**
+     * Last modified date. The string of \`Date\`.
+     */
+    dateModified: string;
+    /**
+     * The parent category id (\`Category.id\`)
+     */
+    parentGameCategoryId: number;
+    /**
+     * The root category id.
+     */
+    rootGameCategoryId: number;
+    /**
+     * The game id. Minecraft is 432.
+     */
+    gameId: number;
+}
+export interface SearchOptions {
+    /**
+     * Please use \`getCategories\` to find the category id
+     */
+    categoryID?: number;
+    sectionId?: number | MinecraftSection;
+    /**
+     * The game id. The Minecraft is 432.
+     * @default 432
+     */
+    gameId?: number;
+    /**
+     * The game version. For Minecraft, it should looks lile 1.12.2
+     */
+    gameVersion?: string;
+    /**
+     * @default 0
+     */
+    index?: number;
+    /**
+     * @default 25
+     */
+    pageSize?: number;
+    /**
+     * The keyword of search
+     */
+    searchFilter: string;
+    /**
+     * @default 0
+     */
+    sort?: number;
+}
+export interface GetFeaturedAddonOptions {
+    /**
+     * The game id. The Minecraft is 432.
+     * @default 432
+     */
+    gameId?: number;
+    /**
+     * The # of featured
+     */
+    featuredCount?: number;
+    popularCount?: number;
+    updatedCount?: number;
+}
+/**
+ * The options to query
+ */
+export interface QueryOption {
+    /**
+     * Additional header
+     */
+    headers?: Record<string, any>;
+    /**
+     * The user agent in nodejs of https
+     */
+    userAgent?: Agent;
+}
+/**
+ * Cached minecraft section name to id
+ */
+export declare enum MinecraftSection {
+    MapandInformation = 423,
+    Addons = 426,
+    ArmorToolsAndWeapons = 434,
+    Structures = 409,
+    BloodMagic = 4485,
+    Storage = 420,
+    IndustrialCraft = 429,
+    Magic = 419,
+    Technology = 412,
+    Redstone = 4558,
+    TinkersConstruct = 428,
+    PlayerTransport = 414,
+    LuckyBlocks = 4486,
+    Buildcraft = 432,
+    Genetics = 418,
+    TwitchIntegration = 4671,
+    OresandResources = 408,
+    CraftTweaker = 4773,
+    Thaumcraft = 430,
+    AdventureandRPG = 422,
+    Processing = 413,
+    Energy = 417,
+    EnergyFluidAndItemTransport = 415,
+    Forestry = 433,
+    Miscellaneous = 425,
+    AppliedEnergistics2 = 4545,
+    Farming = 416,
+    APIandLibrary = 421,
+    Cosmetic = 424,
+    Fabric = 4780,
+    WorldGen = 406,
+    Mobs = 411,
+    Biomes = 407,
+    ThermalExpansion = 427,
+    ServerUtility = 435,
+    Dimensions = 410,
+    Food = 436
+}
+/**
+ * Get the addon by addon Id.
+ * @param addonID The id of addon
+ * @param options The query options
+ */
+export declare function getAddonInfo(addonID: number, options?: QueryOption): Promise<AddonInfo>;
+/**
+ * Get the list of addon by addon ids.
+ */
+export declare function getAddons(addonIDs: number[], options?: QueryOption): Promise<AddonInfo[]>;
+/**
+ * Search addons by keyword.
+ */
+export declare function searchAddons(searchOptions: SearchOptions, options?: QueryOption): Promise<AddonInfo[]>;
+/**
+ * Get the addon project description HTML string.
+ *
+ * @returns The string of description HTML.
+ */
+export declare function getAddonDescription(addonID: number, options?: QueryOption): Promise<string>;
+/**
+ * Get the content of the changelog of a addon's file
+ */
+export declare function getAddonFileChangelog(addonID: number, fileID: number, options?: QueryOption): Promise<string>;
+export declare function getAddonFileInfo(addonID: number, fileID: number, options?: QueryOption): Promise<File[]>;
+/**
+ * Return the addon file download url string.
+ */
+export declare function getAddonFileDownloadURL(addonID: number, fileID: number, options?: QueryOption): Promise<string>;
+/**
+ * Get the file list of the addon.
+ */
+export declare function getAddonFiles(addonID: number, options?: QueryOption): Promise<File[]>;
+/**
+ * Get the addon data base timestamp in string of \`Date\`, like "2019-06-09T23:34:29.103Z".
+ */
+export declare function getAddonDatabaseTimestamp(options?: QueryOption): Promise<string>;
+/**
+ * Select several addons for the game.
+ */
+export declare function getFeaturedAddon(getOptions: GetFeaturedAddonOptions, options?: QueryOption): Promise<AddonInfo[]>;
+/**
+ * Get the list of category. You can use the \`category.id\` in params of \`searchAddon\` function.
+ */
+export declare function getCategories(options?: QueryOption): Promise<Category[]>;
+/**
+ * Get the timestamp of the categories data base.
+ * It should return the \`Date\` string like "2019-06-09T23:34:29.103Z"
+ */
+export declare function getCategoryTimestamp(options?: QueryOption): Promise<any>;
+`;
+module.exports['@xmcl/curseforge/test.d.ts'] = `export {};
 `;
 module.exports['@xmcl/forge-site-parser/index.d.ts'] = `/**
  * One forge version download info
@@ -1381,16 +1827,19 @@ export interface Issue {
      */
     hint: string;
     /**
-     * The expected checksum of the file
+     * The expected checksum of the file. Can be an empty string if this file is missing or not check checksum at all!
      */
     expectedChecksum: string;
     /**
-     * The actual checksum of the file
+     * The actual checksum of the file. Can be an empty string if this file is missing or not check checksum at all!
      */
     receivedChecksum: string;
 }
 export declare type MinecraftIssues = LibraryIssue | MinecraftJarIssue | VersionJsonIssue | AssetIssue | AssetIndexIssue;
 export declare type InstallIssues = ProcessorIssue | LibraryIssue;
+/**
+ * The processor issue
+ */
 export interface ProcessorIssue extends Issue {
     role: "processor";
     /**
@@ -1398,6 +1847,10 @@ export interface ProcessorIssue extends Issue {
      */
     processor: Processor;
 }
+/**
+ * The library issue represents a corrupted or missing lib.
+ * You can use \`Installer.installResolvedLibraries\` to fix this.
+ */
 export interface LibraryIssue extends Issue {
     role: "library";
     /**
@@ -1405,6 +1858,10 @@ export interface LibraryIssue extends Issue {
      */
     library: ResolvedLibrary;
 }
+/**
+ * The minecraft jar issue represents a corrupted or missing minecraft jar.
+ * You can use \`Installer.installVersion\` to fix this.
+ */
 export interface MinecraftJarIssue extends Issue {
     role: "minecraftJar";
     /**
@@ -1412,6 +1869,15 @@ export interface MinecraftJarIssue extends Issue {
      */
     version: string;
 }
+/**
+ * The minecraft jar issue represents a corrupted or missing version jar.
+ *
+ * This means your version is totally broken, and you should reinstall this version.
+ *
+ * - If this is just a Minecraft version, you will need to use \`Installer.install\` to re-install Minecraft.
+ * - If this is a Forge version, you will need to use \`ForgeInstaller.install\` to re-install.
+ * - Others are the same, just re-install
+ */
 export interface VersionJsonIssue extends Issue {
     role: "versionJson";
     /**
@@ -1419,6 +1885,10 @@ export interface VersionJsonIssue extends Issue {
      */
     version: string;
 }
+/**
+ * The asset issue represents a corrupted or missing minecraft asset file.
+ * You can use \`Installer.installResolvedAssets\` to fix this.
+ */
 export interface AssetIssue extends Issue {
     role: "asset";
     /**
@@ -1430,6 +1900,10 @@ export interface AssetIssue extends Issue {
         size: number;
     };
 }
+/**
+ * The asset index issue represents a corrupted or missing minecraft asset index file.
+ * You can use \`Installer.installAssets\` to fix this.
+ */
 export interface AssetIndexIssue extends Issue {
     role: "assetIndex";
     /**
@@ -2282,6 +2756,22 @@ export declare function resolveProcessors(side: "client" | "server", installProf
     classpath: string[];
 }[];
 /**
+ * Post process the post processors from \`InstallProfile\`.
+ *
+ * @param processors The processor info
+ * @param minecraft The minecraft location
+ * @param java The java executable path
+ */
+export declare function postProcess(processors: InstallProfile["processors"], minecraft: MinecraftFolder, java: string): Promise<void>;
+/**
+ * Post process the post processors from \`InstallProfile\`.
+ *
+ * @param processors The processor info
+ * @param minecraft The minecraft location
+ * @param java The java executable path
+ */
+export declare function postProcessTask(processors: InstallProfile["processors"], minecraft: MinecraftFolder, java: string): Task<void>;
+/**
  * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
  *
  * @param installProfile The install profile
@@ -3063,8 +3553,7 @@ interface ResourceSourceWrapper {
     domains: string[];
 }
 /**
- * The resource manager. Design to be able to use in both nodejs and browser environment.
- * @template T The type of the resource content. If you use this in node, it's probably \`Buffer\`. If you are in browser, it might be \`string\`. Just align this with your \`ResourceSource\`
+ * The resource manager just like Minecraft. Design to be able to use in both nodejs and browser environment.
  */
 export declare class ResourceManager {
     private list;
