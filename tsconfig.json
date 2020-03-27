@@ -1,29 +1,36 @@
 {
-  "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "declaration": true,
-    "downlevelIteration": true,
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "lib": [
-      "dom"
-    ],
-    "outDir": "packages",
-    "module": "ES2015",
-    "moduleResolution": "node",
-    "newLine": "LF",
-    "strict": true,
-    "target": "es2018"
-  },
-  "exclude": [
-    "packages/**/*.d.ts"
-  ],
-  "include": [
-    "packages/**/*.ts",
-    "global.d.ts"
-  ],
-  "typedocOptions": {
-	  "mode": "modules",
-	  "out": "docs/docs"
-  }
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
+		"declaration": true,
+		"downlevelIteration": true,
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"lib": [
+			"dom"
+		],
+		"outDir": "packages",
+		"module": "ES2015",
+		"moduleResolution": "node",
+		"newLine": "LF",
+		"strict": true,
+		"target": "es2018"
+	},
+	"exclude": [
+		"packages/**/*.d.ts"
+	],
+	"include": [
+		"packages/**/*.ts",
+		"global.d.ts"
+	],
+	"typedocOptions": {
+		"mode": "module",
+		"out": "docs/docs",
+		"inputFiles": [
+			"./packages"
+		],
+		"exclude": [
+			"**/*.test.ts"
+		],
+		"hideGenerator": true
+	}
 }
