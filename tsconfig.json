@@ -33,6 +33,8 @@
 			"**/test.ts"
 		],
 		"hideGenerator": true,
-		"readme": "./README.md"
+		"readme": "./README.md",
+		"name": "minecraft-launcher-core-node",
+		"includeVersion": true
 	}
 }
