@@ -29,8 +29,8 @@
   "license": "MIT",
   "dependencies": {
     "bytebuffer": "^5.0.1",
-    "file-type": "^14.1.4",
-    "long": "^4.0.0",
+    "file-type": "^12.4.2",
+    "long": "~3",
     "pako": "^1.0.10"
   },
   "bugs": {

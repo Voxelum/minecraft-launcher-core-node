@@ -14,7 +14,7 @@
     "@xmcl/nbt": "file:../nbt",
     "@xmcl/text-component": "file:../text-component",
     "bytebuffer": "^5.0.1",
-    "long": "^4.0.0",
+    "long": "~3",
     "uuid": "^7.0.2"
   },
   "scripts": {
