@@ -35,6 +35,7 @@
         "hideGenerator": true,
         "readme": "./README.md",
         "name": "minecraft-launcher-core-node",
-        "includeVersion": true
-    }
+        "includeVersion": true,
+        "excludeNotExported": true
+    },
 }
