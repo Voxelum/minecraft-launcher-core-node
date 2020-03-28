@@ -335,10 +335,7 @@ const IO: IO[] = [
                     writer.write(buf, value, childContext);
                 } catch (e) {
                     if (e instanceof TypeError) {
-                        throw {
-                            type: "IllegalInputType",
-                            message: `Require ${TagType.getName(tagType)} but found ${typeof value}`,
-                        };
+                        throw new TypeError(`Required ${TagType.getName(tagType)} but found ${typeof value}`);
                     }
                 }
             }
