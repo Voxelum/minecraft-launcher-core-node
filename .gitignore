@@ -67,5 +67,6 @@ jspm_packages/
 packages/**/*.js
 packages/**/*.d.ts
 packages/**/*.js.map
+packages/**/package-lock.json
 
 /temp

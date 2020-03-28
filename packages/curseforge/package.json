@@ -1,38 +1,38 @@
 {
-  "name": "@xmcl/curseforge",
-  "version": "0.1.0",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
-  "sideEffects": false,
-  "description": "Provide the curseforge (twitch) API in https://twitchappapi.docs.apiary.io/",
-  "engines": {
-    "node": ">=10.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "compile": "tsc --build ./http/tsconfig.json && tsc --build tsconfig.json",
-    "build": "npm run compile"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
-  },
-  "author": "cijhn@hotmail.com",
-  "keywords": [
-    "minecraft",
-    "typescript",
-    "minecraft-launcher",
-    "nodejs",
-    "electron",
-    "curseforge",
-    "twitchappapi"
-  ],
-  "license": "MIT",
-  "dependencies": {},
-  "bugs": {
-    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
-  },
-  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+    "name": "@xmcl/curseforge",
+    "version": "0.1.0",
+    "main": "./index.cjs.js",
+    "module": "./index.js",
+    "sideEffects": false,
+    "description": "Provide the curseforge (twitch) API in https://twitchappapi.docs.apiary.io/",
+    "engines": {
+        "node": ">=10.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "compile": "tsc --build ./http/tsconfig.json && tsc --build tsconfig.json",
+        "build": "npm run compile"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
+    },
+    "author": "cijhn@hotmail.com",
+    "keywords": [
+        "minecraft",
+        "typescript",
+        "minecraft-launcher",
+        "nodejs",
+        "electron",
+        "curseforge",
+        "twitchappapi"
+    ],
+    "license": "MIT",
+    "dependencies": {},
+    "bugs": {
+        "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
+    },
+    "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
 }
