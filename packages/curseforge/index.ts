@@ -408,7 +408,7 @@ export async function getAddons(addonIDs: number[], options: QueryOption = {}) {
  * Search addons by keyword.
  */
 export async function searchAddons(searchOptions: SearchOptions, options: QueryOption = {}) {
-    let url = `/api/v2/addon/search?categoryId=${searchOptions.categoryID ?? ""}&gameId=${searchOptions.gameId ?? 432}&gameVersion=${searchOptions.gameVersion ?? ""}&index=${searchOptions.index ?? 0}&pageSize=${searchOptions.pageSize ?? 12}5&searchFilter=${searchOptions.searchFilter}§ionId=${searchOptions.sectionId ?? ""}&sort=${searchOptions.sort ?? 0}`
+    let url = `/api/v2/addon/search?categoryId=${searchOptions.categoryID ?? ""}&gameId=${searchOptions.gameId ?? 432}&gameVersion=${searchOptions.gameVersion ?? ""}&index=${searchOptions.index ?? 0}&pageSize=${searchOptions.pageSize ?? 12}&searchFilter=${searchOptions.searchFilter}&sectionId=${searchOptions.sectionId ?? ""}&sort=${searchOptions.sort ?? 0}`
     let body = await get(url, options);
     return body as AddonInfo[];
 }
@@ -456,13 +456,13 @@ export async function getAddonFiles(addonID: number, options: QueryOption = {}) 
  */
 export async function getAddonDatabaseTimestamp(options: QueryOption = {}) {
     let url = "/api/v2/addon/timestamp";
-    let body = await get(url, options);
+    let body = await get(url, options, undefined, false);
     return body as string;
 }
 /**
  * Select several addons for the game.
  */
-export async function getFeaturedAddon(getOptions: GetFeaturedAddonOptions, options: QueryOption = {}) {
+export async function getFeaturedAddons(getOptions: GetFeaturedAddonOptions = {}, options: QueryOption = {}) {
     let url = "/api/v2/addon/featured"
     let body = await get(url, options, {
         "GameId": getOptions.gameId ?? 432,
@@ -487,6 +487,6 @@ export async function getCategories(options: QueryOption = {}) {
  */
 export async function getCategoryTimestamp(options: QueryOption = {}) {
     let url = "/api/v2/category/timestamp";
-    let body = await get(url, options, undefined, true);
+    let body = await get(url, options, undefined, false);
     return body;
 }
