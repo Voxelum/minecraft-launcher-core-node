@@ -3,7 +3,7 @@ const child_process = require('child_process');
 const path = require('path')
 
 async function main() {
-    let dirs = fs.readdirSync('packages')
+    let dirs = fs.readdirSync('packages').filter(f => f !== '.DS_Store')
     for (let dir of dirs) {
         try {
             let cmds = [path.resolve('./node_modules/.bin/rollup'), '-c', 'rollup.config.js', '--environment', `PACKAGE_NAME:${dir}`];
