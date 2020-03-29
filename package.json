@@ -4,6 +4,7 @@
     "scripts": {
         "build": "npm run lint && npm run compile && node scripts/generate-definition.js && npm run build:readme",
         "build:clean": "node scripts/clean.js",
+        "build:docs": "typedoc",
         "build:web": "sh scripts/build_workers.sh && parcel build docs/site/index.html -d docs/build --public-url ./",
         "build:readme": "node scripts/build-readme.js",
         "clean": "lerna clean --yes",
@@ -70,6 +71,7 @@
         "three-orbitcontrols": "^2.110.1",
         "ts-jest": "^25.2.1",
         "ts-md5": "^1.2.7",
+        "typedoc": "^0.17.3",
         "typescript": "^3.8.3"
     },
     "browserslist": [

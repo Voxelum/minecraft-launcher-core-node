@@ -1,25 +1,41 @@
 {
-  "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "declaration": true,
-    "downlevelIteration": true,
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "lib": [
-      "dom"
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "declaration": true,
+        "downlevelIteration": true,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "lib": [
+            "dom"
+        ],
+        "outDir": "packages",
+        "module": "ES2015",
+        "moduleResolution": "node",
+        "newLine": "LF",
+        "strict": true,
+        "target": "es2018"
+    },
+    "exclude": [
+        "packages/**/*.d.ts"
     ],
-    "outDir": "packages",
-    "module": "ES2015",
-    "moduleResolution": "node",
-    "newLine": "LF",
-    "strict": true,
-    "target": "es2018"
-  },
-  "exclude": [
-    "packages/**/*.d.ts"
-  ],
-  "include": [
-    "packages/**/*.ts",
-    "global.d.ts"
-  ]
+    "include": [
+        "packages/**/*.ts",
+        "global.d.ts"
+    ],
+    "typedocOptions": {
+        "mode": "library",
+        "out": "docs/build/docs",
+        "inputFiles": [
+            "./packages"
+        ],
+        "exclude": [
+            "**/*.test.ts",
+            "**/test.ts"
+        ],
+        "hideGenerator": true,
+        "readme": "./README.md",
+        "name": "minecraft-launcher-core-node",
+        "includeVersion": true,
+        "excludeNotExported": true
+    },
 }
