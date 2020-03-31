@@ -1,6 +1,104 @@
-import { System, FileSystem } from "@xmcl/system";
-import ByteBuffer from "bytebuffer";
 import { deserialize } from "@xmcl/nbt";
+import { FileSystem, System } from "@xmcl/system";
+import ByteBuffer from "bytebuffer";
+import Long from "long";
+
+/**
+ * Compute the bit length from new region section
+ */
+function computeBitLen(palette: NewRegionSectionDataFrame["Palette"], blockStates: Long[]) {
+    let computedBitLen = log2DeBruijn(palette.length);
+    let avgBitLen = blockStates.length * 64 / 4096;
+    return computedBitLen >= 9 ? computedBitLen : avgBitLen;
+}
+
+/**
+ * Create bit vector from a long array
+ */
+function createBitVector(arr: Long[], bitLen: number): number[] {
+    let maxEntryValue = Long.fromNumber(1).shiftLeft(bitLen).sub(1);
+    let result = new Array<number>(4096);
+    for (let i = 0; i < 4096; ++i) {
+        result[i] = seek(arr, bitLen, i, maxEntryValue);
+    }
+    return result;
+}
+
+/**
+ * Seek block id from a long array (new chunk format)
+ * @param data The block state id long array
+ * @param bitLen The bit length
+ * @param index The index (composition of xyz) in chunk
+ * @param maxEntryValue The max entry value
+ */
+function seek(data: Long[], bitLen: number, index: number, maxEntryValue = Long.fromNumber(1).shiftLeft(bitLen).sub(1)) {
+    let offset = index * bitLen;
+    let j = offset >> 6;
+    let k = ((index + 1) * bitLen - 1) >>> 6;
+    let l = offset ^ j << 6;
+
+    if (j == k) {
+        return data[j].shiftRightUnsigned(l).and(maxEntryValue).toInt();
+    } else {
+        let shiftLeft = 64 - l;
+        const v = data[j].shiftRightUnsigned(l).or(data[k].shiftLeft(shiftLeft));
+        return v.and(maxEntryValue).toInt();
+    }
+}
+
+/**
+ * Legacy algorithm to seek block state from chunk
+ */
+function seekLegacy(blocks: number[], data: number[], add: number[] | null, i: number) {
+    function getFromNibbleArray(arr: number[], index: number) {
+        const nibbled = index >>> 1;
+        if ((index & 1) === 0) {
+            return arr[nibbled] & 15;
+        } else {
+            return arr[nibbled] >>> 4 & 15;
+        }
+    }
+    let additional = !add ? 0 : getFromNibbleArray(add, i);
+    return (additional << 12) | ((blocks[i] & 255) << 4) | getFromNibbleArray(data, i);
+}
+
+const MULTIPLY_DE_BRUIJN_BIT_POSITION = [0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9];
+
+function log2DeBruijn(value: number) {
+    function isPowerOfTwo(v: number) {
+        return v !== 0 && (v & v - 1) === 0;
+    }
+    function smallestEncompassingPowerOfTwo(value: number) {
+        let i = value - 1;
+        i = i | i >> 1;
+        i = i | i >> 2;
+        i = i | i >> 4;
+        i = i | i >> 8;
+        i = i | i >> 16;
+        return i + 1;
+    }
+    value = isPowerOfTwo(value) ? value : smallestEncompassingPowerOfTwo(value);
+    return MULTIPLY_DE_BRUIJN_BIT_POSITION[Long.fromInt(value).multiply(125613361).shiftRight(27).and(31).low];
+}
+
+function getChunkOffset(buffer: Uint8Array, x: number, z: number) {
+    // get internal chunk offset should be in the rest of 5 bits (from >> 5)
+    x &= 31;
+    z &= 31;
+    // the offset index stored at the begining
+    // each offset takes 4 bytes
+    let offsetBytesLocation = (x + z * 32) * 4;
+    let offsetBytes = buffer.slice(offsetBytesLocation, offsetBytesLocation + 4);
+    // chunk offset
+    let offset = offsetBytes[0] << 16 | offsetBytes[1] << 8 | offsetBytes[2];
+    // chunk sections should be last 8 bits (1 byte)
+    let sectors = offsetBytes[3];
+    if (offset === 0) {
+        return 0;
+    } else {
+        return offset * 4096;
+    }
+}
 
 export class WorldReader {
     static async create(path: string | Uint8Array) {
@@ -13,18 +111,20 @@ export class WorldReader {
      * @param chunkZ The z value of chunk coord
      */
     public async getRegionData(chunkX: number, chunkZ: number): Promise<RegionDataFrame> {
-        const path = System.fs.join("region", `r.${chunkX}.${chunkZ}.mca`);
-        const buffer = await this.fs.readFile(path);
-        const bb = ByteBuffer.wrap(buffer);
-        const off = getChunkOffset(buffer, chunkX, chunkZ);
+        // The region file coord with chunk is chunk coord shift by 5
+        let path = this.fs.join("region", `r.${chunkX >> 5}.${chunkZ >> 5}.mca`);
+
+        let buffer = await this.fs.readFile(path);
+        let bb = ByteBuffer.wrap(buffer);
+        let off = getChunkOffset(buffer, chunkX, chunkZ);
 
         bb.offset = off;
-        const length = bb.readInt32();
-        const format = bb.readUint8();
-        if (format !== 2) { throw new Error(`Cannot resolve chunk with format ${format}.`); }
-
-        const chunkData = buffer.slice(off + 5, off + 5 + length);
-        const data: RegionDataFrame = await deserialize(chunkData, { compressed: "deflate" });
+        let length = bb.readInt32();
+        let format = bb.readUint8();
+        if (format !== 1 && format !== 2) { throw new Error(`Illegal Chunk format ${format} on (${chunkX}, ${chunkZ})!`) }
+        let compressed = format === 1 ? "gzip" as const : "deflate" as const;
+        let chunkData = buffer.slice(off + 5, off + 5 + length);
+        let data: RegionDataFrame = await deserialize(chunkData, { compressed });
         return data;
     }
 
@@ -50,129 +150,106 @@ export class WorldReader {
     }
 }
 
-function getChunkOffset(buffer: Uint8Array, x: number, z: number) {
-    x = Math.abs(((x % 32) + 32) % 32);
-    z = Math.abs(((z % 32) + 32) % 32);
-    const locationOffset = 4 * (x + z * 32);
-    const bytes = buffer.slice(locationOffset, locationOffset + 4);
-    const sectors = bytes[3];
-    const offset = bytes[0] << 16 | bytes[1] << 8 | bytes[2];
-    if (offset === 0) {
-        return 0;
-    } else {
-        return offset * 4096;
+/**
+ * The chunk index is a number in range [0, 4096), which is mapped position from (0,0,0) to (16,16,16) inside the chunk.
+ */
+export type ChunkIndex = number;
+
+/**
+ * Get chunk index from position.
+ * All x, y, z should be in range [0, 16)
+ *
+ * @param x The position x. Should be in range [0, 16)
+ * @param y The position y. Should be in range [0, 16)
+ * @param z The position z. Should be in range [0, 16)
+ */
+export function getIndexInChunk(x: number, y: number, z: number): ChunkIndex {
+    return (y & 15) << 8 | (z & 15) << 4 | (x & 15);
+}
+
+/**
+ * Get in-chunk coordination from chunk index
+ * @param index The index number in chunk
+ */
+export function getCoordFromIndex(index: ChunkIndex) {
+    let x = index & 15;
+    let y = (index >>> 8) & 15;
+    let z = (index >>> 4) & 15;
+    return {
+        x, y, z
     }
-}
-
-function getFromNibbleArray(arr: number[], index: number) {
-    const nibbled = index >> 1;
-    if ((nibbled & 1) === 0) {
-        return arr[nibbled] & 15;
-    } else {
-        return (arr[nibbled] >> 4) & 15;
-    }
-}
-
-function seekLegacy(blocks: number[], data: number[], add: number[] | null, i: number) {
-    // i = i & 0xFFF;
-    let additional = add == null ? 0 : getFromNibbleArray(add, i);
-    return (additional << 12) | ((blocks[i] & 255) << 4) | getFromNibbleArray(data, i);
-}
-
-function mask(bit: number) {
-    let m = 0;
-    for (let i = 0; i < bit; ++i) { m = (m << 1) + 1; }
-    return m;
-}
-
-function seek(streams: Long[], bitLen: number, bitMask: number, index: number) {
-    const bitOff = index * bitLen;
-    const tagAt = Math.floor(bitOff / 64);
-    const tag = streams[tagAt];
-
-    let bitStart = bitOff % 64;
-    const onLowBit = bitStart >= 32;
-    if (onLowBit) {
-        bitStart = bitStart - 32;
-    }
-    const value = onLowBit ? tag.low : tag.high;
-
-    const off = 32 - (bitStart + bitLen);
-    const overflow = off < 0;
-
-    let id: number;
-    if (overflow) {
-        const curBits = 32 - bitStart;
-        const nextBits = bitLen - curBits;
-        const partialMask = mask(curBits);
-        const nextValue = onLowBit
-            ? streams[tagAt + 1].high // use next long high
-            : tag.low; // use this low
-        id = ((value & partialMask) << nextBits) | (nextValue >>> (32 - nextBits));
-    } else {
-        id = (value >>> off) & bitMask;
-    }
-
-    return id;
-}
-
-export interface BlockState {
-    name: string;
-    properties: { [key: string]: string };
 }
 
 export namespace RegionReader {
+    /**
+     * Get a chunk section in a region by chunk Y value.
+     * @param region The region
+     * @param chunkY The y value of the chunk. It should be from [0, 16)
+     */
     export function getSection(region: RegionDataFrame, chunkY: number) {
-        return region.Level.Sections[chunkY];
+        // the new region has a section.Y === -1
+        return region.Level.Sections[0].Y === 0 ? region.Level.Sections[chunkY] : region.Level.Sections[chunkY + 1];
     }
 
-    export function readBlockState(section: RegionSectionDataFrame, reader: (x: number, y: number, z: number, id: number) => void): void {
+    /**
+     * Walk through all the position in this chunk and emit all the id in every position.
+     * @param section The chunk section
+     * @param reader The callback which will receive the position + state id.
+     */
+    export function walkBlockStateId(section: RegionSectionDataFrame, reader: (x: number, y: number, z: number, id: number) => void): void {
         let seekFunc: (index: number) => number;
         if ("Blocks" in section) {
-            const add = section.Add;
-            const data = section.Data;
-            const blocks = section.Blocks;
+            let add = section.Add;
+            let data = section.Data;
+            let blocks = section.Blocks;
             seekFunc = (i) => seekLegacy(blocks, data, add, i);
         } else {
-            const blockStates = section.BlockStates;
-            const bitLen = blockStates.length * 64 / 4096;
-            const bitMask = mask(bitLen);
-            seekFunc = (i) => seek(blockStates, bitLen, bitMask, i);
+            let blockStates = section.BlockStates;
+            let vector = createBitVector(blockStates, computeBitLen(section.Palette, blockStates));
+            seekFunc = (i) => vector[i];
         }
         for (let i = 0; i < 4096; ++i) {
-            const x = i & 15;
-            const y = (i >> 8) & 15;
-            const z = (i >> 4) & 15;
-            const id = seekFunc(i);
+            let x = i & 15;
+            let y = (i >>> 8) & 15;
+            let z = (i >>> 4) & 15;
+            let id = seekFunc(i);
             reader(x, y, z, id);
         }
     }
 
-    export function seekBlockId(section: RegionDataFrame["Level"]["Sections"][number], index: number) {
+    /**
+     * Seek the section and get the block state id from the section.
+     * @param section The section
+     * @param index The chunk index
+     */
+    export function seekBlockStateId(section: NewRegionSectionDataFrame | LegacyRegionSectionDataFrame, index: ChunkIndex) {
         if ("BlockStates" in section) {
             const blockStates = section.BlockStates;
-            const bitLen = blockStates.length * 64 / 4096;
-            const bitMask = mask(bitLen);
-            return seek(blockStates, bitLen, bitMask, index);
+            const bitLen = computeBitLen(section.Palette, blockStates);
+            return seek(blockStates, bitLen, index);
         }
-        if ("Blocks" in section) {
-            return seekLegacy(section.Blocks, section.Data, section.Add, index);
-        }
-        return undefined;
+        return seekLegacy(section.Blocks, section.Data, section.Add, index);
     }
 
-    export function seekBlockState(section: RegionDataFrame["Level"]["Sections"][number], index: number) {
-        if ("BlockStates" in section) {
-            const blockStates = section.BlockStates;
-            const bitLen = blockStates.length * 64 / 4096;
-            const bitMask = mask(bitLen);
-            return section.Palette[seek(section.BlockStates, bitLen, bitMask, index)];
-        }
-        return undefined;
+    /**
+     * Seek the block state data from new region format.
+     * @param section The new region section
+     * @param index The chunk index, which is a number in range [0, 4096)
+     */
+    export function seekBlockState(section: NewRegionSectionDataFrame, index: ChunkIndex): BlockStateData {
+        const blockStates = section.BlockStates;
+        const bitLen = computeBitLen(section.Palette, blockStates);
+        return section.Palette[seek(section.BlockStates, bitLen, index)];
     }
 }
 
-import Long from "long";
+/**
+ * The Minecraft provided block state info. Only presented in the version >= 1.13 chunk data.
+ */
+export interface BlockStateData {
+    Name: string;
+    Properties: { [key: string]: string }
+}
 
 export enum GameType {
     NON = -1,
@@ -416,27 +493,13 @@ export type LegacyRegionSectionDataFrame = {
 }
 export type NewRegionSectionDataFrame = {
     BlockStates: Long[],
-    Palette: Array<{ Name: string; Properties: { [key: string]: string } }>;
+    Palette: Array<BlockStateData>;
     Data: number[];
     BlockLight: number[];
     SkyLight: number[];
     Y: number;
 }
-export type RegionSectionDataFrame = {
-    BlockStates: Long[],
-    Palette: Array<{ Name: string; Properties: { [key: string]: string } }>;
-    Data: number[];
-    BlockLight: number[];
-    SkyLight: number[];
-    Y: number;
-} | {
-    Blocks: Array<number>;
-    Data: Array<number>;
-    Add: Array<number>;
-    BlockLight: number[];
-    SkyLight: number[];
-    Y: number;
-};
+export type RegionSectionDataFrame = LegacyRegionSectionDataFrame | NewRegionSectionDataFrame;
 export interface RegionDataFrame {
     Level: {
         xPos: number;
@@ -453,5 +516,6 @@ export interface RegionDataFrame {
         Sections: RegionSectionDataFrame[];
     };
     DataVersion: number;
+    ForgeDataVersion?: number;
 }
 

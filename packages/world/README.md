@@ -31,3 +31,25 @@ Read the level info from a buffer.
     const chunkZ: number;
     const region: RegionDataFrame = await reader.getRegionData(chunkX, chunkZ);
 ```
+
+## Some Important Concepts
+
+These concept might help you to understand how to use the API.
+
+### Level
+
+The metadata of one Minecraft save. It contains the info like `when the world is created`, `what is the name of it`, or other metadata.
+
+In code, they are represented by `LevelDataFrame`.
+
+### Region
+
+The Minecraft blocks data are stored in region file (.mca). One region contains 16 sections. Each section contains 16x16x16 blockstates, biome, entities, tileentities and other data. 
+
+For the Minecraft version < 1.13, the mca NBT data store the **global** blockstate ids in `Data` and `Blocks` fields.
+
+For the Minecraft version >= 1.13, the mca NBT data store the **local** blockstate ids in `BlockStates` and a mapping to map the **local** blockstate ids to `BlockState` object.
+
+#### In-Chunk Coord
+
+One chunk (section) in region contains 4096 (16x16x16) blockstates, and they are indexed by [0, 4096). The mapping from x, y, z to index is `(x, y, z) -> y << 8 | z << 4 | x`.
