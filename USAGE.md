@@ -77,6 +77,7 @@ Fetch the new fabric version list.
 
 ```ts
     import { FabricInstaller } from "@xmcl/installer";
+
     const versionList: Fabric.VersionList = await FabricInstaller.updateVersionList();
     const latestYarnVersion = versionList.yarnVersions[0]; // yarn version is combined by mcversion+yarn build number
     const latestLoaderVersion = versionList.loaderVersions[0];
@@ -86,6 +87,7 @@ Install fabric to the client. This installation process doesn't ensure the minec
 
 ```ts
     import { FabricInstaller } from "@xmcl/fabric";
+
     const minecraftLocation: MinecraftLocation;
     const yarnVersion: string; // e.g. "1.14.1+build.10"
     const loaderVersion: string; // e.g. "0.4.7+build.147"
@@ -99,7 +101,9 @@ Please run `Installer.installDependencies` after that to install fully.
 Get the forge version info and install forge from it. 
 
 ```ts
-    import { ForgeInstaller, MinecraftLocation } from "@xmcl/installer";
+    import { ForgeInstaller } from "@xmcl/installer";
+    import { MinecraftLocation } from "@xmcl/core";
+    
     const list: ForgeInstaller.VersionList = await ForgeInstaller.getVersionList();
     const minecraftLocation: MinecraftLocation;
     const mcversion = page.mcversion; // mc version
@@ -111,6 +115,7 @@ If you know forge version and minecraft version. You can directly do such:
 
 ```ts
     import { ForgeInstaller } from "@xmcl/installer";
+ 
     const forgeVersion = 'a-forge-version'; // like 31.1.27
     await ForgeInstaller.install({ version: forgeVersion, mcversion: '1.15.2' }, minecraftLocation);
 ```
@@ -199,7 +204,7 @@ Just install libraries:
 
     const minecraft: MinecraftLocation;
     const version: string; // version string like 1.13
-    const resolvedVersion: ResolvedVersion = await Version.parse(version);
+    const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
     await Installer.installLibraries(resolvedVersion);
 ```
 
@@ -211,7 +216,7 @@ Just install assets:
 
     const minecraft: MinecraftLocation;
     const version: string; // version string like 1.13
-    const resolvedVersion: ResolvedVersion = await Version.parse(version);
+    const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
     await Installer.installAssets(resolvedVersion);
 ```
 
@@ -223,18 +228,21 @@ Just ensure all assets and libraries are installed:
 
     const minecraft: MinecraftLocation;
     const version: string; // version string like 1.13
-    const resolvedVersion: ResolvedVersion = await Version.parse(version);
+    const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
     await Installer.installDependencies(resolvedVersion);
 ```
 
 Get the report of the version. It can check if version missing assets/libraries.
 
 ```ts
-    import { Diagnosis } from "@xmcl/core";
-    const minecraftLocation: string;
-    const minecraftVersionId: string;
+    import { MinecraftLocation } from "@xmcl/core";
+    import { Diagnosis } from "@xmcl/installer";
+    
+    const minecraft: MinecraftLocation;
+    const version: string; // version string like 1.13
+    const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
 
-    const report: Diagnosis.MinecraftIssueReport = await Diagnosis.diagnose(minecraftLocation, minecraftVersionId);
+    const report: Diagnosis.MinecraftIssueReport = await Diagnosis.diagnose(resolvedVersion.id, resolvedVersion.minecraftDirectory);
 
     const issues: Diagnosis.MinecraftIssues[] = report.issues;
 
@@ -524,7 +532,6 @@ Most install function has a corresponding task function. For example, `install` 
 Here is the example of just moniting the install task overall progress: 
 
 ```ts
-
 let task: Task<ResolvedVersion> = installTask('client', versionMetadata, mcLocation);
 let taskHandle: TaskHandle<ResolvedVersion> = task.execute();
 
