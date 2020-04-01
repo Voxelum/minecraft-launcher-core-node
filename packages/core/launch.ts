@@ -3,7 +3,7 @@ import { checksum, ensureDir, validateSha1, readFile, writeFile, missing } from 
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
 import { createReadStream } from "fs";
 import { join, isAbsolute, resolve, delimiter } from "path";
-import v4 from "uuid/v4";
+import { v4 } from "uuid";
 import { MinecraftFolder } from "./folder";
 import { currentPlatform, Platform } from "./platform";
 import { Version, ResolvedNative, ResolvedVersion } from "./version";
