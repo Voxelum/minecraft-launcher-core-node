@@ -9,7 +9,7 @@ import {
     Authenticator,
     Authentication
 } from "./index";
-import uuid from "uuid/v4";
+import { v4 } from "uuid";
 import { AUTH_API_MOJANG } from "./auth";
 
 describe("Auth", () => {
@@ -23,7 +23,7 @@ describe("Auth", () => {
     };
 
     describe("Authenticator", () => {
-        const clientToken = uuid();
+        const clientToken = v4();
         const client = new Authenticator(clientToken, API);
         let auth: Authentication;
         describe("#login", () => {
@@ -38,7 +38,7 @@ describe("Auth", () => {
                     password,
                 }).reply(200, {
                     clientToken,
-                    accessToken: uuid(),
+                    accessToken: v4(),
                 });
                 auth = await client.login({ username, password });
                 expect(auth).toBeTruthy();
@@ -55,7 +55,7 @@ describe("Auth", () => {
                     password,
                 }).reply(200, {
                     clientToken,
-                    accessToken: uuid(),
+                    accessToken: v4(),
                 });
                 auth = await client.login({ username, password, requestUser: false });
                 expect(auth).toBeTruthy();
@@ -228,7 +228,7 @@ describe("Auth", () => {
                 password,
             }).reply(200, {
                 clientToken,
-                accessToken: uuid(),
+                accessToken: v4(),
             });
             await login({ username, password, clientToken }, API);
         });
@@ -242,7 +242,7 @@ describe("Auth", () => {
                 username,
                 password,
             }).reply(200, {
-                accessToken: uuid(),
+                accessToken: v4(),
             });
             await login({ username, password }, API);
         });
@@ -258,7 +258,7 @@ describe("Auth", () => {
                 password,
             }).reply(200, {
                 clientToken,
-                accessToken: uuid(),
+                accessToken: v4(),
             });
             await login({ username, password, clientToken });
         });
