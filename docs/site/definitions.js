@@ -152,7 +152,7 @@ export declare class ServerStatus {
     status: Status;
 }
 export declare class Ping {
-    time: Long;
+    time: Long.Long;
 }
 export declare class Pong {
     ping: Long;
@@ -1360,7 +1360,7 @@ export declare function getAddonDatabaseTimestamp(options?: QueryOption): Promis
 /**
  * Select several addons for the game.
  */
-export declare function getFeaturedAddon(getOptions: GetFeaturedAddonOptions, options?: QueryOption): Promise<AddonInfo[]>;
+export declare function getFeaturedAddons(getOptions?: GetFeaturedAddonOptions, options?: QueryOption): Promise<AddonInfo[]>;
 /**
  * Get the list of category. You can use the \`category.id\` in params of \`searchAddon\` function.
  */
@@ -1569,60 +1569,60 @@ export declare enum KeyCode {
     "MouseMiddle" = -98
 }
 declare const DEFAULT_FRAME: {
-    "version": number;
-    "invertYMouse": boolean;
-    "mouseSensitivity": number;
-    "difficulty": Difficulty;
-    "renderDistance": RenderDistance;
-    "particles": Particles;
-    "fboEnable": boolean;
-    "fancyGraphics": boolean;
-    "ao": AmbientOcclusion;
-    "renderClouds": RenderCloud;
-    "enableVsync": boolean;
-    "useVbo": boolean;
-    "mipmapLevels": MipmapLevel;
-    "anaglyph3d": boolean;
-    "fov": number;
-    "gamma": number;
-    "saturation": number;
-    "guiScale": number;
-    "bobView": boolean;
-    "maxFps": number;
-    "fullscreen": boolean;
-    "resourcePacks": string[];
-    "incompatibleResourcePacks": string[];
-    "lastServer": string;
-    "lang": string;
-    "chatVisibility": number;
-    "chatColors": boolean;
-    "chatLinks": boolean;
-    "chatLinksPrompt": boolean;
-    "chatOpacity": number;
-    "snooperEnabled": boolean;
-    "hideServerAddress": boolean;
-    "advancedItemTooltips": boolean;
-    "pauseOnLostFocus": boolean;
-    "touchscreen": boolean;
-    "overrideWidth": number;
-    "overrideHeight": number;
-    "heldItemTooltips": boolean;
-    "chatHeightFocused": number;
-    "chatHeightUnfocused": number;
-    "chatScale": number;
-    "chatWidth": number;
-    "forceUnicodeFont": boolean;
-    "reducedDebugInfo": boolean;
-    "useNativeTransport": boolean;
-    "entityShadows": boolean;
-    "mainHand": string;
-    "attackIndicator": number;
-    "showSubtitles": boolean;
-    "realmsNotifications": boolean;
-    "enableWeakAttacks": boolean;
-    "autoJump": boolean;
-    "narrator": number;
-    "tutorialStep": string;
+    version: number;
+    invertYMouse: boolean;
+    mouseSensitivity: number;
+    difficulty: Difficulty;
+    renderDistance: RenderDistance;
+    particles: Particles;
+    fboEnable: boolean;
+    fancyGraphics: boolean;
+    ao: AmbientOcclusion;
+    renderClouds: RenderCloud;
+    enableVsync: boolean;
+    useVbo: boolean;
+    mipmapLevels: MipmapLevel;
+    anaglyph3d: boolean;
+    fov: number;
+    gamma: number;
+    saturation: number;
+    guiScale: number;
+    bobView: boolean;
+    maxFps: number;
+    fullscreen: boolean;
+    resourcePacks: string[];
+    incompatibleResourcePacks: string[];
+    lastServer: string;
+    lang: string;
+    chatVisibility: number;
+    chatColors: boolean;
+    chatLinks: boolean;
+    chatLinksPrompt: boolean;
+    chatOpacity: number;
+    snooperEnabled: boolean;
+    hideServerAddress: boolean;
+    advancedItemTooltips: boolean;
+    pauseOnLostFocus: boolean;
+    touchscreen: boolean;
+    overrideWidth: number;
+    overrideHeight: number;
+    heldItemTooltips: boolean;
+    chatHeightFocused: number;
+    chatHeightUnfocused: number;
+    chatScale: number;
+    chatWidth: number;
+    forceUnicodeFont: boolean;
+    reducedDebugInfo: boolean;
+    useNativeTransport: boolean;
+    entityShadows: boolean;
+    mainHand: string;
+    attackIndicator: number;
+    showSubtitles: boolean;
+    realmsNotifications: boolean;
+    enableWeakAttacks: boolean;
+    autoJump: boolean;
+    narrator: number;
+    tutorialStep: string;
     "key_key.attack": KeyCode;
     "key_key.use": KeyCode;
     "key_key.forward": KeyCode;
@@ -1656,23 +1656,23 @@ declare const DEFAULT_FRAME: {
     "key_key.hotbar.7": KeyCode;
     "key_key.hotbar.8": KeyCode;
     "key_key.hotbar.9": KeyCode;
-    "soundCategory_master": KeyCode;
-    "soundCategory_music": KeyCode;
-    "soundCategory_record": KeyCode;
-    "soundCategory_weather": KeyCode;
-    "soundCategory_block": KeyCode;
-    "soundCategory_hostile": KeyCode;
-    "soundCategory_neutral": KeyCode;
-    "soundCategory_player": KeyCode;
-    "soundCategory_ambient": KeyCode;
-    "soundCategory_voice": KeyCode;
-    "modelPart_cape": boolean;
-    "modelPart_jacket": boolean;
-    "modelPart_left_sleeve": boolean;
-    "modelPart_right_sleeve": boolean;
-    "modelPart_left_pants_leg": boolean;
-    "modelPart_right_pants_leg": boolean;
-    "modelPart_hat": boolean;
+    soundCategory_master: KeyCode;
+    soundCategory_music: KeyCode;
+    soundCategory_record: KeyCode;
+    soundCategory_weather: KeyCode;
+    soundCategory_block: KeyCode;
+    soundCategory_hostile: KeyCode;
+    soundCategory_neutral: KeyCode;
+    soundCategory_player: KeyCode;
+    soundCategory_ambient: KeyCode;
+    soundCategory_voice: KeyCode;
+    modelPart_cape: boolean;
+    modelPart_jacket: boolean;
+    modelPart_left_sleeve: boolean;
+    modelPart_right_sleeve: boolean;
+    modelPart_left_pants_leg: boolean;
+    modelPart_right_pants_leg: boolean;
+    modelPart_hat: boolean;
 };
 export declare type FullFrame = typeof DEFAULT_FRAME;
 export declare type Frame = Partial<FullFrame>;
@@ -2795,53 +2795,6 @@ export declare function installByProfileTask(installProfile: InstallProfile, min
  */
 export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOption): string[];
 export {};
-`;
-module.exports['@xmcl/installer/node_modules/agentkeepalive/index.d.ts'] = `declare module "agentkeepalive" {
-  import * as http from 'http';
-  import * as https from 'https';
-
-  export interface AgentStatus {
-    createSocketCount: number,
-    createSocketErrorCount: number,
-    closeSocketCount: number,
-    errorSocketCount: number,
-    timeoutSocketCount: number,
-    requestCount: number,
-    freeSockets: object,
-    sockets: object,
-    requests: object,
-  }
-
-  export interface HttpOptions extends http.AgentOptions {
-    keepAlive?: boolean;
-    freeSocketTimeout?: number;
-    freeSocketKeepAliveTimeout?: number;
-    timeout?: number;
-    socketActiveTTL?: number;
-  }
-
-  export interface HttpsOptions extends https.AgentOptions {
-    keepAlive?: boolean;
-    freeSocketTimeout?: number;
-    freeSocketKeepAliveTimeout?: number;
-    timeout?: number;
-    socketActiveTTL?: number;
-  }
-
-  export default class HttpAgent extends http.Agent {
-    constructor(opts?: HttpOptions);
-    readonly statusChanged: boolean;
-    createSocket(req: http.IncomingMessage, options: http.RequestOptions, cb: Function): void;
-    getCurrentStatus(): AgentStatus;
-  }
-
-  export class HttpsAgent extends https.Agent {
-    constructor(opts?: HttpsOptions);
-    readonly statusChanged: boolean;
-    createSocket(req: http.IncomingMessage, options: https.RequestOptions, cb: Function): void;
-    getCurrentStatus(): AgentStatus;
-  }
-}
 `;
 module.exports['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core";
 import { Task } from "@xmcl/task";
@@ -5165,6 +5118,7 @@ export declare function verify(data: string, signature: string, pemKey: string |
 export declare function decodeBase64(s: string): string;
 `;
 module.exports['@xmcl/world/index.d.ts'] = `import { FileSystem } from "@xmcl/system";
+import Long from "long";
 export declare class WorldReader {
     private fs;
     static create(path: string | Uint8Array): Promise<WorldReader>;
@@ -5182,24 +5136,63 @@ export declare class WorldReader {
     getPlayerData(): Promise<PlayerDataFrame[]>;
     getAdvancementsData(): Promise<AdvancementDataFrame[]>;
 }
-export interface BlockState {
-    name: string;
-    properties: {
+/**
+ * The chunk index is a number in range [0, 4096), which is mapped position from (0,0,0) to (16,16,16) inside the chunk.
+ */
+export declare type ChunkIndex = number;
+/**
+ * Get chunk index from position.
+ * All x, y, z should be in range [0, 16)
+ *
+ * @param x The position x. Should be in range [0, 16)
+ * @param y The position y. Should be in range [0, 16)
+ * @param z The position z. Should be in range [0, 16)
+ */
+export declare function getIndexInChunk(x: number, y: number, z: number): ChunkIndex;
+/**
+ * Get in-chunk coordination from chunk index
+ * @param index The index number in chunk
+ */
+export declare function getCoordFromIndex(index: ChunkIndex): {
+    x: number;
+    y: number;
+    z: number;
+};
+export declare namespace RegionReader {
+    /**
+     * Get a chunk section in a region by chunk Y value.
+     * @param region The region
+     * @param chunkY The y value of the chunk. It should be from [0, 16)
+     */
+    function getSection(region: RegionDataFrame, chunkY: number): RegionSectionDataFrame;
+    /**
+     * Walk through all the position in this chunk and emit all the id in every position.
+     * @param section The chunk section
+     * @param reader The callback which will receive the position + state id.
+     */
+    function walkBlockStateId(section: RegionSectionDataFrame, reader: (x: number, y: number, z: number, id: number) => void): void;
+    /**
+     * Seek the section and get the block state id from the section.
+     * @param section The section
+     * @param index The chunk index
+     */
+    function seekBlockStateId(section: NewRegionSectionDataFrame | LegacyRegionSectionDataFrame, index: ChunkIndex): number;
+    /**
+     * Seek the block state data from new region format.
+     * @param section The new region section
+     * @param index The chunk index, which is a number in range [0, 4096)
+     */
+    function seekBlockState(section: NewRegionSectionDataFrame, index: ChunkIndex): BlockStateData;
+}
+/**
+ * The Minecraft provided block state info. Only presented in the version >= 1.13 chunk data.
+ */
+export interface BlockStateData {
+    Name: string;
+    Properties: {
         [key: string]: string;
     };
 }
-export declare namespace RegionReader {
-    function getSection(region: RegionDataFrame, chunkY: number): RegionSectionDataFrame;
-    function readBlockState(section: RegionSectionDataFrame, reader: (x: number, y: number, z: number, id: number) => void): void;
-    function seekBlockId(section: RegionDataFrame["Level"]["Sections"][number], index: number): number | undefined;
-    function seekBlockState(section: RegionDataFrame["Level"]["Sections"][number], index: number): {
-        Name: string;
-        Properties: {
-            [key: string]: string;
-        };
-    } | undefined;
-}
-import Long from "long";
 export declare enum GameType {
     NON = -1,
     SURVIVAL = 0,
@@ -5444,37 +5437,13 @@ export declare type LegacyRegionSectionDataFrame = {
 };
 export declare type NewRegionSectionDataFrame = {
     BlockStates: Long[];
-    Palette: Array<{
-        Name: string;
-        Properties: {
-            [key: string]: string;
-        };
-    }>;
+    Palette: Array<BlockStateData>;
     Data: number[];
     BlockLight: number[];
     SkyLight: number[];
     Y: number;
 };
-export declare type RegionSectionDataFrame = {
-    BlockStates: Long[];
-    Palette: Array<{
-        Name: string;
-        Properties: {
-            [key: string]: string;
-        };
-    }>;
-    Data: number[];
-    BlockLight: number[];
-    SkyLight: number[];
-    Y: number;
-} | {
-    Blocks: Array<number>;
-    Data: Array<number>;
-    Add: Array<number>;
-    BlockLight: number[];
-    SkyLight: number[];
-    Y: number;
-};
+export declare type RegionSectionDataFrame = LegacyRegionSectionDataFrame | NewRegionSectionDataFrame;
 export interface RegionDataFrame {
     Level: {
         xPos: number;
@@ -5489,6 +5458,7 @@ export interface RegionDataFrame {
         Sections: RegionSectionDataFrame[];
     };
     DataVersion: number;
+    ForgeDataVersion?: number;
 }
 export {};
 `;

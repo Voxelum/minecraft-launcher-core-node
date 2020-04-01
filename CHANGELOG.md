@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.8.0
+### @xmcl/nbt@2.0.2
+#### Bug Fixes
+
+- fix: prevent losing stacktrace by throwing actual Error ([005ecb3d55cb4419b16ed24dfb8d01d91f12d9d8](https://github.com/voxelum/minecraft-launcher-core-node/commit/005ecb3d55cb4419b16ed24dfb8d01d91f12d9d8))
+- fix: rollback file-type & long ([f7f963b0fe50f46280dc604ac86e9483f168837e](https://github.com/voxelum/minecraft-launcher-core-node/commit/f7f963b0fe50f46280dc604ac86e9483f168837e))
+### @xmcl/core@2.1.1
+#### Bug Fixes
+
+- fix: correct the uuid usage for new version ([d33ad313eecb95393d8ba710b34f9f9058425bf0](https://github.com/voxelum/minecraft-launcher-core-node/commit/d33ad313eecb95393d8ba710b34f9f9058425bf0))
+### @xmcl/user@2.1.3
+#### Bug Fixes
+
+- fix: correct the uuid usage for new version ([d33ad313eecb95393d8ba710b34f9f9058425bf0](https://github.com/voxelum/minecraft-launcher-core-node/commit/d33ad313eecb95393d8ba710b34f9f9058425bf0))
+### @xmcl/client@2.0.4
+#### Bug Fixes
+
+- fix: rollback file-type & long ([f7f963b0fe50f46280dc604ac86e9483f168837e](https://github.com/voxelum/minecraft-launcher-core-node/commit/f7f963b0fe50f46280dc604ac86e9483f168837e))
+- Dependency @xmcl/nbt bump **patch**
+### @xmcl/installer@2.6.5
+- Dependency @xmcl/core bump **patch**
+### @xmcl/server-info@2.0.2
+- Dependency @xmcl/nbt bump **patch**
+### @xmcl/world@1.1.0
+#### Features
+
+- feat: parse blockstates in chunk ([b493b0ed81e2e520281347fafc0c27ecff0dee5f](https://github.com/voxelum/minecraft-launcher-core-node/commit/b493b0ed81e2e520281347fafc0c27ecff0dee5f))
+- Dependency @xmcl/nbt bump **patch**
+
+
 ## 2.7.0
 ### @xmcl/core@2.1.0
 #### Features
