@@ -1,7 +1,7 @@
 import { VarInt, VarLong, Long, Short, Float, String, Bool, Byte, UByte, Int, ByteArray, Double, Json, Slot, UUID, UShort } from "./coders";
 import ByteBuffer from "bytebuffer";
 import long from "long";
-import uuid from "uuid/v4";
+import { v4 } from "uuid";
 
 describe("Coders", () => {
     test("UByte", () => {
@@ -30,7 +30,7 @@ describe("Coders", () => {
     });
     test("UUID", () => {
         let bb = ByteBuffer.allocate(1024);
-        let input = uuid();
+        let input = v4();
         UUID.encode(bb, input);
         bb.flip();
         let output = UUID.decode(bb);
