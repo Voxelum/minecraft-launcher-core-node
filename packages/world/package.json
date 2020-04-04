@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "@xmcl/nbt": "file:../nbt",
-    "@xmcl/system": "file:../system",
-    "bytebuffer": "^5.0.1"
+    "@xmcl/system": "file:../system"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",
