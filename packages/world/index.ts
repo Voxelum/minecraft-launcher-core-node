@@ -1,6 +1,5 @@
 import { deserialize } from "@xmcl/nbt";
 import { FileSystem, System } from "@xmcl/system";
-import ByteBuffer from "bytebuffer";
 import Long from "long";
 
 /**
@@ -115,12 +114,11 @@ export class WorldReader {
         let path = this.fs.join("region", `r.${chunkX >> 5}.${chunkZ >> 5}.mca`);
 
         let buffer = await this.fs.readFile(path);
-        let bb = ByteBuffer.wrap(buffer);
         let off = getChunkOffset(buffer, chunkX, chunkZ);
 
-        bb.offset = off;
-        let length = bb.readInt32();
-        let format = bb.readUint8();
+        let lengthBuf = buffer.slice(off, off + 4);
+        let length = lengthBuf[0] << 24 | lengthBuf[1] << 16 | lengthBuf[2] << 8 | lengthBuf[3];
+        let format = buffer[off + 4];
         if (format !== 1 && format !== 2) { throw new Error(`Illegal Chunk format ${format} on (${chunkX}, ${chunkZ})!`) }
         let compressed = format === 1 ? "gzip" as const : "deflate" as const;
         let chunkData = buffer.slice(off + 5, off + 5 + length);
