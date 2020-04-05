@@ -5,10 +5,17 @@ const { Converter } = require('typedoc/dist/lib/converter/converter');
 const { ReflectionKind } = require('typedoc/dist/lib/models/reflections/abstract');
 const { DeclarationReflection } = require('typedoc/dist/lib/models/reflections/declaration');
 const { CommentPlugin } = require('typedoc/dist/lib/converter/plugins/CommentPlugin');
+const { Comment } = require('typedoc/dist/lib/models/comments/comment');
+const { extractReadmeUsages } = require('./readme');
 
 // If you want TypeDoc to load tsconfig.json / typedoc.json files
 app.options.addReader(new TypeDoc.TSConfigReader());
 app.options.addReader(new TypeDoc.TypeDocReader());
+
+const projectToUsage = {};
+extractReadmeUsages().forEach(({ content, project }) => {
+    projectToUsage[`@xmcl/${project}`] = content;
+});
 
 class GroupModuleComponent extends ConverterComponent {
     initialize() {
@@ -16,6 +23,7 @@ class GroupModuleComponent extends ConverterComponent {
             [Converter.EVENT_BEGIN]: this.onBegin,
             [Converter.EVENT_CREATE_DECLARATION]: this.onDeclaration,
             [Converter.EVENT_RESOLVE_BEGIN]: this.onBeginResolve,
+            [Converter.EVENT_RESOLVE_END]: this.onEndResolve,
         });
     }
 
@@ -26,7 +34,7 @@ class GroupModuleComponent extends ConverterComponent {
     onDeclaration(context, reflection, node) {
         if (reflection.kindOf(ReflectionKind.ExternalModule) || reflection.kindOf(ReflectionKind.Module)) {
             let path = node.path;
-            let match = /.+\/packages\/([a-z-]+)\/.+\.ts/.exec(path);
+            let match = /.+\/packages\/([a-z-]+)\/(.+)\.ts/.exec(path);
             if (match) {
                 if (match[1] === "core" && match[2] !== "fs") {
                     this.moduleRenames.push({
@@ -74,6 +82,10 @@ class GroupModuleComponent extends ConverterComponent {
             return m;
         }, []);
 
+        this.moduleRenames.forEach(item => {
+            item.renameTo = `@xmcl/${item.renameTo}`;
+        });
+
         // Process each rename
         this.moduleRenames.forEach(item => {
             let renaming = item.reflection;
@@ -84,11 +96,7 @@ class GroupModuleComponent extends ConverterComponent {
             for (let i = 0; i < nameParts.length - 1; ++i) {
                 let child = parent.children.filter(ref => ref.name === nameParts[i])[0];
                 if (!child) {
-                    if (isTypedocVersion('< 0.14.0')) {
-                        child = new DeclarationReflection(parent, nameParts[i], ReflectionKind.ExternalModule);
-                    } else {
-                        child = new DeclarationReflection(nameParts[i], ReflectionKind.ExternalModule, parent);
-                    }
+                    child = new DeclarationReflection(nameParts[i], ReflectionKind.Module, parent);
                     child.parent = parent;
                     child.children = [];
                     context.project.reflections[child.id] = child;
@@ -146,7 +154,22 @@ class GroupModuleComponent extends ConverterComponent {
             }
         });
     }
+
+    onEndResolve(context) {
+        let parent = context.project;
+        parent.children.forEach((child) => {
+            let comment = child.comment || new Comment("");
+            if (projectToUsage[child.name]) {
+                let md = projectToUsage[child.name].map(r => r.join("\n")).join("\n") + "\n"
+
+                comment.text = (comment.text || "") + "\n\n ## Usage \n\n" + md;
+            }
+
+            child.comment = comment;
+        })
+    }
 }
+let lll = "";
 
 function removeReflection(context, reflection) {
     CommentPlugin.removeReflection(context.project, reflection);
@@ -180,6 +203,7 @@ app.bootstrap({
     readme: "./README.md",
     name: "minecraft-launcher-core-node",
     includeVersion: true,
+    includes: ".",
     excludeNotExported: true,
 });
 
@@ -220,3 +244,5 @@ if (project) { // Project may not have converted correctly
     // Rendered docs
     app.generateDocs(project, outputDir);
 }
+
+console.log(lll)
