@@ -22,7 +22,7 @@ Parse minecraft version as a resolved version, which is used for launching proce
     const resolvedVersion: ResolvedVersion = await Version.parse(minecraftLocation, minecraftVersionId);
 ```
 
-### Launch
+### Launch Game
 
 Launch minecraft from a version:
 

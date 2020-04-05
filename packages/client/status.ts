@@ -106,7 +106,7 @@ export interface QueryOptions {
  *
  * This is a lower level function for the case that you want to use channel directly
  *
- * @see Channel
+ * @see {@link Channel}
  */
 export function createChannel() {
     const channel: Channel = new Channel();

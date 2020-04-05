@@ -73,7 +73,6 @@ import('monaco-editor').then((monaco) => {
     }
 
     function require(m) {
-        console.log(`Require ${m}`);
         return proxyOfAny();
     }
 

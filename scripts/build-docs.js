@@ -28,12 +28,41 @@ class GroupModuleComponent extends ConverterComponent {
             let path = node.path;
             let match = /.+\/packages\/([a-z-]+)\/.+\.ts/.exec(path);
             if (match) {
-                this.moduleRenames.push({
-                    renameTo: match[1],
-                    preferred: true,
-                    symbol: node.symbol,
-                    reflection: reflection,
-                })
+                if (match[1] === "core" && match[2] !== "fs") {
+                    this.moduleRenames.push({
+                        renameTo: match[1],
+                        preferred: true,
+                        symbol: node.symbol,
+                        reflection: reflection,
+                    })
+                } else {
+                    if (match[2] === "index.browser") {
+                        removeReflection(context, reflection);
+                        return;
+                    }
+                    if (match[2] === "index") {
+                        this.moduleRenames.push({
+                            renameTo: match[1],
+                            preferred: true,
+                            symbol: node.symbol,
+                            reflection: reflection,
+                        })
+                    } else if (match[2].indexOf("/") === -1) {
+                        this.moduleRenames.push({
+                            renameTo: match[1] + "." + match[2],
+                            preferred: true,
+                            symbol: node.symbol,
+                            reflection: reflection,
+                        })
+                    } else {
+                        this.moduleRenames.push({
+                            renameTo: match[1] + "." + `internal/${match[2].split("/")[0]}`,
+                            preferred: true,
+                            symbol: node.symbol,
+                            reflection: reflection,
+                        })
+                    }
+                }
             }
         }
     }

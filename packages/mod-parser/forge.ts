@@ -144,7 +144,7 @@ async function tomlMetadata(fs: FileSystem, modidTree: ModidTree, manifest: any)
         if (map.mods instanceof Array) {
             for (const mod of map.mods) {
                 const tomlMod = mod as any;
-                const modObject: Partial<ModMetaData> = {
+                const modObject: Partial<ModMetadata> = {
                     modid: tomlMod.modId,
                     authorList: typeof map.authors === "string" ? [map.authors] : [],
                     version: tomlMod.version === "${file.jarVersion}"
@@ -443,7 +443,9 @@ export interface ModIndentity {
     readonly modid: string;
     readonly version: string;
 }
-export interface ModMetaData extends ModIndentity {
+
+export type ModMetaData = ModMetadata;
+export interface ModMetadata extends ModIndentity {
     readonly modid: string;
     readonly name: string;
     readonly description?: string;
@@ -494,6 +496,6 @@ export async function readModMetaData(mod: Uint8Array | string | FileSystem) {
     await asmMetaData(fs, modidTree, manifest);
     const modids = Object.keys(modidTree);
     if (modids.length === 0) { throw { type: "NonmodTypeFile" }; }
-    return modids.map((k) => modidTree[k] as ModMetaData)
+    return modids.map((k) => modidTree[k] as ModMetadata)
         .filter((m) => m.modid !== undefined);
 }
