@@ -1,6 +1,7 @@
 import { currentPlatform } from "./platform";
 import { join, normalize } from "path";
 import { ResolvedNative, LibraryInfo, Version } from "./version";
+import { createErr } from "./error";
 
 const root = normalize(join(__dirname, "..", "..", "mock"));
 const tempRoot = normalize(join(__dirname, "..", "..", "temp"));
@@ -87,6 +88,17 @@ describe("Version", () => {
             expect(parsed.type).toEqual("zip");
             expect(parsed.isSnapshot).toEqual(false);
             expect(parsed.path).toEqual("de/oceanlabs/mcp/mcp_config/1.14.3-20190624.152911/mcp_config-1.14.3-20190624.152911.zip");
+        });
+
+        test("should be able to parse normal minecraft library", () => {
+            const name = "com.mumfrey:liteloader:1.12.2-SNAPSHOT";
+            const parsed = LibraryInfo.resolve(name);
+            expect(parsed.groupId).toEqual("com.mumfrey");
+            expect(parsed.artifactId).toEqual("liteloader");
+            expect(parsed.version).toEqual("1.12.2-SNAPSHOT");
+            expect(parsed.type).toEqual("jar");
+            expect(parsed.isSnapshot).toEqual(true);
+            expect(parsed.path).toEqual("com/mumfrey/liteloader/1.12.2-SNAPSHOT/liteloader-1.12.2-SNAPSHOT.jar");
         });
     });
 
@@ -310,29 +322,29 @@ describe("Version", () => {
         test("should throw if no main class", async () => {
             await expect(Version.parse(root, "no-main-class"))
                 .rejects
-                .toEqual({
+                .toEqual(createErr({
+                    error: "BadVersionJson",
                     missing: "MainClass",
                     version: "no-main-class",
-                    error: "CorruptedVersionJson",
-                });
+                }));
         });
         test("should throw if no asset json", async () => {
             await expect(Version.parse(root, "no-assets-json"))
                 .rejects
-                .toEqual({
-                    error: "CorruptedVersionJson",
+                .toEqual(createErr({
+                    error: "BadVersionJson",
                     version: "no-assets-json",
                     missing: "AssetIndex",
-                });
+                }));
         });
         test("should throw if no downloads", async () => {
             await expect(Version.parse(root, "no-downloads"))
                 .rejects
-                .toEqual({
-                    error: "CorruptedVersionJson",
-                    version: "no-downloads",
+                .toEqual(createErr({
+                    error: "BadVersionJson",
                     missing: "Downloads",
-                });
+                    version: "no-downloads",
+                }));
         });
         test("should be able to parse 1.17.10 version", async () => {
             const version = await Version.parse(root, "1.7.10");
@@ -349,10 +361,11 @@ describe("Version", () => {
         test("should be able to throw if version not existed", async () => {
             await expect(Version.parse(root, "1.12"))
                 .rejects
-                .toMatchObject({
+                .toMatchObject(createErr({
                     error: "MissingVersionJson",
                     version: "1.12",
-                });
+                    path: join(root, "versions", "1.12", "1.12.json")
+                }));
         });
         test("should be able to parse extended profile for forge", async () => {
             const version = await Version.parse(root, "1.7.10-Forge10.13.3.1400-1.7.10");

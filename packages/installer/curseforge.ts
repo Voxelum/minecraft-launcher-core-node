@@ -5,7 +5,7 @@ import { HttpsAgent } from "agentkeepalive";
 import got from "got";
 import { basename, join } from "path";
 import { DownloaderOption } from "./minecraft";
-import { batchedTask, downloadFileTask, normailzeDownloader } from "./util";
+import { batchedTask, downloadFileTask, normailzeDownloader, createErr } from "./util";
 
 export interface Options extends DownloaderOption {
     /**
@@ -37,6 +37,14 @@ export interface InstallFileOptions extends DownloaderOption {
 }
 
 type InputType = string | Buffer | CachedZipFile;
+
+export interface BadCurseforgeModpackError {
+    error: "BadCurseforgeModpack";
+    /**
+     * What required entry is missing in modpack.
+     */
+    entry: string;
+}
 
 export interface Manifest {
     manifestType: string;
@@ -73,13 +81,14 @@ export interface File {
 
 /**
  * Read the mainifest data from modpack
+ * @throws {@link BadCurseforgeModpackError}
  */
 export function readManifestTask(zip: InputType) {
     return Task.create("unpack", async () => {
         let zipFile = typeof zip === "string" || zip instanceof Buffer ? await open(zip) : zip;
         let mainfiestEntry = zipFile.entries["manifest.json"];
         if (!mainfiestEntry) {
-            throw { error: "InvalidModpack", modpack: zip };
+            throw createErr({ error: "BadCurseforgeModpack", entry: "manifest.json" });
         }
         let buffer = await zipFile.readEntry(mainfiestEntry)
         let content: Manifest = JSON.parse(buffer.toString());
@@ -89,6 +98,7 @@ export function readManifestTask(zip: InputType) {
 
 /**
  * Read the mainifest data from modpack
+ * @throws {@link BadCurseforgeModpackError}
  */
 export function readManifest(zip: InputType) {
     return readManifestTask(zip).execute().wait();
@@ -122,6 +132,7 @@ export function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLoc
  * @param zip The curseforge modpack zip buffer or file path
  * @param minecraft The minecraft location
  * @param options The options for query curseforge
+ * @throws {@link BadCurseforgeModpackError}
  */
 export function installCurseforgeModpackTask(zip: InputType, minecraft: MinecraftLocation, options: Options = {}) {
     normailzeDownloader(options);

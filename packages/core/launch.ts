@@ -8,6 +8,7 @@ import { MinecraftFolder } from "./folder";
 import { currentPlatform, Platform } from "./platform";
 import { Version, ResolvedNative, ResolvedVersion } from "./version";
 import { EventEmitter } from "events";
+import { createErr } from "./error";
 
 function format(template: string, args: any) {
     return template.replace(/\$\{(.*?)}/g, (key) => {
@@ -156,11 +157,18 @@ export interface LaunchOption {
     ignorePatchDiscrepancies?: boolean;
 }
 
+/**
+ * The function to check the game status before the game launched. Will be used in `launch` function.
+ * @see {@link launch}
+ */
 export interface LaunchPrecheck {
     (resourcePath: MinecraftFolder, version: ResolvedVersion, option: LaunchOption): Promise<void>;
 }
 
 export namespace LaunchPrecheck {
+    /**
+     * The default launch precheck. It will check version jar, libraries and natives.
+     */
     export const Default: LaunchPrecheck[] = [checkVersion, checkLibraries, checkNatives];
 
     /**
@@ -169,10 +177,10 @@ export namespace LaunchPrecheck {
     export async function checkVersion(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
         const jarPath = resource.getVersionJar(version.minecraftVersion);
         if (!await validateSha1(jarPath, version.downloads.client.sha1)) {
-            throw {
+            throw createErr({
                 error: "CorruptedVersionJar",
                 version: version.minecraftVersion,
-            };
+            });
         }
     };
     /**
@@ -183,20 +191,22 @@ export namespace LaunchPrecheck {
         const missingLibs = version.libraries.filter((_, index) => missingMask[index]);
 
         if (missingLibs.length > 0) {
-            throw {
-                error: "MissingLibs",
-                libs: missingLibs,
-            };
+            throw createErr({
+                error: "MissingLibraries",
+                libraries: missingLibs,
+                version,
+            });
         }
         const validMask = await Promise.all(version.libraries
             .map((lib) => lib.download.sha1 !== "" ? validateSha1(resource.getLibraryByPath(lib.download.path), lib.download.sha1) : Promise.resolve(true)));
         const corruptedLibs = version.libraries.filter((_, index) => !validMask[index]);
 
         if (corruptedLibs.length > 0) {
-            throw {
-                error: "CorruptedLibs",
-                libs: corruptedLibs,
-            };
+            throw createErr({
+                error: "MissingLibraries",
+                libraries: corruptedLibs,
+                version,
+            });
         }
     };
     /**
@@ -442,9 +452,11 @@ export async function generateArgumentsServer(options: ServerOptions) {
  *
  * This function will NOT check if the runtime libs are completed, and WONT'T check or extract native libs.
  *
+ * @throws TypeError if options does not fully fulfill the requirement
+ *
  */
 export async function generateArguments(options: LaunchOption) {
-    if (!options.version) { throw new Error("Version cannot be null!"); }
+    if (!options.version) { throw new TypeError("Version cannot be null!"); }
     if (!options.isDemo) { options.isDemo = false; }
 
     const gamePath = !isAbsolute(options.gamePath) ? resolve(options.gamePath) : options.gamePath;
@@ -526,7 +538,7 @@ export async function generateArguments(options: LaunchOption) {
     // add extra jvm args
     if (options.extraJVMArgs instanceof Array) {
         if (options.extraJVMArgs.some((v) => typeof v !== "string")) {
-            throw new Error("Require extraJVMArgs be all string!");
+            throw new TypeError("Require extraJVMArgs be all string!");
         }
         cmd.push(...options.extraJVMArgs);
     } else {

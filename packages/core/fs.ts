@@ -1,3 +1,7 @@
+/**
+ * @module
+ * @ignore
+ */
 import { createHash } from "crypto";
 import {
     constants,

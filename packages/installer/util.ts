@@ -123,6 +123,7 @@ export class DefaultDownloader implements Downloader {
                 headers: option.headers,
                 timeout: option.timeout,
                 retry: option.retry,
+                followRedirect: true,
             }).on("response", (resp) => {
                 response = resp;
             }).on("downloadProgress", (progress) => {
@@ -295,6 +296,9 @@ export class MultipleError extends Error {
     constructor(public errors: unknown[], message?: string) { super(message); };
 }
 
+/**
+ * The options pass into the {@link Downloader}.
+ */
 export interface DownloaderOptions {
     /**
      * An customized downloader to swap default downloader.
@@ -320,4 +324,9 @@ export interface DownloaderOptions {
      * The max concurrency of the download
      */
     maxConcurrency?: number;
+}
+
+export function createErr<T>(error: T, message?: string): T & Error {
+    let err = new Error(message);
+    return Object.assign(err, error);
 }
