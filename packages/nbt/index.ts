@@ -1,3 +1,9 @@
+/**
+ * The nbt module provides nbt {@link serialize} and {@link deserialize} functions.
+ *
+ * @packageDocumentation
+ */
+
 import ByteBuffer from "bytebuffer";
 import fileType from "file-type";
 import Long from "long";

@@ -1,3 +1,12 @@
+/**
+ * Provide function to {@link parse} the options.txt and also {@link stringify} it into the string.
+ *
+ * @packageDocumentation
+ */
+
+/**
+ * The AmbientOcclusion enum value in options.txt
+ */
 export enum AmbientOcclusion {
     Off = 0,
     Minimum = 1,
@@ -262,6 +271,9 @@ const DEFAULT_FRAME = {
 export type FullFrame = typeof DEFAULT_FRAME;
 export type Frame = Partial<FullFrame>;
 
+/**
+ * Get the default values in options.txt.
+ */
 export function getDefaultFrame(): FullFrame {
     return Object.assign({}, DEFAULT_FRAME, {
         resourcePacks: [] as string[],

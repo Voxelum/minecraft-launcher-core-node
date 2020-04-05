@@ -66,10 +66,10 @@ You can read resource pack content just like Minecraft:
 
     console.log(resLocation); // minecraft:textures/block/dirt.png
 
-    const resource: Resource | void = pack.load(resLocation);
+    const resource: Resource | undefined = await pack.get(resLocation);
     if (resource) {
-        const binaryContent: Uint8Array = resource.content;
+        const binaryContent: Uint8Array = await resource.read();
         // this is the metadata for resource, like animated texture metadata.
-        const metadata: PackMeta = resource.metadata;
+        const metadata: PackMeta = await resource.readMetadata();
     }
 ```

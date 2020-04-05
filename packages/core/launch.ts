@@ -392,10 +392,10 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
  * This function might throw if the libraries/natives are missing.
  *
  * @param options The detail options for this launching.
- * @see ChildProcess
- * @see spawn
- * @see generateArguments
- * @see createMinecraftProcessWatcher
+ * @see [ChildProcess](https://nodejs.org/api/child_process.html)
+ * @see [spawn](https://nodejs.org/api/spawn.html)
+ * @see {@link generateArguments}
+ * @see {@link createMinecraftProcessWatcher}
  */
 export async function launch(options: LaunchOption & { prechecks?: LaunchPrecheck[] }): Promise<ChildProcess> {
     const gamePath = !isAbsolute(options.gamePath) ? resolve(options.gamePath) : options.gamePath;

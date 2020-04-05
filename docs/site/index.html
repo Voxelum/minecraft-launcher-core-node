@@ -47,7 +47,7 @@
                     <i class="github square icon"></i>
                     <p data-i18n="repository"></p>
                 </a>
-                <a class="item" href="https://github.com/voxelum">
+                <a class="item org" href="https://github.com/voxelum">
                     <i class="github square icon"></i>
                     <p>cijhn@hotmail.com</p>
                 </a>
@@ -79,11 +79,11 @@
                     href="https://www.npmjs.com/package/@xmcl/core">
                     Unknown
                 </a>
-                <h1 class="ui inverted header" style="line-height: 1.4;font-size: 3em;">
-                    <div style="font-size: 1.75em;font-weight: bold;">
+                <h1 class="ui inverted header title">
+                    <div class="major">
                         Minecraft Launcher Core
                     </div>
-                    <div style="font-size: 0.75em;" data-i18n="launcher.description">
+                    <div class="sub" data-i18n="launcher.description">
                     </div>
                 </h1>
 				<a href="./docs" class="ui inverted button">Docs</a>
@@ -92,8 +92,8 @@
         </div>
         <div class="section intro">
             <div class="ui container">
-                <h1 class="ui inverted header" style="line-height: 1.4;font-size: 3em;">
-                    <div style="font-size: 0.75em;font-weight: bold;" data-i18n="showCode">
+                <h1 class="ui inverted header title">
+                    <div class="sub" data-i18n="showCode">
                     </div>
                 </h1>
                 <div class="ui inverted network menu">
@@ -119,7 +119,7 @@
                         <i class="dropdown icon"></i>
                     </div>
                 </div>
-                <div id="editor" style="height: 600px;"></div>
+                <div id="editor"></div>
             </div>
         </div>
         <div class="section demo" id="demo">
@@ -129,15 +129,15 @@
                     </div>
                 </h1>
                 <div class="ui grid" id="inner-flex-container">
-                    <div class="six wide column model-demo">
+                    <div class="model-demo">
                         <h1 class="ui headline" data-i18n="playerModel">
                         </h1>
-                        <canvas height="400" width="400" id="player-canvas"></canvas>
+                        <canvas id="player-canvas"></canvas>
                     </div>
-                    <div class="six wide column model-demo">
+                    <div class="model-demo">
                         <h1 class="ui headline" data-i18n="blockModel">
                         </h1>
-                        <canvas height="400" width="400" id="block-canvas"></canvas>
+                        <canvas id="block-canvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -162,7 +162,6 @@
     <script src="require.js"></script>
     <script src="locale.js"></script>
     <script src="layout.js"></script>
-    <script src="demo.js"></script>
     <script src="editor.js"></script>
 </body>
 

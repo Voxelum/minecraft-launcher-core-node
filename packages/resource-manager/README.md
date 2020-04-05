@@ -10,8 +10,6 @@
 
 ### Load Minecraft Resource
 
-*Notice that these API are not stable. May changed in future*
-
 You can use this module in nodejs/electron:
 
 ```ts
@@ -25,10 +23,10 @@ await manager.addResourcePack(new ResourcePack(await System.openFileSystem('/bas
 // load grass block model resource; it will load file at `assets/${location.domain}/${location.path}`
 // which is '/base/path/assets/minecraft/models/block/grass.json'
 // same logic with minecraft
-const resource = await manager.load(ResourceLocation.ofModelPath('block/grass'));
+const resource = await manager.get(ResourceLocation.ofModelPath('block/grass'));
 
-const content: Buffer = resource.content; // your resource content
-const modelJSON = JSON.parse(content.toString());
+const content: string = await resource.read("utf-8"); // your resource content
+const modelJSON = JSON.parse(content);
 ```
 
 The resource manager will do the simplest cache for same resource location.
