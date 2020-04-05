@@ -4,10 +4,27 @@ import { Task } from "@xmcl/task";
 import { Entry, open } from "@xmcl/unzip";
 import { createWriteStream } from "fs";
 import { join } from "path";
-import { DownloaderOption, installByProfileTask, InstallProfile, InstallProfileOption, LibraryOption, resolveLibraryDownloadUrls } from "./minecraft";
-import { downloadFileTask, getIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, DefaultDownloader, HasDownloader, normailzeDownloader, normalizeArray } from "./util";
+import { installByProfileTask, InstallProfile, InstallProfileOption, LibraryOption, resolveLibraryDownloadUrls } from "./minecraft";
+import { downloadFileTask, getIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, DefaultDownloader, HasDownloader, normailzeDownloader, normalizeArray, createErr, DownloaderOptions } from "./util";
 
 const { copyFile, ensureDir, ensureFile, unlink, waitStream, writeFile } = futils;
+
+export interface BadForgeInstallerJarError {
+    error: "BadForgeInstallerJar";
+    /**
+     * What entry in jar is missing
+     */
+    entry: string;
+}
+export interface BadForgeUniversalJarError {
+    error: "BadForgeUniversalJar";
+    /**
+     * What entry in jar is missing
+     */
+    entry: string;
+}
+
+export type ForgeError = BadForgeInstallerJarError | BadForgeUniversalJarError;
 
 export interface VersionList extends UpdatedObject {
     mcversion: string;
@@ -83,14 +100,14 @@ export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
 /**
  * The options to install forge.
  */
-export interface Options extends DownloaderOption, LibraryOption, InstallOptionsBase, InstallProfileOption {
+export interface Options extends DownloaderOptions, LibraryOption, InstallOptionsBase, InstallProfileOption {
 }
 
 function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLocation, options: HasDownloader<Options>) {
     const mc = MinecraftFolder.from(minecraft);
     const forgeVersion = `${version.mcversion}-${version.version}`;
 
-    return Task.create("installForge", async function installForge(context: Task.Context) {
+    return Task.create("installForge", async function (context: Task.Context) {
         let inf = version.installer;
         let path = inf ? inf.path : `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
 
@@ -133,10 +150,10 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
             "version.json"
         ]);
 
-        if (!forgeEntry) { throw new Error("Missing forge jar entry"); }
-        if (!forgeUniversalEntry) { throw new Error("Missing forge universal entry"); }
-        if (!installProfileEntry) { throw new Error("Missing install profile"); }
-        if (!versionEntry) { throw new Error("Missing version entry"); }
+        if (!forgeEntry) { throw createErr({ error: "BadForgeInstallerJar", entry: `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar` }, "Missing forge jar entry") }
+        if (!forgeUniversalEntry) { throw createErr({ error: "BadForgeInstallerJar", entry: `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar` }, "Missing forge universal entry"); }
+        if (!installProfileEntry) { throw createErr({ error: "BadForgeInstallerJar", entry: "install_profile.json" }, "Missing install profile"); }
+        if (!versionEntry) { throw createErr({ error: "BadForgeInstallerJar", entry: "version.json" }, "Missing version entry"); }
 
         function getLibraryPath(name: string) {
             // remove the maven/ prefix
@@ -222,7 +239,7 @@ function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLo
                 }
             }
         })!;
-        let mavenHost = options.mavenHost ? [... normalizeArray(options.mavenHost), DEFAULT_FORGE_MAVEN] : [DEFAULT_FORGE_MAVEN];
+        let mavenHost = options.mavenHost ? [...normalizeArray(options.mavenHost), DEFAULT_FORGE_MAVEN] : [DEFAULT_FORGE_MAVEN];
         let urls = resolveLibraryDownloadUrls(library, { ...options, mavenHost });
 
         await context.execute(Task.create("jar", downloadFileTask({
@@ -249,7 +266,7 @@ function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLo
 
                 return versionJson;
             }
-            throw new Error(`Cannot install forge json for ${version.version} since the version json is missing!`);
+            throw createErr({ error: "BadForgeUniversalJar", entry: "version.json" }, `Cannot install forge json for ${version.version} since the version json is missing!`)
         }), 20);
 
         let realJarPath = mc.getLibraryByPath(LibraryInfo.resolve(json.libraries.find((l: any) => l.name.startsWith("net.minecraftforge:forge"))!).path);
@@ -269,6 +286,7 @@ function installByUniversalTask(version: RequiredVersion, minecraft: MinecraftLo
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The installed version name.
+ * @throws {@link ForgeError}
  */
 export function install(version: RequiredVersion, minecraft: MinecraftLocation, options?: Options) {
     return Task.execute(installTask(version, minecraft, options)).wait();
@@ -279,6 +297,7 @@ export function install(version: RequiredVersion, minecraft: MinecraftLocation, 
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
+ * @throws {@link ForgeError}
  */
 export function installTask(version: RequiredVersion, minecraft: MinecraftLocation, options: Options = {}): Task<string> {
     let byInstaller = true;

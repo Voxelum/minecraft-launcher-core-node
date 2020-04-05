@@ -1,7 +1,7 @@
 import { MinecraftFolder, MinecraftLocation, futils } from "@xmcl/core";
 import { Task } from "@xmcl/task";
 import { join } from "path";
-import { getIfUpdate, UpdatedObject, InstallOptions } from "./util";
+import { getIfUpdate, UpdatedObject, InstallOptions, createErr } from "./util";
 
 const { ensureDir, missing, readFile, writeFile } = futils;
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
@@ -91,6 +91,17 @@ const snapshotRoot = "http://dl.liteloader.com/versions/";
 const releaseRoot = "http://repo.mumfrey.com/content/repositories/liteloader/";
 
 /**
+ * This error is only thrown from liteloader install currently.
+ */
+export interface MissingVersionJsonError {
+    error: "MissingVersionJson";
+    version: string;
+    /**
+     * The path of version json
+     */
+    path: string;
+}
+/**
  * Get or update the LiteLoader version list.
  *
  * This will request liteloader offical json by default. You can replace the request by assigning the remote option.
@@ -121,6 +132,7 @@ export function getVersionList(option: {
  * @param versionMeta The liteloader version metadata.
  * @param location The minecraft location you want to install
  * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
+ * @throws {@link MissingVersionJsonError}
  */
 export function install(versionMeta: Version, location: MinecraftLocation, options?: InstallOptions) {
     return Task.execute(installTask(versionMeta, location, options)).wait();
@@ -146,9 +158,11 @@ function buildVersionInfo(versionMeta: Version, mountedJSON: any) {
         id, time, releaseTime, type, libraries, mainClass, inheritsFrom, jar,
     };
     if (mountedJSON.arguments) {
+        // liteloader not supported for version > 1.12...
+        // just write this for exception
         info.arguments = {
-            game: ["--tweakClass", versionMeta.tweakClass, ...mountedJSON.arguments.game],
-            jvm: [...mountedJSON.arguments.jvm],
+            game: ["--tweakClass", versionMeta.tweakClass],
+            jvm: [],
         };
     } else {
         info.minecraftArguments = `--tweakClass ${versionMeta.tweakClass} ` + mountedJSON.minecraftArguments;
@@ -177,7 +191,7 @@ export function installTask(versionMeta: Version, location: MinecraftLocation, o
 
         const mountedJSON: any = await context.execute(Task.create("resolveVersionJson", async function resolveVersionJson() {
             if (await missing(mc.getVersionJson(mountVersion))) {
-                throw { type: "MissingVersionJson", version: mountVersion, location: mc.root };
+                throw createErr({ error: "MissingVersionJson", version: mountVersion, path: mc.getVersionJson(mountVersion) });
             }
             return readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
         }), 50);

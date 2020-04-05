@@ -1,7 +1,16 @@
 import * as os from "os";
 
+/**
+ * The platform information.
+ */
 export interface Platform {
+    /**
+     * The system name of the platform. This name is majorly used for download.
+     */
     name: "osx" | "linux" | "windows" | "unknown";
+    /**
+     * The version of the os. It should be the value of `os.release()`.
+     */
     version: string;
     arch: "x86" | "x64" | string;
 }

@@ -262,10 +262,7 @@ const IO: IO[] = [
                 }
             } catch (e) {
                 if (e instanceof TypeError) {
-                    throw {
-                        type: "IllegalInputType",
-                        message: `Require ${TagType.getName(tagType)} but found ${typeof value}`,
-                    };
+                    throw new TypeError(`Require ${TagType.getName(tagType)} but found ${typeof value}`);
                 }
             }
         },

@@ -4,7 +4,8 @@
         "launch.ts",
         "version.ts",
         "folder.ts",
-        "platform.ts"
+        "platform.ts",
+        "error.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

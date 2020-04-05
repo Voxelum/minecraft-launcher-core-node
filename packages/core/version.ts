@@ -1,6 +1,7 @@
 import { MinecraftFolder, MinecraftLocation } from "./folder"
 import { Platform, currentPlatform } from "./platform";
 import { readFile, exists } from "./fs";
+import { createErr } from "./error";
 import { extname } from "path";
 
 export interface PartialResolvedVersion extends Version {
@@ -77,18 +78,39 @@ export interface ResolvedVersion {
     pathChain: string[];
 }
 
+/**
+ * The full library info. I can be resolved from path or maven library name.
+ *
+ * @see {@link LibraryInfo.resolveFromPath} {@link LibraryInfo.resolve}
+ */
 export interface LibraryInfo {
     readonly groupId: string;
     readonly artifactId: string;
     readonly version: string;
     readonly isSnapshot: boolean;
+    /**
+     * The file extension. Default is `jar`. Some files in forge are `zip`.
+     */
     readonly type: string;
+    /**
+     * The classifier. Normally, this is empty. For forge, it can be like `universal`, `installer`.
+     */
     readonly classifier: string;
+    /**
+     * The maven path.
+     */
     readonly path: string;
+    /**
+     * The original maven name of this library
+     */
     readonly name: string;
 }
 
 export namespace LibraryInfo {
+    /**
+     * Resolve the library info from the maven path.
+     * @param path The library path. It should look like `net/minecraftforge/forge/1.0/forge-1.0.jar`
+     */
     export function resolveFromPath(path: string): LibraryInfo {
         let parts = path.split("/");
         let file = parts[parts.length - 1];
@@ -381,25 +403,25 @@ export namespace Version {
         } while (hierarchy.length !== 0);
 
         if (!mainClass) {
-            throw {
-                error: "CorruptedVersionJson",
-                missing: "MainClass",
+            throw createErr({
+                error: "BadVersionJson",
                 version: id,
-            };
+                missing: "MainClass",
+            });
         }
         if (!assetIndex) {
-            throw {
-                error: "CorruptedVersionJson",
+            throw createErr({
+                error: "BadVersionJson",
                 version: id,
                 missing: "AssetIndex",
-            };
+            });
         }
         if (Object.keys(downloadsMap).length === 0) {
-            throw {
-                error: "CorruptedVersionJson",
+            throw createErr({
+                error: "BadVersionJson",
                 version: id,
                 missing: "Downloads",
-            };
+            });
         }
 
         return {
@@ -452,13 +474,13 @@ export namespace Version {
 
         if (typeof parent.minecraftArguments === "string") {
             if (typeof version.arguments === "object") {
-                throw new Error("Extends require two version in same format!");
+                throw new TypeError("Extends require two version in same format!");
             }
             result.minecraftArguments = mixinArgumentString(parent.minecraftArguments,
                 version.minecraftArguments || "");
         } else if (typeof parent.arguments === "object") {
             if (typeof version.minecraftArguments === "string") {
-                throw new Error("Extends require two version in same format!");
+                throw new TypeError("Extends require two version in same format!");
             }
             result.arguments = version.arguments;
         }
@@ -515,11 +537,11 @@ export namespace Version {
         async function walk(versionName: string) {
             const jsonPath = folder.getVersionJson(versionName);
             if (!await exists(jsonPath)) {
-                return Promise.reject({
+                return Promise.reject(createErr({
                     error: "MissingVersionJson",
                     version: versionName,
                     path: jsonPath,
-                });
+                }));
             }
             const contentString = await readFile(jsonPath, "utf-8").then((b) => b.toString());
             let nextVersion: string | undefined;
@@ -528,7 +550,10 @@ export namespace Version {
                 stack.push(raw);
                 nextVersion = raw.inheritsFrom;
             } catch (e) {
-                throw { error: "CorruptedVersionJson", version: versionName, message: e.message, json: contentString };
+                if (e instanceof SyntaxError) {
+                    throw createErr({ error: "CorruptedVersionJson", version: versionName, json: contentString }, e.message);
+                }
+                throw e;
             }
             if (nextVersion) {
                 await walk(nextVersion);
@@ -595,7 +620,7 @@ export namespace Version {
      * @param root The root of the version
      */
     export function normalizeVersionJson(versionString: string, root: string): PartialResolvedVersion {
-        const platform = currentPlatform;
+        let platform = currentPlatform;
         function processArguments(ar: Version.LaunchArgument[]) {
             return ar.filter((a) => {
                 // only filter out the os only rule.
@@ -606,11 +631,11 @@ export namespace Version {
                 return true;
             });
         };
-        const parsed: Version = JSON.parse(versionString);
+        let parsed: Version = JSON.parse(versionString);
         // if we legacy version json don't have argument, but have minecraftArugments
-        const legacyVersionJson = !parsed.arguments;
-        const libraries = Version.resolveLibraries(parsed.libraries || [], platform);
-        const args = {
+        let legacyVersionJson = !parsed.arguments;
+        let libraries = Version.resolveLibraries(parsed.libraries || [], platform);
+        let args = {
             jvm: [] as Version.LaunchArgument[],
             game: [] as Version.LaunchArgument[],
         };
@@ -657,7 +682,7 @@ export namespace Version {
         }
 
         args.jvm = processArguments(args.jvm);
-        const partial = {
+        let partial = {
             ...parsed,
             libraries,
             arguments: args,
