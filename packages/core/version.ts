@@ -161,9 +161,7 @@ export namespace LibraryInfo {
         const isSnapshot = version.endsWith("-SNAPSHOT");
 
         const groupPath = groupId.replace(/\./g, "/");
-        let base = !isSnapshot
-            ? `${groupPath}/${artifactId}/${version}/${artifactId}-${version}`
-            : `${groupPath}/${artifactId}/${version}/${version}`;
+        let base = `${groupPath}/${artifactId}/${version}/${artifactId}-${version}`;
         if (classifier) { base += `-${classifier}`; }
         const path = `${base}.${type}`;
 
