@@ -13,14 +13,14 @@ Support both nodejs and browser.
 You can do read operations for zip or directory in same API:
 
 ```ts
-import { System } from "@xmcl/system";
+import { openFileSystem } from "@xmcl/system";
 
 let filePath = "/path/to/dir/"
-const fs = await System.openFileSystem(filePath);
+const fs = await openFileSystem(filePath);
 fs.readFile("a.txt"); // read /path/to/dir/a.txt
 
 let zipPath = "/path/to/file.zip"
-const fs = await System.openFileSystem(zipPath);
+const fs = await openFileSystem(zipPath);
 fs.readFile("a.txt"); // read a.txt in the file.zip!
 ```
 

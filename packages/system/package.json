@@ -7,7 +7,7 @@
     "./index.js": "./index.browser.js",
     "./cjs/index.js": "./cjs/index.browser.js"
   },
-  "description": "An abstract layer for system and fs",
+  "description": "An abstract layer for file system on reading zip or plain file",
   "engines": {
     "node": ">=10.0"
   },

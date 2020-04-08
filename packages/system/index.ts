@@ -1,20 +1,46 @@
 import { open, CachedZipFile } from "@xmcl/unzip";
-import { stat, writeFile, readFile, readdir } from "fs";
+import { access, stat, writeFile, readFile, readdir } from "fs";
 import { join, sep } from "path";
-import { FileSystem, setSystem, System } from "./system";
+import { FileSystem } from "./system";
 import { promisify } from "util";
 
+const paccess = promisify(access);
 const pstat = promisify(stat);
 const pwriteFile = promisify(writeFile);
 const preadFile = promisify(readFile);
 const preaddir = promisify(readdir);
 
-class DefaultFS extends FileSystem {
+export async function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem> {
+    if (typeof basePath === "string") {
+        const stat = await pstat(basePath);
+        if (stat.isDirectory()) {
+            return new NodeFileSystem(basePath);
+        } else {
+            const zip = await open(basePath, { lazyEntries: false });
+            return new NodeZipFileSystem(basePath, zip);
+        }
+    } else {
+        const zip = await open(basePath as Buffer, { lazyEntries: false });
+        return new NodeZipFileSystem("", zip);
+    }
+}
+export function resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem> {
+    if (typeof base === "string" || base instanceof Uint8Array) {
+        return openFileSystem(base);
+    } else {
+        return Promise.resolve(base);
+    }
+}
+
+class NodeFileSystem extends FileSystem {
     sep = sep;
     type = "path" as const;
     writeable = true;
     join(...paths: string[]): string {
         return join(...paths);
+    }
+    getUrl(name: string) {
+        return `file://${this.join(this.root, name)}`;
     }
     isDirectory(name: string): Promise<boolean> {
         return pstat(join(this.root, name)).then((s) => s.isDirectory());
@@ -23,7 +49,7 @@ class DefaultFS extends FileSystem {
         return pwriteFile(join(this.root, name), data);
     }
     existsFile(name: string): Promise<boolean> {
-        return pstat(join(this.root, name)).then(() => true, () => false);
+        return paccess(join(this.root, name)).then(() => true, () => false);
     }
     readFile(name: any, encoding?: any) {
         return preadFile(join(this.root, name), { encoding }) as any;
@@ -33,10 +59,11 @@ class DefaultFS extends FileSystem {
     }
     constructor(readonly root: string) { super(); }
 }
-class ZipFS extends FileSystem {
+class NodeZipFileSystem extends FileSystem {
     sep = "/";
     type = "zip" as const;
     writeable = false;
+
     join(...paths: string[]): string {
         return paths.join("/");
     }
@@ -95,54 +122,6 @@ class ZipFS extends FileSystem {
     }
     constructor(readonly root: string, private zip: CachedZipFile) { super(); }
 }
-class NodeSystem implements System {
-    fs: FileSystem = new DefaultFS("/");
-    resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem> {
-        if (typeof base === "string" || base instanceof Uint8Array) {
-            return this.openFileSystem(base);
-        } else {
-            return Promise.resolve(base);
-        }
-    }
-    async openFileSystem(basePath: string | Uint8Array): Promise<FileSystem> {
-        if (typeof basePath === "string") {
-            const stat = await pstat(basePath);
-            if (stat.isDirectory()) {
-                return new DefaultFS(basePath);
-            } else {
-                const zip = await open(basePath, { lazyEntries: false });
-                return new ZipFS(basePath, zip);
-            }
-        } else {
-            const zip = await open(basePath as Buffer, { lazyEntries: false });
-            return new ZipFS("", zip);
-        }
-    }
-    decodeBase64(input: string): string {
-        return Buffer.from(input, "base64").toString("utf-8");
-    }
-    encodeBase64(input: string): string {
-        return Buffer.from(input, "utf-8").toString("base64");
-    }
-    bufferToText(buff: Uint8Array): string {
-        if (buff instanceof Buffer) {
-            return buff.toString("utf-8");
-        }
-        return Buffer.from(buff).toString("utf-8");
-    }
-    bufferToBase64(buff: Uint8Array): string {
-        if (buff instanceof Buffer) {
-            return buff.toString("base64");
-        }
-        return Buffer.from(buff).toString("base64");
-    }
-
-    constructor() { }
-}
-
-const node: System = new NodeSystem();
-
-setSystem(node);
 
 export * from "./system";
 

@@ -13,12 +13,13 @@
 You can use this module in nodejs/electron:
 
 ```ts
+import { openFileSystem } from "@xmcl/system"; 
 import { ResourcePack, Resource } from "@xmcl/resourcepack"; 
 import { ResourceManager, ResourceLocation } from "@xmcl/resource-manager"
 const manager: ResourceManager = new ResourceManager();
 
 // add a resource source which load resource from file
-await manager.addResourcePack(new ResourcePack(await System.openFileSystem('/base/path')));
+await manager.addResourcePack(new ResourcePack(await openFileSystem('/base/path')));
 
 // load grass block model resource; it will load file at `assets/${location.domain}/${location.path}`
 // which is '/base/path/assets/minecraft/models/block/grass.json'
@@ -44,10 +45,10 @@ You can use this to load Minecraft block model and texture just like Minecraft.
 ```ts
     import { ResourcePack, Resource, BlockModel } from "@xmcl/resourcepack"; 
     import { ResourceManager, ModelLoader } from "@xmcl/resource-manager";
-    import { System } from "@xmcl/system";
+    import { openFileSystem } from "@xmcl/system";
 
     const man = new ResourceManager();
-    const resourcePack = new ResourcePack(await System.openFileSystem("/path/to/resource-pack.zip"));
+    const resourcePack = new ResourcePack(await openFileSystem("/path/to/resource-pack.zip"));
     // setup resource pack
     man.addResourcePack(resourcePack);
 

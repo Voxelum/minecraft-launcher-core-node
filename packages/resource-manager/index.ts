@@ -11,7 +11,6 @@ interface ResourceSourceWrapper {
  */
 export class ResourceManager {
     get allResourcePacks() { return this.list.map((l) => l.info); }
-    private cache: { [location: string]: Resource | undefined } = {};
 
     constructor(private list: Array<ResourceSourceWrapper> = []) { }
 
@@ -32,14 +31,9 @@ export class ResourceManager {
     }
 
     /**
-     * Clear all cache
+     * Clear all resource packs in this manager
      */
-    clearCache() { this.cache = {}; }
-    /**
-     * Clear all resource source and cache
-     */
-    clearAll() {
-        this.cache = {};
+    clear() {
         this.list.splice(0, this.list.length);
     }
 
@@ -54,40 +48,18 @@ export class ResourceManager {
         const fir = this.list[first];
         this.list[first] = this.list[second];
         this.list[second] = fir;
-
-        this.clearCache();
     }
 
     /**
-     * Invalidate the resource cache
-     */
-    invalidate(location: ResourceLocation) {
-        delete this.cache[`${location.domain}:${location.path}`];
-    }
-
-    load(location: ResourceLocation): Promise<Resource | undefined>;
-    load(location: ResourceLocation, urlOnly: false): Promise<Resource | undefined>;
-    load(location: ResourceLocation, urlOnly: true): Promise<Resource | undefined>;
-    /**
-     * Load the resource in that location. This will walk through current resource source list to load the resource.
-     * @param location The resource location
-     * @param urlOnly If true, it will force return uri, else it will return the normal resource content
-     */
-    async load(location: ResourceLocation, urlOnly: boolean = false): Promise<any> {
-        const cached = this.cache[`${location.domain}:${location.path}`];
-        if (cached) { return cached; }
+    * Get the resource in that location. This will walk through current resource source list to load the resource.
+    * @param location The resource location
+    */
+    async get(location: ResourceLocation): Promise<Resource | undefined> {
         for (const src of this.list) {
-            const loaded = await src.source.load(location, urlOnly as any);
-            if (!loaded) { continue; }
-            this.putCache(loaded);
-            return loaded;
+            let resource = await src.source.get(location);
+            if (resource) { return resource; }
         }
-
         return undefined;
-    }
-
-    private putCache(res: Resource) {
-        this.cache[`${res.location.domain}:${res.location.path}`] = res;
     }
 }
 

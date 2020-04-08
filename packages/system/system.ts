@@ -1,15 +1,3 @@
-export interface System {
-    fs: FileSystem;
-    openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
-    resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem>;
-
-    decodeBase64(input: string): string;
-    encodeBase64(input: string): string;
-
-    bufferToText(buff: Uint8Array): string;
-    bufferToBase64(buff: Uint8Array): string;
-}
-
 export abstract class FileSystem {
     abstract readonly root: string;
     abstract readonly sep: string;
@@ -23,8 +11,14 @@ export abstract class FileSystem {
     abstract isDirectory(name: string): Promise<boolean>;
     abstract existsFile(name: string): Promise<boolean>;
     abstract readFile(name: string, encoding: "utf-8" | "base64"): Promise<string>;
+    abstract readFile(name: string, encoding: undefined): Promise<Uint8Array>;
     abstract readFile(name: string): Promise<Uint8Array>;
     abstract readFile(name: string, encoding?: "utf-8" | "base64"): Promise<Uint8Array | string>;
+
+    /**
+     * Get the url for a file entry. If the system does not support get url. This should return an empty string.
+     */
+    getUrl(name: string): string { return ""; }
 
     abstract listFiles(name: string): Promise<string[]>;
 
@@ -47,12 +41,4 @@ export abstract class FileSystem {
             }
         }
     }
-
 }
-
-export let System: System;
-
-export function setSystem(sys: System) {
-    System = sys;
-}
-

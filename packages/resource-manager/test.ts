@@ -59,57 +59,30 @@ describe("ResourceManager", () => {
         expect(man.allResourcePacks).toHaveLength(1);
         expect(man.allResourcePacks[0]).toEqual({});
     });
-    test("#load", async () => {
+    test("#get", async () => {
         const man = new ResourceManager();
         const dummy: any = {
             info() { return {}; },
             domains() { return []; },
-            load() { return { location: { domain: "a", path: "b" } }; },
+            get() { return { location: { domain: "a", path: "b" } }; },
         };
         await man.addResourcePack(dummy);
-        await expect(man.load(ResourceLocation.fromPath("abc")))
+        await expect(man.get(ResourceLocation.fromPath("abc")))
             .resolves
             .toEqual({ location: { domain: "a", path: "b" } });
     });
-    test("cache", async () => {
+    test("#clear", async () => {
         const man = new ResourceManager();
         const monitor = jest.fn();
         const dummy: any = {
             info() { return {}; },
             domains() { return []; },
-            load(r: any) { monitor(); return { location: r }; },
+            get(r: any) { monitor(); return { location: r }; },
         };
         await man.addResourcePack(dummy);
-        await man.load({ domain: "a", path: "b" });
-        await man.load({ domain: "a", path: "b" });
-        expect(monitor).toBeCalledTimes(1);
-    });
-    test("#clearCache", async () => {
-        const man = new ResourceManager();
-        const monitor = jest.fn();
-        const dummy: any = {
-            info() { return {}; },
-            domains() { return []; },
-            load(r: any) { monitor(); return { location: r }; },
-        };
-        await man.addResourcePack(dummy);
-        await man.load({ domain: "a", path: "b" });
-        man.clearCache();
-        await man.load({ domain: "a", path: "b" });
-        expect(monitor).toBeCalledTimes(2);
-    });
-    test("#clearAll", async () => {
-        const man = new ResourceManager();
-        const monitor = jest.fn();
-        const dummy: any = {
-            info() { return {}; },
-            domains() { return []; },
-            load(r: any) { monitor(); return { location: r }; },
-        };
-        await man.addResourcePack(dummy);
-        await man.load({ domain: "a", path: "b" });
-        man.clearAll();
-        const result = await man.load({ domain: "a", path: "b" });
+        await man.get({ domain: "a", path: "b" });
+        man.clear();
+        const result = await man.get({ domain: "a", path: "b" });
         expect(result).toBeUndefined();
         expect(monitor).toBeCalledTimes(1);
     });
@@ -119,12 +92,12 @@ describe("ResourceManager", () => {
         const dummy: any = {
             info() { return "A"; },
             domains() { return []; },
-            load(r: any) { monitor(); return { location: r }; },
+            get(r: any) { monitor(); return { location: r }; },
         };
         const dummyB: any = {
             info() { return "B"; },
             domains() { return []; },
-            load(r: any) { monitor(); return { location: r }; },
+            get(r: any) { monitor(); return { location: r }; },
         };
         await man.addResourcePack(dummy);
         await man.addResourcePack(dummyB);
