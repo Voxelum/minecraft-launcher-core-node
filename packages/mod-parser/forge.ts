@@ -1,4 +1,4 @@
-import { System, FileSystem } from "@xmcl/system";
+import { resolveFileSystem, FileSystem } from "@xmcl/system";
 import { parse as parseToml } from "@iarna/toml";
 import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from "java-asm";
 
@@ -488,7 +488,7 @@ export interface ModMetadata extends ModIndentity {
  * @param mod The mod path or data
  */
 export async function readModMetaData(mod: Uint8Array | string | FileSystem) {
-    const fs = await System.resolveFileSystem(mod);
+    const fs = await resolveFileSystem(mod);
     const modidTree: ModidTree = {};
     await jsonMetaData(fs, modidTree);
     const manifest = await tweakMetadata(fs, modidTree);
