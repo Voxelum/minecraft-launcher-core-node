@@ -1,4 +1,4 @@
-import { FileSystem, System } from "@xmcl/system";
+import { FileSystem, resolveFileSystem } from "@xmcl/system";
 
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
 export interface MetaData {
@@ -29,7 +29,7 @@ export interface VersionMeta {
     tweakClass: string;
 }
 export async function readModMetaData(mod: string | Uint8Array | FileSystem) {
-    const fs = await System.resolveFileSystem(mod);
+    const fs = await resolveFileSystem(mod);
     const text = await fs.readFile("litemod.json", "utf-8").then((s) => s.replace(/^\uFEFF/, "")).catch(() => undefined);
     if (!text) {
         throw {

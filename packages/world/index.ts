@@ -1,5 +1,5 @@
 import { deserialize } from "@xmcl/nbt";
-import { FileSystem, System } from "@xmcl/system";
+import { FileSystem, openFileSystem } from "@xmcl/system";
 import Long from "long";
 
 /**
@@ -101,7 +101,7 @@ function getChunkOffset(buffer: Uint8Array, x: number, z: number) {
 
 export class WorldReader {
     static async create(path: string | Uint8Array) {
-        return new WorldReader(await System.openFileSystem(path));
+        return new WorldReader(await openFileSystem(path));
     }
     constructor(private fs: FileSystem) { }
     /**

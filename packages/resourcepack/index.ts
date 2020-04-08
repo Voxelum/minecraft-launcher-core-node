@@ -1,6 +1,19 @@
-import { FileSystem, System } from "@xmcl/system";
+/**
+ * The resource pack module to read Minecraft resource pack just like Minecraft in-game.
+ *
+ * You can open the ResourcePack by {@link ResourcePack.open} and get resource by {@link ResourcePack.get}.
+ *
+ * Or you can just load resource pack metadata by {@link readPackMetaAndIcon}.
+ *
+ * @packageDocumentation
+ */
+
+import { FileSystem, resolveFileSystem } from "@xmcl/system";
 import { PackMeta } from "./format";
 
+/**
+ * The Minecraft used object to map the game resource location.
+ */
 export class ResourceLocation {
     /**
      * build from texture path
@@ -42,53 +55,100 @@ export class ResourceLocation {
     toString() { return `${this.domain}:${this.path}`; }
 }
 
-export interface Resource<T = Uint8Array> {
+/**
+ * The resource in the resource pack on a `ResourceLocation`
+ * @see {@link ResourceLocation}
+ */
+export interface Resource {
     /**
-     * the absolute location of the resource
+     * The absolute location of the resource
      */
-    location: ResourceLocation;
+    readonly location: ResourceLocation;
     /**
-     * The real resource url;
+     * The real resource url which is used for reading the content of it.
      */
-    url: string;
+    readonly url: string;
     /**
-     * The resource content
+     * Read the resource content
      */
-    content: T;
+    read(): Promise<Uint8Array>;
+    read(encoding: undefined): Promise<Uint8Array>;
+    read(encoding: "utf-8" | "base64"): Promise<string>;
+    read(encoding?: "utf-8" | "base64"): Promise<Uint8Array | string>;
     /**
-     * The metadata of the resource
+     * Read the metadata of the resource
      */
-    metadata: PackMeta;
+    readMetadata(): Promise<PackMeta>;
 }
 
+/**
+ * The Minecraft resource pack. Providing the loading resource from `ResourceLocation` function.
+ * It's a wrap of `FileSystem` which provides cross node/browser accssing.
+ *
+ * @see {@link ResourceLocation}
+ * @see {@link FileSystem}
+ */
 export class ResourcePack {
-    constructor(private fs: FileSystem) { }
+    constructor(readonly fs: FileSystem) { }
     /**
-     * Load the resource
+     * Load the resource content
      * @param location The resource location
-     * @param urlOnly Should only provide the url, no content
+     * @param type The output type of the resource
      */
-    load(location: ResourceLocation, urlOnly: boolean): Promise<Resource | void>;
-    async load(location: ResourceLocation, urlOnly: boolean): Promise<Resource | void> {
+    async load(location: ResourceLocation, type?: "utf-8" | "base64"): Promise<Uint8Array | string | undefined> {
         const p = this.getPath(location);
-        const name = p.substring(0, p.lastIndexOf("."));
-        const metafileName = name + ".mcmeta";
         if (await this.fs.existsFile(p)) {
-            return {
-                location,
-                url: this.fs.type === "path" ? `file://${this.fs.root}${p}` : "",
-                content: await this.fs.readFile(p),
-                metadata: await this.fs.existsFile(metafileName) ? JSON.parse((await this.fs.readFile(metafileName, "utf-8")).replace(/^\uFEFF/, "")) : {}
-            };
+            return this.fs.readFile(p, type);
         }
         return undefined;
     }
+
     /**
-     * Does the resource source has the resource
+     * Load the resource metadata which is localted at <resource-path>.mcmeta
+     */
+    async loadMetadata(location: ResourceLocation) {
+        const p = this.getPath(location);
+        const name = p.substring(0, p.lastIndexOf("."));
+        const metafileName = name + ".mcmeta";
+        return await this.fs.existsFile(metafileName) ? JSON.parse((await this.fs.readFile(metafileName, "utf-8")).replace(/^\uFEFF/, "")) : {}
+    }
+
+    /**
+     * Get the url of the resource location.
+     * Please notice that this is depended on `FileSystem` implementation of the `getUrl`.
+     *
+     * @returns The absolute url like `file://` or `http://` depending on underlaying `FileSystem`.
+     * @see {@link FileSystem}
+     */
+    getUrl(location: ResourceLocation) {
+        const p = this.getPath(location);
+        return this.fs.getUrl(p);
+    }
+
+    /**
+     * Get the resource on the resource location.
+     *
+     * It can be undefined if there is no resource at that location.
+     * @param location THe resource location
+     */
+    async get(location: ResourceLocation): Promise<Resource | undefined> {
+        if (this.has(location)) {
+            return {
+                location,
+                url: this.getUrl(location),
+                read: ((encoding: any) => this.load(location, encoding)) as any,
+                readMetadata: () => this.loadMetadata(location),
+            }
+        }
+    }
+
+    /**
+     * Does the resource pack has the resource
      */
     has(location: ResourceLocation): Promise<boolean> {
         return this.fs.existsFile(this.getPath(location));
     }
+
     /**
      * The owned domain. You can think about the modids.
      */
@@ -102,6 +162,7 @@ export class ResourcePack {
         }
         return result;
     }
+
     /**
      * The pack info, just like resource pack
      */
@@ -121,7 +182,7 @@ export class ResourcePack {
     }
 
     static async open(resourcePack: string | Uint8Array | FileSystem): Promise<ResourcePack> {
-        return new ResourcePack(await System.resolveFileSystem(resourcePack));
+        return new ResourcePack(await resolveFileSystem(resourcePack));
     }
 }
 
@@ -135,7 +196,7 @@ export * from "./format";
  * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
  */
 export async function readPackMeta(resourcePack: string | Uint8Array | FileSystem): Promise<PackMeta.Pack> {
-    const system = await System.resolveFileSystem(resourcePack);
+    const system = await resolveFileSystem(resourcePack);
     if (!await system.existsFile("pack.mcmeta")) {
         throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!");
     }
@@ -151,15 +212,18 @@ export async function readPackMeta(resourcePack: string | Uint8Array | FileSyste
  * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
  */
 export async function readIcon(resourcePack: string | Uint8Array | FileSystem): Promise<Uint8Array> {
-    const system = await System.resolveFileSystem(resourcePack);
+    const system = await resolveFileSystem(resourcePack);
     return system.readFile("pack.png");
 }
 
 /**
  * Read both metadata and icon
+ *
+ * @see {@link readIcon}
+ * @see {@link readPackMeta}
  */
 export async function readPackMetaAndIcon(resourcePack: string | Uint8Array | FileSystem) {
-    const system = await System.resolveFileSystem(resourcePack);
+    const system = await resolveFileSystem(resourcePack);
     return {
         metadata: await readPackMeta(system),
         icon: await readIcon(system).catch(() => undefined),

@@ -1,4 +1,4 @@
-import { FileSystem, System } from "@xmcl/system";
+import { FileSystem, resolveFileSystem } from "@xmcl/system";
 
 type Person = {
     /**
@@ -191,7 +191,7 @@ export interface ModMetadata {
  * @param file The jar file or directory path. I can also be the binary content of the jar if you have already read the jar.
  */
 export async function readModMetaData(file: FileSystem | string | Uint8Array): Promise<ModMetadata> {
-    const fs = await System.resolveFileSystem(file);
+    const fs = await resolveFileSystem(file);
     const content = await fs.readFile("fabric.mod.json", "utf-8");
     return JSON.parse(content.replace(/^\uFEFF/, ""));
 }
