@@ -1,40 +1,40 @@
 import { join } from "path";
-import { System } from ".";
+import { openFileSystem } from ".";
 
 const mockRoot = join(__dirname, "..", "..", "mock");
 
 describe("FileSystem", () => {
     describe("#listFiles", () => {
         test("should list file in jar", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "mods", "sample-mod.jar"));
+            const fs = await openFileSystem(join(mockRoot, "mods", "sample-mod.jar"));
             const files = await fs.listFiles("/");
             expect(files).toEqual(["Config.class", "mcmod.info", "NuclearCraft.class"])
         });
         test("should list file in litemods", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "mods", "sample-mod.litemod"));
+            const fs = await openFileSystem(join(mockRoot, "mods", "sample-mod.litemod"));
             const files = await fs.listFiles("/");
             expect(files).toEqual(["META-INF", "com", "assets", "litemod.json"]);
         });
         test("should list file in zip", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "sample-resourcepack.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "sample-resourcepack.zip"));
             const files = await fs.listFiles("/");
             expect(files).toEqual(["pack.mcmeta", "pack.png"]);
         });
         test("should list nested file in zip", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             const files = await fs.listFiles("assets");
             expect(files).toEqual([".mcassetsroot", "minecraft", "realms"]);
         });
     });
     describe("#missingFile", () => {
         test("should detect missing file", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             await expect(fs.missingFile("assetss"))
                 .resolves
                 .toBeTruthy();
         });
         test("should detect non-missing file", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             await expect(fs.missingFile("assets"))
                 .resolves
                 .toBeFalsy();
@@ -42,13 +42,13 @@ describe("FileSystem", () => {
     });
     describe("#existsFile", () => {
         test("should detect missing file", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             await expect(fs.existsFile("assetss"))
                 .resolves
                 .toBeFalsy();
         });
         test("should detect non-missing file", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             await expect(fs.existsFile("assets"))
                 .resolves
                 .toBeTruthy();
@@ -56,7 +56,7 @@ describe("FileSystem", () => {
     });
     describe("#walkFiles", () => {
         test("should walk every files in folder", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks"));
             const paths: string[] = [];
             await fs.walkFiles("/", (path) => {
                 paths.push(path);
@@ -64,7 +64,7 @@ describe("FileSystem", () => {
             expect(paths).toHaveLength(5);
         });
         test("should walk every files in zip", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             const paths: string[] = [];
             await fs.walkFiles("/", (path) => {
                 paths.push(path);
@@ -90,31 +90,31 @@ describe("FileSystem", () => {
     });
     describe("#isDirectory", () => {
         test("should identify dir on root", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             await expect(fs.isDirectory("assets"))
                 .resolves
                 .toBeTruthy();
         });
         test("should identify nested dir", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             await expect(fs.isDirectory("assets/minecraft"))
                 .resolves
                 .toBeTruthy();
         });
         test("should identify nested file", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             await expect(fs.isDirectory("assets/.mcassetsroot"))
                 .resolves
                 .toBeFalsy();
         });
         test("should identify wrong nested dir", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             await expect(fs.isDirectory("assets/.mcas"))
                 .resolves
                 .toBeFalsy();
         });
         test("should identify wrong nested file", async () => {
-            const fs = await System.openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
+            const fs = await openFileSystem(join(mockRoot, "resourcepacks", "1.14.4.zip"));
             await expect(fs.isDirectory("assets/.mcassetsrootxxx"))
                 .resolves
                 .toBeFalsy();
