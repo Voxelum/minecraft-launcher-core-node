@@ -1,8 +1,8 @@
-import { futils } from "@xmcl/core";
+import { futils, Platform, getPlatform } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { exec } from "child_process";
 import got from "got";
-import { arch, EOL, platform, tmpdir } from "os";
+import { EOL, tmpdir, platform } from "os";
 import { basename, join, resolve } from "path";
 import { DownloaderOption } from "./minecraft";
 import { downloadFileTask, normailzeDownloader } from "./util";
@@ -34,6 +34,11 @@ export interface Options extends DownloaderOption {
      */
     cacheDir?: string;
     /**
+     * The platform to install. It will be auto-resolved by default.
+     * @default currentPlatform
+     */
+    platform?: Platform;
+    /**
      * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
      */
     unpackLZMA: (src: string, dest: string) => Promise<void>;
@@ -49,14 +54,15 @@ export function installJreFromMojangTask(options: Options) {
         destination,
         unpackLZMA,
         cacheDir = tmpdir(),
+        platform = getPlatform(),
     } = options;
-    const fetchJson = got.extend({ responseType: "json" });
+    const fetchJson = got;
     return task("installJreFromMojang", async function installJreFromMojang(context: Task.Context) {
         const info: { [system: string]: { [arch: string]: { jre: { sha1: string; url: string; version: string } } } }
             = await context.execute(task("fetchInfo", () => fetchJson("https://launchermeta.mojang.com/mc/launcher.json").json()));
         const system = platform.name;
         function resolveArch() {
-            switch (arch()) {
+            switch (platform.arch) {
                 case "x86":
                 case "x32": return "32";
                 case "x64": return "64";

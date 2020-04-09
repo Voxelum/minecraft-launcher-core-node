@@ -1,9 +1,9 @@
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
-import { exists, remove } from "@xmcl/core/fs";
+import { exists, remove, writeFile } from "@xmcl/core/fs";
 import { existsSync, readFileSync } from "fs";
 import { join, normalize } from "path";
-import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis, CurseforgeInstaller } from "./index";
-import { MultipleError, DefaultDownloader, batchedTask } from "./util";
+import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis, CurseforgeInstaller, JavaInstaller } from "./index";
+import { MultipleError, DefaultDownloader, batchedTask, exists, remove, writeFile, ensureFile } from "./util";
 import { parseJavaVersion } from "./java";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
@@ -379,6 +379,26 @@ describe("JavaInstaller", () => {
             let version = "java aaaa 2018-04-17";
             const inf = parseJavaVersion(version);
             expect(inf).toEqual(undefined);
+        });
+    });
+    describe("#install", () => {
+        test("should install from mojang src", async () => {
+            const mock = jest.fn();
+            const downloadMock = jest.fn();
+            await JavaInstaller.installJreFromMojang({
+                destination: join(root, "jre"),
+                cacheDir: join(root),
+                unpackLZMA: async (rt, d) => { mock(d) },
+                downloader: {
+                    async downloadFile(option) {
+                        downloadMock();
+                        await ensureFile(option.destination);
+                        await writeFile(option.destination, "");
+                    },
+                }
+            });
+            expect(mock).toHaveBeenCalledWith(join(root, "jre"));
+            expect(downloadMock).toHaveBeenCalledTimes(1);
         });
     });
 });
