@@ -86,6 +86,10 @@ export interface InstallProfile {
      * The required install profile libraries
      */
     libraries: VersionJson.NormalLibrary[];
+    /**
+     * Legacy format
+     */
+    versionInfo?: VersionJson;
 }
 
 /**
