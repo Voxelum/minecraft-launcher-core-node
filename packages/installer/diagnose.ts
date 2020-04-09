@@ -1,8 +1,7 @@
-import { futils, MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version } from "@xmcl/core";
+import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { InstallProfile, resolveProcessors } from "./minecraft";
-
-const { checksum, readFile, exists } = futils;
+import { checksum, readFile, exists } from "./util";
 
 async function getSha1(file: string) {
     return checksum(file, "sha1");

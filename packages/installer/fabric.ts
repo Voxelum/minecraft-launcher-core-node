@@ -1,8 +1,6 @@
-import { futils, MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
+import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import got from "got";
-import { getRawIfUpdate, InstallOptions, UpdatedObject } from "./util";
-
-const { ensureFile, writeFile } = futils;
+import { ensureFile, writeFile, getRawIfUpdate, InstallOptions, UpdatedObject } from "./util";
 
 export const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";

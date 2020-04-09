@@ -5,7 +5,7 @@
         "version.ts",
         "folder.ts",
         "platform.ts",
-        "error.ts"
+        "util.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

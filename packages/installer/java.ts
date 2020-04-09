@@ -1,12 +1,11 @@
-import { futils, Platform, getPlatform } from "@xmcl/core";
+import { Platform, getPlatform } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { exec } from "child_process";
 import got from "got";
 import { EOL, tmpdir, platform } from "os";
 import { basename, join, resolve } from "path";
 import { DownloaderOption } from "./minecraft";
-import { downloadFileTask, normailzeDownloader } from "./util";
-const { unlink, missing } = futils;
+import { downloadFileTask, normailzeDownloader, unlink, missing } from "./util";
 
 export interface JavaInfo {
     /**

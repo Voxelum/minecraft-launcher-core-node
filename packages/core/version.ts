@@ -1,10 +1,9 @@
 import { MinecraftFolder, MinecraftLocation } from "./folder"
-import { Platform, currentPlatform } from "./platform";
-import { readFile, exists } from "./fs";
-import { createErr } from "./error";
+import { Platform, getPlatform } from "./platform";
+import { readFile } from "./util";
 import { extname } from "path";
 
-export interface PartialResolvedVersion extends Version {
+interface PartialResolvedVersion extends Version {
     libraries: ResolvedLibrary[];
     arguments: {
         game: Version.LaunchArgument[];
@@ -105,6 +104,25 @@ export interface LibraryInfo {
      */
     readonly name: string;
 }
+
+
+export interface BadVersionJsonError {
+    error: "BadVersionJson";
+    missing: "MainClass" | "AssetIndex" | "Downloads";
+    version: string;
+}
+export interface CorruptedVersionJsonError {
+    error: "CorruptedVersionJson";
+    version: string;
+    json: string;
+}
+export interface MissingVersionJsonError {
+    error: "MissingVersionJson";
+    version: string;
+    path: string;
+}
+
+export type VersionParseError = ((BadVersionJsonError | CorruptedVersionJsonError | MissingVersionJsonError) & Error) | Error;
 
 export namespace LibraryInfo {
     /**
@@ -290,7 +308,7 @@ export namespace Version {
       * @param platform The platform, leave it absent will use the `currentPlatform`
       * @param features The features, used by game launch argument `arguments.game`
       */
-    export function checkAllowed(rules: Rule[], platform: Platform = currentPlatform, features: string[] = []): boolean {
+    export function checkAllowed(rules: Rule[], platform: Platform = getPlatform(), features: string[] = []): boolean {
         // by default it's allowed
         if (!rules || rules.length === 0) { return true; }
         // else it's disallow by default
@@ -326,18 +344,36 @@ export namespace Version {
      * This function requires that the id in version.json is identical to the directory name of that version.
      *
      * e.g. .minecraft/<version-a>/<version-a.json> and in <version-a.json>:
-     *
+     *```
      * { "id": "<version-a>", ... }
+     * ```
+     * The function might throw multiple parsing errors. You can handle them with type by this:
+     * ```ts
+     * try {
+     *   await Version.parse(mcPath, version);
+     * } catch (e) {
+     *   let err = e as VersionParseError;
+     *   switch (err.error) {
+     *     case "BadVersionJson": // do things...
+     *     // handle other cases
+     *     default: // this means this is not a VersionParseError, handle error normally.
+     *   }
+     * }
+     * ```
      *
      * @param minecraftPath The .minecraft path
      * @param version The vesion id.
      * @return The final resolved version detail
+     * @throws {@link CorruptedVersionJsonError}
+     * @throws {@link MissingVersionJsonError}
+     * @throws {@link BadVersionJsonError}
+     * @see {@link VersionParseError}
      */
-    export async function parse(minecraftPath: MinecraftLocation, version: string): Promise<ResolvedVersion> {
+    export async function parse(minecraftPath: MinecraftLocation, version: string, platofrm: Platform = getPlatform()): Promise<ResolvedVersion> {
         const folder = MinecraftFolder.from(minecraftPath);
         // the hierarchy is outer version to dep version
         // e.g. [liteloader version, forge version, minecraft version]
-        const hierarchy = await resolveDependency(folder, version);
+        const hierarchy = await resolveDependency(folder, version, platofrm);
         const rootVersion = hierarchy[hierarchy.length - 1];
         const id: string = hierarchy[0].id;
         let assetIndex: AssetIndex = rootVersion.assetIndex!;
@@ -401,25 +437,25 @@ export namespace Version {
         } while (hierarchy.length !== 0);
 
         if (!mainClass) {
-            throw createErr({
+            throw Object.assign(new Error(), {
                 error: "BadVersionJson",
                 version: id,
                 missing: "MainClass",
-            });
+            } as BadVersionJsonError);
         }
         if (!assetIndex) {
-            throw createErr({
+            throw Object.assign(new Error(), {
                 error: "BadVersionJson",
                 version: id,
                 missing: "AssetIndex",
-            });
+            } as BadVersionJsonError);
         }
         if (Object.keys(downloadsMap).length === 0) {
-            throw createErr({
+            throw Object.assign(new Error(), {
                 error: "BadVersionJson",
                 version: id,
                 missing: "Downloads",
-            });
+            } as BadVersionJsonError);
         }
 
         return {
@@ -527,29 +563,37 @@ export namespace Version {
      * @param path The path of minecraft
      * @param version The version id
      * @returns All the version required to run this version, including this version
+     * @throws {@link CorruptedVersionJsonError}
+     * @throws {@link MissingVersionJsonError}
      */
-    export async function resolveDependency(path: MinecraftLocation, version: string): Promise<PartialResolvedVersion[]> {
+    export async function resolveDependency(path: MinecraftLocation, version: string, platform: Platform = getPlatform()): Promise<PartialResolvedVersion[]> {
         const folder = MinecraftFolder.from(path);
         const stack: PartialResolvedVersion[] = [];
 
         async function walk(versionName: string) {
-            const jsonPath = folder.getVersionJson(versionName);
-            if (!await exists(jsonPath)) {
-                return Promise.reject(createErr({
+            let jsonPath = folder.getVersionJson(versionName);
+            let contentString: string;
+            try {
+                contentString = await readFile(jsonPath, "utf-8");
+            } catch (e) {
+                throw Object.assign(new Error(e.message), {
                     error: "MissingVersionJson",
                     version: versionName,
                     path: jsonPath,
-                }));
+                } as MissingVersionJsonError);
             }
-            const contentString = await readFile(jsonPath, "utf-8").then((b) => b.toString());
             let nextVersion: string | undefined;
             try {
-                const raw = normalizeVersionJson(contentString, folder.root);
-                stack.push(raw);
-                nextVersion = raw.inheritsFrom;
+                let versionJson = normalizeVersionJson(contentString, folder.root, platform);
+                stack.push(versionJson);
+                nextVersion = versionJson.inheritsFrom;
             } catch (e) {
                 if (e instanceof SyntaxError) {
-                    throw createErr({ error: "CorruptedVersionJson", version: versionName, json: contentString }, e.message);
+                    throw Object.assign(new Error(e.message), {
+                        error: "CorruptedVersionJson",
+                        version: versionName,
+                        json: contentString
+                    } as CorruptedVersionJsonError);
                 }
                 throw e;
             }
@@ -562,7 +606,7 @@ export namespace Version {
         return stack;
     }
 
-    export function resolveLibrary(lib: Library, platform: Platform = currentPlatform): ResolvedLibrary | undefined {
+    export function resolveLibrary(lib: Library, platform: Platform = getPlatform()): ResolvedLibrary | undefined {
         if ("rules" in lib && !checkAllowed(lib.rules, platform)) {
             return undefined;
         }
@@ -599,7 +643,7 @@ export namespace Version {
      * @param libs All raw lib
      * @param platform The platform
      */
-    export function resolveLibraries(libs: Library[], platform: Platform = currentPlatform): ResolvedLibrary[] {
+    export function resolveLibraries(libs: Library[], platform: Platform = getPlatform()): ResolvedLibrary[] {
         return libs.map((lib) => resolveLibrary(lib, platform)).filter((l) => l !== undefined) as ResolvedLibrary[];
     }
 
@@ -617,8 +661,7 @@ export namespace Version {
      * @param versionString The version json string
      * @param root The root of the version
      */
-    export function normalizeVersionJson(versionString: string, root: string): PartialResolvedVersion {
-        let platform = currentPlatform;
+    export function normalizeVersionJson(versionString: string, root: string, platform: Platform = getPlatform()): PartialResolvedVersion {
         function processArguments(ar: Version.LaunchArgument[]) {
             return ar.filter((a) => {
                 // only filter out the os only rule.
@@ -693,7 +736,14 @@ export namespace Version {
 }
 
 /**
- * The raw json format provided by Minecraft
+ * The raw json format provided by Minecraft. Also the namespace of version operation.
+ *
+ * Use `parse` to parse a Minecraft version json on the disk, and see the detail info of the version.
+ *
+ * With `ResolvedVersion`, you can use the resolved version to launch the game.
+ *
+ * @see {@link Version.parse}
+ * @see {@link launch}
  */
 export interface Version {
     id: string;

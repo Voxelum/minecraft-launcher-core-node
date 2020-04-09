@@ -1,10 +1,8 @@
-import { futils, MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
+import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { open } from "@xmcl/unzip";
 import { ClassReader, ClassVisitor, Opcodes } from "java-asm";
-import { InstallOptions, spawnProcess, createErr } from "./util";
-
-const { writeFile, ensureFile } = futils;
+import { writeFile, ensureFile, InstallOptions, spawnProcess, createErr } from "./util";
 
 export interface BadOptifineJarError {
     error: "BadOptifineJar";

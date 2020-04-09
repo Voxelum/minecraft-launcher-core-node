@@ -1,8 +1,18 @@
-import { futils } from "@xmcl/core";
 import { Task } from "@xmcl/task";
 import HttpAgent, { HttpsAgent } from "agentkeepalive";
 import { ExecOptions, spawn } from "child_process";
-import { createReadStream, createWriteStream, ReadStream } from "fs";
+import {
+    constants,
+    access as faccess,
+    createReadStream, createWriteStream,
+    ReadStream,
+    stat as fstat,
+    unlink as funlink,
+    readFile as freadFile,
+    writeFile as fwriteFile,
+    mkdir as fmkdir,
+} from "fs";
+import { createHash } from "crypto";
 import got from "got";
 import { ProxyStream } from "got/dist/source/as-stream";
 import { IncomingMessage } from "http";
@@ -10,10 +20,16 @@ import { cpus } from "os";
 import { pipeline as pip } from "stream";
 import { fileURLToPath, parse } from "url";
 import { promisify } from "util";
+import { dirname } from "path";
 
-const { checksum, ensureFile, missing } = futils;
+const access = promisify(faccess);
 
-const pipeline = promisify(pip);
+export const pipeline = promisify(pip);
+export const unlink = promisify(funlink);
+export const stat = promisify(fstat);
+export const readFile = promisify(freadFile);
+export const writeFile = promisify(fwriteFile);
+export const mkdir = promisify(fmkdir);
 
 export interface UpdatedObject {
     timestamp: string;
@@ -87,6 +103,36 @@ export interface Downloader {
      * @returns The downloaded file full path
      */
     downloadFile(option: DownloadOption): Promise<void>;
+}
+
+/**
+ * The options pass into the {@link Downloader}.
+ */
+export interface DownloaderOptions {
+    /**
+     * An customized downloader to swap default downloader.
+     */
+    downloader?: Downloader;
+    /**
+     * Decide should downloader redownload and overwrite existed file.
+     *
+     * It has such options:
+     *
+     * - `checksumNotMatch`: Only the file with checksum provided and not matched will be redownload.
+     * - `checksumNotMatchOrEmpty`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
+     * - `always`: Always redownload files.
+     *
+     * @default "checksumNotMatch"
+     */
+    overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
+    /**
+     * Should hault the donwload process immediately after ANY resource download failed.
+     */
+    throwErrorImmediately?: boolean;
+    /**
+     * The max concurrency of the download
+     */
+    maxConcurrency?: number;
 }
 
 /**
@@ -197,6 +243,34 @@ export function downloadFileTask(option: DownloadOption, downloaderOptions: HasD
     };
 }
 
+/**
+ * Shared install options
+ */
+export interface InstallOptions {
+    /**
+     * When you want to install a version over another one.
+     *
+     * Like, you want to install liteloader over a forge version.
+     * You should fill this with that forge version id.
+     */
+    inheritsFrom?: string;
+
+    /**
+     * Override the newly installed version id.
+     *
+     * If this is absent, the installed version id will be either generated or provided by installer.
+     */
+    versionId?: string;
+}
+
+export function normailzeDownloader<T extends { downloader?: Downloader }>(options: T): asserts options is HasDownloader<T> {
+    if (!options.downloader) {
+        options.downloader = new DefaultDownloader();
+    }
+}
+
+export type HasDownloader<T> = T & { downloader: Downloader }
+
 export function spawnProcess(javaPath: string, args: string[], options?: ExecOptions) {
     return new Promise<void>((resolve, reject) => {
         let process = spawn(javaPath, args, options);
@@ -262,71 +336,50 @@ export function joinUrl(a: string, b: string) {
 }
 
 /**
- * Shared install options
- */
-export interface InstallOptions {
-    /**
-     * When you want to install a version over another one.
-     *
-     * Like, you want to install liteloader over a forge version.
-     * You should fill this with that forge version id.
-     */
-    inheritsFrom?: string;
-
-    /**
-     * Override the newly installed version id.
-     *
-     * If this is absent, the installed version id will be either generated or provided by installer.
-     */
-    versionId?: string;
-}
-
-export function normailzeDownloader<T extends { downloader?: Downloader }>(options: T): asserts options is HasDownloader<T> {
-    if (!options.downloader) {
-        options.downloader = new DefaultDownloader();
-    }
-}
-
-export type HasDownloader<T> = T & { downloader: Downloader }
-
-/**
  * The collection of errors happened during a parallel process
  */
 export class MultipleError extends Error {
     constructor(public errors: unknown[], message?: string) { super(message); };
 }
 
-/**
- * The options pass into the {@link Downloader}.
- */
-export interface DownloaderOptions {
-    /**
-     * An customized downloader to swap default downloader.
-     */
-    downloader?: Downloader;
-    /**
-     * Decide should downloader redownload and overwrite existed file.
-     *
-     * It has such options:
-     *
-     * - `checksumNotMatch`: Only the file with checksum provided and not matched will be redownload.
-     * - `checksumNotMatchOrEmpty`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
-     * - `always`: Always redownload files.
-     *
-     * @default "checksumNotMatch"
-     */
-    overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
-    /**
-     * Should hault the donwload process immediately after ANY resource download failed.
-     */
-    throwErrorImmediately?: boolean;
-    /**
-     * The max concurrency of the download
-     */
-    maxConcurrency?: number;
-}
-
 export function createErr<T>(error: T, message?: string): T & Error {
     let err = new Error(message);
     return Object.assign(err, error);
+}
+
+export function exists(target: string) {
+    return access(target, constants.F_OK).then(() => true).catch(() => false);
+}
+export function missing(target: string) {
+    return access(target, constants.F_OK).then(() => false).catch(() => true);
+}
+export async function ensureDir(target: string) {
+    try {
+        await mkdir(target);
+    } catch (e) {
+        if (await stat(target).then((s) => s.isDirectory()).catch((e) => false)) { return; }
+        if (e.code === "EEXIST") { return; }
+        if (e.code === "ENOENT") {
+            if (dirname(target) === target) {
+                throw e;
+            }
+            try {
+                await ensureDir(dirname(target));
+                await mkdir(target);
+            } catch {
+                if (await stat(target).then((s) => s.isDirectory()).catch((e) => false)) { return; }
+                throw e;
+            }
+            return;
+        }
+        throw e;
+    }
+}
+export function ensureFile(target: string) {
+    return ensureDir(dirname(target));
+}
+export async function checksum(path: string, algorithm: string = "sha1"): Promise<string> {
+    let hash = createHash(algorithm).setEncoding("hex");
+    await pipeline(createReadStream(path), hash);
+    return hash.read();
 }

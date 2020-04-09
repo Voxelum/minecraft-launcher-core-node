@@ -1,4 +1,3 @@
-import { ensureDir } from "@xmcl/core/fs";
 import * as fs from "fs";
 import * as path from "path";
 import { ResourcePack, readPackMetaAndIcon, readPackMeta } from "./index";
@@ -43,7 +42,9 @@ describe("Resourcepack", () => {
             expect(pack.icon).toBeTruthy();
         });
         test("should throw if there is no pack.meta in directory", async () => {
-            await ensureDir(`${root}/resourcepacks/empty-resourcepack`);
+            try {
+                fs.mkdirSync(`${root}/resourcepacks/empty-resourcepack`, { recursive: true });
+            } catch  { }
             await expect(readPackMetaAndIcon(`${root}/resourcepacks/empty-resourcepack`))
                 .rejects
                 .toThrowError(new Error("Illegal Resourcepack: Cannot find pack.mcmeta!"));

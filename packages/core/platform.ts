@@ -1,7 +1,7 @@
 import * as os from "os";
 
 /**
- * The platform information.
+ * The platform information related to current operating system.
  */
 export interface Platform {
     /**
@@ -12,6 +12,9 @@ export interface Platform {
      * The version of the os. It should be the value of `os.release()`.
      */
     version: string;
+    /**
+     * The direct output of `os.arch()`
+     */
     arch: "x86" | "x64" | string;
 }
 
@@ -35,5 +38,6 @@ export function getPlatform(): Platform {
 
 /**
  * The current platform
+ * @deprecated Will be removed in next patch
  */
 export const currentPlatform: Platform = getPlatform();
