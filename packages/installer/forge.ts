@@ -1,13 +1,11 @@
-import { futils, LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
+import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
 import { parse as parseForge } from "@xmcl/forge-site-parser";
 import { Task } from "@xmcl/task";
 import { Entry, open } from "@xmcl/unzip";
 import { createWriteStream } from "fs";
 import { join } from "path";
 import { installByProfileTask, InstallProfile, InstallProfileOption, LibraryOption, resolveLibraryDownloadUrls } from "./minecraft";
-import { downloadFileTask, getIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, DefaultDownloader, HasDownloader, normailzeDownloader, normalizeArray, createErr, DownloaderOptions } from "./util";
-
-const { copyFile, ensureDir, ensureFile, unlink, waitStream, writeFile } = futils;
+import { downloadFileTask, getIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, HasDownloader, normailzeDownloader, normalizeArray, createErr, DownloaderOptions, ensureFile, pipeline, writeFile } from "./util";
 
 export interface BadForgeInstallerJarError {
     error: "BadForgeInstallerJar";
@@ -160,7 +158,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
             return mc.getLibraryByPath(name.substring(name.indexOf("/") + 1));
         }
         function extractEntryTo(e: Entry, dest: string) {
-            return zip.openEntry(e).then((stream) => stream.pipe(createWriteStream(dest))).then(waitStream);
+            return zip.openEntry(e).then((stream) => pipeline(stream, createWriteStream(dest)));
         }
 
         let profile: InstallProfile = await zip.readEntry(installProfileEntry).then((b) => b.toString()).then(JSON.parse);

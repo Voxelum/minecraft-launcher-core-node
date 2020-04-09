@@ -1,14 +1,13 @@
 import { createExtractStream } from "@xmcl/unzip";
-import { checksum, ensureDir, validateSha1, readFile, writeFile, missing } from "./fs";
+import { validateSha1, readFile, writeFile, getSha1, mkdir } from "./util";
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
 import { createReadStream } from "fs";
 import { join, isAbsolute, resolve, delimiter } from "path";
 import { v4 } from "uuid";
 import { MinecraftFolder } from "./folder";
-import { currentPlatform, Platform } from "./platform";
-import { Version, ResolvedNative, ResolvedVersion } from "./version";
+import { Platform, getPlatform } from "./platform";
+import { Version, ResolvedNative, ResolvedVersion, ResolvedLibrary } from "./version";
 import { EventEmitter } from "events";
-import { createErr } from "./error";
 
 function format(template: string, args: any) {
     return template.replace(/\$\{(.*?)}/g, (key) => {
@@ -34,6 +33,8 @@ export interface EnabledFeatures {
 
 /**
  * General launch option, used to generate launch arguments.
+ * @see {@link generateArguments}
+ * @see {@link launch}
  */
 export interface LaunchOption {
     /**
@@ -155,6 +156,19 @@ export interface LaunchOption {
      * Add `-Dfml.ignorePatchDiscrepancies=true` to jvm argument
      */
     ignorePatchDiscrepancies?: boolean;
+    /**
+     * The platform of this launch will run. By default, it will fetch the current machine info if this is absent.
+     */
+    platform?: Platform;
+
+    /**
+     * The launcher precheck functions. These will run before it run.
+     *
+     * This property is only used for `launch` function. The `generateArguments` function won't use this!
+     * @see {@link launch}
+     * @see {@link generateArguments}
+     */
+    prechecks?: LaunchPrecheck[];
 }
 
 /**
@@ -165,6 +179,24 @@ export interface LaunchPrecheck {
     (resourcePath: MinecraftFolder, version: ResolvedVersion, option: LaunchOption): Promise<void>;
 }
 
+/**
+ * Thrown when the version jar is corrupted. This interface only used in `LaunchPrecheck.checkVersion`
+ * @see {@link LaunchPrecheck.checkVersion}
+ */
+export interface CorruptedVersionJarError {
+    error: "CorruptedVersionJar";
+    version: string;
+}
+/**
+ * Thrown when the libraries jar is corrupted. This interface only used in `LaunchPrecheck.checkLibraries`
+ * @see {@link LaunchPrecheck.checkLibraries}
+ */
+export interface MissingLibrariesError {
+    error: "MissingLibraries";
+    libraries: ResolvedLibrary[];
+    version: ResolvedVersion;
+}
+
 export namespace LaunchPrecheck {
     /**
      * The default launch precheck. It will check version jar, libraries and natives.
@@ -173,40 +205,32 @@ export namespace LaunchPrecheck {
 
     /**
      * Quick check if Minecraft version jar is corrupted
+     * @throws {@link CorruptedVersionJarError}
      */
     export async function checkVersion(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
         const jarPath = resource.getVersionJar(version.minecraftVersion);
         if (!await validateSha1(jarPath, version.downloads.client.sha1)) {
-            throw createErr({
+            throw Object.assign(new Error(`Corrupted Version jar ${jarPath}. Either the file not reachable or the file sha1 not matched!`), {
                 error: "CorruptedVersionJar",
                 version: version.minecraftVersion,
-            });
+            } as CorruptedVersionJarError);
         }
     };
     /**
      * Quick check if there are missed libraries.
+     * @throws {@link MissingLibrariesError}
      */
     export async function checkLibraries(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
-        const missingMask = await Promise.all(version.libraries.map((lib) => missing(resource.getLibraryByPath(lib.download.path))));
-        const missingLibs = version.libraries.filter((_, index) => missingMask[index]);
-
-        if (missingLibs.length > 0) {
-            throw createErr({
-                error: "MissingLibraries",
-                libraries: missingLibs,
-                version,
-            });
-        }
         const validMask = await Promise.all(version.libraries
-            .map((lib) => lib.download.sha1 !== "" ? validateSha1(resource.getLibraryByPath(lib.download.path), lib.download.sha1) : Promise.resolve(true)));
+            .map((lib) => validateSha1(resource.getLibraryByPath(lib.download.path), lib.download.sha1)));
         const corruptedLibs = version.libraries.filter((_, index) => !validMask[index]);
 
         if (corruptedLibs.length > 0) {
-            throw createErr({
+            throw Object.assign(new Error(`Missing ${corruptedLibs.length} libraries! Either the file not reachable or the file sha1 not matched!`), {
                 error: "MissingLibraries",
                 libraries: corruptedLibs,
                 version,
-            });
+            } as MissingLibrariesError);
         }
     };
     /**
@@ -215,7 +239,9 @@ export namespace LaunchPrecheck {
      */
     export async function checkNatives(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
         const native: string = option.nativeRoot || resource.getNativesRoot(version.id);
-        await ensureDir(native);
+        await mkdir(native, { recursive: true }).catch((e) => {
+            if (e.code !== "EEXIST") { throw e; }
+        });
         const natives = version.libraries.filter((lib) => lib instanceof ResolvedNative) as ResolvedNative[];
         const checksumFile = join(native, ".json");
         const includedLibs = natives.map((n) => n.name).sort();
@@ -223,7 +249,7 @@ export namespace LaunchPrecheck {
         interface ChecksumFile { entries: CheckEntry[]; libraries: string[] }
         interface CheckEntry { file: string; sha1: string; name: string; }
 
-        const checksumFileObject: ChecksumFile = await readFile(checksumFile).then((b) => b.toString()).then(JSON.parse).catch((e) => undefined);
+        const checksumFileObject: ChecksumFile = await readFile(checksumFile, "utf-8").then(JSON.parse).catch((e) => undefined);
 
         let shaEntries: CheckEntry[] | undefined;
         if (checksumFileObject && checksumFileObject.libraries) {
@@ -272,7 +298,7 @@ export namespace LaunchPrecheck {
             await Promise.all(natives.map(extractJar));
             const entries = await Promise.all(extractedNatives.map(async (n) => ({
                 ...n,
-                sha1: await checksum(join(native, n.file))
+                sha1: await getSha1(join(native, n.file))
             })));
             const fileContent = JSON.stringify({
                 entries,
@@ -316,7 +342,8 @@ export async function launchServer(options: ServerOptions) {
  * Generally, there are several cases after you call `launch` and get `ChildProcess` object
  *
  * 1. child process fire an error, no real process start.
- *
+ * 2. child process started, but game crash (code is not 0).
+ * 3. cihld process started, game normally exit (code is 0).
  */
 export interface MinecraftProcessWatcher extends EventEmitter {
     /**
@@ -397,9 +424,16 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
 /**
  * Launch the minecraft as a child process. This function use spawn to create child process. To use an alternative way, see function generateArguments.
  *
- * This function will also check if the runtime libs are completed, and will extract native libs if needed.
- * This function might throw exception when the version jar is missing/checksum not matched.
- * This function might throw if the libraries/natives are missing.
+ * By default, it will use the `LauncherPrecheck.Default` to pre-check:
+ * - It will also check if the runtime libs are completed, and will extract native libs if needed.
+ * - It might throw exception when the version jar is missing/checksum not matched.
+ * - It might throw if the libraries/natives are missing.
+ *
+ * If you DON'T want such precheck, and you want to change it. You can assign the `prechecks` property in launch
+ *
+ * ```ts
+ * launch({ ...otherOptions, prechecks: yourPrechecks });
+ * ```
  *
  * @param options The detail options for this launching.
  * @see [ChildProcess](https://nodejs.org/api/child_process.html)
@@ -407,7 +441,7 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
  * @see {@link generateArguments}
  * @see {@link createMinecraftProcessWatcher}
  */
-export async function launch(options: LaunchOption & { prechecks?: LaunchPrecheck[] }): Promise<ChildProcess> {
+export async function launch(options: LaunchOption): Promise<ChildProcess> {
     const gamePath = !isAbsolute(options.gamePath) ? resolve(options.gamePath) : options.gamePath;
     const resourcePath = options.resourcePath || gamePath;
     const version = typeof options.version === "string" ? await Version.parse(resourcePath, options.version) : options.version;
@@ -453,12 +487,12 @@ export async function generateArgumentsServer(options: ServerOptions) {
  * This function will NOT check if the runtime libs are completed, and WONT'T check or extract native libs.
  *
  * @throws TypeError if options does not fully fulfill the requirement
- *
  */
 export async function generateArguments(options: LaunchOption) {
     if (!options.version) { throw new TypeError("Version cannot be null!"); }
     if (!options.isDemo) { options.isDemo = false; }
 
+    const currentPlatform = options.platform ?? getPlatform();
     const gamePath = !isAbsolute(options.gamePath) ? resolve(options.gamePath) : options.gamePath;
     const resourcePath = options.resourcePath || gamePath;
     const version = typeof options.version === "string" ? await Version.parse(resourcePath, options.version) : options.version;

@@ -1,7 +1,6 @@
-import { currentPlatform } from "./platform";
 import { join, normalize } from "path";
-import { ResolvedNative, LibraryInfo, Version } from "./version";
-import { createErr } from "./error";
+import { getPlatform } from "./platform";
+import { LibraryInfo, ResolvedNative, Version } from "./version";
 
 const root = normalize(join(__dirname, "..", "..", "mock"));
 const tempRoot = normalize(join(__dirname, "..", "..", "temp"));
@@ -322,7 +321,7 @@ describe("Version", () => {
         test("should throw if no main class", async () => {
             await expect(Version.parse(root, "no-main-class"))
                 .rejects
-                .toEqual(createErr({
+                .toEqual(Object.assign(new Error(), {
                     error: "BadVersionJson",
                     missing: "MainClass",
                     version: "no-main-class",
@@ -331,7 +330,7 @@ describe("Version", () => {
         test("should throw if no asset json", async () => {
             await expect(Version.parse(root, "no-assets-json"))
                 .rejects
-                .toEqual(createErr({
+                .toEqual(Object.assign(new Error(), {
                     error: "BadVersionJson",
                     version: "no-assets-json",
                     missing: "AssetIndex",
@@ -340,7 +339,7 @@ describe("Version", () => {
         test("should throw if no downloads", async () => {
             await expect(Version.parse(root, "no-downloads"))
                 .rejects
-                .toEqual(createErr({
+                .toEqual(Object.assign(new Error(), {
                     error: "BadVersionJson",
                     missing: "Downloads",
                     version: "no-downloads",
@@ -361,11 +360,11 @@ describe("Version", () => {
         test("should be able to throw if version not existed", async () => {
             await expect(Version.parse(root, "1.12"))
                 .rejects
-                .toMatchObject(createErr({
+                .toMatchObject({
                     error: "MissingVersionJson",
                     version: "1.12",
                     path: join(root, "versions", "1.12", "1.12.json")
-                }));
+                });
         });
         test("should be able to parse extended profile for forge", async () => {
             const version = await Version.parse(root, "1.7.10-Forge10.13.3.1400-1.7.10");
@@ -394,6 +393,7 @@ describe("Version", () => {
     });
 
     describe("#checkAllowed", () => {
+        const currentPlatform = getPlatform();
         test("should be able to handle empty rules", () => {
             expect(Version.checkAllowed([]))
                 .toBeTruthy();

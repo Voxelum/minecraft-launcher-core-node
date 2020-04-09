@@ -4,6 +4,9 @@ export interface MinecraftFolder {
     readonly root: string;
 }
 
+/**
+ * The Minecraft folder structure. All method will return the path related to a minecraft root like `.minecraft`.
+ */
 export class MinecraftFolder {
     /**
      * Normal a Minecraft folder from a folder or string

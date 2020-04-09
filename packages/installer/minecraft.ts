@@ -1,10 +1,8 @@
-import { futils, LibraryInfo, MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
+import { LibraryInfo, MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { open, LazyZipFile } from "@xmcl/unzip";
 import { delimiter, join } from "path";
-import { batchedTask, DownloaderOptions, downloadFileTask, getIfUpdate, HasDownloader, joinUrl, normailzeDownloader, normalizeArray, spawnProcess, UpdatedObject, createErr } from "./util";
-
-const { ensureDir, readFile, validateSha1 } = futils;
+import { ensureDir, readFile, batchedTask, DownloaderOptions, downloadFileTask, getIfUpdate, HasDownloader, joinUrl, normailzeDownloader, normalizeArray, spawnProcess, UpdatedObject, createErr, checksum } from "./util";
 
 /**
  * The function to swap library host.
@@ -562,7 +560,9 @@ export function postProcessTask(processors: InstallProfile["processors"], minecr
         let shouldProcess = false;
         if (proc.outputs) {
             for (const file in proc.outputs) {
-                if (! await validateSha1(file, proc.outputs[file].replace(/'/g, ""))) {
+                let sha1 = await checksum(file, "sha1").catch((e) => "");
+                let expected = proc.outputs[file].replace(/'/g, "");
+                if (expected !== sha1) {
                     shouldProcess = true;
                     break;
                 }

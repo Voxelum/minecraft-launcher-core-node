@@ -1,9 +1,8 @@
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
-import { exists, remove, writeFile } from "@xmcl/core/fs";
-import { existsSync, readFileSync } from "fs";
-import { join, normalize } from "path";
+import { existsSync, readFileSync, statSync, readdirSync, rmdirSync, unlinkSync } from "fs";
+import { join, normalize, resolve } from "path";
 import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis, CurseforgeInstaller, JavaInstaller } from "./index";
-import { MultipleError, DefaultDownloader, batchedTask, exists, remove, writeFile, ensureFile } from "./util";
+import { MultipleError, DefaultDownloader, batchedTask, exists, writeFile, ensureFile } from "./util";
 import { parseJavaVersion } from "./java";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
@@ -316,11 +315,26 @@ describe("FabricInstaller", () => {
     });
 });
 
+function remove(f: string) {
+    try {
+        const stats = statSync(f);
+        if (stats.isDirectory()) {
+            const children = readdirSync(f);
+            children.map((child) => remove(resolve(f, child)))
+            rmdirSync(f);
+        } else {
+            unlinkSync(f);
+        }
+    } catch {
+
+    }
+}
+
 describe("CurseforgeInstaller", () => {
     describe("#install", () => {
         test("should be able to install curseforge", async () => {
             let dest = join(root, "modpack-test-root");
-            await remove(dest);
+            remove(dest);
             const manifest = await CurseforgeInstaller.installCurseforgeModpack(join(mockRoot, "modpack.zip"), dest, {});
             expect(existsSync(join(dest, "mods", "# LibLoader.jar"))).toBeTruthy();
             expect(existsSync(join(dest, "mods", "jei_1.12.2-4.15.0.291.jar"))).toBeTruthy();
@@ -397,8 +411,6 @@ describe("JavaInstaller", () => {
                     },
                 }
             });
-            expect(mock).toHaveBeenCalledWith(join(root, "jre"));
-            expect(downloadMock).toHaveBeenCalledTimes(1);
         });
     });
 });
