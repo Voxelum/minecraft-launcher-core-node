@@ -186,25 +186,18 @@ describe("ForgeInstaller", () => {
         await Installer.installDependencies(await Version.parse(root, result));
         // await assertNoError(result, root);
     });
-    test("should install forge 1.13.2-25.0.209", async () => {
-        const meta: ForgeInstaller.Version = {
-            mcversion: "1.13.2",
-            version: "25.0.209",
-            universal: {
-                md5: "d565c9d4c5c5e1f223fecd6d29ce8294",
-                sha1: "ad053f1db76e9683de0c4d6c54d0d6928a6bc1f2",
-                path: "/maven/net/minecraftforge/forge/1.13.2-25.0.209/forge-1.13.2-25.0.209-sources.jar",
-            },
+    test("should install forge 1.12.2-14.23.5.2852", async () => {
+        const meta = {
+            mcversion: "1.12.2",
+            version: "14.23.5.2852",
             installer: {
-                md5: "9870b8ebe8393d427a375d5a0f355af3",
-                sha1: "36a0bb39da14d29f9dfec61d7538937ae8af7ab9",
-                path: "/maven/net/minecraftforge/forge/1.13.2-25.0.209/forge-1.13.2-25.0.209-installer.jar",
-            },
-            type: "common",
+                sha1: "9c2b201b97730688f9e8ae2a1d671707f5c937f5",
+                path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2852/forge-1.12.2-14.23.5.2852-installer.jar"
+            }
         };
         const result = await ForgeInstaller.install(meta, MinecraftFolder.from(root), { java: javaPath });
-        expect(result).toEqual("1.13.2-forge-25.0.209");
-        await expect(exists(join(root, "versions", "1.13.2-forge-25.0.209", "1.13.2-forge-25.0.209.json")))
+        expect(result).toEqual("1.12.2-forge-14.23.5.2852");
+        await expect(exists(join(root, "versions", "1.12.2-forge-14.23.5.2852", "1.12.2-forge-14.23.5.2852.json")))
             .resolves
             .toBeTruthy();
         await Installer.installDependencies(await Version.parse(root, result));
