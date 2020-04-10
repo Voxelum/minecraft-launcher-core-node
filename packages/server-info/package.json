@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/server-info",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "main": "./index.cjs.js",
   "module": "./index.js",
   "description": "Read Minecraft servers.dat NBT file",

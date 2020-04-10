@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/system",
-  "version": "1.0.9",
+  "version": "2.0.0",
   "main": "./index.cjs.js",
   "module": "./index.js",
   "browser": {

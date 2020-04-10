@@ -1,5 +1,66 @@
 # Changelog
 
+## 3.0.0
+### @xmcl/nbt@2.0.3
+#### Bug Fixes
+
+- fix: unify the error thrown ([6d3d5c79518305685316e81bf7f30cb0a0134972](https://github.com/voxelum/minecraft-launcher-core-node/commit/6d3d5c79518305685316e81bf7f30cb0a0134972))
+### @xmcl/unzip@1.2.0
+#### Features
+
+- feat: add find entry ([0c509e151ba3c3a2af4924a76891dc0674402ead](https://github.com/voxelum/minecraft-launcher-core-node/commit/0c509e151ba3c3a2af4924a76891dc0674402ead))
+### @xmcl/client@2.0.5
+- Dependency @xmcl/nbt bump **patch**
+### @xmcl/core@2.1.2
+#### Bug Fixes
+
+- fix: clear fs deps on core and installer modules ([ff78d9bc8743fd39a7c0b08a794e9ec5adcf3af5](https://github.com/voxelum/minecraft-launcher-core-node/commit/ff78d9bc8743fd39a7c0b08a794e9ec5adcf3af5))
+- fix: correct parse of snapshot version ([fdf5600325546309b79e74e4699cbac3702125eb](https://github.com/voxelum/minecraft-launcher-core-node/commit/fdf5600325546309b79e74e4699cbac3702125eb))
+- fix: unify the error thrown ([6d3d5c79518305685316e81bf7f30cb0a0134972](https://github.com/voxelum/minecraft-launcher-core-node/commit/6d3d5c79518305685316e81bf7f30cb0a0134972))
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/installer@2.6.6
+#### Bug Fixes
+
+- fix: forge 1.12 new pipeline #136 ([a131b7e0f9968b66b1273f16ea1b369b88bd883f](https://github.com/voxelum/minecraft-launcher-core-node/commit/a131b7e0f9968b66b1273f16ea1b369b88bd883f))
+- fix: clear fs deps on core and installer modules ([ff78d9bc8743fd39a7c0b08a794e9ec5adcf3af5](https://github.com/voxelum/minecraft-launcher-core-node/commit/ff78d9bc8743fd39a7c0b08a794e9ec5adcf3af5))
+- fix: wrong platform to install jre #135 ([78d538d365a19256b27c07f891ec0488193dd3f3](https://github.com/voxelum/minecraft-launcher-core-node/commit/78d538d365a19256b27c07f891ec0488193dd3f3))
+- fix: unify the error thrown ([6d3d5c79518305685316e81bf7f30cb0a0134972](https://github.com/voxelum/minecraft-launcher-core-node/commit/6d3d5c79518305685316e81bf7f30cb0a0134972))
+- Dependency @xmcl/core bump **patch**
+### @xmcl/system@2.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: simplify API of resource-manager and system ([2ec473b35d8c7c14cbdf5971fc811f14fbb4eff0](https://github.com/voxelum/minecraft-launcher-core-node/commit/2ec473b35d8c7c14cbdf5971fc811f14fbb4eff0))
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/mod-parser@2.0.6
+#### Bug Fixes
+
+- fix: use new system API ([b796688089f9697d833ccea76647c6fba802839a](https://github.com/voxelum/minecraft-launcher-core-node/commit/b796688089f9697d833ccea76647c6fba802839a))
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.0.11
+#### Bug Fixes
+
+- fix: clear fs deps on core and installer modules ([ff78d9bc8743fd39a7c0b08a794e9ec5adcf3af5](https://github.com/voxelum/minecraft-launcher-core-node/commit/ff78d9bc8743fd39a7c0b08a794e9ec5adcf3af5))
+- fix: use new system API ([b796688089f9697d833ccea76647c6fba802839a](https://github.com/voxelum/minecraft-launcher-core-node/commit/b796688089f9697d833ccea76647c6fba802839a))
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@1.0.11
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@2.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: simplify API of resource-manager and system ([2ec473b35d8c7c14cbdf5971fc811f14fbb4eff0](https://github.com/voxelum/minecraft-launcher-core-node/commit/2ec473b35d8c7c14cbdf5971fc811f14fbb4eff0))
+- Dependency @xmcl/system bump **patch**
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/server-info@2.0.3
+- Dependency @xmcl/nbt bump **patch**
+### @xmcl/world@1.1.1
+#### Bug Fixes
+
+- fix: use new system API ([b796688089f9697d833ccea76647c6fba802839a](https://github.com/voxelum/minecraft-launcher-core-node/commit/b796688089f9697d833ccea76647c6fba802839a))
+- fix: remove bytebuffer dep ([54179fbe564c454a7c2d90cabc38a9d8d144ef7c](https://github.com/voxelum/minecraft-launcher-core-node/commit/54179fbe564c454a7c2d90cabc38a9d8d144ef7c))
+- Dependency @xmcl/nbt bump **patch**
+- Dependency @xmcl/system bump **patch**
+
+
 ## 2.8.0
 ### @xmcl/nbt@2.0.2
 #### Bug Fixes

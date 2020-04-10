@@ -258,7 +258,7 @@ Get the report of the version. It can check if version missing assets/libraries.
 ```
 
 
-### Launch
+### Launch Game
 
 Launch minecraft from a version:
 
@@ -283,10 +283,10 @@ You can use this to load Minecraft block model and texture just like Minecraft.
 ```ts
     import { ResourcePack, Resource, BlockModel } from "@xmcl/resourcepack"; 
     import { ResourceManager, ModelLoader } from "@xmcl/resource-manager";
-    import { System } from "@xmcl/system";
+    import { openFileSystem } from "@xmcl/system";
 
     const man = new ResourceManager();
-    const resourcePack = new ResourcePack(await System.openFileSystem("/path/to/resource-pack.zip"));
+    const resourcePack = new ResourcePack(await openFileSystem("/path/to/resource-pack.zip"));
     // setup resource pack
     man.addResourcePack(resourcePack);
 
@@ -304,25 +304,24 @@ You can use this to load Minecraft block model and texture just like Minecraft.
 
 ### Load Minecraft Resource
 
-*Notice that these API are not stable. May changed in future*
-
 You can use this module in nodejs/electron:
 
 ```ts
+import { openFileSystem } from "@xmcl/system"; 
 import { ResourcePack, Resource } from "@xmcl/resourcepack"; 
 import { ResourceManager, ResourceLocation } from "@xmcl/resource-manager"
 const manager: ResourceManager = new ResourceManager();
 
 // add a resource source which load resource from file
-await manager.addResourcePack(new ResourcePack(await System.openFileSystem('/base/path')));
+await manager.addResourcePack(new ResourcePack(await openFileSystem('/base/path')));
 
 // load grass block model resource; it will load file at `assets/${location.domain}/${location.path}`
 // which is '/base/path/assets/minecraft/models/block/grass.json'
 // same logic with minecraft
-const resource = await manager.load(ResourceLocation.ofModelPath('block/grass'));
+const resource = await manager.get(ResourceLocation.ofModelPath('block/grass'));
 
-const content: Buffer = resource.content; // your resource content
-const modelJSON = JSON.parse(content.toString());
+const content: string = await resource.read("utf-8"); // your resource content
+const modelJSON = JSON.parse(content);
 ```
 
 The resource manager will do the simplest cache for same resource location.
@@ -707,11 +706,11 @@ You can read resource pack content just like Minecraft:
 
     console.log(resLocation); // minecraft:textures/block/dirt.png
 
-    const resource: Resource | void = pack.load(resLocation);
+    const resource: Resource | undefined = await pack.get(resLocation);
     if (resource) {
-        const binaryContent: Uint8Array = resource.content;
+        const binaryContent: Uint8Array = await resource.read();
         // this is the metadata for resource, like animated texture metadata.
-        const metadata: PackMeta = resource.metadata;
+        const metadata: PackMeta = await resource.readMetadata();
     }
 ```
 
