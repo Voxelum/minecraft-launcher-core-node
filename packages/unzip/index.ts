@@ -174,9 +174,10 @@ function extractLazy(zipfile: yZipFile, destination: string, options: ExtractOpt
 }
 
 function parseEntries(zipfile: yZipFile, entries: string[]) {
-    return new Promise<Record<string, yEntry>>((resolve) => {
+    return new Promise<Record<string, undefined | yEntry>>((resolve) => {
         let set = new Set<any>(entries);
-        let result: Record<string, yEntry> = {};
+        let result: Record<string, yEntry | undefined> = {};
+        entries.forEach((e) => { result[e] = undefined; });
         zipfile.on("end", () => { resolve(result); });
         zipfile.on("entry", (entry: yEntry) => {
             if (set.has(entry.fileName)) {
@@ -266,9 +267,13 @@ class LazyZip extends AbstractZip implements LazyZipFile {
             this.delegate.readEntry();
         });
     }
-    async filterEntries(entries: string[]): Promise<yEntry[]> {
+    async filterEntries(entries: string[]): Promise<(yEntry | undefined)[]> {
         const result = await parseEntries(this.delegate, entries);
-        return Object.values(result).sort((a, b) => entries.indexOf(a.fileName) - entries.indexOf(b.fileName));
+        return Object.keys(result).sort((a, b) => entries.indexOf(a) - entries.indexOf(b)).map((e) => result[e]);
+    }
+    async findEntries<T extends string>(entries: T[]): Promise<{ [K in T]: Entry | undefined }> {
+        const result = await parseEntries(this.delegate, entries);
+        return result as any;
     }
     walkEntries(onEntry: (entry: yEntry) => boolean | void | Promise<any>): Promise<void> {
         return walkEntries(this.delegate, onEntry);
@@ -444,11 +449,25 @@ export interface LazyZipFile extends ZipFile {
     /**
      * When you know which entries you want, you can use this function to get the entries you want at once.
      *
+     * This will return the entries in array. If any entry does not exist, it will leave undefined in that position.
+     *
+     * For more complex requirement, please use walkEntries.
+     *
+     * @param entries The entries' names you want
+     * @returns The entries in the same order
+     */
+    filterEntries(entries: string[]): Promise<(Entry | undefined)[]>;
+
+    /**
+     * When you know which entries you want, you can use this function to get the entries you want at once.
+     *
+     * This will return the entires in key-value object.
+     *
      * For more complex requirement, please use walkEntries.
      *
      * @param entries The entries' names you want
      */
-    filterEntries(entries: string[]): Promise<Entry[]>;
+    findEntries<T extends string>(entries: T[]): Promise<{ [K in T]: Entry | undefined }>;
 
     /**
      * Start to walk all the unread entries.
