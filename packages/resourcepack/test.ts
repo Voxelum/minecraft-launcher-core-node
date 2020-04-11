@@ -74,7 +74,10 @@ describe("Resourcepack", () => {
             const pack = await ResourcePack.open(`${root}/resourcepacks/sample-resourcepack.zip`);
             await expect(pack.info())
                 .resolves
-                .toBeTruthy();
+                .toEqual({
+                    description: "Vattic's Faithful 32x32 pack",
+                    pack_format: 1,
+                });
         });
         test("should be able to read info", async () => {
             const pack = await ResourcePack.open(`${root}/resourcepacks/empty-resourcepack.zip`);

@@ -167,7 +167,13 @@ export class ResourcePack {
      * The pack info, just like resource pack
      */
     async info(): Promise<PackMeta.Pack> {
-        return JSON.parse((await this.fs.readFile("pack.mcmeta", "utf-8")).replace(/^\uFEFF/, ""));
+        let { pack } = await this.fs.readFile("pack.mcmeta", "utf-8").then(
+            (s) => JSON.parse(s.replace(/^\uFEFF/, "")),
+            () => { throw new Error("Illegal Resourcepack: Cannot find pack.mcmeta!"); });
+        if (!pack) {
+            throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!");
+        }
+        return pack;
     }
 
     /**
