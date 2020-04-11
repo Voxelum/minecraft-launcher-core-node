@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.0.1
+### @xmcl/core@2.1.3
+#### Bug Fixes
+
+- fix: inverted validation result ([01b9866964f90aed9eb55d53fec178c464aacf23](https://github.com/voxelum/minecraft-launcher-core-node/commit/01b9866964f90aed9eb55d53fec178c464aacf23))
+### @xmcl/resourcepack@1.0.12
+#### Bug Fixes
+
+- fix: wrong resourcepack info return ([a9b1359bccf436f73d96a4a09622970360df6c07](https://github.com/voxelum/minecraft-launcher-core-node/commit/a9b1359bccf436f73d96a4a09622970360df6c07))
+### @xmcl/installer@2.6.7
+- Dependency @xmcl/core bump **patch**
+### @xmcl/model@1.0.12
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@2.0.1
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 3.0.0
 ### @xmcl/nbt@2.0.3
 #### Bug Fixes

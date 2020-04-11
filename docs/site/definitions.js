@@ -708,6 +708,8 @@ export declare function validateSha1(target: string, hash?: string, strict?: boo
  */
 export declare function getSha1(target: string): Promise<any>;
 `;
+module.exports['@xmcl/core/util.test.d.ts'] = `export {};
+`;
 module.exports['@xmcl/core/version.d.ts'] = `import { MinecraftLocation } from "./folder";
 import { Platform } from "./platform";
 interface PartialResolvedVersion extends Version {
