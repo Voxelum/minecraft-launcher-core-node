@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/installer",
-  "version": "2.6.6",
+  "version": "2.6.7",
   "main": "./index.cjs.js",
   "module": "./index.js",
   "description": "Provides Minecraft/Forge/Fabric/Liteloader installers",
