@@ -28,9 +28,9 @@ export const mkdir = promisify(fmkdir);
  * @ignore
  */
 export async function validateSha1(target: string, hash?: string, strict: boolean = false) {
-    if (await access(target).then(() => true, () => false)) { return false; }
+    if (await access(target).then(() => false, () => true)) { return false; }
     if (!hash) { return !strict; }
-    const sha1 = await getSha1(target);
+    let sha1 = await getSha1(target);
     return sha1 === hash;
 }
 /**
