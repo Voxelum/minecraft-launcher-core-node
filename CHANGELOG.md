@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.2
+### @xmcl/task@2.1.6
+#### Bug Fixes
+
+- fix: nest task propagation ([b8b5a2ed156e0cc796316202086a87c91d76468c](https://github.com/voxelum/minecraft-launcher-core-node/commit/b8b5a2ed156e0cc796316202086a87c91d76468c))
+### @xmcl/installer@2.6.8
+- Dependency @xmcl/task bump **patch**
+
+
 ## 3.0.1
 ### @xmcl/core@2.1.3
 #### Bug Fixes
