@@ -187,6 +187,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
             let progress = subProgress.reduce((a, b) => a + b);
             let total = knownTotal === -1 ? subTotals.reduce((a, b) => a + b, 0) : knownTotal;
             emitter.emit("update", { progress, total, message }, node);
+            parent?.progressUpdate(progress, total, message);
         }
 
         const context: Task.Context = {
