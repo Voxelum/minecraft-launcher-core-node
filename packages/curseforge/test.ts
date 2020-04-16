@@ -104,18 +104,18 @@ describe("Curseforge", () => {
     describe("#searchAddon", () => {
         test("should use default params", async () => {
             nock("https://addons-ecs.forgesvc.net")
-                .get("/api/v2/addon/search?categoryId=&gameId=432&gameVersion=&index=0&pageSize=12&searchFilter=aaa&sectionId=&sort=0")
+                .get("/api/v2/addon/search?gameId=432&gameVersion=&index=0&pageSize=12&sort=0&searchFilter=aaa")
                 .reply(200, {});
             await searchAddons({ searchFilter: "aaa" });
             expect(nock.isDone()).toBeTruthy();
         });
         test("should pass params", async () => {
             nock("https://addons-ecs.forgesvc.net")
-                .get("/api/v2/addon/search?categoryId=0&gameId=422&gameVersion=1.1&index=3&pageSize=3&searchFilter=jei&sectionId=10&sort=2")
+                .get("/api/v2/addon/search?gameId=422&gameVersion=1.1&index=3&pageSize=3&sort=2&searchFilter=jei&sectionId=10&categoryId=0")
                 .reply(200, {});
             await searchAddons({
                 searchFilter: "jei",
-                categoryID: 0,
+                categoryId: 0,
                 gameId: 422,
                 gameVersion: "1.1",
                 index: 3,
