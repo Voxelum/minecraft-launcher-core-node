@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.3
+### @xmcl/curseforge@0.1.1
+#### Bug Fixes
+
+- fix: correct the usage of the API ([bbd383e236321c4d8dc32539ba622708b9656de9](https://github.com/voxelum/minecraft-launcher-core-node/commit/bbd383e236321c4d8dc32539ba622708b9656de9))
+
+
 ## 3.0.2
 ### @xmcl/task@2.1.6
 #### Bug Fixes
