@@ -1352,7 +1352,9 @@ export interface Category {
      */
     parentGameCategoryId: number;
     /**
-     * The root category id.
+     * The root category id. Which will be used for \`sectionId\` in search
+     *
+     * @see {@link SearchOptions.sectionId}
      */
     rootGameCategoryId: number;
     /**
@@ -1360,34 +1362,81 @@ export interface Category {
      */
     gameId: number;
 }
+/**
+ * The search options of the search API.
+ *
+ * @see {@link searchAddons}
+ */
 export interface SearchOptions {
     /**
-     * Please use \`getCategories\` to find the category id
+     * The category section id, which is also a category id.
+     * You can fetch if from \`getCategories\`.
+     *
+     * To get availiable categories, you can:
+     *
+     * \`\`\`ts
+     * const cat = await getCategories();
+     * const sectionIds = cat
+     *  .filter(c => c.gameId === 432) // 432 is minecraft game id
+     *  .filter(c => c.rootGameCategoryId === null).map(c => c.id);
+     * // the sectionIds is all normal sections here
+     * \`\`\`
+     *
+     * @see {@link getCategories}
      */
-    categoryID?: number;
-    sectionId?: number | MinecraftSection;
+    sectionId?: number;
+    /**
+     * This is actually the sub category id of the \`sectionId\`. All the numbers for this should also be fetch by \`getCategories\`.
+     *
+     * To get availiable values, you can:
+     *
+     * \`\`\`ts
+     * const cat = await getCategories();
+     * const sectionId = 6; // the mods
+     * const categoryIds = cat
+     *  .filter(c => c.gameId === 432) // 432 is minecraft game id
+     *  .filter(c => c.rootGameCategoryId === sectionId) // only under the section id
+     *  .map(c => c.id);
+     * // Use categoryIds' id to search under the corresponding section id.
+     * \`\`\`
+     *
+     * @see {@link getCategories}
+     */
+    categoryId?: number;
     /**
      * The game id. The Minecraft is 432.
+     *
      * @default 432
      */
     gameId?: number;
     /**
-     * The game version. For Minecraft, it should looks lile 1.12.2
+     * The game version. For Minecraft, it should looks lile 1.12.2.
      */
     gameVersion?: string;
     /**
+     * The index of the page.
+     *
      * @default 0
      */
     index?: number;
     /**
+     * The page size, or the number of the addons in a page.
+     *
      * @default 25
      */
     pageSize?: number;
     /**
-     * The keyword of search
+     * The keyword of search. If this is absent, it just list out the avaiable addons by \`sectionId\` and \`categoryId\`.
      */
-    searchFilter: string;
+    searchFilter?: string;
     /**
+     * The way to sort the result. These are commonly used values:
+     *
+     * - \`1\`, sort by popularity
+     * - \`2\`, sort by last updated date
+     * - \`3\`, sort by name of the project
+     * - \`5\`, sort by total download counts
+     *
      * @default 0
      */
     sort?: number;
@@ -1419,48 +1468,6 @@ export interface QueryOption {
     userAgent?: Agent;
 }
 /**
- * Cached minecraft section name to id
- */
-export declare enum MinecraftSection {
-    MapandInformation = 423,
-    Addons = 426,
-    ArmorToolsAndWeapons = 434,
-    Structures = 409,
-    BloodMagic = 4485,
-    Storage = 420,
-    IndustrialCraft = 429,
-    Magic = 419,
-    Technology = 412,
-    Redstone = 4558,
-    TinkersConstruct = 428,
-    PlayerTransport = 414,
-    LuckyBlocks = 4486,
-    Buildcraft = 432,
-    Genetics = 418,
-    TwitchIntegration = 4671,
-    OresandResources = 408,
-    CraftTweaker = 4773,
-    Thaumcraft = 430,
-    AdventureandRPG = 422,
-    Processing = 413,
-    Energy = 417,
-    EnergyFluidAndItemTransport = 415,
-    Forestry = 433,
-    Miscellaneous = 425,
-    AppliedEnergistics2 = 4545,
-    Farming = 416,
-    APIandLibrary = 421,
-    Cosmetic = 424,
-    Fabric = 4780,
-    WorldGen = 406,
-    Mobs = 411,
-    Biomes = 407,
-    ThermalExpansion = 427,
-    ServerUtility = 435,
-    Dimensions = 410,
-    Food = 436
-}
-/**
  * Get the addon by addon Id.
  * @param addonID The id of addon
  * @param options The query options
@@ -1471,7 +1478,7 @@ export declare function getAddonInfo(addonID: number, options?: QueryOption): Pr
  */
 export declare function getAddons(addonIDs: number[], options?: QueryOption): Promise<AddonInfo[]>;
 /**
- * Search addons by keyword.
+ * List the addons by category/section or search addons by keyword.
  */
 export declare function searchAddons(searchOptions: SearchOptions, options?: QueryOption): Promise<AddonInfo[]>;
 /**
