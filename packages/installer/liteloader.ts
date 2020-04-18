@@ -1,7 +1,7 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
 import { join } from "path";
-import { getIfUpdate, UpdatedObject, InstallOptions, createErr, ensureDir, missing, readFile, writeFile } from "./util";
+import { getAndParseIfUpdate, UpdatedObject, InstallOptions, createErr, ensureDir, missing, readFile, writeFile } from "./util";
 
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
 /**
@@ -118,7 +118,7 @@ export function getVersionList(option: {
      */
     remote?: string;
 } = {}): Promise<VersionList> {
-    return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST, VersionList.parse, option.original);
+    return getAndParseIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST, VersionList.parse, option.original);
 }
 
 /**

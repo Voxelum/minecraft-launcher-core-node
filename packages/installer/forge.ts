@@ -5,7 +5,7 @@ import { Entry, open } from "@xmcl/unzip";
 import { createWriteStream } from "fs";
 import { join } from "path";
 import { installByProfileTask, InstallProfile, InstallProfileOption, LibraryOption, resolveLibraryDownloadUrls } from "./minecraft";
-import { downloadFileTask, getIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, HasDownloader, normailzeDownloader, normalizeArray, createErr, DownloaderOptions, ensureFile, pipeline, writeFile } from "./util";
+import { downloadFileTask, getAndParseIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, HasDownloader, normalizeArray, createErr, DownloaderOptions, ensureFile, pipeline, writeFile, resolveDownloader } from "./util";
 
 export interface BadForgeInstallerJarError {
     error: "BadForgeInstallerJar";
@@ -94,9 +94,7 @@ export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
 export interface Options extends DownloaderOptions, LibraryOption, InstallOptionsBase, InstallProfileOption {
 }
 
-function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLocation, options: HasDownloader<Options>) {
-    const mc = MinecraftFolder.from(minecraft);
-
+function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLocation, options: Options) {
     function getForgeArtifactVersion() {
         let [_, minor] = version.mcversion.split(".");
         let minorVersion = Number.parseInt(minor);
@@ -106,9 +104,10 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
         return `${version.mcversion}-${version.version}`;
     }
 
-    const forgeVersion = getForgeArtifactVersion();
+    return Task.create("installForge", (context) => resolveDownloader(options, async function (options) {
+        const mc = MinecraftFolder.from(minecraft);
+        const forgeVersion = getForgeArtifactVersion();
 
-    return Task.create("installForge", async function (context: Task.Context) {
         let inf = version.installer;
         let path = inf ? inf.path : `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
 
@@ -239,7 +238,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
 
             return versionJson.id;
         }
-    });
+    }));
 }
 
 /**
@@ -261,7 +260,6 @@ export function install(version: RequiredVersion, minecraft: MinecraftLocation, 
  * @throws {@link ForgeError}
  */
 export function installTask(version: RequiredVersion, minecraft: MinecraftLocation, options: Options = {}): Task<string> {
-    normailzeDownloader(options);
     return installByInstallerTask(version, minecraft, options);
 }
 
@@ -288,5 +286,5 @@ export async function getVersionList(option: {
 } = {}): Promise<VersionList> {
     const mcversion = option.mcversion || "";
     const url = mcversion === "" ? "http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html" : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`;
-    return getIfUpdate(url, parseForge, option.original);
+    return getAndParseIfUpdate(url, parseForge, option.original);
 }

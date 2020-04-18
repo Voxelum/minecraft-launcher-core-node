@@ -456,6 +456,10 @@ export async function launch(options: LaunchOption): Promise<ChildProcess> {
     if (options.extraExecOption?.shell) {
         args = args.map((a) => `"${a}"`);
     }
+    // fix the ENOTFOUND if cwd does not existed.
+    if (!existsSync(gamePath)) {
+        await mkdir(gamePath);
+    }
 
     return spawn(args[0], args.slice(1), spawnOption);
 }

@@ -2,7 +2,7 @@ import { LibraryInfo, MinecraftFolder, MinecraftLocation, ResolvedLibrary, Resol
 import { Task, task } from "@xmcl/task";
 import { open, LazyZipFile } from "@xmcl/unzip";
 import { delimiter, join } from "path";
-import { ensureDir, readFile, batchedTask, DownloaderOptions, downloadFileTask, getIfUpdate, HasDownloader, joinUrl, normailzeDownloader, normalizeArray, spawnProcess, UpdatedObject, createErr, checksum } from "./util";
+import { ensureDir, readFile, batchedTask, DownloaderOptions, downloadFileTask, getAndParseIfUpdate, HasDownloader, joinUrl, normalizeArray, spawnProcess, UpdatedObject, createErr, checksum, resolveDownloader } from "./util";
 
 /**
  * The function to swap library host.
@@ -121,7 +121,7 @@ export function getVersionList(option: {
      */
     remote?: string,
 } = {}): Promise<VersionList> {
-    return getIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.original);
+    return getAndParseIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.original);
 }
 
 export type DownloaderOption = DownloaderOptions;
@@ -235,17 +235,16 @@ export function install(type: "server" | "client", versionMeta: RequiredVersion,
  * @param option
  */
 export function installTask(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option: Option = {}): Task<ResolvedVersion> {
-    normailzeDownloader(option);
-    return task("install", async function install(context: Task.Context) {
+    return task("install", (context) => resolveDownloader(option, async function install(option) {
         context.update(0, 100);
-        const version = await context.execute(installVersionTask(type, versionMeta, minecraft, option), 20);
+        let version = await context.execute(installVersionTask(type, versionMeta, minecraft, option), 20);
         if (type === "client") {
             await context.execute(installDependenciesTask(version, option), 80);
         } else {
             await context.execute(installLibrariesTask(version, option), 80);
         }
         return version;
-    }, { version: versionMeta.id });
+    }), { version: versionMeta.id });
 }
 
 /**
@@ -272,14 +271,13 @@ export function installVersion(type: "client" | "server", versionMeta: Version, 
  * @param minecraft minecraft location
  */
 export function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, options: JarOption = {}): Task<ResolvedVersion> {
-    normailzeDownloader(options);
-    return task("installVersion", async function installVersion(context: Task.Context) {
+    return task("installVersion", (context) => resolveDownloader(options, async function installVersion(options) {
         context.update(0, 100);
         await context.execute(installVersionJsonTask(versionMeta, minecraft, options), 40);
-        const version = await VersionJson.parse(minecraft, versionMeta.id);
+        let version = await VersionJson.parse(minecraft, versionMeta.id);
         await context.execute(installVersionJarTask(type, version, minecraft, options), 60);
         return version;
-    }, { version: versionMeta.id });
+    }), { version: versionMeta.id });
 }
 
 /**
@@ -306,15 +304,14 @@ export function installDependencies(version: ResolvedVersion, option?: Option): 
  * @param minecraft The minecraft location
  */
 export function installDependenciesTask(version: ResolvedVersion, options: Option = {}): Task<ResolvedVersion> {
-    normailzeDownloader(options);
-    return task("installDependencies", async function installDependencies(context: Task.Context) {
+    return task("installDependencies", (context) => resolveDownloader(options, async (options) => {
         context.update(0, 100);
         await Promise.all([
             context.execute(installAssetsTask(version, options), 50),
             context.execute(installLibrariesTask(version, options), 50),
         ]);
         return version;
-    }, { version: version.id });
+    }), { version: version.id });
 }
 
 /**
@@ -338,8 +335,7 @@ export function installAssets(version: ResolvedVersion, options?: AssetsOption):
  * @param options The option to replace assets host url
  */
 export function installAssetsTask(version: ResolvedVersion, options: AssetsOption = {}): Task<ResolvedVersion> {
-    async function installAssets(context: Task.Context) {
-        normailzeDownloader(options);
+    return task("installAssets", (context) => resolveDownloader(options, async function installAssets(options) {
         let folder = MinecraftFolder.from(version.minecraftDirectory);
         let jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
@@ -371,8 +367,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
             () => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}`);
 
         return version;
-    }
-    return task("installAssets", installAssets, { version: version.id });
+    }), { version: version.id });
 }
 
 /**
@@ -394,13 +389,12 @@ export function installLibraries(version: ResolvedVersion, option: LibraryOption
  * @param option The library host swap option
  */
 export function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option: LibraryOption = {}): Task<void> {
-    normailzeDownloader(option);
-    return task("installLibraries", async function installLibraries(context: Task.Context) {
+    return task("installLibraries", (context) => resolveDownloader(option, async function installLibraries(option) {
         let folder = MinecraftFolder.from(version.minecraftDirectory);
         let tasks = version.libraries.map((lib) => installLibraryTask(lib, folder, option));
         await batchedTask(context, tasks, tasks.map(() => 10), option.librariesDownloadConcurrency || option.maxConcurrency, option.throwErrorImmediately,
             () => `Errors during install Minecraft ${version.minecraftDirectory} libraries.`);
-    }, { version: Reflect.get(version, "id") || "" });
+    }), { version: Reflect.get(version, "id") || "" });
 }
 
 /**
@@ -414,8 +408,7 @@ export function installResolvedAssetsTask(assets: {
     hash: string;
     size: number;
 }[], folder: MinecraftFolder, options: AssetsOption = {}) {
-    async function installAssets(context: Task.Context) {
-        normailzeDownloader(options);
+    return task("installAssets", (context) => resolveDownloader(options, async function installAssets(options) {
         await ensureDir(folder.getPath("assets", "objects"));
 
         let tasks = assets.map((o) => installAssetTask(o, folder, options));
@@ -423,8 +416,7 @@ export function installResolvedAssetsTask(assets: {
 
         await batchedTask(context, tasks, sizes, options.assetsDownloadConcurrency || options.maxConcurrency, options.throwErrorImmediately,
             () => `Errors during install assets at ${folder.root}`);
-    }
-    return task("installAssets", installAssets);
+    }));
 }
 
 /**
@@ -625,10 +617,9 @@ export function installByProfile(installProfile: InstallProfile, minecraft: Mine
  * @param options The options to install
  */
 export function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
-    normailzeDownloader(options);
-    return task("installByProfile", async function install(context: Task.Context) {
-        const minecraftFolder = MinecraftFolder.from(minecraft);
-        const java = options.java || "java";
+    return task("installByProfile", (context) => resolveDownloader(options, async function install(options) {
+        let minecraftFolder = MinecraftFolder.from(minecraft);
+        let java = options.java || "java";
 
         let processor = resolveProcessors(options.side || "client", installProfile, minecraftFolder);
 
@@ -637,7 +628,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
 
         await context.execute(installResolvedLibrariesTask(libraries, minecraft, options), 50);
         await context.execute(postProcessTask(processor, minecraftFolder, java), 50);
-    });
+    }));
 }
 
 function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLocation, options: HasDownloader<Option>) {

@@ -22,7 +22,7 @@ import * as JavaInstaller from "./java";
 import * as Diagnosis from "./diagnose";
 
 export {
-    DownloadOption, Downloader, DefaultDownloader, MultipleError, downloadFileTask, InstallOptions, DownloaderOptions,
+    DownloadOption, Downloader, HttpDownloader as DefaultDownloader, HttpDownloader, MultipleError, downloadFileTask, InstallOptions, DownloaderOptions,
 } from "./util";
 
 export { JavaInstaller, Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller, OptifineInstaller };

@@ -14,8 +14,6 @@
     "@xmcl/core": "file:../core",
     "@xmcl/forge-site-parser": "file:../forge-site-parser",
     "@xmcl/task": "file:../task",
-    "agentkeepalive": "^4.1.0",
-    "got": "^10.7.0",
     "java-asm": "^0.0.6"
   },
   "scripts": {
