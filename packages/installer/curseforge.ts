@@ -5,7 +5,7 @@ import { HttpsAgent } from "agentkeepalive";
 import got from "got";
 import { basename, join } from "path";
 import { DownloaderOption } from "./minecraft";
-import { batchedTask, downloadFileTask, normailzeDownloader, createErr } from "./util";
+import { batchedTask, downloadFileTask, createErr, resolveDownloader } from "./util";
 
 export interface Options extends DownloaderOption {
     /**
@@ -135,8 +135,7 @@ export function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLoc
  * @throws {@link BadCurseforgeModpackError}
  */
 export function installCurseforgeModpackTask(zip: InputType, minecraft: MinecraftLocation, options: Options = {}) {
-    normailzeDownloader(options);
-    return Task.create("installCurseforgeModpack", async (context: Task.Context) => {
+    return Task.create("installCurseforgeModpack", (context) => resolveDownloader(options, async function installCurseforgeModpack(options) {
         let mc = MinecraftFolder.from(minecraft);
         let zipFile = typeof zip === "string" || zip instanceof Buffer ? await open(zip) : zip;
 
@@ -176,7 +175,7 @@ export function installCurseforgeModpackTask(zip: InputType, minecraft: Minecraf
         }), 10);
 
         return mainfest;
-    })
+    }));
 }
 
 /**
@@ -190,10 +189,9 @@ export function installCurseforgeFile(file: File, destination: string, options?:
  * Install a cureseforge xml file to a specific locations
  */
 export function installCurseforgeFileTask(file: File, destination: string, options: InstallFileOptions = {}) {
-    return Task.create("curseforge-file", async (context) => {
-        normailzeDownloader(options);
+    return Task.create("installCurseforgeFile", (context) => resolveDownloader(options, async (options) => {
         let requestor = options.queryFileUrl || createDefaultCurseforgeQuery();
         let url = await requestor(file.projectID, file.fileID);
         return downloadFileTask({ destination: join(destination, basename(url)), url }, options)(context);
-    });
+    }));
 }

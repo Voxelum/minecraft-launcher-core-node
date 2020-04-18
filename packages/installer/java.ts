@@ -1,11 +1,10 @@
 import { Platform, getPlatform } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { exec } from "child_process";
-import got from "got";
 import { EOL, tmpdir, platform } from "os";
 import { basename, join, resolve } from "path";
 import { DownloaderOption } from "./minecraft";
-import { downloadFileTask, normailzeDownloader, unlink, missing } from "./util";
+import { downloadFileTask, unlink, missing, resolveDownloader, fetchJson } from "./util";
 
 export interface JavaInfo {
     /**
@@ -48,17 +47,15 @@ export interface Options extends DownloaderOption {
  * @param options The install options
  */
 export function installJreFromMojangTask(options: Options) {
-    normailzeDownloader(options);
     const {
         destination,
         unpackLZMA,
         cacheDir = tmpdir(),
         platform = getPlatform(),
     } = options;
-    const fetchJson = got;
-    return task("installJreFromMojang", async function installJreFromMojang(context: Task.Context) {
+    return task("installJreFromMojang", (context) => resolveDownloader(options, async function installJreFromMojang(options) {
         const info: { [system: string]: { [arch: string]: { jre: { sha1: string; url: string; version: string } } } }
-            = await context.execute(task("fetchInfo", () => fetchJson("https://launchermeta.mojang.com/mc/launcher.json").json()));
+            = await context.execute(task("fetchInfo", () => fetchJson("https://launchermeta.mojang.com/mc/launcher.json")));
         const system = platform.name;
         function resolveArch() {
             switch (platform.arch) {
@@ -91,7 +88,7 @@ export function installJreFromMojangTask(options: Options) {
             await unpackLZMA(downloadDestination, javaRoot);
         }));
         await context.execute(task("cleanup", async () => { await unlink(downloadDestination); }));
-    });
+    }));
 }
 
 /**
