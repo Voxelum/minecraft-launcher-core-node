@@ -2,7 +2,7 @@ import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import { existsSync, readFileSync, statSync, readdirSync, rmdirSync, unlinkSync } from "fs";
 import { join, normalize, resolve } from "path";
 import { FabricInstaller, ForgeInstaller, Installer, LiteLoaderInstaller, Diagnosis, CurseforgeInstaller, JavaInstaller } from "./index";
-import { MultipleError, DefaultDownloader, batchedTask, exists, writeFile, ensureFile } from "./util";
+import { MultipleError, HttpDownloader, batchedTask, exists, writeFile, ensureFile } from "./util";
 import { parseJavaVersion } from "./java";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
@@ -19,7 +19,7 @@ describe("Install", () => {
     describe("MinecraftClient", () => {
         async function installVersionClient(version: Installer.Version, gameDirectory: string) {
             const loc = MinecraftFolder.from(gameDirectory);
-            await Installer.install("client", version, loc);
+            await Installer.install("client", version, loc, { client: "https://bmclapi2.bangbang93.com/version/1.15.2/client" });
             expect(existsSync(loc.getVersionJar(version.id))).toBeTruthy();
             expect(existsSync(loc.getVersionJson(version.id))).toBeTruthy();
             await assertNoError(version.id, loc);
@@ -263,27 +263,6 @@ describe("FabricInstaller", () => {
             .toBeTruthy();
     });
 
-    describe("#parseVersionMavenXML", () => {
-        test("should parse valid version xml from fabric", () => {
-            const xmlString = readFileSync(join(mockRoot, "fabric-yarn.xml")).toString();
-            const versions = FabricInstaller.parseVersionMavenXML(xmlString);
-            expect(versions).toEqual([
-                "19w13b.8",
-                "3D Shareware v1.34.2",
-                "1.14 Pre-Release 4+build.7",
-                "1.14.3+build.13",
-                "1.14.4-pre7+build.1",
-                "1.14_combat-3+build.2",
-                "1.14.4+build.15",
-                "19w46b+build.1"
-            ]);
-        });
-        test("should just return empty if the input is invalid", () => {
-            const versions = FabricInstaller.parseVersionMavenXML("");
-            expect(versions).toEqual([]);
-        })
-    });
-
     describe("#updateVersionList", () => {
         let freshList: FabricInstaller.YarnVersionList;
         test("should be able to get fresh list", async () => {
@@ -411,7 +390,7 @@ describe("JavaInstaller", () => {
 describe("DefaultDownloader", () => {
     describe("download", () => {
         test("should use fallback urls", async () => {
-            let downloader = new DefaultDownloader();
+            let downloader = new HttpDownloader();
             try {
                 await downloader.downloadFile({ destination: root + "/temp", url: ["h/abc", "z/abc"] });
             } catch (e) {

@@ -1,6 +1,6 @@
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import got from "got";
-import { ensureFile, writeFile, getRawIfUpdate, InstallOptions, UpdatedObject } from "./util";
+import { ensureFile, writeFile, getIfUpdate, InstallOptions, UpdatedObject, getLastModified } from "./util";
 
 export const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
@@ -10,7 +10,7 @@ export const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-
  * @see https://github.com/FabricMC/yarn
  */
 export interface YarnVersionList extends UpdatedObject {
-    versions: string[];
+    versions: FabricArtifactVersion[];
 }
 
 /**
@@ -18,7 +18,7 @@ export interface YarnVersionList extends UpdatedObject {
  * @see https://fabricmc.net/
  */
 export interface LoaderVersionList extends UpdatedObject {
-    versions: string[];
+    versions: FabricArtifactVersion[];
 }
 
 export interface FabricArtifactVersion {
@@ -107,22 +107,8 @@ export function getLoaderArtifact(minecraft: string, loader: string, remote: str
 }
 
 /**
- * Parse the maven xml provided by Fabric. This is pretty tricky. I don't want to include another lib to parse xml.
- * Therefore I just use RegExp here to match.
- *
- * @param content The xml string from Fabric.
- */
-export function parseVersionMavenXML(content: string) {
-    const matchVersions = /<version>(.+)<\/version>/g;
-    const matched = content.match(matchVersions);
-    if (!matched) {
-        return [];
-    }
-    return matched.map((v) => v.substring(9, v.length - 10));
-}
-
-/**
  * Get or refresh the yarn version list.
+ * @beta
  */
 export async function getYarnVersionList(option: {
     /**
@@ -137,16 +123,20 @@ export async function getYarnVersionList(option: {
      */
     remote?: string,
 } = {}): Promise<YarnVersionList> {
-    const timestamp = option.original?.timestamp;
-    const yarn = await getRawIfUpdate(YARN_MAVEN_URL, timestamp);
-    return {
-        versions: yarn.content ? parseVersionMavenXML(yarn.content) : option.original?.versions!,
-        timestamp: yarn.timestamp,
-    };
+    let [modified, timestamp] = await getLastModified(YARN_MAVEN_URL, option.original?.timestamp);
+    if (modified || !option.original) {
+        let versions = await getYarnArtifactList(option.remote);
+        return {
+            versions: versions,
+            timestamp: timestamp ?? "",
+        };
+    }
+    return option.original;
 }
 
 /**
  * Get or refresh the fabric mod loader version list.
+ * @beta
  */
 export async function getLoaderVersionList(option: {
     /**
@@ -161,12 +151,15 @@ export async function getLoaderVersionList(option: {
      */
     remote?: string,
 }): Promise<LoaderVersionList> {
-    const timestamp = option.original?.timestamp;
-    const loader = await getRawIfUpdate(LOADER_MAVEN_URL, timestamp);
-    return {
-        versions: loader.content ? parseVersionMavenXML(loader.content) : option.original?.versions!,
-        timestamp: loader.timestamp,
-    };
+    let [modified, timestamp] = await getLastModified(LOADER_MAVEN_URL, option.original?.timestamp);
+    if (modified || !option.original) {
+        let versions = await getLoaderArtifactList(option.remote);
+        return {
+            versions: versions,
+            timestamp: timestamp ?? "",
+        };
+    }
+    return option.original;
 }
 
 /**
