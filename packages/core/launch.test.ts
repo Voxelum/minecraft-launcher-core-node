@@ -308,17 +308,20 @@ describe("Launcher", () => {
             expect(existsSync(path.join(nativeRoot, ".json")));
             await LaunchPrecheck.checkNatives(loc, ver, {} as any);
         });
-        test("should be able to extract natives 1.13.2", async () => {
-            const loc = new MinecraftFolder(root);
-            const ver = await Version.parse(loc, "1.13.2");
-            await LaunchPrecheck.checkNatives(loc, ver, {} as any);
-        });
     });
     describe.skip("#launch", () => {
+        describe("1.6.4", () => {
+            let t = test;
+            if ((javaVersion && javaVersion > 8) || !javaPath) { t = test.skip; }
+            test("should launch 1.6.4", async () => {
+                const option: LaunchOption = { version: "1.6.4", gamePath: root, javaPath };
+                await waitGameProcess(await launch(option), "OpenAL initialized.");
+            });
+        });
         describe("1.17.10", () => {
             let t = test;
             if ((javaVersion && javaVersion > 8) || !javaPath) { t = test.skip; }
-            t("should launch with forge", async () => {
+            test("should launch with forge", async () => {
                 const option: LaunchOption = { version: "1.7.10-Forge10.13.3.1400-1.7.10", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "OpenAL initialized.");
             });
@@ -327,7 +330,7 @@ describe("Launcher", () => {
         describe("1.12.2", () => {
             let t = test;
             if ((javaVersion && javaVersion > 8) || !javaPath) { t = test.skip; }
-            t("should launch normal minecraft", async () => {
+            test("should launch normal minecraft", async () => {
                 const option: LaunchOption = { version: "1.12.2", gamePath: root, javaPath };
                 await waitGameProcess(await launch(option), "[Client thread/INFO]: Created: 1024x512 textures-atlas");
             });
@@ -354,14 +357,6 @@ describe("Launcher", () => {
             });
         });
 
-        describe("1.13.2", () => {
-            let t = test;
-            if (!javaPath) { t = test.skip; }
-            t("should launch normal minecraft", async () => {
-                const option: LaunchOption = { version: "1.13.2", gamePath: root, javaPath };
-                await waitGameProcess(await launch(option), "[Client thread/INFO]: Created: 1024x512 textures-atlas");
-            });
-        });
         describe("1.14.4", () => {
             let t = test;
             if (!javaPath) { t = test.skip; }

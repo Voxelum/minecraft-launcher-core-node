@@ -1,8 +1,8 @@
 import { createExtractStream } from "@xmcl/unzip";
-import { validateSha1, readFile, writeFile, getSha1, mkdir } from "./util";
+import { validateSha1, readFile, writeFile, getSha1, mkdir, link } from "./util";
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
-import { createReadStream } from "fs";
-import { join, isAbsolute, resolve, delimiter } from "path";
+import { createReadStream, existsSync } from "fs";
+import { join, isAbsolute, resolve, delimiter, dirname } from "path";
 import { v4 } from "uuid";
 import { MinecraftFolder } from "./folder";
 import { Platform, getPlatform } from "./platform";
@@ -201,7 +201,39 @@ export namespace LaunchPrecheck {
     /**
      * The default launch precheck. It will check version jar, libraries and natives.
      */
-    export const Default: LaunchPrecheck[] = [checkVersion, checkLibraries, checkNatives];
+    export const DEFAULT_PRECHECKS: readonly LaunchPrecheck[] = Object.freeze([checkVersion, checkLibraries, checkNatives, linkAssets]);
+
+    /**
+     * @deprecated
+     */
+    export const Default = DEFAULT_PRECHECKS;
+
+    /**
+     * Link assets to the assets/virtual/legacy.
+     */
+    export async function linkAssets(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
+        if (version.assets !== "legacy") {
+            return;
+        }
+        let assetsIndexPath = resource.getAssetsIndex(version.assets);
+        let buf = await readFile(assetsIndexPath);
+        let assetsIndex: { objects: Record<string, { hash: string; size: number }> } = JSON.parse(buf.toString());
+        let virtualPath = resource.getPath("assets/virtual/" + version.assets);
+        await mkdir(virtualPath, { recursive: true }).catch(() => { });
+
+        let dirs = Object.keys(assetsIndex.objects)
+            .map((path) => dirname(join(virtualPath, path)))
+            .reduce((a, b) => a.add(b), new Set<string>());
+        await Promise.all([...dirs].map((dir) => mkdir(dir, { recursive: true })));
+
+        for (let [path, { hash }] of Object.entries(assetsIndex.objects)) {
+            let assetPath = resource.getAsset(hash);
+            let targetPath = join(virtualPath, path);
+            await link(assetPath, targetPath).catch((e) => {
+                if (e.code !== "EEXIST") { throw e; }
+            });
+        }
+    }
 
     /**
      * Quick check if Minecraft version jar is corrupted
@@ -449,7 +481,7 @@ export async function launch(options: LaunchOption): Promise<ChildProcess> {
     let args = await generateArguments({ ...options, version, gamePath, resourcePath });
 
     const minecraftFolder = MinecraftFolder.from(resourcePath);
-    const prechecks: LaunchPrecheck[] = options.prechecks || LaunchPrecheck.Default;
+    const prechecks = options.prechecks || LaunchPrecheck.DEFAULT_PRECHECKS;
     await Promise.all(prechecks.map((f) => f(minecraftFolder, version, options)));
     const spawnOption = { cwd: options.gamePath, ...(options.extraExecOption || {}) };
 
@@ -592,7 +624,7 @@ export async function generateArguments(options: LaunchOption) {
         version_name: versionName,
         version_type: versionType,
         assets_root: assetsDir,
-        game_assets: assetsDir,
+        game_assets: join(assetsDir, "virtual", version.assets),
         assets_index_name: version.assets,
         game_directory: gamePath,
         auth_player_name: name,
