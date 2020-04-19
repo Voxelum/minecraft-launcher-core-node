@@ -9,6 +9,7 @@ import {
     writeFile as fwriteFile,
     access as faccess,
     mkdir as fmkdir,
+    link as flink,
 } from "fs";
 import { promisify } from "util";
 import { pipeline as pip } from "stream";
@@ -16,6 +17,8 @@ import { pipeline as pip } from "stream";
 const pipeline = promisify(pip);
 const access = promisify(faccess);
 
+/** @ignore */
+export const link = promisify(flink);
 /** @ignore */
 export const readFile = promisify(freadFile);
 /** @ignore */
