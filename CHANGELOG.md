@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.1.0
+### @xmcl/core@2.2.0
+#### Features
+
+- feat: support legacy Minecraft assets link ([783daa03310f59b2847cc47ba855b6843c11a13e](https://github.com/voxelum/minecraft-launcher-core-node/commit/783daa03310f59b2847cc47ba855b6843c11a13e))
+- feat: remove got from @xmcl/installer and support segment download ([667cd78b491f7073a12e44d1f8d32f6e89108be8](https://github.com/voxelum/minecraft-launcher-core-node/commit/667cd78b491f7073a12e44d1f8d32f6e89108be8))
+### @xmcl/installer@2.7.0
+#### Features
+
+- feat: remove got from @xmcl/installer and support segment download ([667cd78b491f7073a12e44d1f8d32f6e89108be8](https://github.com/voxelum/minecraft-launcher-core-node/commit/667cd78b491f7073a12e44d1f8d32f6e89108be8))
+- feat: adjust the fabric get version list API ([4a966a1084620490223c499752ab195e647d80db](https://github.com/voxelum/minecraft-launcher-core-node/commit/4a966a1084620490223c499752ab195e647d80db))
+- Dependency @xmcl/core bump **patch**
+
+
 ## 3.0.3
 ### @xmcl/curseforge@0.1.1
 #### Bug Fixes

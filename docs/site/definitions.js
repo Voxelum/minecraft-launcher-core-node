@@ -535,7 +535,15 @@ export declare namespace LaunchPrecheck {
     /**
      * The default launch precheck. It will check version jar, libraries and natives.
      */
-    const Default: LaunchPrecheck[];
+    const DEFAULT_PRECHECKS: readonly LaunchPrecheck[];
+    /**
+     * @deprecated
+     */
+    const Default: readonly LaunchPrecheck[];
+    /**
+     * Link assets to the assets/virtual/legacy.
+     */
+    function linkAssets(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption): Promise<void>;
     /**
      * Quick check if Minecraft version jar is corrupted
      * @throws {@link CorruptedVersionJarError}
@@ -690,7 +698,9 @@ module.exports['@xmcl/core/util.d.ts'] = `/**
  * @ignore
  */
 /// <reference types="node" />
-import { readFile as freadFile, writeFile as fwriteFile, mkdir as fmkdir } from "fs";
+import { readFile as freadFile, writeFile as fwriteFile, mkdir as fmkdir, link as flink } from "fs";
+/** @ignore */
+export declare const link: typeof flink.__promisify__;
 /** @ignore */
 export declare const readFile: typeof freadFile.__promisify__;
 /** @ignore */
@@ -2136,14 +2146,14 @@ export declare const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc
  * @see https://github.com/FabricMC/yarn
  */
 export interface YarnVersionList extends UpdatedObject {
-    versions: string[];
+    versions: FabricArtifactVersion[];
 }
 /**
  * Fabric mod loader version list
  * @see https://fabricmc.net/
  */
 export interface LoaderVersionList extends UpdatedObject {
-    versions: string[];
+    versions: FabricArtifactVersion[];
 }
 export interface FabricArtifactVersion {
     gameVersion?: string;
@@ -2223,14 +2233,8 @@ export declare function getLoaderArtifactListFor(minecraft: string, remote?: str
  */
 export declare function getLoaderArtifact(minecraft: string, loader: string, remote?: string): Promise<LoaderArtifact>;
 /**
- * Parse the maven xml provided by Fabric. This is pretty tricky. I don't want to include another lib to parse xml.
- * Therefore I just use RegExp here to match.
- *
- * @param content The xml string from Fabric.
- */
-export declare function parseVersionMavenXML(content: string): string[];
-/**
  * Get or refresh the yarn version list.
+ * @beta
  */
 export declare function getYarnVersionList(option?: {
     /**
@@ -2247,6 +2251,7 @@ export declare function getYarnVersionList(option?: {
 }): Promise<YarnVersionList>;
 /**
  * Get or refresh the fabric mod loader version list.
+ * @beta
  */
 export declare function getLoaderVersionList(option: {
     /**
@@ -2425,7 +2430,7 @@ import * as CurseforgeInstaller from "./curseforge";
 import * as OptifineInstaller from "./optifine";
 import * as JavaInstaller from "./java";
 import * as Diagnosis from "./diagnose";
-export { DownloadOption, Downloader, DefaultDownloader, MultipleError, downloadFileTask, InstallOptions, DownloaderOptions, } from "./util";
+export { DownloadOption, Downloader, HttpDownloader as DefaultDownloader, HttpDownloader, MultipleError, downloadFileTask, InstallOptions, DownloaderOptions, } from "./util";
 export { JavaInstaller, Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller, OptifineInstaller };
 `;
 module.exports['@xmcl/installer/java.d.ts'] = `import { Platform } from "@xmcl/core";
@@ -3078,8 +3083,9 @@ module.exports['@xmcl/installer/test.d.ts'] = `export {};
 module.exports['@xmcl/installer/util.d.ts'] = `/// <reference types="node" />
 import { Task } from "@xmcl/task";
 import { ExecOptions } from "child_process";
-import { ReadStream, stat as fstat, unlink as funlink, readFile as freadFile, writeFile as fwriteFile, mkdir as fmkdir } from "fs";
-import { ProxyStream } from "got/dist/source/as-stream";
+import { stat as fstat, unlink as funlink, readFile as freadFile, writeFile as fwriteFile, mkdir as fmkdir } from "fs";
+import { Agent as HttpAgent } from "http";
+import { Agent as HttpsAgent } from "https";
 import { pipeline as pip } from "stream";
 export declare const pipeline: typeof pip.__promisify__;
 export declare const unlink: typeof funlink.__promisify__;
@@ -3090,19 +3096,27 @@ export declare const mkdir: typeof fmkdir.__promisify__;
 export interface UpdatedObject {
     timestamp: string;
 }
-export declare function getRawIfUpdate(url: string, timestamp?: string): Promise<{
+export interface Agents {
+    http?: HttpAgent;
+    https?: HttpsAgent;
+}
+export declare function fetchJson(url: string, agent?: Agents): Promise<any>;
+export declare function getIfUpdate(url: string, timestamp?: string, agent?: Agents): Promise<{
     timestamp: string;
     content: string | undefined;
 }>;
-export declare function getIfUpdate<T extends UpdatedObject>(url: string, parser: (s: string) => any, lastObject: T | undefined): Promise<T>;
+export declare function getAndParseIfUpdate<T extends UpdatedObject>(url: string, parser: (s: string) => any, lastObject: T | undefined): Promise<T>;
+export declare function getLastModified(url: string, timestamp: string | undefined, agent?: Agents): Promise<readonly [true, string | undefined] | readonly [false, string | undefined]>;
 export interface DownloadOption {
     url: string | string[];
-    retry?: number;
-    method?: "GET" | "POST" | "PUT" | "PATCH" | "HEAD" | "DELETE" | "OPTIONS" | "TRACE" | "get" | "post" | "put" | "patch" | "head" | "delete" | "options" | "trace";
     headers?: {
         [key: string]: string;
     };
-    timeout?: number;
+    /**
+     * The minimum bytes a segment should have.
+     * @default 2MB
+     */
+    segmentThreshold?: number;
     /**
      * If user wants to know the progress, pass this in, and \`Downloader\` should call this when there is a progress.
      * @param chunkLength The length of just transferred chunk
@@ -3160,21 +3174,39 @@ export interface DownloaderOptions {
      */
     throwErrorImmediately?: boolean;
     /**
-     * The max concurrency of the download
+     * The suggested max concurrency of the download. This is not a strict criteria.
      */
     maxConcurrency?: number;
+    /**
+     * The suggested minimum bytes a segment should have.
+     * @default 2MB
+     */
+    segmentThreshold?: number;
+}
+export interface Segment {
+    start: number;
+    end?: number;
 }
 /**
- * The default downloader based on gotjs
+ * The default downloader based on nodejs http/https which support range (segment) download
+ * and optimized for many small files downloading.
+ * @beta
  */
-export declare class DefaultDownloader implements Downloader {
-    readonly requster: import("got/dist/source").Got;
-    constructor(requster?: import("got/dist/source").Got);
-    protected openDownloadStream(url: string, option: DownloadOption): ReadStream | ProxyStream<unknown>;
+export declare class HttpDownloader implements Downloader {
+    readonly agents: Agents;
+    constructor(agents?: Agents);
+    protected resolveMetadata(url: string): Promise<{
+        url: string;
+        acceptRanges: boolean;
+        contentLength: number | undefined;
+        isFile: boolean;
+    }>;
+    protected downloadByFramgments(url: string, segments: Segment[], total: number, option: DownloadOption, acceptRanges: boolean): Promise<Segment[]>;
     /**
      * Download file by the option provided.
      */
     downloadFile(option: DownloadOption): Promise<void>;
+    destroy(): void;
 }
 /**
  * Wrapped task function of download file if absent task
@@ -3198,11 +3230,10 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
-export declare function normailzeDownloader<T extends {
-    downloader?: Downloader;
-}>(options: T): asserts options is HasDownloader<T>;
+export declare function resolveDownloader<O extends DownloaderOptions, T>(options: O, closure: (options: HasDownloader<O>) => Promise<T>): Promise<T>;
 export declare type HasDownloader<T> = T & {
     downloader: Downloader;
+    dispose?: () => void;
 };
 export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
 export declare function batchedTask(context: Task.Context, tasks: Task<unknown>[], sizes: number[], maxConcurrency?: number, throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<void>;
@@ -3221,6 +3252,8 @@ export declare function missing(target: string): Promise<boolean>;
 export declare function ensureDir(target: string): Promise<void>;
 export declare function ensureFile(target: string): Promise<void>;
 export declare function checksum(path: string, algorithm?: string): Promise<string>;
+`;
+module.exports['@xmcl/installer/util.test.d.ts'] = `export {};
 `;
 module.exports['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system";
 declare type Person = {
