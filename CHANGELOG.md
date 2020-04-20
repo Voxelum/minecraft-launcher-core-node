@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1.1
+### @xmcl/installer@2.7.1
+#### Bug Fixes
+
+- fix: phantom reference of the gotjs ([4c5d9daaae2a61e2c1f2725b0a342fd5e35aed88](https://github.com/voxelum/minecraft-launcher-core-node/commit/4c5d9daaae2a61e2c1f2725b0a342fd5e35aed88))
+
+
 ## 3.1.0
 ### @xmcl/core@2.2.0
 #### Features
