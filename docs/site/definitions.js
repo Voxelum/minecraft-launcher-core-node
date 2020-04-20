@@ -3100,6 +3100,7 @@ export interface Agents {
     http?: HttpAgent;
     https?: HttpsAgent;
 }
+export declare function fetchText(url: string, agent?: Agents): Promise<string>;
 export declare function fetchJson(url: string, agent?: Agents): Promise<any>;
 export declare function getIfUpdate(url: string, timestamp?: string, agent?: Agents): Promise<{
     timestamp: string;
