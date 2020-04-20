@@ -43,7 +43,7 @@ export interface Agents {
     https?: HttpsAgent;
 }
 
-async function fetchText(url: string, agent?: Agents) {
+export async function fetchText(url: string, agent?: Agents) {
     let parsed = parse(url);
     if (!isValidProtocol(parsed.protocol)) {
         throw new Error(`Invalid protocol ${parsed.protocol}`);

@@ -1,11 +1,10 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
 import { CachedZipFile, open } from "@xmcl/unzip";
-import { HttpsAgent } from "agentkeepalive";
-import got from "got";
+import { Agent as HttpsAgent } from "https";
 import { basename, join } from "path";
 import { DownloaderOption } from "./minecraft";
-import { batchedTask, downloadFileTask, createErr, resolveDownloader } from "./util";
+import { batchedTask, downloadFileTask, createErr, resolveDownloader, fetchText } from "./util";
 
 export interface Options extends DownloaderOption {
     /**
@@ -110,7 +109,7 @@ export type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "r
 
 export function createDefaultCurseforgeQuery(): CurseforgeURLQuery {
     let agent = new HttpsAgent();
-    return (projectId, fileId) => got.get(`https://addons-ecs.forgesvc.net/api/v2/addon/${projectId}/file/${fileId}/download-url`, { agent }).text();
+    return (projectId, fileId) => fetchText(`https://addons-ecs.forgesvc.net/api/v2/addon/${projectId}/file/${fileId}/download-url`, { https: agent });
 }
 /**
  * Install curseforge modpack to a specific Minecraft location.
