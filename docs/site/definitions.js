@@ -3087,6 +3087,7 @@ import { stat as fstat, unlink as funlink, readFile as freadFile, writeFile as f
 import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
 import { pipeline as pip } from "stream";
+import { UrlWithStringQuery } from "url";
 export declare const pipeline: typeof pip.__promisify__;
 export declare const unlink: typeof funlink.__promisify__;
 export declare const stat: typeof fstat.__promisify__;
@@ -3188,6 +3189,13 @@ export interface Segment {
     start: number;
     end?: number;
 }
+interface DownloadMetadata {
+    url: string;
+    acceptRanges: boolean;
+    contentLength: number;
+    lastModified?: string;
+    eTag?: string | string[];
+}
 /**
  * The default downloader based on nodejs http/https which support range (segment) download
  * and optimized for many small files downloading.
@@ -3195,14 +3203,10 @@ export interface Segment {
  */
 export declare class HttpDownloader implements Downloader {
     readonly agents: Agents;
-    constructor(agents?: Agents);
-    protected resolveMetadata(url: string): Promise<{
-        url: string;
-        acceptRanges: boolean;
-        contentLength: number | undefined;
-        isFile: boolean;
-    }>;
-    protected downloadByFramgments(url: string, segments: Segment[], total: number, option: DownloadOption, acceptRanges: boolean): Promise<Segment[]>;
+    readonly headers: Record<string, string | string[] | null>;
+    constructor(agents?: Agents, headers?: Record<string, string | string[] | null>);
+    protected resolveMetadata(parsedURL: UrlWithStringQuery): Promise<DownloadMetadata>;
+    protected downloads(originalUrl: UrlWithStringQuery, option: DownloadOption): Promise<Segment[]>;
     /**
      * Download file by the option provided.
      */
@@ -3253,6 +3257,7 @@ export declare function missing(target: string): Promise<boolean>;
 export declare function ensureDir(target: string): Promise<void>;
 export declare function ensureFile(target: string): Promise<void>;
 export declare function checksum(path: string, algorithm?: string): Promise<string>;
+export {};
 `;
 module.exports['@xmcl/installer/util.test.d.ts'] = `export {};
 `;

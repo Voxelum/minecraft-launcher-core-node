@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1.2
+### @xmcl/installer@2.7.2
+#### Bug Fixes
+
+- fix: support real pause and resume (in-memory) and handle event correctly (#146) ([0d35b742ad0ec04aa7b907dc5fbdfa98be064212](https://github.com/voxelum/minecraft-launcher-core-node/commit/0d35b742ad0ec04aa7b907dc5fbdfa98be064212))
+
+
 ## 3.1.1
 ### @xmcl/installer@2.7.1
 #### Bug Fixes
