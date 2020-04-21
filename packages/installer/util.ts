@@ -405,26 +405,35 @@ export class HttpDownloader implements Downloader {
                 };
                 return new Promise<void>((resolve, reject) => {
                     input.pipe(output);
-                    input.on("end", resolve);
+                    output.on("finish", resolve);
                     request.on("abort", resolve);
                     request.on("error", reject);
                 });
             }));
         }
 
+        let retry = 2;
         let download = (resume = false) => {
             start(resume).then(() => {
                 if (!paused) { _resolve(); }
-            }, _reject);
+            }, (e) => {
+                if (e.code === "ECONNRESET" && e.message === "socket hang up" && retry > 0) {
+                    retry -= 1;
+                    download(true);
+                } else {
+                    _reject(e);
+                }
+            });
         }
 
         try {
             download();
             await downloading;
-        } catch (e) {
-            await unlink(dest);
-        } finally {
             await close(fd);
+        } catch (e) {
+            await close(fd);
+            await unlink(dest);
+            throw e;
         }
 
         return states;
