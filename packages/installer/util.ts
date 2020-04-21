@@ -12,13 +12,14 @@ import {
     readFile as freadFile,
     writeFile as fwriteFile,
     mkdir as fmkdir,
+    ftruncate,
 } from "fs";
 import { createHash } from "crypto";
-import { IncomingMessage, request, RequestOptions, Agent as HttpAgent, AgentOptions } from "http";
+import { IncomingMessage, request, RequestOptions, Agent as HttpAgent, AgentOptions, ClientRequest } from "http";
 import { request as requests, Agent as HttpsAgent } from "https";
 import { cpus } from "os";
 import { pipeline as pip } from "stream";
-import { fileURLToPath, parse, format } from "url";
+import { fileURLToPath, parse, format, UrlWithStringQuery } from "url";
 import { promisify } from "util";
 import { dirname } from "path";
 
@@ -26,6 +27,7 @@ const access = promisify(faccess);
 const open = promisify(fopen);
 const close = promisify(fclose);
 const copyFile = promisify(fcopyFile);
+const truncate = promisify(ftruncate);
 
 export const pipeline = promisify(pip);
 export const unlink = promisify(funlink);
@@ -48,7 +50,7 @@ export async function fetchText(url: string, agent?: Agents) {
     if (!isValidProtocol(parsed.protocol)) {
         throw new Error(`Invalid protocol ${parsed.protocol}`);
     }
-    let msg = await fetch({
+    let { message: msg } = await fetch({
         method: "GET",
         ...parsed,
         headers: {
@@ -73,7 +75,7 @@ export async function getIfUpdate(url: string, timestamp?: string, agent: Agents
     if (!isValidProtocol(parsed.protocol)) {
         throw new Error(`Invalid protocol ${parsed.protocol}`);
     }
-    let msg = await fetch({
+    let { message: msg } = await fetch({
         method: "GET",
         ...parsed,
         headers: {
@@ -113,7 +115,7 @@ export async function getLastModified(url: string, timestamp: string | undefined
     if (!isValidProtocol(parsed.protocol)) {
         throw new Error(`Invalid protocol ${parsed.protocol}`);
     }
-    let msg = await fetch({
+    let { message: msg } = await fetch({
         method: "HEAD",
         ...parsed,
         headers: {
@@ -247,25 +249,34 @@ function mergeRequestOptions(original: RequestOptions, newOptions: RequestOption
 }
 
 function fetch(options: RequestOptions, agents: { http?: HttpAgent, https?: HttpsAgent } = {}) {
-    return new Promise<IncomingMessage>((resolve, reject) => {
+    return new Promise<{ request: ClientRequest, message: IncomingMessage }>((resolve, reject) => {
         function follow(options: RequestOptions) {
             if (!isValidProtocol(options.protocol)) {
                 reject(new Error(`Invalid URL: ${format(options)}`));
             } else {
                 let [req, agent] = options.protocol === "http:" ? [request, agents.http] : [requests, agents.https];
-                req({ ...options, agent }, (m) => {
+                let clientReq = req({ ...options, agent }, (m) => {
                     if (m.statusCode === 302 || m.statusCode === 301 || m.statusCode === 303) {
                         m.resume();
                         follow(mergeRequestOptions(options, parse(m.headers.location!)));
                     } else {
                         m.url = m.url || format(options);
-                        resolve(m);
+                        resolve({ request: clientReq, message: m });
                     }
-                }).end();
+                });
+                clientReq.end();
             }
         }
         follow(options);
     });
+}
+
+interface DownloadMetadata {
+    url: string;
+    acceptRanges: boolean;
+    contentLength: number;
+    lastModified?: string;
+    eTag?: string | string[];
 }
 
 /**
@@ -274,15 +285,21 @@ function fetch(options: RequestOptions, agents: { http?: HttpAgent, https?: Http
  * @beta
  */
 export class HttpDownloader implements Downloader {
-    constructor(readonly agents: Agents = {}) { }
+    constructor(readonly agents: Agents = {
+        http: new HttpAgent({
+            maxSockets: cpus().length * 4,
+            maxFreeSockets: 64,
+            keepAlive: true,
+        }),
+        https: new HttpsAgent({
+            maxSockets: cpus().length * 4,
+            maxFreeSockets: 64,
+            keepAlive: true,
+        }),
+    }, readonly headers: Record<string, string | string[] | null> = {}) { }
 
-    protected async resolveMetadata(url: string) {
-        let parsedURL = parse(url);
-        if (parsedURL.protocol === "file:") {
-            return { url, isFile: true, acceptRanges: false, contentLength: undefined };
-        }
-
-        let msg = await fetch({ ...parsedURL, method: "HEAD" }, this.agents);
+    protected async resolveMetadata(parsedURL: UrlWithStringQuery): Promise<DownloadMetadata> {
+        let { message: msg } = await fetch({ ...parsedURL, method: "HEAD", ...this.headers }, this.agents);
 
         msg.resume();
         let { headers, url: resultUrl, statusCode } = msg;
@@ -290,66 +307,136 @@ export class HttpDownloader implements Downloader {
             throw new Error(`HTTP Error: Status code ${statusCode} on ${resultUrl}`);
         }
         return {
-            url: resultUrl ?? url,
+            url: resultUrl ?? format(parsedURL),
             acceptRanges: headers["accept-ranges"] === "bytes",
-            contentLength: headers["content-length"] ? Number.parseInt(headers["content-length"]) : undefined,
-            isFile: false,
+            contentLength: headers["content-length"] ? Number.parseInt(headers["content-length"]) : -1,
+            lastModified: headers["last-modified"],
+            eTag: headers.etag,
         };
     }
 
-    protected async downloadByFramgments(url: string, segments: Segment[], total: number, option: DownloadOption, acceptRanges: boolean) {
+    protected async downloads(originalUrl: UrlWithStringQuery, option: DownloadOption) {
         let dest = option.destination;
         let transferredTotal = 0;
         let progress = option.progress ?? (() => { });
         let paused = false;
-        let pauses: Function[] = [];
-        let resumes: Function[] = [];
-        option.pausable?.(() => {
+        let _resolve: () => void;
+        let _reject: (e: unknown) => void;
+        let downloading = new Promise((resolve, reject) => {
+            _resolve = resolve;
+            _reject = reject;
+        });
+        function pause() {
             if (!paused) {
                 paused = true;
                 pauses.forEach((f) => f());
+                pauses.fill(() => { });
             }
-        }, () => {
+        }
+        function resume() {
             if (paused) {
                 paused = false;
-                resumes.forEach((f) => f());
+                download(true);
             }
-        });
-        let result: Segment[] = segments.map((f) => ({ ...f }));
+        }
+        option.pausable?.(pause, resume);
+
+        let { url, contentLength: total, eTag, acceptRanges } = await this.resolveMetadata(originalUrl);
+        let segments = total && acceptRanges
+            ? computeSegmenets(total, option.segmentThreshold ?? 2 * 1024 * 1024, 4)
+            : [{ start: 0, end: total }];
+        let pauses: Function[] = new Array(segments.length).fill(() => { });
+        let resolvedUrl = parse(url);
+        let resolvedHeader = option.headers || {};
+        let states: Segment[] = segments.map((s) => ({ ...s }));
         let fd = await open(dest, "w");
-        try {
-            await Promise.all(segments.map(async (seg, index) => {
-                let options: RequestOptions = parse(url);
-                options.method = "GET";
-                options.headers = {
-                    ...(option.headers || {}),
-                    Range: `bytes=${seg.start}-${seg.end ?? ""}`
+        let outputs = states.map((seg) => createWriteStream(dest, {
+            fd,
+            start: seg.start,
+            autoClose: false,
+        }));
+
+        let start = async (resumed: boolean) => {
+            if (resumed) {
+                let newMetadata = await this.resolveMetadata(originalUrl);
+                if (newMetadata.eTag !== eTag) {
+                    total = newMetadata.contentLength;
+                    acceptRanges = newMetadata.acceptRanges;
+                    url = newMetadata.url;
+                    eTag = newMetadata.eTag;
+                    resolvedUrl = parse(url);
+                    states = total && acceptRanges
+                        ? computeSegmenets(total, option.segmentThreshold ?? 2 * 1024 * 1024, 4)
+                        : [{ start: 0, end: total }];
+                    await truncate(fd);
+                    outputs = states.map((seg) => createWriteStream(dest, {
+                        fd,
+                        start: seg.start,
+                        autoClose: false,
+                    }));
                 }
-                let input = await fetch(options, this.agents);
+            }
+
+            return Promise.all(states.map(async (seg, index) => {
+                if (seg.end && seg.start >= seg.end) {
+                    return true;
+                }
+                let options: RequestOptions = {
+                    ...resolvedUrl,
+                    method: "GET",
+                    headers: {
+                        ...this.headers,
+                        ...resolvedHeader,
+                        Range: `bytes=${seg.start}-${seg.end ?? ""}`,
+                    },
+                };
+                let { message: input, request } = await fetch(options, this.agents);
                 input.on("data", (chunk) => {
                     transferredTotal += chunk.length;
-                    result[index].start += chunk.length;
+                    seg.start += chunk.length;
                     if (progress(chunk.length, transferredTotal, total, url)) {
                         input.destroy(new Task.CancelledError());
                     }
                 });
-                pauses.push(input.pause);
-                resumes.push(input.resume);
-                let output = createWriteStream(dest, {
-                    fd,
-                    start: seg.start,
-                    autoClose: false,
+                let output = outputs[index];
+                pauses[index] = () => {
+                    input.unpipe();
+                    request.abort();
+                };
+                return new Promise<void>((resolve, reject) => {
+                    input.pipe(output);
+                    output.on("finish", resolve);
+                    request.on("abort", resolve);
+                    request.on("error", reject);
                 });
-                await pipeline(input, output);
             }));
-        } catch (e) {
-            // if (!acceptRanges) {
-            await unlink(dest);
-            // }
-        } finally {
-            await close(fd);
         }
-        return result;
+
+        let retry = 2;
+        let download = (resume = false) => {
+            start(resume).then(() => {
+                if (!paused) { _resolve(); }
+            }, (e) => {
+                if (e.code === "ECONNRESET" && e.message === "socket hang up" && retry > 0) {
+                    retry -= 1;
+                    download(true);
+                } else {
+                    _reject(e);
+                }
+            });
+        }
+
+        try {
+            download();
+            await downloading;
+            await close(fd);
+        } catch (e) {
+            await close(fd);
+            await unlink(dest);
+            throw e;
+        }
+
+        return states;
     }
 
     /**
@@ -363,15 +450,11 @@ export class HttpDownloader implements Downloader {
                 if (e instanceof Task.CancelledError) { throw e; }
                 if (e) { errors.push(e); }
                 try {
-                    let { url, contentLength: total, acceptRanges, isFile } = await this.resolveMetadata(u);
-
-                    if (isFile) {
-                        await copyFile(fileURLToPath(url), option.destination);
+                    let parsedURL = parse(u);
+                    if (parsedURL.protocol === "file:") {
+                        await copyFile(fileURLToPath(u), option.destination);
                     } else {
-                        let fragments = total && acceptRanges
-                            ? computeSegmenets(total, option.segmentThreshold ?? 2 * 1024 * 1024, 4)
-                            : [{ start: 0, end: total }];
-                        await this.downloadByFramgments(url, fragments, total ?? -1, option, !!acceptRanges);
+                        await this.downloads(parsedURL, option);
                     }
                 } catch (err) {
                     errors.push(err);
@@ -457,7 +540,7 @@ export function resolveDownloader<O extends DownloaderOptions, T>(options: O, cl
         maxSockets,
         maxFreeSockets: 64,
         keepAlive: true,
-    }
+    };
     let downloader = new HttpDownloader({
         http: new HttpAgent(agentOptions),
         https: new HttpsAgent(agentOptions),
