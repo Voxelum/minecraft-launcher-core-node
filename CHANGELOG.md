@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.3
+### @xmcl/installer@2.7.3
+#### Bug Fixes
+
+- fix: correctly reset state ([db73d6f9870e158bd8b22d8c613811a1a2091581](https://github.com/voxelum/minecraft-launcher-core-node/commit/db73d6f9870e158bd8b22d8c613811a1a2091581))
+- fix: caught the error during fetch & checksum to ensure result (#149) ([b3950d9db367815a3b0faec2cdf73c4ce9fdcb2d](https://github.com/voxelum/minecraft-launcher-core-node/commit/b3950d9db367815a3b0faec2cdf73c4ce9fdcb2d))
+
+
 ## 3.1.2
 ### @xmcl/installer@2.7.2
 #### Bug Fixes
