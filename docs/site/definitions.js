@@ -3194,7 +3194,7 @@ interface DownloadMetadata {
     acceptRanges: boolean;
     contentLength: number;
     lastModified?: string;
-    eTag?: string | string[];
+    eTag?: string;
 }
 /**
  * The default downloader based on nodejs http/https which support range (segment) download
@@ -3206,7 +3206,7 @@ export declare class HttpDownloader implements Downloader {
     readonly headers: Record<string, string | string[] | null>;
     constructor(agents?: Agents, headers?: Record<string, string | string[] | null>);
     protected resolveMetadata(parsedURL: UrlWithStringQuery): Promise<DownloadMetadata>;
-    protected downloads(originalUrl: UrlWithStringQuery, option: DownloadOption): Promise<Segment[]>;
+    protected downloads(fd: number, originalUrl: UrlWithStringQuery, option: DownloadOption): Promise<Segment[]>;
     /**
      * Download file by the option provided.
      */
