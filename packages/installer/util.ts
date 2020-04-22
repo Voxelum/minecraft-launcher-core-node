@@ -350,23 +350,28 @@ export class HttpDownloader implements Downloader {
             return true;
         }
 
+        let reset = () => {
+            states = total && acceptRanges
+                ? computeSegmenets(total, option.segmentThreshold ?? 2 * 1024 * 1024, 4)
+                : [{ start: 0, end: total }];
+            outputs = states.map((seg) => createWriteStream(dest, {
+                fd,
+                start: seg.start,
+                autoClose: false,
+            }));
+        }
+
         let update = async () => {
             let newMetadata = await this.resolveMetadata(originalUrl);
-            if (newMetadata.eTag !== eTag) {
+            let unmatched = newMetadata.eTag !== eTag;
+            if (unmatched) {
                 url = newMetadata.url;
                 eTag = newMetadata.eTag;
                 total = newMetadata.contentLength;
                 acceptRanges = newMetadata.acceptRanges;
                 resolvedUrl = parse(url);
-                states = total && acceptRanges
-                    ? computeSegmenets(total, option.segmentThreshold ?? 2 * 1024 * 1024, 4)
-                    : [{ start: 0, end: total }];
-                await truncate(fd);
-                outputs = states.map((seg) => createWriteStream(dest, {
-                    fd,
-                    start: seg.start,
-                    autoClose: false,
-                }));
+                await truncate(fd, total);
+                reset();
             }
         }
 
@@ -452,6 +457,7 @@ export class HttpDownloader implements Downloader {
                     break;
                 } else {
                     done = false;
+                    reset();
                 }
             } catch (e) {
                 if (!shouldTolerateError(e)) {
