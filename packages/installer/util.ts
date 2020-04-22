@@ -13,6 +13,7 @@ import {
     writeFile as fwriteFile,
     mkdir as fmkdir,
     ftruncate,
+    WriteStream,
 } from "fs";
 import { createHash } from "crypto";
 import { IncomingMessage, request, RequestOptions, Agent as HttpAgent, AgentOptions, ClientRequest } from "http";
@@ -261,9 +262,11 @@ function fetch(options: RequestOptions, agents: { http?: HttpAgent, https?: Http
                         follow(mergeRequestOptions(options, parse(m.headers.location!)));
                     } else {
                         m.url = m.url || format(options);
+                        clientReq.removeListener("error", reject);
                         resolve({ request: clientReq, message: m });
                     }
                 });
+                clientReq.addListener("error", reject);
                 clientReq.end();
             }
         }
@@ -276,7 +279,7 @@ interface DownloadMetadata {
     acceptRanges: boolean;
     contentLength: number;
     lastModified?: string;
-    eTag?: string | string[];
+    eTag?: string;
 }
 
 /**
@@ -311,73 +314,64 @@ export class HttpDownloader implements Downloader {
             acceptRanges: headers["accept-ranges"] === "bytes",
             contentLength: headers["content-length"] ? Number.parseInt(headers["content-length"]) : -1,
             lastModified: headers["last-modified"],
-            eTag: headers.etag,
+            eTag: headers.etag as string | undefined,
         };
     }
 
-    protected async downloads(originalUrl: UrlWithStringQuery, option: DownloadOption) {
+    protected async downloads(fd: number, originalUrl: UrlWithStringQuery, option: DownloadOption) {
         let dest = option.destination;
         let transferredTotal = 0;
         let progress = option.progress ?? (() => { });
+        let headers = option.headers || {};
+
+        // metadata
+        let url: string = "";
+        let total: number = 0;
+        let eTag: string | undefined;
+        let acceptRanges: boolean = false;
+        let resolvedUrl: UrlWithStringQuery;
+        let segments: Segment[] = [];
+
+        // states
         let paused = false;
-        let _resolve: () => void;
-        let _reject: (e: unknown) => void;
-        let downloading = new Promise((resolve, reject) => {
-            _resolve = resolve;
-            _reject = reject;
-        });
-        function pause() {
-            if (!paused) {
-                paused = true;
-                pauses.forEach((f) => f());
-                pauses.fill(() => { });
-            }
-        }
-        function resume() {
-            if (paused) {
-                paused = false;
-                download(true);
-            }
-        }
-        option.pausable?.(pause, resume);
-
-        let { url, contentLength: total, eTag, acceptRanges } = await this.resolveMetadata(originalUrl);
-        let segments = total && acceptRanges
-            ? computeSegmenets(total, option.segmentThreshold ?? 2 * 1024 * 1024, 4)
-            : [{ start: 0, end: total }];
-        let pauses: Function[] = new Array(segments.length).fill(() => { });
-        let resolvedUrl = parse(url);
-        let resolvedHeader = option.headers || {};
+        let done = false;
+        let _unpause: () => void;
+        let pausing: Promise<void> = Promise.resolve();
+        let abortRequests: Function[] = [];
         let states: Segment[] = segments.map((s) => ({ ...s }));
-        let fd = await open(dest, "w");
-        let outputs = states.map((seg) => createWriteStream(dest, {
-            fd,
-            start: seg.start,
-            autoClose: false,
-        }));
+        let outputs: WriteStream[] = [];
 
-        let start = async (resumed: boolean) => {
-            if (resumed) {
-                let newMetadata = await this.resolveMetadata(originalUrl);
-                if (newMetadata.eTag !== eTag) {
-                    total = newMetadata.contentLength;
-                    acceptRanges = newMetadata.acceptRanges;
-                    url = newMetadata.url;
-                    eTag = newMetadata.eTag;
-                    resolvedUrl = parse(url);
-                    states = total && acceptRanges
-                        ? computeSegmenets(total, option.segmentThreshold ?? 2 * 1024 * 1024, 4)
-                        : [{ start: 0, end: total }];
-                    await truncate(fd);
-                    outputs = states.map((seg) => createWriteStream(dest, {
-                        fd,
-                        start: seg.start,
-                        autoClose: false,
-                    }));
-                }
+        let validate = async () => {
+            if (option.checksum) {
+                let actual = await checksum(option.destination, option.checksum.algorithm)
+                let expect = option.checksum.hash;
+                return actual === expect;
             }
+            return true;
+        }
 
-            return Promise.all(states.map(async (seg, index) => {
+        let update = async () => {
+            let newMetadata = await this.resolveMetadata(originalUrl);
+            if (newMetadata.eTag !== eTag) {
+                url = newMetadata.url;
+                eTag = newMetadata.eTag;
+                total = newMetadata.contentLength;
+                acceptRanges = newMetadata.acceptRanges;
+                resolvedUrl = parse(url);
+                states = total && acceptRanges
+                    ? computeSegmenets(total, option.segmentThreshold ?? 2 * 1024 * 1024, 4)
+                    : [{ start: 0, end: total }];
+                await truncate(fd);
+                outputs = states.map((seg) => createWriteStream(dest, {
+                    fd,
+                    start: seg.start,
+                    autoClose: false,
+                }));
+            }
+        }
+
+        let download = async () => {
+            let results = await Promise.all(states.map(async (seg, index) => {
                 if (seg.end && seg.start >= seg.end) {
                     return true;
                 }
@@ -386,7 +380,7 @@ export class HttpDownloader implements Downloader {
                     method: "GET",
                     headers: {
                         ...this.headers,
-                        ...resolvedHeader,
+                        ...headers,
                         Range: `bytes=${seg.start}-${seg.end ?? ""}`,
                     },
                 };
@@ -399,41 +393,72 @@ export class HttpDownloader implements Downloader {
                     }
                 });
                 let output = outputs[index];
-                pauses[index] = () => {
+                abortRequests[index] = () => {
                     input.unpipe();
                     request.abort();
                 };
-                return new Promise<void>((resolve, reject) => {
+                return new Promise<boolean>((resolve, reject) => {
                     input.pipe(output);
-                    output.on("finish", resolve);
-                    request.on("abort", resolve);
+                    output.on("finish", () => resolve(true));
+                    request.on("abort", () => resolve(false));
                     request.on("error", reject);
                 });
             }));
+            done = results.every((r) => r);
         }
+
+        let pause = () => {
+            if (!paused) {
+                paused = true;
+                // update the pause handle
+                pausing = new Promise((resolve) => {
+                    _unpause = resolve;
+                });
+
+                // notify each request to abort
+                abortRequests.forEach((f) => f());
+                abortRequests.fill(() => { });
+            }
+        }
+        let resume = () => {
+            if (paused) {
+                paused = false;
+                _unpause();
+                _unpause = () => { };
+                pausing = Promise.resolve();
+            }
+        }
+        let shouldTolerateError = (e: any) => {
+            if (e.code === "ECONNRESET") {
+                return true;
+            }
+            if (e.code === "ETIMEDOUT") {
+                return true;
+            }
+            return false;
+        }
+        option.pausable?.(pause, resume);
 
         let retry = 2;
-        let download = (resume = false) => {
-            start(resume).then(() => {
-                if (!paused) { _resolve(); }
-            }, (e) => {
-                if (e.code === "ECONNRESET" && e.message === "socket hang up" && retry > 0) {
-                    retry -= 1;
-                    download(true);
-                } else {
-                    _reject(e);
+        while (!done && retry > 0) {
+            try {
+                await update();
+                await download();
+                await pausing;
+                if (!done) {
+                    continue;
                 }
-            });
-        }
-
-        try {
-            download();
-            await downloading;
-            await close(fd);
-        } catch (e) {
-            await close(fd);
-            await unlink(dest);
-            throw e;
+                if (await validate()) {
+                    break;
+                } else {
+                    done = false;
+                }
+            } catch (e) {
+                if (!shouldTolerateError(e)) {
+                    throw e;
+                }
+            }
+            retry -= 1;
         }
 
         return states;
@@ -446,15 +471,17 @@ export class HttpDownloader implements Downloader {
         await ensureFile(option.destination);
         let errors: unknown[] = [];
         try {
+            let fd = await open(option.destination, "w");
             await normalizeArray(option.url).reduce(async (memo, u) => memo.catch(async (e) => {
                 if (e instanceof Task.CancelledError) { throw e; }
-                if (e) { errors.push(e); }
                 try {
                     let parsedURL = parse(u);
                     if (parsedURL.protocol === "file:") {
+                        await close(fd);
                         await copyFile(fileURLToPath(u), option.destination);
                     } else {
-                        await this.downloads(parsedURL, option);
+                        await this.downloads(fd, parsedURL, option);
+                        await close(fd);
                     }
                 } catch (err) {
                     errors.push(err);
@@ -464,6 +491,7 @@ export class HttpDownloader implements Downloader {
         } catch (e) {
             errors.pop();
             e.errors = errors;
+            await unlink(option.destination);
             throw e;
         }
     }
