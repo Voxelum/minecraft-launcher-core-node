@@ -261,9 +261,11 @@ function fetch(options: RequestOptions, agents: { http?: HttpAgent, https?: Http
                         follow(mergeRequestOptions(options, parse(m.headers.location!)));
                     } else {
                         m.url = m.url || format(options);
+                        clientReq.removeListener("error", reject);
                         resolve({ request: clientReq, message: m });
                     }
                 });
+                clientReq.addListener("error", reject);
                 clientReq.end();
             }
         }
@@ -444,17 +446,30 @@ export class HttpDownloader implements Downloader {
      */
     async downloadFile(option: DownloadOption): Promise<void> {
         await ensureFile(option.destination);
+        const downloadAndCheck = async (parsedURL: UrlWithStringQuery, retry: number) => {
+            await this.downloads(parsedURL, option);
+            if (option.checksum) {
+                let actual = await checksum(option.destination, option.checksum.algorithm)
+                let expect = option.checksum.hash;
+                if (actual !== expect) {
+                    if (retry > 0) {
+                        await downloadAndCheck(parsedURL, retry - 1);
+                    } else {
+                        throw new Error(`Checksum not matched: expect ${expect}, actual ${actual}.`);
+                    }
+                }
+            }
+        }
         let errors: unknown[] = [];
         try {
             await normalizeArray(option.url).reduce(async (memo, u) => memo.catch(async (e) => {
                 if (e instanceof Task.CancelledError) { throw e; }
-                if (e) { errors.push(e); }
                 try {
                     let parsedURL = parse(u);
                     if (parsedURL.protocol === "file:") {
                         await copyFile(fileURLToPath(u), option.destination);
                     } else {
-                        await this.downloads(parsedURL, option);
+                        await downloadAndCheck(parsedURL, 1);
                     }
                 } catch (err) {
                     errors.push(err);
