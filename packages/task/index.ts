@@ -128,8 +128,8 @@ export class TaskSignal {
     _started: boolean = false;
 
     _resumePauseCallback: null | (() => void) = null;
-    _onPause: null | (() => void) = null;
-    _onResume: null | (() => void) = null;
+    _onPause: Array<() => void> = [];
+    _onResume: Array<() => void> = [];
 }
 
 export class TaskBridge<X extends Task.State = Task.State> {
@@ -144,16 +144,20 @@ export class TaskBridge<X extends Task.State = Task.State> {
         const { node, promise } = this.enqueueTask(signal, task);
         const handle: TaskHandle<T, X> = {
             pause() {
-                signal._paused = true;
-                if (signal._onPause) { signal._onPause(); }
+                if (!signal._paused) {
+                    signal._paused = true;
+                    if (signal._onPause) { signal._onPause.forEach((f) => f()); }
+                }
             },
             resume() {
-                signal._paused = false;
-                if (signal._resumePauseCallback) {
-                    signal._resumePauseCallback();
-                }
-                if (signal._onResume) {
-                    signal._onResume();
+                if (signal._paused) {
+                    signal._paused = false;
+                    if (signal._resumePauseCallback) {
+                        signal._resumePauseCallback();
+                    }
+                    if (signal._onResume) {
+                        signal._onResume.forEach((f) => f());
+                    }
                 }
             },
             cancel() { signal._cancelled = true; },
@@ -182,61 +186,28 @@ export class TaskBridge<X extends Task.State = Task.State> {
         let knownTotal = -1;
         let subTotals: number[] = [];
         let subProgress: number[] = [];
+        let pauseFunc: (() => void) | undefined;
+        let resumeFunc: (() => void) | undefined;
 
-        function subUpdate(message?: string) {
-            let progress = subProgress.reduce((a, b) => a + b);
-            let total = knownTotal === -1 ? subTotals.reduce((a, b) => a + b, 0) : knownTotal;
-            emitter.emit("update", { progress, total, message }, node);
-            parent?.progressUpdate(progress, total, message);
-        }
-
-        const context: Task.Context = {
-            pausealbe(onPause, onResume) {
-                signal._onPause = onPause || null;
-                signal._onResume = onResume || null;
-            },
-            update(progress: number, total: number, message?: string) {
-                knownTotal = total || knownTotal;
-
-                emitter.emit("update", { progress, total, message }, node);
-
-                parent?.progressUpdate(progress, total, message);
-
-                if (signal._cancelled) {
-                    emitter.emit("cancel", node);
-                    throw new Task.CancelledError();
-                }
-            },
-            async execute<Y>(task: Task<Y>, total?: number): Promise<Y> {
-                let index = subProgress.length;
-                subProgress.push(0);
-                let { promise } = bridge.enqueueTask(signal, task, {
-                    node,
-                    progressUpdate(progress: number, subTotal, message) {
-                        if (total) {
-                            subTotals[index] = total;
-                            subProgress[index] = total * (progress / subTotal);
-                            subUpdate(message);
-                        }
-                    }
-                });
-                promise = promise.then((r) => {
-                    subProgress[index] = total || 0;
-                    subUpdate();
-                    return r;
-                });
-                return promise;
-            },
-        }
-
-        if (signal._cancelled) {
-            emitter.emit("cancel", node);
-            throw new Task.CancelledError();
-        }
-
-        const promise = bridge.scheduler(async () => {
-            await new Promise((resolve) => setImmediate(resolve));
-
+        const pause = () => {
+            if (pauseFunc) {
+                pauseFunc();
+                emitter.emit("pasue", node);
+            }
+        };
+        const resume = () => {
+            if (resumeFunc) {
+                resumeFunc();
+                emitter.emit("resume", node);
+            }
+        };
+        const checkCancel = () => {
+            if (signal._cancelled) {
+                emitter.emit("cancel", node);
+                throw new Task.CancelledError();
+            }
+        };
+        const waitPause = async () => {
             if (signal._paused) {
                 emitter.emit("pause", node);
                 await new Promise<void>((resolve) => {
@@ -247,25 +218,81 @@ export class TaskBridge<X extends Task.State = Task.State> {
                     };
                 });
             }
+        };
+        const pausealbe = (onPause: (() => void) | undefined, onResume: (() => void) | undefined) => {
+            if (pauseFunc !== onPause) {
+                pauseFunc = onPause;
+            }
+            if (resumeFunc !== onResume) {
+                resumeFunc = onResume;
+            }
+        }
+        const update = (progress: number, total: number, message?: string) => {
+            knownTotal = total || knownTotal;
+
+            emitter.emit("update", { progress, total, message }, node);
+
+            parent?.progressUpdate(progress, total, message);
+
+            checkCancel();
+        }
+        const subUpdate = (message?: string) => {
+            let progress = subProgress.reduce((a, b) => a + b);
+            let total = knownTotal === -1 ? subTotals.reduce((a, b) => a + b, 0) : knownTotal;
+            emitter.emit("update", { progress, total, message }, node);
+            parent?.progressUpdate(progress, total, message);
+        }
+        const execute = <Y>(task: Task<Y>, total?: number) => {
+            let index = subProgress.length;
+            subProgress.push(0);
+            let { promise } = bridge.enqueueTask(signal, task, {
+                node,
+                progressUpdate(progress: number, subTotal, message) {
+                    if (total) {
+                        subTotals[index] = total;
+                        subProgress[index] = total * (progress / subTotal);
+                        subUpdate(message);
+                    }
+                }
+            });
+            promise = promise.then((r) => {
+                subProgress[index] = total || 0;
+                subUpdate();
+                return r;
+            });
+            return promise;
+        }
+        const run = async () => {
+            await new Promise((resolve) => setImmediate(resolve));
+
+            checkCancel();
+            await waitPause();
 
             signal._started = true;
 
             emitter.emit("execute", node, parent?.node);
 
-            return runTask(context, task).then((r) => {
-                emitter.emit("finish", r, node);
-                return r;
-            }, (e) => {
+            try {
+                let result = await runTask({ update, execute, pausealbe, waitPause }, task);
+                emitter.emit("finish", result, node);
+                return result;
+            } catch (e) {
                 if (e instanceof Task.CancelledError) {
                     emitter.emit("cancel", node);
                     throw e;
                 }
                 emitter.emit("fail", e, node);
                 throw e;
-            });
-        });
+            } finally {
+                signal._onPause.splice(signal._onPause.indexOf(pause));
+                signal._onResume.splice(signal._onResume.indexOf(resume));
+            }
+        };
 
-        return { node, promise };
+        signal._onPause.push(pause);
+        signal._onResume.push(resume);
+        checkCancel();
+        return { node, promise: bridge.scheduler(run) };
     }
 }
 
@@ -327,6 +354,8 @@ export namespace Task {
         pausealbe(onPause?: () => void, onResume?: () => void): void;
         update(progres: number, total?: number, message?: string): void | boolean;
         execute<T>(task: Task<T>, pushProgress?: number): Promise<T>;
+
+        waitPause(): Promise<void>;
     }
 
     export type StateFactory<X extends Task.State = Task.State> = (node: Task.State, parent?: X) => X;
