@@ -142,6 +142,8 @@ export interface LibraryOption extends DownloaderOptions {
     /**
      * Control how many libraries download task should run at the same time.
      * It will override the `maxConcurrencyOption` if this is presented.
+     *
+     * This will be ignored if you have your own downloader assigned.
      */
     librariesDownloadConcurrency?: number;
 }
@@ -156,26 +158,42 @@ export interface AssetsOption extends DownloaderOptions {
     /**
      * Control how many assets download task should run at the same time.
      * It will override the `maxConcurrencyOption` if this is presented.
+     *
+     * This will be ignored if you have your own downloader assigned.
      */
     assetsDownloadConcurrency?: number;
+
+    /**
+     * The assets index download or url replacement
+     */
+    assetsIndexUrl?: string | string[] | ((version: ResolvedVersion) => string | string[]);
+}
+
+function resolveDownloads<T>(original: string, version: T, option?: string | string[] | ((version: T) => string | string[])) {
+    let result = [original];
+    if (typeof option === "function") {
+        result.push(...normalizeArray(option(version)));
+    } else {
+        result.push(...normalizeArray(option));
+    }
+    return result;
 }
 /**
  * Replace the minecraft client or server jar download
  */
 export interface JarOption extends DownloaderOptions {
     /**
-     * The client jar url
-     */
-    client?: string;
-    /**
-     * The server jar url
-     */
-    server?: string;
-
-    /**
      * The version json url replacement
      */
-    jsonUrl?: string;
+    json?: string | string[] | ((version: RequiredVersion) => string | string[]);
+    /**
+     * The client jar url replacement
+     */
+    client?: string | string[] | ((version: ResolvedVersion) => string | string[]);
+    /**
+     * The server jar url replacement
+     */
+    server?: string | string[] | ((version: ResolvedVersion) => string | string[]);
 }
 
 export type Option = AssetsOption & JarOption & LibraryOption;
@@ -340,7 +358,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
         let jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
         await context.execute(task("assetsJson", downloadFileTask({
-            url: version.assetIndex.url,
+            url: resolveDownloads(version.assetIndex.url, version, options.assetsIndexUrl),
             destination: jsonPath,
             checksum: {
                 algorithm: "sha1",
@@ -637,8 +655,8 @@ function installVersionJsonTask(version: RequiredVersion, minecraft: MinecraftLo
         await ensureDir(folder.getVersionRoot(version.id));
 
         let destination = folder.getVersionJson(version.id);
-        let url = options.jsonUrl ?? version.url;
-        let expectSha1 = url.split("/")[5];
+        let expectSha1 = version.url.split("/")[5];
+        let url = resolveDownloads(version.url, version, options.json);
 
         await downloadFileTask({
             url,
@@ -653,7 +671,7 @@ function installVersionJarTask(type: "client" | "server", version: ResolvedVersi
         const folder = MinecraftFolder.from(minecraft);
         const destination = join(folder.getVersionRoot(version.id),
             type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar");
-        const url = options[type] || version.downloads[type].url;
+        const url = resolveDownloads(version.downloads[type].url, version, options[type]);
         const expectSha1 = version.downloads[type].sha1;
 
         await downloadFileTask({
