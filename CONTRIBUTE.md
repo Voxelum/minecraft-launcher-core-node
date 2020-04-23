@@ -39,7 +39,9 @@ The code are splited into seperated projects, which layed in under `packages` fo
 
 The simplest way to run the code is write a test and then run it.
 
-And, the simplest way to run a test is `npx jest packages/<the-package>/<the-test-file.test.ts>`.
+If you using VSCode, you can install [jest](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest) plugin and use jest plugin to debug specific test.
+
+Or you just use cli to run a test: `npx jest packages/<the-package>/<the-test-file.test.ts>`.
 
 Also you can use the command `npm run dev`.
 
@@ -49,7 +51,7 @@ During this process, you can first run `npm run dev world`, and it will start to
 
 **Please make sure you clean all built js files before you run your test! The test will fail if there are built js file! You can run `npm run build:clean` to clean all js!** 
 
-**Highly recommended to add test for the features,** ~~which I always lazy to add.~~
+**Highly recommended to add test for the features,**
 
 ### Commit You Code
 
@@ -77,7 +79,7 @@ For example, all the files in `@xmcl/installer` module will be built into a sing
 
 ### How user know which version they are using?
 
-If you run nodejs and directly require a module `require('@xmcl/core')`, the node module resolution will give you the `main` field in package json, which is the `index.cjs.js` file.
+If you run nodejs and directly require a module `require('@xmcl/core')`, the node module resolution will pick the `main` field in package json, which usually points to a file named `index.cjs.js`.
 
 If you using webpack, and bundle these into a single file, it will pick the `main` field if there is no esm support, or pick `module` field if the esm is supported. It will pick the browser file if you are built for browser.
 

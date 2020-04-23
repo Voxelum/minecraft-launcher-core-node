@@ -79,6 +79,7 @@ It requires electron have the minimum version of `v3.x` (node version `>= 10`).
 
 Go [Getting Started](/USAGE.md) page.
 
+Or you can read the full [document](https://voxelum.github.io/minecraft-launcher-core-node/).
 
 ## Active Packages
 
@@ -108,7 +109,11 @@ See [Contribute.md](/CONTRIBUTE.md)
 
 ## Credit
 
-[Yu Xuanchi](https://github.com/yuxuanchiadm), provide some idea about NBT module.
+[lukechu10](https://github.com/lukechu10) helped me to generate the document from typescript.
 
-[Haowei Wen](https://github.com/yushijinhun), the author of [JMCCC](https://github.com/to2mbn/JMCCC), [Authlib Injector](https://github.com/to2mbn/authlib-injector), and [Indexyz](https://github.com/Indexyz), help me a lot on Minecraft launching, authing.
+[HoldYourWaffle](https://github.com/HoldYourWaffle) provided great suggestions to repo.
+
+[Yu Xuanchi](https://github.com/yuxuanchiadm) provided some idea about NBT module.
+
+[Haowei Wen](https://github.com/yushijinhun), the author of [JMCCC](https://github.com/to2mbn/JMCCC), [Authlib Injector](https://github.com/to2mbn/authlib-injector), and [Indexyz](https://github.com/Indexyz), helped me a lot on Minecraft launching, authing.
 
