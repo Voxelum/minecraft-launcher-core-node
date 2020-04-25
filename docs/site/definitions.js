@@ -2757,6 +2757,8 @@ export interface LibraryOption extends DownloaderOptions {
     /**
      * Control how many libraries download task should run at the same time.
      * It will override the \`maxConcurrencyOption\` if this is presented.
+     *
+     * This will be ignored if you have your own downloader assigned.
      */
     librariesDownloadConcurrency?: number;
 }
@@ -2771,25 +2773,31 @@ export interface AssetsOption extends DownloaderOptions {
     /**
      * Control how many assets download task should run at the same time.
      * It will override the \`maxConcurrencyOption\` if this is presented.
+     *
+     * This will be ignored if you have your own downloader assigned.
      */
     assetsDownloadConcurrency?: number;
+    /**
+     * The assets index download or url replacement
+     */
+    assetsIndexUrl?: string | string[] | ((version: ResolvedVersion) => string | string[]);
 }
 /**
  * Replace the minecraft client or server jar download
  */
 export interface JarOption extends DownloaderOptions {
     /**
-     * The client jar url
-     */
-    client?: string;
-    /**
-     * The server jar url
-     */
-    server?: string;
-    /**
      * The version json url replacement
      */
-    jsonUrl?: string;
+    json?: string | string[] | ((version: RequiredVersion) => string | string[]);
+    /**
+     * The client jar url replacement
+     */
+    client?: string | string[] | ((version: ResolvedVersion) => string | string[]);
+    /**
+     * The server jar url replacement
+     */
+    server?: string | string[] | ((version: ResolvedVersion) => string | string[]);
 }
 export declare type Option = AssetsOption & JarOption & LibraryOption;
 declare type RequiredVersion = Pick<Version, "id" | "url">;
@@ -4446,8 +4454,8 @@ export declare class TaskSignal {
     _cancelled: boolean;
     _started: boolean;
     _resumePauseCallback: null | (() => void);
-    _onPause: null | (() => void);
-    _onResume: null | (() => void);
+    _onPause: Array<() => void>;
+    _onResume: Array<() => void>;
 }
 export declare class TaskBridge<X extends Task.State = Task.State> {
     readonly emitter: EventEmitter;
@@ -4515,6 +4523,7 @@ export declare namespace Task {
         pausealbe(onPause?: () => void, onResume?: () => void): void;
         update(progres: number, total?: number, message?: string): void | boolean;
         execute<T>(task: Task<T>, pushProgress?: number): Promise<T>;
+        waitPause(): Promise<void>;
     }
     type StateFactory<X extends Task.State = Task.State> = (node: Task.State, parent?: X) => X;
     const DEFAULT_STATE_FACTORY: StateFactory;

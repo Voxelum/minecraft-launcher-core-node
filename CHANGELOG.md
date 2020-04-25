@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.2.0
+### @xmcl/task@2.1.7
+#### Bug Fixes
+
+- fix: wrong pause dispatch ([df8e7364b1a9281e5acfd0ce9cd5ebb2af637fb9](https://github.com/voxelum/minecraft-launcher-core-node/commit/df8e7364b1a9281e5acfd0ce9cd5ebb2af637fb9))
+### @xmcl/installer@2.8.0
+#### Features
+
+- feat: support more options to swap urls src ([c064074773c1be0887f0e73ffa52aa506ea44995](https://github.com/voxelum/minecraft-launcher-core-node/commit/c064074773c1be0887f0e73ffa52aa506ea44995))
+- Dependency @xmcl/task bump **patch**
+
+
 ## 3.1.3
 ### @xmcl/installer@2.7.3
 #### Bug Fixes
