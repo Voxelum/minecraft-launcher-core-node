@@ -81,7 +81,8 @@ export function installByInstallerTask(installer: string, minecraft: MinecraftLo
         let zip = await open(installer);
         context.update(10, 100);
 
-        let entry = zip.entries["net/optifine/Config.class"];
+        let entry = zip.entries["net/optifine/Config.class"]
+                                ?? zip.entries["Config.class"];
         if (!entry) {
             throw createErr({ error: "BadOptifineJar", entry: "net/optifine/Config.class" });
         }
