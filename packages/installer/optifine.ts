@@ -81,9 +81,9 @@ export function installByInstallerTask(installer: string, minecraft: MinecraftLo
         let zip = await open(installer);
         context.update(10, 100);
 
-        let entry = zip.entries["net/optifine/Config.class"];
+        let entry = zip.entries["net/optifine/BlockDir.class"];
         if (!entry) {
-            throw createErr({ error: "BadOptifineJar", entry: "net/optifine/Config.class" });
+            throw createErr({ error: "BadOptifineJar", entry: "net/optifine/BlockDir.class" });
         }
 
         let launchWrapperVersionEntry = zip.entries["launchwrapper-of.txt"];
