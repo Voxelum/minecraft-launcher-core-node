@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.2.1
+### @xmcl/installer@2.8.1
+#### Bug Fixes
+
+- fix: correctly find Config.class on old version of Optifine (#155) ([66489b19a4416485e9727f57d704bc819a3f744b](https://github.com/voxelum/minecraft-launcher-core-node/commit/66489b19a4416485e9727f57d704bc819a3f744b))
+
+
 ## 3.2.0
 ### @xmcl/task@2.1.7
 #### Bug Fixes
