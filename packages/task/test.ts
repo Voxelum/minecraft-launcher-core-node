@@ -206,9 +206,51 @@ describe("Task", () => {
             expect(aFunc).toBeCalled();
             expect(bFunc).not.toBeCalled();
         });
+        test("should pause all task", async () => {
+            const aFunc = jest.fn();
+            const aResume = jest.fn();
+            const bFunc = jest.fn();
+            const bResume = jest.fn();
+
+            const runtime = Task.createRuntime(Task.DEFAULT_STATE_FACTORY);
+            const task = runtime.submit(Task.create("test", async function test(c) {
+                await c.execute(Task.create("nested", async (c) => {
+                    await Promise.all([
+                        c.execute(Task.create("aFunc", async function a(x) {
+                            x.pausealbe(() => {
+                                aFunc();
+                            }, () => {
+                                aResume();
+                            });
+                            await wait(1000);
+                        })),
+                        c.execute(Task.create("bFunc", async function a(x) {
+                            x.pausealbe(() => {
+                                bFunc();
+                            }, () => {
+                                bResume();
+                            });
+                            await wait(1000);
+                        }))
+                    ]);
+                }))
+
+            }));
+            setTimeout(() => {
+                task.pause();
+            }, 100);
+            await wait(200);
+            expect(aFunc).toBeCalled();
+            expect(bFunc).toBeCalled();
+            expect(aResume).not.toBeCalled();
+            expect(bResume).not.toBeCalled();
+            task.resume();
+            expect(aResume).toBeCalled();
+            expect(bResume).toBeCalled();
+        });
     });
     describe("#resume", () => {
-        test("should be able to resume task", async () => {
+        test.only("should be able to resume task", async () => {
             const monitor = jest.fn();
             const runtime = Task.createRuntime();
             const task = runtime.submit(Task.create("monitor", monitor));
@@ -216,7 +258,7 @@ describe("Task", () => {
             await wait(10);
             expect(monitor).not.toBeCalled();
             task.resume();
-            await wait(0);
+            await wait(10);
             expect(monitor).toBeCalled();
         });
     });

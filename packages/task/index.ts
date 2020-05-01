@@ -127,7 +127,6 @@ export class TaskSignal {
     _cancelled = false;
     _started: boolean = false;
 
-    _resumePauseCallback: null | (() => void) = null;
     _onPause: Array<() => void> = [];
     _onResume: Array<() => void> = [];
 }
@@ -146,18 +145,13 @@ export class TaskBridge<X extends Task.State = Task.State> {
             pause() {
                 if (!signal._paused) {
                     signal._paused = true;
-                    if (signal._onPause) { signal._onPause.forEach((f) => f()); }
+                    signal._onPause.forEach((f) => f());
                 }
             },
             resume() {
                 if (signal._paused) {
                     signal._paused = false;
-                    if (signal._resumePauseCallback) {
-                        signal._resumePauseCallback();
-                    }
-                    if (signal._onResume) {
-                        signal._onResume.forEach((f) => f());
-                    }
+                    signal._onResume.forEach((f) => f());
                 }
             },
             cancel() { signal._cancelled = true; },
@@ -188,11 +182,12 @@ export class TaskBridge<X extends Task.State = Task.State> {
         let subProgress: number[] = [];
         let pauseFunc: (() => void) | undefined;
         let resumeFunc: (() => void) | undefined;
+        let resumeCb = () => { };
 
         const pause = () => {
             if (pauseFunc) {
                 pauseFunc();
-                emitter.emit("pasue", node);
+                emitter.emit("pause", node);
             }
         };
         const resume = () => {
@@ -200,6 +195,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
                 resumeFunc();
                 emitter.emit("resume", node);
             }
+            resumeCb();
         };
         const checkCancel = () => {
             if (signal._cancelled) {
@@ -211,11 +207,11 @@ export class TaskBridge<X extends Task.State = Task.State> {
             if (signal._paused) {
                 emitter.emit("pause", node);
                 await new Promise<void>((resolve) => {
-                    signal._resumePauseCallback = () => {
-                        signal._resumePauseCallback = null;
+                    resumeCb = () => {
+                        resumeCb = () => { };
                         emitter.emit("resume", node);
                         resolve();
-                    };
+                    }
                 });
             }
         };
@@ -226,7 +222,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
             if (resumeFunc !== onResume) {
                 resumeFunc = onResume;
             }
-        }
+        };
         const update = (progress: number, total: number, message?: string) => {
             knownTotal = total || knownTotal;
 
@@ -235,13 +231,13 @@ export class TaskBridge<X extends Task.State = Task.State> {
             parent?.progressUpdate(progress, total, message);
 
             checkCancel();
-        }
+        };
         const subUpdate = (message?: string) => {
             let progress = subProgress.reduce((a, b) => a + b);
             let total = knownTotal === -1 ? subTotals.reduce((a, b) => a + b, 0) : knownTotal;
             emitter.emit("update", { progress, total, message }, node);
             parent?.progressUpdate(progress, total, message);
-        }
+        };
         const execute = <Y>(task: Task<Y>, total?: number) => {
             let index = subProgress.length;
             subProgress.push(0);
