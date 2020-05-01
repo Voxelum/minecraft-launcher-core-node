@@ -329,7 +329,9 @@ export interface SearchOptions {
      */
     gameVersion?: string;
     /**
-     * The index of the page.
+     * The index of the addon, NOT the page!
+     *
+     * When your page size is 25, if you want to get next page contents, you should have index = 25 to gext 2nd page content.
      *
      * @default 0
      */
@@ -388,6 +390,9 @@ export interface QueryOption {
 async function get(url: string, options: QueryOption, body?: object, text?: boolean) {
     let fullUrl = BASE_URL + url;
     let result = await httpRequester({ method: body ? "POST" : "GET", url: fullUrl, headers: options.headers || {}, body, userAgent: options.userAgent });
+    if (result.statusCode < 200 || result.statusCode >= 300) {
+        throw new Error(`HTTP Error: Status Code ${result.statusCode}. (${url})`);
+    }
     if (text) {
         return result.body;
     } else {
