@@ -11,7 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "fast-html-parser": "^1.0.1"
+    "node-html-parser": "1.2.16"
   },
   "scripts": {
     "compile": "tsc --build tsconfig.json",

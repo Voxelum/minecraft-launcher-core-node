@@ -1,4 +1,4 @@
-import * as parser from "fast-html-parser";
+import { parse as parseHtml, HTMLElement } from "node-html-parser";
 
 /**
  * One forge version download info
@@ -13,25 +13,31 @@ interface Download {
  * Parse the html string of forge webpage
  */
 export function parse(content: string): ForgeWebPage {
-    const dom = parser.parse(content);
+    const dom = parseHtml(content);
+    if (!(dom instanceof HTMLElement)) {
+        throw new SyntaxError("The content is not the HTML format.");
+    }
     const selected = dom.querySelector(".elem-active");
+    if (!selected) {
+        throw new Error("Corrupted Forge Web Page");
+    }
     const mcversion = selected.text;
     return {
         mcversion,
-        versions: dom.querySelector(".download-list").querySelector("tbody").querySelectorAll("tr")
+        versions: dom.querySelector(".download-list")!.querySelector("tbody")!.querySelectorAll("tr")!
             .map((e) => {
                 const links = e.querySelector(".download-links").childNodes
-                    .filter((elem) => elem.tagName === "li")
+                    .filter((elem) => elem instanceof HTMLElement && elem.tagName === "li")
                     .map((elem) => {
-                        elem = elem.removeWhitespace();
+                        let e = (elem as HTMLElement).removeWhitespace();
                         /*
                          * <div class="info-tooltip">
                          *   <strong>MD5:</strong> 31742b6c996f53af96f606b7a0c46e2a<br>
                          *   <strong>SHA1:</strong> 8d6a23554839d6f6014fbdb7991e3cd8af7eca80
                          * </div>
                          */
-                        const tooltipInfo = elem.querySelector(".info-tooltip");
-                        const url = tooltipInfo.querySelector("a") || elem.querySelector("a");
+                        const tooltipInfo = e.querySelector(".info-tooltip");
+                        const url = tooltipInfo.querySelector("a") || e.querySelector("a");
                         // href is like /maven/net/minecraftforge/forge/1.14.4-28.1.70/forge-1.14.4-28.1.70-changelog.txt
                         const href = url.attributes.href.trim();
                         const matched = /forge-.+-.+-(\w+)\.\w+/.exec(href);
