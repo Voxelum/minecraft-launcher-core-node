@@ -45,7 +45,6 @@
         "@rollup/plugin-json": "^4.0.2",
         "@rollup/plugin-node-resolve": "^7.1.1",
         "@types/bytebuffer": "^5.0.37",
-        "@types/fast-html-parser": "^1.0.0",
         "@types/jest": "^25.1.4",
         "@types/jszip": "^3.1.6",
         "@types/long": "^4.0.1",
