@@ -374,6 +374,25 @@ export namespace Version {
         // the hierarchy is outer version to dep version
         // e.g. [liteloader version, forge version, minecraft version]
         const hierarchy = await resolveDependency(folder, version, platofrm);
+        return resolve(minecraftPath, hierarchy);
+    }
+
+    /**
+     * Resolve the given version hierarchy into `ResolvedVersion`.
+     *
+     * Some launcher has non-standard version json format to handle hierarchy,
+     * and if you want to handle them, you can use this function to parse.
+     *
+     * @param minecraftPath The path of the Minecraft folder
+     * @param hierarchy The version hierarchy, which can be produced by `normalizeVersionJson`
+     * @throws {@link BadVersionJsonError}
+     * @see {@link VersionParseError}
+     * @see {@link normalizeVersionJson}
+     * @see {@link parse}
+     */
+    export function resolve(minecraftPath: MinecraftLocation, hierarchy: PartialResolvedVersion[]) {
+        const folder = MinecraftFolder.from(minecraftPath);
+
         const rootVersion = hierarchy[hierarchy.length - 1];
         const id: string = hierarchy[0].id;
         let assetIndex: AssetIndex = rootVersion.assetIndex!;
@@ -472,6 +491,7 @@ export namespace Version {
             minecraftDirectory: location,
         } as ResolvedVersion;
     }
+
     /**
      * Simply extends the version (actaully mixin)
      *
