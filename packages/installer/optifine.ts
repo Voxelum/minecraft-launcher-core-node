@@ -141,5 +141,7 @@ export function installByInstallerTask(installer: string, minecraft: MinecraftLo
             await ensureFile(dest);
             await spawnProcess(options.java ?? "java", ["-cp", installer, "optifine.Patcher", mcJar, installer, dest]);
         }), 40);
+
+        return versionJSON.id;
     });
 }
