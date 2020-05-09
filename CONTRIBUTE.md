@@ -104,7 +104,6 @@ They all depends on `@xmcl/core` module, which providing the basic version parsi
 
 The modules below are used as helper:
 
-- `got`, for downloader
 - `yauzl`, for decompressing zip
 
 ### User Authorization Features (Node/Electron/Browser)
