@@ -61,19 +61,15 @@ The module built with `ES5` module option by typescript. To use treeshake, pleas
 Some bundler like webpack, rollup support treeshake by default. Just make sure you dont do something like `import * as SomeNamespace from ...`, which will bundle the whole package.
 (But `import { xxx } from 'xxx'` will still work)
 
-
 ### CommonJS
 
-If you don't have a bundler to transform the package, you can still use it in cjs. The webpack will pick the `"main"` field in package.json which is pointing to the cjs version.
+If you don't have a bundler to transform the package, you can still use it in cjs. The webpack will pick the `"main"` field in `package.json` which is pointing to the cjs version.
 
 It means you don't need to do anything in extra ideally.
 
 ### Electron Version
 
 Recommend to use the latest electron, so you don't need to setup babel with webpack 4.
-
-The dependency `got` use async generator in dist code. Therefore, the electron should at least support `async generator`.
-It requires electron have the minimum version of `v3.x` (node version `>= 10`).
 
 ## Getting Started
 
