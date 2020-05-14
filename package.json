@@ -14,7 +14,7 @@
         "lint": "eslint packages --ext .ts",
         "lint:fix": "eslint packages --ext .ts --fix",
         "test": "jest packages --runInBand",
-        "test:full": "jest packages --coverage --verbose --runInBand",
+        "test:full": "jest packages/installer/e2e.test.ts --verbose --runInBand && jest packages --coverage --verbose --runInBand",
         "update": "lerna bootstrap",
         "dev": "node scripts/dev.js",
         "dev:web": "sh scripts/build_workers.sh && parcel serve docs/site/index.html -d docs/build"
