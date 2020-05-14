@@ -1,5 +1,31 @@
 # Changelog
 
+## 3.3.0
+### @xmcl/core@2.3.0
+#### Features
+
+- feat(core): support `resolve` for non-standard version json ([2ed83ab62d5a12261460e57de74cb119982388b2](https://github.com/voxelum/minecraft-launcher-core-node/commit/2ed83ab62d5a12261460e57de74cb119982388b2))
+### @xmcl/curseforge@0.1.2
+#### Bug Fixes
+
+- fix: guard the get with the http code ([d831e5882115497445410156738fa262c0cd7af5](https://github.com/voxelum/minecraft-launcher-core-node/commit/d831e5882115497445410156738fa262c0cd7af5))
+### @xmcl/forge-site-parser@2.0.5
+#### Bug Fixes
+
+- fix: change the fast-html-parser to node-html-parser ([961bad778566f6193542acff675a10fe3d81810a](https://github.com/voxelum/minecraft-launcher-core-node/commit/961bad778566f6193542acff675a10fe3d81810a))
+### @xmcl/task@2.1.8
+#### Bug Fixes
+
+- fix: wait pause correctly & typo on pause event ([607688870924888cc49605e9c14b9eee910d370a](https://github.com/voxelum/minecraft-launcher-core-node/commit/607688870924888cc49605e9c14b9eee910d370a))
+### @xmcl/installer@2.8.2
+#### Bug Fixes
+
+- fix: return the installed optifine version ([95c681a26c2e9ab174005468d045586e0c37f310](https://github.com/voxelum/minecraft-launcher-core-node/commit/95c681a26c2e9ab174005468d045586e0c37f310))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/forge-site-parser bump **patch**
+- Dependency @xmcl/task bump **patch**
+
+
 ## 3.2.1
 ### @xmcl/installer@2.8.1
 #### Bug Fixes

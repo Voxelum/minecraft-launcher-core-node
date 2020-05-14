@@ -977,6 +977,20 @@ export declare namespace Version {
      */
     function parse(minecraftPath: MinecraftLocation, version: string, platofrm?: Platform): Promise<ResolvedVersion>;
     /**
+     * Resolve the given version hierarchy into \`ResolvedVersion\`.
+     *
+     * Some launcher has non-standard version json format to handle hierarchy,
+     * and if you want to handle them, you can use this function to parse.
+     *
+     * @param minecraftPath The path of the Minecraft folder
+     * @param hierarchy The version hierarchy, which can be produced by \`normalizeVersionJson\`
+     * @throws {@link BadVersionJsonError}
+     * @see {@link VersionParseError}
+     * @see {@link normalizeVersionJson}
+     * @see {@link parse}
+     */
+    function resolve(minecraftPath: MinecraftLocation, hierarchy: PartialResolvedVersion[]): ResolvedVersion;
+    /**
      * Simply extends the version (actaully mixin)
      *
      * The result version will have the union of two version's libs. If one lib in two versions has different version, it will take the extra version one.
@@ -1424,7 +1438,9 @@ export interface SearchOptions {
      */
     gameVersion?: string;
     /**
-     * The index of the page.
+     * The index of the addon, NOT the page!
+     *
+     * When your page size is 25, if you want to get next page contents, you should have index = 25 to gext 2nd page content.
      *
      * @default 0
      */
@@ -2136,6 +2152,8 @@ export declare function diagnoseInstallTask(installProfile: InstallProfile, mine
  */
 export declare function diagnoseInstall(installProfile: InstallProfile, minecraftLocation: MinecraftLocation): Promise<InstallProfileIssueReport>;
 export {};
+`;
+module.exports['@xmcl/installer/e2e.test.d.ts'] = `export {};
 `;
 module.exports['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { InstallOptions, UpdatedObject } from "./util";
@@ -3074,7 +3092,7 @@ export interface InstallOptifineOptions extends InstallOptions {
  * @beta Might be changed and don't break the major version
  * @throws {@link BadOptifineJarError}
  */
-export declare function installByInstaller(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Promise<void>;
+export declare function installByInstaller(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Promise<string>;
 /**
  * Install optifine by optifine installer task
  *
@@ -3084,9 +3102,7 @@ export declare function installByInstaller(installer: string, minecraft: Minecra
  * @beta Might be changed and don't break the major version
  * @throws {@link BadOptifineJarError}
  */
-export declare function installByInstallerTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Task<void>;
-`;
-module.exports['@xmcl/installer/test.d.ts'] = `export {};
+export declare function installByInstallerTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Task<string>;
 `;
 module.exports['@xmcl/installer/util.d.ts'] = `/// <reference types="node" />
 import { Task } from "@xmcl/task";
@@ -4453,7 +4469,6 @@ export declare class TaskSignal {
     _paused: boolean;
     _cancelled: boolean;
     _started: boolean;
-    _resumePauseCallback: null | (() => void);
     _onPause: Array<() => void>;
     _onResume: Array<() => void>;
 }
