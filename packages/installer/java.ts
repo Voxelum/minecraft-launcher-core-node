@@ -67,8 +67,8 @@ export function installJreFromMojangTask(options: Options) {
         }
         const currentArch = resolveArch();
 
-        if (system === "unknown" || system === "linux") {
-            return;
+        if (!info[system] || !info[system][currentArch] || !info[system][currentArch].jre) {
+            throw new Error("No Java package available for your platform")
         }
         const { sha1, url } = info[system][currentArch].jre;
         const filename = basename(url);
