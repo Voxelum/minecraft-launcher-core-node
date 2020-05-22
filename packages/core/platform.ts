@@ -13,7 +13,7 @@ export interface Platform {
      */
     version: string;
     /**
-     * The direct output of `os.arch()`
+     * The direct output of `os.arch()`. Should look like x86 or x64.
      */
     arch: "x86" | "x64" | string;
 }
