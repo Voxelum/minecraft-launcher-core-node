@@ -187,14 +187,14 @@ export class TaskBridge<X extends Task.State = Task.State> {
         const pause = () => {
             if (pauseFunc) {
                 pauseFunc();
-                emitter.emit("pause", node);
             }
+            emitter.emit("pause", node);
         };
         const resume = () => {
             if (resumeFunc) {
                 resumeFunc();
-                emitter.emit("resume", node);
             }
+            emitter.emit("resume", node);
             resumeCb();
         };
         const checkCancel = () => {
