@@ -1,28 +1,14 @@
 import { Task } from "@xmcl/task";
 import { ExecOptions, spawn } from "child_process";
-import {
-    constants,
-    close as fclose,
-    copyFile as fcopyFile,
-    open as fopen,
-    access as faccess,
-    createReadStream, createWriteStream,
-    stat as fstat,
-    unlink as funlink,
-    readFile as freadFile,
-    writeFile as fwriteFile,
-    mkdir as fmkdir,
-    ftruncate,
-    WriteStream,
-} from "fs";
 import { createHash } from "crypto";
-import { IncomingMessage, request, RequestOptions, Agent as HttpAgent, AgentOptions, ClientRequest } from "http";
-import { request as requests, Agent as HttpsAgent } from "https";
+import { access as faccess, close as fclose, constants, copyFile as fcopyFile, createReadStream, createWriteStream, ftruncate, mkdir as fmkdir, open as fopen, readFile as freadFile, stat as fstat, unlink as funlink, writeFile as fwriteFile, WriteStream } from "fs";
+import { Agent as HttpAgent, AgentOptions, ClientRequest, IncomingMessage, request, RequestOptions } from "http";
+import { Agent as HttpsAgent, request as requests } from "https";
 import { cpus } from "os";
-import { pipeline as pip } from "stream";
-import { fileURLToPath, parse, format, UrlWithStringQuery } from "url";
-import { promisify } from "util";
 import { dirname } from "path";
+import { pipeline as pip } from "stream";
+import { fileURLToPath, format, parse, UrlWithStringQuery } from "url";
+import { promisify } from "util";
 
 const access = promisify(faccess);
 const open = promisify(fopen);
@@ -152,9 +138,9 @@ export interface DownloadOption {
      */
     progress?: (chunkLength: number, written: number, total: number, url: string) => boolean | void;
     /**
-     * If user wants to pause/resume the download, pass this in, and `Downloader` should call this to tell user how to pause and resume.
+     * If user wants to pause/resume/cancel the download, pass this in, and `Downloader` should call this to tell user how to pause and resume.
      */
-    pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
+    handlers?: (pauseFunc: () => void, resumeFunc: () => void, cancelFunc: () => void) => void;
     /**
      * The destination of the download on the disk
      */
@@ -335,6 +321,7 @@ export class HttpDownloader implements Downloader {
         // states
         let paused = false;
         let done = false;
+        let cancelled = false;
         let _unpause: () => void;
         let pausing: Promise<void> = Promise.resolve();
         let abortRequests: Function[] = [];
@@ -433,6 +420,14 @@ export class HttpDownloader implements Downloader {
                 pausing = Promise.resolve();
             }
         }
+        let cancel = () => {
+            if (!cancelled) {
+                cancelled = true;
+                // notify each request to abort
+                abortRequests.forEach((f) => f());
+                abortRequests.fill(() => { });
+            }
+        };
         let shouldTolerateError = (e: any) => {
             if (e.code === "ECONNRESET") {
                 return true;
@@ -442,13 +437,16 @@ export class HttpDownloader implements Downloader {
             }
             return false;
         }
-        option.pausable?.(pause, resume);
+        option.handlers?.(pause, resume, cancel);
 
         let retry = 2;
         while (!done && retry > 0) {
             try {
                 await update();
                 await download();
+                if (cancelled) {
+                    return states;
+                }
                 await pausing;
                 if (!done) {
                     continue;
@@ -533,12 +531,11 @@ async function shouldDownload(option: DownloadOption, downloaderOptions: Downloa
  */
 export function downloadFileTask(option: DownloadOption, downloaderOptions: HasDownloader<DownloaderOptions>): Task.Function<void> {
     return async (context: Task.Context) => {
-        option.pausable = context.pausealbe;
+        option.handlers = context.setup;
         option.progress = (c, p, t, u) => context.update(p, t, u);
         if (await shouldDownload(option, downloaderOptions)) {
             await downloaderOptions.downloader.downloadFile(option);
         }
-        context.pausealbe(undefined, undefined);
     };
 }
 
