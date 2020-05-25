@@ -364,13 +364,13 @@ export class HttpDownloader implements Downloader {
         let update = async () => {
             let newMetadata = await this.resolveMetadata(originalUrl);
             let unmatched = newMetadata.eTag !== eTag;
-            if (unmatched) {
+            if (unmatched || newMetadata.eTag === undefined) {
                 url = newMetadata.url;
                 eTag = newMetadata.eTag;
-                total = newMetadata.contentLength;
                 acceptRanges = newMetadata.acceptRanges;
-                resolvedUrl = parse(url);
+                total = newMetadata.contentLength;
                 await truncate(fd, total);
+                resolvedUrl = parse(url);
                 reset();
             }
         }
