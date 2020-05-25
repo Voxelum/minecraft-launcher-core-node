@@ -217,7 +217,7 @@ describe("Task", () => {
                 await c.execute(Task.create("nested", async (c) => {
                     await Promise.all([
                         c.execute(Task.create("aFunc", async function a(x) {
-                            x.pausealbe(() => {
+                            x.setup(() => {
                                 aFunc();
                             }, () => {
                                 aResume();
@@ -225,7 +225,7 @@ describe("Task", () => {
                             await wait(1000);
                         })),
                         c.execute(Task.create("bFunc", async function a(x) {
-                            x.pausealbe(() => {
+                            x.setup(() => {
                                 bFunc();
                             }, () => {
                                 bResume();
@@ -250,7 +250,7 @@ describe("Task", () => {
         });
     });
     describe("#resume", () => {
-        test.only("should be able to resume task", async () => {
+        test("should be able to resume task", async () => {
             const monitor = jest.fn();
             const runtime = Task.createRuntime();
             const task = runtime.submit(Task.create("monitor", monitor));

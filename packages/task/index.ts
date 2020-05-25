@@ -129,6 +129,7 @@ export class TaskSignal {
 
     _onPause: Array<() => void> = [];
     _onResume: Array<() => void> = [];
+    _onCancel: Array<() => void> = [];
 }
 
 export class TaskBridge<X extends Task.State = Task.State> {
@@ -154,7 +155,12 @@ export class TaskBridge<X extends Task.State = Task.State> {
                     signal._onResume.forEach((f) => f());
                 }
             },
-            cancel() { signal._cancelled = true; },
+            cancel() {
+                if (!signal._cancelled) {
+                    signal._cancelled = true;
+                    signal._onCancel.forEach((f) => f());
+                }
+            },
             get isCancelled() { return signal._cancelled; },
             get isPaused() { return signal._paused; },
             get isStarted() { return signal._started; },
@@ -182,6 +188,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
         let subProgress: number[] = [];
         let pauseFunc: (() => void) | undefined;
         let resumeFunc: (() => void) | undefined;
+        let cancelFunc: (() => void) | undefined;
         let resumeCb = () => { };
 
         const pause = () => {
@@ -196,6 +203,12 @@ export class TaskBridge<X extends Task.State = Task.State> {
             }
             emitter.emit("resume", node);
             resumeCb();
+        };
+        const cancel = () => {
+            if (cancelFunc) {
+                cancelFunc();
+            }
+            emitter.emit("cancel", node);
         };
         const checkCancel = () => {
             if (signal._cancelled) {
@@ -215,12 +228,15 @@ export class TaskBridge<X extends Task.State = Task.State> {
                 });
             }
         };
-        const pausealbe = (onPause: (() => void) | undefined, onResume: (() => void) | undefined) => {
+        const setup = (onPause: (() => void) | undefined, onResume: (() => void) | undefined, onCancel: (() => void) | undefined) => {
             if (pauseFunc !== onPause) {
                 pauseFunc = onPause;
             }
             if (resumeFunc !== onResume) {
                 resumeFunc = onResume;
+            }
+            if (cancelFunc !== onCancel) {
+                cancelFunc = onCancel;
             }
         };
         const update = (progress: number, total: number, message?: string) => {
@@ -269,7 +285,7 @@ export class TaskBridge<X extends Task.State = Task.State> {
             emitter.emit("execute", node, parent?.node);
 
             try {
-                let result = await runTask({ update, execute, pausealbe, waitPause }, task);
+                let result = await runTask({ update, execute, setup: setup, waitPause }, task);
                 emitter.emit("finish", result, node);
                 return result;
             } catch (e) {
@@ -282,11 +298,13 @@ export class TaskBridge<X extends Task.State = Task.State> {
             } finally {
                 signal._onPause.splice(signal._onPause.indexOf(pause));
                 signal._onResume.splice(signal._onResume.indexOf(resume));
+                signal._onCancel.splice(signal._onCancel.indexOf(cancel));
             }
         };
 
         signal._onPause.push(pause);
         signal._onResume.push(resume);
+        signal._onCancel.push(cancel);
         checkCancel();
         return { node, promise: bridge.scheduler(run) };
     }
@@ -347,8 +365,8 @@ export namespace Task {
     export type Schedualer = <N>(r: () => Promise<N>) => Promise<N>
 
     export interface Context {
-        pausealbe(onPause?: () => void, onResume?: () => void): void;
-        update(progres: number, total?: number, message?: string): void | boolean;
+        setup(onPause?: () => void, onResume?: () => void, onCancel?: () => void): void;
+        update(progress: number, total?: number, message?: string): void | boolean;
         execute<T>(task: Task<T>, pushProgress?: number): Promise<T>;
 
         waitPause(): Promise<void>;
