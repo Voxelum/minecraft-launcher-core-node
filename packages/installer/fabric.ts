@@ -36,6 +36,7 @@ export interface FabricArtifacts {
 
 export interface LoaderArtifact {
     loader: FabricArtifactVersion;
+    intermediary: FabricArtifactVersion;
     launcherMeta: {
         version: number;
         libraries: {
@@ -187,6 +188,11 @@ export async function install(yarnVersion: string, loaderVersion: string, minecr
     return id;
 }
 
+export interface FabricInstallOptions extends InstallOptions {
+    side?: "client" | "server";
+    yarnVersion?: string | FabricArtifactVersion;
+}
+
 /**
  * Generate fabric version json to the disk according to yarn and loader
  * @param side Client or server
@@ -196,23 +202,38 @@ export async function install(yarnVersion: string, loaderVersion: string, minecr
  * @param options The options
  * @beta
  */
-export async function installFromVersionMeta(side: "client" | "server", yarnVersion: string | FabricArtifactVersion, loader: LoaderArtifact, minecraft: MinecraftLocation, options: InstallOptions = {}) {
+export async function installFromVersionMeta(loader: LoaderArtifact, minecraft: MinecraftLocation, options: FabricInstallOptions = {}) {
     const folder = MinecraftFolder.from(minecraft);
 
-    let yarn: string;
+    let yarn: string | undefined;
+    let side = options.side ?? "client";
     let id = options.versionId;
     let mcversion: string;
-    if (typeof yarnVersion === "string") {
-        yarn = yarnVersion;
-        mcversion = yarn.split("+")[0];
+    if (options.yarnVersion) {
+        let yarnVersion = options.yarnVersion;
+        if (typeof yarnVersion === "string") {
+            yarn = yarnVersion;
+            mcversion = yarn.split("+")[0];
+        } else {
+            yarn = yarnVersion.version;
+            mcversion = yarnVersion.gameVersion || yarn.split("+")[0];
+        }
     } else {
-        yarn = yarnVersion.version;
-        mcversion = yarnVersion.gameVersion || yarn.split("+")[0];
+        mcversion = loader.intermediary.version;
     }
-    id = id || `${mcversion}-fabric${yarnVersion}-${loader.loader.version}`;
+
+    if (!id) {
+        id = mcversion;
+        if (yarn) {
+            id += `-fabric${yarn}`;
+        }
+        id += loader.loader.version;
+    }
     let libraries = [
         { name: loader.loader.maven, url: "https://maven.fabricmc.net/" },
-        { name: `net.fabricmc:yarn:${yarn}`, url: "https://maven.fabricmc.net/" },
+        options.yarnVersion
+            ? { name: `net.fabricmc:yarn:${yarn}`, url: "https://maven.fabricmc.net/" }
+            : { name: loader.intermediary.maven, url: "https://maven.fabricmc.net/" },
         ...loader.launcherMeta.libraries.common,
         ...loader.launcherMeta.libraries[side],
     ];
