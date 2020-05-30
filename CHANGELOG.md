@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.4.0
+### @xmcl/task@2.2.0
+#### Features
+
+- feat: support passing cancel outside ([f8f50503d387a85ba91232801a7dd46e01367802](https://github.com/voxelum/minecraft-launcher-core-node/commit/f8f50503d387a85ba91232801a7dd46e01367802))
+#### Bug Fixes
+
+- fix: emit pause whatever the case ([c6d6b4e3a42f9edb5e7d130672fb983547a8c7b4](https://github.com/voxelum/minecraft-launcher-core-node/commit/c6d6b4e3a42f9edb5e7d130672fb983547a8c7b4))
+### @xmcl/installer@2.9.0
+#### Features
+
+- feat: add support install from loader version ([d03dd862d7d43fb8d9a45b7fec74545aa9351c2a](https://github.com/voxelum/minecraft-launcher-core-node/commit/d03dd862d7d43fb8d9a45b7fec74545aa9351c2a))
+#### Bug Fixes
+
+- fix: download cancel handle ([02af0af0e8a8c3b4faced57c57cc2c953dd4825e](https://github.com/voxelum/minecraft-launcher-core-node/commit/02af0af0e8a8c3b4faced57c57cc2c953dd4825e))
+- fix: downloader not work for url without eTag ([554703f3b3a84e4a7361d238f21816359cfa23c1](https://github.com/voxelum/minecraft-launcher-core-node/commit/554703f3b3a84e4a7361d238f21816359cfa23c1))
+- fix: add more robust check to Java installer (#160) ([a8d2ee6bacd3c2049e386e448015dd401fa6ccfb](https://github.com/voxelum/minecraft-launcher-core-node/commit/a8d2ee6bacd3c2049e386e448015dd401fa6ccfb))
+- Dependency @xmcl/task bump **patch**
+
+
 ## 3.3.0
 ### @xmcl/core@2.3.0
 #### Features

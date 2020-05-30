@@ -680,7 +680,7 @@ export interface Platform {
      */
     version: string;
     /**
-     * The direct output of \`os.arch()\`
+     * The direct output of \`os.arch()\`. Should look like x86 or x64.
      */
     arch: "x86" | "x64" | string;
 }
@@ -1999,6 +1999,8 @@ export declare function installCurseforgeFile(file: File, destination: string, o
 export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): Task<void>;
 export {};
 `;
+module.exports['@xmcl/installer/curseforge.test.d.ts'] = `export {};
+`;
 module.exports['@xmcl/installer/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary } from "@xmcl/core";
 import { Task } from "@xmcl/task";
 import { InstallProfile } from "./minecraft";
@@ -2187,6 +2189,7 @@ export interface FabricArtifacts {
 }
 export interface LoaderArtifact {
     loader: FabricArtifactVersion;
+    intermediary: FabricArtifactVersion;
     launcherMeta: {
         version: number;
         libraries: {
@@ -2293,6 +2296,10 @@ export declare function getLoaderVersionList(option: {
  * @returns The installed version id
  */
 export declare function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options?: InstallOptions): Promise<string>;
+export interface FabricInstallOptions extends InstallOptions {
+    side?: "client" | "server";
+    yarnVersion?: string | FabricArtifactVersion;
+}
 /**
  * Generate fabric version json to the disk according to yarn and loader
  * @param side Client or server
@@ -2302,7 +2309,7 @@ export declare function install(yarnVersion: string, loaderVersion: string, mine
  * @param options The options
  * @beta
  */
-export declare function installFromVersionMeta(side: "client" | "server", yarnVersion: string | FabricArtifactVersion, loader: LoaderArtifact, minecraft: MinecraftLocation, options?: InstallOptions): Promise<string>;
+export declare function installFromVersionMeta(loader: LoaderArtifact, minecraft: MinecraftLocation, options?: FabricInstallOptions): Promise<string>;
 `;
 module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
@@ -2532,6 +2539,8 @@ export declare function getPotentialJavaLocations(): Promise<string[]>;
  * @returns All validate java info
  */
 export declare function scanLocalJava(locations: string[]): Promise<JavaInfo[]>;
+`;
+module.exports['@xmcl/installer/java.test.d.ts'] = `export {};
 `;
 module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
@@ -3107,7 +3116,7 @@ export declare function installByInstallerTask(installer: string, minecraft: Min
 module.exports['@xmcl/installer/util.d.ts'] = `/// <reference types="node" />
 import { Task } from "@xmcl/task";
 import { ExecOptions } from "child_process";
-import { stat as fstat, unlink as funlink, readFile as freadFile, writeFile as fwriteFile, mkdir as fmkdir } from "fs";
+import { mkdir as fmkdir, readFile as freadFile, stat as fstat, unlink as funlink, writeFile as fwriteFile } from "fs";
 import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
 import { pipeline as pip } from "stream";
@@ -3152,9 +3161,9 @@ export interface DownloadOption {
      */
     progress?: (chunkLength: number, written: number, total: number, url: string) => boolean | void;
     /**
-     * If user wants to pause/resume the download, pass this in, and \`Downloader\` should call this to tell user how to pause and resume.
+     * If user wants to pause/resume/cancel the download, pass this in, and \`Downloader\` should call this to tell user how to pause and resume.
      */
-    pausable?: (pauseFunc: () => void, resumeFunc: () => void) => void;
+    handlers?: (pauseFunc: () => void, resumeFunc: () => void, cancelFunc: () => void) => void;
     /**
      * The destination of the download on the disk
      */
@@ -4471,6 +4480,7 @@ export declare class TaskSignal {
     _started: boolean;
     _onPause: Array<() => void>;
     _onResume: Array<() => void>;
+    _onCancel: Array<() => void>;
 }
 export declare class TaskBridge<X extends Task.State = Task.State> {
     readonly emitter: EventEmitter;
@@ -4535,8 +4545,8 @@ export declare namespace Task {
     }
     type Schedualer = <N>(r: () => Promise<N>) => Promise<N>;
     interface Context {
-        pausealbe(onPause?: () => void, onResume?: () => void): void;
-        update(progres: number, total?: number, message?: string): void | boolean;
+        setup(onPause?: () => void, onResume?: () => void, onCancel?: () => void): void;
+        update(progress: number, total?: number, message?: string): void | boolean;
         execute<T>(task: Task<T>, pushProgress?: number): Promise<T>;
         waitPause(): Promise<void>;
     }
