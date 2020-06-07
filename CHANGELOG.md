@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.4.1
+### @xmcl/core@2.3.1
+#### Bug Fixes
+
+- fix: wrong native sha validation ([2ca1a3c6a8653a2a90495f895f4838edc0a1209a](https://github.com/voxelum/minecraft-launcher-core-node/commit/2ca1a3c6a8653a2a90495f895f4838edc0a1209a))
+### @xmcl/installer@2.9.1
+- Dependency @xmcl/core bump **patch**
+
+
 ## 3.4.0
 ### @xmcl/task@2.2.0
 #### Features
