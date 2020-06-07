@@ -317,8 +317,8 @@ export namespace LaunchPrecheck {
             for (const entry of shaEntries) {
                 if (typeof entry.file !== "string") { continue; }
                 const file = join(native, entry.file);
-                const valid = await validateSha1(file, entry.sha1);
-                if (!valid) {
+                const valid = await validateSha1(file, entry.sha1, true);
+                if (valid) {
                     validEntries[entry.name] = true;
                 }
             }
