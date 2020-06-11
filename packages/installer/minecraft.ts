@@ -258,8 +258,6 @@ export function installTask(type: "server" | "client", versionMeta: RequiredVers
         let version = await context.execute(installVersionTask(type, versionMeta, minecraft, option), 20);
         if (type === "client") {
             await context.execute(installDependenciesTask(version, option), 80);
-        } else {
-            await context.execute(installLibrariesTask(version, option), 80);
         }
         return version;
     }), { version: versionMeta.id });
