@@ -341,20 +341,19 @@ export namespace LaunchPrecheck {
     }
 }
 
-export interface ServerOptions {
-    javaPath: string;
+export interface BaseServerOptions {
     /**
-     * Minecraft location
+     * Java executable.
      */
-    path: string;
+    javaPath: string;
     /**
      * Current working directory. Default is the same with the path.
      */
     cwd?: string;
-    version: string | ResolvedVersion;
-
+    /**
+     * No gui for the server launch
+     */
     nogui?: boolean;
-
     minMemory?: number;
     maxMemory?: number;
     extraJVMArgs?: string[];
@@ -362,9 +361,37 @@ export interface ServerOptions {
     extraExecOption?: SpawnOptions;
 }
 
-export async function launchServer(options: ServerOptions) {
+export interface MinecraftServerOptions extends BaseServerOptions {
+    /**
+     * Minecraft location.
+     */
+    path: string;
+    /**
+     * The version id.
+     */
+    version: string | ResolvedVersion;
+}
+/**
+ * This is the case you provide the server jar execution path.
+ */
+export interface ServerOptions extends BaseServerOptions {
+    /**
+     * The minecraft server exectuable jar file.
+     *
+     * This is the case like you are launching forge server.
+     */
+    serverExectuableJarPath: string;
+};
+
+export async function launchServer(options: MinecraftServerOptions | ServerOptions) {
     const args = await generateArgumentsServer(options);
-    const spawnOption = { cwd: options.path, env: process.env, ...(options.extraExecOption || {}) };
+    let cwd = options.cwd;
+    if ("path" in options) {
+        cwd = options.path;
+    } else {
+        cwd = dirname(options.serverExectuableJarPath);
+    }
+    const spawnOption = { cwd, env: process.env, ...(options.extraExecOption || {}) };
     return spawn(args[0], args.slice(1), spawnOption);
 }
 
@@ -499,20 +526,28 @@ export async function launch(options: LaunchOption): Promise<ChildProcess> {
 /**
  * Generate the argument for server
  */
-export async function generateArgumentsServer(options: ServerOptions) {
-    const { javaPath, path: gamePath, version, minMemory = 1024, maxMemory = 1024, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options;
-    const mc = MinecraftFolder.from(gamePath);
-    const resolvedVersion = typeof version === "string" ? await Version.parse(mc, version) : version;
+export async function generateArgumentsServer(options: MinecraftServerOptions | ServerOptions) {
+    const { javaPath, minMemory = 1024, maxMemory = 1024, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options;
     const cmd = [
-        javaPath, `-Xms${(minMemory)}M`, `-Xmx${(maxMemory)}M`, ...extraJVMArgs,
-        "-jar",
-        mc.getVersionJar(resolvedVersion.minecraftVersion, "server"),
-        ...extraMCArgs,
+        javaPath,
+        `-Xms${(minMemory)}M`,
+        `-Xmx${(maxMemory)}M`,
+        ...extraJVMArgs,
     ];
+    if ("path" in options) {
+        let mc = MinecraftFolder.from(options.path);
+        let version = options.version;
+        let resolvedVersion = typeof version === "string" ? await Version.parse(mc, version) : version;
+        cmd.push("-jar", mc.getVersionJar(resolvedVersion.minecraftVersion, "server"));
+    } else {
+        cmd.push("-jar", options.serverExectuableJarPath);
+    }
+
+    cmd.push(...extraMCArgs);
+
     if (options.nogui) {
         cmd.push("nogui");
     }
-    options.version = resolvedVersion;
 
     return cmd;
 }
