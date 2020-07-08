@@ -1,9 +1,85 @@
 import { join } from "path";
 import { openFileSystem } from ".";
+import { assert } from "console";
 
 const mockRoot = join(__dirname, "..", "..", "mock");
 
 describe("FileSystem", () => {
+    describe("#cd", () => {
+        describe("fs", () => {
+            test("should be able to cd", async () => {
+                let root = join(mockRoot, "mods");
+                const fs = await openFileSystem(root);
+                expect(fs.root).toEqual(root);
+                fs.cd("abc/bcd");
+                expect(fs.root).toEqual(join(root, "abc/bcd"));
+            });
+            test("should be able to cd .. in normal fs", async () => {
+                let root = join(mockRoot, "mods");
+                const fs = await openFileSystem(root);
+                expect(fs.root).toEqual(root);
+                fs.cd("..");
+                expect(fs.root).toEqual(mockRoot);
+            });
+        });
+        describe("node-zip", () => {
+            test("should be able to cd", async () => {
+                let root = join(mockRoot, "mods", "sample-mod.jar");
+                const fs = await openFileSystem(root);
+                expect(fs.root).toEqual(root);
+                fs.cd("abc/bcd");
+                expect(fs.root).toEqual(`${root}/abc/bcd`);
+            });
+            test("should be able to cd ..", async () => {
+                let root = join(mockRoot, "mods", "sample-mod.jar");
+                const fs = await openFileSystem(root);
+                expect(fs.root).toEqual(root);
+                fs.cd("abc/bcd");
+                fs.cd("..");
+                expect(fs.root).toEqual(`${root}/abc`);
+            });
+            test("should be able to cd .. at root", async () => {
+                let root = join(mockRoot, "mods", "sample-mod.jar");
+                const fs = await openFileSystem(root);
+                expect(fs.root).toEqual(root);
+                fs.cd("..");
+                expect(fs.root).toEqual(root);
+            });
+            test("should be able to cd .", async () => {
+                let root = join(mockRoot, "mods", "sample-mod.jar");
+                const fs = await openFileSystem(root);
+                expect(fs.root).toEqual(root);
+                fs.cd(".");
+                expect(fs.root).toEqual(root);
+            });
+
+            test("should be able to cd ./abc", async () => {
+                let root = join(mockRoot, "mods", "sample-mod.jar");
+                const fs = await openFileSystem(root);
+                expect(fs.root).toEqual(root);
+                fs.cd("./abc");
+                expect(fs.root).toEqual(`${root}/abc`);
+            });
+
+            test("should be able to cd ../abc", async () => {
+                let root = join(mockRoot, "mods", "sample-mod.jar");
+                const fs = await openFileSystem(root);
+                expect(fs.root).toEqual(root);
+                fs.cd("bcd/xyz");
+                fs.cd("../abc");
+                expect(fs.root).toEqual(`${root}/bcd/abc`);
+            });
+
+            test("should be able to cd /zzzz/abc", async () => {
+                let root = join(mockRoot, "mods", "sample-mod.jar");
+                const fs = await openFileSystem(root);
+                expect(fs.root).toEqual(root);
+                fs.cd("bcd/xyz");
+                fs.cd("/zzzz/abc");
+                expect(fs.root).toEqual(`${root}/zzzz/abc`);
+            });
+        });
+    });
     describe("#listFiles", () => {
         test("should list file in jar", async () => {
             const fs = await openFileSystem(join(mockRoot, "mods", "sample-mod.jar"));

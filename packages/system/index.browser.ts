@@ -6,23 +6,34 @@ class JSZipFS extends FileSystem {
     type: "zip" | "path" = "zip";
     writeable: boolean = true;
     root: string = "";
+    protected normalizePath(path: string): string {
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        if (this.root !== "") {
+            path = [this.root, path].join("/")
+        }
+        return path;
+    }
     join(...paths: string[]): string {
         return paths.join("/");
     }
     isDirectory(name: string): Promise<boolean> {
-        if (name === "" || name === "/") { return Promise.resolve(true); }
-        name = name.startsWith("/") ? name.substring(1) : name;
+        name = this.normalizePath(name);
         name = name.endsWith("/") ? name : name + "/";
         return Promise.resolve(Object.keys(this.zip.files).some((e) => e.startsWith(name)))
     }
     async writeFile(name: string, data: Uint8Array): Promise<void> {
+        name = this.normalizePath(name);
         this.zip.file(name, data);
     }
     existsFile(name: string): Promise<boolean> {
+        name = this.normalizePath(name);
         if (this.zip.files[name] !== undefined) { return Promise.resolve(true); }
         return this.isDirectory(name);
     }
     readFile(name: any, encoding?: any): Promise<any> {
+        name = this.normalizePath(name);
         if (!encoding) {
             return this.zip.files[name].async("uint8array");
         }
@@ -36,12 +47,36 @@ class JSZipFS extends FileSystem {
     }
     async listFiles(name: string): Promise<string[]> {
         if (!await this.isDirectory(name)) { return Promise.reject("Require a directory!"); }
-        name = name.startsWith("/") ? name.substring(1) : name;
+        name = this.normalizePath(name);
         return Promise.resolve(Object.keys(this.zip.files)
             .filter((e) => e.startsWith(name))
             .map((e) => e.substring(name.length))
             .map((e) => e.startsWith("/") ? e.substring(1) : e)
             .map((e) => e.split("/")[0]))
+    }
+    cd(name: string): void {
+        if (name.startsWith("/")) {
+            this.root = name.substring(1);
+            return;
+        }
+        let paths = name.split("/");
+        for (let path of paths) {
+            if (path === ".") {
+                continue;
+            } else if (path === "..") {
+                let sub = this.root.split("/");
+                if (sub.length > 0) {
+                    sub.pop();
+                    this.root = sub.join("/");
+                }
+            } else {
+                if (this.root === "") {
+                    this.root = path;
+                } else {
+                    this.root += `/${path}`;
+                }
+            }
+        }
     }
 
     constructor(private zip: JSZip) { super(); }
