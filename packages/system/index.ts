@@ -57,17 +57,45 @@ class NodeFileSystem extends FileSystem {
     listFiles(name: string): Promise<string[]> {
         return preaddir(join(this.root, name));
     }
-    constructor(readonly root: string) { super(); }
+    cd(name: string): void {
+        this.root = join(this.root, name);
+    }
+    constructor(public root: string) { super(); }
 }
 class NodeZipFileSystem extends FileSystem {
     sep = "/";
     type = "zip" as const;
     writeable = false;
 
+    private zipRoot: string = "";
+
+    private fileRoot: string;
+
+    constructor(root: string, private zip: CachedZipFile) {
+        super();
+        this.fileRoot = root;
+    }
+
+    get root() { return this.fileRoot + (this.zipRoot.length === 0 ? "" : `/${this.zipRoot}`); }
+
+    protected normalizePath(name: string): string {
+        if (name.startsWith("/")) {
+            name = name.substring(1);
+        }
+        if (this.zipRoot !== "") {
+            name = [this.root, name].join("/")
+        }
+        return name;
+    }
+
     join(...paths: string[]): string {
         return paths.join("/");
     }
     isDirectory(name: string): Promise<boolean> {
+        name = this.normalizePath(name);
+        if (name === "") {
+            return Promise.resolve(true);
+        }
         if (this.zip.entries[name]) {
             return Promise.resolve(name.endsWith("/"));
         }
@@ -80,7 +108,7 @@ class NodeZipFileSystem extends FileSystem {
         return Promise.resolve(entries.some((e) => e.startsWith(name + "/")));
     }
     existsFile(name: string): Promise<boolean> {
-        name = name.startsWith("/") ? name.substring(1) : name;
+        name = this.normalizePath(name);
         if (this.zip.entries[name]
             || this.zip.entries[name + "/"]) { return Promise.resolve(true); }
         // the root dir won't have entries
@@ -89,6 +117,7 @@ class NodeZipFileSystem extends FileSystem {
         return Promise.resolve(entries.some((e) => e.startsWith(name + "/")));
     }
     async readFile(name: string, encoding?: "utf-8" | "base64"): Promise<any> {
+        name = this.normalizePath(name);
         const entry = this.zip.entries[name];
         if (!entry) { throw new Error(`Not found file named ${name}`); }
         const buffer = await this.zip.readEntry(entry);
@@ -101,7 +130,7 @@ class NodeZipFileSystem extends FileSystem {
         return buffer;
     }
     listFiles(name: string): Promise<string[]> {
-        name = name.startsWith("/") ? name.substring(1) : name;
+        name = this.normalizePath(name);
         return Promise.resolve([
             ...new Set(Object.keys(this.zip.entries)
                 .filter((n) => n.startsWith(name))
@@ -110,7 +139,32 @@ class NodeZipFileSystem extends FileSystem {
                 .map((n) => n.split("/")[0])),
         ]);
     }
+    cd(name: string): void {
+        if (name.startsWith("/")) {
+            this.zipRoot = name.substring(1);
+            return;
+        }
+        let paths = name.split("/");
+        for (let path of paths) {
+            if (path === ".") {
+                continue;
+            } else if (path === "..") {
+                let sub = this.zipRoot.split("/");
+                if (sub.length > 0) {
+                    sub.pop();
+                    this.zipRoot = sub.join("/");
+                }
+            } else {
+                if (this.zipRoot === "") {
+                    this.zipRoot = path;
+                } else {
+                    this.zipRoot += `/${path}`;
+                }
+            }
+        }
+    }
     async walkFiles(startingDir: string, walker: (path: string) => void | Promise<void>) {
+        startingDir = this.normalizePath(startingDir);
         const root = startingDir.startsWith("/") ? startingDir.substring(1) : startingDir;
         for (const child of Object.keys(this.zip.entries).filter((e) => e.startsWith(root))) {
             if (child.endsWith("/")) { continue; }
@@ -120,7 +174,6 @@ class NodeZipFileSystem extends FileSystem {
             }
         }
     }
-    constructor(readonly root: string, private zip: CachedZipFile) { super(); }
 }
 
 export * from "./system";

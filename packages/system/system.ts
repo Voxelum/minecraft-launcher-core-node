@@ -22,6 +22,8 @@ export abstract class FileSystem {
 
     abstract listFiles(name: string): Promise<string[]>;
 
+    abstract cd(name: string): void;
+
     // extension methods
 
     async missingFile(name: string) {
