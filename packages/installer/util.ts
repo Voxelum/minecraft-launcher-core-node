@@ -435,6 +435,12 @@ export class HttpDownloader implements Downloader {
             if (e.code === "ETIMEDOUT") {
                 return true;
             }
+            if (e.code === "EPROTO") {
+                return true;
+            }
+            if (e.code === "ECANCELED") {
+                return true;
+            }
             return false;
         }
         option.handlers?.(pause, resume, cancel);
@@ -495,7 +501,7 @@ export class HttpDownloader implements Downloader {
         } catch (e) {
             errors.pop();
             e.errors = errors;
-            await unlink(option.destination);
+            await unlink(option.destination).catch(() => { });
             throw e;
         }
     }
