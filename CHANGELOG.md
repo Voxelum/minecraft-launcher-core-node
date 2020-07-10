@@ -1,5 +1,36 @@
 # Changelog
 
+## 3.5.0
+### @xmcl/core@2.4.0
+#### Features
+
+- feat: custom launch server executable option ([0df6c44e85cb98e41ecd33f06e4a1bb5faf6d145](https://github.com/voxelum/minecraft-launcher-core-node/commit/0df6c44e85cb98e41ecd33f06e4a1bb5faf6d145))
+#### Bug Fixes
+
+- fix: crashReport location should not contain nextline ([ce5069457ffffe69919a8bd9187cbbee7bfae915](https://github.com/voxelum/minecraft-launcher-core-node/commit/ce5069457ffffe69919a8bd9187cbbee7bfae915))
+### @xmcl/system@2.1.0
+#### Features
+
+- feat: add cd for file system ([bdd0bb8e06d20371558d41f5be940b28b3bace35](https://github.com/voxelum/minecraft-launcher-core-node/commit/bdd0bb8e06d20371558d41f5be940b28b3bace35))
+### @xmcl/installer@2.9.2
+#### Bug Fixes
+
+- fix: allow retry on EPROTO & ECANCELED ([f4a103cf43f4dd84e1e2bbb91d8dd67905b5e289](https://github.com/voxelum/minecraft-launcher-core-node/commit/f4a103cf43f4dd84e1e2bbb91d8dd67905b5e289))
+- fix: just install jar for server ([9f63f2f987baa3c4a75fb2ad9c32998e3072745b](https://github.com/voxelum/minecraft-launcher-core-node/commit/9f63f2f987baa3c4a75fb2ad9c32998e3072745b))
+- Dependency @xmcl/core bump **patch**
+### @xmcl/mod-parser@2.0.7
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.0.13
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@1.0.13
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@2.0.2
+- Dependency @xmcl/system bump **patch**
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/world@1.1.2
+- Dependency @xmcl/system bump **patch**
+
+
 ## 3.4.1
 ### @xmcl/core@2.3.1
 #### Bug Fixes

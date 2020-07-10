@@ -560,17 +560,18 @@ export declare namespace LaunchPrecheck {
      */
     function checkNatives(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption): Promise<void>;
 }
-export interface ServerOptions {
-    javaPath: string;
+export interface BaseServerOptions {
     /**
-     * Minecraft location
+     * Java executable.
      */
-    path: string;
+    javaPath: string;
     /**
      * Current working directory. Default is the same with the path.
      */
     cwd?: string;
-    version: string | ResolvedVersion;
+    /**
+     * No gui for the server launch
+     */
     nogui?: boolean;
     minMemory?: number;
     maxMemory?: number;
@@ -578,7 +579,28 @@ export interface ServerOptions {
     extraMCArgs?: string[];
     extraExecOption?: SpawnOptions;
 }
-export declare function launchServer(options: ServerOptions): Promise<ChildProcess>;
+export interface MinecraftServerOptions extends BaseServerOptions {
+    /**
+     * Minecraft location.
+     */
+    path: string;
+    /**
+     * The version id.
+     */
+    version: string | ResolvedVersion;
+}
+/**
+ * This is the case you provide the server jar execution path.
+ */
+export interface ServerOptions extends BaseServerOptions {
+    /**
+     * The minecraft server exectuable jar file.
+     *
+     * This is the case like you are launching forge server.
+     */
+    serverExectuableJarPath: string;
+}
+export declare function launchServer(options: MinecraftServerOptions | ServerOptions): Promise<ChildProcess>;
 /**
  * The Minecraft process watcher. You can inspect Minecraft launch state by this.
  *
@@ -655,7 +677,7 @@ export declare function launch(options: LaunchOption): Promise<ChildProcess>;
 /**
  * Generate the argument for server
  */
-export declare function generateArgumentsServer(options: ServerOptions): Promise<string[]>;
+export declare function generateArgumentsServer(options: MinecraftServerOptions | ServerOptions): Promise<string[]>;
 /**
  * Generate the arguments array by options. This function is useful if you want to launch the process by yourself.
  *
@@ -4354,6 +4376,7 @@ module.exports['@xmcl/system/system.d.ts'] = `export declare abstract class File
      */
     getUrl(name: string): string;
     abstract listFiles(name: string): Promise<string[]>;
+    abstract cd(name: string): void;
     missingFile(name: string): Promise<boolean>;
     walkFiles(target: string, walker: (path: string) => void | Promise<void>): Promise<void>;
 }
