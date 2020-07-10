@@ -8,6 +8,7 @@ import { MinecraftFolder } from "./folder";
 import { Platform, getPlatform } from "./platform";
 import { Version, ResolvedNative, ResolvedVersion, ResolvedLibrary } from "./version";
 import { EventEmitter } from "events";
+import { EOL } from "os";
 
 function format(template: string, args: any) {
     return template.replace(/\$\{(.*?)}/g, (key) => {
@@ -455,16 +456,12 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
         emitter.emit("error", e);
     });
     process.on("exit", (code, signal) => {
-        if (code !== 0 && (crashReport || crashReportLocation)) {
-            emitter.emit("minecraft-exit", {
-                code,
-                signal,
-                crashReport,
-                crashReportLocation,
-            });
-        } else {
-            emitter.emit("minecraft-exit", { code, signal });
-        }
+        emitter.emit("minecraft-exit", {
+            code,
+            signal,
+            crashReport,
+            crashReportLocation,
+        });
     });
     process.stdout?.on("data", (s) => {
         const string = s.toString();
@@ -472,6 +469,7 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
             crashReport = string;
         } else if (string.indexOf("Crash report saved to:") !== -1) {
             crashReportLocation = string.substring(string.indexOf("Crash report saved to:") + "Crash report saved to: #@!@# ".length);
+            crashReportLocation = crashReportLocation.replace(EOL, "").trim();
         } else if (waitForReady && string.indexOf("Reloading ResourceManager") !== -1 || string.indexOf("LWJGL Version: ") !== -1 || string.indexOf("OpenAL initialized.") !== -1) {
             waitForReady = false;
             emitter.emit("minecraft-window-ready");
