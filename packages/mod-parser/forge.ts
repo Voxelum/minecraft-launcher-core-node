@@ -217,7 +217,7 @@ async function asmMetaData(fs: FileSystem, modidTree: ModidTree, manifest?: Reco
         }
         const modid = metaContainer.modid;
         let modMeta = modidTree[modid];
-        if (!modMeta) {
+        if (modid && !modMeta) {
             modMeta = {};
             modidTree[modid] = modMeta;
         }
