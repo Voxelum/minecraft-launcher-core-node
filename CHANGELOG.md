@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.5.1
+### @xmcl/mod-parser@2.0.8
+#### Bug Fixes
+
+- fix: ignore empty modid during parsing mod ([91ae8a63e3ccdb6676aef0a7b3746948a562cddd](https://github.com/voxelum/minecraft-launcher-core-node/commit/91ae8a63e3ccdb6676aef0a7b3746948a562cddd))
+
+
 ## 3.5.0
 ### @xmcl/core@2.4.0
 #### Features
