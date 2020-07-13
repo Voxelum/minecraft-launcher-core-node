@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.5.2
+### @xmcl/installer@2.9.3
+#### Bug Fixes
+
+- fix: append new url on front of urls array ([485fda80d068a58858be8540a92f2262aa06a638](https://github.com/voxelum/minecraft-launcher-core-node/commit/485fda80d068a58858be8540a92f2262aa06a638))
+### @xmcl/mod-parser@2.0.9
+#### Bug Fixes
+
+- fix: correctly type the fabric metadata ([1a1d9e4907f094820fcba3127f49b4f751831b0f](https://github.com/voxelum/minecraft-launcher-core-node/commit/1a1d9e4907f094820fcba3127f49b4f751831b0f))
+
+
 ## 3.5.1
 ### @xmcl/mod-parser@2.0.8
 #### Bug Fixes
