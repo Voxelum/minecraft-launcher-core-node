@@ -3412,23 +3412,23 @@ export interface ModMetadata {
     /**
      * For dependencies required to run. Without them a game will crash.
      */
-    depends?: string[] | string;
+    depends?: Record<string, string | string[]>;
     /**
      * For dependencies not required to run. Without them a game will log a warning.
      */
-    recommends?: string[] | string;
+    recommends?: Record<string, string | string[]>;
     /**
      * For dependencies not required to run. Use this as a kind of metadata.
      */
-    suggests?: string[] | string;
+    suggests?: Record<string, string | string[]>;
     /**
      * For mods whose together with yours might cause a game crash. With them a game will crash.
      */
-    breaks?: string[] | string;
+    breaks?: Record<string, string | string[]>;
     /**
      * For mods whose together with yours cause some kind of bugs, etc. With them a game will log a warning.
      */
-    conflicts?: string[] | string;
+    conflicts?: Record<string, string | string[]>;
     /**
      * Defines the user-friendly mod's name. If not present, assume it matches id.
      */
