@@ -172,9 +172,9 @@ export interface AssetsOption extends DownloaderOptions {
 function resolveDownloads<T>(original: string, version: T, option?: string | string[] | ((version: T) => string | string[])) {
     let result = [original];
     if (typeof option === "function") {
-        result.push(...normalizeArray(option(version)));
+        result.unshift(...normalizeArray(option(version)));
     } else {
-        result.push(...normalizeArray(option));
+        result.unshift(...normalizeArray(option));
     }
     return result;
 }
