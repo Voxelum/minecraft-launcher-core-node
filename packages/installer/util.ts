@@ -389,12 +389,18 @@ export class HttpDownloader implements Downloader {
                     input.unpipe();
                     request.abort();
                 };
-                return new Promise<boolean>((resolve, reject) => {
-                    input.pipe(output);
-                    output.on("finish", () => resolve(true));
-                    request.on("abort", () => resolve(false));
+                input.pipe(output);
+                let requestPromise = new Promise<boolean>((resolve, reject) => {
                     request.on("error", reject);
+                    request.on("abort", () => resolve(false));
+                    input.on("end", () => resolve(true));
                 });
+                let outputFinishPromise = new Promise((resolve, reject) => {
+                    output.on("error", reject);
+                    output.on("finish", () => resolve());
+                });
+                let [done] = await Promise.all([requestPromise, outputFinishPromise]);
+                return done;
             }));
             done = results.every((r) => r);
         }
