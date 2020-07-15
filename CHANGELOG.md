@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.5.3
+### @xmcl/installer@2.9.4
+#### Bug Fixes
+
+- fix: ensure the download stream and write end (#170) ([5fba3b037d627c175067d81563703a0e512ff458](https://github.com/voxelum/minecraft-launcher-core-node/commit/5fba3b037d627c175067d81563703a0e512ff458))
+
+
 ## 3.5.2
 ### @xmcl/installer@2.9.3
 #### Bug Fixes
