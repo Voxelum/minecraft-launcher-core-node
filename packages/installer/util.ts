@@ -393,7 +393,7 @@ export class HttpDownloader implements Downloader {
                 let requestPromise = new Promise<boolean>((resolve, reject) => {
                     request.on("error", reject);
                     request.on("abort", () => resolve(false));
-                    request.on("end", () => resolve(true));
+                    input.on("end", () => resolve(true));
                 });
                 let outputFinishPromise = new Promise((resolve, reject) => {
                     output.on("error", reject);
