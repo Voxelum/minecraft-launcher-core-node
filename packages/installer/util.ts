@@ -484,10 +484,10 @@ export class HttpDownloader implements Downloader {
      * Download file by the option provided.
      */
     async downloadFile(option: DownloadOption): Promise<void> {
-        await ensureFile(option.destination);
         let errors: unknown[] = [];
+        await ensureFile(option.destination);
+        let fd = await open(option.destination, "w");;
         try {
-            let fd = await open(option.destination, "w");
             await normalizeArray(option.url).reduce(async (memo, u) => memo.catch(async (e) => {
                 if (e instanceof Task.CancelledError) { throw e; }
                 try {
@@ -507,6 +507,7 @@ export class HttpDownloader implements Downloader {
         } catch (e) {
             errors.pop();
             e.errors = errors;
+            await close(fd).catch(() => { });
             await unlink(option.destination).catch(() => { });
             throw e;
         }
