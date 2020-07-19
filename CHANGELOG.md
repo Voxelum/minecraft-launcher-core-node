@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.5.4
+### @xmcl/installer@2.9.5
+#### Bug Fixes
+
+- fix: ensure the file closed for download ([2a9d62373acecf8f16e21f5c39e502906c545593](https://github.com/voxelum/minecraft-launcher-core-node/commit/2a9d62373acecf8f16e21f5c39e502906c545593))
+
+
 ## 3.5.3
 ### @xmcl/installer@2.9.4
 #### Bug Fixes
