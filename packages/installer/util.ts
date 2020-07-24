@@ -447,6 +447,9 @@ export class HttpDownloader implements Downloader {
             if (e.code === "ECANCELED") {
                 return true;
             }
+            if (e.message === "ChecksumNotMatch") {
+                return true;
+            }
             return false;
         }
         option.handlers?.(pause, resume, cancel);
@@ -463,14 +466,13 @@ export class HttpDownloader implements Downloader {
                 if (!done) {
                     continue;
                 }
-                if (await validate()) {
-                    break;
-                } else {
-                    done = false;
-                    reset();
+                if (!await validate()) {
+                    throw new Error("ChecksumNotMatch")
                 }
             } catch (e) {
-                if (!shouldTolerateError(e)) {
+                done = false;
+                reset();
+                if (!shouldTolerateError(e) || retry === 0) {
                     throw e;
                 }
             }
