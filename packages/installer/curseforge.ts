@@ -152,7 +152,7 @@ export function installCurseforgeModpackTask(zip: InputType, minecraft: Minecraf
                 }
                 return downloadFileTask({ destination: dest, url: u }, options)(c);
             }));
-            await batchedTask(c, tasks, sizes, options.maxConcurrency, options.throwErrorImmediately, () => `Fail to install curseforge modpack to ${mc.root}.`);
+            await batchedTask(c, tasks, sizes, options.maxConcurrency, options.throwErrorImmediately, (e) => `Fail to install curseforge modpack to ${mc.root}: ${e.map((x: any) => x.message).join("\n")}`);
         }), 80);
 
         await context.execute(Task.create("deploy", async (c) => {
