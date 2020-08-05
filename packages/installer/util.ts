@@ -346,6 +346,7 @@ export class HttpDownloader implements Downloader {
                 start: seg.start,
                 autoClose: false,
             }));
+            transferredTotal = 0;
         }
 
         let update = async () => {
@@ -455,7 +456,7 @@ export class HttpDownloader implements Downloader {
         option.handlers?.(pause, resume, cancel);
 
         let retry = 2;
-        while (!done && retry > 0) {
+        while (!done) {
             try {
                 await update();
                 await download();
@@ -472,11 +473,11 @@ export class HttpDownloader implements Downloader {
             } catch (e) {
                 done = false;
                 reset();
-                if (!shouldTolerateError(e) || retry === 0) {
+                retry -= 1;
+                if (!shouldTolerateError(e) || retry <= 0) {
                     throw e;
                 }
             }
-            retry -= 1;
         }
 
         return states;
