@@ -53,7 +53,7 @@ describe("Install", () => {
                 type: "release",
                 time: "2018-02-15T16:26:45+00:00",
                 releaseTime: "2017-09-18T08:39:46+00:00",
-                url: "https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json",
+                url: "https://launchermeta.mojang.com/v1/packages/6e69e85d0f85f4f4b9e12dd99d102092a6e15918/1.12.2.json",
             }, root);
         });
         test("should be able to install 1.14.4", async () => {
@@ -85,7 +85,7 @@ describe("Install", () => {
                     type: "release",
                     time: "2018-02-15T16:26:45+00:00",
                     releaseTime: "2017-09-18T08:39:46+00:00",
-                    url: "https://launchermeta.mojang.com/mc/game/cf72a57ff499d6d9ade870b2143ee54958bd33ef/1.12.2.json",
+                    url: "https://launchermeta.mojang.com/v1/packages/6e69e85d0f85f4f4b9e12dd99d102092a6e15918/1.12.2.json",
                 };
                 const version = await Installer.install("server", meta, root);
             },
