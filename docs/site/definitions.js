@@ -3251,6 +3251,13 @@ interface DownloadMetadata {
     lastModified?: string;
     eTag?: string;
 }
+export declare class ChecksumNotMatchError extends Error {
+    readonly algorithm: string;
+    readonly expect: string;
+    readonly actual: string;
+    readonly file: string;
+    constructor(algorithm: string, expect: string, actual: string, file: string);
+}
 /**
  * The default downloader based on nodejs http/https which support range (segment) download
  * and optimized for many small files downloading.
