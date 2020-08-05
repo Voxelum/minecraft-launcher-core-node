@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.5.5
+### @xmcl/installer@2.9.6
+#### Bug Fixes
+
+- fix: print err message to batch task ([79be25eef5e85804d989a500f1f5af35be6627c4](https://github.com/voxelum/minecraft-launcher-core-node/commit/79be25eef5e85804d989a500f1f5af35be6627c4))
+- fix: retry next src for checksum not matched ([3560c9dd231e55779856c363a3e4c5f544687025](https://github.com/voxelum/minecraft-launcher-core-node/commit/3560c9dd231e55779856c363a3e4c5f544687025))
+
+
 ## 3.5.4
 ### @xmcl/installer@2.9.5
 #### Bug Fixes
