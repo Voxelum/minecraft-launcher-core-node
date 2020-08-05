@@ -268,6 +268,13 @@ interface DownloadMetadata {
     eTag?: string;
 }
 
+export class ChecksumNotMatchError extends Error {
+    constructor(readonly algorithm: string, readonly expect: string, readonly actual: string, readonly file: string) {
+        super(`File ${file} ${algorithm} checksum not match. Expect: ${expect}. Actual: ${actual}`);
+    }
+}
+
+
 /**
  * The default downloader based on nodejs http/https which support range (segment) download
  * and optimized for many small files downloading.
@@ -332,9 +339,10 @@ export class HttpDownloader implements Downloader {
             if (option.checksum) {
                 let actual = await checksum(option.destination, option.checksum.algorithm)
                 let expect = option.checksum.hash;
-                return actual === expect;
+                if (actual !== expect) {
+                    throw new ChecksumNotMatchError(option.checksum.algorithm, expect, actual, option.destination);
+                }
             }
-            return true;
         }
 
         let reset = () => {
@@ -448,7 +456,7 @@ export class HttpDownloader implements Downloader {
             if (e.code === "ECANCELED") {
                 return true;
             }
-            if (e.message === "ChecksumNotMatch") {
+            if (e instanceof ChecksumNotMatchError) {
                 return true;
             }
             return false;
@@ -467,9 +475,7 @@ export class HttpDownloader implements Downloader {
                 if (!done) {
                     continue;
                 }
-                if (!await validate()) {
-                    throw new Error("ChecksumNotMatch")
-                }
+                await validate();
             } catch (e) {
                 done = false;
                 reset();
