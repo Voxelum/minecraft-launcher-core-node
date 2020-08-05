@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.5.6
+### @xmcl/installer@2.9.7
+#### Bug Fixes
+
+- fix: add checksum not match error info (#177) ([d48af1802d4003e6497d2d6723f3ae46be851f22](https://github.com/voxelum/minecraft-launcher-core-node/commit/d48af1802d4003e6497d2d6723f3ae46be851f22))
+- fix: reset download progress if failed ([dffdb616adc4025fc8ebc768c5587579267ae1e1](https://github.com/voxelum/minecraft-launcher-core-node/commit/dffdb616adc4025fc8ebc768c5587579267ae1e1))
+
+
 ## 3.5.5
 ### @xmcl/installer@2.9.6
 #### Bug Fixes
