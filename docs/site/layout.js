@@ -17,9 +17,8 @@ $(document).ready(function () {
         },
     });
 });
-$('.menu .item').tab();
-$('.dropdown').dropdown();
 
+$('.dropdown').dropdown();
 getLatestTagName().then(t => {
     $('#version').text(t);
 })

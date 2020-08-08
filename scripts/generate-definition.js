@@ -6,7 +6,7 @@ function ecape(s) {
 
 {
     const definitions = [];
-    function scanScenarios(dir) {
+    function scanDefinitions(dir) {
         try {
             for (const file of fs.readdirSync(dir)) {
                 const f = `${dir}/${file}`;
@@ -14,14 +14,28 @@ function ecape(s) {
                     const fname = `@xmcl/${dir.replace('packages/', '')}/${file}`;
                     definitions.push({ file: fname, content: fs.readFileSync(f).toString() })
                 } else if (fs.statSync(f).isDirectory()) {
-                    scanScenarios(f);
+                    scanDefinitions(f);
                 }
             }
         } catch (e) {
             console.error(e)
         }
     }
-    scanScenarios("packages");
+    function scanNodeDefinitions() {
+        try {
+            for (const file of fs.readdirSync('node_modules/@types/node')) {
+                const f = `node_modules/@types/node/${file}`;
+                if (file.endsWith(".d.ts")) {
+                    const fname = `${file}`;
+                    definitions.push({ file: fname, content: fs.readFileSync(f).toString() })
+                }
+            }
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    scanDefinitions("packages");
+    scanNodeDefinitions();
     fs.writeFileSync('docs/site/definitions.js', definitions.map(f => {
         return `module.exports['${f.file}'] = \`${ecape(f.content)}\`;`
     }).join('\n'));

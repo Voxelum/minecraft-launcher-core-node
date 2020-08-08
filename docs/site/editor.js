@@ -19,10 +19,11 @@ self.MonacoEnvironment = {
 import('monaco-editor').then((monaco) => {
 
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-        target: monaco.languages.typescript.ScriptTarget.ES2015,
+        target: monaco.languages.typescript.ScriptTarget.ESNext,
         allowNonTsExtensions: true,
         moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-        module: monaco.languages.typescript.ModuleKind.CommonJS,
+        module: monaco.languages.typescript.ModuleKind.ESNext,
+        allowSyntheticDefaultImports: true,
     });
 
     for (const key of Object.keys(definitions)) {

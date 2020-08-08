@@ -5884,3 +5884,14640 @@ export {};
 `;
 module.exports['@xmcl/world/test.d.ts'] = `export {};
 `;
+module.exports['assert.d.ts'] = `declare module "assert" {
+    function internal(value: any, message?: string | Error): void;
+    namespace internal {
+        class AssertionError implements Error {
+            name: string;
+            message: string;
+            actual: any;
+            expected: any;
+            operator: string;
+            generatedMessage: boolean;
+            code: 'ERR_ASSERTION';
+
+            constructor(options?: {
+                message?: string; actual?: any; expected?: any;
+                operator?: string; stackStartFn?: Function
+            });
+        }
+
+        function fail(message?: string | Error): never;
+        /** @deprecated since v10.0.0 - use fail([message]) or other assert functions instead. */
+        function fail(actual: any, expected: any, message?: string | Error, operator?: string, stackStartFn?: Function): never;
+        function ok(value: any, message?: string | Error): void;
+        function equal(actual: any, expected: any, message?: string | Error): void;
+        function notEqual(actual: any, expected: any, message?: string | Error): void;
+        function deepEqual(actual: any, expected: any, message?: string | Error): void;
+        function notDeepEqual(actual: any, expected: any, message?: string | Error): void;
+        function strictEqual(actual: any, expected: any, message?: string | Error): void;
+        function notStrictEqual(actual: any, expected: any, message?: string | Error): void;
+        function deepStrictEqual(actual: any, expected: any, message?: string | Error): void;
+        function notDeepStrictEqual(actual: any, expected: any, message?: string | Error): void;
+
+        function throws(block: () => any, message?: string | Error): void;
+        function throws(block: () => any, error: RegExp | Function | Object | Error, message?: string | Error): void;
+        function doesNotThrow(block: () => any, message?: string | Error): void;
+        function doesNotThrow(block: () => any, error: RegExp | Function, message?: string | Error): void;
+
+        function ifError(value: any): void;
+
+        function rejects(block: (() => Promise<any>) | Promise<any>, message?: string | Error): Promise<void>;
+        function rejects(block: (() => Promise<any>) | Promise<any>, error: RegExp | Function | Object | Error, message?: string | Error): Promise<void>;
+        function doesNotReject(block: (() => Promise<any>) | Promise<any>, message?: string | Error): Promise<void>;
+        function doesNotReject(block: (() => Promise<any>) | Promise<any>, error: RegExp | Function, message?: string | Error): Promise<void>;
+
+        const strict: typeof internal;
+    }
+
+    export = internal;
+}
+`;
+module.exports['async_hooks.d.ts'] = `/**
+ * Async Hooks module: https://nodejs.org/api/async_hooks.html
+ */
+declare module "async_hooks" {
+    /**
+     * Returns the asyncId of the current execution context.
+     */
+    function executionAsyncId(): number;
+
+    /**
+     * Returns the ID of the resource responsible for calling the callback that is currently being executed.
+     */
+    function triggerAsyncId(): number;
+
+    interface HookCallbacks {
+        /**
+         * Called when a class is constructed that has the possibility to emit an asynchronous event.
+         * @param asyncId a unique ID for the async resource
+         * @param type the type of the async resource
+         * @param triggerAsyncId the unique ID of the async resource in whose execution context this async resource was created
+         * @param resource reference to the resource representing the async operation, needs to be released during destroy
+         */
+        init?(asyncId: number, type: string, triggerAsyncId: number, resource: Object): void;
+
+        /**
+         * When an asynchronous operation is initiated or completes a callback is called to notify the user.
+         * The before callback is called just before said callback is executed.
+         * @param asyncId the unique identifier assigned to the resource about to execute the callback.
+         */
+        before?(asyncId: number): void;
+
+        /**
+         * Called immediately after the callback specified in before is completed.
+         * @param asyncId the unique identifier assigned to the resource which has executed the callback.
+         */
+        after?(asyncId: number): void;
+
+        /**
+         * Called when a promise has resolve() called. This may not be in the same execution id
+         * as the promise itself.
+         * @param asyncId the unique id for the promise that was resolve()d.
+         */
+        promiseResolve?(asyncId: number): void;
+
+        /**
+         * Called after the resource corresponding to asyncId is destroyed
+         * @param asyncId a unique ID for the async resource
+         */
+        destroy?(asyncId: number): void;
+    }
+
+    interface AsyncHook {
+        /**
+         * Enable the callbacks for a given AsyncHook instance. If no callbacks are provided enabling is a noop.
+         */
+        enable(): this;
+
+        /**
+         * Disable the callbacks for a given AsyncHook instance from the global pool of AsyncHook callbacks to be executed. Once a hook has been disabled it will not be called again until enabled.
+         */
+        disable(): this;
+    }
+
+    /**
+     * Registers functions to be called for different lifetime events of each async operation.
+     * @param options the callbacks to register
+     * @return an AsyncHooks instance used for disabling and enabling hooks
+     */
+    function createHook(options: HookCallbacks): AsyncHook;
+
+    interface AsyncResourceOptions {
+      /**
+       * The ID of the execution context that created this async event.
+       * Default: \`executionAsyncId()\`
+       */
+      triggerAsyncId?: number;
+
+      /**
+       * Disables automatic \`emitDestroy\` when the object is garbage collected.
+       * This usually does not need to be set (even if \`emitDestroy\` is called
+       * manually), unless the resource's \`asyncId\` is retrieved and the
+       * sensitive API's \`emitDestroy\` is called with it.
+       * Default: \`false\`
+       */
+      requireManualDestroy?: boolean;
+    }
+
+    /**
+     * The class AsyncResource was designed to be extended by the embedder's async resources.
+     * Using this users can easily trigger the lifetime events of their own resources.
+     */
+    class AsyncResource {
+        /**
+         * AsyncResource() is meant to be extended. Instantiating a
+         * new AsyncResource() also triggers init. If triggerAsyncId is omitted then
+         * async_hook.executionAsyncId() is used.
+         * @param type The type of async event.
+         * @param triggerAsyncId The ID of the execution context that created
+         *   this async event (default: \`executionAsyncId()\`), or an
+         *   AsyncResourceOptions object (since 9.3)
+         */
+        constructor(type: string, triggerAsyncId?: number|AsyncResourceOptions);
+
+        /**
+         * Call the provided function with the provided arguments in the
+         * execution context of the async resource. This will establish the
+         * context, trigger the AsyncHooks before callbacks, call the function,
+         * trigger the AsyncHooks after callbacks, and then restore the original
+         * execution context.
+         * @param fn The function to call in the execution context of this
+         *   async resource.
+         * @param thisArg The receiver to be used for the function call.
+         * @param args Optional arguments to pass to the function.
+         */
+        runInAsyncScope<This, Result>(fn: (this: This, ...args: any[]) => Result, thisArg?: This, ...args: any[]): Result;
+
+        /**
+         * Call AsyncHooks destroy callbacks.
+         */
+        emitDestroy(): void;
+
+        /**
+         * @return the unique ID assigned to this AsyncResource instance.
+         */
+        asyncId(): number;
+
+        /**
+         * @return the trigger ID for this AsyncResource instance.
+         */
+        triggerAsyncId(): number;
+    }
+}
+`;
+module.exports['base.d.ts'] = `// base definnitions for all NodeJS modules that are not specific to any version of TypeScript
+/// <reference path="globals.d.ts" />
+/// <reference path="assert.d.ts" />
+/// <reference path="async_hooks.d.ts" />
+/// <reference path="buffer.d.ts" />
+/// <reference path="child_process.d.ts" />
+/// <reference path="cluster.d.ts" />
+/// <reference path="console.d.ts" />
+/// <reference path="constants.d.ts" />
+/// <reference path="crypto.d.ts" />
+/// <reference path="dgram.d.ts" />
+/// <reference path="dns.d.ts" />
+/// <reference path="domain.d.ts" />
+/// <reference path="events.d.ts" />
+/// <reference path="fs.d.ts" />
+/// <reference path="http.d.ts" />
+/// <reference path="http2.d.ts" />
+/// <reference path="https.d.ts" />
+/// <reference path="inspector.d.ts" />
+/// <reference path="module.d.ts" />
+/// <reference path="net.d.ts" />
+/// <reference path="os.d.ts" />
+/// <reference path="path.d.ts" />
+/// <reference path="perf_hooks.d.ts" />
+/// <reference path="process.d.ts" />
+/// <reference path="punycode.d.ts" />
+/// <reference path="querystring.d.ts" />
+/// <reference path="readline.d.ts" />
+/// <reference path="repl.d.ts" />
+/// <reference path="stream.d.ts" />
+/// <reference path="string_decoder.d.ts" />
+/// <reference path="timers.d.ts" />
+/// <reference path="tls.d.ts" />
+/// <reference path="trace_events.d.ts" />
+/// <reference path="tty.d.ts" />
+/// <reference path="url.d.ts" />
+/// <reference path="util.d.ts" />
+/// <reference path="v8.d.ts" />
+/// <reference path="vm.d.ts" />
+/// <reference path="worker_threads.d.ts" />
+/// <reference path="zlib.d.ts" />
+`;
+module.exports['buffer.d.ts'] = `declare module "buffer" {
+    export const INSPECT_MAX_BYTES: number;
+    export const kMaxLength: number;
+    export const kStringMaxLength: number;
+    export const constants: {
+        MAX_LENGTH: number;
+        MAX_STRING_LENGTH: number;
+    };
+    const BuffType: typeof Buffer;
+
+    export type TranscodeEncoding = "ascii" | "utf8" | "utf16le" | "ucs2" | "latin1" | "binary";
+
+    export function transcode(source: Uint8Array, fromEnc: TranscodeEncoding, toEnc: TranscodeEncoding): Buffer;
+
+    export const SlowBuffer: {
+        /** @deprecated since v6.0.0, use Buffer.allocUnsafeSlow() */
+        new(size: number): Buffer;
+        prototype: Buffer;
+    };
+
+    export { BuffType as Buffer };
+}
+`;
+module.exports['child_process.d.ts'] = `declare module "child_process" {
+    import * as events from "events";
+    import * as net from "net";
+    import { Writable, Readable, Stream, Pipe } from "stream";
+
+    interface ChildProcess extends events.EventEmitter {
+        stdin: Writable | null;
+        stdout: Readable | null;
+        stderr: Readable | null;
+        readonly channel?: Pipe | null;
+        readonly stdio: [
+            Writable | null, // stdin
+            Readable | null, // stdout
+            Readable | null, // stderr
+            Readable | Writable | null | undefined, // extra
+            Readable | Writable | null | undefined // extra
+        ];
+        readonly killed: boolean;
+        readonly pid: number;
+        readonly connected: boolean;
+        kill(signal?: NodeJS.Signals | number): void;
+        send(message: any, callback?: (error: Error | null) => void): boolean;
+        send(message: any, sendHandle?: net.Socket | net.Server, callback?: (error: Error | null) => void): boolean;
+        send(message: any, sendHandle?: net.Socket | net.Server, options?: MessageOptions, callback?: (error: Error | null) => void): boolean;
+        disconnect(): void;
+        unref(): void;
+        ref(): void;
+
+        /**
+         * events.EventEmitter
+         * 1. close
+         * 2. disconnect
+         * 3. error
+         * 4. exit
+         * 5. message
+         */
+
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        addListener(event: "disconnect", listener: () => void): this;
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
+        addListener(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "close", code: number, signal: NodeJS.Signals): boolean;
+        emit(event: "disconnect"): boolean;
+        emit(event: "error", err: Error): boolean;
+        emit(event: "exit", code: number | null, signal: NodeJS.Signals | null): boolean;
+        emit(event: "message", message: any, sendHandle: net.Socket | net.Server): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        on(event: "disconnect", listener: () => void): this;
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
+        on(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        once(event: "disconnect", listener: () => void): this;
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
+        once(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        prependListener(event: "disconnect", listener: () => void): this;
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
+        prependListener(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        prependOnceListener(event: "disconnect", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
+        prependOnceListener(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+    }
+
+    // return this object when stdio option is undefined or not specified
+    interface ChildProcessWithoutNullStreams extends ChildProcess {
+        stdin: Writable;
+        stdout: Readable;
+        stderr: Readable;
+        readonly stdio: [
+            Writable, // stdin
+            Readable, // stdout
+            Readable, // stderr
+            Readable | Writable | null | undefined, // extra, no modification
+            Readable | Writable | null | undefined // extra, no modification
+        ];
+    }
+
+    // return this object when stdio option is a tuple of 3
+    interface ChildProcessByStdio<
+        I extends null | Writable,
+        O extends null | Readable,
+        E extends null | Readable,
+    > extends ChildProcess {
+        stdin: I;
+        stdout: O;
+        stderr: E;
+        readonly stdio: [
+            I,
+            O,
+            E,
+            Readable | Writable | null | undefined, // extra, no modification
+            Readable | Writable | null | undefined // extra, no modification
+        ];
+    }
+
+    interface MessageOptions {
+        keepOpen?: boolean;
+    }
+
+    type StdioOptions = "pipe" | "ignore" | "inherit" | Array<("pipe" | "ipc" | "ignore" | "inherit" | Stream | number | null | undefined)>;
+
+    interface ProcessEnvOptions {
+        uid?: number;
+        gid?: number;
+        cwd?: string;
+        env?: NodeJS.ProcessEnv;
+    }
+
+    interface CommonOptions extends ProcessEnvOptions {
+        /**
+         * @default true
+         */
+        windowsHide?: boolean;
+        /**
+         * @default 0
+         */
+        timeout?: number;
+    }
+
+    interface SpawnOptions extends CommonOptions {
+        argv0?: string;
+        stdio?: StdioOptions;
+        detached?: boolean;
+        shell?: boolean | string;
+        windowsVerbatimArguments?: boolean;
+    }
+
+    interface SpawnOptionsWithoutStdio extends SpawnOptions {
+        stdio?: 'pipe' | Array<null | undefined | 'pipe'>;
+    }
+
+    type StdioNull = 'inherit' | 'ignore' | Stream;
+    type StdioPipe = undefined | null | 'pipe';
+
+    interface SpawnOptionsWithStdioTuple<
+        Stdin extends StdioNull | StdioPipe,
+        Stdout extends StdioNull | StdioPipe,
+        Stderr extends StdioNull | StdioPipe,
+    > extends SpawnOptions {
+        stdio: [Stdin, Stdout, Stderr];
+    }
+
+    // overloads of spawn without 'args'
+    function spawn(command: string, options?: SpawnOptionsWithoutStdio): ChildProcessWithoutNullStreams;
+
+    function spawn(
+        command: string,
+        options: SpawnOptionsWithStdioTuple<StdioPipe, StdioPipe, StdioPipe>,
+    ): ChildProcessByStdio<Writable, Readable, Readable>;
+    function spawn(
+        command: string,
+        options: SpawnOptionsWithStdioTuple<StdioPipe, StdioPipe, StdioNull>,
+    ): ChildProcessByStdio<Writable, Readable, null>;
+    function spawn(
+        command: string,
+        options: SpawnOptionsWithStdioTuple<StdioPipe, StdioNull, StdioPipe>,
+    ): ChildProcessByStdio<Writable, null, Readable>;
+    function spawn(
+        command: string,
+        options: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioPipe>,
+    ): ChildProcessByStdio<null, Readable, Readable>;
+    function spawn(
+        command: string,
+        options: SpawnOptionsWithStdioTuple<StdioPipe, StdioNull, StdioNull>,
+    ): ChildProcessByStdio<Writable, null, null>;
+    function spawn(
+        command: string,
+        options: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioNull>,
+    ): ChildProcessByStdio<null, Readable, null>;
+    function spawn(
+        command: string,
+        options: SpawnOptionsWithStdioTuple<StdioNull, StdioNull, StdioPipe>,
+    ): ChildProcessByStdio<null, null, Readable>;
+    function spawn(
+        command: string,
+        options: SpawnOptionsWithStdioTuple<StdioNull, StdioNull, StdioNull>,
+    ): ChildProcessByStdio<null, null, null>;
+
+    function spawn(command: string, options: SpawnOptions): ChildProcess;
+
+    // overloads of spawn with 'args'
+    function spawn(command: string, args?: ReadonlyArray<string>, options?: SpawnOptionsWithoutStdio): ChildProcessWithoutNullStreams;
+
+    function spawn(
+        command: string,
+        args: ReadonlyArray<string>,
+        options: SpawnOptionsWithStdioTuple<StdioPipe, StdioPipe, StdioPipe>,
+    ): ChildProcessByStdio<Writable, Readable, Readable>;
+    function spawn(
+        command: string,
+        args: ReadonlyArray<string>,
+        options: SpawnOptionsWithStdioTuple<StdioPipe, StdioPipe, StdioNull>,
+    ): ChildProcessByStdio<Writable, Readable, null>;
+    function spawn(
+        command: string,
+        args: ReadonlyArray<string>,
+        options: SpawnOptionsWithStdioTuple<StdioPipe, StdioNull, StdioPipe>,
+    ): ChildProcessByStdio<Writable, null, Readable>;
+    function spawn(
+        command: string,
+        args: ReadonlyArray<string>,
+        options: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioPipe>,
+    ): ChildProcessByStdio<null, Readable, Readable>;
+    function spawn(
+        command: string,
+        args: ReadonlyArray<string>,
+        options: SpawnOptionsWithStdioTuple<StdioPipe, StdioNull, StdioNull>,
+    ): ChildProcessByStdio<Writable, null, null>;
+    function spawn(
+        command: string,
+        args: ReadonlyArray<string>,
+        options: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioNull>,
+    ): ChildProcessByStdio<null, Readable, null>;
+    function spawn(
+        command: string,
+        args: ReadonlyArray<string>,
+        options: SpawnOptionsWithStdioTuple<StdioNull, StdioNull, StdioPipe>,
+    ): ChildProcessByStdio<null, null, Readable>;
+    function spawn(
+        command: string,
+        args: ReadonlyArray<string>,
+        options: SpawnOptionsWithStdioTuple<StdioNull, StdioNull, StdioNull>,
+    ): ChildProcessByStdio<null, null, null>;
+
+    function spawn(command: string, args: ReadonlyArray<string>, options: SpawnOptions): ChildProcess;
+
+    interface ExecOptions extends CommonOptions {
+        shell?: string;
+        maxBuffer?: number;
+        killSignal?: NodeJS.Signals | number;
+    }
+
+    interface ExecOptionsWithStringEncoding extends ExecOptions {
+        encoding: BufferEncoding;
+    }
+
+    interface ExecOptionsWithBufferEncoding extends ExecOptions {
+        encoding: string | null; // specify \`null\`.
+    }
+
+    interface ExecException extends Error {
+        cmd?: string;
+        killed?: boolean;
+        code?: number;
+        signal?: NodeJS.Signals;
+    }
+
+    // no \`options\` definitely means stdout/stderr are \`string\`.
+    function exec(command: string, callback?: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+
+    // \`options\` with \`"buffer"\` or \`null\` for \`encoding\` means stdout/stderr are definitely \`Buffer\`.
+    function exec(command: string, options: { encoding: "buffer" | null } & ExecOptions, callback?: (error: ExecException | null, stdout: Buffer, stderr: Buffer) => void): ChildProcess;
+
+    // \`options\` with well known \`encoding\` means stdout/stderr are definitely \`string\`.
+    function exec(command: string, options: { encoding: BufferEncoding } & ExecOptions, callback?: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+
+    // \`options\` with an \`encoding\` whose type is \`string\` means stdout/stderr could either be \`Buffer\` or \`string\`.
+    // There is no guarantee the \`encoding\` is unknown as \`string\` is a superset of \`BufferEncoding\`.
+    function exec(command: string, options: { encoding: string } & ExecOptions, callback?: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void): ChildProcess;
+
+    // \`options\` without an \`encoding\` means stdout/stderr are definitely \`string\`.
+    function exec(command: string, options: ExecOptions, callback?: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+
+    // fallback if nothing else matches. Worst case is always \`string | Buffer\`.
+    function exec(
+        command: string,
+        options: ({ encoding?: string | null } & ExecOptions) | undefined | null,
+        callback?: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
+    ): ChildProcess;
+
+    interface PromiseWithChild<T> extends Promise<T> {
+        child: ChildProcess;
+    }
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace exec {
+        function __promisify__(command: string): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(command: string, options: { encoding: "buffer" | null } & ExecOptions): PromiseWithChild<{ stdout: Buffer, stderr: Buffer }>;
+        function __promisify__(command: string, options: { encoding: BufferEncoding } & ExecOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(command: string, options: ExecOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(command: string, options?: ({ encoding?: string | null } & ExecOptions) | null): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
+    }
+
+    interface ExecFileOptions extends CommonOptions {
+        maxBuffer?: number;
+        killSignal?: NodeJS.Signals | number;
+        windowsVerbatimArguments?: boolean;
+        shell?: boolean | string;
+    }
+    interface ExecFileOptionsWithStringEncoding extends ExecFileOptions {
+        encoding: BufferEncoding;
+    }
+    interface ExecFileOptionsWithBufferEncoding extends ExecFileOptions {
+        encoding: 'buffer' | null;
+    }
+    interface ExecFileOptionsWithOtherEncoding extends ExecFileOptions {
+        encoding: string;
+    }
+
+    function execFile(file: string): ChildProcess;
+    function execFile(file: string, options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null): ChildProcess;
+    function execFile(file: string, args?: ReadonlyArray<string> | null): ChildProcess;
+    function execFile(file: string, args: ReadonlyArray<string> | undefined | null, options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null): ChildProcess;
+
+    // no \`options\` definitely means stdout/stderr are \`string\`.
+    function execFile(file: string, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+    function execFile(file: string, args: ReadonlyArray<string> | undefined | null, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+
+    // \`options\` with \`"buffer"\` or \`null\` for \`encoding\` means stdout/stderr are definitely \`Buffer\`.
+    function execFile(file: string, options: ExecFileOptionsWithBufferEncoding, callback: (error: ExecException | null, stdout: Buffer, stderr: Buffer) => void): ChildProcess;
+    function execFile(
+        file: string,
+        args: ReadonlyArray<string> | undefined | null,
+        options: ExecFileOptionsWithBufferEncoding,
+        callback: (error: ExecException | null, stdout: Buffer, stderr: Buffer) => void,
+    ): ChildProcess;
+
+    // \`options\` with well known \`encoding\` means stdout/stderr are definitely \`string\`.
+    function execFile(file: string, options: ExecFileOptionsWithStringEncoding, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+    function execFile(
+        file: string,
+        args: ReadonlyArray<string> | undefined | null,
+        options: ExecFileOptionsWithStringEncoding,
+        callback: (error: ExecException | null, stdout: string, stderr: string) => void,
+    ): ChildProcess;
+
+    // \`options\` with an \`encoding\` whose type is \`string\` means stdout/stderr could either be \`Buffer\` or \`string\`.
+    // There is no guarantee the \`encoding\` is unknown as \`string\` is a superset of \`BufferEncoding\`.
+    function execFile(
+        file: string,
+        options: ExecFileOptionsWithOtherEncoding,
+        callback: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
+    ): ChildProcess;
+    function execFile(
+        file: string,
+        args: ReadonlyArray<string> | undefined | null,
+        options: ExecFileOptionsWithOtherEncoding,
+        callback: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
+    ): ChildProcess;
+
+    // \`options\` without an \`encoding\` means stdout/stderr are definitely \`string\`.
+    function execFile(file: string, options: ExecFileOptions, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+    function execFile(
+        file: string,
+        args: ReadonlyArray<string> | undefined | null,
+        options: ExecFileOptions,
+        callback: (error: ExecException | null, stdout: string, stderr: string) => void
+    ): ChildProcess;
+
+    // fallback if nothing else matches. Worst case is always \`string | Buffer\`.
+    function execFile(
+        file: string,
+        options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null,
+        callback: ((error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void) | undefined | null,
+    ): ChildProcess;
+    function execFile(
+        file: string,
+        args: ReadonlyArray<string> | undefined | null,
+        options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null,
+        callback: ((error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void) | undefined | null,
+    ): ChildProcess;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace execFile {
+        function __promisify__(file: string): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, args: string[] | undefined | null): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, options: ExecFileOptionsWithBufferEncoding): PromiseWithChild<{ stdout: Buffer, stderr: Buffer }>;
+        function __promisify__(file: string, args: string[] | undefined | null, options: ExecFileOptionsWithBufferEncoding): PromiseWithChild<{ stdout: Buffer, stderr: Buffer }>;
+        function __promisify__(file: string, options: ExecFileOptionsWithStringEncoding): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, args: string[] | undefined | null, options: ExecFileOptionsWithStringEncoding): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, options: ExecFileOptionsWithOtherEncoding): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
+        function __promisify__(file: string, args: string[] | undefined | null, options: ExecFileOptionsWithOtherEncoding): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
+        function __promisify__(file: string, options: ExecFileOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, args: string[] | undefined | null, options: ExecFileOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
+        function __promisify__(
+            file: string,
+            args: string[] | undefined | null,
+            options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null,
+        ): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
+    }
+
+    interface ForkOptions extends ProcessEnvOptions {
+        execPath?: string;
+        execArgv?: string[];
+        silent?: boolean;
+        stdio?: StdioOptions;
+        detached?: boolean;
+        windowsVerbatimArguments?: boolean;
+    }
+    function fork(modulePath: string, args?: ReadonlyArray<string>, options?: ForkOptions): ChildProcess;
+
+    interface SpawnSyncOptions extends CommonOptions {
+        argv0?: string; // Not specified in the docs
+        input?: string | NodeJS.ArrayBufferView;
+        stdio?: StdioOptions;
+        killSignal?: NodeJS.Signals | number;
+        maxBuffer?: number;
+        encoding?: string;
+        shell?: boolean | string;
+        windowsVerbatimArguments?: boolean;
+    }
+    interface SpawnSyncOptionsWithStringEncoding extends SpawnSyncOptions {
+        encoding: BufferEncoding;
+    }
+    interface SpawnSyncOptionsWithBufferEncoding extends SpawnSyncOptions {
+        encoding: string; // specify \`null\`.
+    }
+    interface SpawnSyncReturns<T> {
+        pid: number;
+        output: string[];
+        stdout: T;
+        stderr: T;
+        status: number | null;
+        signal: NodeJS.Signals | null;
+        error?: Error;
+    }
+    function spawnSync(command: string): SpawnSyncReturns<Buffer>;
+    function spawnSync(command: string, options?: SpawnSyncOptionsWithStringEncoding): SpawnSyncReturns<string>;
+    function spawnSync(command: string, options?: SpawnSyncOptionsWithBufferEncoding): SpawnSyncReturns<Buffer>;
+    function spawnSync(command: string, options?: SpawnSyncOptions): SpawnSyncReturns<Buffer>;
+    function spawnSync(command: string, args?: ReadonlyArray<string>, options?: SpawnSyncOptionsWithStringEncoding): SpawnSyncReturns<string>;
+    function spawnSync(command: string, args?: ReadonlyArray<string>, options?: SpawnSyncOptionsWithBufferEncoding): SpawnSyncReturns<Buffer>;
+    function spawnSync(command: string, args?: ReadonlyArray<string>, options?: SpawnSyncOptions): SpawnSyncReturns<Buffer>;
+
+    interface ExecSyncOptions extends CommonOptions {
+        input?: string | Uint8Array;
+        stdio?: StdioOptions;
+        shell?: string;
+        killSignal?: NodeJS.Signals | number;
+        maxBuffer?: number;
+        encoding?: string;
+    }
+    interface ExecSyncOptionsWithStringEncoding extends ExecSyncOptions {
+        encoding: BufferEncoding;
+    }
+    interface ExecSyncOptionsWithBufferEncoding extends ExecSyncOptions {
+        encoding: string; // specify \`null\`.
+    }
+    function execSync(command: string): Buffer;
+    function execSync(command: string, options?: ExecSyncOptionsWithStringEncoding): string;
+    function execSync(command: string, options?: ExecSyncOptionsWithBufferEncoding): Buffer;
+    function execSync(command: string, options?: ExecSyncOptions): Buffer;
+
+    interface ExecFileSyncOptions extends CommonOptions {
+        input?: string | NodeJS.ArrayBufferView;
+        stdio?: StdioOptions;
+        killSignal?: NodeJS.Signals | number;
+        maxBuffer?: number;
+        encoding?: string;
+        shell?: boolean | string;
+    }
+    interface ExecFileSyncOptionsWithStringEncoding extends ExecFileSyncOptions {
+        encoding: BufferEncoding;
+    }
+    interface ExecFileSyncOptionsWithBufferEncoding extends ExecFileSyncOptions {
+        encoding: string; // specify \`null\`.
+    }
+    function execFileSync(command: string): Buffer;
+    function execFileSync(command: string, options?: ExecFileSyncOptionsWithStringEncoding): string;
+    function execFileSync(command: string, options?: ExecFileSyncOptionsWithBufferEncoding): Buffer;
+    function execFileSync(command: string, options?: ExecFileSyncOptions): Buffer;
+    function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptionsWithStringEncoding): string;
+    function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptionsWithBufferEncoding): Buffer;
+    function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptions): Buffer;
+}
+`;
+module.exports['cluster.d.ts'] = `declare module "cluster" {
+    import * as child from "child_process";
+    import * as events from "events";
+    import * as net from "net";
+
+    // interfaces
+    interface ClusterSettings {
+        execArgv?: string[]; // default: process.execArgv
+        exec?: string;
+        args?: string[];
+        silent?: boolean;
+        stdio?: any[];
+        uid?: number;
+        gid?: number;
+        inspectPort?: number | (() => number);
+    }
+
+    interface Address {
+        address: string;
+        port: number;
+        addressType: number | "udp4" | "udp6";  // 4, 6, -1, "udp4", "udp6"
+    }
+
+    class Worker extends events.EventEmitter {
+        id: number;
+        process: child.ChildProcess;
+        send(message: any, sendHandle?: any, callback?: (error: Error | null) => void): boolean;
+        kill(signal?: string): void;
+        destroy(signal?: string): void;
+        disconnect(): void;
+        isConnected(): boolean;
+        isDead(): boolean;
+        exitedAfterDisconnect: boolean;
+
+        /**
+         * events.EventEmitter
+         *   1. disconnect
+         *   2. error
+         *   3. exit
+         *   4. listening
+         *   5. message
+         *   6. online
+         */
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "disconnect", listener: () => void): this;
+        addListener(event: "error", listener: (error: Error) => void): this;
+        addListener(event: "exit", listener: (code: number, signal: string) => void): this;
+        addListener(event: "listening", listener: (address: Address) => void): this;
+        addListener(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        addListener(event: "online", listener: () => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "disconnect"): boolean;
+        emit(event: "error", error: Error): boolean;
+        emit(event: "exit", code: number, signal: string): boolean;
+        emit(event: "listening", address: Address): boolean;
+        emit(event: "message", message: any, handle: net.Socket | net.Server): boolean;
+        emit(event: "online"): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "disconnect", listener: () => void): this;
+        on(event: "error", listener: (error: Error) => void): this;
+        on(event: "exit", listener: (code: number, signal: string) => void): this;
+        on(event: "listening", listener: (address: Address) => void): this;
+        on(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        on(event: "online", listener: () => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "disconnect", listener: () => void): this;
+        once(event: "error", listener: (error: Error) => void): this;
+        once(event: "exit", listener: (code: number, signal: string) => void): this;
+        once(event: "listening", listener: (address: Address) => void): this;
+        once(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        once(event: "online", listener: () => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "disconnect", listener: () => void): this;
+        prependListener(event: "error", listener: (error: Error) => void): this;
+        prependListener(event: "exit", listener: (code: number, signal: string) => void): this;
+        prependListener(event: "listening", listener: (address: Address) => void): this;
+        prependListener(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        prependListener(event: "online", listener: () => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "disconnect", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (error: Error) => void): this;
+        prependOnceListener(event: "exit", listener: (code: number, signal: string) => void): this;
+        prependOnceListener(event: "listening", listener: (address: Address) => void): this;
+        prependOnceListener(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        prependOnceListener(event: "online", listener: () => void): this;
+    }
+
+    interface Cluster extends events.EventEmitter {
+        Worker: Worker;
+        disconnect(callback?: () => void): void;
+        fork(env?: any): Worker;
+        isMaster: boolean;
+        isWorker: boolean;
+        // TODO: cluster.schedulingPolicy
+        settings: ClusterSettings;
+        setupMaster(settings?: ClusterSettings): void;
+        worker?: Worker;
+        workers?: {
+            [index: string]: Worker | undefined
+        };
+
+        /**
+         * events.EventEmitter
+         *   1. disconnect
+         *   2. exit
+         *   3. fork
+         *   4. listening
+         *   5. message
+         *   6. online
+         *   7. setup
+         */
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "disconnect", listener: (worker: Worker) => void): this;
+        addListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
+        addListener(event: "fork", listener: (worker: Worker) => void): this;
+        addListener(event: "listening", listener: (worker: Worker, address: Address) => void): this;
+        addListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        addListener(event: "online", listener: (worker: Worker) => void): this;
+        addListener(event: "setup", listener: (settings: ClusterSettings) => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "disconnect", worker: Worker): boolean;
+        emit(event: "exit", worker: Worker, code: number, signal: string): boolean;
+        emit(event: "fork", worker: Worker): boolean;
+        emit(event: "listening", worker: Worker, address: Address): boolean;
+        emit(event: "message", worker: Worker, message: any, handle: net.Socket | net.Server): boolean;
+        emit(event: "online", worker: Worker): boolean;
+        emit(event: "setup", settings: ClusterSettings): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "disconnect", listener: (worker: Worker) => void): this;
+        on(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
+        on(event: "fork", listener: (worker: Worker) => void): this;
+        on(event: "listening", listener: (worker: Worker, address: Address) => void): this;
+        on(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        on(event: "online", listener: (worker: Worker) => void): this;
+        on(event: "setup", listener: (settings: ClusterSettings) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "disconnect", listener: (worker: Worker) => void): this;
+        once(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
+        once(event: "fork", listener: (worker: Worker) => void): this;
+        once(event: "listening", listener: (worker: Worker, address: Address) => void): this;
+        once(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        once(event: "online", listener: (worker: Worker) => void): this;
+        once(event: "setup", listener: (settings: ClusterSettings) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "disconnect", listener: (worker: Worker) => void): this;
+        prependListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
+        prependListener(event: "fork", listener: (worker: Worker) => void): this;
+        prependListener(event: "listening", listener: (worker: Worker, address: Address) => void): this;
+        prependListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        prependListener(event: "online", listener: (worker: Worker) => void): this;
+        prependListener(event: "setup", listener: (settings: ClusterSettings) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "disconnect", listener: (worker: Worker) => void): this;
+        prependOnceListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
+        prependOnceListener(event: "fork", listener: (worker: Worker) => void): this;
+        prependOnceListener(event: "listening", listener: (worker: Worker, address: Address) => void): this;
+        // the handle is a net.Socket or net.Server object, or undefined.
+        prependOnceListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;
+        prependOnceListener(event: "online", listener: (worker: Worker) => void): this;
+        prependOnceListener(event: "setup", listener: (settings: ClusterSettings) => void): this;
+    }
+
+    function disconnect(callback?: () => void): void;
+    function fork(env?: any): Worker;
+    const isMaster: boolean;
+    const isWorker: boolean;
+    // TODO: cluster.schedulingPolicy
+    const settings: ClusterSettings;
+    function setupMaster(settings?: ClusterSettings): void;
+    const worker: Worker;
+    const workers: {
+        [index: string]: Worker | undefined
+    };
+
+    /**
+     * events.EventEmitter
+     *   1. disconnect
+     *   2. exit
+     *   3. fork
+     *   4. listening
+     *   5. message
+     *   6. online
+     *   7. setup
+     */
+    function addListener(event: string, listener: (...args: any[]) => void): Cluster;
+    function addListener(event: "disconnect", listener: (worker: Worker) => void): Cluster;
+    function addListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
+    function addListener(event: "fork", listener: (worker: Worker) => void): Cluster;
+    function addListener(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
+     // the handle is a net.Socket or net.Server object, or undefined.
+    function addListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;
+    function addListener(event: "online", listener: (worker: Worker) => void): Cluster;
+    function addListener(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
+
+    function emit(event: string | symbol, ...args: any[]): boolean;
+    function emit(event: "disconnect", worker: Worker): boolean;
+    function emit(event: "exit", worker: Worker, code: number, signal: string): boolean;
+    function emit(event: "fork", worker: Worker): boolean;
+    function emit(event: "listening", worker: Worker, address: Address): boolean;
+    function emit(event: "message", worker: Worker, message: any, handle: net.Socket | net.Server): boolean;
+    function emit(event: "online", worker: Worker): boolean;
+    function emit(event: "setup", settings: ClusterSettings): boolean;
+
+    function on(event: string, listener: (...args: any[]) => void): Cluster;
+    function on(event: "disconnect", listener: (worker: Worker) => void): Cluster;
+    function on(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
+    function on(event: "fork", listener: (worker: Worker) => void): Cluster;
+    function on(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
+    function on(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;  // the handle is a net.Socket or net.Server object, or undefined.
+    function on(event: "online", listener: (worker: Worker) => void): Cluster;
+    function on(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
+
+    function once(event: string, listener: (...args: any[]) => void): Cluster;
+    function once(event: "disconnect", listener: (worker: Worker) => void): Cluster;
+    function once(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
+    function once(event: "fork", listener: (worker: Worker) => void): Cluster;
+    function once(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
+    function once(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;  // the handle is a net.Socket or net.Server object, or undefined.
+    function once(event: "online", listener: (worker: Worker) => void): Cluster;
+    function once(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
+
+    function removeListener(event: string, listener: (...args: any[]) => void): Cluster;
+    function removeAllListeners(event?: string): Cluster;
+    function setMaxListeners(n: number): Cluster;
+    function getMaxListeners(): number;
+    function listeners(event: string): Function[];
+    function listenerCount(type: string): number;
+
+    function prependListener(event: string, listener: (...args: any[]) => void): Cluster;
+    function prependListener(event: "disconnect", listener: (worker: Worker) => void): Cluster;
+    function prependListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
+    function prependListener(event: "fork", listener: (worker: Worker) => void): Cluster;
+    function prependListener(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
+     // the handle is a net.Socket or net.Server object, or undefined.
+    function prependListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;
+    function prependListener(event: "online", listener: (worker: Worker) => void): Cluster;
+    function prependListener(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
+
+    function prependOnceListener(event: string, listener: (...args: any[]) => void): Cluster;
+    function prependOnceListener(event: "disconnect", listener: (worker: Worker) => void): Cluster;
+    function prependOnceListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
+    function prependOnceListener(event: "fork", listener: (worker: Worker) => void): Cluster;
+    function prependOnceListener(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
+     // the handle is a net.Socket or net.Server object, or undefined.
+    function prependOnceListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;
+    function prependOnceListener(event: "online", listener: (worker: Worker) => void): Cluster;
+    function prependOnceListener(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
+
+    function eventNames(): string[];
+}
+`;
+module.exports['console.d.ts'] = `declare module "console" {
+    export = console;
+}
+`;
+module.exports['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */
+declare module "constants" {
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.E2BIG\` instead. */
+    const E2BIG: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EACCES\` instead. */
+    const EACCES: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EADDRINUSE\` instead. */
+    const EADDRINUSE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EADDRNOTAVAIL\` instead. */
+    const EADDRNOTAVAIL: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EAFNOSUPPORT\` instead. */
+    const EAFNOSUPPORT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EAGAIN\` instead. */
+    const EAGAIN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EALREADY\` instead. */
+    const EALREADY: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EBADF\` instead. */
+    const EBADF: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EBADMSG\` instead. */
+    const EBADMSG: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EBUSY\` instead. */
+    const EBUSY: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECANCELED\` instead. */
+    const ECANCELED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECHILD\` instead. */
+    const ECHILD: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECONNABORTED\` instead. */
+    const ECONNABORTED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECONNREFUSED\` instead. */
+    const ECONNREFUSED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECONNRESET\` instead. */
+    const ECONNRESET: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EDEADLK\` instead. */
+    const EDEADLK: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EDESTADDRREQ\` instead. */
+    const EDESTADDRREQ: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EDOM\` instead. */
+    const EDOM: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EEXIST\` instead. */
+    const EEXIST: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EFAULT\` instead. */
+    const EFAULT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EFBIG\` instead. */
+    const EFBIG: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EHOSTUNREACH\` instead. */
+    const EHOSTUNREACH: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EIDRM\` instead. */
+    const EIDRM: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EILSEQ\` instead. */
+    const EILSEQ: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EINPROGRESS\` instead. */
+    const EINPROGRESS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EINTR\` instead. */
+    const EINTR: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EINVAL\` instead. */
+    const EINVAL: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EIO\` instead. */
+    const EIO: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EISCONN\` instead. */
+    const EISCONN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EISDIR\` instead. */
+    const EISDIR: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ELOOP\` instead. */
+    const ELOOP: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EMFILE\` instead. */
+    const EMFILE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EMLINK\` instead. */
+    const EMLINK: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EMSGSIZE\` instead. */
+    const EMSGSIZE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENAMETOOLONG\` instead. */
+    const ENAMETOOLONG: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENETDOWN\` instead. */
+    const ENETDOWN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENETRESET\` instead. */
+    const ENETRESET: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENETUNREACH\` instead. */
+    const ENETUNREACH: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENFILE\` instead. */
+    const ENFILE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOBUFS\` instead. */
+    const ENOBUFS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENODATA\` instead. */
+    const ENODATA: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENODEV\` instead. */
+    const ENODEV: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOENT\` instead. */
+    const ENOENT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOEXEC\` instead. */
+    const ENOEXEC: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOLCK\` instead. */
+    const ENOLCK: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOLINK\` instead. */
+    const ENOLINK: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOMEM\` instead. */
+    const ENOMEM: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOMSG\` instead. */
+    const ENOMSG: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOPROTOOPT\` instead. */
+    const ENOPROTOOPT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOSPC\` instead. */
+    const ENOSPC: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOSR\` instead. */
+    const ENOSR: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOSTR\` instead. */
+    const ENOSTR: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOSYS\` instead. */
+    const ENOSYS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTCONN\` instead. */
+    const ENOTCONN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTDIR\` instead. */
+    const ENOTDIR: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTEMPTY\` instead. */
+    const ENOTEMPTY: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTSOCK\` instead. */
+    const ENOTSOCK: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTSUP\` instead. */
+    const ENOTSUP: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTTY\` instead. */
+    const ENOTTY: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENXIO\` instead. */
+    const ENXIO: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EOPNOTSUPP\` instead. */
+    const EOPNOTSUPP: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EOVERFLOW\` instead. */
+    const EOVERFLOW: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPERM\` instead. */
+    const EPERM: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPIPE\` instead. */
+    const EPIPE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPROTO\` instead. */
+    const EPROTO: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPROTONOSUPPORT\` instead. */
+    const EPROTONOSUPPORT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPROTOTYPE\` instead. */
+    const EPROTOTYPE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ERANGE\` instead. */
+    const ERANGE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EROFS\` instead. */
+    const EROFS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ESPIPE\` instead. */
+    const ESPIPE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ESRCH\` instead. */
+    const ESRCH: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ETIME\` instead. */
+    const ETIME: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ETIMEDOUT\` instead. */
+    const ETIMEDOUT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.ETXTBSY\` instead. */
+    const ETXTBSY: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EWOULDBLOCK\` instead. */
+    const EWOULDBLOCK: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.EXDEV\` instead. */
+    const EXDEV: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINTR\` instead. */
+    const WSAEINTR: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEBADF\` instead. */
+    const WSAEBADF: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEACCES\` instead. */
+    const WSAEACCES: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEFAULT\` instead. */
+    const WSAEFAULT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINVAL\` instead. */
+    const WSAEINVAL: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEMFILE\` instead. */
+    const WSAEMFILE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEWOULDBLOCK\` instead. */
+    const WSAEWOULDBLOCK: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINPROGRESS\` instead. */
+    const WSAEINPROGRESS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEALREADY\` instead. */
+    const WSAEALREADY: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOTSOCK\` instead. */
+    const WSAENOTSOCK: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEDESTADDRREQ\` instead. */
+    const WSAEDESTADDRREQ: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEMSGSIZE\` instead. */
+    const WSAEMSGSIZE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPROTOTYPE\` instead. */
+    const WSAEPROTOTYPE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOPROTOOPT\` instead. */
+    const WSAENOPROTOOPT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPROTONOSUPPORT\` instead. */
+    const WSAEPROTONOSUPPORT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAESOCKTNOSUPPORT\` instead. */
+    const WSAESOCKTNOSUPPORT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEOPNOTSUPP\` instead. */
+    const WSAEOPNOTSUPP: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPFNOSUPPORT\` instead. */
+    const WSAEPFNOSUPPORT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEAFNOSUPPORT\` instead. */
+    const WSAEAFNOSUPPORT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEADDRINUSE\` instead. */
+    const WSAEADDRINUSE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEADDRNOTAVAIL\` instead. */
+    const WSAEADDRNOTAVAIL: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENETDOWN\` instead. */
+    const WSAENETDOWN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENETUNREACH\` instead. */
+    const WSAENETUNREACH: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENETRESET\` instead. */
+    const WSAENETRESET: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAECONNABORTED\` instead. */
+    const WSAECONNABORTED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAECONNRESET\` instead. */
+    const WSAECONNRESET: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOBUFS\` instead. */
+    const WSAENOBUFS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEISCONN\` instead. */
+    const WSAEISCONN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOTCONN\` instead. */
+    const WSAENOTCONN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAESHUTDOWN\` instead. */
+    const WSAESHUTDOWN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAETOOMANYREFS\` instead. */
+    const WSAETOOMANYREFS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAETIMEDOUT\` instead. */
+    const WSAETIMEDOUT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAECONNREFUSED\` instead. */
+    const WSAECONNREFUSED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAELOOP\` instead. */
+    const WSAELOOP: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENAMETOOLONG\` instead. */
+    const WSAENAMETOOLONG: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEHOSTDOWN\` instead. */
+    const WSAEHOSTDOWN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEHOSTUNREACH\` instead. */
+    const WSAEHOSTUNREACH: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOTEMPTY\` instead. */
+    const WSAENOTEMPTY: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPROCLIM\` instead. */
+    const WSAEPROCLIM: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEUSERS\` instead. */
+    const WSAEUSERS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEDQUOT\` instead. */
+    const WSAEDQUOT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAESTALE\` instead. */
+    const WSAESTALE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEREMOTE\` instead. */
+    const WSAEREMOTE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSASYSNOTREADY\` instead. */
+    const WSASYSNOTREADY: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAVERNOTSUPPORTED\` instead. */
+    const WSAVERNOTSUPPORTED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSANOTINITIALISED\` instead. */
+    const WSANOTINITIALISED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEDISCON\` instead. */
+    const WSAEDISCON: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOMORE\` instead. */
+    const WSAENOMORE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAECANCELLED\` instead. */
+    const WSAECANCELLED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINVALIDPROCTABLE\` instead. */
+    const WSAEINVALIDPROCTABLE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINVALIDPROVIDER\` instead. */
+    const WSAEINVALIDPROVIDER: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPROVIDERFAILEDINIT\` instead. */
+    const WSAEPROVIDERFAILEDINIT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSASYSCALLFAILURE\` instead. */
+    const WSASYSCALLFAILURE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSASERVICE_NOT_FOUND\` instead. */
+    const WSASERVICE_NOT_FOUND: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSATYPE_NOT_FOUND\` instead. */
+    const WSATYPE_NOT_FOUND: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSA_E_NO_MORE\` instead. */
+    const WSA_E_NO_MORE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSA_E_CANCELLED\` instead. */
+    const WSA_E_CANCELLED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEREFUSED\` instead. */
+    const WSAEREFUSED: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGHUP\` instead. */
+    const SIGHUP: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGINT\` instead. */
+    const SIGINT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGILL\` instead. */
+    const SIGILL: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGABRT\` instead. */
+    const SIGABRT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGFPE\` instead. */
+    const SIGFPE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGKILL\` instead. */
+    const SIGKILL: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGSEGV\` instead. */
+    const SIGSEGV: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTERM\` instead. */
+    const SIGTERM: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGBREAK\` instead. */
+    const SIGBREAK: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGWINCH\` instead. */
+    const SIGWINCH: number;
+    const SSL_OP_ALL: number;
+    const SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION: number;
+    const SSL_OP_CIPHER_SERVER_PREFERENCE: number;
+    const SSL_OP_CISCO_ANYCONNECT: number;
+    const SSL_OP_COOKIE_EXCHANGE: number;
+    const SSL_OP_CRYPTOPRO_TLSEXT_BUG: number;
+    const SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS: number;
+    const SSL_OP_EPHEMERAL_RSA: number;
+    const SSL_OP_LEGACY_SERVER_CONNECT: number;
+    const SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER: number;
+    const SSL_OP_MICROSOFT_SESS_ID_BUG: number;
+    const SSL_OP_MSIE_SSLV2_RSA_PADDING: number;
+    const SSL_OP_NETSCAPE_CA_DN_BUG: number;
+    const SSL_OP_NETSCAPE_CHALLENGE_BUG: number;
+    const SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG: number;
+    const SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG: number;
+    const SSL_OP_NO_COMPRESSION: number;
+    const SSL_OP_NO_QUERY_MTU: number;
+    const SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION: number;
+    const SSL_OP_NO_SSLv2: number;
+    const SSL_OP_NO_SSLv3: number;
+    const SSL_OP_NO_TICKET: number;
+    const SSL_OP_NO_TLSv1: number;
+    const SSL_OP_NO_TLSv1_1: number;
+    const SSL_OP_NO_TLSv1_2: number;
+    const SSL_OP_PKCS1_CHECK_1: number;
+    const SSL_OP_PKCS1_CHECK_2: number;
+    const SSL_OP_SINGLE_DH_USE: number;
+    const SSL_OP_SINGLE_ECDH_USE: number;
+    const SSL_OP_SSLEAY_080_CLIENT_DH_BUG: number;
+    const SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG: number;
+    const SSL_OP_TLS_BLOCK_PADDING_BUG: number;
+    const SSL_OP_TLS_D5_BUG: number;
+    const SSL_OP_TLS_ROLLBACK_BUG: number;
+    const ENGINE_METHOD_DSA: number;
+    const ENGINE_METHOD_DH: number;
+    const ENGINE_METHOD_RAND: number;
+    const ENGINE_METHOD_ECDH: number;
+    const ENGINE_METHOD_ECDSA: number;
+    const ENGINE_METHOD_CIPHERS: number;
+    const ENGINE_METHOD_DIGESTS: number;
+    const ENGINE_METHOD_STORE: number;
+    const ENGINE_METHOD_PKEY_METHS: number;
+    const ENGINE_METHOD_PKEY_ASN1_METHS: number;
+    const ENGINE_METHOD_ALL: number;
+    const ENGINE_METHOD_NONE: number;
+    const DH_CHECK_P_NOT_SAFE_PRIME: number;
+    const DH_CHECK_P_NOT_PRIME: number;
+    const DH_UNABLE_TO_CHECK_GENERATOR: number;
+    const DH_NOT_SUITABLE_GENERATOR: number;
+    const RSA_PKCS1_PADDING: number;
+    const RSA_SSLV23_PADDING: number;
+    const RSA_NO_PADDING: number;
+    const RSA_PKCS1_OAEP_PADDING: number;
+    const RSA_X931_PADDING: number;
+    const RSA_PKCS1_PSS_PADDING: number;
+    const POINT_CONVERSION_COMPRESSED: number;
+    const POINT_CONVERSION_UNCOMPRESSED: number;
+    const POINT_CONVERSION_HYBRID: number;
+    const O_RDONLY: number;
+    const O_WRONLY: number;
+    const O_RDWR: number;
+    const S_IFMT: number;
+    const S_IFREG: number;
+    const S_IFDIR: number;
+    const S_IFCHR: number;
+    const S_IFBLK: number;
+    const S_IFIFO: number;
+    const S_IFSOCK: number;
+    const S_IRWXU: number;
+    const S_IRUSR: number;
+    const S_IWUSR: number;
+    const S_IXUSR: number;
+    const S_IRWXG: number;
+    const S_IRGRP: number;
+    const S_IWGRP: number;
+    const S_IXGRP: number;
+    const S_IRWXO: number;
+    const S_IROTH: number;
+    const S_IWOTH: number;
+    const S_IXOTH: number;
+    const S_IFLNK: number;
+    const O_CREAT: number;
+    const O_EXCL: number;
+    const O_NOCTTY: number;
+    const O_DIRECTORY: number;
+    const O_NOATIME: number;
+    const O_NOFOLLOW: number;
+    const O_SYNC: number;
+    const O_DSYNC: number;
+    const O_SYMLINK: number;
+    const O_DIRECT: number;
+    const O_NONBLOCK: number;
+    const O_TRUNC: number;
+    const O_APPEND: number;
+    const F_OK: number;
+    const R_OK: number;
+    const W_OK: number;
+    const X_OK: number;
+    const COPYFILE_EXCL: number;
+    const COPYFILE_FICLONE: number;
+    const COPYFILE_FICLONE_FORCE: number;
+    const UV_UDP_REUSEADDR: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGQUIT\` instead. */
+    const SIGQUIT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTRAP\` instead. */
+    const SIGTRAP: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGIOT\` instead. */
+    const SIGIOT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGBUS\` instead. */
+    const SIGBUS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGUSR1\` instead. */
+    const SIGUSR1: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGUSR2\` instead. */
+    const SIGUSR2: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGPIPE\` instead. */
+    const SIGPIPE: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGALRM\` instead. */
+    const SIGALRM: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGCHLD\` instead. */
+    const SIGCHLD: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGSTKFLT\` instead. */
+    const SIGSTKFLT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGCONT\` instead. */
+    const SIGCONT: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGSTOP\` instead. */
+    const SIGSTOP: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTSTP\` instead. */
+    const SIGTSTP: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTTIN\` instead. */
+    const SIGTTIN: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTTOU\` instead. */
+    const SIGTTOU: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGURG\` instead. */
+    const SIGURG: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGXCPU\` instead. */
+    const SIGXCPU: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGXFSZ\` instead. */
+    const SIGXFSZ: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGVTALRM\` instead. */
+    const SIGVTALRM: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGPROF\` instead. */
+    const SIGPROF: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGIO\` instead. */
+    const SIGIO: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGPOLL\` instead. */
+    const SIGPOLL: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGPWR\` instead. */
+    const SIGPWR: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGSYS\` instead. */
+    const SIGSYS: number;
+    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGUNUSED\` instead. */
+    const SIGUNUSED: number;
+    const defaultCoreCipherList: string;
+    const defaultCipherList: string;
+    const ENGINE_METHOD_RSA: number;
+    const ALPN_ENABLED: number;
+}
+`;
+module.exports['crypto.d.ts'] = `declare module "crypto" {
+    import * as stream from "stream";
+
+    interface Certificate {
+        exportChallenge(spkac: BinaryLike): Buffer;
+        exportPublicKey(spkac: BinaryLike): Buffer;
+        verifySpkac(spkac: NodeJS.ArrayBufferView): boolean;
+    }
+    const Certificate: {
+        new(): Certificate;
+        (): Certificate;
+    };
+
+    namespace constants { // https://nodejs.org/dist/latest-v10.x/docs/api/crypto.html#crypto_crypto_constants
+        const OPENSSL_VERSION_NUMBER: number;
+
+        /** Applies multiple bug workarounds within OpenSSL. See https://www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html for detail. */
+        const SSL_OP_ALL: number;
+        /** Allows legacy insecure renegotiation between OpenSSL and unpatched clients or servers. See https://www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html. */
+        const SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION: number;
+        /** Attempts to use the server's preferences instead of the client's when selecting a cipher. See https://www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html. */
+        const SSL_OP_CIPHER_SERVER_PREFERENCE: number;
+        /** Instructs OpenSSL to use Cisco's "speshul" version of DTLS_BAD_VER. */
+        const SSL_OP_CISCO_ANYCONNECT: number;
+        /** Instructs OpenSSL to turn on cookie exchange. */
+        const SSL_OP_COOKIE_EXCHANGE: number;
+        /** Instructs OpenSSL to add server-hello extension from an early version of the cryptopro draft. */
+        const SSL_OP_CRYPTOPRO_TLSEXT_BUG: number;
+        /** Instructs OpenSSL to disable a SSL 3.0/TLS 1.0 vulnerability workaround added in OpenSSL 0.9.6d. */
+        const SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS: number;
+        /** Instructs OpenSSL to always use the tmp_rsa key when performing RSA operations. */
+        const SSL_OP_EPHEMERAL_RSA: number;
+        /** Allows initial connection to servers that do not support RI. */
+        const SSL_OP_LEGACY_SERVER_CONNECT: number;
+        const SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER: number;
+        const SSL_OP_MICROSOFT_SESS_ID_BUG: number;
+        /** Instructs OpenSSL to disable the workaround for a man-in-the-middle protocol-version vulnerability in the SSL 2.0 server implementation. */
+        const SSL_OP_MSIE_SSLV2_RSA_PADDING: number;
+        const SSL_OP_NETSCAPE_CA_DN_BUG: number;
+        const SSL_OP_NETSCAPE_CHALLENGE_BUG: number;
+        const SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG: number;
+        const SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG: number;
+        /** Instructs OpenSSL to disable support for SSL/TLS compression. */
+        const SSL_OP_NO_COMPRESSION: number;
+        const SSL_OP_NO_QUERY_MTU: number;
+        /** Instructs OpenSSL to always start a new session when performing renegotiation. */
+        const SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION: number;
+        const SSL_OP_NO_SSLv2: number;
+        const SSL_OP_NO_SSLv3: number;
+        const SSL_OP_NO_TICKET: number;
+        const SSL_OP_NO_TLSv1: number;
+        const SSL_OP_NO_TLSv1_1: number;
+        const SSL_OP_NO_TLSv1_2: number;
+        const SSL_OP_PKCS1_CHECK_1: number;
+        const SSL_OP_PKCS1_CHECK_2: number;
+        /** Instructs OpenSSL to always create a new key when using temporary/ephemeral DH parameters. */
+        const SSL_OP_SINGLE_DH_USE: number;
+        /** Instructs OpenSSL to always create a new key when using temporary/ephemeral ECDH parameters. */
+        const SSL_OP_SINGLE_ECDH_USE: number;
+        const SSL_OP_SSLEAY_080_CLIENT_DH_BUG: number;
+        const SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG: number;
+        const SSL_OP_TLS_BLOCK_PADDING_BUG: number;
+        const SSL_OP_TLS_D5_BUG: number;
+        /** Instructs OpenSSL to disable version rollback attack detection. */
+        const SSL_OP_TLS_ROLLBACK_BUG: number;
+
+        const ENGINE_METHOD_RSA: number;
+        const ENGINE_METHOD_DSA: number;
+        const ENGINE_METHOD_DH: number;
+        const ENGINE_METHOD_RAND: number;
+        const ENGINE_METHOD_EC: number;
+        const ENGINE_METHOD_CIPHERS: number;
+        const ENGINE_METHOD_DIGESTS: number;
+        const ENGINE_METHOD_PKEY_METHS: number;
+        const ENGINE_METHOD_PKEY_ASN1_METHS: number;
+        const ENGINE_METHOD_ALL: number;
+        const ENGINE_METHOD_NONE: number;
+
+        const DH_CHECK_P_NOT_SAFE_PRIME: number;
+        const DH_CHECK_P_NOT_PRIME: number;
+        const DH_UNABLE_TO_CHECK_GENERATOR: number;
+        const DH_NOT_SUITABLE_GENERATOR: number;
+
+        const ALPN_ENABLED: number;
+
+        const RSA_PKCS1_PADDING: number;
+        const RSA_SSLV23_PADDING: number;
+        const RSA_NO_PADDING: number;
+        const RSA_PKCS1_OAEP_PADDING: number;
+        const RSA_X931_PADDING: number;
+        const RSA_PKCS1_PSS_PADDING: number;
+        /** Sets the salt length for RSA_PKCS1_PSS_PADDING to the digest size when signing or verifying. */
+        const RSA_PSS_SALTLEN_DIGEST: number;
+        /** Sets the salt length for RSA_PKCS1_PSS_PADDING to the maximum permissible value when signing data. */
+        const RSA_PSS_SALTLEN_MAX_SIGN: number;
+        /** Causes the salt length for RSA_PKCS1_PSS_PADDING to be determined automatically when verifying a signature. */
+        const RSA_PSS_SALTLEN_AUTO: number;
+
+        const POINT_CONVERSION_COMPRESSED: number;
+        const POINT_CONVERSION_UNCOMPRESSED: number;
+        const POINT_CONVERSION_HYBRID: number;
+
+        /** Specifies the built-in default cipher list used by Node.js (colon-separated values). */
+        const defaultCoreCipherList: string;
+        /** Specifies the active default cipher list used by the current Node.js process  (colon-separated values). */
+        const defaultCipherList: string;
+    }
+
+    interface HashOptions extends stream.TransformOptions {
+        /**
+         * For XOF hash functions such as \`shake256\`, the
+         * outputLength option can be used to specify the desired output length in bytes.
+         */
+        outputLength?: number;
+    }
+
+    /** @deprecated since v10.0.0 */
+    const fips: boolean;
+
+    function createHash(algorithm: string, options?: HashOptions): Hash;
+    function createHmac(algorithm: string, key: BinaryLike, options?: stream.TransformOptions): Hmac;
+
+    type Utf8AsciiLatin1Encoding = "utf8" | "ascii" | "latin1";
+    type HexBase64Latin1Encoding = "latin1" | "hex" | "base64";
+    type Utf8AsciiBinaryEncoding = "utf8" | "ascii" | "binary";
+    type HexBase64BinaryEncoding = "binary" | "base64" | "hex";
+    type ECDHKeyFormat = "compressed" | "uncompressed" | "hybrid";
+
+    class Hash extends stream.Transform {
+        private constructor();
+        update(data: BinaryLike): Hash;
+        update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Hash;
+        digest(): Buffer;
+        digest(encoding: HexBase64Latin1Encoding): string;
+    }
+    class Hmac extends stream.Transform {
+        private constructor();
+        update(data: BinaryLike): Hmac;
+        update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Hmac;
+        digest(): Buffer;
+        digest(encoding: HexBase64Latin1Encoding): string;
+    }
+
+    type KeyObjectType = 'secret' | 'public' | 'private';
+
+    interface KeyExportOptions<T extends KeyFormat> {
+        type: 'pkcs1' | 'spki' | 'pkcs8' | 'sec1';
+        format: T;
+        cipher?: string;
+        passphrase?: string | Buffer;
+    }
+
+    class KeyObject {
+        private constructor();
+        asymmetricKeyType?: KeyType;
+        /**
+         * For asymmetric keys, this property represents the size of the embedded key in
+         * bytes. This property is \`undefined\` for symmetric keys.
+         */
+        asymmetricKeySize?: number;
+        export(options: KeyExportOptions<'pem'>): string | Buffer;
+        export(options?: KeyExportOptions<'der'>): Buffer;
+        symmetricKeySize?: number;
+        type: KeyObjectType;
+    }
+
+    type CipherCCMTypes = 'aes-128-ccm' | 'aes-192-ccm' | 'aes-256-ccm';
+    type CipherGCMTypes = 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm';
+
+    type BinaryLike = string | NodeJS.ArrayBufferView;
+
+    type CipherKey = BinaryLike | KeyObject;
+
+    interface CipherCCMOptions extends stream.TransformOptions {
+        authTagLength: number;
+    }
+    interface CipherGCMOptions extends stream.TransformOptions {
+        authTagLength?: number;
+    }
+    /** @deprecated since v10.0.0 use createCipheriv() */
+    function createCipher(algorithm: CipherCCMTypes, password: BinaryLike, options: CipherCCMOptions): CipherCCM;
+    /** @deprecated since v10.0.0 use createCipheriv() */
+    function createCipher(algorithm: CipherGCMTypes, password: BinaryLike, options?: CipherGCMOptions): CipherGCM;
+    /** @deprecated since v10.0.0 use createCipheriv() */
+    function createCipher(algorithm: string, password: BinaryLike, options?: stream.TransformOptions): Cipher;
+
+    function createCipheriv(
+        algorithm: CipherCCMTypes,
+        key: CipherKey,
+        iv: BinaryLike | null,
+        options: CipherCCMOptions
+    ): CipherCCM;
+    function createCipheriv(
+        algorithm: CipherGCMTypes,
+        key: CipherKey,
+        iv: BinaryLike | null,
+        options?: CipherGCMOptions
+    ): CipherGCM;
+    function createCipheriv(
+        algorithm: string, key: CipherKey, iv: BinaryLike | null, options?: stream.TransformOptions
+    ): Cipher;
+
+    class Cipher extends stream.Transform {
+        private constructor();
+        update(data: BinaryLike): Buffer;
+        update(data: string, input_encoding: Utf8AsciiBinaryEncoding): Buffer;
+        update(data: NodeJS.ArrayBufferView, input_encoding: undefined, output_encoding: HexBase64BinaryEncoding): string;
+        update(data: string, input_encoding: Utf8AsciiBinaryEncoding | undefined, output_encoding: HexBase64BinaryEncoding): string;
+        final(): Buffer;
+        final(output_encoding: string): string;
+        setAutoPadding(auto_padding?: boolean): this;
+        // getAuthTag(): Buffer;
+        // setAAD(buffer: Buffer): this; // docs only say buffer
+    }
+    interface CipherCCM extends Cipher {
+        setAAD(buffer: Buffer, options: { plaintextLength: number }): this;
+        getAuthTag(): Buffer;
+    }
+    interface CipherGCM extends Cipher {
+        setAAD(buffer: Buffer, options?: { plaintextLength: number }): this;
+        getAuthTag(): Buffer;
+    }
+    /** @deprecated since v10.0.0 use createDecipheriv() */
+    function createDecipher(algorithm: CipherCCMTypes, password: BinaryLike, options: CipherCCMOptions): DecipherCCM;
+    /** @deprecated since v10.0.0 use createDecipheriv() */
+    function createDecipher(algorithm: CipherGCMTypes, password: BinaryLike, options?: CipherGCMOptions): DecipherGCM;
+    /** @deprecated since v10.0.0 use createDecipheriv() */
+    function createDecipher(algorithm: string, password: BinaryLike, options?: stream.TransformOptions): Decipher;
+
+    function createDecipheriv(
+        algorithm: CipherCCMTypes,
+        key: BinaryLike,
+        iv: BinaryLike | null,
+        options: CipherCCMOptions,
+    ): DecipherCCM;
+    function createDecipheriv(
+        algorithm: CipherGCMTypes,
+        key: BinaryLike,
+        iv: BinaryLike | null,
+        options?: CipherGCMOptions,
+    ): DecipherGCM;
+    function createDecipheriv(algorithm: string, key: BinaryLike, iv: BinaryLike | null, options?: stream.TransformOptions): Decipher;
+
+    class Decipher extends stream.Transform {
+        private constructor();
+        update(data: NodeJS.ArrayBufferView): Buffer;
+        update(data: string, input_encoding: HexBase64BinaryEncoding): Buffer;
+        update(data: NodeJS.ArrayBufferView, input_encoding: HexBase64BinaryEncoding | undefined, output_encoding: Utf8AsciiBinaryEncoding): string;
+        update(data: string, input_encoding: HexBase64BinaryEncoding | undefined, output_encoding: Utf8AsciiBinaryEncoding): string;
+        final(): Buffer;
+        final(output_encoding: string): string;
+        setAutoPadding(auto_padding?: boolean): this;
+        // setAuthTag(tag: NodeJS.ArrayBufferView): this;
+        // setAAD(buffer: NodeJS.ArrayBufferView): this;
+    }
+    interface DecipherCCM extends Decipher {
+        setAuthTag(buffer: NodeJS.ArrayBufferView): this;
+        setAAD(buffer: NodeJS.ArrayBufferView, options: { plaintextLength: number }): this;
+    }
+    interface DecipherGCM extends Decipher {
+        setAuthTag(buffer: NodeJS.ArrayBufferView): this;
+        setAAD(buffer: NodeJS.ArrayBufferView, options?: { plaintextLength: number }): this;
+    }
+
+    interface PrivateKeyInput {
+        key: string | Buffer;
+        format?: KeyFormat;
+        type?: 'pkcs1' | 'pkcs8' | 'sec1';
+        passphrase?: string | Buffer;
+    }
+
+    interface PublicKeyInput {
+        key: string | Buffer;
+        format?: KeyFormat;
+        type?: 'pkcs1' | 'spki';
+    }
+
+    function createPrivateKey(key: PrivateKeyInput | string | Buffer): KeyObject;
+    function createPublicKey(key: PublicKeyInput | string | Buffer | KeyObject): KeyObject;
+    function createSecretKey(key: Buffer): KeyObject;
+
+    function createSign(algorithm: string, options?: stream.WritableOptions): Signer;
+
+    interface SigningOptions {
+        /**
+         * @See crypto.constants.RSA_PKCS1_PADDING
+         */
+        padding?: number;
+        saltLength?: number;
+    }
+
+    interface SignPrivateKeyInput extends PrivateKeyInput, SigningOptions {
+    }
+
+    type KeyLike = string | Buffer | KeyObject;
+
+    class Signer extends stream.Writable {
+        private constructor();
+
+        update(data: BinaryLike): Signer;
+        update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Signer;
+        sign(private_key: SignPrivateKeyInput | KeyLike): Buffer;
+        sign(private_key: SignPrivateKeyInput | KeyLike, output_format: HexBase64Latin1Encoding): string;
+    }
+
+    function createVerify(algorithm: string, options?: stream.WritableOptions): Verify;
+    class Verify extends stream.Writable {
+        private constructor();
+
+        update(data: BinaryLike): Verify;
+        update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Verify;
+        verify(object: Object | KeyLike, signature: NodeJS.ArrayBufferView): boolean;
+        verify(object: Object | KeyLike, signature: string, signature_format?: HexBase64Latin1Encoding): boolean;
+        // https://nodejs.org/api/crypto.html#crypto_verifier_verify_object_signature_signature_format
+        // The signature field accepts a TypedArray type, but it is only available starting ES2017
+    }
+    function createDiffieHellman(prime_length: number, generator?: number | NodeJS.ArrayBufferView): DiffieHellman;
+    function createDiffieHellman(prime: NodeJS.ArrayBufferView): DiffieHellman;
+    function createDiffieHellman(prime: string, prime_encoding: HexBase64Latin1Encoding): DiffieHellman;
+    function createDiffieHellman(prime: string, prime_encoding: HexBase64Latin1Encoding, generator: number | NodeJS.ArrayBufferView): DiffieHellman;
+    function createDiffieHellman(prime: string, prime_encoding: HexBase64Latin1Encoding, generator: string, generator_encoding: HexBase64Latin1Encoding): DiffieHellman;
+    class DiffieHellman {
+        private constructor();
+        generateKeys(): Buffer;
+        generateKeys(encoding: HexBase64Latin1Encoding): string;
+        computeSecret(other_public_key: NodeJS.ArrayBufferView): Buffer;
+        computeSecret(other_public_key: string, input_encoding: HexBase64Latin1Encoding): Buffer;
+        computeSecret(other_public_key: NodeJS.ArrayBufferView, output_encoding: HexBase64Latin1Encoding): string;
+        computeSecret(other_public_key: string, input_encoding: HexBase64Latin1Encoding, output_encoding: HexBase64Latin1Encoding): string;
+        getPrime(): Buffer;
+        getPrime(encoding: HexBase64Latin1Encoding): string;
+        getGenerator(): Buffer;
+        getGenerator(encoding: HexBase64Latin1Encoding): string;
+        getPublicKey(): Buffer;
+        getPublicKey(encoding: HexBase64Latin1Encoding): string;
+        getPrivateKey(): Buffer;
+        getPrivateKey(encoding: HexBase64Latin1Encoding): string;
+        setPublicKey(public_key: NodeJS.ArrayBufferView): void;
+        setPublicKey(public_key: string, encoding: string): void;
+        setPrivateKey(private_key: NodeJS.ArrayBufferView): void;
+        setPrivateKey(private_key: string, encoding: string): void;
+        verifyError: number;
+    }
+    function getDiffieHellman(group_name: string): DiffieHellman;
+    function pbkdf2(
+        password: BinaryLike,
+        salt: BinaryLike,
+        iterations: number,
+        keylen: number,
+        digest: string,
+        callback: (err: Error | null, derivedKey: Buffer) => any,
+    ): void;
+    function pbkdf2Sync(password: BinaryLike, salt: BinaryLike, iterations: number, keylen: number, digest: string): Buffer;
+
+    function randomBytes(size: number): Buffer;
+    function randomBytes(size: number, callback: (err: Error | null, buf: Buffer) => void): void;
+    function pseudoRandomBytes(size: number): Buffer;
+    function pseudoRandomBytes(size: number, callback: (err: Error | null, buf: Buffer) => void): void;
+
+    function randomFillSync<T extends NodeJS.ArrayBufferView>(buffer: T, offset?: number, size?: number): T;
+    function randomFill<T extends NodeJS.ArrayBufferView>(buffer: T, callback: (err: Error | null, buf: T) => void): void;
+    function randomFill<T extends NodeJS.ArrayBufferView>(buffer: T, offset: number, callback: (err: Error | null, buf: T) => void): void;
+    function randomFill<T extends NodeJS.ArrayBufferView>(buffer: T, offset: number, size: number, callback: (err: Error | null, buf: T) => void): void;
+
+    interface ScryptOptions {
+        N?: number;
+        r?: number;
+        p?: number;
+        maxmem?: number;
+    }
+    function scrypt(
+        password: BinaryLike,
+        salt: BinaryLike,
+        keylen: number, callback: (err: Error | null, derivedKey: Buffer) => void,
+    ): void;
+    function scrypt(
+        password: BinaryLike,
+        salt: BinaryLike,
+        keylen: number,
+        options: ScryptOptions,
+        callback: (err: Error | null, derivedKey: Buffer) => void,
+    ): void;
+    function scryptSync(password: BinaryLike, salt: BinaryLike, keylen: number, options?: ScryptOptions): Buffer;
+
+    interface RsaPublicKey {
+        key: KeyLike;
+        padding?: number;
+    }
+    interface RsaPrivateKey {
+        key: KeyLike;
+        passphrase?: string;
+        /**
+         * @default 'sha1'
+         */
+        oaepHash?: string;
+        oaepLabel?: NodeJS.TypedArray;
+        padding?: number;
+    }
+    function publicEncrypt(key: RsaPublicKey | RsaPrivateKey | KeyLike, buffer: NodeJS.ArrayBufferView): Buffer;
+    function publicDecrypt(key: RsaPublicKey | RsaPrivateKey | KeyLike, buffer: NodeJS.ArrayBufferView): Buffer;
+    function privateDecrypt(private_key: RsaPrivateKey | KeyLike, buffer: NodeJS.ArrayBufferView): Buffer;
+    function privateEncrypt(private_key: RsaPrivateKey | KeyLike, buffer: NodeJS.ArrayBufferView): Buffer;
+    function getCiphers(): string[];
+    function getCurves(): string[];
+    function getHashes(): string[];
+    class ECDH {
+        private constructor();
+        static convertKey(
+            key: BinaryLike,
+            curve: string,
+            inputEncoding?: HexBase64Latin1Encoding,
+            outputEncoding?: "latin1" | "hex" | "base64",
+            format?: "uncompressed" | "compressed" | "hybrid",
+        ): Buffer | string;
+        generateKeys(): Buffer;
+        generateKeys(encoding: HexBase64Latin1Encoding, format?: ECDHKeyFormat): string;
+        computeSecret(other_public_key: NodeJS.ArrayBufferView): Buffer;
+        computeSecret(other_public_key: string, input_encoding: HexBase64Latin1Encoding): Buffer;
+        computeSecret(other_public_key: NodeJS.ArrayBufferView, output_encoding: HexBase64Latin1Encoding): string;
+        computeSecret(other_public_key: string, input_encoding: HexBase64Latin1Encoding, output_encoding: HexBase64Latin1Encoding): string;
+        getPrivateKey(): Buffer;
+        getPrivateKey(encoding: HexBase64Latin1Encoding): string;
+        getPublicKey(): Buffer;
+        getPublicKey(encoding: HexBase64Latin1Encoding, format?: ECDHKeyFormat): string;
+        setPrivateKey(private_key: NodeJS.ArrayBufferView): void;
+        setPrivateKey(private_key: string, encoding: HexBase64Latin1Encoding): void;
+    }
+    function createECDH(curve_name: string): ECDH;
+    function timingSafeEqual(a: NodeJS.ArrayBufferView, b: NodeJS.ArrayBufferView): boolean;
+    /** @deprecated since v10.0.0 */
+    const DEFAULT_ENCODING: string;
+
+    type KeyType = 'rsa' | 'dsa' | 'ec';
+    type KeyFormat = 'pem' | 'der';
+
+    interface BasePrivateKeyEncodingOptions<T extends KeyFormat> {
+        format: T;
+        cipher?: string;
+        passphrase?: string;
+    }
+
+    interface KeyPairKeyObjectResult {
+        publicKey: KeyObject;
+        privateKey: KeyObject;
+    }
+
+    interface ECKeyPairKeyObjectOptions {
+        /**
+         * Name of the curve to use.
+         */
+        namedCurve: string;
+    }
+
+    interface RSAKeyPairKeyObjectOptions {
+        /**
+         * Key size in bits
+         */
+        modulusLength: number;
+
+        /**
+         * @default 0x10001
+         */
+        publicExponent?: number;
+    }
+
+    interface DSAKeyPairKeyObjectOptions {
+        /**
+         * Key size in bits
+         */
+        modulusLength: number;
+
+        /**
+         * Size of q in bits
+         */
+        divisorLength: number;
+    }
+
+    interface RSAKeyPairOptions<PubF extends KeyFormat, PrivF extends KeyFormat> {
+        /**
+         * Key size in bits
+         */
+        modulusLength: number;
+        /**
+         * @default 0x10001
+         */
+        publicExponent?: number;
+
+        publicKeyEncoding: {
+            type: 'pkcs1' | 'spki';
+            format: PubF;
+        };
+        privateKeyEncoding: BasePrivateKeyEncodingOptions<PrivF> & {
+            type: 'pkcs1' | 'pkcs8';
+        };
+    }
+
+    interface DSAKeyPairOptions<PubF extends KeyFormat, PrivF extends KeyFormat> {
+        /**
+         * Key size in bits
+         */
+        modulusLength: number;
+        /**
+         * Size of q in bits
+         */
+        divisorLength: number;
+
+        publicKeyEncoding: {
+            type: 'spki';
+            format: PubF;
+        };
+        privateKeyEncoding: BasePrivateKeyEncodingOptions<PrivF> & {
+            type: 'pkcs8';
+        };
+    }
+
+    interface ECKeyPairOptions<PubF extends KeyFormat, PrivF extends KeyFormat> {
+        /**
+         * Name of the curve to use.
+         */
+        namedCurve: string;
+
+        publicKeyEncoding: {
+            type: 'pkcs1' | 'spki';
+            format: PubF;
+        };
+        privateKeyEncoding: BasePrivateKeyEncodingOptions<PrivF> & {
+            type: 'sec1' | 'pkcs8';
+        };
+    }
+
+    interface KeyPairSyncResult<T1 extends string | Buffer, T2 extends string | Buffer> {
+        publicKey: T1;
+        privateKey: T2;
+    }
+
+    function generateKeyPairSync(type: 'rsa', options: RSAKeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(type: 'rsa', options: RSAKeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(type: 'rsa', options: RSAKeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(type: 'rsa', options: RSAKeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(type: 'rsa', options: RSAKeyPairKeyObjectOptions): KeyPairKeyObjectResult;
+
+    function generateKeyPairSync(type: 'dsa', options: DSAKeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(type: 'dsa', options: DSAKeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(type: 'dsa', options: DSAKeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(type: 'dsa', options: DSAKeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(type: 'dsa', options: DSAKeyPairKeyObjectOptions): KeyPairKeyObjectResult;
+
+    function generateKeyPairSync(type: 'ec', options: ECKeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(type: 'ec', options: ECKeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(type: 'ec', options: ECKeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(type: 'ec', options: ECKeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(type: 'ec', options: ECKeyPairKeyObjectOptions): KeyPairKeyObjectResult;
+
+    function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
+    function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
+    function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'rsa', options: RSAKeyPairKeyObjectOptions, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+
+    function generateKeyPair(type: 'dsa', options: DSAKeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
+    function generateKeyPair(type: 'dsa', options: DSAKeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'dsa', options: DSAKeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
+    function generateKeyPair(type: 'dsa', options: DSAKeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'dsa', options: DSAKeyPairKeyObjectOptions, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+
+    function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
+    function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
+    function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'ec', options: ECKeyPairKeyObjectOptions, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+
+    namespace generateKeyPair {
+        function __promisify__(type: "rsa", options: RSAKeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
+        function __promisify__(type: "rsa", options: RSAKeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
+        function __promisify__(type: "rsa", options: RSAKeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
+        function __promisify__(type: "rsa", options: RSAKeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
+        function __promisify__(type: "rsa", options: RSAKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+
+        function __promisify__(type: "dsa", options: DSAKeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
+        function __promisify__(type: "dsa", options: DSAKeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
+        function __promisify__(type: "dsa", options: DSAKeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
+        function __promisify__(type: "dsa", options: DSAKeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
+        function __promisify__(type: "dsa", options: DSAKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+
+        function __promisify__(type: "ec", options: ECKeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
+        function __promisify__(type: "ec", options: ECKeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
+        function __promisify__(type: "ec", options: ECKeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
+        function __promisify__(type: "ec", options: ECKeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
+        function __promisify__(type: "ec", options: ECKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+    }
+
+    /**
+     * Calculates and returns the signature for \`data\` using the given private key and
+     * algorithm. If \`algorithm\` is \`null\` or \`undefined\`, then the algorithm is
+     * dependent upon the key type (especially Ed25519 and Ed448).
+     *
+     * If \`key\` is not a [\`KeyObject\`][], this function behaves as if \`key\` had been
+     * passed to [\`crypto.createPrivateKey()\`][].
+     */
+    function sign(algorithm: string | null | undefined, data: NodeJS.ArrayBufferView, key: KeyLike | SignPrivateKeyInput): Buffer;
+
+    interface VerifyKeyWithOptions extends KeyObject, SigningOptions {
+    }
+
+    /**
+     * Calculates and returns the signature for \`data\` using the given private key and
+     * algorithm. If \`algorithm\` is \`null\` or \`undefined\`, then the algorithm is
+     * dependent upon the key type (especially Ed25519 and Ed448).
+     *
+     * If \`key\` is not a [\`KeyObject\`][], this function behaves as if \`key\` had been
+     * passed to [\`crypto.createPublicKey()\`][].
+     */
+    function verify(algorithm: string | null | undefined, data: NodeJS.ArrayBufferView, key: KeyLike | VerifyKeyWithOptions, signature: NodeJS.ArrayBufferView): Buffer;
+}
+`;
+module.exports['dgram.d.ts'] = `declare module "dgram" {
+    import { AddressInfo } from "net";
+    import * as dns from "dns";
+    import * as events from "events";
+
+    interface RemoteInfo {
+        address: string;
+        family: 'IPv4' | 'IPv6';
+        port: number;
+        size: number;
+    }
+
+    interface BindOptions {
+        port?: number;
+        address?: string;
+        exclusive?: boolean;
+        fd?: number;
+    }
+
+    type SocketType = "udp4" | "udp6";
+
+    interface SocketOptions {
+        type: SocketType;
+        reuseAddr?: boolean;
+        /**
+         * @default false
+         */
+        ipv6Only?: boolean;
+        recvBufferSize?: number;
+        sendBufferSize?: number;
+        lookup?: (hostname: string, options: dns.LookupOneOptions, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void) => void;
+    }
+
+    function createSocket(type: SocketType, callback?: (msg: Buffer, rinfo: RemoteInfo) => void): Socket;
+    function createSocket(options: SocketOptions, callback?: (msg: Buffer, rinfo: RemoteInfo) => void): Socket;
+
+    class Socket extends events.EventEmitter {
+        addMembership(multicastAddress: string, multicastInterface?: string): void;
+        address(): AddressInfo;
+        bind(port?: number, address?: string, callback?: () => void): void;
+        bind(port?: number, callback?: () => void): void;
+        bind(callback?: () => void): void;
+        bind(options: BindOptions, callback?: () => void): void;
+        close(callback?: () => void): void;
+        connect(port: number, address?: string, callback?: () => void): void;
+        connect(port: number, callback: () => void): void;
+        disconnect(): void;
+        dropMembership(multicastAddress: string, multicastInterface?: string): void;
+        getRecvBufferSize(): number;
+        getSendBufferSize(): number;
+        ref(): this;
+        remoteAddress(): AddressInfo;
+        send(msg: string | Uint8Array | any[], port?: number, address?: string, callback?: (error: Error | null, bytes: number) => void): void;
+        send(msg: string | Uint8Array | any[], port?: number, callback?: (error: Error | null, bytes: number) => void): void;
+        send(msg: string | Uint8Array | any[], callback?: (error: Error | null, bytes: number) => void): void;
+        send(msg: string | Uint8Array, offset: number, length: number, port?: number, address?: string, callback?: (error: Error | null, bytes: number) => void): void;
+        send(msg: string | Uint8Array, offset: number, length: number, port?: number, callback?: (error: Error | null, bytes: number) => void): void;
+        send(msg: string | Uint8Array, offset: number, length: number, callback?: (error: Error | null, bytes: number) => void): void;
+        setBroadcast(flag: boolean): void;
+        setMulticastInterface(multicastInterface: string): void;
+        setMulticastLoopback(flag: boolean): void;
+        setMulticastTTL(ttl: number): void;
+        setRecvBufferSize(size: number): void;
+        setSendBufferSize(size: number): void;
+        setTTL(ttl: number): void;
+        unref(): this;
+
+        /**
+         * events.EventEmitter
+         * 1. close
+         * 2. connect
+         * 3. error
+         * 4. listening
+         * 5. message
+         */
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "close", listener: () => void): this;
+        addListener(event: "connect", listener: () => void): this;
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: "listening", listener: () => void): this;
+        addListener(event: "message", listener: (msg: Buffer, rinfo: RemoteInfo) => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "close"): boolean;
+        emit(event: "connect"): boolean;
+        emit(event: "error", err: Error): boolean;
+        emit(event: "listening"): boolean;
+        emit(event: "message", msg: Buffer, rinfo: RemoteInfo): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "close", listener: () => void): this;
+        on(event: "connect", listener: () => void): this;
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: "listening", listener: () => void): this;
+        on(event: "message", listener: (msg: Buffer, rinfo: RemoteInfo) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "close", listener: () => void): this;
+        once(event: "connect", listener: () => void): this;
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: "listening", listener: () => void): this;
+        once(event: "message", listener: (msg: Buffer, rinfo: RemoteInfo) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "connect", listener: () => void): this;
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: "listening", listener: () => void): this;
+        prependListener(event: "message", listener: (msg: Buffer, rinfo: RemoteInfo) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "connect", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: "listening", listener: () => void): this;
+        prependOnceListener(event: "message", listener: (msg: Buffer, rinfo: RemoteInfo) => void): this;
+    }
+}
+`;
+module.exports['dns.d.ts'] = `declare module "dns" {
+    // Supported getaddrinfo flags.
+    const ADDRCONFIG: number;
+    const V4MAPPED: number;
+
+    interface LookupOptions {
+        family?: number;
+        hints?: number;
+        all?: boolean;
+        verbatim?: boolean;
+    }
+
+    interface LookupOneOptions extends LookupOptions {
+        all?: false;
+    }
+
+    interface LookupAllOptions extends LookupOptions {
+        all: true;
+    }
+
+    interface LookupAddress {
+        address: string;
+        family: number;
+    }
+
+    function lookup(hostname: string, family: number, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
+    function lookup(hostname: string, options: LookupOneOptions, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
+    function lookup(hostname: string, options: LookupAllOptions, callback: (err: NodeJS.ErrnoException | null, addresses: LookupAddress[]) => void): void;
+    function lookup(hostname: string, options: LookupOptions, callback: (err: NodeJS.ErrnoException | null, address: string | LookupAddress[], family: number) => void): void;
+    function lookup(hostname: string, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace lookup {
+        function __promisify__(hostname: string, options: LookupAllOptions): Promise<LookupAddress[]>;
+        function __promisify__(hostname: string, options?: LookupOneOptions | number): Promise<LookupAddress>;
+        function __promisify__(hostname: string, options: LookupOptions): Promise<LookupAddress | LookupAddress[]>;
+    }
+
+    function lookupService(address: string, port: number, callback: (err: NodeJS.ErrnoException | null, hostname: string, service: string) => void): void;
+
+    namespace lookupService {
+        function __promisify__(address: string, port: number): Promise<{ hostname: string, service: string }>;
+    }
+
+    interface ResolveOptions {
+        ttl: boolean;
+    }
+
+    interface ResolveWithTtlOptions extends ResolveOptions {
+        ttl: true;
+    }
+
+    interface RecordWithTtl {
+        address: string;
+        ttl: number;
+    }
+
+    /** @deprecated Use AnyARecord or AnyAaaaRecord instead. */
+    type AnyRecordWithTtl = AnyARecord | AnyAaaaRecord;
+
+    interface AnyARecord extends RecordWithTtl {
+        type: "A";
+    }
+
+    interface AnyAaaaRecord extends RecordWithTtl {
+        type: "AAAA";
+    }
+
+    interface MxRecord {
+        priority: number;
+        exchange: string;
+    }
+
+    interface AnyMxRecord extends MxRecord {
+        type: "MX";
+    }
+
+    interface NaptrRecord {
+        flags: string;
+        service: string;
+        regexp: string;
+        replacement: string;
+        order: number;
+        preference: number;
+    }
+
+    interface AnyNaptrRecord extends NaptrRecord {
+        type: "NAPTR";
+    }
+
+    interface SoaRecord {
+        nsname: string;
+        hostmaster: string;
+        serial: number;
+        refresh: number;
+        retry: number;
+        expire: number;
+        minttl: number;
+    }
+
+    interface AnySoaRecord extends SoaRecord {
+        type: "SOA";
+    }
+
+    interface SrvRecord {
+        priority: number;
+        weight: number;
+        port: number;
+        name: string;
+    }
+
+    interface AnySrvRecord extends SrvRecord {
+        type: "SRV";
+    }
+
+    interface AnyTxtRecord {
+        type: "TXT";
+        entries: string[];
+    }
+
+    interface AnyNsRecord {
+        type: "NS";
+        value: string;
+    }
+
+    interface AnyPtrRecord {
+        type: "PTR";
+        value: string;
+    }
+
+    interface AnyCnameRecord {
+        type: "CNAME";
+        value: string;
+    }
+
+    type AnyRecord = AnyARecord |
+        AnyAaaaRecord |
+        AnyCnameRecord |
+        AnyMxRecord |
+        AnyNaptrRecord |
+        AnyNsRecord |
+        AnyPtrRecord |
+        AnySoaRecord |
+        AnySrvRecord |
+        AnyTxtRecord;
+
+    function resolve(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    function resolve(hostname: string, rrtype: "A", callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    function resolve(hostname: string, rrtype: "AAAA", callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    function resolve(hostname: string, rrtype: "ANY", callback: (err: NodeJS.ErrnoException | null, addresses: AnyRecord[]) => void): void;
+    function resolve(hostname: string, rrtype: "CNAME", callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    function resolve(hostname: string, rrtype: "MX", callback: (err: NodeJS.ErrnoException | null, addresses: MxRecord[]) => void): void;
+    function resolve(hostname: string, rrtype: "NAPTR", callback: (err: NodeJS.ErrnoException | null, addresses: NaptrRecord[]) => void): void;
+    function resolve(hostname: string, rrtype: "NS", callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    function resolve(hostname: string, rrtype: "PTR", callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    function resolve(hostname: string, rrtype: "SOA", callback: (err: NodeJS.ErrnoException | null, addresses: SoaRecord) => void): void;
+    function resolve(hostname: string, rrtype: "SRV", callback: (err: NodeJS.ErrnoException | null, addresses: SrvRecord[]) => void): void;
+    function resolve(hostname: string, rrtype: "TXT", callback: (err: NodeJS.ErrnoException | null, addresses: string[][]) => void): void;
+    function resolve(
+        hostname: string,
+        rrtype: string,
+        callback: (err: NodeJS.ErrnoException | null, addresses: string[] | MxRecord[] | NaptrRecord[] | SoaRecord | SrvRecord[] | string[][] | AnyRecord[]) => void,
+    ): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace resolve {
+        function __promisify__(hostname: string, rrtype?: "A" | "AAAA" | "CNAME" | "NS" | "PTR"): Promise<string[]>;
+        function __promisify__(hostname: string, rrtype: "ANY"): Promise<AnyRecord[]>;
+        function __promisify__(hostname: string, rrtype: "MX"): Promise<MxRecord[]>;
+        function __promisify__(hostname: string, rrtype: "NAPTR"): Promise<NaptrRecord[]>;
+        function __promisify__(hostname: string, rrtype: "SOA"): Promise<SoaRecord>;
+        function __promisify__(hostname: string, rrtype: "SRV"): Promise<SrvRecord[]>;
+        function __promisify__(hostname: string, rrtype: "TXT"): Promise<string[][]>;
+        function __promisify__(hostname: string, rrtype: string): Promise<string[] | MxRecord[] | NaptrRecord[] | SoaRecord | SrvRecord[] | string[][] | AnyRecord[]>;
+    }
+
+    function resolve4(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    function resolve4(hostname: string, options: ResolveWithTtlOptions, callback: (err: NodeJS.ErrnoException | null, addresses: RecordWithTtl[]) => void): void;
+    function resolve4(hostname: string, options: ResolveOptions, callback: (err: NodeJS.ErrnoException | null, addresses: string[] | RecordWithTtl[]) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace resolve4 {
+        function __promisify__(hostname: string): Promise<string[]>;
+        function __promisify__(hostname: string, options: ResolveWithTtlOptions): Promise<RecordWithTtl[]>;
+        function __promisify__(hostname: string, options?: ResolveOptions): Promise<string[] | RecordWithTtl[]>;
+    }
+
+    function resolve6(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    function resolve6(hostname: string, options: ResolveWithTtlOptions, callback: (err: NodeJS.ErrnoException | null, addresses: RecordWithTtl[]) => void): void;
+    function resolve6(hostname: string, options: ResolveOptions, callback: (err: NodeJS.ErrnoException | null, addresses: string[] | RecordWithTtl[]) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace resolve6 {
+        function __promisify__(hostname: string): Promise<string[]>;
+        function __promisify__(hostname: string, options: ResolveWithTtlOptions): Promise<RecordWithTtl[]>;
+        function __promisify__(hostname: string, options?: ResolveOptions): Promise<string[] | RecordWithTtl[]>;
+    }
+
+    function resolveCname(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    namespace resolveCname {
+        function __promisify__(hostname: string): Promise<string[]>;
+    }
+
+    function resolveMx(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: MxRecord[]) => void): void;
+    namespace resolveMx {
+        function __promisify__(hostname: string): Promise<MxRecord[]>;
+    }
+
+    function resolveNaptr(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: NaptrRecord[]) => void): void;
+    namespace resolveNaptr {
+        function __promisify__(hostname: string): Promise<NaptrRecord[]>;
+    }
+
+    function resolveNs(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    namespace resolveNs {
+        function __promisify__(hostname: string): Promise<string[]>;
+    }
+
+    function resolvePtr(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: string[]) => void): void;
+    namespace resolvePtr {
+        function __promisify__(hostname: string): Promise<string[]>;
+    }
+
+    function resolveSoa(hostname: string, callback: (err: NodeJS.ErrnoException | null, address: SoaRecord) => void): void;
+    namespace resolveSoa {
+        function __promisify__(hostname: string): Promise<SoaRecord>;
+    }
+
+    function resolveSrv(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: SrvRecord[]) => void): void;
+    namespace resolveSrv {
+        function __promisify__(hostname: string): Promise<SrvRecord[]>;
+    }
+
+    function resolveTxt(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: string[][]) => void): void;
+    namespace resolveTxt {
+        function __promisify__(hostname: string): Promise<string[][]>;
+    }
+
+    function resolveAny(hostname: string, callback: (err: NodeJS.ErrnoException | null, addresses: AnyRecord[]) => void): void;
+    namespace resolveAny {
+        function __promisify__(hostname: string): Promise<AnyRecord[]>;
+    }
+
+    function reverse(ip: string, callback: (err: NodeJS.ErrnoException | null, hostnames: string[]) => void): void;
+    function setServers(servers: ReadonlyArray<string>): void;
+    function getServers(): string[];
+
+    // Error codes
+    const NODATA: string;
+    const FORMERR: string;
+    const SERVFAIL: string;
+    const NOTFOUND: string;
+    const NOTIMP: string;
+    const REFUSED: string;
+    const BADQUERY: string;
+    const BADNAME: string;
+    const BADFAMILY: string;
+    const BADRESP: string;
+    const CONNREFUSED: string;
+    const TIMEOUT: string;
+    const EOF: string;
+    const FILE: string;
+    const NOMEM: string;
+    const DESTRUCTION: string;
+    const BADSTR: string;
+    const BADFLAGS: string;
+    const NONAME: string;
+    const BADHINTS: string;
+    const NOTINITIALIZED: string;
+    const LOADIPHLPAPI: string;
+    const ADDRGETNETWORKPARAMS: string;
+    const CANCELLED: string;
+
+    class Resolver {
+        getServers: typeof getServers;
+        setServers: typeof setServers;
+        resolve: typeof resolve;
+        resolve4: typeof resolve4;
+        resolve6: typeof resolve6;
+        resolveAny: typeof resolveAny;
+        resolveCname: typeof resolveCname;
+        resolveMx: typeof resolveMx;
+        resolveNaptr: typeof resolveNaptr;
+        resolveNs: typeof resolveNs;
+        resolvePtr: typeof resolvePtr;
+        resolveSoa: typeof resolveSoa;
+        resolveSrv: typeof resolveSrv;
+        resolveTxt: typeof resolveTxt;
+        reverse: typeof reverse;
+        cancel(): void;
+    }
+
+    namespace promises {
+        function getServers(): string[];
+
+        function lookup(hostname: string, family: number): Promise<LookupAddress>;
+        function lookup(hostname: string, options: LookupOneOptions): Promise<LookupAddress>;
+        function lookup(hostname: string, options: LookupAllOptions): Promise<LookupAddress[]>;
+        function lookup(hostname: string, options: LookupOptions): Promise<LookupAddress | LookupAddress[]>;
+        function lookup(hostname: string): Promise<LookupAddress>;
+
+        function lookupService(address: string, port: number): Promise<{ hostname: string, service: string }>;
+
+        function resolve(hostname: string): Promise<string[]>;
+        function resolve(hostname: string, rrtype: "A"): Promise<string[]>;
+        function resolve(hostname: string, rrtype: "AAAA"): Promise<string[]>;
+        function resolve(hostname: string, rrtype: "ANY"): Promise<AnyRecord[]>;
+        function resolve(hostname: string, rrtype: "CNAME"): Promise<string[]>;
+        function resolve(hostname: string, rrtype: "MX"): Promise<MxRecord[]>;
+        function resolve(hostname: string, rrtype: "NAPTR"): Promise<NaptrRecord[]>;
+        function resolve(hostname: string, rrtype: "NS"): Promise<string[]>;
+        function resolve(hostname: string, rrtype: "PTR"): Promise<string[]>;
+        function resolve(hostname: string, rrtype: "SOA"): Promise<SoaRecord>;
+        function resolve(hostname: string, rrtype: "SRV"): Promise<SrvRecord[]>;
+        function resolve(hostname: string, rrtype: "TXT"): Promise<string[][]>;
+        function resolve(hostname: string, rrtype: string): Promise<string[] | MxRecord[] | NaptrRecord[] | SoaRecord | SrvRecord[] | string[][] | AnyRecord[]>;
+
+        function resolve4(hostname: string): Promise<string[]>;
+        function resolve4(hostname: string, options: ResolveWithTtlOptions): Promise<RecordWithTtl[]>;
+        function resolve4(hostname: string, options: ResolveOptions): Promise<string[] | RecordWithTtl[]>;
+
+        function resolve6(hostname: string): Promise<string[]>;
+        function resolve6(hostname: string, options: ResolveWithTtlOptions): Promise<RecordWithTtl[]>;
+        function resolve6(hostname: string, options: ResolveOptions): Promise<string[] | RecordWithTtl[]>;
+
+        function resolveAny(hostname: string): Promise<AnyRecord[]>;
+
+        function resolveCname(hostname: string): Promise<string[]>;
+
+        function resolveMx(hostname: string): Promise<MxRecord[]>;
+
+        function resolveNaptr(hostname: string): Promise<NaptrRecord[]>;
+
+        function resolveNs(hostname: string): Promise<string[]>;
+
+        function resolvePtr(hostname: string): Promise<string[]>;
+
+        function resolveSoa(hostname: string): Promise<SoaRecord>;
+
+        function resolveSrv(hostname: string): Promise<SrvRecord[]>;
+
+        function resolveTxt(hostname: string): Promise<string[][]>;
+
+        function reverse(ip: string): Promise<string[]>;
+
+        function setServers(servers: ReadonlyArray<string>): void;
+
+        class Resolver {
+            getServers: typeof getServers;
+            resolve: typeof resolve;
+            resolve4: typeof resolve4;
+            resolve6: typeof resolve6;
+            resolveAny: typeof resolveAny;
+            resolveCname: typeof resolveCname;
+            resolveMx: typeof resolveMx;
+            resolveNaptr: typeof resolveNaptr;
+            resolveNs: typeof resolveNs;
+            resolvePtr: typeof resolvePtr;
+            resolveSoa: typeof resolveSoa;
+            resolveSrv: typeof resolveSrv;
+            resolveTxt: typeof resolveTxt;
+            reverse: typeof reverse;
+            setServers: typeof setServers;
+        }
+    }
+}
+`;
+module.exports['domain.d.ts'] = `declare module "domain" {
+    import * as events from "events";
+
+    class Domain extends events.EventEmitter implements NodeJS.Domain {
+        run<T>(fn: (...args: any[]) => T, ...args: any[]): T;
+        add(emitter: events.EventEmitter | NodeJS.Timer): void;
+        remove(emitter: events.EventEmitter | NodeJS.Timer): void;
+        bind<T extends Function>(cb: T): T;
+        intercept<T extends Function>(cb: T): T;
+        members: Array<events.EventEmitter | NodeJS.Timer>;
+        enter(): void;
+        exit(): void;
+    }
+
+    function create(): Domain;
+}
+`;
+module.exports['events.d.ts'] = `declare module "events" {
+    class internal extends NodeJS.EventEmitter { }
+
+    interface NodeEventTarget {
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    interface DOMEventTarget {
+        addEventListener(event: string, listener: (...args: any[]) => void, opts?: { once: boolean }): any;
+    }
+
+    namespace internal {
+        function once(emitter: NodeEventTarget, event: string | symbol): Promise<any[]>;
+        function once(emitter: DOMEventTarget, event: string): Promise<any[]>;
+         class EventEmitter extends internal {
+            /** @deprecated since v4.0.0 */
+            static listenerCount(emitter: EventEmitter, event: string | symbol): number;
+            static defaultMaxListeners: number;
+
+            addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+            on(event: string | symbol, listener: (...args: any[]) => void): this;
+            once(event: string | symbol, listener: (...args: any[]) => void): this;
+            prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+            prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+            removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+            off(event: string | symbol, listener: (...args: any[]) => void): this;
+            removeAllListeners(event?: string | symbol): this;
+            setMaxListeners(n: number): this;
+            getMaxListeners(): number;
+            listeners(event: string | symbol): Function[];
+            rawListeners(event: string | symbol): Function[];
+            emit(event: string | symbol, ...args: any[]): boolean;
+            eventNames(): Array<string | symbol>;
+            listenerCount(type: string | symbol): number;
+        }
+    }
+
+    export = internal;
+}
+`;
+module.exports['fs.d.ts'] = `declare module "fs" {
+    import * as stream from "stream";
+    import * as events from "events";
+    import { URL } from "url";
+
+    /**
+     * Valid types for path values in "fs".
+     */
+    type PathLike = string | Buffer | URL;
+
+    type NoParamCallback = (err: NodeJS.ErrnoException | null) => void;
+
+    interface StatsBase<T> {
+        isFile(): boolean;
+        isDirectory(): boolean;
+        isBlockDevice(): boolean;
+        isCharacterDevice(): boolean;
+        isSymbolicLink(): boolean;
+        isFIFO(): boolean;
+        isSocket(): boolean;
+
+        dev: T;
+        ino: T;
+        mode: T;
+        nlink: T;
+        uid: T;
+        gid: T;
+        rdev: T;
+        size: T;
+        blksize: T;
+        blocks: T;
+        atimeMs: T;
+        mtimeMs: T;
+        ctimeMs: T;
+        birthtimeMs: T;
+        atime: Date;
+        mtime: Date;
+        ctime: Date;
+        birthtime: Date;
+    }
+
+    interface Stats extends StatsBase<number> {
+    }
+
+    class Stats {
+    }
+
+    class Dirent {
+        isFile(): boolean;
+        isDirectory(): boolean;
+        isBlockDevice(): boolean;
+        isCharacterDevice(): boolean;
+        isSymbolicLink(): boolean;
+        isFIFO(): boolean;
+        isSocket(): boolean;
+        name: string;
+    }
+
+    /**
+     * A class representing a directory stream.
+     */
+    class Dir {
+        readonly path: string;
+
+        /**
+         * Asynchronously iterates over the directory via \`readdir(3)\` until all entries have been read.
+         */
+        [Symbol.asyncIterator](): AsyncIterableIterator<Dirent>;
+
+        /**
+         * Asynchronously close the directory's underlying resource handle.
+         * Subsequent reads will result in errors.
+         */
+        close(): Promise<void>;
+        close(cb: NoParamCallback): void;
+
+        /**
+         * Synchronously close the directory's underlying resource handle.
+         * Subsequent reads will result in errors.
+         */
+        closeSync(): void;
+
+        /**
+         * Asynchronously read the next directory entry via \`readdir(3)\` as an \`Dirent\`.
+         * After the read is completed, a value is returned that will be resolved with an \`Dirent\`, or \`null\` if there are no more directory entries to read.
+         * Directory entries returned by this function are in no particular order as provided by the operating system's underlying directory mechanisms.
+         */
+        read(): Promise<Dirent | null>;
+        read(cb: (err: NodeJS.ErrnoException | null, dirEnt: Dirent | null) => void): void;
+
+        /**
+         * Synchronously read the next directory entry via \`readdir(3)\` as a \`Dirent\`.
+         * If there are no more directory entries to read, null will be returned.
+         * Directory entries returned by this function are in no particular order as provided by the operating system's underlying directory mechanisms.
+         */
+        readSync(): Dirent;
+    }
+
+    interface FSWatcher extends events.EventEmitter {
+        close(): void;
+
+        /**
+         * events.EventEmitter
+         *   1. change
+         *   2. error
+         */
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
+        addListener(event: "error", listener: (error: Error) => void): this;
+        addListener(event: "close", listener: () => void): this;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
+        on(event: "error", listener: (error: Error) => void): this;
+        on(event: "close", listener: () => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
+        once(event: "error", listener: (error: Error) => void): this;
+        once(event: "close", listener: () => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
+        prependListener(event: "error", listener: (error: Error) => void): this;
+        prependListener(event: "close", listener: () => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
+        prependOnceListener(event: "error", listener: (error: Error) => void): this;
+        prependOnceListener(event: "close", listener: () => void): this;
+    }
+
+    class ReadStream extends stream.Readable {
+        close(): void;
+        bytesRead: number;
+        path: string | Buffer;
+
+        /**
+         * events.EventEmitter
+         *   1. open
+         *   2. close
+         */
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "open", listener: (fd: number) => void): this;
+        addListener(event: "close", listener: () => void): this;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "open", listener: (fd: number) => void): this;
+        on(event: "close", listener: () => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "open", listener: (fd: number) => void): this;
+        once(event: "close", listener: () => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "open", listener: (fd: number) => void): this;
+        prependListener(event: "close", listener: () => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "open", listener: (fd: number) => void): this;
+        prependOnceListener(event: "close", listener: () => void): this;
+    }
+
+    class WriteStream extends stream.Writable {
+        close(): void;
+        bytesWritten: number;
+        path: string | Buffer;
+
+        /**
+         * events.EventEmitter
+         *   1. open
+         *   2. close
+         */
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "open", listener: (fd: number) => void): this;
+        addListener(event: "close", listener: () => void): this;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "open", listener: (fd: number) => void): this;
+        on(event: "close", listener: () => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "open", listener: (fd: number) => void): this;
+        once(event: "close", listener: () => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "open", listener: (fd: number) => void): this;
+        prependListener(event: "close", listener: () => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "open", listener: (fd: number) => void): this;
+        prependOnceListener(event: "close", listener: () => void): this;
+    }
+
+    /**
+     * Asynchronous rename(2) - Change the name or location of a file or directory.
+     * @param oldPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function rename(oldPath: PathLike, newPath: PathLike, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace rename {
+        /**
+         * Asynchronous rename(2) - Change the name or location of a file or directory.
+         * @param oldPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         */
+        function __promisify__(oldPath: PathLike, newPath: PathLike): Promise<void>;
+    }
+
+    /**
+     * Synchronous rename(2) - Change the name or location of a file or directory.
+     * @param oldPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function renameSync(oldPath: PathLike, newPath: PathLike): void;
+
+    /**
+     * Asynchronous truncate(2) - Truncate a file to a specified length.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param len If not specified, defaults to \`0\`.
+     */
+    function truncate(path: PathLike, len: number | undefined | null, callback: NoParamCallback): void;
+
+    /**
+     * Asynchronous truncate(2) - Truncate a file to a specified length.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function truncate(path: PathLike, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace truncate {
+        /**
+         * Asynchronous truncate(2) - Truncate a file to a specified length.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param len If not specified, defaults to \`0\`.
+         */
+        function __promisify__(path: PathLike, len?: number | null): Promise<void>;
+    }
+
+    /**
+     * Synchronous truncate(2) - Truncate a file to a specified length.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param len If not specified, defaults to \`0\`.
+     */
+    function truncateSync(path: PathLike, len?: number | null): void;
+
+    /**
+     * Asynchronous ftruncate(2) - Truncate a file to a specified length.
+     * @param fd A file descriptor.
+     * @param len If not specified, defaults to \`0\`.
+     */
+    function ftruncate(fd: number, len: number | undefined | null, callback: NoParamCallback): void;
+
+    /**
+     * Asynchronous ftruncate(2) - Truncate a file to a specified length.
+     * @param fd A file descriptor.
+     */
+    function ftruncate(fd: number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace ftruncate {
+        /**
+         * Asynchronous ftruncate(2) - Truncate a file to a specified length.
+         * @param fd A file descriptor.
+         * @param len If not specified, defaults to \`0\`.
+         */
+        function __promisify__(fd: number, len?: number | null): Promise<void>;
+    }
+
+    /**
+     * Synchronous ftruncate(2) - Truncate a file to a specified length.
+     * @param fd A file descriptor.
+     * @param len If not specified, defaults to \`0\`.
+     */
+    function ftruncateSync(fd: number, len?: number | null): void;
+
+    /**
+     * Asynchronous chown(2) - Change ownership of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function chown(path: PathLike, uid: number, gid: number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace chown {
+        /**
+         * Asynchronous chown(2) - Change ownership of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function __promisify__(path: PathLike, uid: number, gid: number): Promise<void>;
+    }
+
+    /**
+     * Synchronous chown(2) - Change ownership of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function chownSync(path: PathLike, uid: number, gid: number): void;
+
+    /**
+     * Asynchronous fchown(2) - Change ownership of a file.
+     * @param fd A file descriptor.
+     */
+    function fchown(fd: number, uid: number, gid: number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace fchown {
+        /**
+         * Asynchronous fchown(2) - Change ownership of a file.
+         * @param fd A file descriptor.
+         */
+        function __promisify__(fd: number, uid: number, gid: number): Promise<void>;
+    }
+
+    /**
+     * Synchronous fchown(2) - Change ownership of a file.
+     * @param fd A file descriptor.
+     */
+    function fchownSync(fd: number, uid: number, gid: number): void;
+
+    /**
+     * Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function lchown(path: PathLike, uid: number, gid: number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace lchown {
+        /**
+         * Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function __promisify__(path: PathLike, uid: number, gid: number): Promise<void>;
+    }
+
+    /**
+     * Synchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function lchownSync(path: PathLike, uid: number, gid: number): void;
+
+    /**
+     * Asynchronous chmod(2) - Change permissions of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+     */
+    function chmod(path: PathLike, mode: string | number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace chmod {
+        /**
+         * Asynchronous chmod(2) - Change permissions of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+         */
+        function __promisify__(path: PathLike, mode: string | number): Promise<void>;
+    }
+
+    /**
+     * Synchronous chmod(2) - Change permissions of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+     */
+    function chmodSync(path: PathLike, mode: string | number): void;
+
+    /**
+     * Asynchronous fchmod(2) - Change permissions of a file.
+     * @param fd A file descriptor.
+     * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+     */
+    function fchmod(fd: number, mode: string | number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace fchmod {
+        /**
+         * Asynchronous fchmod(2) - Change permissions of a file.
+         * @param fd A file descriptor.
+         * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+         */
+        function __promisify__(fd: number, mode: string | number): Promise<void>;
+    }
+
+    /**
+     * Synchronous fchmod(2) - Change permissions of a file.
+     * @param fd A file descriptor.
+     * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+     */
+    function fchmodSync(fd: number, mode: string | number): void;
+
+    /**
+     * Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+     */
+    function lchmod(path: PathLike, mode: string | number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace lchmod {
+        /**
+         * Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+         */
+        function __promisify__(path: PathLike, mode: string | number): Promise<void>;
+    }
+
+    /**
+     * Synchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+     */
+    function lchmodSync(path: PathLike, mode: string | number): void;
+
+    /**
+     * Asynchronous stat(2) - Get file status.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function stat(path: PathLike, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace stat {
+        /**
+         * Asynchronous stat(2) - Get file status.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function __promisify__(path: PathLike): Promise<Stats>;
+    }
+
+    /**
+     * Synchronous stat(2) - Get file status.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function statSync(path: PathLike): Stats;
+
+    /**
+     * Asynchronous fstat(2) - Get file status.
+     * @param fd A file descriptor.
+     */
+    function fstat(fd: number, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace fstat {
+        /**
+         * Asynchronous fstat(2) - Get file status.
+         * @param fd A file descriptor.
+         */
+        function __promisify__(fd: number): Promise<Stats>;
+    }
+
+    /**
+     * Synchronous fstat(2) - Get file status.
+     * @param fd A file descriptor.
+     */
+    function fstatSync(fd: number): Stats;
+
+    /**
+     * Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function lstat(path: PathLike, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace lstat {
+        /**
+         * Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function __promisify__(path: PathLike): Promise<Stats>;
+    }
+
+    /**
+     * Synchronous lstat(2) - Get file status. Does not dereference symbolic links.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function lstatSync(path: PathLike): Stats;
+
+    /**
+     * Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
+     * @param existingPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function link(existingPath: PathLike, newPath: PathLike, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace link {
+        /**
+         * Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
+         * @param existingPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function __promisify__(existingPath: PathLike, newPath: PathLike): Promise<void>;
+    }
+
+    /**
+     * Synchronous link(2) - Create a new link (also known as a hard link) to an existing file.
+     * @param existingPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function linkSync(existingPath: PathLike, newPath: PathLike): void;
+
+    /**
+     * Asynchronous symlink(2) - Create a new symbolic link to an existing file.
+     * @param target A path to an existing file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param path A path to the new symlink. If a URL is provided, it must use the \`file:\` protocol.
+     * @param type May be set to \`'dir'\`, \`'file'\`, or \`'junction'\` (default is \`'file'\`) and is only available on Windows (ignored on other platforms).
+     * When using \`'junction'\`, the \`target\` argument will automatically be normalized to an absolute path.
+     */
+    function symlink(target: PathLike, path: PathLike, type: symlink.Type | undefined | null, callback: NoParamCallback): void;
+
+    /**
+     * Asynchronous symlink(2) - Create a new symbolic link to an existing file.
+     * @param target A path to an existing file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param path A path to the new symlink. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function symlink(target: PathLike, path: PathLike, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace symlink {
+        /**
+         * Asynchronous symlink(2) - Create a new symbolic link to an existing file.
+         * @param target A path to an existing file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param path A path to the new symlink. If a URL is provided, it must use the \`file:\` protocol.
+         * @param type May be set to \`'dir'\`, \`'file'\`, or \`'junction'\` (default is \`'file'\`) and is only available on Windows (ignored on other platforms).
+         * When using \`'junction'\`, the \`target\` argument will automatically be normalized to an absolute path.
+         */
+        function __promisify__(target: PathLike, path: PathLike, type?: string | null): Promise<void>;
+
+        type Type = "dir" | "file" | "junction";
+    }
+
+    /**
+     * Synchronous symlink(2) - Create a new symbolic link to an existing file.
+     * @param target A path to an existing file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param path A path to the new symlink. If a URL is provided, it must use the \`file:\` protocol.
+     * @param type May be set to \`'dir'\`, \`'file'\`, or \`'junction'\` (default is \`'file'\`) and is only available on Windows (ignored on other platforms).
+     * When using \`'junction'\`, the \`target\` argument will automatically be normalized to an absolute path.
+     */
+    function symlinkSync(target: PathLike, path: PathLike, type?: symlink.Type | null): void;
+
+    /**
+     * Asynchronous readlink(2) - read value of a symbolic link.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readlink(
+        path: PathLike,
+        options: { encoding?: BufferEncoding | null } | BufferEncoding | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, linkString: string) => void
+    ): void;
+
+    /**
+     * Asynchronous readlink(2) - read value of a symbolic link.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readlink(path: PathLike, options: { encoding: "buffer" } | "buffer", callback: (err: NodeJS.ErrnoException | null, linkString: Buffer) => void): void;
+
+    /**
+     * Asynchronous readlink(2) - read value of a symbolic link.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readlink(path: PathLike, options: { encoding?: string | null } | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, linkString: string | Buffer) => void): void;
+
+    /**
+     * Asynchronous readlink(2) - read value of a symbolic link.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function readlink(path: PathLike, callback: (err: NodeJS.ErrnoException | null, linkString: string) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace readlink {
+        /**
+         * Asynchronous readlink(2) - read value of a symbolic link.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
+
+        /**
+         * Asynchronous readlink(2) - read value of a symbolic link.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
+
+        /**
+         * Asynchronous readlink(2) - read value of a symbolic link.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
+    }
+
+    /**
+     * Synchronous readlink(2) - read value of a symbolic link.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readlinkSync(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): string;
+
+    /**
+     * Synchronous readlink(2) - read value of a symbolic link.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readlinkSync(path: PathLike, options: { encoding: "buffer" } | "buffer"): Buffer;
+
+    /**
+     * Synchronous readlink(2) - read value of a symbolic link.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readlinkSync(path: PathLike, options?: { encoding?: string | null } | string | null): string | Buffer;
+
+    /**
+     * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function realpath(
+        path: PathLike,
+        options: { encoding?: BufferEncoding | null } | BufferEncoding | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, resolvedPath: string) => void
+    ): void;
+
+    /**
+     * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function realpath(path: PathLike, options: { encoding: "buffer" } | "buffer", callback: (err: NodeJS.ErrnoException | null, resolvedPath: Buffer) => void): void;
+
+    /**
+     * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function realpath(path: PathLike, options: { encoding?: string | null } | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string | Buffer) => void): void;
+
+    /**
+     * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function realpath(path: PathLike, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace realpath {
+        /**
+         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
+
+        /**
+         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
+
+        /**
+         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
+
+        function native(
+            path: PathLike,
+            options: { encoding?: BufferEncoding | null } | BufferEncoding | undefined | null,
+            callback: (err: NodeJS.ErrnoException | null, resolvedPath: string) => void
+        ): void;
+        function native(path: PathLike, options: { encoding: "buffer" } | "buffer", callback: (err: NodeJS.ErrnoException | null, resolvedPath: Buffer) => void): void;
+        function native(path: PathLike, options: { encoding?: string | null } | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string | Buffer) => void): void;
+        function native(path: PathLike, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string) => void): void;
+    }
+
+    /**
+     * Synchronous realpath(3) - return the canonicalized absolute pathname.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function realpathSync(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): string;
+
+    /**
+     * Synchronous realpath(3) - return the canonicalized absolute pathname.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function realpathSync(path: PathLike, options: { encoding: "buffer" } | "buffer"): Buffer;
+
+    /**
+     * Synchronous realpath(3) - return the canonicalized absolute pathname.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function realpathSync(path: PathLike, options?: { encoding?: string | null } | string | null): string | Buffer;
+
+    namespace realpathSync {
+        function native(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): string;
+        function native(path: PathLike, options: { encoding: "buffer" } | "buffer"): Buffer;
+        function native(path: PathLike, options?: { encoding?: string | null } | string | null): string | Buffer;
+    }
+
+    /**
+     * Asynchronous unlink(2) - delete a name and possibly the file it refers to.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function unlink(path: PathLike, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace unlink {
+        /**
+         * Asynchronous unlink(2) - delete a name and possibly the file it refers to.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function __promisify__(path: PathLike): Promise<void>;
+    }
+
+    /**
+     * Synchronous unlink(2) - delete a name and possibly the file it refers to.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function unlinkSync(path: PathLike): void;
+
+    interface RmDirOptions {
+        /**
+         * If \`true\`, perform a recursive directory removal. In
+         * recursive mode, errors are not reported if \`path\` does not exist, and
+         * operations are retried on failure.
+         * @experimental
+         * @default false
+         */
+        recursive?: boolean;
+    }
+
+    interface RmDirAsyncOptions extends RmDirOptions {
+        /**
+         * If an \`EMFILE\` error is encountered, Node.js will
+         * retry the operation with a linear backoff of 1ms longer on each try until the
+         * timeout duration passes this limit. This option is ignored if the \`recursive\`
+         * option is not \`true\`.
+         * @default 1000
+         */
+        emfileWait?: number;
+        /**
+         * If an \`EBUSY\`, \`ENOTEMPTY\`, or \`EPERM\` error is
+         * encountered, Node.js will retry the operation with a linear backoff wait of
+         * 100ms longer on each try. This option represents the number of retries. This
+         * option is ignored if the \`recursive\` option is not \`true\`.
+         * @default 3
+         */
+        maxBusyTries?: number;
+    }
+
+    /**
+     * Asynchronous rmdir(2) - delete a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function rmdir(path: PathLike, callback: NoParamCallback): void;
+    function rmdir(path: PathLike, options: RmDirAsyncOptions, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace rmdir {
+        /**
+         * Asynchronous rmdir(2) - delete a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function __promisify__(path: PathLike, options?: RmDirAsyncOptions): Promise<void>;
+    }
+
+    /**
+     * Synchronous rmdir(2) - delete a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function rmdirSync(path: PathLike, options?: RmDirOptions): void;
+
+    interface MakeDirectoryOptions {
+        /**
+         * Indicates whether parent folders should be created.
+         * @default false
+         */
+        recursive?: boolean;
+        /**
+         * A file mode. If a string is passed, it is parsed as an octal integer. If not specified
+         * @default 0o777.
+         */
+        mode?: number | string;
+    }
+
+    /**
+     * Asynchronous mkdir(2) - create a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+     * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+     */
+    function mkdir(path: PathLike, options: number | string | MakeDirectoryOptions | undefined | null, callback: NoParamCallback): void;
+
+    /**
+     * Asynchronous mkdir(2) - create a directory with a mode of \`0o777\`.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function mkdir(path: PathLike, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace mkdir {
+        /**
+         * Asynchronous mkdir(2) - create a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+         * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+         */
+        function __promisify__(path: PathLike, options?: number | string | MakeDirectoryOptions | null): Promise<void>;
+    }
+
+    /**
+     * Synchronous mkdir(2) - create a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+     * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+     */
+    function mkdirSync(path: PathLike, options?: number | string | MakeDirectoryOptions | null): void;
+
+    /**
+     * Asynchronously creates a unique temporary directory.
+     * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function mkdtemp(prefix: string, options: { encoding?: BufferEncoding | null } | BufferEncoding | undefined | null, callback: (err: NodeJS.ErrnoException | null, folder: string) => void): void;
+
+    /**
+     * Asynchronously creates a unique temporary directory.
+     * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function mkdtemp(prefix: string, options: "buffer" | { encoding: "buffer" }, callback: (err: NodeJS.ErrnoException | null, folder: Buffer) => void): void;
+
+    /**
+     * Asynchronously creates a unique temporary directory.
+     * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function mkdtemp(prefix: string, options: { encoding?: string | null } | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, folder: string | Buffer) => void): void;
+
+    /**
+     * Asynchronously creates a unique temporary directory.
+     * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+     */
+    function mkdtemp(prefix: string, callback: (err: NodeJS.ErrnoException | null, folder: string) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace mkdtemp {
+        /**
+         * Asynchronously creates a unique temporary directory.
+         * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(prefix: string, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
+
+        /**
+         * Asynchronously creates a unique temporary directory.
+         * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(prefix: string, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
+
+        /**
+         * Asynchronously creates a unique temporary directory.
+         * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(prefix: string, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
+    }
+
+    /**
+     * Synchronously creates a unique temporary directory.
+     * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function mkdtempSync(prefix: string, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): string;
+
+    /**
+     * Synchronously creates a unique temporary directory.
+     * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function mkdtempSync(prefix: string, options: { encoding: "buffer" } | "buffer"): Buffer;
+
+    /**
+     * Synchronously creates a unique temporary directory.
+     * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function mkdtempSync(prefix: string, options?: { encoding?: string | null } | string | null): string | Buffer;
+
+    /**
+     * Asynchronous readdir(3) - read a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readdir(
+        path: PathLike,
+        options: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, files: string[]) => void,
+    ): void;
+
+    /**
+     * Asynchronous readdir(3) - read a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readdir(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer", callback: (err: NodeJS.ErrnoException | null, files: Buffer[]) => void): void;
+
+    /**
+     * Asynchronous readdir(3) - read a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readdir(
+        path: PathLike,
+        options: { encoding?: string | null; withFileTypes?: false } | string | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, files: string[] | Buffer[]) => void,
+    ): void;
+
+    /**
+     * Asynchronous readdir(3) - read a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function readdir(path: PathLike, callback: (err: NodeJS.ErrnoException | null, files: string[]) => void): void;
+
+    /**
+     * Asynchronous readdir(3) - read a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options If called with \`withFileTypes: true\` the result data will be an array of Dirent.
+     */
+    function readdir(path: PathLike, options: { encoding?: string | null; withFileTypes: true }, callback: (err: NodeJS.ErrnoException | null, files: Dirent[]) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace readdir {
+        /**
+         * Asynchronous readdir(3) - read a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options?: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null): Promise<string[]>;
+
+        /**
+         * Asynchronous readdir(3) - read a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options: "buffer" | { encoding: "buffer"; withFileTypes?: false }): Promise<Buffer[]>;
+
+        /**
+         * Asynchronous readdir(3) - read a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options?: { encoding?: string | null; withFileTypes?: false } | string | null): Promise<string[] | Buffer[]>;
+
+        /**
+         * Asynchronous readdir(3) - read a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options If called with \`withFileTypes: true\` the result data will be an array of Dirent
+         */
+        function __promisify__(path: PathLike, options: { encoding?: string | null; withFileTypes: true }): Promise<Dirent[]>;
+    }
+
+    /**
+     * Synchronous readdir(3) - read a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readdirSync(path: PathLike, options?: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null): string[];
+
+    /**
+     * Synchronous readdir(3) - read a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readdirSync(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer"): Buffer[];
+
+    /**
+     * Synchronous readdir(3) - read a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+     */
+    function readdirSync(path: PathLike, options?: { encoding?: string | null; withFileTypes?: false } | string | null): string[] | Buffer[];
+
+    /**
+     * Synchronous readdir(3) - read a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options If called with \`withFileTypes: true\` the result data will be an array of Dirent.
+     */
+    function readdirSync(path: PathLike, options: { encoding?: string | null; withFileTypes: true }): Dirent[];
+
+    /**
+     * Asynchronous close(2) - close a file descriptor.
+     * @param fd A file descriptor.
+     */
+    function close(fd: number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace close {
+        /**
+         * Asynchronous close(2) - close a file descriptor.
+         * @param fd A file descriptor.
+         */
+        function __promisify__(fd: number): Promise<void>;
+    }
+
+    /**
+     * Synchronous close(2) - close a file descriptor.
+     * @param fd A file descriptor.
+     */
+    function closeSync(fd: number): void;
+
+    /**
+     * Asynchronous open(2) - open and possibly create a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param mode A file mode. If a string is passed, it is parsed as an octal integer. If not supplied, defaults to \`0o666\`.
+     */
+    function open(path: PathLike, flags: string | number, mode: string | number | undefined | null, callback: (err: NodeJS.ErrnoException | null, fd: number) => void): void;
+
+    /**
+     * Asynchronous open(2) - open and possibly create a file. If the file is created, its mode will be \`0o666\`.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     */
+    function open(path: PathLike, flags: string | number, callback: (err: NodeJS.ErrnoException | null, fd: number) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace open {
+        /**
+         * Asynchronous open(2) - open and possibly create a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param mode A file mode. If a string is passed, it is parsed as an octal integer. If not supplied, defaults to \`0o666\`.
+         */
+        function __promisify__(path: PathLike, flags: string | number, mode?: string | number | null): Promise<number>;
+    }
+
+    /**
+     * Synchronous open(2) - open and possibly create a file, returning a file descriptor..
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param mode A file mode. If a string is passed, it is parsed as an octal integer. If not supplied, defaults to \`0o666\`.
+     */
+    function openSync(path: PathLike, flags: string | number, mode?: string | number | null): number;
+
+    /**
+     * Asynchronously change file timestamps of the file referenced by the supplied path.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param atime The last access time. If a string is provided, it will be coerced to number.
+     * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+     */
+    function utimes(path: PathLike, atime: string | number | Date, mtime: string | number | Date, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace utimes {
+        /**
+         * Asynchronously change file timestamps of the file referenced by the supplied path.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param atime The last access time. If a string is provided, it will be coerced to number.
+         * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+         */
+        function __promisify__(path: PathLike, atime: string | number | Date, mtime: string | number | Date): Promise<void>;
+    }
+
+    /**
+     * Synchronously change file timestamps of the file referenced by the supplied path.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param atime The last access time. If a string is provided, it will be coerced to number.
+     * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+     */
+    function utimesSync(path: PathLike, atime: string | number | Date, mtime: string | number | Date): void;
+
+    /**
+     * Asynchronously change file timestamps of the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     * @param atime The last access time. If a string is provided, it will be coerced to number.
+     * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+     */
+    function futimes(fd: number, atime: string | number | Date, mtime: string | number | Date, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace futimes {
+        /**
+         * Asynchronously change file timestamps of the file referenced by the supplied file descriptor.
+         * @param fd A file descriptor.
+         * @param atime The last access time. If a string is provided, it will be coerced to number.
+         * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+         */
+        function __promisify__(fd: number, atime: string | number | Date, mtime: string | number | Date): Promise<void>;
+    }
+
+    /**
+     * Synchronously change file timestamps of the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     * @param atime The last access time. If a string is provided, it will be coerced to number.
+     * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+     */
+    function futimesSync(fd: number, atime: string | number | Date, mtime: string | number | Date): void;
+
+    /**
+     * Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
+     * @param fd A file descriptor.
+     */
+    function fsync(fd: number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace fsync {
+        /**
+         * Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
+         * @param fd A file descriptor.
+         */
+        function __promisify__(fd: number): Promise<void>;
+    }
+
+    /**
+     * Synchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
+     * @param fd A file descriptor.
+     */
+    function fsyncSync(fd: number): void;
+
+    /**
+     * Asynchronously writes \`buffer\` to the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
+     * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
+     * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+     */
+    function write<TBuffer extends NodeJS.ArrayBufferView>(
+        fd: number,
+        buffer: TBuffer,
+        offset: number | undefined | null,
+        length: number | undefined | null,
+        position: number | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, written: number, buffer: TBuffer) => void,
+    ): void;
+
+    /**
+     * Asynchronously writes \`buffer\` to the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
+     * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
+     */
+    function write<TBuffer extends NodeJS.ArrayBufferView>(
+        fd: number,
+        buffer: TBuffer,
+        offset: number | undefined | null,
+        length: number | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, written: number, buffer: TBuffer) => void,
+    ): void;
+
+    /**
+     * Asynchronously writes \`buffer\` to the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
+     */
+    function write<TBuffer extends NodeJS.ArrayBufferView>(
+        fd: number,
+        buffer: TBuffer,
+        offset: number | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, written: number, buffer: TBuffer) => void
+    ): void;
+
+    /**
+     * Asynchronously writes \`buffer\` to the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     */
+    function write<TBuffer extends NodeJS.ArrayBufferView>(fd: number, buffer: TBuffer, callback: (err: NodeJS.ErrnoException | null, written: number, buffer: TBuffer) => void): void;
+
+    /**
+     * Asynchronously writes \`string\` to the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+     * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+     * @param encoding The expected string encoding.
+     */
+    function write(
+        fd: number,
+        string: any,
+        position: number | undefined | null,
+        encoding: string | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, written: number, str: string) => void,
+    ): void;
+
+    /**
+     * Asynchronously writes \`string\` to the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+     * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+     */
+    function write(fd: number, string: any, position: number | undefined | null, callback: (err: NodeJS.ErrnoException | null, written: number, str: string) => void): void;
+
+    /**
+     * Asynchronously writes \`string\` to the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+     */
+    function write(fd: number, string: any, callback: (err: NodeJS.ErrnoException | null, written: number, str: string) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace write {
+        /**
+         * Asynchronously writes \`buffer\` to the file referenced by the supplied file descriptor.
+         * @param fd A file descriptor.
+         * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
+         * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
+         * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+         */
+        function __promisify__<TBuffer extends NodeJS.ArrayBufferView>(
+            fd: number,
+            buffer?: TBuffer,
+            offset?: number,
+            length?: number,
+            position?: number | null,
+        ): Promise<{ bytesWritten: number, buffer: TBuffer }>;
+
+        /**
+         * Asynchronously writes \`string\` to the file referenced by the supplied file descriptor.
+         * @param fd A file descriptor.
+         * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+         * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+         * @param encoding The expected string encoding.
+         */
+        function __promisify__(fd: number, string: any, position?: number | null, encoding?: string | null): Promise<{ bytesWritten: number, buffer: string }>;
+    }
+
+    /**
+     * Synchronously writes \`buffer\` to the file referenced by the supplied file descriptor, returning the number of bytes written.
+     * @param fd A file descriptor.
+     * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
+     * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
+     * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+     */
+    function writeSync(fd: number, buffer: NodeJS.ArrayBufferView, offset?: number | null, length?: number | null, position?: number | null): number;
+
+    /**
+     * Synchronously writes \`string\` to the file referenced by the supplied file descriptor, returning the number of bytes written.
+     * @param fd A file descriptor.
+     * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+     * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+     * @param encoding The expected string encoding.
+     */
+    function writeSync(fd: number, string: any, position?: number | null, encoding?: string | null): number;
+
+    /**
+     * Asynchronously reads data from the file referenced by the supplied file descriptor.
+     * @param fd A file descriptor.
+     * @param buffer The buffer that the data will be written to.
+     * @param offset The offset in the buffer at which to start writing.
+     * @param length The number of bytes to read.
+     * @param position The offset from the beginning of the file from which data should be read. If \`null\`, data will be read from the current position.
+     */
+    function read<TBuffer extends NodeJS.ArrayBufferView>(
+        fd: number,
+        buffer: TBuffer,
+        offset: number,
+        length: number,
+        position: number | null,
+        callback: (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: TBuffer) => void,
+    ): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace read {
+        /**
+         * @param fd A file descriptor.
+         * @param buffer The buffer that the data will be written to.
+         * @param offset The offset in the buffer at which to start writing.
+         * @param length The number of bytes to read.
+         * @param position The offset from the beginning of the file from which data should be read. If \`null\`, data will be read from the current position.
+         */
+        function __promisify__<TBuffer extends NodeJS.ArrayBufferView>(
+            fd: number,
+            buffer: TBuffer,
+            offset: number,
+            length: number,
+            position: number | null
+        ): Promise<{ bytesRead: number, buffer: TBuffer }>;
+    }
+
+    /**
+     * Synchronously reads data from the file referenced by the supplied file descriptor, returning the number of bytes read.
+     * @param fd A file descriptor.
+     * @param buffer The buffer that the data will be written to.
+     * @param offset The offset in the buffer at which to start writing.
+     * @param length The number of bytes to read.
+     * @param position The offset from the beginning of the file from which data should be read. If \`null\`, data will be read from the current position.
+     */
+    function readSync(fd: number, buffer: NodeJS.ArrayBufferView, offset: number, length: number, position: number | null): number;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options An object that may contain an optional flag.
+     * If a flag is not provided, it defaults to \`'r'\`.
+     */
+    function readFile(path: PathLike | number, options: { encoding?: null; flag?: string; } | undefined | null, callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void): void;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
+     * If a flag is not provided, it defaults to \`'r'\`.
+     */
+    function readFile(path: PathLike | number, options: { encoding: string; flag?: string; } | string, callback: (err: NodeJS.ErrnoException | null, data: string) => void): void;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
+     * If a flag is not provided, it defaults to \`'r'\`.
+     */
+    function readFile(
+        path: PathLike | number,
+        options: { encoding?: string | null; flag?: string; } | string | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, data: string | Buffer) => void,
+    ): void;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     */
+    function readFile(path: PathLike | number, callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace readFile {
+        /**
+         * Asynchronously reads the entire contents of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+         * @param options An object that may contain an optional flag.
+         * If a flag is not provided, it defaults to \`'r'\`.
+         */
+        function __promisify__(path: PathLike | number, options?: { encoding?: null; flag?: string; } | null): Promise<Buffer>;
+
+        /**
+         * Asynchronously reads the entire contents of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+         * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
+         * If a flag is not provided, it defaults to \`'r'\`.
+         */
+        function __promisify__(path: PathLike | number, options: { encoding: string; flag?: string; } | string): Promise<string>;
+
+        /**
+         * Asynchronously reads the entire contents of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+         * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
+         * If a flag is not provided, it defaults to \`'r'\`.
+         */
+        function __promisify__(path: PathLike | number, options?: { encoding?: string | null; flag?: string; } | string | null): Promise<string | Buffer>;
+    }
+
+    /**
+     * Synchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options An object that may contain an optional flag. If a flag is not provided, it defaults to \`'r'\`.
+     */
+    function readFileSync(path: PathLike | number, options?: { encoding?: null; flag?: string; } | null): Buffer;
+
+    /**
+     * Synchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
+     * If a flag is not provided, it defaults to \`'r'\`.
+     */
+    function readFileSync(path: PathLike | number, options: { encoding: string; flag?: string; } | string): string;
+
+    /**
+     * Synchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
+     * If a flag is not provided, it defaults to \`'r'\`.
+     */
+    function readFileSync(path: PathLike | number, options?: { encoding?: string | null; flag?: string; } | string | null): string | Buffer;
+
+    type WriteFileOptions = { encoding?: string | null; mode?: number | string; flag?: string; } | string | null;
+
+    /**
+     * Asynchronously writes data to a file, replacing the file if it already exists.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
+     * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+     * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+     * If \`mode\` is not supplied, the default of \`0o666\` is used.
+     * If \`mode\` is a string, it is parsed as an octal integer.
+     * If \`flag\` is not supplied, the default of \`'w'\` is used.
+     */
+    function writeFile(path: PathLike | number, data: any, options: WriteFileOptions, callback: NoParamCallback): void;
+
+    /**
+     * Asynchronously writes data to a file, replacing the file if it already exists.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
+     */
+    function writeFile(path: PathLike | number, data: any, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace writeFile {
+        /**
+         * Asynchronously writes data to a file, replacing the file if it already exists.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+         * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
+         * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+         * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+         * If \`mode\` is not supplied, the default of \`0o666\` is used.
+         * If \`mode\` is a string, it is parsed as an octal integer.
+         * If \`flag\` is not supplied, the default of \`'w'\` is used.
+         */
+        function __promisify__(path: PathLike | number, data: any, options?: WriteFileOptions): Promise<void>;
+    }
+
+    /**
+     * Synchronously writes data to a file, replacing the file if it already exists.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
+     * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+     * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+     * If \`mode\` is not supplied, the default of \`0o666\` is used.
+     * If \`mode\` is a string, it is parsed as an octal integer.
+     * If \`flag\` is not supplied, the default of \`'w'\` is used.
+     */
+    function writeFileSync(path: PathLike | number, data: any, options?: WriteFileOptions): void;
+
+    /**
+     * Asynchronously append data to a file, creating the file if it does not exist.
+     * @param file A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
+     * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+     * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+     * If \`mode\` is not supplied, the default of \`0o666\` is used.
+     * If \`mode\` is a string, it is parsed as an octal integer.
+     * If \`flag\` is not supplied, the default of \`'a'\` is used.
+     */
+    function appendFile(file: PathLike | number, data: any, options: WriteFileOptions, callback: NoParamCallback): void;
+
+    /**
+     * Asynchronously append data to a file, creating the file if it does not exist.
+     * @param file A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
+     */
+    function appendFile(file: PathLike | number, data: any, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace appendFile {
+        /**
+         * Asynchronously append data to a file, creating the file if it does not exist.
+         * @param file A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+         * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
+         * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+         * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+         * If \`mode\` is not supplied, the default of \`0o666\` is used.
+         * If \`mode\` is a string, it is parsed as an octal integer.
+         * If \`flag\` is not supplied, the default of \`'a'\` is used.
+         */
+        function __promisify__(file: PathLike | number, data: any, options?: WriteFileOptions): Promise<void>;
+    }
+
+    /**
+     * Synchronously append data to a file, creating the file if it does not exist.
+     * @param file A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
+     * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+     * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+     * If \`mode\` is not supplied, the default of \`0o666\` is used.
+     * If \`mode\` is a string, it is parsed as an octal integer.
+     * If \`flag\` is not supplied, the default of \`'a'\` is used.
+     */
+    function appendFileSync(file: PathLike | number, data: any, options?: WriteFileOptions): void;
+
+    /**
+     * Watch for changes on \`filename\`. The callback \`listener\` will be called each time the file is accessed.
+     */
+    function watchFile(filename: PathLike, options: { persistent?: boolean; interval?: number; } | undefined, listener: (curr: Stats, prev: Stats) => void): void;
+
+    /**
+     * Watch for changes on \`filename\`. The callback \`listener\` will be called each time the file is accessed.
+     * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function watchFile(filename: PathLike, listener: (curr: Stats, prev: Stats) => void): void;
+
+    /**
+     * Stop watching for changes on \`filename\`.
+     * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function unwatchFile(filename: PathLike, listener?: (curr: Stats, prev: Stats) => void): void;
+
+    /**
+     * Watch for changes on \`filename\`, where \`filename\` is either a file or a directory, returning an \`FSWatcher\`.
+     * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * @param options Either the encoding for the filename provided to the listener, or an object optionally specifying encoding, persistent, and recursive options.
+     * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+     * If \`persistent\` is not supplied, the default of \`true\` is used.
+     * If \`recursive\` is not supplied, the default of \`false\` is used.
+     */
+    function watch(
+        filename: PathLike,
+        options: { encoding?: BufferEncoding | null, persistent?: boolean, recursive?: boolean } | BufferEncoding | undefined | null,
+        listener?: (event: string, filename: string) => void,
+    ): FSWatcher;
+
+    /**
+     * Watch for changes on \`filename\`, where \`filename\` is either a file or a directory, returning an \`FSWatcher\`.
+     * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * @param options Either the encoding for the filename provided to the listener, or an object optionally specifying encoding, persistent, and recursive options.
+     * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+     * If \`persistent\` is not supplied, the default of \`true\` is used.
+     * If \`recursive\` is not supplied, the default of \`false\` is used.
+     */
+    function watch(filename: PathLike, options: { encoding: "buffer", persistent?: boolean, recursive?: boolean } | "buffer", listener?: (event: string, filename: Buffer) => void): FSWatcher;
+
+    /**
+     * Watch for changes on \`filename\`, where \`filename\` is either a file or a directory, returning an \`FSWatcher\`.
+     * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * @param options Either the encoding for the filename provided to the listener, or an object optionally specifying encoding, persistent, and recursive options.
+     * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+     * If \`persistent\` is not supplied, the default of \`true\` is used.
+     * If \`recursive\` is not supplied, the default of \`false\` is used.
+     */
+    function watch(
+        filename: PathLike,
+        options: { encoding?: string | null, persistent?: boolean, recursive?: boolean } | string | null,
+        listener?: (event: string, filename: string | Buffer) => void,
+    ): FSWatcher;
+
+    /**
+     * Watch for changes on \`filename\`, where \`filename\` is either a file or a directory, returning an \`FSWatcher\`.
+     * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function watch(filename: PathLike, listener?: (event: string, filename: string) => any): FSWatcher;
+
+    /**
+     * Asynchronously tests whether or not the given path exists by checking with the file system.
+     * @deprecated
+     * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function exists(path: PathLike, callback: (exists: boolean) => void): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace exists {
+        /**
+         * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         */
+        function __promisify__(path: PathLike): Promise<boolean>;
+    }
+
+    /**
+     * Synchronously tests whether or not the given path exists by checking with the file system.
+     * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function existsSync(path: PathLike): boolean;
+
+    namespace constants {
+        // File Access Constants
+
+        /** Constant for fs.access(). File is visible to the calling process. */
+        const F_OK: number;
+
+        /** Constant for fs.access(). File can be read by the calling process. */
+        const R_OK: number;
+
+        /** Constant for fs.access(). File can be written by the calling process. */
+        const W_OK: number;
+
+        /** Constant for fs.access(). File can be executed by the calling process. */
+        const X_OK: number;
+
+        // File Copy Constants
+
+        /** Constant for fs.copyFile. Flag indicating the destination file should not be overwritten if it already exists. */
+        const COPYFILE_EXCL: number;
+
+        /**
+         * Constant for fs.copyFile. copy operation will attempt to create a copy-on-write reflink.
+         * If the underlying platform does not support copy-on-write, then a fallback copy mechanism is used.
+         */
+        const COPYFILE_FICLONE: number;
+
+        /**
+         * Constant for fs.copyFile. Copy operation will attempt to create a copy-on-write reflink.
+         * If the underlying platform does not support copy-on-write, then the operation will fail with an error.
+         */
+        const COPYFILE_FICLONE_FORCE: number;
+
+        // File Open Constants
+
+        /** Constant for fs.open(). Flag indicating to open a file for read-only access. */
+        const O_RDONLY: number;
+
+        /** Constant for fs.open(). Flag indicating to open a file for write-only access. */
+        const O_WRONLY: number;
+
+        /** Constant for fs.open(). Flag indicating to open a file for read-write access. */
+        const O_RDWR: number;
+
+        /** Constant for fs.open(). Flag indicating to create the file if it does not already exist. */
+        const O_CREAT: number;
+
+        /** Constant for fs.open(). Flag indicating that opening a file should fail if the O_CREAT flag is set and the file already exists. */
+        const O_EXCL: number;
+
+        /**
+         * Constant for fs.open(). Flag indicating that if path identifies a terminal device,
+         * opening the path shall not cause that terminal to become the controlling terminal for the process
+         * (if the process does not already have one).
+         */
+        const O_NOCTTY: number;
+
+        /** Constant for fs.open(). Flag indicating that if the file exists and is a regular file, and the file is opened successfully for write access, its length shall be truncated to zero. */
+        const O_TRUNC: number;
+
+        /** Constant for fs.open(). Flag indicating that data will be appended to the end of the file. */
+        const O_APPEND: number;
+
+        /** Constant for fs.open(). Flag indicating that the open should fail if the path is not a directory. */
+        const O_DIRECTORY: number;
+
+        /**
+         * constant for fs.open().
+         * Flag indicating reading accesses to the file system will no longer result in
+         * an update to the atime information associated with the file.
+         * This flag is available on Linux operating systems only.
+         */
+        const O_NOATIME: number;
+
+        /** Constant for fs.open(). Flag indicating that the open should fail if the path is a symbolic link. */
+        const O_NOFOLLOW: number;
+
+        /** Constant for fs.open(). Flag indicating that the file is opened for synchronous I/O. */
+        const O_SYNC: number;
+
+        /** Constant for fs.open(). Flag indicating that the file is opened for synchronous I/O with write operations waiting for data integrity. */
+        const O_DSYNC: number;
+
+        /** Constant for fs.open(). Flag indicating to open the symbolic link itself rather than the resource it is pointing to. */
+        const O_SYMLINK: number;
+
+        /** Constant for fs.open(). When set, an attempt will be made to minimize caching effects of file I/O. */
+        const O_DIRECT: number;
+
+        /** Constant for fs.open(). Flag indicating to open the file in nonblocking mode when possible. */
+        const O_NONBLOCK: number;
+
+        // File Type Constants
+
+        /** Constant for fs.Stats mode property for determining a file's type. Bit mask used to extract the file type code. */
+        const S_IFMT: number;
+
+        /** Constant for fs.Stats mode property for determining a file's type. File type constant for a regular file. */
+        const S_IFREG: number;
+
+        /** Constant for fs.Stats mode property for determining a file's type. File type constant for a directory. */
+        const S_IFDIR: number;
+
+        /** Constant for fs.Stats mode property for determining a file's type. File type constant for a character-oriented device file. */
+        const S_IFCHR: number;
+
+        /** Constant for fs.Stats mode property for determining a file's type. File type constant for a block-oriented device file. */
+        const S_IFBLK: number;
+
+        /** Constant for fs.Stats mode property for determining a file's type. File type constant for a FIFO/pipe. */
+        const S_IFIFO: number;
+
+        /** Constant for fs.Stats mode property for determining a file's type. File type constant for a symbolic link. */
+        const S_IFLNK: number;
+
+        /** Constant for fs.Stats mode property for determining a file's type. File type constant for a socket. */
+        const S_IFSOCK: number;
+
+        // File Mode Constants
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating readable, writable and executable by owner. */
+        const S_IRWXU: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating readable by owner. */
+        const S_IRUSR: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating writable by owner. */
+        const S_IWUSR: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating executable by owner. */
+        const S_IXUSR: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating readable, writable and executable by group. */
+        const S_IRWXG: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating readable by group. */
+        const S_IRGRP: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating writable by group. */
+        const S_IWGRP: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating executable by group. */
+        const S_IXGRP: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating readable, writable and executable by others. */
+        const S_IRWXO: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating readable by others. */
+        const S_IROTH: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating writable by others. */
+        const S_IWOTH: number;
+
+        /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating executable by others. */
+        const S_IXOTH: number;
+
+        /**
+         * When set, a memory file mapping is used to access the file. This flag
+         * is available on Windows operating systems only. On other operating systems,
+         * this flag is ignored.
+         */
+        const UV_FS_O_FILEMAP: number;
+    }
+
+    /**
+     * Asynchronously tests a user's permissions for the file specified by path.
+     * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function access(path: PathLike, mode: number | undefined, callback: NoParamCallback): void;
+
+    /**
+     * Asynchronously tests a user's permissions for the file specified by path.
+     * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function access(path: PathLike, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace access {
+        /**
+         * Asynchronously tests a user's permissions for the file specified by path.
+         * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         */
+        function __promisify__(path: PathLike, mode?: number): Promise<void>;
+    }
+
+    /**
+     * Synchronously tests a user's permissions for the file specified by path.
+     * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function accessSync(path: PathLike, mode?: number): void;
+
+    /**
+     * Returns a new \`ReadStream\` object.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function createReadStream(path: PathLike, options?: string | {
+        flags?: string;
+        encoding?: string;
+        fd?: number;
+        mode?: number;
+        autoClose?: boolean;
+        /**
+         * @default false
+         */
+        emitClose?: boolean;
+        start?: number;
+        end?: number;
+        highWaterMark?: number;
+    }): ReadStream;
+
+    /**
+     * Returns a new \`WriteStream\` object.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     */
+    function createWriteStream(path: PathLike, options?: string | {
+        flags?: string;
+        encoding?: string;
+        fd?: number;
+        mode?: number;
+        autoClose?: boolean;
+        emitClose?: boolean;
+        start?: number;
+        highWaterMark?: number;
+    }): WriteStream;
+
+    /**
+     * Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
+     * @param fd A file descriptor.
+     */
+    function fdatasync(fd: number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace fdatasync {
+        /**
+         * Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
+         * @param fd A file descriptor.
+         */
+        function __promisify__(fd: number): Promise<void>;
+    }
+
+    /**
+     * Synchronous fdatasync(2) - synchronize a file's in-core state with storage device.
+     * @param fd A file descriptor.
+     */
+    function fdatasyncSync(fd: number): void;
+
+    /**
+     * Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
+     * No arguments other than a possible exception are given to the callback function.
+     * Node.js makes no guarantees about the atomicity of the copy operation.
+     * If an error occurs after the destination file has been opened for writing, Node.js will attempt
+     * to remove the destination.
+     * @param src A path to the source file.
+     * @param dest A path to the destination file.
+     */
+    function copyFile(src: PathLike, dest: PathLike, callback: NoParamCallback): void;
+    /**
+     * Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
+     * No arguments other than a possible exception are given to the callback function.
+     * Node.js makes no guarantees about the atomicity of the copy operation.
+     * If an error occurs after the destination file has been opened for writing, Node.js will attempt
+     * to remove the destination.
+     * @param src A path to the source file.
+     * @param dest A path to the destination file.
+     * @param flags An integer that specifies the behavior of the copy operation. The only supported flag is fs.constants.COPYFILE_EXCL, which causes the copy operation to fail if dest already exists.
+     */
+    function copyFile(src: PathLike, dest: PathLike, flags: number, callback: NoParamCallback): void;
+
+    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    namespace copyFile {
+        /**
+         * Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
+         * No arguments other than a possible exception are given to the callback function.
+         * Node.js makes no guarantees about the atomicity of the copy operation.
+         * If an error occurs after the destination file has been opened for writing, Node.js will attempt
+         * to remove the destination.
+         * @param src A path to the source file.
+         * @param dest A path to the destination file.
+         * @param flags An optional integer that specifies the behavior of the copy operation.
+         * The only supported flag is fs.constants.COPYFILE_EXCL,
+         * which causes the copy operation to fail if dest already exists.
+         */
+        function __promisify__(src: PathLike, dst: PathLike, flags?: number): Promise<void>;
+    }
+
+    /**
+     * Synchronously copies src to dest. By default, dest is overwritten if it already exists.
+     * Node.js makes no guarantees about the atomicity of the copy operation.
+     * If an error occurs after the destination file has been opened for writing, Node.js will attempt
+     * to remove the destination.
+     * @param src A path to the source file.
+     * @param dest A path to the destination file.
+     * @param flags An optional integer that specifies the behavior of the copy operation.
+     * The only supported flag is fs.constants.COPYFILE_EXCL, which causes the copy operation to fail if dest already exists.
+     */
+    function copyFileSync(src: PathLike, dest: PathLike, flags?: number): void;
+
+    /**
+     * Write an array of ArrayBufferViews to the file specified by fd using writev().
+     * position is the offset from the beginning of the file where this data should be written.
+     * It is unsafe to use fs.writev() multiple times on the same file without waiting for the callback. For this scenario, use fs.createWriteStream().
+     * On Linux, positional writes don't work when the file is opened in append mode.
+     * The kernel ignores the position argument and always appends the data to the end of the file.
+     */
+    function writev(
+        fd: number,
+        buffers: NodeJS.ArrayBufferView[],
+        cb: (err: NodeJS.ErrnoException | null, bytesWritten: number, buffers: NodeJS.ArrayBufferView[]) => void
+    ): void;
+    function writev(
+        fd: number,
+        buffers: NodeJS.ArrayBufferView[],
+        position: number,
+        cb: (err: NodeJS.ErrnoException | null, bytesWritten: number, buffers: NodeJS.ArrayBufferView[]) => void
+    ): void;
+
+    interface WriteVResult {
+        bytesWritten: number;
+        buffers: NodeJS.ArrayBufferView[];
+    }
+
+    namespace writev {
+        function __promisify__(fd: number, buffers: NodeJS.ArrayBufferView[], position?: number): Promise<WriteVResult>;
+    }
+
+    /**
+     * See \`writev\`.
+     */
+    function writevSync(fd: number, buffers: NodeJS.ArrayBufferView[], position?: number): number;
+
+    interface OpenDirOptions {
+        encoding?: BufferEncoding;
+    }
+
+    function opendirSync(path: string, options?: OpenDirOptions): Dir;
+
+    function opendir(path: string, cb: (err: NodeJS.ErrnoException | null, dir: Dir) => void): void;
+    function opendir(path: string, options: OpenDirOptions, cb: (err: NodeJS.ErrnoException | null, dir: Dir) => void): void;
+
+    namespace opendir {
+        function __promisify__(path: string, options?: OpenDirOptions): Promise<Dir>;
+    }
+
+    namespace promises {
+        interface FileHandle {
+            /**
+             * Gets the file descriptor for this file handle.
+             */
+            readonly fd: number;
+
+            /**
+             * Asynchronously append data to a file, creating the file if it does not exist. The underlying file will _not_ be closed automatically.
+             * The \`FileHandle\` must have been opened for appending.
+             * @param data The data to write. If something other than a \`Buffer\` or \`Uint8Array\` is provided, the value is coerced to a string.
+             * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+             * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+             * If \`mode\` is not supplied, the default of \`0o666\` is used.
+             * If \`mode\` is a string, it is parsed as an octal integer.
+             * If \`flag\` is not supplied, the default of \`'a'\` is used.
+             */
+            appendFile(data: any, options?: { encoding?: string | null, mode?: string | number, flag?: string | number } | string | null): Promise<void>;
+
+            /**
+             * Asynchronous fchown(2) - Change ownership of a file.
+             */
+            chown(uid: number, gid: number): Promise<void>;
+
+            /**
+             * Asynchronous fchmod(2) - Change permissions of a file.
+             * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+             */
+            chmod(mode: string | number): Promise<void>;
+
+            /**
+             * Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
+             */
+            datasync(): Promise<void>;
+
+            /**
+             * Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
+             */
+            sync(): Promise<void>;
+
+            /**
+             * Asynchronously reads data from the file.
+             * The \`FileHandle\` must have been opened for reading.
+             * @param buffer The buffer that the data will be written to.
+             * @param offset The offset in the buffer at which to start writing.
+             * @param length The number of bytes to read.
+             * @param position The offset from the beginning of the file from which data should be read. If \`null\`, data will be read from the current position.
+             */
+            read<TBuffer extends Uint8Array>(buffer: TBuffer, offset?: number | null, length?: number | null, position?: number | null): Promise<{ bytesRead: number, buffer: TBuffer }>;
+
+            /**
+             * Asynchronously reads the entire contents of a file. The underlying file will _not_ be closed automatically.
+             * The \`FileHandle\` must have been opened for reading.
+             * @param options An object that may contain an optional flag.
+             * If a flag is not provided, it defaults to \`'r'\`.
+             */
+            readFile(options?: { encoding?: null, flag?: string | number } | null): Promise<Buffer>;
+
+            /**
+             * Asynchronously reads the entire contents of a file. The underlying file will _not_ be closed automatically.
+             * The \`FileHandle\` must have been opened for reading.
+             * @param options An object that may contain an optional flag.
+             * If a flag is not provided, it defaults to \`'r'\`.
+             */
+            readFile(options: { encoding: BufferEncoding, flag?: string | number } | BufferEncoding): Promise<string>;
+
+            /**
+             * Asynchronously reads the entire contents of a file. The underlying file will _not_ be closed automatically.
+             * The \`FileHandle\` must have been opened for reading.
+             * @param options An object that may contain an optional flag.
+             * If a flag is not provided, it defaults to \`'r'\`.
+             */
+            readFile(options?: { encoding?: string | null, flag?: string | number } | string | null): Promise<string | Buffer>;
+
+            /**
+             * Asynchronous fstat(2) - Get file status.
+             */
+            stat(): Promise<Stats>;
+
+            /**
+             * Asynchronous ftruncate(2) - Truncate a file to a specified length.
+             * @param len If not specified, defaults to \`0\`.
+             */
+            truncate(len?: number): Promise<void>;
+
+            /**
+             * Asynchronously change file timestamps of the file.
+             * @param atime The last access time. If a string is provided, it will be coerced to number.
+             * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+             */
+            utimes(atime: string | number | Date, mtime: string | number | Date): Promise<void>;
+
+            /**
+             * Asynchronously writes \`buffer\` to the file.
+             * The \`FileHandle\` must have been opened for writing.
+             * @param buffer The buffer that the data will be written to.
+             * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
+             * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
+             * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+             */
+            write<TBuffer extends Uint8Array>(buffer: TBuffer, offset?: number | null, length?: number | null, position?: number | null): Promise<{ bytesWritten: number, buffer: TBuffer }>;
+
+            /**
+             * Asynchronously writes \`string\` to the file.
+             * The \`FileHandle\` must have been opened for writing.
+             * It is unsafe to call \`write()\` multiple times on the same file without waiting for the \`Promise\`
+             * to be resolved (or rejected). For this scenario, \`fs.createWriteStream\` is strongly recommended.
+             * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+             * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+             * @param encoding The expected string encoding.
+             */
+            write(data: any, position?: number | null, encoding?: string | null): Promise<{ bytesWritten: number, buffer: string }>;
+
+            /**
+             * Asynchronously writes data to a file, replacing the file if it already exists. The underlying file will _not_ be closed automatically.
+             * The \`FileHandle\` must have been opened for writing.
+             * It is unsafe to call \`writeFile()\` multiple times on the same file without waiting for the \`Promise\` to be resolved (or rejected).
+             * @param data The data to write. If something other than a \`Buffer\` or \`Uint8Array\` is provided, the value is coerced to a string.
+             * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+             * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+             * If \`mode\` is not supplied, the default of \`0o666\` is used.
+             * If \`mode\` is a string, it is parsed as an octal integer.
+             * If \`flag\` is not supplied, the default of \`'w'\` is used.
+             */
+            writeFile(data: any, options?: { encoding?: string | null, mode?: string | number, flag?: string | number } | string | null): Promise<void>;
+
+            /**
+             * See \`fs.writev\` promisified version.
+             */
+            writev(buffers: NodeJS.ArrayBufferView[], position?: number): Promise<WriteVResult>;
+
+            /**
+             * Asynchronous close(2) - close a \`FileHandle\`.
+             */
+            close(): Promise<void>;
+        }
+
+        /**
+         * Asynchronously tests a user's permissions for the file specified by path.
+         * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         */
+        function access(path: PathLike, mode?: number): Promise<void>;
+
+        /**
+         * Asynchronously copies \`src\` to \`dest\`. By default, \`dest\` is overwritten if it already exists.
+         * Node.js makes no guarantees about the atomicity of the copy operation.
+         * If an error occurs after the destination file has been opened for writing, Node.js will attempt
+         * to remove the destination.
+         * @param src A path to the source file.
+         * @param dest A path to the destination file.
+         * @param flags An optional integer that specifies the behavior of the copy operation. The only
+         * supported flag is \`fs.constants.COPYFILE_EXCL\`, which causes the copy operation to fail if
+         * \`dest\` already exists.
+         */
+        function copyFile(src: PathLike, dest: PathLike, flags?: number): Promise<void>;
+
+        /**
+         * Asynchronous open(2) - open and possibly create a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param mode A file mode. If a string is passed, it is parsed as an octal integer. If not
+         * supplied, defaults to \`0o666\`.
+         */
+        function open(path: PathLike, flags: string | number, mode?: string | number): Promise<FileHandle>;
+
+        /**
+         * Asynchronously reads data from the file referenced by the supplied \`FileHandle\`.
+         * @param handle A \`FileHandle\`.
+         * @param buffer The buffer that the data will be written to.
+         * @param offset The offset in the buffer at which to start writing.
+         * @param length The number of bytes to read.
+         * @param position The offset from the beginning of the file from which data should be read. If
+         * \`null\`, data will be read from the current position.
+         */
+        function read<TBuffer extends Uint8Array>(
+            handle: FileHandle,
+            buffer: TBuffer,
+            offset?: number | null,
+            length?: number | null,
+            position?: number | null,
+        ): Promise<{ bytesRead: number, buffer: TBuffer }>;
+
+        /**
+         * Asynchronously writes \`buffer\` to the file referenced by the supplied \`FileHandle\`.
+         * It is unsafe to call \`fsPromises.write()\` multiple times on the same file without waiting for the \`Promise\`
+         * to be resolved (or rejected). For this scenario, \`fs.createWriteStream\` is strongly recommended.
+         * @param handle A \`FileHandle\`.
+         * @param buffer The buffer that the data will be written to.
+         * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
+         * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
+         * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+         */
+        function write<TBuffer extends Uint8Array>(
+            handle: FileHandle,
+            buffer: TBuffer,
+            offset?: number | null,
+            length?: number | null, position?: number | null): Promise<{ bytesWritten: number, buffer: TBuffer }>;
+
+        /**
+         * Asynchronously writes \`string\` to the file referenced by the supplied \`FileHandle\`.
+         * It is unsafe to call \`fsPromises.write()\` multiple times on the same file without waiting for the \`Promise\`
+         * to be resolved (or rejected). For this scenario, \`fs.createWriteStream\` is strongly recommended.
+         * @param handle A \`FileHandle\`.
+         * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+         * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
+         * @param encoding The expected string encoding.
+         */
+        function write(handle: FileHandle, string: any, position?: number | null, encoding?: string | null): Promise<{ bytesWritten: number, buffer: string }>;
+
+        /**
+         * Asynchronous rename(2) - Change the name or location of a file or directory.
+         * @param oldPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         */
+        function rename(oldPath: PathLike, newPath: PathLike): Promise<void>;
+
+        /**
+         * Asynchronous truncate(2) - Truncate a file to a specified length.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param len If not specified, defaults to \`0\`.
+         */
+        function truncate(path: PathLike, len?: number): Promise<void>;
+
+        /**
+         * Asynchronous ftruncate(2) - Truncate a file to a specified length.
+         * @param handle A \`FileHandle\`.
+         * @param len If not specified, defaults to \`0\`.
+         */
+        function ftruncate(handle: FileHandle, len?: number): Promise<void>;
+
+        /**
+         * Asynchronous rmdir(2) - delete a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function rmdir(path: PathLike, options?: RmDirAsyncOptions): Promise<void>;
+
+        /**
+         * Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
+         * @param handle A \`FileHandle\`.
+         */
+        function fdatasync(handle: FileHandle): Promise<void>;
+
+        /**
+         * Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
+         * @param handle A \`FileHandle\`.
+         */
+        function fsync(handle: FileHandle): Promise<void>;
+
+        /**
+         * Asynchronous mkdir(2) - create a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+         * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+         */
+        function mkdir(path: PathLike, options?: number | string | MakeDirectoryOptions | null): Promise<void>;
+
+        /**
+         * Asynchronous readdir(3) - read a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function readdir(path: PathLike, options?: { encoding?: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null): Promise<string[]>;
+
+        /**
+         * Asynchronous readdir(3) - read a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function readdir(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer"): Promise<Buffer[]>;
+
+        /**
+         * Asynchronous readdir(3) - read a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function readdir(path: PathLike, options?: { encoding?: string | null; withFileTypes?: false } | string | null): Promise<string[] | Buffer[]>;
+
+        /**
+         * Asynchronous readdir(3) - read a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options If called with \`withFileTypes: true\` the result data will be an array of Dirent.
+         */
+        function readdir(path: PathLike, options: { encoding?: string | null; withFileTypes: true }): Promise<Dirent[]>;
+
+        /**
+         * Asynchronous readlink(2) - read value of a symbolic link.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function readlink(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
+
+        /**
+         * Asynchronous readlink(2) - read value of a symbolic link.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function readlink(path: PathLike, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
+
+        /**
+         * Asynchronous readlink(2) - read value of a symbolic link.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function readlink(path: PathLike, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
+
+        /**
+         * Asynchronous symlink(2) - Create a new symbolic link to an existing file.
+         * @param target A path to an existing file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param path A path to the new symlink. If a URL is provided, it must use the \`file:\` protocol.
+         * @param type May be set to \`'dir'\`, \`'file'\`, or \`'junction'\` (default is \`'file'\`) and is only available on Windows (ignored on other platforms).
+         * When using \`'junction'\`, the \`target\` argument will automatically be normalized to an absolute path.
+         */
+        function symlink(target: PathLike, path: PathLike, type?: string | null): Promise<void>;
+
+        /**
+         * Asynchronous fstat(2) - Get file status.
+         * @param handle A \`FileHandle\`.
+         */
+        function fstat(handle: FileHandle): Promise<Stats>;
+
+        /**
+         * Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function lstat(path: PathLike): Promise<Stats>;
+
+        /**
+         * Asynchronous stat(2) - Get file status.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function stat(path: PathLike): Promise<Stats>;
+
+        /**
+         * Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
+         * @param existingPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function link(existingPath: PathLike, newPath: PathLike): Promise<void>;
+
+        /**
+         * Asynchronous unlink(2) - delete a name and possibly the file it refers to.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function unlink(path: PathLike): Promise<void>;
+
+        /**
+         * Asynchronous fchmod(2) - Change permissions of a file.
+         * @param handle A \`FileHandle\`.
+         * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+         */
+        function fchmod(handle: FileHandle, mode: string | number): Promise<void>;
+
+        /**
+         * Asynchronous chmod(2) - Change permissions of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+         */
+        function chmod(path: PathLike, mode: string | number): Promise<void>;
+
+        /**
+         * Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
+         */
+        function lchmod(path: PathLike, mode: string | number): Promise<void>;
+
+        /**
+         * Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function lchown(path: PathLike, uid: number, gid: number): Promise<void>;
+
+        /**
+         * Asynchronous fchown(2) - Change ownership of a file.
+         * @param handle A \`FileHandle\`.
+         */
+        function fchown(handle: FileHandle, uid: number, gid: number): Promise<void>;
+
+        /**
+         * Asynchronous chown(2) - Change ownership of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         */
+        function chown(path: PathLike, uid: number, gid: number): Promise<void>;
+
+        /**
+         * Asynchronously change file timestamps of the file referenced by the supplied path.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param atime The last access time. If a string is provided, it will be coerced to number.
+         * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+         */
+        function utimes(path: PathLike, atime: string | number | Date, mtime: string | number | Date): Promise<void>;
+
+        /**
+         * Asynchronously change file timestamps of the file referenced by the supplied \`FileHandle\`.
+         * @param handle A \`FileHandle\`.
+         * @param atime The last access time. If a string is provided, it will be coerced to number.
+         * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+         */
+        function futimes(handle: FileHandle, atime: string | number | Date, mtime: string | number | Date): Promise<void>;
+
+        /**
+         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function realpath(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
+
+        /**
+         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function realpath(path: PathLike, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
+
+        /**
+         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function realpath(path: PathLike, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
+
+        /**
+         * Asynchronously creates a unique temporary directory.
+         * Generates six random characters to be appended behind a required \`prefix\` to create a unique temporary directory.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function mkdtemp(prefix: string, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
+
+        /**
+         * Asynchronously creates a unique temporary directory.
+         * Generates six random characters to be appended behind a required \`prefix\` to create a unique temporary directory.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function mkdtemp(prefix: string, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
+
+        /**
+         * Asynchronously creates a unique temporary directory.
+         * Generates six random characters to be appended behind a required \`prefix\` to create a unique temporary directory.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function mkdtemp(prefix: string, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
+
+        /**
+         * Asynchronously writes data to a file, replacing the file if it already exists.
+         * It is unsafe to call \`fsPromises.writeFile()\` multiple times on the same file without waiting for the \`Promise\` to be resolved (or rejected).
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
+         * @param data The data to write. If something other than a \`Buffer\` or \`Uint8Array\` is provided, the value is coerced to a string.
+         * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+         * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+         * If \`mode\` is not supplied, the default of \`0o666\` is used.
+         * If \`mode\` is a string, it is parsed as an octal integer.
+         * If \`flag\` is not supplied, the default of \`'w'\` is used.
+         */
+        function writeFile(path: PathLike | FileHandle, data: any, options?: { encoding?: string | null, mode?: string | number, flag?: string | number } | string | null): Promise<void>;
+
+        /**
+         * Asynchronously append data to a file, creating the file if it does not exist.
+         * @param file A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * URL support is _experimental_.
+         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
+         * @param data The data to write. If something other than a \`Buffer\` or \`Uint8Array\` is provided, the value is coerced to a string.
+         * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
+         * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+         * If \`mode\` is not supplied, the default of \`0o666\` is used.
+         * If \`mode\` is a string, it is parsed as an octal integer.
+         * If \`flag\` is not supplied, the default of \`'a'\` is used.
+         */
+        function appendFile(path: PathLike | FileHandle, data: any, options?: { encoding?: string | null, mode?: string | number, flag?: string | number } | string | null): Promise<void>;
+
+        /**
+         * Asynchronously reads the entire contents of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
+         * @param options An object that may contain an optional flag.
+         * If a flag is not provided, it defaults to \`'r'\`.
+         */
+        function readFile(path: PathLike | FileHandle, options?: { encoding?: null, flag?: string | number } | null): Promise<Buffer>;
+
+        /**
+         * Asynchronously reads the entire contents of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
+         * @param options An object that may contain an optional flag.
+         * If a flag is not provided, it defaults to \`'r'\`.
+         */
+        function readFile(path: PathLike | FileHandle, options: { encoding: BufferEncoding, flag?: string | number } | BufferEncoding): Promise<string>;
+
+        /**
+         * Asynchronously reads the entire contents of a file.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
+         * @param options An object that may contain an optional flag.
+         * If a flag is not provided, it defaults to \`'r'\`.
+         */
+        function readFile(path: PathLike | FileHandle, options?: { encoding?: string | null, flag?: string | number } | string | null): Promise<string | Buffer>;
+
+        function opendir(path: string, options?: OpenDirOptions): Promise<Dir>;
+    }
+}
+`;
+module.exports['globals.d.ts'] = `// This needs to be global to avoid TS2403 in case lib.dom.d.ts is present in the same build
+interface Console {
+    Console: NodeJS.ConsoleConstructor;
+    /**
+     * A simple assertion test that verifies whether \`value\` is truthy.
+     * If it is not, an \`AssertionError\` is thrown.
+     * If provided, the error \`message\` is formatted using \`util.format()\` and used as the error message.
+     */
+    assert(value: any, message?: string, ...optionalParams: any[]): void;
+    /**
+     * When \`stdout\` is a TTY, calling \`console.clear()\` will attempt to clear the TTY.
+     * When \`stdout\` is not a TTY, this method does nothing.
+     */
+    clear(): void;
+    /**
+     * Maintains an internal counter specific to \`label\` and outputs to \`stdout\` the number of times \`console.count()\` has been called with the given \`label\`.
+     */
+    count(label?: string): void;
+    /**
+     * Resets the internal counter specific to \`label\`.
+     */
+    countReset(label?: string): void;
+    /**
+     * The \`console.debug()\` function is an alias for {@link console.log()}.
+     */
+    debug(message?: any, ...optionalParams: any[]): void;
+    /**
+     * Uses {@link util.inspect()} on \`obj\` and prints the resulting string to \`stdout\`.
+     * This function bypasses any custom \`inspect()\` function defined on \`obj\`.
+     */
+    dir(obj: any, options?: NodeJS.InspectOptions): void;
+    /**
+     * This method calls {@link console.log()} passing it the arguments received. Please note that this method does not produce any XML formatting
+     */
+    dirxml(...data: any[]): void;
+    /**
+     * Prints to \`stderr\` with newline.
+     */
+    error(message?: any, ...optionalParams: any[]): void;
+    /**
+     * Increases indentation of subsequent lines by two spaces.
+     * If one or more \`label\`s are provided, those are printed first without the additional indentation.
+     */
+    group(...label: any[]): void;
+    /**
+     * The \`console.groupCollapsed()\` function is an alias for {@link console.group()}.
+     */
+    groupCollapsed(...label: any[]): void;
+    /**
+     * Decreases indentation of subsequent lines by two spaces.
+     */
+    groupEnd(): void;
+    /**
+     * The {@link console.info()} function is an alias for {@link console.log()}.
+     */
+    info(message?: any, ...optionalParams: any[]): void;
+    /**
+     * Prints to \`stdout\` with newline.
+     */
+    log(message?: any, ...optionalParams: any[]): void;
+    /**
+     * This method does not display anything unless used in the inspector.
+     *  Prints to \`stdout\` the array \`array\` formatted as a table.
+     */
+    table(tabularData: any, properties?: string[]): void;
+    /**
+     * Starts a timer that can be used to compute the duration of an operation. Timers are identified by a unique \`label\`.
+     */
+    time(label?: string): void;
+    /**
+     * Stops a timer that was previously started by calling {@link console.time()} and prints the result to \`stdout\`.
+     */
+    timeEnd(label?: string): void;
+    /**
+     * For a timer that was previously started by calling {@link console.time()}, prints the elapsed time and other \`data\` arguments to \`stdout\`.
+     */
+    timeLog(label?: string, ...data: any[]): void;
+    /**
+     * Prints to \`stderr\` the string 'Trace :', followed by the {@link util.format()} formatted message and stack trace to the current position in the code.
+     */
+    trace(message?: any, ...optionalParams: any[]): void;
+    /**
+     * The {@link console.warn()} function is an alias for {@link console.error()}.
+     */
+    warn(message?: any, ...optionalParams: any[]): void;
+
+    // --- Inspector mode only ---
+    /**
+     * This method does not display anything unless used in the inspector.
+     *  The console.markTimeline() method is the deprecated form of console.timeStamp().
+     *
+     * @deprecated Use console.timeStamp() instead.
+     */
+    markTimeline(label?: string): void;
+    /**
+     * This method does not display anything unless used in the inspector.
+     *  Starts a JavaScript CPU profile with an optional label.
+     */
+    profile(label?: string): void;
+    /**
+     * This method does not display anything unless used in the inspector.
+     *  Stops the current JavaScript CPU profiling session if one has been started and prints the report to the Profiles panel of the inspector.
+     */
+    profileEnd(label?: string): void;
+    /**
+     * This method does not display anything unless used in the inspector.
+     *  Adds an event with the label \`label\` to the Timeline panel of the inspector.
+     */
+    timeStamp(label?: string): void;
+    /**
+     * This method does not display anything unless used in the inspector.
+     *  The console.timeline() method is the deprecated form of console.time().
+     *
+     * @deprecated Use console.time() instead.
+     */
+    timeline(label?: string): void;
+    /**
+     * This method does not display anything unless used in the inspector.
+     *  The console.timelineEnd() method is the deprecated form of console.timeEnd().
+     *
+     * @deprecated Use console.timeEnd() instead.
+     */
+    timelineEnd(label?: string): void;
+}
+
+interface Error {
+    stack?: string;
+}
+
+// Declare "static" methods in Error
+interface ErrorConstructor {
+    /** Create .stack property on a target object */
+    captureStackTrace(targetObject: Object, constructorOpt?: Function): void;
+
+    /**
+     * Optional override for formatting stack traces
+     *
+     * @see https://github.com/v8/v8/wiki/Stack%20Trace%20API#customizing-stack-traces
+     */
+    prepareStackTrace?: (err: Error, stackTraces: NodeJS.CallSite[]) => any;
+
+    stackTraceLimit: number;
+}
+
+interface SymbolConstructor {
+    readonly observable: symbol;
+}
+
+// Node.js ESNEXT support
+interface String {
+    /** Removes whitespace from the left end of a string. */
+    trimLeft(): string;
+    /** Removes whitespace from the right end of a string. */
+    trimRight(): string;
+}
+
+interface ImportMeta {
+    url: string;
+}
+
+/*-----------------------------------------------*
+ *                                               *
+ *                   GLOBAL                      *
+ *                                               *
+ ------------------------------------------------*/
+declare var process: NodeJS.Process;
+declare var global: NodeJS.Global;
+declare var console: Console;
+
+declare var __filename: string;
+declare var __dirname: string;
+
+declare function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+declare namespace setTimeout {
+    function __promisify__(ms: number): Promise<void>;
+    function __promisify__<T>(ms: number, value: T): Promise<T>;
+}
+declare function clearTimeout(timeoutId: NodeJS.Timeout): void;
+declare function setInterval(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+declare function clearInterval(intervalId: NodeJS.Timeout): void;
+declare function setImmediate(callback: (...args: any[]) => void, ...args: any[]): NodeJS.Immediate;
+declare namespace setImmediate {
+    function __promisify__(): Promise<void>;
+    function __promisify__<T>(value: T): Promise<T>;
+}
+declare function clearImmediate(immediateId: NodeJS.Immediate): void;
+
+declare function queueMicrotask(callback: () => void): void;
+
+// TODO: change to \`type NodeRequireFunction = (id: string) => any;\` in next mayor version.
+interface NodeRequireFunction {
+    /* tslint:disable-next-line:callable-types */
+    (id: string): any;
+}
+
+interface NodeRequireCache {
+    [path: string]: NodeModule;
+}
+
+interface NodeRequire extends NodeRequireFunction {
+    resolve: RequireResolve;
+    cache: NodeRequireCache;
+    /**
+     * @deprecated
+     */
+    extensions: NodeExtensions;
+    main: NodeModule | undefined;
+}
+
+interface RequireResolve {
+    (id: string, options?: { paths?: string[]; }): string;
+    paths(request: string): string[] | null;
+}
+
+interface NodeExtensions {
+    '.js': (m: NodeModule, filename: string) => any;
+    '.json': (m: NodeModule, filename: string) => any;
+    '.node': (m: NodeModule, filename: string) => any;
+    [ext: string]: (m: NodeModule, filename: string) => any;
+}
+
+declare var require: NodeRequire;
+
+interface NodeModule {
+    exports: any;
+    require: NodeRequireFunction;
+    id: string;
+    filename: string;
+    loaded: boolean;
+    parent: NodeModule | null;
+    children: NodeModule[];
+    paths: string[];
+}
+
+declare var module: NodeModule;
+
+// Same as module.exports
+declare var exports: any;
+
+// Buffer class
+type BufferEncoding = "ascii" | "utf8" | "utf-8" | "utf16le" | "ucs2" | "ucs-2" | "base64" | "latin1" | "binary" | "hex";
+
+interface Buffer {
+    constructor: typeof Buffer;
+}
+
+/**
+ * Raw data is stored in instances of the Buffer class.
+ * A Buffer is similar to an array of integers but corresponds to a raw memory allocation outside the V8 heap.  A Buffer cannot be resized.
+ * Valid string encodings: 'ascii'|'utf8'|'utf16le'|'ucs2'(alias of 'utf16le')|'base64'|'binary'(deprecated)|'hex'
+ */
+declare class Buffer extends Uint8Array {
+    /**
+     * Allocates a new buffer containing the given {str}.
+     *
+     * @param str String to store in buffer.
+     * @param encoding encoding to use, optional.  Default is 'utf8'
+     * @deprecated since v10.0.0 - Use \`Buffer.from(string[, encoding])\` instead.
+     */
+    constructor(str: string, encoding?: BufferEncoding);
+    /**
+     * Allocates a new buffer of {size} octets.
+     *
+     * @param size count of octets to allocate.
+     * @deprecated since v10.0.0 - Use \`Buffer.alloc()\` instead (also see \`Buffer.allocUnsafe()\`).
+     */
+    constructor(size: number);
+    /**
+     * Allocates a new buffer containing the given {array} of octets.
+     *
+     * @param array The octets to store.
+     * @deprecated since v10.0.0 - Use \`Buffer.from(array)\` instead.
+     */
+    constructor(array: Uint8Array);
+    /**
+     * Produces a Buffer backed by the same allocated memory as
+     * the given {ArrayBuffer}/{SharedArrayBuffer}.
+     *
+     *
+     * @param arrayBuffer The ArrayBuffer with which to share memory.
+     * @deprecated since v10.0.0 - Use \`Buffer.from(arrayBuffer[, byteOffset[, length]])\` instead.
+     */
+    constructor(arrayBuffer: ArrayBuffer | SharedArrayBuffer);
+    /**
+     * Allocates a new buffer containing the given {array} of octets.
+     *
+     * @param array The octets to store.
+     * @deprecated since v10.0.0 - Use \`Buffer.from(array)\` instead.
+     */
+    constructor(array: any[]);
+    /**
+     * Copies the passed {buffer} data onto a new {Buffer} instance.
+     *
+     * @param buffer The buffer to copy.
+     * @deprecated since v10.0.0 - Use \`Buffer.from(buffer)\` instead.
+     */
+    constructor(buffer: Buffer);
+    /**
+     * When passed a reference to the .buffer property of a TypedArray instance,
+     * the newly created Buffer will share the same allocated memory as the TypedArray.
+     * The optional {byteOffset} and {length} arguments specify a memory range
+     * within the {arrayBuffer} that will be shared by the Buffer.
+     *
+     * @param arrayBuffer The .buffer property of any TypedArray or a new ArrayBuffer()
+     */
+    static from(arrayBuffer: ArrayBuffer | SharedArrayBuffer, byteOffset?: number, length?: number): Buffer;
+    /**
+     * Creates a new Buffer using the passed {data}
+     * @param data data to create a new Buffer
+     */
+    static from(data: number[]): Buffer;
+    static from(data: Uint8Array): Buffer;
+    /**
+     * Creates a new buffer containing the coerced value of an object
+     * A \`TypeError\` will be thrown if {obj} has not mentioned methods or is not of other type appropriate for \`Buffer.from()\` variants.
+     * @param obj An object supporting \`Symbol.toPrimitive\` or \`valueOf()\`.
+     */
+    static from(obj: { valueOf(): string | object } | { [Symbol.toPrimitive](hint: 'string'): string }, byteOffset?: number, length?: number): Buffer;
+    /**
+     * Creates a new Buffer containing the given JavaScript string {str}.
+     * If provided, the {encoding} parameter identifies the character encoding.
+     * If not provided, {encoding} defaults to 'utf8'.
+     */
+    static from(str: string, encoding?: BufferEncoding): Buffer;
+    /**
+     * Creates a new Buffer using the passed {data}
+     * @param values to create a new Buffer
+     */
+    static of(...items: number[]): Buffer;
+    /**
+     * Returns true if {obj} is a Buffer
+     *
+     * @param obj object to test.
+     */
+    static isBuffer(obj: any): obj is Buffer;
+    /**
+     * Returns true if {encoding} is a valid encoding argument.
+     * Valid string encodings in Node 0.12: 'ascii'|'utf8'|'utf16le'|'ucs2'(alias of 'utf16le')|'base64'|'binary'(deprecated)|'hex'
+     *
+     * @param encoding string to test.
+     */
+    static isEncoding(encoding: string): encoding is BufferEncoding;
+    /**
+     * Gives the actual byte length of a string. encoding defaults to 'utf8'.
+     * This is not the same as String.prototype.length since that returns the number of characters in a string.
+     *
+     * @param string string to test.
+     * @param encoding encoding used to evaluate (defaults to 'utf8')
+     */
+    static byteLength(
+        string: string | NodeJS.ArrayBufferView | ArrayBuffer | SharedArrayBuffer,
+        encoding?: BufferEncoding
+    ): number;
+    /**
+     * Returns a buffer which is the result of concatenating all the buffers in the list together.
+     *
+     * If the list has no items, or if the totalLength is 0, then it returns a zero-length buffer.
+     * If the list has exactly one item, then the first item of the list is returned.
+     * If the list has more than one item, then a new Buffer is created.
+     *
+     * @param list An array of Buffer objects to concatenate
+     * @param totalLength Total length of the buffers when concatenated.
+     *   If totalLength is not provided, it is read from the buffers in the list. However, this adds an additional loop to the function, so it is faster to provide the length explicitly.
+     */
+    static concat(list: Uint8Array[], totalLength?: number): Buffer;
+    /**
+     * The same as buf1.compare(buf2).
+     */
+    static compare(buf1: Uint8Array, buf2: Uint8Array): number;
+    /**
+     * Allocates a new buffer of {size} octets.
+     *
+     * @param size count of octets to allocate.
+     * @param fill if specified, buffer will be initialized by calling buf.fill(fill).
+     *    If parameter is omitted, buffer will be filled with zeros.
+     * @param encoding encoding used for call to buf.fill while initalizing
+     */
+    static alloc(size: number, fill?: string | Buffer | number, encoding?: BufferEncoding): Buffer;
+    /**
+     * Allocates a new buffer of {size} octets, leaving memory not initialized, so the contents
+     * of the newly created Buffer are unknown and may contain sensitive data.
+     *
+     * @param size count of octets to allocate
+     */
+    static allocUnsafe(size: number): Buffer;
+    /**
+     * Allocates a new non-pooled buffer of {size} octets, leaving memory not initialized, so the contents
+     * of the newly created Buffer are unknown and may contain sensitive data.
+     *
+     * @param size count of octets to allocate
+     */
+    static allocUnsafeSlow(size: number): Buffer;
+    /**
+     * This is the number of bytes used to determine the size of pre-allocated, internal Buffer instances used for pooling. This value may be modified.
+     */
+    static poolSize: number;
+
+    write(string: string, encoding?: BufferEncoding): number;
+    write(string: string, offset: number, encoding?: BufferEncoding): number;
+    write(string: string, offset: number, length: number, encoding?: BufferEncoding): number;
+    toString(encoding?: string, start?: number, end?: number): string;
+    toJSON(): { type: 'Buffer'; data: number[] };
+    equals(otherBuffer: Uint8Array): boolean;
+    compare(
+        otherBuffer: Uint8Array,
+        targetStart?: number,
+        targetEnd?: number,
+        sourceStart?: number,
+        sourceEnd?: number
+    ): number;
+    copy(targetBuffer: Uint8Array, targetStart?: number, sourceStart?: number, sourceEnd?: number): number;
+    /**
+     * Returns a new \`Buffer\` that references **the same memory as the original**, but offset and cropped by the start and end indices.
+     *
+     * This method is incompatible with \`Uint8Array#slice()\`, which returns a copy of the original memory.
+     *
+     * @param begin Where the new \`Buffer\` will start. Default: \`0\`.
+     * @param end Where the new \`Buffer\` will end (not inclusive). Default: \`buf.length\`.
+     */
+    slice(begin?: number, end?: number): Buffer;
+    /**
+     * Returns a new \`Buffer\` that references **the same memory as the original**, but offset and cropped by the start and end indices.
+     *
+     * This method is compatible with \`Uint8Array#subarray()\`.
+     *
+     * @param begin Where the new \`Buffer\` will start. Default: \`0\`.
+     * @param end Where the new \`Buffer\` will end (not inclusive). Default: \`buf.length\`.
+     */
+    subarray(begin?: number, end?: number): Buffer;
+    writeUIntLE(value: number, offset: number, byteLength: number): number;
+    writeUIntBE(value: number, offset: number, byteLength: number): number;
+    writeIntLE(value: number, offset: number, byteLength: number): number;
+    writeIntBE(value: number, offset: number, byteLength: number): number;
+    readUIntLE(offset: number, byteLength: number): number;
+    readUIntBE(offset: number, byteLength: number): number;
+    readIntLE(offset: number, byteLength: number): number;
+    readIntBE(offset: number, byteLength: number): number;
+    readUInt8(offset: number): number;
+    readUInt16LE(offset: number): number;
+    readUInt16BE(offset: number): number;
+    readUInt32LE(offset: number): number;
+    readUInt32BE(offset: number): number;
+    readInt8(offset: number): number;
+    readInt16LE(offset: number): number;
+    readInt16BE(offset: number): number;
+    readInt32LE(offset: number): number;
+    readInt32BE(offset: number): number;
+    readFloatLE(offset: number): number;
+    readFloatBE(offset: number): number;
+    readDoubleLE(offset: number): number;
+    readDoubleBE(offset: number): number;
+    reverse(): this;
+    swap16(): Buffer;
+    swap32(): Buffer;
+    swap64(): Buffer;
+    writeUInt8(value: number, offset: number): number;
+    writeUInt16LE(value: number, offset: number): number;
+    writeUInt16BE(value: number, offset: number): number;
+    writeUInt32LE(value: number, offset: number): number;
+    writeUInt32BE(value: number, offset: number): number;
+    writeInt8(value: number, offset: number): number;
+    writeInt16LE(value: number, offset: number): number;
+    writeInt16BE(value: number, offset: number): number;
+    writeInt32LE(value: number, offset: number): number;
+    writeInt32BE(value: number, offset: number): number;
+    writeFloatLE(value: number, offset: number): number;
+    writeFloatBE(value: number, offset: number): number;
+    writeDoubleLE(value: number, offset: number): number;
+    writeDoubleBE(value: number, offset: number): number;
+
+    fill(value: string | Uint8Array | number, offset?: number, end?: number, encoding?: BufferEncoding): this;
+
+    indexOf(value: string | number | Uint8Array, byteOffset?: number, encoding?: BufferEncoding): number;
+    lastIndexOf(value: string | number | Uint8Array, byteOffset?: number, encoding?: BufferEncoding): number;
+    entries(): IterableIterator<[number, number]>;
+    includes(value: string | number | Buffer, byteOffset?: number, encoding?: BufferEncoding): boolean;
+    keys(): IterableIterator<number>;
+    values(): IterableIterator<number>;
+}
+
+/*----------------------------------------------*
+*                                               *
+*               GLOBAL INTERFACES               *
+*                                               *
+*-----------------------------------------------*/
+declare namespace NodeJS {
+    interface InspectOptions {
+        /**
+         * If set to \`true\`, getters are going to be
+         * inspected as well. If set to \`'get'\` only getters without setter are going
+         * to be inspected. If set to \`'set'\` only getters having a corresponding
+         * setter are going to be inspected. This might cause side effects depending on
+         * the getter function.
+         * @default \`false\`
+         */
+        getters?: 'get' | 'set' | boolean;
+        showHidden?: boolean;
+        /**
+         * @default 2
+         */
+        depth?: number | null;
+        colors?: boolean;
+        customInspect?: boolean;
+        showProxy?: boolean;
+        maxArrayLength?: number | null;
+        breakLength?: number;
+        /**
+         * Setting this to \`false\` causes each object key
+         * to be displayed on a new line. It will also add new lines to text that is
+         * longer than \`breakLength\`. If set to a number, the most \`n\` inner elements
+         * are united on a single line as long as all properties fit into
+         * \`breakLength\`. Short array elements are also grouped together. Note that no
+         * text will be reduced below 16 characters, no matter the \`breakLength\` size.
+         * For more information, see the example below.
+         * @default \`true\`
+         */
+        compact?: boolean | number;
+        sorted?: boolean | ((a: string, b: string) => number);
+    }
+
+    interface ConsoleConstructorOptions {
+        stdout: WritableStream;
+        stderr?: WritableStream;
+        ignoreErrors?: boolean;
+        colorMode?: boolean | 'auto';
+        inspectOptions?: InspectOptions;
+    }
+
+    interface ConsoleConstructor {
+        prototype: Console;
+        new(stdout: WritableStream, stderr?: WritableStream, ignoreErrors?: boolean): Console;
+        new(options: ConsoleConstructorOptions): Console;
+    }
+
+    interface CallSite {
+        /**
+         * Value of "this"
+         */
+        getThis(): any;
+
+        /**
+         * Type of "this" as a string.
+         * This is the name of the function stored in the constructor field of
+         * "this", if available.  Otherwise the object's [[Class]] internal
+         * property.
+         */
+        getTypeName(): string | null;
+
+        /**
+         * Current function
+         */
+        getFunction(): Function | undefined;
+
+        /**
+         * Name of the current function, typically its name property.
+         * If a name property is not available an attempt will be made to try
+         * to infer a name from the function's context.
+         */
+        getFunctionName(): string | null;
+
+        /**
+         * Name of the property [of "this" or one of its prototypes] that holds
+         * the current function
+         */
+        getMethodName(): string | null;
+
+        /**
+         * Name of the script [if this function was defined in a script]
+         */
+        getFileName(): string | null;
+
+        /**
+         * Current line number [if this function was defined in a script]
+         */
+        getLineNumber(): number | null;
+
+        /**
+         * Current column number [if this function was defined in a script]
+         */
+        getColumnNumber(): number | null;
+
+        /**
+         * A call site object representing the location where eval was called
+         * [if this function was created using a call to eval]
+         */
+        getEvalOrigin(): string | undefined;
+
+        /**
+         * Is this a toplevel invocation, that is, is "this" the global object?
+         */
+        isToplevel(): boolean;
+
+        /**
+         * Does this call take place in code defined by a call to eval?
+         */
+        isEval(): boolean;
+
+        /**
+         * Is this call in native V8 code?
+         */
+        isNative(): boolean;
+
+        /**
+         * Is this a constructor call?
+         */
+        isConstructor(): boolean;
+    }
+
+    interface ErrnoException extends Error {
+        errno?: number;
+        code?: string;
+        path?: string;
+        syscall?: string;
+        stack?: string;
+    }
+
+    class EventEmitter {
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+        removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+        off(event: string | symbol, listener: (...args: any[]) => void): this;
+        removeAllListeners(event?: string | symbol): this;
+        setMaxListeners(n: number): this;
+        getMaxListeners(): number;
+        listeners(event: string | symbol): Function[];
+        rawListeners(event: string | symbol): Function[];
+        emit(event: string | symbol, ...args: any[]): boolean;
+        listenerCount(type: string | symbol): number;
+        // Added in Node 6...
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+        eventNames(): Array<string | symbol>;
+    }
+
+    interface ReadableStream extends EventEmitter {
+        readable: boolean;
+        read(size?: number): string | Buffer;
+        setEncoding(encoding: string): this;
+        pause(): this;
+        resume(): this;
+        isPaused(): boolean;
+        pipe<T extends WritableStream>(destination: T, options?: { end?: boolean; }): T;
+        unpipe(destination?: WritableStream): this;
+        unshift(chunk: string | Uint8Array, encoding?: BufferEncoding): void;
+        wrap(oldStream: ReadableStream): this;
+        [Symbol.asyncIterator](): AsyncIterableIterator<string | Buffer>;
+    }
+
+    interface WritableStream extends EventEmitter {
+        writable: boolean;
+        write(buffer: Uint8Array | string, cb?: (err?: Error | null) => void): boolean;
+        write(str: string, encoding?: string, cb?: (err?: Error | null) => void): boolean;
+        end(cb?: () => void): void;
+        end(data: string | Uint8Array, cb?: () => void): void;
+        end(str: string, encoding?: string, cb?: () => void): void;
+    }
+
+    interface ReadWriteStream extends ReadableStream, WritableStream { }
+
+    interface Domain extends EventEmitter {
+        run<T>(fn: (...args: any[]) => T, ...args: any[]): T;
+        add(emitter: EventEmitter | Timer): void;
+        remove(emitter: EventEmitter | Timer): void;
+        bind<T extends Function>(cb: T): T;
+        intercept<T extends Function>(cb: T): T;
+
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        on(event: string, listener: (...args: any[]) => void): this;
+        once(event: string, listener: (...args: any[]) => void): this;
+        removeListener(event: string, listener: (...args: any[]) => void): this;
+        removeAllListeners(event?: string): this;
+    }
+
+    interface MemoryUsage {
+        rss: number;
+        heapTotal: number;
+        heapUsed: number;
+        external: number;
+    }
+
+    interface CpuUsage {
+        user: number;
+        system: number;
+    }
+
+    interface ProcessRelease {
+        name: string;
+        sourceUrl?: string;
+        headersUrl?: string;
+        libUrl?: string;
+        lts?: string;
+    }
+
+    interface ProcessVersions {
+        http_parser: string;
+        node: string;
+        v8: string;
+        ares: string;
+        uv: string;
+        zlib: string;
+        modules: string;
+        openssl: string;
+    }
+
+    type Platform = 'aix'
+        | 'android'
+        | 'darwin'
+        | 'freebsd'
+        | 'linux'
+        | 'openbsd'
+        | 'sunos'
+        | 'win32'
+        | 'cygwin'
+        | 'netbsd';
+
+    type Signals =
+        "SIGABRT" | "SIGALRM" | "SIGBUS" | "SIGCHLD" | "SIGCONT" | "SIGFPE" | "SIGHUP" | "SIGILL" | "SIGINT" | "SIGIO" |
+        "SIGIOT" | "SIGKILL" | "SIGPIPE" | "SIGPOLL" | "SIGPROF" | "SIGPWR" | "SIGQUIT" | "SIGSEGV" | "SIGSTKFLT" |
+        "SIGSTOP" | "SIGSYS" | "SIGTERM" | "SIGTRAP" | "SIGTSTP" | "SIGTTIN" | "SIGTTOU" | "SIGUNUSED" | "SIGURG" |
+        "SIGUSR1" | "SIGUSR2" | "SIGVTALRM" | "SIGWINCH" | "SIGXCPU" | "SIGXFSZ" | "SIGBREAK" | "SIGLOST" | "SIGINFO";
+
+    type MultipleResolveType = 'resolve' | 'reject';
+
+    type BeforeExitListener = (code: number) => void;
+    type DisconnectListener = () => void;
+    type ExitListener = (code: number) => void;
+    type RejectionHandledListener = (promise: Promise<any>) => void;
+    type UncaughtExceptionListener = (error: Error) => void;
+    type UnhandledRejectionListener = (reason: {} | null | undefined, promise: Promise<any>) => void;
+    type WarningListener = (warning: Error) => void;
+    type MessageListener = (message: any, sendHandle: any) => void;
+    type SignalsListener = (signal: Signals) => void;
+    type NewListenerListener = (type: string | symbol, listener: (...args: any[]) => void) => void;
+    type RemoveListenerListener = (type: string | symbol, listener: (...args: any[]) => void) => void;
+    type MultipleResolveListener = (type: MultipleResolveType, promise: Promise<any>, value: any) => void;
+
+    interface Socket extends ReadWriteStream {
+        isTTY?: true;
+    }
+
+    interface ProcessEnv {
+        [key: string]: string | undefined;
+    }
+
+    interface HRTime {
+        (time?: [number, number]): [number, number];
+    }
+
+    interface ProcessReport {
+        /**
+         * Directory where the report is written.
+         * working directory of the Node.js process.
+         * @default '' indicating that reports are written to the current
+         */
+        directory: string;
+
+        /**
+         * Filename where the report is written.
+         * The default value is the empty string.
+         * @default '' the output filename will be comprised of a timestamp,
+         * PID, and sequence number.
+         */
+        filename: string;
+
+        /**
+         * Returns a JSON-formatted diagnostic report for the running process.
+         * The report's JavaScript stack trace is taken from err, if present.
+         */
+        getReport(err?: Error): string;
+
+        /**
+         * If true, a diagnostic report is generated on fatal errors,
+         * such as out of memory errors or failed C++ assertions.
+         * @default false
+         */
+        reportOnFatalError: boolean;
+
+        /**
+         * If true, a diagnostic report is generated when the process
+         * receives the signal specified by process.report.signal.
+         * @defaul false
+         */
+        reportOnSignal: boolean;
+
+        /**
+         * If true, a diagnostic report is generated on uncaught exception.
+         * @default false
+         */
+        reportOnUncaughtException: boolean;
+
+        /**
+         * The signal used to trigger the creation of a diagnostic report.
+         * @default 'SIGUSR2'
+         */
+        signal: Signals;
+
+        /**
+         * Writes a diagnostic report to a file. If filename is not provided, the default filename
+         * includes the date, time, PID, and a sequence number.
+         * The report's JavaScript stack trace is taken from err, if present.
+         *
+         * @param fileName Name of the file where the report is written.
+         * This should be a relative path, that will be appended to the directory specified in
+         * \`process.report.directory\`, or the current working directory of the Node.js process,
+         * if unspecified.
+         * @param error A custom error used for reporting the JavaScript stack.
+         * @return Filename of the generated report.
+         */
+        writeReport(fileName?: string): string;
+        writeReport(error?: Error): string;
+        writeReport(fileName?: string, err?: Error): string;
+    }
+
+    interface ResourceUsage {
+        fsRead: number;
+        fsWrite: number;
+        involuntaryContextSwitches: number;
+        ipcReceived: number;
+        ipcSent: number;
+        majorPageFault: number;
+        maxRSS: number;
+        minorPageFault: number;
+        sharedMemorySize: number;
+        signalsCount: number;
+        swappedOut: number;
+        systemCPUTime: number;
+        unsharedDataSize: number;
+        unsharedStackSize: number;
+        userCPUTime: number;
+        voluntaryContextSwitches: number;
+    }
+
+    interface Process extends EventEmitter {
+        /**
+         * Can also be a tty.WriteStream, not typed due to limitation.s
+         */
+        stdout: WriteStream;
+        /**
+         * Can also be a tty.WriteStream, not typed due to limitation.s
+         */
+        stderr: WriteStream;
+        stdin: ReadStream;
+        openStdin(): Socket;
+        argv: string[];
+        argv0: string;
+        execArgv: string[];
+        execPath: string;
+        abort(): void;
+        chdir(directory: string): void;
+        cwd(): string;
+        debugPort: number;
+        emitWarning(warning: string | Error, name?: string, ctor?: Function): void;
+        env: ProcessEnv;
+        exit(code?: number): never;
+        exitCode?: number;
+        getgid(): number;
+        setgid(id: number | string): void;
+        getuid(): number;
+        setuid(id: number | string): void;
+        geteuid(): number;
+        seteuid(id: number | string): void;
+        getegid(): number;
+        setegid(id: number | string): void;
+        getgroups(): number[];
+        setgroups(groups: Array<string | number>): void;
+        setUncaughtExceptionCaptureCallback(cb: ((err: Error) => void) | null): void;
+        hasUncaughtExceptionCaptureCallback(): boolean;
+        version: string;
+        versions: ProcessVersions;
+        config: {
+            target_defaults: {
+                cflags: any[];
+                default_configuration: string;
+                defines: string[];
+                include_dirs: string[];
+                libraries: string[];
+            };
+            variables: {
+                clang: number;
+                host_arch: string;
+                node_install_npm: boolean;
+                node_install_waf: boolean;
+                node_prefix: string;
+                node_shared_openssl: boolean;
+                node_shared_v8: boolean;
+                node_shared_zlib: boolean;
+                node_use_dtrace: boolean;
+                node_use_etw: boolean;
+                node_use_openssl: boolean;
+                target_arch: string;
+                v8_no_strict_aliasing: number;
+                v8_use_snapshot: boolean;
+                visibility: string;
+            };
+        };
+        kill(pid: number, signal?: string | number): void;
+        pid: number;
+        ppid: number;
+        title: string;
+        arch: string;
+        platform: Platform;
+        mainModule?: NodeModule;
+        memoryUsage(): MemoryUsage;
+        cpuUsage(previousValue?: CpuUsage): CpuUsage;
+        nextTick(callback: Function, ...args: any[]): void;
+        release: ProcessRelease;
+        features: {
+            inspector: boolean;
+            debug: boolean;
+            uv: boolean;
+            ipv6: boolean;
+            tls_alpn: boolean;
+            tls_sni: boolean;
+            tls_ocsp: boolean;
+            tls: boolean;
+        };
+        /**
+         * Can only be set if not in worker thread.
+         */
+        umask(mask?: number): number;
+        uptime(): number;
+        hrtime: HRTime;
+        domain: Domain;
+
+        // Worker
+        send?(message: any, sendHandle?: any, options?: { swallowErrors?: boolean}, callback?: (error: Error | null) => void): boolean;
+        disconnect(): void;
+        connected: boolean;
+
+        /**
+         * The \`process.allowedNodeEnvironmentFlags\` property is a special,
+         * read-only \`Set\` of flags allowable within the [\`NODE_OPTIONS\`][]
+         * environment variable.
+         */
+        allowedNodeEnvironmentFlags: ReadonlySet<string>;
+
+        /**
+         * Only available with \`--experimental-report\`
+         */
+        report?: ProcessReport;
+
+        resourceUsage(): ResourceUsage;
+
+        /**
+         * EventEmitter
+         *   1. beforeExit
+         *   2. disconnect
+         *   3. exit
+         *   4. message
+         *   5. rejectionHandled
+         *   6. uncaughtException
+         *   7. unhandledRejection
+         *   8. warning
+         *   9. message
+         *  10. <All OS Signals>
+         *  11. newListener/removeListener inherited from EventEmitter
+         */
+        addListener(event: "beforeExit", listener: BeforeExitListener): this;
+        addListener(event: "disconnect", listener: DisconnectListener): this;
+        addListener(event: "exit", listener: ExitListener): this;
+        addListener(event: "rejectionHandled", listener: RejectionHandledListener): this;
+        addListener(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+        addListener(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+        addListener(event: "warning", listener: WarningListener): this;
+        addListener(event: "message", listener: MessageListener): this;
+        addListener(event: Signals, listener: SignalsListener): this;
+        addListener(event: "newListener", listener: NewListenerListener): this;
+        addListener(event: "removeListener", listener: RemoveListenerListener): this;
+        addListener(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+        emit(event: "beforeExit", code: number): boolean;
+        emit(event: "disconnect"): boolean;
+        emit(event: "exit", code: number): boolean;
+        emit(event: "rejectionHandled", promise: Promise<any>): boolean;
+        emit(event: "uncaughtException", error: Error): boolean;
+        emit(event: "unhandledRejection", reason: any, promise: Promise<any>): boolean;
+        emit(event: "warning", warning: Error): boolean;
+        emit(event: "message", message: any, sendHandle: any): this;
+        emit(event: Signals, signal: Signals): boolean;
+        emit(event: "newListener", eventName: string | symbol, listener: (...args: any[]) => void): this;
+        emit(event: "removeListener", eventName: string, listener: (...args: any[]) => void): this;
+        emit(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+        on(event: "beforeExit", listener: BeforeExitListener): this;
+        on(event: "disconnect", listener: DisconnectListener): this;
+        on(event: "exit", listener: ExitListener): this;
+        on(event: "rejectionHandled", listener: RejectionHandledListener): this;
+        on(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+        on(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+        on(event: "warning", listener: WarningListener): this;
+        on(event: "message", listener: MessageListener): this;
+        on(event: Signals, listener: SignalsListener): this;
+        on(event: "newListener", listener: NewListenerListener): this;
+        on(event: "removeListener", listener: RemoveListenerListener): this;
+        on(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+        once(event: "beforeExit", listener: BeforeExitListener): this;
+        once(event: "disconnect", listener: DisconnectListener): this;
+        once(event: "exit", listener: ExitListener): this;
+        once(event: "rejectionHandled", listener: RejectionHandledListener): this;
+        once(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+        once(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+        once(event: "warning", listener: WarningListener): this;
+        once(event: "message", listener: MessageListener): this;
+        once(event: Signals, listener: SignalsListener): this;
+        once(event: "newListener", listener: NewListenerListener): this;
+        once(event: "removeListener", listener: RemoveListenerListener): this;
+        once(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+        prependListener(event: "beforeExit", listener: BeforeExitListener): this;
+        prependListener(event: "disconnect", listener: DisconnectListener): this;
+        prependListener(event: "exit", listener: ExitListener): this;
+        prependListener(event: "rejectionHandled", listener: RejectionHandledListener): this;
+        prependListener(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+        prependListener(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+        prependListener(event: "warning", listener: WarningListener): this;
+        prependListener(event: "message", listener: MessageListener): this;
+        prependListener(event: Signals, listener: SignalsListener): this;
+        prependListener(event: "newListener", listener: NewListenerListener): this;
+        prependListener(event: "removeListener", listener: RemoveListenerListener): this;
+        prependListener(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+        prependOnceListener(event: "beforeExit", listener: BeforeExitListener): this;
+        prependOnceListener(event: "disconnect", listener: DisconnectListener): this;
+        prependOnceListener(event: "exit", listener: ExitListener): this;
+        prependOnceListener(event: "rejectionHandled", listener: RejectionHandledListener): this;
+        prependOnceListener(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+        prependOnceListener(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+        prependOnceListener(event: "warning", listener: WarningListener): this;
+        prependOnceListener(event: "message", listener: MessageListener): this;
+        prependOnceListener(event: Signals, listener: SignalsListener): this;
+        prependOnceListener(event: "newListener", listener: NewListenerListener): this;
+        prependOnceListener(event: "removeListener", listener: RemoveListenerListener): this;
+        prependOnceListener(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+        listeners(event: "beforeExit"): BeforeExitListener[];
+        listeners(event: "disconnect"): DisconnectListener[];
+        listeners(event: "exit"): ExitListener[];
+        listeners(event: "rejectionHandled"): RejectionHandledListener[];
+        listeners(event: "uncaughtException"): UncaughtExceptionListener[];
+        listeners(event: "unhandledRejection"): UnhandledRejectionListener[];
+        listeners(event: "warning"): WarningListener[];
+        listeners(event: "message"): MessageListener[];
+        listeners(event: Signals): SignalsListener[];
+        listeners(event: "newListener"): NewListenerListener[];
+        listeners(event: "removeListener"): RemoveListenerListener[];
+        listeners(event: "multipleResolves"): MultipleResolveListener[];
+    }
+
+    interface Global {
+        Array: typeof Array;
+        ArrayBuffer: typeof ArrayBuffer;
+        Boolean: typeof Boolean;
+        Buffer: typeof Buffer;
+        DataView: typeof DataView;
+        Date: typeof Date;
+        Error: typeof Error;
+        EvalError: typeof EvalError;
+        Float32Array: typeof Float32Array;
+        Float64Array: typeof Float64Array;
+        Function: typeof Function;
+        GLOBAL: Global;
+        Infinity: typeof Infinity;
+        Int16Array: typeof Int16Array;
+        Int32Array: typeof Int32Array;
+        Int8Array: typeof Int8Array;
+        Intl: typeof Intl;
+        JSON: typeof JSON;
+        Map: MapConstructor;
+        Math: typeof Math;
+        NaN: typeof NaN;
+        Number: typeof Number;
+        Object: typeof Object;
+        Promise: Function;
+        RangeError: typeof RangeError;
+        ReferenceError: typeof ReferenceError;
+        RegExp: typeof RegExp;
+        Set: SetConstructor;
+        String: typeof String;
+        Symbol: Function;
+        SyntaxError: typeof SyntaxError;
+        TypeError: typeof TypeError;
+        URIError: typeof URIError;
+        Uint16Array: typeof Uint16Array;
+        Uint32Array: typeof Uint32Array;
+        Uint8Array: typeof Uint8Array;
+        Uint8ClampedArray: Function;
+        WeakMap: WeakMapConstructor;
+        WeakSet: WeakSetConstructor;
+        clearImmediate: (immediateId: Immediate) => void;
+        clearInterval: (intervalId: Timeout) => void;
+        clearTimeout: (timeoutId: Timeout) => void;
+        console: typeof console;
+        decodeURI: typeof decodeURI;
+        decodeURIComponent: typeof decodeURIComponent;
+        encodeURI: typeof encodeURI;
+        encodeURIComponent: typeof encodeURIComponent;
+        escape: (str: string) => string;
+        eval: typeof eval;
+        global: Global;
+        isFinite: typeof isFinite;
+        isNaN: typeof isNaN;
+        parseFloat: typeof parseFloat;
+        parseInt: typeof parseInt;
+        process: Process;
+        root: Global;
+        setImmediate: (callback: (...args: any[]) => void, ...args: any[]) => Immediate;
+        setInterval: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => Timeout;
+        setTimeout: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => Timeout;
+        queueMicrotask: typeof queueMicrotask;
+        undefined: typeof undefined;
+        unescape: (str: string) => string;
+        gc: () => void;
+        v8debug?: any;
+    }
+
+    // compatibility with older typings
+    interface Timer {
+        hasRef(): boolean;
+        ref(): this;
+        refresh(): this;
+        unref(): this;
+    }
+
+    class Immediate {
+        hasRef(): boolean;
+        ref(): this;
+        unref(): this;
+        _onImmediate: Function; // to distinguish it from the Timeout class
+    }
+
+    class Timeout implements Timer {
+        hasRef(): boolean;
+        ref(): this;
+        refresh(): this;
+        unref(): this;
+    }
+
+    class Module {
+        static runMain(): void;
+        static wrap(code: string): string;
+
+        /**
+         * @deprecated Deprecated since: v12.2.0. Please use createRequire() instead.
+         */
+        static createRequireFromPath(path: string): NodeRequire;
+        static createRequire(path: string): NodeRequire;
+        static builtinModules: string[];
+
+        static Module: typeof Module;
+
+        exports: any;
+        require: NodeRequireFunction;
+        id: string;
+        filename: string;
+        loaded: boolean;
+        parent: Module | null;
+        children: Module[];
+        paths: string[];
+
+        constructor(id: string, parent?: Module);
+    }
+
+    type TypedArray = Uint8Array | Uint8ClampedArray | Uint16Array | Uint32Array | Int8Array | Int16Array | Int32Array | Float32Array | Float64Array;
+    type ArrayBufferView = TypedArray | DataView;
+
+    // The value type here is a "poor man's \`unknown\`". When these types support TypeScript
+    // 3.0+, we can replace this with \`unknown\`.
+    type PoorMansUnknown = {} | null | undefined;
+}
+`;
+module.exports['http.d.ts'] = `declare module "http" {
+    import * as events from "events";
+    import * as stream from "stream";
+    import { URL } from "url";
+    import { Socket, Server as NetServer } from "net";
+
+    // incoming headers will never contain number
+    interface IncomingHttpHeaders {
+        'accept'?: string;
+        'accept-language'?: string;
+        'accept-patch'?: string;
+        'accept-ranges'?: string;
+        'access-control-allow-credentials'?: string;
+        'access-control-allow-headers'?: string;
+        'access-control-allow-methods'?: string;
+        'access-control-allow-origin'?: string;
+        'access-control-expose-headers'?: string;
+        'access-control-max-age'?: string;
+        'age'?: string;
+        'allow'?: string;
+        'alt-svc'?: string;
+        'authorization'?: string;
+        'cache-control'?: string;
+        'connection'?: string;
+        'content-disposition'?: string;
+        'content-encoding'?: string;
+        'content-language'?: string;
+        'content-length'?: string;
+        'content-location'?: string;
+        'content-range'?: string;
+        'content-type'?: string;
+        'cookie'?: string;
+        'date'?: string;
+        'expect'?: string;
+        'expires'?: string;
+        'forwarded'?: string;
+        'from'?: string;
+        'host'?: string;
+        'if-match'?: string;
+        'if-modified-since'?: string;
+        'if-none-match'?: string;
+        'if-unmodified-since'?: string;
+        'last-modified'?: string;
+        'location'?: string;
+        'pragma'?: string;
+        'proxy-authenticate'?: string;
+        'proxy-authorization'?: string;
+        'public-key-pins'?: string;
+        'range'?: string;
+        'referer'?: string;
+        'retry-after'?: string;
+        'set-cookie'?: string[];
+        'strict-transport-security'?: string;
+        'tk'?: string;
+        'trailer'?: string;
+        'transfer-encoding'?: string;
+        'upgrade'?: string;
+        'user-agent'?: string;
+        'vary'?: string;
+        'via'?: string;
+        'warning'?: string;
+        'www-authenticate'?: string;
+        [header: string]: string | string[] | undefined;
+    }
+
+    // outgoing headers allows numbers (as they are converted internally to strings)
+    interface OutgoingHttpHeaders {
+        [header: string]: number | string | string[] | undefined;
+    }
+
+    interface ClientRequestArgs {
+        protocol?: string | null;
+        host?: string | null;
+        hostname?: string | null;
+        family?: number;
+        port?: number | string | null;
+        defaultPort?: number | string;
+        localAddress?: string;
+        socketPath?: string;
+        method?: string;
+        path?: string | null;
+        headers?: OutgoingHttpHeaders;
+        auth?: string | null;
+        agent?: Agent | boolean;
+        _defaultAgent?: Agent;
+        timeout?: number;
+        setHost?: boolean;
+        // https://github.com/nodejs/node/blob/master/lib/_http_client.js#L278
+        createConnection?: (options: ClientRequestArgs, oncreate: (err: Error, socket: Socket) => void) => Socket;
+    }
+
+    interface ServerOptions {
+        IncomingMessage?: typeof IncomingMessage;
+        ServerResponse?: typeof ServerResponse;
+    }
+
+    type RequestListener = (req: IncomingMessage, res: ServerResponse) => void;
+
+    class Server extends NetServer {
+        constructor(requestListener?: RequestListener);
+        constructor(options: ServerOptions, requestListener?: RequestListener);
+
+        setTimeout(msecs?: number, callback?: () => void): this;
+        setTimeout(callback: () => void): this;
+        /**
+         * Limits maximum incoming headers count. If set to 0, no limit will be applied.
+         * @default 2000
+         * {@link https://nodejs.org/api/http.html#http_server_maxheaderscount}
+         */
+        maxHeadersCount: number | null;
+        timeout: number;
+        /**
+         * Limit the amount of time the parser will wait to receive the complete HTTP headers.
+         * @default 40000
+         * {@link https://nodejs.org/api/http.html#http_server_headerstimeout}
+         */
+        headersTimeout: number;
+        keepAliveTimeout: number;
+    }
+
+    // https://github.com/nodejs/node/blob/master/lib/_http_outgoing.js
+    class OutgoingMessage extends stream.Writable {
+        upgrading: boolean;
+        chunkedEncoding: boolean;
+        shouldKeepAlive: boolean;
+        useChunkedEncodingByDefault: boolean;
+        sendDate: boolean;
+        finished: boolean;
+        headersSent: boolean;
+        connection: Socket;
+
+        constructor();
+
+        setTimeout(msecs: number, callback?: () => void): this;
+        setHeader(name: string, value: number | string | string[]): void;
+        getHeader(name: string): number | string | string[] | undefined;
+        getHeaders(): OutgoingHttpHeaders;
+        getHeaderNames(): string[];
+        hasHeader(name: string): boolean;
+        removeHeader(name: string): void;
+        addTrailers(headers: OutgoingHttpHeaders | Array<[string, string]>): void;
+        flushHeaders(): void;
+    }
+
+    // https://github.com/nodejs/node/blob/master/lib/_http_server.js#L108-L256
+    class ServerResponse extends OutgoingMessage {
+        statusCode: number;
+        statusMessage: string;
+        writableFinished: boolean;
+
+        constructor(req: IncomingMessage);
+
+        assignSocket(socket: Socket): void;
+        detachSocket(socket: Socket): void;
+        // https://github.com/nodejs/node/blob/master/test/parallel/test-http-write-callbacks.js#L53
+        // no args in writeContinue callback
+        writeContinue(callback?: () => void): void;
+        writeHead(statusCode: number, reasonPhrase?: string, headers?: OutgoingHttpHeaders): this;
+        writeHead(statusCode: number, headers?: OutgoingHttpHeaders): this;
+        writeProcessing(): void;
+    }
+
+    interface InformationEvent {
+        statusCode: number;
+        statusMessage: string;
+        httpVersion: string;
+        httpVersionMajor: number;
+        httpVersionMinor: number;
+        headers: IncomingHttpHeaders;
+        rawHeaders: string[];
+    }
+
+    // https://github.com/nodejs/node/blob/master/lib/_http_client.js#L77
+    class ClientRequest extends OutgoingMessage {
+        connection: Socket;
+        socket: Socket;
+        aborted: number;
+
+        constructor(url: string | URL | ClientRequestArgs, cb?: (res: IncomingMessage) => void);
+
+        readonly path: string;
+        abort(): void;
+        onSocket(socket: Socket): void;
+        setTimeout(timeout: number, callback?: () => void): this;
+        setNoDelay(noDelay?: boolean): void;
+        setSocketKeepAlive(enable?: boolean, initialDelay?: number): void;
+
+        addListener(event: 'abort', listener: () => void): this;
+        addListener(event: 'connect', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        addListener(event: 'continue', listener: () => void): this;
+        addListener(event: 'information', listener: (info: InformationEvent) => void): this;
+        addListener(event: 'response', listener: (response: IncomingMessage) => void): this;
+        addListener(event: 'socket', listener: (socket: Socket) => void): this;
+        addListener(event: 'timeout', listener: () => void): this;
+        addListener(event: 'upgrade', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        addListener(event: 'close', listener: () => void): this;
+        addListener(event: 'drain', listener: () => void): this;
+        addListener(event: 'error', listener: (err: Error) => void): this;
+        addListener(event: 'finish', listener: () => void): this;
+        addListener(event: 'pipe', listener: (src: stream.Readable) => void): this;
+        addListener(event: 'unpipe', listener: (src: stream.Readable) => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        on(event: 'abort', listener: () => void): this;
+        on(event: 'connect', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        on(event: 'continue', listener: () => void): this;
+        on(event: 'information', listener: (info: InformationEvent) => void): this;
+        on(event: 'response', listener: (response: IncomingMessage) => void): this;
+        on(event: 'socket', listener: (socket: Socket) => void): this;
+        on(event: 'timeout', listener: () => void): this;
+        on(event: 'upgrade', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        on(event: 'close', listener: () => void): this;
+        on(event: 'drain', listener: () => void): this;
+        on(event: 'error', listener: (err: Error) => void): this;
+        on(event: 'finish', listener: () => void): this;
+        on(event: 'pipe', listener: (src: stream.Readable) => void): this;
+        on(event: 'unpipe', listener: (src: stream.Readable) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: 'abort', listener: () => void): this;
+        once(event: 'connect', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        once(event: 'continue', listener: () => void): this;
+        once(event: 'information', listener: (info: InformationEvent) => void): this;
+        once(event: 'response', listener: (response: IncomingMessage) => void): this;
+        once(event: 'socket', listener: (socket: Socket) => void): this;
+        once(event: 'timeout', listener: () => void): this;
+        once(event: 'upgrade', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        once(event: 'close', listener: () => void): this;
+        once(event: 'drain', listener: () => void): this;
+        once(event: 'error', listener: (err: Error) => void): this;
+        once(event: 'finish', listener: () => void): this;
+        once(event: 'pipe', listener: (src: stream.Readable) => void): this;
+        once(event: 'unpipe', listener: (src: stream.Readable) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: 'abort', listener: () => void): this;
+        prependListener(event: 'connect', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        prependListener(event: 'continue', listener: () => void): this;
+        prependListener(event: 'information', listener: (info: InformationEvent) => void): this;
+        prependListener(event: 'response', listener: (response: IncomingMessage) => void): this;
+        prependListener(event: 'socket', listener: (socket: Socket) => void): this;
+        prependListener(event: 'timeout', listener: () => void): this;
+        prependListener(event: 'upgrade', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        prependListener(event: 'close', listener: () => void): this;
+        prependListener(event: 'drain', listener: () => void): this;
+        prependListener(event: 'error', listener: (err: Error) => void): this;
+        prependListener(event: 'finish', listener: () => void): this;
+        prependListener(event: 'pipe', listener: (src: stream.Readable) => void): this;
+        prependListener(event: 'unpipe', listener: (src: stream.Readable) => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: 'abort', listener: () => void): this;
+        prependOnceListener(event: 'connect', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        prependOnceListener(event: 'continue', listener: () => void): this;
+        prependOnceListener(event: 'information', listener: (info: InformationEvent) => void): this;
+        prependOnceListener(event: 'response', listener: (response: IncomingMessage) => void): this;
+        prependOnceListener(event: 'socket', listener: (socket: Socket) => void): this;
+        prependOnceListener(event: 'timeout', listener: () => void): this;
+        prependOnceListener(event: 'upgrade', listener: (response: IncomingMessage, socket: Socket, head: Buffer) => void): this;
+        prependOnceListener(event: 'close', listener: () => void): this;
+        prependOnceListener(event: 'drain', listener: () => void): this;
+        prependOnceListener(event: 'error', listener: (err: Error) => void): this;
+        prependOnceListener(event: 'finish', listener: () => void): this;
+        prependOnceListener(event: 'pipe', listener: (src: stream.Readable) => void): this;
+        prependOnceListener(event: 'unpipe', listener: (src: stream.Readable) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    class IncomingMessage extends stream.Readable {
+        constructor(socket: Socket);
+
+        aborted: boolean;
+        httpVersion: string;
+        httpVersionMajor: number;
+        httpVersionMinor: number;
+        complete: boolean;
+        connection: Socket;
+        headers: IncomingHttpHeaders;
+        rawHeaders: string[];
+        trailers: { [key: string]: string | undefined };
+        rawTrailers: string[];
+        setTimeout(msecs: number, callback?: () => void): this;
+        /**
+         * Only valid for request obtained from http.Server.
+         */
+        method?: string;
+        /**
+         * Only valid for request obtained from http.Server.
+         */
+        url?: string;
+        /**
+         * Only valid for response obtained from http.ClientRequest.
+         */
+        statusCode?: number;
+        /**
+         * Only valid for response obtained from http.ClientRequest.
+         */
+        statusMessage?: string;
+        socket: Socket;
+        destroy(error?: Error): void;
+    }
+
+    interface AgentOptions {
+        /**
+         * Keep sockets around in a pool to be used by other requests in the future. Default = false
+         */
+        keepAlive?: boolean;
+        /**
+         * When using HTTP KeepAlive, how often to send TCP KeepAlive packets over sockets being kept alive. Default = 1000.
+         * Only relevant if keepAlive is set to true.
+         */
+        keepAliveMsecs?: number;
+        /**
+         * Maximum number of sockets to allow per host. Default for Node 0.10 is 5, default for Node 0.12 is Infinity
+         */
+        maxSockets?: number;
+        /**
+         * Maximum number of sockets to leave open in a free state. Only relevant if keepAlive is set to true. Default = 256.
+         */
+        maxFreeSockets?: number;
+        /**
+         * Socket timeout in milliseconds. This will set the timeout after the socket is connected.
+         */
+        timeout?: number;
+    }
+
+    class Agent {
+        maxFreeSockets: number;
+        maxSockets: number;
+        readonly sockets: {
+            readonly [key: string]: Socket[];
+        };
+        readonly requests: {
+            readonly [key: string]: IncomingMessage[];
+        };
+
+        constructor(opts?: AgentOptions);
+
+        /**
+         * Destroy any sockets that are currently in use by the agent.
+         * It is usually not necessary to do this. However, if you are using an agent with KeepAlive enabled,
+         * then it is best to explicitly shut down the agent when you know that it will no longer be used. Otherwise,
+         * sockets may hang open for quite a long time before the server terminates them.
+         */
+        destroy(): void;
+    }
+
+    const METHODS: string[];
+
+    const STATUS_CODES: {
+        [errorCode: number]: string | undefined;
+        [errorCode: string]: string | undefined;
+    };
+
+    function createServer(requestListener?: RequestListener): Server;
+    function createServer(options: ServerOptions, requestListener?: RequestListener): Server;
+
+    // although RequestOptions are passed as ClientRequestArgs to ClientRequest directly,
+    // create interface RequestOptions would make the naming more clear to developers
+    interface RequestOptions extends ClientRequestArgs { }
+    function request(options: RequestOptions | string | URL, callback?: (res: IncomingMessage) => void): ClientRequest;
+    function request(url: string | URL, options: RequestOptions, callback?: (res: IncomingMessage) => void): ClientRequest;
+    function get(options: RequestOptions | string | URL, callback?: (res: IncomingMessage) => void): ClientRequest;
+    function get(url: string | URL, options: RequestOptions, callback?: (res: IncomingMessage) => void): ClientRequest;
+    let globalAgent: Agent;
+
+    /**
+     * Read-only property specifying the maximum allowed size of HTTP headers in bytes.
+     * Defaults to 8KB. Configurable using the [\`--max-http-header-size\`][] CLI option.
+     */
+    const maxHeaderSize: number;
+}
+`;
+module.exports['http2.d.ts'] = `declare module "http2" {
+    import * as events from "events";
+    import * as fs from "fs";
+    import * as net from "net";
+    import * as stream from "stream";
+    import * as tls from "tls";
+    import * as url from "url";
+
+    import { IncomingHttpHeaders as Http1IncomingHttpHeaders, OutgoingHttpHeaders, IncomingMessage, ServerResponse } from "http";
+    export { OutgoingHttpHeaders } from "http";
+
+    export interface IncomingHttpStatusHeader {
+        ":status"?: number;
+    }
+
+    export interface IncomingHttpHeaders extends Http1IncomingHttpHeaders {
+        ":path"?: string;
+        ":method"?: string;
+        ":authority"?: string;
+        ":scheme"?: string;
+    }
+
+    // Http2Stream
+
+    export interface StreamPriorityOptions {
+        exclusive?: boolean;
+        parent?: number;
+        weight?: number;
+        silent?: boolean;
+    }
+
+    export interface StreamState {
+        localWindowSize?: number;
+        state?: number;
+        localClose?: number;
+        remoteClose?: number;
+        sumDependencyWeight?: number;
+        weight?: number;
+    }
+
+    export interface ServerStreamResponseOptions {
+        endStream?: boolean;
+        waitForTrailers?: boolean;
+    }
+
+    export interface StatOptions {
+        offset: number;
+        length: number;
+    }
+
+    export interface ServerStreamFileResponseOptions {
+        statCheck?(stats: fs.Stats, headers: OutgoingHttpHeaders, statOptions: StatOptions): void | boolean;
+        waitForTrailers?: boolean;
+        offset?: number;
+        length?: number;
+    }
+
+    export interface ServerStreamFileResponseOptionsWithError extends ServerStreamFileResponseOptions {
+        onError?(err: NodeJS.ErrnoException): void;
+    }
+
+    export interface Http2Stream extends stream.Duplex {
+        readonly aborted: boolean;
+        readonly bufferSize: number;
+        readonly closed: boolean;
+        readonly destroyed: boolean;
+        /**
+         * Set the true if the END_STREAM flag was set in the request or response HEADERS frame received,
+         * indicating that no additional data should be received and the readable side of the Http2Stream will be closed.
+         */
+        readonly endAfterHeaders: boolean;
+        readonly id?: number;
+        readonly pending: boolean;
+        readonly rstCode: number;
+        readonly sentHeaders: OutgoingHttpHeaders;
+        readonly sentInfoHeaders?: OutgoingHttpHeaders[];
+        readonly sentTrailers?: OutgoingHttpHeaders;
+        readonly session: Http2Session;
+        readonly state: StreamState;
+
+        close(code?: number, callback?: () => void): void;
+        priority(options: StreamPriorityOptions): void;
+        setTimeout(msecs: number, callback?: () => void): void;
+        sendTrailers(headers: OutgoingHttpHeaders): void;
+
+        addListener(event: "aborted", listener: () => void): this;
+        addListener(event: "close", listener: () => void): this;
+        addListener(event: "data", listener: (chunk: Buffer | string) => void): this;
+        addListener(event: "drain", listener: () => void): this;
+        addListener(event: "end", listener: () => void): this;
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: "finish", listener: () => void): this;
+        addListener(event: "frameError", listener: (frameType: number, errorCode: number) => void): this;
+        addListener(event: "pipe", listener: (src: stream.Readable) => void): this;
+        addListener(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        addListener(event: "streamClosed", listener: (code: number) => void): this;
+        addListener(event: "timeout", listener: () => void): this;
+        addListener(event: "trailers", listener: (trailers: IncomingHttpHeaders, flags: number) => void): this;
+        addListener(event: "wantTrailers", listener: () => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "aborted"): boolean;
+        emit(event: "close"): boolean;
+        emit(event: "data", chunk: Buffer | string): boolean;
+        emit(event: "drain"): boolean;
+        emit(event: "end"): boolean;
+        emit(event: "error", err: Error): boolean;
+        emit(event: "finish"): boolean;
+        emit(event: "frameError", frameType: number, errorCode: number): boolean;
+        emit(event: "pipe", src: stream.Readable): boolean;
+        emit(event: "unpipe", src: stream.Readable): boolean;
+        emit(event: "streamClosed", code: number): boolean;
+        emit(event: "timeout"): boolean;
+        emit(event: "trailers", trailers: IncomingHttpHeaders, flags: number): boolean;
+        emit(event: "wantTrailers"): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "aborted", listener: () => void): this;
+        on(event: "close", listener: () => void): this;
+        on(event: "data", listener: (chunk: Buffer | string) => void): this;
+        on(event: "drain", listener: () => void): this;
+        on(event: "end", listener: () => void): this;
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: "finish", listener: () => void): this;
+        on(event: "frameError", listener: (frameType: number, errorCode: number) => void): this;
+        on(event: "pipe", listener: (src: stream.Readable) => void): this;
+        on(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        on(event: "streamClosed", listener: (code: number) => void): this;
+        on(event: "timeout", listener: () => void): this;
+        on(event: "trailers", listener: (trailers: IncomingHttpHeaders, flags: number) => void): this;
+        on(event: "wantTrailers", listener: () => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "aborted", listener: () => void): this;
+        once(event: "close", listener: () => void): this;
+        once(event: "data", listener: (chunk: Buffer | string) => void): this;
+        once(event: "drain", listener: () => void): this;
+        once(event: "end", listener: () => void): this;
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: "finish", listener: () => void): this;
+        once(event: "frameError", listener: (frameType: number, errorCode: number) => void): this;
+        once(event: "pipe", listener: (src: stream.Readable) => void): this;
+        once(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        once(event: "streamClosed", listener: (code: number) => void): this;
+        once(event: "timeout", listener: () => void): this;
+        once(event: "trailers", listener: (trailers: IncomingHttpHeaders, flags: number) => void): this;
+        once(event: "wantTrailers", listener: () => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "aborted", listener: () => void): this;
+        prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "data", listener: (chunk: Buffer | string) => void): this;
+        prependListener(event: "drain", listener: () => void): this;
+        prependListener(event: "end", listener: () => void): this;
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: "finish", listener: () => void): this;
+        prependListener(event: "frameError", listener: (frameType: number, errorCode: number) => void): this;
+        prependListener(event: "pipe", listener: (src: stream.Readable) => void): this;
+        prependListener(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        prependListener(event: "streamClosed", listener: (code: number) => void): this;
+        prependListener(event: "timeout", listener: () => void): this;
+        prependListener(event: "trailers", listener: (trailers: IncomingHttpHeaders, flags: number) => void): this;
+        prependListener(event: "wantTrailers", listener: () => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "aborted", listener: () => void): this;
+        prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "data", listener: (chunk: Buffer | string) => void): this;
+        prependOnceListener(event: "drain", listener: () => void): this;
+        prependOnceListener(event: "end", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: "finish", listener: () => void): this;
+        prependOnceListener(event: "frameError", listener: (frameType: number, errorCode: number) => void): this;
+        prependOnceListener(event: "pipe", listener: (src: stream.Readable) => void): this;
+        prependOnceListener(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        prependOnceListener(event: "streamClosed", listener: (code: number) => void): this;
+        prependOnceListener(event: "timeout", listener: () => void): this;
+        prependOnceListener(event: "trailers", listener: (trailers: IncomingHttpHeaders, flags: number) => void): this;
+        prependOnceListener(event: "wantTrailers", listener: () => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    export interface ClientHttp2Stream extends Http2Stream {
+        addListener(event: "continue", listener: () => {}): this;
+        addListener(event: "headers", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        addListener(event: "push", listener: (headers: IncomingHttpHeaders, flags: number) => void): this;
+        addListener(event: "response", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "continue"): boolean;
+        emit(event: "headers", headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number): boolean;
+        emit(event: "push", headers: IncomingHttpHeaders, flags: number): boolean;
+        emit(event: "response", headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "continue", listener: () => {}): this;
+        on(event: "headers", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        on(event: "push", listener: (headers: IncomingHttpHeaders, flags: number) => void): this;
+        on(event: "response", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "continue", listener: () => {}): this;
+        once(event: "headers", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        once(event: "push", listener: (headers: IncomingHttpHeaders, flags: number) => void): this;
+        once(event: "response", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "continue", listener: () => {}): this;
+        prependListener(event: "headers", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        prependListener(event: "push", listener: (headers: IncomingHttpHeaders, flags: number) => void): this;
+        prependListener(event: "response", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "continue", listener: () => {}): this;
+        prependOnceListener(event: "headers", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        prependOnceListener(event: "push", listener: (headers: IncomingHttpHeaders, flags: number) => void): this;
+        prependOnceListener(event: "response", listener: (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    export interface ServerHttp2Stream extends Http2Stream {
+        readonly headersSent: boolean;
+        readonly pushAllowed: boolean;
+        additionalHeaders(headers: OutgoingHttpHeaders): void;
+        pushStream(headers: OutgoingHttpHeaders, callback?: (err: Error | null, pushStream: ServerHttp2Stream, headers: OutgoingHttpHeaders) => void): void;
+        pushStream(headers: OutgoingHttpHeaders, options?: StreamPriorityOptions, callback?: (err: Error | null, pushStream: ServerHttp2Stream, headers: OutgoingHttpHeaders) => void): void;
+        respond(headers?: OutgoingHttpHeaders, options?: ServerStreamResponseOptions): void;
+        respondWithFD(fd: number | fs.promises.FileHandle, headers?: OutgoingHttpHeaders, options?: ServerStreamFileResponseOptions): void;
+        respondWithFile(path: string, headers?: OutgoingHttpHeaders, options?: ServerStreamFileResponseOptionsWithError): void;
+    }
+
+    // Http2Session
+
+    export interface Settings {
+        headerTableSize?: number;
+        enablePush?: boolean;
+        initialWindowSize?: number;
+        maxFrameSize?: number;
+        maxConcurrentStreams?: number;
+        maxHeaderListSize?: number;
+        enableConnectProtocol?: boolean;
+    }
+
+    export interface ClientSessionRequestOptions {
+        endStream?: boolean;
+        exclusive?: boolean;
+        parent?: number;
+        weight?: number;
+        waitForTrailers?: boolean;
+    }
+
+    export interface SessionState {
+        effectiveLocalWindowSize?: number;
+        effectiveRecvDataLength?: number;
+        nextStreamID?: number;
+        localWindowSize?: number;
+        lastProcStreamID?: number;
+        remoteWindowSize?: number;
+        outboundQueueSize?: number;
+        deflateDynamicTableSize?: number;
+        inflateDynamicTableSize?: number;
+    }
+
+    export interface Http2Session extends events.EventEmitter {
+        readonly alpnProtocol?: string;
+        readonly closed: boolean;
+        readonly connecting: boolean;
+        readonly destroyed: boolean;
+        readonly encrypted?: boolean;
+        readonly localSettings: Settings;
+        readonly originSet?: string[];
+        readonly pendingSettingsAck: boolean;
+        readonly remoteSettings: Settings;
+        readonly socket: net.Socket | tls.TLSSocket;
+        readonly state: SessionState;
+        readonly type: number;
+
+        close(callback?: () => void): void;
+        destroy(error?: Error, code?: number): void;
+        goaway(code?: number, lastStreamID?: number, opaqueData?: NodeJS.ArrayBufferView): void;
+        ping(callback: (err: Error | null, duration: number, payload: Buffer) => void): boolean;
+        ping(payload: NodeJS.ArrayBufferView, callback: (err: Error | null, duration: number, payload: Buffer) => void): boolean;
+        ref(): void;
+        setTimeout(msecs: number, callback?: () => void): void;
+        settings(settings: Settings): void;
+        unref(): void;
+
+        addListener(event: "close", listener: () => void): this;
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: "frameError", listener: (frameType: number, errorCode: number, streamID: number) => void): this;
+        addListener(event: "goaway", listener: (errorCode: number, lastStreamID: number, opaqueData: Buffer) => void): this;
+        addListener(event: "localSettings", listener: (settings: Settings) => void): this;
+        addListener(event: "ping", listener: () => void): this;
+        addListener(event: "remoteSettings", listener: (settings: Settings) => void): this;
+        addListener(event: "timeout", listener: () => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "close"): boolean;
+        emit(event: "error", err: Error): boolean;
+        emit(event: "frameError", frameType: number, errorCode: number, streamID: number): boolean;
+        emit(event: "goaway", errorCode: number, lastStreamID: number, opaqueData: Buffer): boolean;
+        emit(event: "localSettings", settings: Settings): boolean;
+        emit(event: "ping"): boolean;
+        emit(event: "remoteSettings", settings: Settings): boolean;
+        emit(event: "timeout"): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "close", listener: () => void): this;
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: "frameError", listener: (frameType: number, errorCode: number, streamID: number) => void): this;
+        on(event: "goaway", listener: (errorCode: number, lastStreamID: number, opaqueData: Buffer) => void): this;
+        on(event: "localSettings", listener: (settings: Settings) => void): this;
+        on(event: "ping", listener: () => void): this;
+        on(event: "remoteSettings", listener: (settings: Settings) => void): this;
+        on(event: "timeout", listener: () => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "close", listener: () => void): this;
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: "frameError", listener: (frameType: number, errorCode: number, streamID: number) => void): this;
+        once(event: "goaway", listener: (errorCode: number, lastStreamID: number, opaqueData: Buffer) => void): this;
+        once(event: "localSettings", listener: (settings: Settings) => void): this;
+        once(event: "ping", listener: () => void): this;
+        once(event: "remoteSettings", listener: (settings: Settings) => void): this;
+        once(event: "timeout", listener: () => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: "frameError", listener: (frameType: number, errorCode: number, streamID: number) => void): this;
+        prependListener(event: "goaway", listener: (errorCode: number, lastStreamID: number, opaqueData: Buffer) => void): this;
+        prependListener(event: "localSettings", listener: (settings: Settings) => void): this;
+        prependListener(event: "ping", listener: () => void): this;
+        prependListener(event: "remoteSettings", listener: (settings: Settings) => void): this;
+        prependListener(event: "timeout", listener: () => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: "frameError", listener: (frameType: number, errorCode: number, streamID: number) => void): this;
+        prependOnceListener(event: "goaway", listener: (errorCode: number, lastStreamID: number, opaqueData: Buffer) => void): this;
+        prependOnceListener(event: "localSettings", listener: (settings: Settings) => void): this;
+        prependOnceListener(event: "ping", listener: () => void): this;
+        prependOnceListener(event: "remoteSettings", listener: (settings: Settings) => void): this;
+        prependOnceListener(event: "timeout", listener: () => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    export interface ClientHttp2Session extends Http2Session {
+        request(headers?: OutgoingHttpHeaders, options?: ClientSessionRequestOptions): ClientHttp2Stream;
+
+        addListener(event: "altsvc", listener: (alt: string, origin: string, stream: number) => void): this;
+        addListener(event: "origin", listener: (origins: string[]) => void): this;
+        addListener(event: "connect", listener: (session: ClientHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        addListener(event: "stream", listener: (stream: ClientHttp2Stream, headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "altsvc", alt: string, origin: string, stream: number): boolean;
+        emit(event: "origin", origins: string[]): boolean;
+        emit(event: "connect", session: ClientHttp2Session, socket: net.Socket | tls.TLSSocket): boolean;
+        emit(event: "stream", stream: ClientHttp2Stream, headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "altsvc", listener: (alt: string, origin: string, stream: number) => void): this;
+        on(event: "origin", listener: (origins: string[]) => void): this;
+        on(event: "connect", listener: (session: ClientHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        on(event: "stream", listener: (stream: ClientHttp2Stream, headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "altsvc", listener: (alt: string, origin: string, stream: number) => void): this;
+        once(event: "origin", listener: (origins: string[]) => void): this;
+        once(event: "connect", listener: (session: ClientHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        once(event: "stream", listener: (stream: ClientHttp2Stream, headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "altsvc", listener: (alt: string, origin: string, stream: number) => void): this;
+        prependListener(event: "origin", listener: (origins: string[]) => void): this;
+        prependListener(event: "connect", listener: (session: ClientHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        prependListener(event: "stream", listener: (stream: ClientHttp2Stream, headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "altsvc", listener: (alt: string, origin: string, stream: number) => void): this;
+        prependOnceListener(event: "origin", listener: (origins: string[]) => void): this;
+        prependOnceListener(event: "connect", listener: (session: ClientHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        prependOnceListener(event: "stream", listener: (stream: ClientHttp2Stream, headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    export interface AlternativeServiceOptions {
+        origin: number | string | url.URL;
+    }
+
+    export interface ServerHttp2Session extends Http2Session {
+        readonly server: Http2Server | Http2SecureServer;
+
+        altsvc(alt: string, originOrStream: number | string | url.URL | AlternativeServiceOptions): void;
+        origin(...args: Array<string | url.URL | { origin: string }>): void;
+
+        addListener(event: "connect", listener: (session: ServerHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        addListener(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "connect", session: ServerHttp2Session, socket: net.Socket | tls.TLSSocket): boolean;
+        emit(event: "stream", stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "connect", listener: (session: ServerHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        on(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "connect", listener: (session: ServerHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        once(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "connect", listener: (session: ServerHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        prependListener(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "connect", listener: (session: ServerHttp2Session, socket: net.Socket | tls.TLSSocket) => void): this;
+        prependOnceListener(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    // Http2Server
+
+    export interface SessionOptions {
+        maxDeflateDynamicTableSize?: number;
+        maxSessionMemory?: number;
+        maxHeaderListPairs?: number;
+        maxOutstandingPings?: number;
+        maxSendHeaderBlockLength?: number;
+        paddingStrategy?: number;
+        peerMaxConcurrentStreams?: number;
+        settings?: Settings;
+
+        selectPadding?(frameLen: number, maxFrameLen: number): number;
+        createConnection?(authority: url.URL, option: SessionOptions): stream.Duplex;
+    }
+
+    export interface ClientSessionOptions extends SessionOptions {
+        maxReservedRemoteStreams?: number;
+        createConnection?: (authority: url.URL, option: SessionOptions) => stream.Duplex;
+    }
+
+    export interface ServerSessionOptions extends SessionOptions {
+        Http1IncomingMessage?: typeof IncomingMessage;
+        Http1ServerResponse?: typeof ServerResponse;
+        Http2ServerRequest?: typeof Http2ServerRequest;
+        Http2ServerResponse?: typeof Http2ServerResponse;
+    }
+
+    export interface SecureClientSessionOptions extends ClientSessionOptions, tls.ConnectionOptions { }
+    export interface SecureServerSessionOptions extends ServerSessionOptions, tls.TlsOptions { }
+
+    export interface ServerOptions extends ServerSessionOptions { }
+
+    export interface SecureServerOptions extends SecureServerSessionOptions {
+        allowHTTP1?: boolean;
+        origins?: string[];
+    }
+
+    export interface Http2Server extends net.Server {
+        addListener(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        addListener(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        addListener(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        addListener(event: "sessionError", listener: (err: Error) => void): this;
+        addListener(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        addListener(event: "timeout", listener: () => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "checkContinue", request: Http2ServerRequest, response: Http2ServerResponse): boolean;
+        emit(event: "request", request: Http2ServerRequest, response: Http2ServerResponse): boolean;
+        emit(event: "session", session: ServerHttp2Session): boolean;
+        emit(event: "sessionError", err: Error): boolean;
+        emit(event: "stream", stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number): boolean;
+        emit(event: "timeout"): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        on(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        on(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        on(event: "sessionError", listener: (err: Error) => void): this;
+        on(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        on(event: "timeout", listener: () => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        once(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        once(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        once(event: "sessionError", listener: (err: Error) => void): this;
+        once(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        once(event: "timeout", listener: () => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        prependListener(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        prependListener(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        prependListener(event: "sessionError", listener: (err: Error) => void): this;
+        prependListener(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        prependListener(event: "timeout", listener: () => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        prependOnceListener(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        prependOnceListener(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        prependOnceListener(event: "sessionError", listener: (err: Error) => void): this;
+        prependOnceListener(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        prependOnceListener(event: "timeout", listener: () => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        setTimeout(msec?: number, callback?: () => void): this;
+    }
+
+    export interface Http2SecureServer extends tls.Server {
+        addListener(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        addListener(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        addListener(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        addListener(event: "sessionError", listener: (err: Error) => void): this;
+        addListener(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        addListener(event: "timeout", listener: () => void): this;
+        addListener(event: "unknownProtocol", listener: (socket: tls.TLSSocket) => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "checkContinue", request: Http2ServerRequest, response: Http2ServerResponse): boolean;
+        emit(event: "request", request: Http2ServerRequest, response: Http2ServerResponse): boolean;
+        emit(event: "session", session: ServerHttp2Session): boolean;
+        emit(event: "sessionError", err: Error): boolean;
+        emit(event: "stream", stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number): boolean;
+        emit(event: "timeout"): boolean;
+        emit(event: "unknownProtocol", socket: tls.TLSSocket): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        on(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        on(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        on(event: "sessionError", listener: (err: Error) => void): this;
+        on(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        on(event: "timeout", listener: () => void): this;
+        on(event: "unknownProtocol", listener: (socket: tls.TLSSocket) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        once(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        once(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        once(event: "sessionError", listener: (err: Error) => void): this;
+        once(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        once(event: "timeout", listener: () => void): this;
+        once(event: "unknownProtocol", listener: (socket: tls.TLSSocket) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        prependListener(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        prependListener(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        prependListener(event: "sessionError", listener: (err: Error) => void): this;
+        prependListener(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        prependListener(event: "timeout", listener: () => void): this;
+        prependListener(event: "unknownProtocol", listener: (socket: tls.TLSSocket) => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "checkContinue", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        prependOnceListener(event: "request", listener: (request: Http2ServerRequest, response: Http2ServerResponse) => void): this;
+        prependOnceListener(event: "session", listener: (session: ServerHttp2Session) => void): this;
+        prependOnceListener(event: "sessionError", listener: (err: Error) => void): this;
+        prependOnceListener(event: "stream", listener: (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => void): this;
+        prependOnceListener(event: "timeout", listener: () => void): this;
+        prependOnceListener(event: "unknownProtocol", listener: (socket: tls.TLSSocket) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        setTimeout(msec?: number, callback?: () => void): this;
+    }
+
+    export class Http2ServerRequest extends stream.Readable {
+        constructor(stream: ServerHttp2Stream, headers: IncomingHttpHeaders, options: stream.ReadableOptions, rawHeaders: string[]);
+
+        readonly aborted: boolean;
+        readonly authority: string;
+        readonly headers: IncomingHttpHeaders;
+        readonly httpVersion: string;
+        readonly method: string;
+        readonly rawHeaders: string[];
+        readonly rawTrailers: string[];
+        readonly scheme: string;
+        readonly socket: net.Socket | tls.TLSSocket;
+        readonly stream: ServerHttp2Stream;
+        readonly trailers: IncomingHttpHeaders;
+        readonly url: string;
+
+        setTimeout(msecs: number, callback?: () => void): void;
+        read(size?: number): Buffer | string | null;
+
+        addListener(event: "aborted", listener: (hadError: boolean, code: number) => void): this;
+        addListener(event: "close", listener: () => void): this;
+        addListener(event: "data", listener: (chunk: Buffer | string) => void): this;
+        addListener(event: "end", listener: () => void): this;
+        addListener(event: "readable", listener: () => void): this;
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "aborted", hadError: boolean, code: number): boolean;
+        emit(event: "close"): boolean;
+        emit(event: "data", chunk: Buffer | string): boolean;
+        emit(event: "end"): boolean;
+        emit(event: "readable"): boolean;
+        emit(event: "error", err: Error): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "aborted", listener: (hadError: boolean, code: number) => void): this;
+        on(event: "close", listener: () => void): this;
+        on(event: "data", listener: (chunk: Buffer | string) => void): this;
+        on(event: "end", listener: () => void): this;
+        on(event: "readable", listener: () => void): this;
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "aborted", listener: (hadError: boolean, code: number) => void): this;
+        once(event: "close", listener: () => void): this;
+        once(event: "data", listener: (chunk: Buffer | string) => void): this;
+        once(event: "end", listener: () => void): this;
+        once(event: "readable", listener: () => void): this;
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "aborted", listener: (hadError: boolean, code: number) => void): this;
+        prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "data", listener: (chunk: Buffer | string) => void): this;
+        prependListener(event: "end", listener: () => void): this;
+        prependListener(event: "readable", listener: () => void): this;
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "aborted", listener: (hadError: boolean, code: number) => void): this;
+        prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "data", listener: (chunk: Buffer | string) => void): this;
+        prependOnceListener(event: "end", listener: () => void): this;
+        prependOnceListener(event: "readable", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    export class Http2ServerResponse extends stream.Stream {
+        constructor(stream: ServerHttp2Stream);
+
+        readonly connection: net.Socket | tls.TLSSocket;
+        readonly finished: boolean;
+        readonly headersSent: boolean;
+        readonly socket: net.Socket | tls.TLSSocket;
+        readonly stream: ServerHttp2Stream;
+        sendDate: boolean;
+        statusCode: number;
+        statusMessage: '';
+        addTrailers(trailers: OutgoingHttpHeaders): void;
+        end(callback?: () => void): void;
+        end(data: string | Uint8Array, callback?: () => void): void;
+        end(data: string | Uint8Array, encoding: string, callback?: () => void): void;
+        getHeader(name: string): string;
+        getHeaderNames(): string[];
+        getHeaders(): OutgoingHttpHeaders;
+        hasHeader(name: string): boolean;
+        removeHeader(name: string): void;
+        setHeader(name: string, value: number | string | string[]): void;
+        setTimeout(msecs: number, callback?: () => void): void;
+        write(chunk: string | Uint8Array, callback?: (err: Error) => void): boolean;
+        write(chunk: string | Uint8Array, encoding: string, callback?: (err: Error) => void): boolean;
+        writeContinue(): void;
+        writeHead(statusCode: number, headers?: OutgoingHttpHeaders): this;
+        writeHead(statusCode: number, statusMessage: string, headers?: OutgoingHttpHeaders): this;
+        createPushResponse(headers: OutgoingHttpHeaders, callback: (err: Error | null, res: Http2ServerResponse) => void): void;
+
+        addListener(event: "close", listener: () => void): this;
+        addListener(event: "drain", listener: () => void): this;
+        addListener(event: "error", listener: (error: Error) => void): this;
+        addListener(event: "finish", listener: () => void): this;
+        addListener(event: "pipe", listener: (src: stream.Readable) => void): this;
+        addListener(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "close"): boolean;
+        emit(event: "drain"): boolean;
+        emit(event: "error", error: Error): boolean;
+        emit(event: "finish"): boolean;
+        emit(event: "pipe", src: stream.Readable): boolean;
+        emit(event: "unpipe", src: stream.Readable): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "close", listener: () => void): this;
+        on(event: "drain", listener: () => void): this;
+        on(event: "error", listener: (error: Error) => void): this;
+        on(event: "finish", listener: () => void): this;
+        on(event: "pipe", listener: (src: stream.Readable) => void): this;
+        on(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "close", listener: () => void): this;
+        once(event: "drain", listener: () => void): this;
+        once(event: "error", listener: (error: Error) => void): this;
+        once(event: "finish", listener: () => void): this;
+        once(event: "pipe", listener: (src: stream.Readable) => void): this;
+        once(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "drain", listener: () => void): this;
+        prependListener(event: "error", listener: (error: Error) => void): this;
+        prependListener(event: "finish", listener: () => void): this;
+        prependListener(event: "pipe", listener: (src: stream.Readable) => void): this;
+        prependListener(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "drain", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (error: Error) => void): this;
+        prependOnceListener(event: "finish", listener: () => void): this;
+        prependOnceListener(event: "pipe", listener: (src: stream.Readable) => void): this;
+        prependOnceListener(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    // Public API
+
+    export namespace constants {
+        const NGHTTP2_SESSION_SERVER: number;
+        const NGHTTP2_SESSION_CLIENT: number;
+        const NGHTTP2_STREAM_STATE_IDLE: number;
+        const NGHTTP2_STREAM_STATE_OPEN: number;
+        const NGHTTP2_STREAM_STATE_RESERVED_LOCAL: number;
+        const NGHTTP2_STREAM_STATE_RESERVED_REMOTE: number;
+        const NGHTTP2_STREAM_STATE_HALF_CLOSED_LOCAL: number;
+        const NGHTTP2_STREAM_STATE_HALF_CLOSED_REMOTE: number;
+        const NGHTTP2_STREAM_STATE_CLOSED: number;
+        const NGHTTP2_NO_ERROR: number;
+        const NGHTTP2_PROTOCOL_ERROR: number;
+        const NGHTTP2_INTERNAL_ERROR: number;
+        const NGHTTP2_FLOW_CONTROL_ERROR: number;
+        const NGHTTP2_SETTINGS_TIMEOUT: number;
+        const NGHTTP2_STREAM_CLOSED: number;
+        const NGHTTP2_FRAME_SIZE_ERROR: number;
+        const NGHTTP2_REFUSED_STREAM: number;
+        const NGHTTP2_CANCEL: number;
+        const NGHTTP2_COMPRESSION_ERROR: number;
+        const NGHTTP2_CONNECT_ERROR: number;
+        const NGHTTP2_ENHANCE_YOUR_CALM: number;
+        const NGHTTP2_INADEQUATE_SECURITY: number;
+        const NGHTTP2_HTTP_1_1_REQUIRED: number;
+        const NGHTTP2_ERR_FRAME_SIZE_ERROR: number;
+        const NGHTTP2_FLAG_NONE: number;
+        const NGHTTP2_FLAG_END_STREAM: number;
+        const NGHTTP2_FLAG_END_HEADERS: number;
+        const NGHTTP2_FLAG_ACK: number;
+        const NGHTTP2_FLAG_PADDED: number;
+        const NGHTTP2_FLAG_PRIORITY: number;
+        const DEFAULT_SETTINGS_HEADER_TABLE_SIZE: number;
+        const DEFAULT_SETTINGS_ENABLE_PUSH: number;
+        const DEFAULT_SETTINGS_INITIAL_WINDOW_SIZE: number;
+        const DEFAULT_SETTINGS_MAX_FRAME_SIZE: number;
+        const MAX_MAX_FRAME_SIZE: number;
+        const MIN_MAX_FRAME_SIZE: number;
+        const MAX_INITIAL_WINDOW_SIZE: number;
+        const NGHTTP2_DEFAULT_WEIGHT: number;
+        const NGHTTP2_SETTINGS_HEADER_TABLE_SIZE: number;
+        const NGHTTP2_SETTINGS_ENABLE_PUSH: number;
+        const NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS: number;
+        const NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE: number;
+        const NGHTTP2_SETTINGS_MAX_FRAME_SIZE: number;
+        const NGHTTP2_SETTINGS_MAX_HEADER_LIST_SIZE: number;
+        const PADDING_STRATEGY_NONE: number;
+        const PADDING_STRATEGY_MAX: number;
+        const PADDING_STRATEGY_CALLBACK: number;
+        const HTTP2_HEADER_STATUS: string;
+        const HTTP2_HEADER_METHOD: string;
+        const HTTP2_HEADER_AUTHORITY: string;
+        const HTTP2_HEADER_SCHEME: string;
+        const HTTP2_HEADER_PATH: string;
+        const HTTP2_HEADER_ACCEPT_CHARSET: string;
+        const HTTP2_HEADER_ACCEPT_ENCODING: string;
+        const HTTP2_HEADER_ACCEPT_LANGUAGE: string;
+        const HTTP2_HEADER_ACCEPT_RANGES: string;
+        const HTTP2_HEADER_ACCEPT: string;
+        const HTTP2_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN: string;
+        const HTTP2_HEADER_AGE: string;
+        const HTTP2_HEADER_ALLOW: string;
+        const HTTP2_HEADER_AUTHORIZATION: string;
+        const HTTP2_HEADER_CACHE_CONTROL: string;
+        const HTTP2_HEADER_CONNECTION: string;
+        const HTTP2_HEADER_CONTENT_DISPOSITION: string;
+        const HTTP2_HEADER_CONTENT_ENCODING: string;
+        const HTTP2_HEADER_CONTENT_LANGUAGE: string;
+        const HTTP2_HEADER_CONTENT_LENGTH: string;
+        const HTTP2_HEADER_CONTENT_LOCATION: string;
+        const HTTP2_HEADER_CONTENT_MD5: string;
+        const HTTP2_HEADER_CONTENT_RANGE: string;
+        const HTTP2_HEADER_CONTENT_TYPE: string;
+        const HTTP2_HEADER_COOKIE: string;
+        const HTTP2_HEADER_DATE: string;
+        const HTTP2_HEADER_ETAG: string;
+        const HTTP2_HEADER_EXPECT: string;
+        const HTTP2_HEADER_EXPIRES: string;
+        const HTTP2_HEADER_FROM: string;
+        const HTTP2_HEADER_HOST: string;
+        const HTTP2_HEADER_IF_MATCH: string;
+        const HTTP2_HEADER_IF_MODIFIED_SINCE: string;
+        const HTTP2_HEADER_IF_NONE_MATCH: string;
+        const HTTP2_HEADER_IF_RANGE: string;
+        const HTTP2_HEADER_IF_UNMODIFIED_SINCE: string;
+        const HTTP2_HEADER_LAST_MODIFIED: string;
+        const HTTP2_HEADER_LINK: string;
+        const HTTP2_HEADER_LOCATION: string;
+        const HTTP2_HEADER_MAX_FORWARDS: string;
+        const HTTP2_HEADER_PREFER: string;
+        const HTTP2_HEADER_PROXY_AUTHENTICATE: string;
+        const HTTP2_HEADER_PROXY_AUTHORIZATION: string;
+        const HTTP2_HEADER_RANGE: string;
+        const HTTP2_HEADER_REFERER: string;
+        const HTTP2_HEADER_REFRESH: string;
+        const HTTP2_HEADER_RETRY_AFTER: string;
+        const HTTP2_HEADER_SERVER: string;
+        const HTTP2_HEADER_SET_COOKIE: string;
+        const HTTP2_HEADER_STRICT_TRANSPORT_SECURITY: string;
+        const HTTP2_HEADER_TRANSFER_ENCODING: string;
+        const HTTP2_HEADER_TE: string;
+        const HTTP2_HEADER_UPGRADE: string;
+        const HTTP2_HEADER_USER_AGENT: string;
+        const HTTP2_HEADER_VARY: string;
+        const HTTP2_HEADER_VIA: string;
+        const HTTP2_HEADER_WWW_AUTHENTICATE: string;
+        const HTTP2_HEADER_HTTP2_SETTINGS: string;
+        const HTTP2_HEADER_KEEP_ALIVE: string;
+        const HTTP2_HEADER_PROXY_CONNECTION: string;
+        const HTTP2_METHOD_ACL: string;
+        const HTTP2_METHOD_BASELINE_CONTROL: string;
+        const HTTP2_METHOD_BIND: string;
+        const HTTP2_METHOD_CHECKIN: string;
+        const HTTP2_METHOD_CHECKOUT: string;
+        const HTTP2_METHOD_CONNECT: string;
+        const HTTP2_METHOD_COPY: string;
+        const HTTP2_METHOD_DELETE: string;
+        const HTTP2_METHOD_GET: string;
+        const HTTP2_METHOD_HEAD: string;
+        const HTTP2_METHOD_LABEL: string;
+        const HTTP2_METHOD_LINK: string;
+        const HTTP2_METHOD_LOCK: string;
+        const HTTP2_METHOD_MERGE: string;
+        const HTTP2_METHOD_MKACTIVITY: string;
+        const HTTP2_METHOD_MKCALENDAR: string;
+        const HTTP2_METHOD_MKCOL: string;
+        const HTTP2_METHOD_MKREDIRECTREF: string;
+        const HTTP2_METHOD_MKWORKSPACE: string;
+        const HTTP2_METHOD_MOVE: string;
+        const HTTP2_METHOD_OPTIONS: string;
+        const HTTP2_METHOD_ORDERPATCH: string;
+        const HTTP2_METHOD_PATCH: string;
+        const HTTP2_METHOD_POST: string;
+        const HTTP2_METHOD_PRI: string;
+        const HTTP2_METHOD_PROPFIND: string;
+        const HTTP2_METHOD_PROPPATCH: string;
+        const HTTP2_METHOD_PUT: string;
+        const HTTP2_METHOD_REBIND: string;
+        const HTTP2_METHOD_REPORT: string;
+        const HTTP2_METHOD_SEARCH: string;
+        const HTTP2_METHOD_TRACE: string;
+        const HTTP2_METHOD_UNBIND: string;
+        const HTTP2_METHOD_UNCHECKOUT: string;
+        const HTTP2_METHOD_UNLINK: string;
+        const HTTP2_METHOD_UNLOCK: string;
+        const HTTP2_METHOD_UPDATE: string;
+        const HTTP2_METHOD_UPDATEREDIRECTREF: string;
+        const HTTP2_METHOD_VERSION_CONTROL: string;
+        const HTTP_STATUS_CONTINUE: number;
+        const HTTP_STATUS_SWITCHING_PROTOCOLS: number;
+        const HTTP_STATUS_PROCESSING: number;
+        const HTTP_STATUS_OK: number;
+        const HTTP_STATUS_CREATED: number;
+        const HTTP_STATUS_ACCEPTED: number;
+        const HTTP_STATUS_NON_AUTHORITATIVE_INFORMATION: number;
+        const HTTP_STATUS_NO_CONTENT: number;
+        const HTTP_STATUS_RESET_CONTENT: number;
+        const HTTP_STATUS_PARTIAL_CONTENT: number;
+        const HTTP_STATUS_MULTI_STATUS: number;
+        const HTTP_STATUS_ALREADY_REPORTED: number;
+        const HTTP_STATUS_IM_USED: number;
+        const HTTP_STATUS_MULTIPLE_CHOICES: number;
+        const HTTP_STATUS_MOVED_PERMANENTLY: number;
+        const HTTP_STATUS_FOUND: number;
+        const HTTP_STATUS_SEE_OTHER: number;
+        const HTTP_STATUS_NOT_MODIFIED: number;
+        const HTTP_STATUS_USE_PROXY: number;
+        const HTTP_STATUS_TEMPORARY_REDIRECT: number;
+        const HTTP_STATUS_PERMANENT_REDIRECT: number;
+        const HTTP_STATUS_BAD_REQUEST: number;
+        const HTTP_STATUS_UNAUTHORIZED: number;
+        const HTTP_STATUS_PAYMENT_REQUIRED: number;
+        const HTTP_STATUS_FORBIDDEN: number;
+        const HTTP_STATUS_NOT_FOUND: number;
+        const HTTP_STATUS_METHOD_NOT_ALLOWED: number;
+        const HTTP_STATUS_NOT_ACCEPTABLE: number;
+        const HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED: number;
+        const HTTP_STATUS_REQUEST_TIMEOUT: number;
+        const HTTP_STATUS_CONFLICT: number;
+        const HTTP_STATUS_GONE: number;
+        const HTTP_STATUS_LENGTH_REQUIRED: number;
+        const HTTP_STATUS_PRECONDITION_FAILED: number;
+        const HTTP_STATUS_PAYLOAD_TOO_LARGE: number;
+        const HTTP_STATUS_URI_TOO_LONG: number;
+        const HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE: number;
+        const HTTP_STATUS_RANGE_NOT_SATISFIABLE: number;
+        const HTTP_STATUS_EXPECTATION_FAILED: number;
+        const HTTP_STATUS_TEAPOT: number;
+        const HTTP_STATUS_MISDIRECTED_REQUEST: number;
+        const HTTP_STATUS_UNPROCESSABLE_ENTITY: number;
+        const HTTP_STATUS_LOCKED: number;
+        const HTTP_STATUS_FAILED_DEPENDENCY: number;
+        const HTTP_STATUS_UNORDERED_COLLECTION: number;
+        const HTTP_STATUS_UPGRADE_REQUIRED: number;
+        const HTTP_STATUS_PRECONDITION_REQUIRED: number;
+        const HTTP_STATUS_TOO_MANY_REQUESTS: number;
+        const HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE: number;
+        const HTTP_STATUS_UNAVAILABLE_FOR_LEGAL_REASONS: number;
+        const HTTP_STATUS_INTERNAL_SERVER_ERROR: number;
+        const HTTP_STATUS_NOT_IMPLEMENTED: number;
+        const HTTP_STATUS_BAD_GATEWAY: number;
+        const HTTP_STATUS_SERVICE_UNAVAILABLE: number;
+        const HTTP_STATUS_GATEWAY_TIMEOUT: number;
+        const HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED: number;
+        const HTTP_STATUS_VARIANT_ALSO_NEGOTIATES: number;
+        const HTTP_STATUS_INSUFFICIENT_STORAGE: number;
+        const HTTP_STATUS_LOOP_DETECTED: number;
+        const HTTP_STATUS_BANDWIDTH_LIMIT_EXCEEDED: number;
+        const HTTP_STATUS_NOT_EXTENDED: number;
+        const HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED: number;
+    }
+
+    export function getDefaultSettings(): Settings;
+    export function getPackedSettings(settings: Settings): Buffer;
+    export function getUnpackedSettings(buf: Uint8Array): Settings;
+
+    export function createServer(onRequestHandler?: (request: Http2ServerRequest, response: Http2ServerResponse) => void): Http2Server;
+    export function createServer(options: ServerOptions, onRequestHandler?: (request: Http2ServerRequest, response: Http2ServerResponse) => void): Http2Server;
+
+    export function createSecureServer(onRequestHandler?: (request: Http2ServerRequest, response: Http2ServerResponse) => void): Http2SecureServer;
+    export function createSecureServer(options: SecureServerOptions, onRequestHandler?: (request: Http2ServerRequest, response: Http2ServerResponse) => void): Http2SecureServer;
+
+    export function connect(authority: string | url.URL, listener: (session: ClientHttp2Session, socket: net.Socket | tls.TLSSocket) => void): ClientHttp2Session;
+    export function connect(
+        authority: string | url.URL,
+        options?: ClientSessionOptions | SecureClientSessionOptions,
+        listener?: (session: ClientHttp2Session, socket: net.Socket | tls.TLSSocket) => void
+    ): ClientHttp2Session;
+}
+`;
+module.exports['https.d.ts'] = `declare module "https" {
+    import * as tls from "tls";
+    import * as events from "events";
+    import * as http from "http";
+    import { URL } from "url";
+
+    type ServerOptions = tls.SecureContextOptions & tls.TlsOptions & http.ServerOptions;
+
+    type RequestOptions = http.RequestOptions & tls.SecureContextOptions & {
+        rejectUnauthorized?: boolean; // Defaults to true
+        servername?: string; // SNI TLS Extension
+    };
+
+    interface AgentOptions extends http.AgentOptions, tls.ConnectionOptions {
+        rejectUnauthorized?: boolean;
+        maxCachedSessions?: number;
+    }
+
+    class Agent extends http.Agent {
+        constructor(options?: AgentOptions);
+        options: AgentOptions;
+    }
+
+    class Server extends tls.Server {
+        constructor(requestListener?: http.RequestListener);
+        constructor(options: ServerOptions, requestListener?: http.RequestListener);
+
+        setTimeout(callback: () => void): this;
+        setTimeout(msecs?: number, callback?: () => void): this;
+        /**
+         * Limits maximum incoming headers count. If set to 0, no limit will be applied.
+         * @default 2000
+         * {@link https://nodejs.org/api/http.html#http_server_maxheaderscount}
+         */
+        maxHeadersCount: number | null;
+        timeout: number;
+        /**
+         * Limit the amount of time the parser will wait to receive the complete HTTP headers.
+         * @default 40000
+         * {@link https://nodejs.org/api/http.html#http_server_headerstimeout}
+         */
+        headersTimeout: number;
+        keepAliveTimeout: number;
+    }
+
+    function createServer(requestListener?: http.RequestListener): Server;
+    function createServer(options: ServerOptions, requestListener?: http.RequestListener): Server;
+    function request(options: RequestOptions | string | URL, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
+    function request(url: string | URL, options: RequestOptions, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
+    function get(options: RequestOptions | string | URL, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
+    function get(url: string | URL, options: RequestOptions, callback?: (res: http.IncomingMessage) => void): http.ClientRequest;
+    let globalAgent: Agent;
+}
+`;
+module.exports['index.d.ts'] = `// Type definitions for non-npm package Node.js 12.12
+// Project: http://nodejs.org/
+// Definitions by: Microsoft TypeScript <https://github.com/Microsoft>
+//                 DefinitelyTyped <https://github.com/DefinitelyTyped>
+//                 Alberto Schiabel <https://github.com/jkomyno>
+//                 Alexander T. <https://github.com/a-tarasyuk>
+//                 Alvis HT Tang <https://github.com/alvis>
+//                 Andrew Makarov <https://github.com/r3nya>
+//                 Benjamin Toueg <https://github.com/btoueg>
+//                 Bruno Scheufler <https://github.com/brunoscheufler>
+//                 Chigozirim C. <https://github.com/smac89>
+//                 Christian Vaagland Tellnes <https://github.com/tellnes>
+//                 David Junger <https://github.com/touffy>
+//                 Deividas Bakanas <https://github.com/DeividasBakanas>
+//                 Eugene Y. Q. Shen <https://github.com/eyqs>
+//                 Flarna <https://github.com/Flarna>
+//                 Hannes Magnusson <https://github.com/Hannes-Magnusson-CK>
+//                 Hoàng Văn Khải <https://github.com/KSXGitHub>
+//                 Huw <https://github.com/hoo29>
+//                 Kelvin Jin <https://github.com/kjin>
+//                 Klaus Meinhardt <https://github.com/ajafff>
+//                 Lishude <https://github.com/islishude>
+//                 Mariusz Wiktorczyk <https://github.com/mwiktorczyk>
+//                 Mohsen Azimi <https://github.com/mohsen1>
+//                 Nicolas Even <https://github.com/n-e>
+//                 Nicolas Voigt <https://github.com/octo-sniffle>
+//                 Nikita Galkin <https://github.com/galkin>
+//                 Parambir Singh <https://github.com/parambirs>
+//                 Sebastian Silbermann <https://github.com/eps1lon>
+//                 Simon Schick <https://github.com/SimonSchick>
+//                 Thomas den Hollander <https://github.com/ThomasdenH>
+//                 Wilco Bakker <https://github.com/WilcoBakker>
+//                 wwwy3y3 <https://github.com/wwwy3y3>
+//                 Zane Hannan AU <https://github.com/ZaneHannanAU>
+//                 Samuel Ainsworth <https://github.com/samuela>
+//                 Kyle Uehlein <https://github.com/kuehlein>
+//                 Jordi Oliveras Rovira <https://github.com/j-oliveras>
+//                 Thanik Bhongbhibhat <https://github.com/bhongy>
+//                 Marcin Kopacz <https://github.com/chyzwar>
+//                 Trivikram Kamat <https://github.com/trivikr>
+//                 Minh Son Nguyen <https://github.com/nguymin4>
+//                 Junxiao Shi <https://github.com/yoursunny>
+//                 Ilia Baryshnikov <https://github.com/qwelias>
+//                 ExE Boss <https://github.com/ExE-Boss>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+
+// NOTE: These definitions support NodeJS and TypeScript 3.2.
+
+// NOTE: TypeScript version-specific augmentations can be found in the following paths:
+//          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
+//          - ~/index.d.ts        - Definitions specific to TypeScript 2.1
+//          - ~/ts3.2/index.d.ts  - Definitions specific to TypeScript 3.2
+
+// NOTE: Augmentations for TypeScript 3.2 and later should use individual files for overrides
+//       within the respective ~/ts3.2 (or later) folder. However, this is disallowed for versions
+//       prior to TypeScript 3.2, so the older definitions will be found here.
+
+// Base definitions for all NodeJS modules that are not specific to any version of TypeScript:
+/// <reference path="base.d.ts" />
+
+// TypeScript 2.1-specific augmentations:
+
+// Forward-declarations for needed types from es2015 and later (in case users are using \`--lib es5\`)
+// Empty interfaces are used here which merge fine with the real declarations in the lib XXX files
+// just to ensure the names are known and node typings can be used without importing these libs.
+// if someone really needs these types the libs need to be added via --lib or in tsconfig.json
+interface MapConstructor { }
+interface WeakMapConstructor { }
+interface SetConstructor { }
+interface WeakSetConstructor { }
+interface Set<T> {}
+interface Map<K, V> {}
+interface ReadonlySet<T> {}
+interface Iterable<T> { }
+interface IteratorResult<T> { }
+interface AsyncIterable<T> { }
+interface Iterator<T> {
+    next(value?: any): IteratorResult<T>;
+}
+interface IterableIterator<T> { }
+interface AsyncIterableIterator<T> {}
+interface SymbolConstructor {
+    readonly iterator: symbol;
+    readonly asyncIterator: symbol;
+}
+declare var Symbol: SymbolConstructor;
+// even this is just a forward declaration some properties are added otherwise
+// it would be allowed to pass anything to e.g. Buffer.from()
+interface SharedArrayBuffer {
+    readonly byteLength: number;
+    slice(begin?: number, end?: number): SharedArrayBuffer;
+}
+
+declare module "util" {
+    namespace inspect {
+        const custom: symbol;
+    }
+    namespace promisify {
+        const custom: symbol;
+    }
+    namespace types {
+        function isBigInt64Array(value: any): boolean;
+        function isBigUint64Array(value: any): boolean;
+    }
+}
+`;
+module.exports['inspector.d.ts'] = `// tslint:disable-next-line:dt-header
+// Type definitions for inspector
+
+// These definitions are auto-generated.
+// Please see https://github.com/DefinitelyTyped/DefinitelyTyped/pull/19330
+// for more information.
+
+// tslint:disable:max-line-length
+
+/**
+ * The inspector module provides an API for interacting with the V8 inspector.
+ */
+declare module "inspector" {
+    import { EventEmitter } from 'events';
+
+    interface InspectorNotification<T> {
+        method: string;
+        params: T;
+    }
+
+    namespace Schema {
+        /**
+         * Description of the protocol domain.
+         */
+        interface Domain {
+            /**
+             * Domain name.
+             */
+            name: string;
+            /**
+             * Domain version.
+             */
+            version: string;
+        }
+
+        interface GetDomainsReturnType {
+            /**
+             * List of supported domains.
+             */
+            domains: Domain[];
+        }
+    }
+
+    namespace Runtime {
+        /**
+         * Unique script identifier.
+         */
+        type ScriptId = string;
+
+        /**
+         * Unique object identifier.
+         */
+        type RemoteObjectId = string;
+
+        /**
+         * Primitive value which cannot be JSON-stringified.
+         */
+        type UnserializableValue = string;
+
+        /**
+         * Mirror object referencing original JavaScript object.
+         */
+        interface RemoteObject {
+            /**
+             * Object type.
+             */
+            type: string;
+            /**
+             * Object subtype hint. Specified for <code>object</code> type values only.
+             */
+            subtype?: string;
+            /**
+             * Object class (constructor) name. Specified for <code>object</code> type values only.
+             */
+            className?: string;
+            /**
+             * Remote object value in case of primitive values or JSON values (if it was requested).
+             */
+            value?: any;
+            /**
+             * Primitive value which can not be JSON-stringified does not have <code>value</code>, but gets this property.
+             */
+            unserializableValue?: UnserializableValue;
+            /**
+             * String representation of the object.
+             */
+            description?: string;
+            /**
+             * Unique object identifier (for non-primitive values).
+             */
+            objectId?: RemoteObjectId;
+            /**
+             * Preview containing abbreviated property values. Specified for <code>object</code> type values only.
+             * @experimental
+             */
+            preview?: ObjectPreview;
+            /**
+             * @experimental
+             */
+            customPreview?: CustomPreview;
+        }
+
+        /**
+         * @experimental
+         */
+        interface CustomPreview {
+            header: string;
+            hasBody: boolean;
+            formatterObjectId: RemoteObjectId;
+            bindRemoteObjectFunctionId: RemoteObjectId;
+            configObjectId?: RemoteObjectId;
+        }
+
+        /**
+         * Object containing abbreviated remote object value.
+         * @experimental
+         */
+        interface ObjectPreview {
+            /**
+             * Object type.
+             */
+            type: string;
+            /**
+             * Object subtype hint. Specified for <code>object</code> type values only.
+             */
+            subtype?: string;
+            /**
+             * String representation of the object.
+             */
+            description?: string;
+            /**
+             * True iff some of the properties or entries of the original object did not fit.
+             */
+            overflow: boolean;
+            /**
+             * List of the properties.
+             */
+            properties: PropertyPreview[];
+            /**
+             * List of the entries. Specified for <code>map</code> and <code>set</code> subtype values only.
+             */
+            entries?: EntryPreview[];
+        }
+
+        /**
+         * @experimental
+         */
+        interface PropertyPreview {
+            /**
+             * Property name.
+             */
+            name: string;
+            /**
+             * Object type. Accessor means that the property itself is an accessor property.
+             */
+            type: string;
+            /**
+             * User-friendly property value string.
+             */
+            value?: string;
+            /**
+             * Nested value preview.
+             */
+            valuePreview?: ObjectPreview;
+            /**
+             * Object subtype hint. Specified for <code>object</code> type values only.
+             */
+            subtype?: string;
+        }
+
+        /**
+         * @experimental
+         */
+        interface EntryPreview {
+            /**
+             * Preview of the key. Specified for map-like collection entries.
+             */
+            key?: ObjectPreview;
+            /**
+             * Preview of the value.
+             */
+            value: ObjectPreview;
+        }
+
+        /**
+         * Object property descriptor.
+         */
+        interface PropertyDescriptor {
+            /**
+             * Property name or symbol description.
+             */
+            name: string;
+            /**
+             * The value associated with the property.
+             */
+            value?: RemoteObject;
+            /**
+             * True if the value associated with the property may be changed (data descriptors only).
+             */
+            writable?: boolean;
+            /**
+             * A function which serves as a getter for the property, or <code>undefined</code> if there is no getter (accessor descriptors only).
+             */
+            get?: RemoteObject;
+            /**
+             * A function which serves as a setter for the property, or <code>undefined</code> if there is no setter (accessor descriptors only).
+             */
+            set?: RemoteObject;
+            /**
+             * True if the type of this property descriptor may be changed and if the property may be deleted from the corresponding object.
+             */
+            configurable: boolean;
+            /**
+             * True if this property shows up during enumeration of the properties on the corresponding object.
+             */
+            enumerable: boolean;
+            /**
+             * True if the result was thrown during the evaluation.
+             */
+            wasThrown?: boolean;
+            /**
+             * True if the property is owned for the object.
+             */
+            isOwn?: boolean;
+            /**
+             * Property symbol object, if the property is of the <code>symbol</code> type.
+             */
+            symbol?: RemoteObject;
+        }
+
+        /**
+         * Object internal property descriptor. This property isn't normally visible in JavaScript code.
+         */
+        interface InternalPropertyDescriptor {
+            /**
+             * Conventional property name.
+             */
+            name: string;
+            /**
+             * The value associated with the property.
+             */
+            value?: RemoteObject;
+        }
+
+        /**
+         * Represents function call argument. Either remote object id <code>objectId</code>, primitive <code>value</code>, unserializable primitive value or neither of (for undefined) them should be specified.
+         */
+        interface CallArgument {
+            /**
+             * Primitive value or serializable javascript object.
+             */
+            value?: any;
+            /**
+             * Primitive value which can not be JSON-stringified.
+             */
+            unserializableValue?: UnserializableValue;
+            /**
+             * Remote object handle.
+             */
+            objectId?: RemoteObjectId;
+        }
+
+        /**
+         * Id of an execution context.
+         */
+        type ExecutionContextId = number;
+
+        /**
+         * Description of an isolated world.
+         */
+        interface ExecutionContextDescription {
+            /**
+             * Unique id of the execution context. It can be used to specify in which execution context script evaluation should be performed.
+             */
+            id: ExecutionContextId;
+            /**
+             * Execution context origin.
+             */
+            origin: string;
+            /**
+             * Human readable name describing given context.
+             */
+            name: string;
+            /**
+             * Embedder-specific auxiliary data.
+             */
+            auxData?: {};
+        }
+
+        /**
+         * Detailed information about exception (or error) that was thrown during script compilation or execution.
+         */
+        interface ExceptionDetails {
+            /**
+             * Exception id.
+             */
+            exceptionId: number;
+            /**
+             * Exception text, which should be used together with exception object when available.
+             */
+            text: string;
+            /**
+             * Line number of the exception location (0-based).
+             */
+            lineNumber: number;
+            /**
+             * Column number of the exception location (0-based).
+             */
+            columnNumber: number;
+            /**
+             * Script ID of the exception location.
+             */
+            scriptId?: ScriptId;
+            /**
+             * URL of the exception location, to be used when the script was not reported.
+             */
+            url?: string;
+            /**
+             * JavaScript stack trace if available.
+             */
+            stackTrace?: StackTrace;
+            /**
+             * Exception object if available.
+             */
+            exception?: RemoteObject;
+            /**
+             * Identifier of the context where exception happened.
+             */
+            executionContextId?: ExecutionContextId;
+        }
+
+        /**
+         * Number of milliseconds since epoch.
+         */
+        type Timestamp = number;
+
+        /**
+         * Stack entry for runtime errors and assertions.
+         */
+        interface CallFrame {
+            /**
+             * JavaScript function name.
+             */
+            functionName: string;
+            /**
+             * JavaScript script id.
+             */
+            scriptId: ScriptId;
+            /**
+             * JavaScript script name or url.
+             */
+            url: string;
+            /**
+             * JavaScript script line number (0-based).
+             */
+            lineNumber: number;
+            /**
+             * JavaScript script column number (0-based).
+             */
+            columnNumber: number;
+        }
+
+        /**
+         * Call frames for assertions or error messages.
+         */
+        interface StackTrace {
+            /**
+             * String label of this stack trace. For async traces this may be a name of the function that initiated the async call.
+             */
+            description?: string;
+            /**
+             * JavaScript function name.
+             */
+            callFrames: CallFrame[];
+            /**
+             * Asynchronous JavaScript stack trace that preceded this stack, if available.
+             */
+            parent?: StackTrace;
+            /**
+             * Asynchronous JavaScript stack trace that preceded this stack, if available.
+             * @experimental
+             */
+            parentId?: StackTraceId;
+        }
+
+        /**
+         * Unique identifier of current debugger.
+         * @experimental
+         */
+        type UniqueDebuggerId = string;
+
+        /**
+         * If <code>debuggerId</code> is set stack trace comes from another debugger and can be resolved there. This allows to track cross-debugger calls. See <code>Runtime.StackTrace</code> and <code>Debugger.paused</code> for usages.
+         * @experimental
+         */
+        interface StackTraceId {
+            id: string;
+            debuggerId?: UniqueDebuggerId;
+        }
+
+        interface EvaluateParameterType {
+            /**
+             * Expression to evaluate.
+             */
+            expression: string;
+            /**
+             * Symbolic group name that can be used to release multiple objects.
+             */
+            objectGroup?: string;
+            /**
+             * Determines whether Command Line API should be available during the evaluation.
+             */
+            includeCommandLineAPI?: boolean;
+            /**
+             * In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides <code>setPauseOnException</code> state.
+             */
+            silent?: boolean;
+            /**
+             * Specifies in which execution context to perform evaluation. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
+             */
+            contextId?: ExecutionContextId;
+            /**
+             * Whether the result is expected to be a JSON object that should be sent by value.
+             */
+            returnByValue?: boolean;
+            /**
+             * Whether preview should be generated for the result.
+             * @experimental
+             */
+            generatePreview?: boolean;
+            /**
+             * Whether execution should be treated as initiated by user in the UI.
+             */
+            userGesture?: boolean;
+            /**
+             * Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved.
+             */
+            awaitPromise?: boolean;
+        }
+
+        interface AwaitPromiseParameterType {
+            /**
+             * Identifier of the promise.
+             */
+            promiseObjectId: RemoteObjectId;
+            /**
+             * Whether the result is expected to be a JSON object that should be sent by value.
+             */
+            returnByValue?: boolean;
+            /**
+             * Whether preview should be generated for the result.
+             */
+            generatePreview?: boolean;
+        }
+
+        interface CallFunctionOnParameterType {
+            /**
+             * Declaration of the function to call.
+             */
+            functionDeclaration: string;
+            /**
+             * Identifier of the object to call function on. Either objectId or executionContextId should be specified.
+             */
+            objectId?: RemoteObjectId;
+            /**
+             * Call arguments. All call arguments must belong to the same JavaScript world as the target object.
+             */
+            arguments?: CallArgument[];
+            /**
+             * In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides <code>setPauseOnException</code> state.
+             */
+            silent?: boolean;
+            /**
+             * Whether the result is expected to be a JSON object which should be sent by value.
+             */
+            returnByValue?: boolean;
+            /**
+             * Whether preview should be generated for the result.
+             * @experimental
+             */
+            generatePreview?: boolean;
+            /**
+             * Whether execution should be treated as initiated by user in the UI.
+             */
+            userGesture?: boolean;
+            /**
+             * Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved.
+             */
+            awaitPromise?: boolean;
+            /**
+             * Specifies execution context which global object will be used to call function on. Either executionContextId or objectId should be specified.
+             */
+            executionContextId?: ExecutionContextId;
+            /**
+             * Symbolic group name that can be used to release multiple objects. If objectGroup is not specified and objectId is, objectGroup will be inherited from object.
+             */
+            objectGroup?: string;
+        }
+
+        interface GetPropertiesParameterType {
+            /**
+             * Identifier of the object to return properties for.
+             */
+            objectId: RemoteObjectId;
+            /**
+             * If true, returns properties belonging only to the element itself, not to its prototype chain.
+             */
+            ownProperties?: boolean;
+            /**
+             * If true, returns accessor properties (with getter/setter) only; internal properties are not returned either.
+             * @experimental
+             */
+            accessorPropertiesOnly?: boolean;
+            /**
+             * Whether preview should be generated for the results.
+             * @experimental
+             */
+            generatePreview?: boolean;
+        }
+
+        interface ReleaseObjectParameterType {
+            /**
+             * Identifier of the object to release.
+             */
+            objectId: RemoteObjectId;
+        }
+
+        interface ReleaseObjectGroupParameterType {
+            /**
+             * Symbolic object group name.
+             */
+            objectGroup: string;
+        }
+
+        interface SetCustomObjectFormatterEnabledParameterType {
+            enabled: boolean;
+        }
+
+        interface CompileScriptParameterType {
+            /**
+             * Expression to compile.
+             */
+            expression: string;
+            /**
+             * Source url to be set for the script.
+             */
+            sourceURL: string;
+            /**
+             * Specifies whether the compiled script should be persisted.
+             */
+            persistScript: boolean;
+            /**
+             * Specifies in which execution context to perform script run. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
+             */
+            executionContextId?: ExecutionContextId;
+        }
+
+        interface RunScriptParameterType {
+            /**
+             * Id of the script to run.
+             */
+            scriptId: ScriptId;
+            /**
+             * Specifies in which execution context to perform script run. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
+             */
+            executionContextId?: ExecutionContextId;
+            /**
+             * Symbolic group name that can be used to release multiple objects.
+             */
+            objectGroup?: string;
+            /**
+             * In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides <code>setPauseOnException</code> state.
+             */
+            silent?: boolean;
+            /**
+             * Determines whether Command Line API should be available during the evaluation.
+             */
+            includeCommandLineAPI?: boolean;
+            /**
+             * Whether the result is expected to be a JSON object which should be sent by value.
+             */
+            returnByValue?: boolean;
+            /**
+             * Whether preview should be generated for the result.
+             */
+            generatePreview?: boolean;
+            /**
+             * Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved.
+             */
+            awaitPromise?: boolean;
+        }
+
+        interface QueryObjectsParameterType {
+            /**
+             * Identifier of the prototype to return objects for.
+             */
+            prototypeObjectId: RemoteObjectId;
+        }
+
+        interface GlobalLexicalScopeNamesParameterType {
+            /**
+             * Specifies in which execution context to lookup global scope variables.
+             */
+            executionContextId?: ExecutionContextId;
+        }
+
+        interface EvaluateReturnType {
+            /**
+             * Evaluation result.
+             */
+            result: RemoteObject;
+            /**
+             * Exception details.
+             */
+            exceptionDetails?: ExceptionDetails;
+        }
+
+        interface AwaitPromiseReturnType {
+            /**
+             * Promise result. Will contain rejected value if promise was rejected.
+             */
+            result: RemoteObject;
+            /**
+             * Exception details if stack strace is available.
+             */
+            exceptionDetails?: ExceptionDetails;
+        }
+
+        interface CallFunctionOnReturnType {
+            /**
+             * Call result.
+             */
+            result: RemoteObject;
+            /**
+             * Exception details.
+             */
+            exceptionDetails?: ExceptionDetails;
+        }
+
+        interface GetPropertiesReturnType {
+            /**
+             * Object properties.
+             */
+            result: PropertyDescriptor[];
+            /**
+             * Internal object properties (only of the element itself).
+             */
+            internalProperties?: InternalPropertyDescriptor[];
+            /**
+             * Exception details.
+             */
+            exceptionDetails?: ExceptionDetails;
+        }
+
+        interface CompileScriptReturnType {
+            /**
+             * Id of the script.
+             */
+            scriptId?: ScriptId;
+            /**
+             * Exception details.
+             */
+            exceptionDetails?: ExceptionDetails;
+        }
+
+        interface RunScriptReturnType {
+            /**
+             * Run result.
+             */
+            result: RemoteObject;
+            /**
+             * Exception details.
+             */
+            exceptionDetails?: ExceptionDetails;
+        }
+
+        interface QueryObjectsReturnType {
+            /**
+             * Array with objects.
+             */
+            objects: RemoteObject;
+        }
+
+        interface GlobalLexicalScopeNamesReturnType {
+            names: string[];
+        }
+
+        interface ExecutionContextCreatedEventDataType {
+            /**
+             * A newly created execution context.
+             */
+            context: ExecutionContextDescription;
+        }
+
+        interface ExecutionContextDestroyedEventDataType {
+            /**
+             * Id of the destroyed context
+             */
+            executionContextId: ExecutionContextId;
+        }
+
+        interface ExceptionThrownEventDataType {
+            /**
+             * Timestamp of the exception.
+             */
+            timestamp: Timestamp;
+            exceptionDetails: ExceptionDetails;
+        }
+
+        interface ExceptionRevokedEventDataType {
+            /**
+             * Reason describing why exception was revoked.
+             */
+            reason: string;
+            /**
+             * The id of revoked exception, as reported in <code>exceptionThrown</code>.
+             */
+            exceptionId: number;
+        }
+
+        interface ConsoleAPICalledEventDataType {
+            /**
+             * Type of the call.
+             */
+            type: string;
+            /**
+             * Call arguments.
+             */
+            args: RemoteObject[];
+            /**
+             * Identifier of the context where the call was made.
+             */
+            executionContextId: ExecutionContextId;
+            /**
+             * Call timestamp.
+             */
+            timestamp: Timestamp;
+            /**
+             * Stack trace captured when the call was made.
+             */
+            stackTrace?: StackTrace;
+            /**
+             * Console context descriptor for calls on non-default console context (not console.*): 'anonymous#unique-logger-id' for call on unnamed context, 'name#unique-logger-id' for call on named context.
+             * @experimental
+             */
+            context?: string;
+        }
+
+        interface InspectRequestedEventDataType {
+            object: RemoteObject;
+            hints: {};
+        }
+    }
+
+    namespace Debugger {
+        /**
+         * Breakpoint identifier.
+         */
+        type BreakpointId = string;
+
+        /**
+         * Call frame identifier.
+         */
+        type CallFrameId = string;
+
+        /**
+         * Location in the source code.
+         */
+        interface Location {
+            /**
+             * Script identifier as reported in the <code>Debugger.scriptParsed</code>.
+             */
+            scriptId: Runtime.ScriptId;
+            /**
+             * Line number in the script (0-based).
+             */
+            lineNumber: number;
+            /**
+             * Column number in the script (0-based).
+             */
+            columnNumber?: number;
+        }
+
+        /**
+         * Location in the source code.
+         * @experimental
+         */
+        interface ScriptPosition {
+            lineNumber: number;
+            columnNumber: number;
+        }
+
+        /**
+         * JavaScript call frame. Array of call frames form the call stack.
+         */
+        interface CallFrame {
+            /**
+             * Call frame identifier. This identifier is only valid while the virtual machine is paused.
+             */
+            callFrameId: CallFrameId;
+            /**
+             * Name of the JavaScript function called on this call frame.
+             */
+            functionName: string;
+            /**
+             * Location in the source code.
+             */
+            functionLocation?: Location;
+            /**
+             * Location in the source code.
+             */
+            location: Location;
+            /**
+             * JavaScript script name or url.
+             */
+            url: string;
+            /**
+             * Scope chain for this call frame.
+             */
+            scopeChain: Scope[];
+            /**
+             * <code>this</code> object for this call frame.
+             */
+            this: Runtime.RemoteObject;
+            /**
+             * The value being returned, if the function is at return point.
+             */
+            returnValue?: Runtime.RemoteObject;
+        }
+
+        /**
+         * Scope description.
+         */
+        interface Scope {
+            /**
+             * Scope type.
+             */
+            type: string;
+            /**
+             * Object representing the scope. For <code>global</code> and <code>with</code> scopes it represents the actual object; for the rest of the scopes, it is artificial transient object enumerating scope variables as its properties.
+             */
+            object: Runtime.RemoteObject;
+            name?: string;
+            /**
+             * Location in the source code where scope starts
+             */
+            startLocation?: Location;
+            /**
+             * Location in the source code where scope ends
+             */
+            endLocation?: Location;
+        }
+
+        /**
+         * Search match for resource.
+         */
+        interface SearchMatch {
+            /**
+             * Line number in resource content.
+             */
+            lineNumber: number;
+            /**
+             * Line with match content.
+             */
+            lineContent: string;
+        }
+
+        interface BreakLocation {
+            /**
+             * Script identifier as reported in the <code>Debugger.scriptParsed</code>.
+             */
+            scriptId: Runtime.ScriptId;
+            /**
+             * Line number in the script (0-based).
+             */
+            lineNumber: number;
+            /**
+             * Column number in the script (0-based).
+             */
+            columnNumber?: number;
+            type?: string;
+        }
+
+        interface SetBreakpointsActiveParameterType {
+            /**
+             * New value for breakpoints active state.
+             */
+            active: boolean;
+        }
+
+        interface SetSkipAllPausesParameterType {
+            /**
+             * New value for skip pauses state.
+             */
+            skip: boolean;
+        }
+
+        interface SetBreakpointByUrlParameterType {
+            /**
+             * Line number to set breakpoint at.
+             */
+            lineNumber: number;
+            /**
+             * URL of the resources to set breakpoint on.
+             */
+            url?: string;
+            /**
+             * Regex pattern for the URLs of the resources to set breakpoints on. Either <code>url</code> or <code>urlRegex</code> must be specified.
+             */
+            urlRegex?: string;
+            /**
+             * Script hash of the resources to set breakpoint on.
+             */
+            scriptHash?: string;
+            /**
+             * Offset in the line to set breakpoint at.
+             */
+            columnNumber?: number;
+            /**
+             * Expression to use as a breakpoint condition. When specified, debugger will only stop on the breakpoint if this expression evaluates to true.
+             */
+            condition?: string;
+        }
+
+        interface SetBreakpointParameterType {
+            /**
+             * Location to set breakpoint in.
+             */
+            location: Location;
+            /**
+             * Expression to use as a breakpoint condition. When specified, debugger will only stop on the breakpoint if this expression evaluates to true.
+             */
+            condition?: string;
+        }
+
+        interface RemoveBreakpointParameterType {
+            breakpointId: BreakpointId;
+        }
+
+        interface GetPossibleBreakpointsParameterType {
+            /**
+             * Start of range to search possible breakpoint locations in.
+             */
+            start: Location;
+            /**
+             * End of range to search possible breakpoint locations in (excluding). When not specified, end of scripts is used as end of range.
+             */
+            end?: Location;
+            /**
+             * Only consider locations which are in the same (non-nested) function as start.
+             */
+            restrictToFunction?: boolean;
+        }
+
+        interface ContinueToLocationParameterType {
+            /**
+             * Location to continue to.
+             */
+            location: Location;
+            targetCallFrames?: string;
+        }
+
+        interface PauseOnAsyncCallParameterType {
+            /**
+             * Debugger will pause when async call with given stack trace is started.
+             */
+            parentStackTraceId: Runtime.StackTraceId;
+        }
+
+        interface StepIntoParameterType {
+            /**
+             * Debugger will issue additional Debugger.paused notification if any async task is scheduled before next pause.
+             * @experimental
+             */
+            breakOnAsyncCall?: boolean;
+        }
+
+        interface GetStackTraceParameterType {
+            stackTraceId: Runtime.StackTraceId;
+        }
+
+        interface SearchInContentParameterType {
+            /**
+             * Id of the script to search in.
+             */
+            scriptId: Runtime.ScriptId;
+            /**
+             * String to search for.
+             */
+            query: string;
+            /**
+             * If true, search is case sensitive.
+             */
+            caseSensitive?: boolean;
+            /**
+             * If true, treats string parameter as regex.
+             */
+            isRegex?: boolean;
+        }
+
+        interface SetScriptSourceParameterType {
+            /**
+             * Id of the script to edit.
+             */
+            scriptId: Runtime.ScriptId;
+            /**
+             * New content of the script.
+             */
+            scriptSource: string;
+            /**
+             *  If true the change will not actually be applied. Dry run may be used to get result description without actually modifying the code.
+             */
+            dryRun?: boolean;
+        }
+
+        interface RestartFrameParameterType {
+            /**
+             * Call frame identifier to evaluate on.
+             */
+            callFrameId: CallFrameId;
+        }
+
+        interface GetScriptSourceParameterType {
+            /**
+             * Id of the script to get source for.
+             */
+            scriptId: Runtime.ScriptId;
+        }
+
+        interface SetPauseOnExceptionsParameterType {
+            /**
+             * Pause on exceptions mode.
+             */
+            state: string;
+        }
+
+        interface EvaluateOnCallFrameParameterType {
+            /**
+             * Call frame identifier to evaluate on.
+             */
+            callFrameId: CallFrameId;
+            /**
+             * Expression to evaluate.
+             */
+            expression: string;
+            /**
+             * String object group name to put result into (allows rapid releasing resulting object handles using <code>releaseObjectGroup</code>).
+             */
+            objectGroup?: string;
+            /**
+             * Specifies whether command line API should be available to the evaluated expression, defaults to false.
+             */
+            includeCommandLineAPI?: boolean;
+            /**
+             * In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides <code>setPauseOnException</code> state.
+             */
+            silent?: boolean;
+            /**
+             * Whether the result is expected to be a JSON object that should be sent by value.
+             */
+            returnByValue?: boolean;
+            /**
+             * Whether preview should be generated for the result.
+             * @experimental
+             */
+            generatePreview?: boolean;
+            /**
+             * Whether to throw an exception if side effect cannot be ruled out during evaluation.
+             */
+            throwOnSideEffect?: boolean;
+        }
+
+        interface SetVariableValueParameterType {
+            /**
+             * 0-based number of scope as was listed in scope chain. Only 'local', 'closure' and 'catch' scope types are allowed. Other scopes could be manipulated manually.
+             */
+            scopeNumber: number;
+            /**
+             * Variable name.
+             */
+            variableName: string;
+            /**
+             * New variable value.
+             */
+            newValue: Runtime.CallArgument;
+            /**
+             * Id of callframe that holds variable.
+             */
+            callFrameId: CallFrameId;
+        }
+
+        interface SetReturnValueParameterType {
+            /**
+             * New return value.
+             */
+            newValue: Runtime.CallArgument;
+        }
+
+        interface SetAsyncCallStackDepthParameterType {
+            /**
+             * Maximum depth of async call stacks. Setting to <code>0</code> will effectively disable collecting async call stacks (default).
+             */
+            maxDepth: number;
+        }
+
+        interface SetBlackboxPatternsParameterType {
+            /**
+             * Array of regexps that will be used to check script url for blackbox state.
+             */
+            patterns: string[];
+        }
+
+        interface SetBlackboxedRangesParameterType {
+            /**
+             * Id of the script.
+             */
+            scriptId: Runtime.ScriptId;
+            positions: ScriptPosition[];
+        }
+
+        interface EnableReturnType {
+            /**
+             * Unique identifier of the debugger.
+             * @experimental
+             */
+            debuggerId: Runtime.UniqueDebuggerId;
+        }
+
+        interface SetBreakpointByUrlReturnType {
+            /**
+             * Id of the created breakpoint for further reference.
+             */
+            breakpointId: BreakpointId;
+            /**
+             * List of the locations this breakpoint resolved into upon addition.
+             */
+            locations: Location[];
+        }
+
+        interface SetBreakpointReturnType {
+            /**
+             * Id of the created breakpoint for further reference.
+             */
+            breakpointId: BreakpointId;
+            /**
+             * Location this breakpoint resolved into.
+             */
+            actualLocation: Location;
+        }
+
+        interface GetPossibleBreakpointsReturnType {
+            /**
+             * List of the possible breakpoint locations.
+             */
+            locations: BreakLocation[];
+        }
+
+        interface GetStackTraceReturnType {
+            stackTrace: Runtime.StackTrace;
+        }
+
+        interface SearchInContentReturnType {
+            /**
+             * List of search matches.
+             */
+            result: SearchMatch[];
+        }
+
+        interface SetScriptSourceReturnType {
+            /**
+             * New stack trace in case editing has happened while VM was stopped.
+             */
+            callFrames?: CallFrame[];
+            /**
+             * Whether current call stack  was modified after applying the changes.
+             */
+            stackChanged?: boolean;
+            /**
+             * Async stack trace, if any.
+             */
+            asyncStackTrace?: Runtime.StackTrace;
+            /**
+             * Async stack trace, if any.
+             * @experimental
+             */
+            asyncStackTraceId?: Runtime.StackTraceId;
+            /**
+             * Exception details if any.
+             */
+            exceptionDetails?: Runtime.ExceptionDetails;
+        }
+
+        interface RestartFrameReturnType {
+            /**
+             * New stack trace.
+             */
+            callFrames: CallFrame[];
+            /**
+             * Async stack trace, if any.
+             */
+            asyncStackTrace?: Runtime.StackTrace;
+            /**
+             * Async stack trace, if any.
+             * @experimental
+             */
+            asyncStackTraceId?: Runtime.StackTraceId;
+        }
+
+        interface GetScriptSourceReturnType {
+            /**
+             * Script source.
+             */
+            scriptSource: string;
+        }
+
+        interface EvaluateOnCallFrameReturnType {
+            /**
+             * Object wrapper for the evaluation result.
+             */
+            result: Runtime.RemoteObject;
+            /**
+             * Exception details.
+             */
+            exceptionDetails?: Runtime.ExceptionDetails;
+        }
+
+        interface ScriptParsedEventDataType {
+            /**
+             * Identifier of the script parsed.
+             */
+            scriptId: Runtime.ScriptId;
+            /**
+             * URL or name of the script parsed (if any).
+             */
+            url: string;
+            /**
+             * Line offset of the script within the resource with given URL (for script tags).
+             */
+            startLine: number;
+            /**
+             * Column offset of the script within the resource with given URL.
+             */
+            startColumn: number;
+            /**
+             * Last line of the script.
+             */
+            endLine: number;
+            /**
+             * Length of the last line of the script.
+             */
+            endColumn: number;
+            /**
+             * Specifies script creation context.
+             */
+            executionContextId: Runtime.ExecutionContextId;
+            /**
+             * Content hash of the script.
+             */
+            hash: string;
+            /**
+             * Embedder-specific auxiliary data.
+             */
+            executionContextAuxData?: {};
+            /**
+             * True, if this script is generated as a result of the live edit operation.
+             * @experimental
+             */
+            isLiveEdit?: boolean;
+            /**
+             * URL of source map associated with script (if any).
+             */
+            sourceMapURL?: string;
+            /**
+             * True, if this script has sourceURL.
+             */
+            hasSourceURL?: boolean;
+            /**
+             * True, if this script is ES6 module.
+             */
+            isModule?: boolean;
+            /**
+             * This script length.
+             */
+            length?: number;
+            /**
+             * JavaScript top stack frame of where the script parsed event was triggered if available.
+             * @experimental
+             */
+            stackTrace?: Runtime.StackTrace;
+        }
+
+        interface ScriptFailedToParseEventDataType {
+            /**
+             * Identifier of the script parsed.
+             */
+            scriptId: Runtime.ScriptId;
+            /**
+             * URL or name of the script parsed (if any).
+             */
+            url: string;
+            /**
+             * Line offset of the script within the resource with given URL (for script tags).
+             */
+            startLine: number;
+            /**
+             * Column offset of the script within the resource with given URL.
+             */
+            startColumn: number;
+            /**
+             * Last line of the script.
+             */
+            endLine: number;
+            /**
+             * Length of the last line of the script.
+             */
+            endColumn: number;
+            /**
+             * Specifies script creation context.
+             */
+            executionContextId: Runtime.ExecutionContextId;
+            /**
+             * Content hash of the script.
+             */
+            hash: string;
+            /**
+             * Embedder-specific auxiliary data.
+             */
+            executionContextAuxData?: {};
+            /**
+             * URL of source map associated with script (if any).
+             */
+            sourceMapURL?: string;
+            /**
+             * True, if this script has sourceURL.
+             */
+            hasSourceURL?: boolean;
+            /**
+             * True, if this script is ES6 module.
+             */
+            isModule?: boolean;
+            /**
+             * This script length.
+             */
+            length?: number;
+            /**
+             * JavaScript top stack frame of where the script parsed event was triggered if available.
+             * @experimental
+             */
+            stackTrace?: Runtime.StackTrace;
+        }
+
+        interface BreakpointResolvedEventDataType {
+            /**
+             * Breakpoint unique identifier.
+             */
+            breakpointId: BreakpointId;
+            /**
+             * Actual breakpoint location.
+             */
+            location: Location;
+        }
+
+        interface PausedEventDataType {
+            /**
+             * Call stack the virtual machine stopped on.
+             */
+            callFrames: CallFrame[];
+            /**
+             * Pause reason.
+             */
+            reason: string;
+            /**
+             * Object containing break-specific auxiliary properties.
+             */
+            data?: {};
+            /**
+             * Hit breakpoints IDs
+             */
+            hitBreakpoints?: string[];
+            /**
+             * Async stack trace, if any.
+             */
+            asyncStackTrace?: Runtime.StackTrace;
+            /**
+             * Async stack trace, if any.
+             * @experimental
+             */
+            asyncStackTraceId?: Runtime.StackTraceId;
+            /**
+             * Just scheduled async call will have this stack trace as parent stack during async execution. This field is available only after <code>Debugger.stepInto</code> call with <code>breakOnAsynCall</code> flag.
+             * @experimental
+             */
+            asyncCallStackTraceId?: Runtime.StackTraceId;
+        }
+    }
+
+    namespace Console {
+        /**
+         * Console message.
+         */
+        interface ConsoleMessage {
+            /**
+             * Message source.
+             */
+            source: string;
+            /**
+             * Message severity.
+             */
+            level: string;
+            /**
+             * Message text.
+             */
+            text: string;
+            /**
+             * URL of the message origin.
+             */
+            url?: string;
+            /**
+             * Line number in the resource that generated this message (1-based).
+             */
+            line?: number;
+            /**
+             * Column number in the resource that generated this message (1-based).
+             */
+            column?: number;
+        }
+
+        interface MessageAddedEventDataType {
+            /**
+             * Console message that has been added.
+             */
+            message: ConsoleMessage;
+        }
+    }
+
+    namespace Profiler {
+        /**
+         * Profile node. Holds callsite information, execution statistics and child nodes.
+         */
+        interface ProfileNode {
+            /**
+             * Unique id of the node.
+             */
+            id: number;
+            /**
+             * Function location.
+             */
+            callFrame: Runtime.CallFrame;
+            /**
+             * Number of samples where this node was on top of the call stack.
+             */
+            hitCount?: number;
+            /**
+             * Child node ids.
+             */
+            children?: number[];
+            /**
+             * The reason of being not optimized. The function may be deoptimized or marked as don't optimize.
+             */
+            deoptReason?: string;
+            /**
+             * An array of source position ticks.
+             */
+            positionTicks?: PositionTickInfo[];
+        }
+
+        /**
+         * Profile.
+         */
+        interface Profile {
+            /**
+             * The list of profile nodes. First item is the root node.
+             */
+            nodes: ProfileNode[];
+            /**
+             * Profiling start timestamp in microseconds.
+             */
+            startTime: number;
+            /**
+             * Profiling end timestamp in microseconds.
+             */
+            endTime: number;
+            /**
+             * Ids of samples top nodes.
+             */
+            samples?: number[];
+            /**
+             * Time intervals between adjacent samples in microseconds. The first delta is relative to the profile startTime.
+             */
+            timeDeltas?: number[];
+        }
+
+        /**
+         * Specifies a number of samples attributed to a certain source position.
+         */
+        interface PositionTickInfo {
+            /**
+             * Source line number (1-based).
+             */
+            line: number;
+            /**
+             * Number of samples attributed to the source line.
+             */
+            ticks: number;
+        }
+
+        /**
+         * Coverage data for a source range.
+         */
+        interface CoverageRange {
+            /**
+             * JavaScript script source offset for the range start.
+             */
+            startOffset: number;
+            /**
+             * JavaScript script source offset for the range end.
+             */
+            endOffset: number;
+            /**
+             * Collected execution count of the source range.
+             */
+            count: number;
+        }
+
+        /**
+         * Coverage data for a JavaScript function.
+         */
+        interface FunctionCoverage {
+            /**
+             * JavaScript function name.
+             */
+            functionName: string;
+            /**
+             * Source ranges inside the function with coverage data.
+             */
+            ranges: CoverageRange[];
+            /**
+             * Whether coverage data for this function has block granularity.
+             */
+            isBlockCoverage: boolean;
+        }
+
+        /**
+         * Coverage data for a JavaScript script.
+         */
+        interface ScriptCoverage {
+            /**
+             * JavaScript script id.
+             */
+            scriptId: Runtime.ScriptId;
+            /**
+             * JavaScript script name or url.
+             */
+            url: string;
+            /**
+             * Functions contained in the script that has coverage data.
+             */
+            functions: FunctionCoverage[];
+        }
+
+        /**
+         * Describes a type collected during runtime.
+         * @experimental
+         */
+        interface TypeObject {
+            /**
+             * Name of a type collected with type profiling.
+             */
+            name: string;
+        }
+
+        /**
+         * Source offset and types for a parameter or return value.
+         * @experimental
+         */
+        interface TypeProfileEntry {
+            /**
+             * Source offset of the parameter or end of function for return values.
+             */
+            offset: number;
+            /**
+             * The types for this parameter or return value.
+             */
+            types: TypeObject[];
+        }
+
+        /**
+         * Type profile data collected during runtime for a JavaScript script.
+         * @experimental
+         */
+        interface ScriptTypeProfile {
+            /**
+             * JavaScript script id.
+             */
+            scriptId: Runtime.ScriptId;
+            /**
+             * JavaScript script name or url.
+             */
+            url: string;
+            /**
+             * Type profile entries for parameters and return values of the functions in the script.
+             */
+            entries: TypeProfileEntry[];
+        }
+
+        interface SetSamplingIntervalParameterType {
+            /**
+             * New sampling interval in microseconds.
+             */
+            interval: number;
+        }
+
+        interface StartPreciseCoverageParameterType {
+            /**
+             * Collect accurate call counts beyond simple 'covered' or 'not covered'.
+             */
+            callCount?: boolean;
+            /**
+             * Collect block-based coverage.
+             */
+            detailed?: boolean;
+        }
+
+        interface StopReturnType {
+            /**
+             * Recorded profile.
+             */
+            profile: Profile;
+        }
+
+        interface TakePreciseCoverageReturnType {
+            /**
+             * Coverage data for the current isolate.
+             */
+            result: ScriptCoverage[];
+        }
+
+        interface GetBestEffortCoverageReturnType {
+            /**
+             * Coverage data for the current isolate.
+             */
+            result: ScriptCoverage[];
+        }
+
+        interface TakeTypeProfileReturnType {
+            /**
+             * Type profile for all scripts since startTypeProfile() was turned on.
+             */
+            result: ScriptTypeProfile[];
+        }
+
+        interface ConsoleProfileStartedEventDataType {
+            id: string;
+            /**
+             * Location of console.profile().
+             */
+            location: Debugger.Location;
+            /**
+             * Profile title passed as an argument to console.profile().
+             */
+            title?: string;
+        }
+
+        interface ConsoleProfileFinishedEventDataType {
+            id: string;
+            /**
+             * Location of console.profileEnd().
+             */
+            location: Debugger.Location;
+            profile: Profile;
+            /**
+             * Profile title passed as an argument to console.profile().
+             */
+            title?: string;
+        }
+    }
+
+    namespace HeapProfiler {
+        /**
+         * Heap snapshot object id.
+         */
+        type HeapSnapshotObjectId = string;
+
+        /**
+         * Sampling Heap Profile node. Holds callsite information, allocation statistics and child nodes.
+         */
+        interface SamplingHeapProfileNode {
+            /**
+             * Function location.
+             */
+            callFrame: Runtime.CallFrame;
+            /**
+             * Allocations size in bytes for the node excluding children.
+             */
+            selfSize: number;
+            /**
+             * Child nodes.
+             */
+            children: SamplingHeapProfileNode[];
+        }
+
+        /**
+         * Profile.
+         */
+        interface SamplingHeapProfile {
+            head: SamplingHeapProfileNode;
+        }
+
+        interface StartTrackingHeapObjectsParameterType {
+            trackAllocations?: boolean;
+        }
+
+        interface StopTrackingHeapObjectsParameterType {
+            /**
+             * If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken when the tracking is stopped.
+             */
+            reportProgress?: boolean;
+        }
+
+        interface TakeHeapSnapshotParameterType {
+            /**
+             * If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken.
+             */
+            reportProgress?: boolean;
+        }
+
+        interface GetObjectByHeapObjectIdParameterType {
+            objectId: HeapSnapshotObjectId;
+            /**
+             * Symbolic group name that can be used to release multiple objects.
+             */
+            objectGroup?: string;
+        }
+
+        interface AddInspectedHeapObjectParameterType {
+            /**
+             * Heap snapshot object id to be accessible by means of \$x command line API.
+             */
+            heapObjectId: HeapSnapshotObjectId;
+        }
+
+        interface GetHeapObjectIdParameterType {
+            /**
+             * Identifier of the object to get heap object id for.
+             */
+            objectId: Runtime.RemoteObjectId;
+        }
+
+        interface StartSamplingParameterType {
+            /**
+             * Average sample interval in bytes. Poisson distribution is used for the intervals. The default value is 32768 bytes.
+             */
+            samplingInterval?: number;
+        }
+
+        interface GetObjectByHeapObjectIdReturnType {
+            /**
+             * Evaluation result.
+             */
+            result: Runtime.RemoteObject;
+        }
+
+        interface GetHeapObjectIdReturnType {
+            /**
+             * Id of the heap snapshot object corresponding to the passed remote object id.
+             */
+            heapSnapshotObjectId: HeapSnapshotObjectId;
+        }
+
+        interface StopSamplingReturnType {
+            /**
+             * Recorded sampling heap profile.
+             */
+            profile: SamplingHeapProfile;
+        }
+
+        interface GetSamplingProfileReturnType {
+            /**
+             * Return the sampling profile being collected.
+             */
+            profile: SamplingHeapProfile;
+        }
+
+        interface AddHeapSnapshotChunkEventDataType {
+            chunk: string;
+        }
+
+        interface ReportHeapSnapshotProgressEventDataType {
+            done: number;
+            total: number;
+            finished?: boolean;
+        }
+
+        interface LastSeenObjectIdEventDataType {
+            lastSeenObjectId: number;
+            timestamp: number;
+        }
+
+        interface HeapStatsUpdateEventDataType {
+            /**
+             * An array of triplets. Each triplet describes a fragment. The first integer is the fragment index, the second integer is a total count of objects for the fragment, the third integer is a total size of the objects for the fragment.
+             */
+            statsUpdate: number[];
+        }
+    }
+
+    namespace NodeTracing {
+        interface TraceConfig {
+            /**
+             * Controls how the trace buffer stores data.
+             */
+            recordMode?: string;
+            /**
+             * Included category filters.
+             */
+            includedCategories: string[];
+        }
+
+        interface StartParameterType {
+            traceConfig: TraceConfig;
+        }
+
+        interface GetCategoriesReturnType {
+            /**
+             * A list of supported tracing categories.
+             */
+            categories: string[];
+        }
+
+        interface DataCollectedEventDataType {
+            value: Array<{}>;
+        }
+    }
+
+    namespace NodeWorker {
+        type WorkerID = string;
+
+        /**
+         * Unique identifier of attached debugging session.
+         */
+        type SessionID = string;
+
+        interface WorkerInfo {
+            workerId: WorkerID;
+            type: string;
+            title: string;
+            url: string;
+        }
+
+        interface SendMessageToWorkerParameterType {
+            message: string;
+            /**
+             * Identifier of the session.
+             */
+            sessionId: SessionID;
+        }
+
+        interface EnableParameterType {
+            /**
+             * Whether to new workers should be paused until the frontend sends \`Runtime.runIfWaitingForDebugger\`
+             * message to run them.
+             */
+            waitForDebuggerOnStart: boolean;
+        }
+
+        interface DetachParameterType {
+            sessionId: SessionID;
+        }
+
+        interface AttachedToWorkerEventDataType {
+            /**
+             * Identifier assigned to the session used to send/receive messages.
+             */
+            sessionId: SessionID;
+            workerInfo: WorkerInfo;
+            waitingForDebugger: boolean;
+        }
+
+        interface DetachedFromWorkerEventDataType {
+            /**
+             * Detached session identifier.
+             */
+            sessionId: SessionID;
+        }
+
+        interface ReceivedMessageFromWorkerEventDataType {
+            /**
+             * Identifier of a session which sends a message.
+             */
+            sessionId: SessionID;
+            message: string;
+        }
+    }
+
+    namespace NodeRuntime {
+        interface NotifyWhenWaitingForDisconnectParameterType {
+            enabled: boolean;
+        }
+    }
+
+    /**
+     * The inspector.Session is used for dispatching messages to the V8 inspector back-end and receiving message responses and notifications.
+     */
+    class Session extends EventEmitter {
+        /**
+         * Create a new instance of the inspector.Session class.
+         * The inspector session needs to be connected through session.connect() before the messages can be dispatched to the inspector backend.
+         */
+        constructor();
+
+        /**
+         * Connects a session to the inspector back-end.
+         * An exception will be thrown if there is already a connected session established either
+         * through the API or by a front-end connected to the Inspector WebSocket port.
+         */
+        connect(): void;
+
+        /**
+         * Immediately close the session. All pending message callbacks will be called with an error.
+         * session.connect() will need to be called to be able to send messages again.
+         * Reconnected session will lose all inspector state, such as enabled agents or configured breakpoints.
+         */
+        disconnect(): void;
+
+        /**
+         * Posts a message to the inspector back-end. callback will be notified when a response is received.
+         * callback is a function that accepts two optional arguments - error and message-specific result.
+         */
+        post(method: string, params?: {}, callback?: (err: Error | null, params?: {}) => void): void;
+        post(method: string, callback?: (err: Error | null, params?: {}) => void): void;
+
+        /**
+         * Returns supported domains.
+         */
+        post(method: "Schema.getDomains", callback?: (err: Error | null, params: Schema.GetDomainsReturnType) => void): void;
+
+        /**
+         * Evaluates expression on global object.
+         */
+        post(method: "Runtime.evaluate", params?: Runtime.EvaluateParameterType, callback?: (err: Error | null, params: Runtime.EvaluateReturnType) => void): void;
+        post(method: "Runtime.evaluate", callback?: (err: Error | null, params: Runtime.EvaluateReturnType) => void): void;
+
+        /**
+         * Add handler to promise with given promise object id.
+         */
+        post(method: "Runtime.awaitPromise", params?: Runtime.AwaitPromiseParameterType, callback?: (err: Error | null, params: Runtime.AwaitPromiseReturnType) => void): void;
+        post(method: "Runtime.awaitPromise", callback?: (err: Error | null, params: Runtime.AwaitPromiseReturnType) => void): void;
+
+        /**
+         * Calls function with given declaration on the given object. Object group of the result is inherited from the target object.
+         */
+        post(method: "Runtime.callFunctionOn", params?: Runtime.CallFunctionOnParameterType, callback?: (err: Error | null, params: Runtime.CallFunctionOnReturnType) => void): void;
+        post(method: "Runtime.callFunctionOn", callback?: (err: Error | null, params: Runtime.CallFunctionOnReturnType) => void): void;
+
+        /**
+         * Returns properties of a given object. Object group of the result is inherited from the target object.
+         */
+        post(method: "Runtime.getProperties", params?: Runtime.GetPropertiesParameterType, callback?: (err: Error | null, params: Runtime.GetPropertiesReturnType) => void): void;
+        post(method: "Runtime.getProperties", callback?: (err: Error | null, params: Runtime.GetPropertiesReturnType) => void): void;
+
+        /**
+         * Releases remote object with given id.
+         */
+        post(method: "Runtime.releaseObject", params?: Runtime.ReleaseObjectParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Runtime.releaseObject", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Releases all remote objects that belong to a given group.
+         */
+        post(method: "Runtime.releaseObjectGroup", params?: Runtime.ReleaseObjectGroupParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Runtime.releaseObjectGroup", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Tells inspected instance to run if it was waiting for debugger to attach.
+         */
+        post(method: "Runtime.runIfWaitingForDebugger", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Enables reporting of execution contexts creation by means of <code>executionContextCreated</code> event. When the reporting gets enabled the event will be sent immediately for each existing execution context.
+         */
+        post(method: "Runtime.enable", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Disables reporting of execution contexts creation.
+         */
+        post(method: "Runtime.disable", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Discards collected exceptions and console API calls.
+         */
+        post(method: "Runtime.discardConsoleEntries", callback?: (err: Error | null) => void): void;
+
+        /**
+         * @experimental
+         */
+        post(method: "Runtime.setCustomObjectFormatterEnabled", params?: Runtime.SetCustomObjectFormatterEnabledParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Runtime.setCustomObjectFormatterEnabled", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Compiles expression.
+         */
+        post(method: "Runtime.compileScript", params?: Runtime.CompileScriptParameterType, callback?: (err: Error | null, params: Runtime.CompileScriptReturnType) => void): void;
+        post(method: "Runtime.compileScript", callback?: (err: Error | null, params: Runtime.CompileScriptReturnType) => void): void;
+
+        /**
+         * Runs script with given id in a given context.
+         */
+        post(method: "Runtime.runScript", params?: Runtime.RunScriptParameterType, callback?: (err: Error | null, params: Runtime.RunScriptReturnType) => void): void;
+        post(method: "Runtime.runScript", callback?: (err: Error | null, params: Runtime.RunScriptReturnType) => void): void;
+
+        post(method: "Runtime.queryObjects", params?: Runtime.QueryObjectsParameterType, callback?: (err: Error | null, params: Runtime.QueryObjectsReturnType) => void): void;
+        post(method: "Runtime.queryObjects", callback?: (err: Error | null, params: Runtime.QueryObjectsReturnType) => void): void;
+
+        /**
+         * Returns all let, const and class variables from global scope.
+         */
+        post(
+            method: "Runtime.globalLexicalScopeNames",
+            params?: Runtime.GlobalLexicalScopeNamesParameterType,
+            callback?: (err: Error | null, params: Runtime.GlobalLexicalScopeNamesReturnType) => void
+        ): void;
+        post(method: "Runtime.globalLexicalScopeNames", callback?: (err: Error | null, params: Runtime.GlobalLexicalScopeNamesReturnType) => void): void;
+
+        /**
+         * Enables debugger for the given page. Clients should not assume that the debugging has been enabled until the result for this command is received.
+         */
+        post(method: "Debugger.enable", callback?: (err: Error | null, params: Debugger.EnableReturnType) => void): void;
+
+        /**
+         * Disables debugger for given page.
+         */
+        post(method: "Debugger.disable", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Activates / deactivates all breakpoints on the page.
+         */
+        post(method: "Debugger.setBreakpointsActive", params?: Debugger.SetBreakpointsActiveParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.setBreakpointsActive", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Makes page not interrupt on any pauses (breakpoint, exception, dom exception etc).
+         */
+        post(method: "Debugger.setSkipAllPauses", params?: Debugger.SetSkipAllPausesParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.setSkipAllPauses", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Sets JavaScript breakpoint at given location specified either by URL or URL regex. Once this command is issued, all existing parsed scripts will have breakpoints resolved and returned in <code>locations</code> property. Further matching script parsing will result in subsequent <code>breakpointResolved</code> events issued. This logical breakpoint will survive page reloads.
+         */
+        post(method: "Debugger.setBreakpointByUrl", params?: Debugger.SetBreakpointByUrlParameterType, callback?: (err: Error | null, params: Debugger.SetBreakpointByUrlReturnType) => void): void;
+        post(method: "Debugger.setBreakpointByUrl", callback?: (err: Error | null, params: Debugger.SetBreakpointByUrlReturnType) => void): void;
+
+        /**
+         * Sets JavaScript breakpoint at a given location.
+         */
+        post(method: "Debugger.setBreakpoint", params?: Debugger.SetBreakpointParameterType, callback?: (err: Error | null, params: Debugger.SetBreakpointReturnType) => void): void;
+        post(method: "Debugger.setBreakpoint", callback?: (err: Error | null, params: Debugger.SetBreakpointReturnType) => void): void;
+
+        /**
+         * Removes JavaScript breakpoint.
+         */
+        post(method: "Debugger.removeBreakpoint", params?: Debugger.RemoveBreakpointParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.removeBreakpoint", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Returns possible locations for breakpoint. scriptId in start and end range locations should be the same.
+         */
+        post(
+            method: "Debugger.getPossibleBreakpoints",
+            params?: Debugger.GetPossibleBreakpointsParameterType,
+            callback?: (err: Error | null, params: Debugger.GetPossibleBreakpointsReturnType) => void
+        ): void;
+        post(method: "Debugger.getPossibleBreakpoints", callback?: (err: Error | null, params: Debugger.GetPossibleBreakpointsReturnType) => void): void;
+
+        /**
+         * Continues execution until specific location is reached.
+         */
+        post(method: "Debugger.continueToLocation", params?: Debugger.ContinueToLocationParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.continueToLocation", callback?: (err: Error | null) => void): void;
+
+        /**
+         * @experimental
+         */
+        post(method: "Debugger.pauseOnAsyncCall", params?: Debugger.PauseOnAsyncCallParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.pauseOnAsyncCall", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Steps over the statement.
+         */
+        post(method: "Debugger.stepOver", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Steps into the function call.
+         */
+        post(method: "Debugger.stepInto", params?: Debugger.StepIntoParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.stepInto", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Steps out of the function call.
+         */
+        post(method: "Debugger.stepOut", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Stops on the next JavaScript statement.
+         */
+        post(method: "Debugger.pause", callback?: (err: Error | null) => void): void;
+
+        /**
+         * This method is deprecated - use Debugger.stepInto with breakOnAsyncCall and Debugger.pauseOnAsyncTask instead. Steps into next scheduled async task if any is scheduled before next pause. Returns success when async task is actually scheduled, returns error if no task were scheduled or another scheduleStepIntoAsync was called.
+         * @experimental
+         */
+        post(method: "Debugger.scheduleStepIntoAsync", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Resumes JavaScript execution.
+         */
+        post(method: "Debugger.resume", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Returns stack trace with given <code>stackTraceId</code>.
+         * @experimental
+         */
+        post(method: "Debugger.getStackTrace", params?: Debugger.GetStackTraceParameterType, callback?: (err: Error | null, params: Debugger.GetStackTraceReturnType) => void): void;
+        post(method: "Debugger.getStackTrace", callback?: (err: Error | null, params: Debugger.GetStackTraceReturnType) => void): void;
+
+        /**
+         * Searches for given string in script content.
+         */
+        post(method: "Debugger.searchInContent", params?: Debugger.SearchInContentParameterType, callback?: (err: Error | null, params: Debugger.SearchInContentReturnType) => void): void;
+        post(method: "Debugger.searchInContent", callback?: (err: Error | null, params: Debugger.SearchInContentReturnType) => void): void;
+
+        /**
+         * Edits JavaScript source live.
+         */
+        post(method: "Debugger.setScriptSource", params?: Debugger.SetScriptSourceParameterType, callback?: (err: Error | null, params: Debugger.SetScriptSourceReturnType) => void): void;
+        post(method: "Debugger.setScriptSource", callback?: (err: Error | null, params: Debugger.SetScriptSourceReturnType) => void): void;
+
+        /**
+         * Restarts particular call frame from the beginning.
+         */
+        post(method: "Debugger.restartFrame", params?: Debugger.RestartFrameParameterType, callback?: (err: Error | null, params: Debugger.RestartFrameReturnType) => void): void;
+        post(method: "Debugger.restartFrame", callback?: (err: Error | null, params: Debugger.RestartFrameReturnType) => void): void;
+
+        /**
+         * Returns source for the script with given id.
+         */
+        post(method: "Debugger.getScriptSource", params?: Debugger.GetScriptSourceParameterType, callback?: (err: Error | null, params: Debugger.GetScriptSourceReturnType) => void): void;
+        post(method: "Debugger.getScriptSource", callback?: (err: Error | null, params: Debugger.GetScriptSourceReturnType) => void): void;
+
+        /**
+         * Defines pause on exceptions state. Can be set to stop on all exceptions, uncaught exceptions or no exceptions. Initial pause on exceptions state is <code>none</code>.
+         */
+        post(method: "Debugger.setPauseOnExceptions", params?: Debugger.SetPauseOnExceptionsParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.setPauseOnExceptions", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Evaluates expression on a given call frame.
+         */
+        post(method: "Debugger.evaluateOnCallFrame", params?: Debugger.EvaluateOnCallFrameParameterType, callback?: (err: Error | null, params: Debugger.EvaluateOnCallFrameReturnType) => void): void;
+        post(method: "Debugger.evaluateOnCallFrame", callback?: (err: Error | null, params: Debugger.EvaluateOnCallFrameReturnType) => void): void;
+
+        /**
+         * Changes value of variable in a callframe. Object-based scopes are not supported and must be mutated manually.
+         */
+        post(method: "Debugger.setVariableValue", params?: Debugger.SetVariableValueParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.setVariableValue", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Changes return value in top frame. Available only at return break position.
+         * @experimental
+         */
+        post(method: "Debugger.setReturnValue", params?: Debugger.SetReturnValueParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.setReturnValue", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Enables or disables async call stacks tracking.
+         */
+        post(method: "Debugger.setAsyncCallStackDepth", params?: Debugger.SetAsyncCallStackDepthParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.setAsyncCallStackDepth", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Replace previous blackbox patterns with passed ones. Forces backend to skip stepping/pausing in scripts with url matching one of the patterns. VM will try to leave blackboxed script by performing 'step in' several times, finally resorting to 'step out' if unsuccessful.
+         * @experimental
+         */
+        post(method: "Debugger.setBlackboxPatterns", params?: Debugger.SetBlackboxPatternsParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.setBlackboxPatterns", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Makes backend skip steps in the script in blackboxed ranges. VM will try leave blacklisted scripts by performing 'step in' several times, finally resorting to 'step out' if unsuccessful. Positions array contains positions where blackbox state is changed. First interval isn't blackboxed. Array should be sorted.
+         * @experimental
+         */
+        post(method: "Debugger.setBlackboxedRanges", params?: Debugger.SetBlackboxedRangesParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Debugger.setBlackboxedRanges", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Enables console domain, sends the messages collected so far to the client by means of the <code>messageAdded</code> notification.
+         */
+        post(method: "Console.enable", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Disables console domain, prevents further console messages from being reported to the client.
+         */
+        post(method: "Console.disable", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Does nothing.
+         */
+        post(method: "Console.clearMessages", callback?: (err: Error | null) => void): void;
+
+        post(method: "Profiler.enable", callback?: (err: Error | null) => void): void;
+
+        post(method: "Profiler.disable", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Changes CPU profiler sampling interval. Must be called before CPU profiles recording started.
+         */
+        post(method: "Profiler.setSamplingInterval", params?: Profiler.SetSamplingIntervalParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Profiler.setSamplingInterval", callback?: (err: Error | null) => void): void;
+
+        post(method: "Profiler.start", callback?: (err: Error | null) => void): void;
+
+        post(method: "Profiler.stop", callback?: (err: Error | null, params: Profiler.StopReturnType) => void): void;
+
+        /**
+         * Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code coverage may be incomplete. Enabling prevents running optimized code and resets execution counters.
+         */
+        post(method: "Profiler.startPreciseCoverage", params?: Profiler.StartPreciseCoverageParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "Profiler.startPreciseCoverage", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Disable precise code coverage. Disabling releases unnecessary execution count records and allows executing optimized code.
+         */
+        post(method: "Profiler.stopPreciseCoverage", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Collect coverage data for the current isolate, and resets execution counters. Precise code coverage needs to have started.
+         */
+        post(method: "Profiler.takePreciseCoverage", callback?: (err: Error | null, params: Profiler.TakePreciseCoverageReturnType) => void): void;
+
+        /**
+         * Collect coverage data for the current isolate. The coverage data may be incomplete due to garbage collection.
+         */
+        post(method: "Profiler.getBestEffortCoverage", callback?: (err: Error | null, params: Profiler.GetBestEffortCoverageReturnType) => void): void;
+
+        /**
+         * Enable type profile.
+         * @experimental
+         */
+        post(method: "Profiler.startTypeProfile", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Disable type profile. Disabling releases type profile data collected so far.
+         * @experimental
+         */
+        post(method: "Profiler.stopTypeProfile", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Collect type profile.
+         * @experimental
+         */
+        post(method: "Profiler.takeTypeProfile", callback?: (err: Error | null, params: Profiler.TakeTypeProfileReturnType) => void): void;
+
+        post(method: "HeapProfiler.enable", callback?: (err: Error | null) => void): void;
+
+        post(method: "HeapProfiler.disable", callback?: (err: Error | null) => void): void;
+
+        post(method: "HeapProfiler.startTrackingHeapObjects", params?: HeapProfiler.StartTrackingHeapObjectsParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "HeapProfiler.startTrackingHeapObjects", callback?: (err: Error | null) => void): void;
+
+        post(method: "HeapProfiler.stopTrackingHeapObjects", params?: HeapProfiler.StopTrackingHeapObjectsParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "HeapProfiler.stopTrackingHeapObjects", callback?: (err: Error | null) => void): void;
+
+        post(method: "HeapProfiler.takeHeapSnapshot", params?: HeapProfiler.TakeHeapSnapshotParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "HeapProfiler.takeHeapSnapshot", callback?: (err: Error | null) => void): void;
+
+        post(method: "HeapProfiler.collectGarbage", callback?: (err: Error | null) => void): void;
+
+        post(
+            method: "HeapProfiler.getObjectByHeapObjectId",
+            params?: HeapProfiler.GetObjectByHeapObjectIdParameterType,
+            callback?: (err: Error | null, params: HeapProfiler.GetObjectByHeapObjectIdReturnType) => void
+        ): void;
+        post(method: "HeapProfiler.getObjectByHeapObjectId", callback?: (err: Error | null, params: HeapProfiler.GetObjectByHeapObjectIdReturnType) => void): void;
+
+        /**
+         * Enables console to refer to the node with given id via \$x (see Command Line API for more details \$x functions).
+         */
+        post(method: "HeapProfiler.addInspectedHeapObject", params?: HeapProfiler.AddInspectedHeapObjectParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "HeapProfiler.addInspectedHeapObject", callback?: (err: Error | null) => void): void;
+
+        post(method: "HeapProfiler.getHeapObjectId", params?: HeapProfiler.GetHeapObjectIdParameterType, callback?: (err: Error | null, params: HeapProfiler.GetHeapObjectIdReturnType) => void): void;
+        post(method: "HeapProfiler.getHeapObjectId", callback?: (err: Error | null, params: HeapProfiler.GetHeapObjectIdReturnType) => void): void;
+
+        post(method: "HeapProfiler.startSampling", params?: HeapProfiler.StartSamplingParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "HeapProfiler.startSampling", callback?: (err: Error | null) => void): void;
+
+        post(method: "HeapProfiler.stopSampling", callback?: (err: Error | null, params: HeapProfiler.StopSamplingReturnType) => void): void;
+
+        post(method: "HeapProfiler.getSamplingProfile", callback?: (err: Error | null, params: HeapProfiler.GetSamplingProfileReturnType) => void): void;
+
+        /**
+         * Gets supported tracing categories.
+         */
+        post(method: "NodeTracing.getCategories", callback?: (err: Error | null, params: NodeTracing.GetCategoriesReturnType) => void): void;
+
+        /**
+         * Start trace events collection.
+         */
+        post(method: "NodeTracing.start", params?: NodeTracing.StartParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "NodeTracing.start", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Stop trace events collection. Remaining collected events will be sent as a sequence of
+         * dataCollected events followed by tracingComplete event.
+         */
+        post(method: "NodeTracing.stop", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Sends protocol message over session with given id.
+         */
+        post(method: "NodeWorker.sendMessageToWorker", params?: NodeWorker.SendMessageToWorkerParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "NodeWorker.sendMessageToWorker", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Instructs the inspector to attach to running workers. Will also attach to new workers
+         * as they start
+         */
+        post(method: "NodeWorker.enable", params?: NodeWorker.EnableParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "NodeWorker.enable", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Detaches from all running workers and disables attaching to new workers as they are started.
+         */
+        post(method: "NodeWorker.disable", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Detached from the worker with given sessionId.
+         */
+        post(method: "NodeWorker.detach", params?: NodeWorker.DetachParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "NodeWorker.detach", callback?: (err: Error | null) => void): void;
+
+        /**
+         * Enable the \`NodeRuntime.waitingForDisconnect\`.
+         */
+        post(method: "NodeRuntime.notifyWhenWaitingForDisconnect", params?: NodeRuntime.NotifyWhenWaitingForDisconnectParameterType, callback?: (err: Error | null) => void): void;
+        post(method: "NodeRuntime.notifyWhenWaitingForDisconnect", callback?: (err: Error | null) => void): void;
+
+        // Events
+
+        addListener(event: string, listener: (...args: any[]) => void): this;
+
+        /**
+         * Emitted when any notification from the V8 Inspector is received.
+         */
+        addListener(event: "inspectorNotification", listener: (message: InspectorNotification<{}>) => void): this;
+
+        /**
+         * Issued when new execution context is created.
+         */
+        addListener(event: "Runtime.executionContextCreated", listener: (message: InspectorNotification<Runtime.ExecutionContextCreatedEventDataType>) => void): this;
+
+        /**
+         * Issued when execution context is destroyed.
+         */
+        addListener(event: "Runtime.executionContextDestroyed", listener: (message: InspectorNotification<Runtime.ExecutionContextDestroyedEventDataType>) => void): this;
+
+        /**
+         * Issued when all executionContexts were cleared in browser
+         */
+        addListener(event: "Runtime.executionContextsCleared", listener: () => void): this;
+
+        /**
+         * Issued when exception was thrown and unhandled.
+         */
+        addListener(event: "Runtime.exceptionThrown", listener: (message: InspectorNotification<Runtime.ExceptionThrownEventDataType>) => void): this;
+
+        /**
+         * Issued when unhandled exception was revoked.
+         */
+        addListener(event: "Runtime.exceptionRevoked", listener: (message: InspectorNotification<Runtime.ExceptionRevokedEventDataType>) => void): this;
+
+        /**
+         * Issued when console API was called.
+         */
+        addListener(event: "Runtime.consoleAPICalled", listener: (message: InspectorNotification<Runtime.ConsoleAPICalledEventDataType>) => void): this;
+
+        /**
+         * Issued when object should be inspected (for example, as a result of inspect() command line API call).
+         */
+        addListener(event: "Runtime.inspectRequested", listener: (message: InspectorNotification<Runtime.InspectRequestedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine parses script. This event is also fired for all known and uncollected scripts upon enabling debugger.
+         */
+        addListener(event: "Debugger.scriptParsed", listener: (message: InspectorNotification<Debugger.ScriptParsedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine fails to parse the script.
+         */
+        addListener(event: "Debugger.scriptFailedToParse", listener: (message: InspectorNotification<Debugger.ScriptFailedToParseEventDataType>) => void): this;
+
+        /**
+         * Fired when breakpoint is resolved to an actual script and location.
+         */
+        addListener(event: "Debugger.breakpointResolved", listener: (message: InspectorNotification<Debugger.BreakpointResolvedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine stopped on breakpoint or exception or any other stop criteria.
+         */
+        addListener(event: "Debugger.paused", listener: (message: InspectorNotification<Debugger.PausedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine resumed execution.
+         */
+        addListener(event: "Debugger.resumed", listener: () => void): this;
+
+        /**
+         * Issued when new console message is added.
+         */
+        addListener(event: "Console.messageAdded", listener: (message: InspectorNotification<Console.MessageAddedEventDataType>) => void): this;
+
+        /**
+         * Sent when new profile recording is started using console.profile() call.
+         */
+        addListener(event: "Profiler.consoleProfileStarted", listener: (message: InspectorNotification<Profiler.ConsoleProfileStartedEventDataType>) => void): this;
+
+        addListener(event: "Profiler.consoleProfileFinished", listener: (message: InspectorNotification<Profiler.ConsoleProfileFinishedEventDataType>) => void): this;
+        addListener(event: "HeapProfiler.addHeapSnapshotChunk", listener: (message: InspectorNotification<HeapProfiler.AddHeapSnapshotChunkEventDataType>) => void): this;
+        addListener(event: "HeapProfiler.resetProfiles", listener: () => void): this;
+        addListener(event: "HeapProfiler.reportHeapSnapshotProgress", listener: (message: InspectorNotification<HeapProfiler.ReportHeapSnapshotProgressEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend regularly sends a current value for last seen object id and corresponding timestamp. If the were changes in the heap since last event then one or more heapStatsUpdate events will be sent before a new lastSeenObjectId event.
+         */
+        addListener(event: "HeapProfiler.lastSeenObjectId", listener: (message: InspectorNotification<HeapProfiler.LastSeenObjectIdEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend may send update for one or more fragments
+         */
+        addListener(event: "HeapProfiler.heapStatsUpdate", listener: (message: InspectorNotification<HeapProfiler.HeapStatsUpdateEventDataType>) => void): this;
+
+        /**
+         * Contains an bucket of collected trace events.
+         */
+        addListener(event: "NodeTracing.dataCollected", listener: (message: InspectorNotification<NodeTracing.DataCollectedEventDataType>) => void): this;
+
+        /**
+         * Signals that tracing is stopped and there is no trace buffers pending flush, all data were
+         * delivered via dataCollected events.
+         */
+        addListener(event: "NodeTracing.tracingComplete", listener: () => void): this;
+
+        /**
+         * Issued when attached to a worker.
+         */
+        addListener(event: "NodeWorker.attachedToWorker", listener: (message: InspectorNotification<NodeWorker.AttachedToWorkerEventDataType>) => void): this;
+
+        /**
+         * Issued when detached from the worker.
+         */
+        addListener(event: "NodeWorker.detachedFromWorker", listener: (message: InspectorNotification<NodeWorker.DetachedFromWorkerEventDataType>) => void): this;
+
+        /**
+         * Notifies about a new protocol message received from the session
+         * (session ID is provided in attachedToWorker notification).
+         */
+        addListener(event: "NodeWorker.receivedMessageFromWorker", listener: (message: InspectorNotification<NodeWorker.ReceivedMessageFromWorkerEventDataType>) => void): this;
+
+        /**
+         * This event is fired instead of \`Runtime.executionContextDestroyed\` when
+         * enabled.
+         * It is fired when the Node process finished all code execution and is
+         * waiting for all frontends to disconnect.
+         */
+        addListener(event: "NodeRuntime.waitingForDisconnect", listener: () => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "inspectorNotification", message: InspectorNotification<{}>): boolean;
+        emit(event: "Runtime.executionContextCreated", message: InspectorNotification<Runtime.ExecutionContextCreatedEventDataType>): boolean;
+        emit(event: "Runtime.executionContextDestroyed", message: InspectorNotification<Runtime.ExecutionContextDestroyedEventDataType>): boolean;
+        emit(event: "Runtime.executionContextsCleared"): boolean;
+        emit(event: "Runtime.exceptionThrown", message: InspectorNotification<Runtime.ExceptionThrownEventDataType>): boolean;
+        emit(event: "Runtime.exceptionRevoked", message: InspectorNotification<Runtime.ExceptionRevokedEventDataType>): boolean;
+        emit(event: "Runtime.consoleAPICalled", message: InspectorNotification<Runtime.ConsoleAPICalledEventDataType>): boolean;
+        emit(event: "Runtime.inspectRequested", message: InspectorNotification<Runtime.InspectRequestedEventDataType>): boolean;
+        emit(event: "Debugger.scriptParsed", message: InspectorNotification<Debugger.ScriptParsedEventDataType>): boolean;
+        emit(event: "Debugger.scriptFailedToParse", message: InspectorNotification<Debugger.ScriptFailedToParseEventDataType>): boolean;
+        emit(event: "Debugger.breakpointResolved", message: InspectorNotification<Debugger.BreakpointResolvedEventDataType>): boolean;
+        emit(event: "Debugger.paused", message: InspectorNotification<Debugger.PausedEventDataType>): boolean;
+        emit(event: "Debugger.resumed"): boolean;
+        emit(event: "Console.messageAdded", message: InspectorNotification<Console.MessageAddedEventDataType>): boolean;
+        emit(event: "Profiler.consoleProfileStarted", message: InspectorNotification<Profiler.ConsoleProfileStartedEventDataType>): boolean;
+        emit(event: "Profiler.consoleProfileFinished", message: InspectorNotification<Profiler.ConsoleProfileFinishedEventDataType>): boolean;
+        emit(event: "HeapProfiler.addHeapSnapshotChunk", message: InspectorNotification<HeapProfiler.AddHeapSnapshotChunkEventDataType>): boolean;
+        emit(event: "HeapProfiler.resetProfiles"): boolean;
+        emit(event: "HeapProfiler.reportHeapSnapshotProgress", message: InspectorNotification<HeapProfiler.ReportHeapSnapshotProgressEventDataType>): boolean;
+        emit(event: "HeapProfiler.lastSeenObjectId", message: InspectorNotification<HeapProfiler.LastSeenObjectIdEventDataType>): boolean;
+        emit(event: "HeapProfiler.heapStatsUpdate", message: InspectorNotification<HeapProfiler.HeapStatsUpdateEventDataType>): boolean;
+        emit(event: "NodeTracing.dataCollected", message: InspectorNotification<NodeTracing.DataCollectedEventDataType>): boolean;
+        emit(event: "NodeTracing.tracingComplete"): boolean;
+        emit(event: "NodeWorker.attachedToWorker", message: InspectorNotification<NodeWorker.AttachedToWorkerEventDataType>): boolean;
+        emit(event: "NodeWorker.detachedFromWorker", message: InspectorNotification<NodeWorker.DetachedFromWorkerEventDataType>): boolean;
+        emit(event: "NodeWorker.receivedMessageFromWorker", message: InspectorNotification<NodeWorker.ReceivedMessageFromWorkerEventDataType>): boolean;
+        emit(event: "NodeRuntime.waitingForDisconnect"): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+
+        /**
+         * Emitted when any notification from the V8 Inspector is received.
+         */
+        on(event: "inspectorNotification", listener: (message: InspectorNotification<{}>) => void): this;
+
+        /**
+         * Issued when new execution context is created.
+         */
+        on(event: "Runtime.executionContextCreated", listener: (message: InspectorNotification<Runtime.ExecutionContextCreatedEventDataType>) => void): this;
+
+        /**
+         * Issued when execution context is destroyed.
+         */
+        on(event: "Runtime.executionContextDestroyed", listener: (message: InspectorNotification<Runtime.ExecutionContextDestroyedEventDataType>) => void): this;
+
+        /**
+         * Issued when all executionContexts were cleared in browser
+         */
+        on(event: "Runtime.executionContextsCleared", listener: () => void): this;
+
+        /**
+         * Issued when exception was thrown and unhandled.
+         */
+        on(event: "Runtime.exceptionThrown", listener: (message: InspectorNotification<Runtime.ExceptionThrownEventDataType>) => void): this;
+
+        /**
+         * Issued when unhandled exception was revoked.
+         */
+        on(event: "Runtime.exceptionRevoked", listener: (message: InspectorNotification<Runtime.ExceptionRevokedEventDataType>) => void): this;
+
+        /**
+         * Issued when console API was called.
+         */
+        on(event: "Runtime.consoleAPICalled", listener: (message: InspectorNotification<Runtime.ConsoleAPICalledEventDataType>) => void): this;
+
+        /**
+         * Issued when object should be inspected (for example, as a result of inspect() command line API call).
+         */
+        on(event: "Runtime.inspectRequested", listener: (message: InspectorNotification<Runtime.InspectRequestedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine parses script. This event is also fired for all known and uncollected scripts upon enabling debugger.
+         */
+        on(event: "Debugger.scriptParsed", listener: (message: InspectorNotification<Debugger.ScriptParsedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine fails to parse the script.
+         */
+        on(event: "Debugger.scriptFailedToParse", listener: (message: InspectorNotification<Debugger.ScriptFailedToParseEventDataType>) => void): this;
+
+        /**
+         * Fired when breakpoint is resolved to an actual script and location.
+         */
+        on(event: "Debugger.breakpointResolved", listener: (message: InspectorNotification<Debugger.BreakpointResolvedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine stopped on breakpoint or exception or any other stop criteria.
+         */
+        on(event: "Debugger.paused", listener: (message: InspectorNotification<Debugger.PausedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine resumed execution.
+         */
+        on(event: "Debugger.resumed", listener: () => void): this;
+
+        /**
+         * Issued when new console message is added.
+         */
+        on(event: "Console.messageAdded", listener: (message: InspectorNotification<Console.MessageAddedEventDataType>) => void): this;
+
+        /**
+         * Sent when new profile recording is started using console.profile() call.
+         */
+        on(event: "Profiler.consoleProfileStarted", listener: (message: InspectorNotification<Profiler.ConsoleProfileStartedEventDataType>) => void): this;
+
+        on(event: "Profiler.consoleProfileFinished", listener: (message: InspectorNotification<Profiler.ConsoleProfileFinishedEventDataType>) => void): this;
+        on(event: "HeapProfiler.addHeapSnapshotChunk", listener: (message: InspectorNotification<HeapProfiler.AddHeapSnapshotChunkEventDataType>) => void): this;
+        on(event: "HeapProfiler.resetProfiles", listener: () => void): this;
+        on(event: "HeapProfiler.reportHeapSnapshotProgress", listener: (message: InspectorNotification<HeapProfiler.ReportHeapSnapshotProgressEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend regularly sends a current value for last seen object id and corresponding timestamp. If the were changes in the heap since last event then one or more heapStatsUpdate events will be sent before a new lastSeenObjectId event.
+         */
+        on(event: "HeapProfiler.lastSeenObjectId", listener: (message: InspectorNotification<HeapProfiler.LastSeenObjectIdEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend may send update for one or more fragments
+         */
+        on(event: "HeapProfiler.heapStatsUpdate", listener: (message: InspectorNotification<HeapProfiler.HeapStatsUpdateEventDataType>) => void): this;
+
+        /**
+         * Contains an bucket of collected trace events.
+         */
+        on(event: "NodeTracing.dataCollected", listener: (message: InspectorNotification<NodeTracing.DataCollectedEventDataType>) => void): this;
+
+        /**
+         * Signals that tracing is stopped and there is no trace buffers pending flush, all data were
+         * delivered via dataCollected events.
+         */
+        on(event: "NodeTracing.tracingComplete", listener: () => void): this;
+
+        /**
+         * Issued when attached to a worker.
+         */
+        on(event: "NodeWorker.attachedToWorker", listener: (message: InspectorNotification<NodeWorker.AttachedToWorkerEventDataType>) => void): this;
+
+        /**
+         * Issued when detached from the worker.
+         */
+        on(event: "NodeWorker.detachedFromWorker", listener: (message: InspectorNotification<NodeWorker.DetachedFromWorkerEventDataType>) => void): this;
+
+        /**
+         * Notifies about a new protocol message received from the session
+         * (session ID is provided in attachedToWorker notification).
+         */
+        on(event: "NodeWorker.receivedMessageFromWorker", listener: (message: InspectorNotification<NodeWorker.ReceivedMessageFromWorkerEventDataType>) => void): this;
+
+        /**
+         * This event is fired instead of \`Runtime.executionContextDestroyed\` when
+         * enabled.
+         * It is fired when the Node process finished all code execution and is
+         * waiting for all frontends to disconnect.
+         */
+        on(event: "NodeRuntime.waitingForDisconnect", listener: () => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+
+        /**
+         * Emitted when any notification from the V8 Inspector is received.
+         */
+        once(event: "inspectorNotification", listener: (message: InspectorNotification<{}>) => void): this;
+
+        /**
+         * Issued when new execution context is created.
+         */
+        once(event: "Runtime.executionContextCreated", listener: (message: InspectorNotification<Runtime.ExecutionContextCreatedEventDataType>) => void): this;
+
+        /**
+         * Issued when execution context is destroyed.
+         */
+        once(event: "Runtime.executionContextDestroyed", listener: (message: InspectorNotification<Runtime.ExecutionContextDestroyedEventDataType>) => void): this;
+
+        /**
+         * Issued when all executionContexts were cleared in browser
+         */
+        once(event: "Runtime.executionContextsCleared", listener: () => void): this;
+
+        /**
+         * Issued when exception was thrown and unhandled.
+         */
+        once(event: "Runtime.exceptionThrown", listener: (message: InspectorNotification<Runtime.ExceptionThrownEventDataType>) => void): this;
+
+        /**
+         * Issued when unhandled exception was revoked.
+         */
+        once(event: "Runtime.exceptionRevoked", listener: (message: InspectorNotification<Runtime.ExceptionRevokedEventDataType>) => void): this;
+
+        /**
+         * Issued when console API was called.
+         */
+        once(event: "Runtime.consoleAPICalled", listener: (message: InspectorNotification<Runtime.ConsoleAPICalledEventDataType>) => void): this;
+
+        /**
+         * Issued when object should be inspected (for example, as a result of inspect() command line API call).
+         */
+        once(event: "Runtime.inspectRequested", listener: (message: InspectorNotification<Runtime.InspectRequestedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine parses script. This event is also fired for all known and uncollected scripts upon enabling debugger.
+         */
+        once(event: "Debugger.scriptParsed", listener: (message: InspectorNotification<Debugger.ScriptParsedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine fails to parse the script.
+         */
+        once(event: "Debugger.scriptFailedToParse", listener: (message: InspectorNotification<Debugger.ScriptFailedToParseEventDataType>) => void): this;
+
+        /**
+         * Fired when breakpoint is resolved to an actual script and location.
+         */
+        once(event: "Debugger.breakpointResolved", listener: (message: InspectorNotification<Debugger.BreakpointResolvedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine stopped on breakpoint or exception or any other stop criteria.
+         */
+        once(event: "Debugger.paused", listener: (message: InspectorNotification<Debugger.PausedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine resumed execution.
+         */
+        once(event: "Debugger.resumed", listener: () => void): this;
+
+        /**
+         * Issued when new console message is added.
+         */
+        once(event: "Console.messageAdded", listener: (message: InspectorNotification<Console.MessageAddedEventDataType>) => void): this;
+
+        /**
+         * Sent when new profile recording is started using console.profile() call.
+         */
+        once(event: "Profiler.consoleProfileStarted", listener: (message: InspectorNotification<Profiler.ConsoleProfileStartedEventDataType>) => void): this;
+
+        once(event: "Profiler.consoleProfileFinished", listener: (message: InspectorNotification<Profiler.ConsoleProfileFinishedEventDataType>) => void): this;
+        once(event: "HeapProfiler.addHeapSnapshotChunk", listener: (message: InspectorNotification<HeapProfiler.AddHeapSnapshotChunkEventDataType>) => void): this;
+        once(event: "HeapProfiler.resetProfiles", listener: () => void): this;
+        once(event: "HeapProfiler.reportHeapSnapshotProgress", listener: (message: InspectorNotification<HeapProfiler.ReportHeapSnapshotProgressEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend regularly sends a current value for last seen object id and corresponding timestamp. If the were changes in the heap since last event then one or more heapStatsUpdate events will be sent before a new lastSeenObjectId event.
+         */
+        once(event: "HeapProfiler.lastSeenObjectId", listener: (message: InspectorNotification<HeapProfiler.LastSeenObjectIdEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend may send update for one or more fragments
+         */
+        once(event: "HeapProfiler.heapStatsUpdate", listener: (message: InspectorNotification<HeapProfiler.HeapStatsUpdateEventDataType>) => void): this;
+
+        /**
+         * Contains an bucket of collected trace events.
+         */
+        once(event: "NodeTracing.dataCollected", listener: (message: InspectorNotification<NodeTracing.DataCollectedEventDataType>) => void): this;
+
+        /**
+         * Signals that tracing is stopped and there is no trace buffers pending flush, all data were
+         * delivered via dataCollected events.
+         */
+        once(event: "NodeTracing.tracingComplete", listener: () => void): this;
+
+        /**
+         * Issued when attached to a worker.
+         */
+        once(event: "NodeWorker.attachedToWorker", listener: (message: InspectorNotification<NodeWorker.AttachedToWorkerEventDataType>) => void): this;
+
+        /**
+         * Issued when detached from the worker.
+         */
+        once(event: "NodeWorker.detachedFromWorker", listener: (message: InspectorNotification<NodeWorker.DetachedFromWorkerEventDataType>) => void): this;
+
+        /**
+         * Notifies about a new protocol message received from the session
+         * (session ID is provided in attachedToWorker notification).
+         */
+        once(event: "NodeWorker.receivedMessageFromWorker", listener: (message: InspectorNotification<NodeWorker.ReceivedMessageFromWorkerEventDataType>) => void): this;
+
+        /**
+         * This event is fired instead of \`Runtime.executionContextDestroyed\` when
+         * enabled.
+         * It is fired when the Node process finished all code execution and is
+         * waiting for all frontends to disconnect.
+         */
+        once(event: "NodeRuntime.waitingForDisconnect", listener: () => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+
+        /**
+         * Emitted when any notification from the V8 Inspector is received.
+         */
+        prependListener(event: "inspectorNotification", listener: (message: InspectorNotification<{}>) => void): this;
+
+        /**
+         * Issued when new execution context is created.
+         */
+        prependListener(event: "Runtime.executionContextCreated", listener: (message: InspectorNotification<Runtime.ExecutionContextCreatedEventDataType>) => void): this;
+
+        /**
+         * Issued when execution context is destroyed.
+         */
+        prependListener(event: "Runtime.executionContextDestroyed", listener: (message: InspectorNotification<Runtime.ExecutionContextDestroyedEventDataType>) => void): this;
+
+        /**
+         * Issued when all executionContexts were cleared in browser
+         */
+        prependListener(event: "Runtime.executionContextsCleared", listener: () => void): this;
+
+        /**
+         * Issued when exception was thrown and unhandled.
+         */
+        prependListener(event: "Runtime.exceptionThrown", listener: (message: InspectorNotification<Runtime.ExceptionThrownEventDataType>) => void): this;
+
+        /**
+         * Issued when unhandled exception was revoked.
+         */
+        prependListener(event: "Runtime.exceptionRevoked", listener: (message: InspectorNotification<Runtime.ExceptionRevokedEventDataType>) => void): this;
+
+        /**
+         * Issued when console API was called.
+         */
+        prependListener(event: "Runtime.consoleAPICalled", listener: (message: InspectorNotification<Runtime.ConsoleAPICalledEventDataType>) => void): this;
+
+        /**
+         * Issued when object should be inspected (for example, as a result of inspect() command line API call).
+         */
+        prependListener(event: "Runtime.inspectRequested", listener: (message: InspectorNotification<Runtime.InspectRequestedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine parses script. This event is also fired for all known and uncollected scripts upon enabling debugger.
+         */
+        prependListener(event: "Debugger.scriptParsed", listener: (message: InspectorNotification<Debugger.ScriptParsedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine fails to parse the script.
+         */
+        prependListener(event: "Debugger.scriptFailedToParse", listener: (message: InspectorNotification<Debugger.ScriptFailedToParseEventDataType>) => void): this;
+
+        /**
+         * Fired when breakpoint is resolved to an actual script and location.
+         */
+        prependListener(event: "Debugger.breakpointResolved", listener: (message: InspectorNotification<Debugger.BreakpointResolvedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine stopped on breakpoint or exception or any other stop criteria.
+         */
+        prependListener(event: "Debugger.paused", listener: (message: InspectorNotification<Debugger.PausedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine resumed execution.
+         */
+        prependListener(event: "Debugger.resumed", listener: () => void): this;
+
+        /**
+         * Issued when new console message is added.
+         */
+        prependListener(event: "Console.messageAdded", listener: (message: InspectorNotification<Console.MessageAddedEventDataType>) => void): this;
+
+        /**
+         * Sent when new profile recording is started using console.profile() call.
+         */
+        prependListener(event: "Profiler.consoleProfileStarted", listener: (message: InspectorNotification<Profiler.ConsoleProfileStartedEventDataType>) => void): this;
+
+        prependListener(event: "Profiler.consoleProfileFinished", listener: (message: InspectorNotification<Profiler.ConsoleProfileFinishedEventDataType>) => void): this;
+        prependListener(event: "HeapProfiler.addHeapSnapshotChunk", listener: (message: InspectorNotification<HeapProfiler.AddHeapSnapshotChunkEventDataType>) => void): this;
+        prependListener(event: "HeapProfiler.resetProfiles", listener: () => void): this;
+        prependListener(event: "HeapProfiler.reportHeapSnapshotProgress", listener: (message: InspectorNotification<HeapProfiler.ReportHeapSnapshotProgressEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend regularly sends a current value for last seen object id and corresponding timestamp. If the were changes in the heap since last event then one or more heapStatsUpdate events will be sent before a new lastSeenObjectId event.
+         */
+        prependListener(event: "HeapProfiler.lastSeenObjectId", listener: (message: InspectorNotification<HeapProfiler.LastSeenObjectIdEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend may send update for one or more fragments
+         */
+        prependListener(event: "HeapProfiler.heapStatsUpdate", listener: (message: InspectorNotification<HeapProfiler.HeapStatsUpdateEventDataType>) => void): this;
+
+        /**
+         * Contains an bucket of collected trace events.
+         */
+        prependListener(event: "NodeTracing.dataCollected", listener: (message: InspectorNotification<NodeTracing.DataCollectedEventDataType>) => void): this;
+
+        /**
+         * Signals that tracing is stopped and there is no trace buffers pending flush, all data were
+         * delivered via dataCollected events.
+         */
+        prependListener(event: "NodeTracing.tracingComplete", listener: () => void): this;
+
+        /**
+         * Issued when attached to a worker.
+         */
+        prependListener(event: "NodeWorker.attachedToWorker", listener: (message: InspectorNotification<NodeWorker.AttachedToWorkerEventDataType>) => void): this;
+
+        /**
+         * Issued when detached from the worker.
+         */
+        prependListener(event: "NodeWorker.detachedFromWorker", listener: (message: InspectorNotification<NodeWorker.DetachedFromWorkerEventDataType>) => void): this;
+
+        /**
+         * Notifies about a new protocol message received from the session
+         * (session ID is provided in attachedToWorker notification).
+         */
+        prependListener(event: "NodeWorker.receivedMessageFromWorker", listener: (message: InspectorNotification<NodeWorker.ReceivedMessageFromWorkerEventDataType>) => void): this;
+
+        /**
+         * This event is fired instead of \`Runtime.executionContextDestroyed\` when
+         * enabled.
+         * It is fired when the Node process finished all code execution and is
+         * waiting for all frontends to disconnect.
+         */
+        prependListener(event: "NodeRuntime.waitingForDisconnect", listener: () => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+
+        /**
+         * Emitted when any notification from the V8 Inspector is received.
+         */
+        prependOnceListener(event: "inspectorNotification", listener: (message: InspectorNotification<{}>) => void): this;
+
+        /**
+         * Issued when new execution context is created.
+         */
+        prependOnceListener(event: "Runtime.executionContextCreated", listener: (message: InspectorNotification<Runtime.ExecutionContextCreatedEventDataType>) => void): this;
+
+        /**
+         * Issued when execution context is destroyed.
+         */
+        prependOnceListener(event: "Runtime.executionContextDestroyed", listener: (message: InspectorNotification<Runtime.ExecutionContextDestroyedEventDataType>) => void): this;
+
+        /**
+         * Issued when all executionContexts were cleared in browser
+         */
+        prependOnceListener(event: "Runtime.executionContextsCleared", listener: () => void): this;
+
+        /**
+         * Issued when exception was thrown and unhandled.
+         */
+        prependOnceListener(event: "Runtime.exceptionThrown", listener: (message: InspectorNotification<Runtime.ExceptionThrownEventDataType>) => void): this;
+
+        /**
+         * Issued when unhandled exception was revoked.
+         */
+        prependOnceListener(event: "Runtime.exceptionRevoked", listener: (message: InspectorNotification<Runtime.ExceptionRevokedEventDataType>) => void): this;
+
+        /**
+         * Issued when console API was called.
+         */
+        prependOnceListener(event: "Runtime.consoleAPICalled", listener: (message: InspectorNotification<Runtime.ConsoleAPICalledEventDataType>) => void): this;
+
+        /**
+         * Issued when object should be inspected (for example, as a result of inspect() command line API call).
+         */
+        prependOnceListener(event: "Runtime.inspectRequested", listener: (message: InspectorNotification<Runtime.InspectRequestedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine parses script. This event is also fired for all known and uncollected scripts upon enabling debugger.
+         */
+        prependOnceListener(event: "Debugger.scriptParsed", listener: (message: InspectorNotification<Debugger.ScriptParsedEventDataType>) => void): this;
+
+        /**
+         * Fired when virtual machine fails to parse the script.
+         */
+        prependOnceListener(event: "Debugger.scriptFailedToParse", listener: (message: InspectorNotification<Debugger.ScriptFailedToParseEventDataType>) => void): this;
+
+        /**
+         * Fired when breakpoint is resolved to an actual script and location.
+         */
+        prependOnceListener(event: "Debugger.breakpointResolved", listener: (message: InspectorNotification<Debugger.BreakpointResolvedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine stopped on breakpoint or exception or any other stop criteria.
+         */
+        prependOnceListener(event: "Debugger.paused", listener: (message: InspectorNotification<Debugger.PausedEventDataType>) => void): this;
+
+        /**
+         * Fired when the virtual machine resumed execution.
+         */
+        prependOnceListener(event: "Debugger.resumed", listener: () => void): this;
+
+        /**
+         * Issued when new console message is added.
+         */
+        prependOnceListener(event: "Console.messageAdded", listener: (message: InspectorNotification<Console.MessageAddedEventDataType>) => void): this;
+
+        /**
+         * Sent when new profile recording is started using console.profile() call.
+         */
+        prependOnceListener(event: "Profiler.consoleProfileStarted", listener: (message: InspectorNotification<Profiler.ConsoleProfileStartedEventDataType>) => void): this;
+
+        prependOnceListener(event: "Profiler.consoleProfileFinished", listener: (message: InspectorNotification<Profiler.ConsoleProfileFinishedEventDataType>) => void): this;
+        prependOnceListener(event: "HeapProfiler.addHeapSnapshotChunk", listener: (message: InspectorNotification<HeapProfiler.AddHeapSnapshotChunkEventDataType>) => void): this;
+        prependOnceListener(event: "HeapProfiler.resetProfiles", listener: () => void): this;
+        prependOnceListener(event: "HeapProfiler.reportHeapSnapshotProgress", listener: (message: InspectorNotification<HeapProfiler.ReportHeapSnapshotProgressEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend regularly sends a current value for last seen object id and corresponding timestamp. If the were changes in the heap since last event then one or more heapStatsUpdate events will be sent before a new lastSeenObjectId event.
+         */
+        prependOnceListener(event: "HeapProfiler.lastSeenObjectId", listener: (message: InspectorNotification<HeapProfiler.LastSeenObjectIdEventDataType>) => void): this;
+
+        /**
+         * If heap objects tracking has been started then backend may send update for one or more fragments
+         */
+        prependOnceListener(event: "HeapProfiler.heapStatsUpdate", listener: (message: InspectorNotification<HeapProfiler.HeapStatsUpdateEventDataType>) => void): this;
+
+        /**
+         * Contains an bucket of collected trace events.
+         */
+        prependOnceListener(event: "NodeTracing.dataCollected", listener: (message: InspectorNotification<NodeTracing.DataCollectedEventDataType>) => void): this;
+
+        /**
+         * Signals that tracing is stopped and there is no trace buffers pending flush, all data were
+         * delivered via dataCollected events.
+         */
+        prependOnceListener(event: "NodeTracing.tracingComplete", listener: () => void): this;
+
+        /**
+         * Issued when attached to a worker.
+         */
+        prependOnceListener(event: "NodeWorker.attachedToWorker", listener: (message: InspectorNotification<NodeWorker.AttachedToWorkerEventDataType>) => void): this;
+
+        /**
+         * Issued when detached from the worker.
+         */
+        prependOnceListener(event: "NodeWorker.detachedFromWorker", listener: (message: InspectorNotification<NodeWorker.DetachedFromWorkerEventDataType>) => void): this;
+
+        /**
+         * Notifies about a new protocol message received from the session
+         * (session ID is provided in attachedToWorker notification).
+         */
+        prependOnceListener(event: "NodeWorker.receivedMessageFromWorker", listener: (message: InspectorNotification<NodeWorker.ReceivedMessageFromWorkerEventDataType>) => void): this;
+
+        /**
+         * This event is fired instead of \`Runtime.executionContextDestroyed\` when
+         * enabled.
+         * It is fired when the Node process finished all code execution and is
+         * waiting for all frontends to disconnect.
+         */
+        prependOnceListener(event: "NodeRuntime.waitingForDisconnect", listener: () => void): this;
+    }
+
+    // Top Level API
+
+    /**
+     * Activate inspector on host and port. Equivalent to node --inspect=[[host:]port], but can be done programatically after node has started.
+     * If wait is true, will block until a client has connected to the inspect port and flow control has been passed to the debugger client.
+     * @param port Port to listen on for inspector connections. Optional, defaults to what was specified on the CLI.
+     * @param host Host to listen on for inspector connections. Optional, defaults to what was specified on the CLI.
+     * @param wait Block until a client has connected. Optional, defaults to false.
+     */
+    function open(port?: number, host?: string, wait?: boolean): void;
+
+    /**
+     * Deactivate the inspector. Blocks until there are no active connections.
+     */
+    function close(): void;
+
+    /**
+     * Return the URL of the active inspector, or \`undefined\` if there is none.
+     */
+    function url(): string | undefined;
+}
+`;
+module.exports['module.d.ts'] = `declare module "module" {
+    export = NodeJS.Module;
+}
+`;
+module.exports['net.d.ts'] = `declare module "net" {
+    import * as stream from "stream";
+    import * as events from "events";
+    import * as dns from "dns";
+
+    type LookupFunction = (hostname: string, options: dns.LookupOneOptions, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void) => void;
+
+    interface AddressInfo {
+        address: string;
+        family: string;
+        port: number;
+    }
+
+    interface SocketConstructorOpts {
+        fd?: number;
+        allowHalfOpen?: boolean;
+        readable?: boolean;
+        writable?: boolean;
+    }
+
+    interface OnReadOpts {
+        buffer: Uint8Array | (() => Uint8Array);
+        /**
+         * This function is called for every chunk of incoming data.
+         * Two arguments are passed to it: the number of bytes written to buffer and a reference to buffer.
+         * Return false from this function to implicitly pause() the socket.
+         */
+        callback(bytesWritten: number, buf: Uint8Array): boolean;
+    }
+
+    interface ConnectOpts {
+        /**
+         * If specified, incoming data is stored in a single buffer and passed to the supplied callback when data arrives on the socket.
+         * Note: this will cause the streaming functionality to not provide any data, however events like 'error', 'end', and 'close' will
+         * still be emitted as normal and methods like pause() and resume() will also behave as expected.
+         */
+        onread?: OnReadOpts;
+    }
+
+    interface TcpSocketConnectOpts extends ConnectOpts {
+        port: number;
+        host?: string;
+        localAddress?: string;
+        localPort?: number;
+        hints?: number;
+        family?: number;
+        lookup?: LookupFunction;
+    }
+
+    interface IpcSocketConnectOpts extends ConnectOpts {
+        path: string;
+    }
+
+    type SocketConnectOpts = TcpSocketConnectOpts | IpcSocketConnectOpts;
+
+    class Socket extends stream.Duplex {
+        constructor(options?: SocketConstructorOpts);
+
+        // Extended base methods
+        write(buffer: Uint8Array | string, cb?: (err?: Error) => void): boolean;
+        write(str: Uint8Array | string, encoding?: string, cb?: (err?: Error) => void): boolean;
+
+        connect(options: SocketConnectOpts, connectionListener?: () => void): this;
+        connect(port: number, host: string, connectionListener?: () => void): this;
+        connect(port: number, connectionListener?: () => void): this;
+        connect(path: string, connectionListener?: () => void): this;
+
+        setEncoding(encoding?: string): this;
+        pause(): this;
+        resume(): this;
+        setTimeout(timeout: number, callback?: () => void): this;
+        setNoDelay(noDelay?: boolean): this;
+        setKeepAlive(enable?: boolean, initialDelay?: number): this;
+        address(): AddressInfo | string;
+        unref(): void;
+        ref(): void;
+
+        readonly bufferSize: number;
+        readonly bytesRead: number;
+        readonly bytesWritten: number;
+        readonly connecting: boolean;
+        readonly destroyed: boolean;
+        readonly localAddress: string;
+        readonly localPort: number;
+        readonly remoteAddress?: string;
+        readonly remoteFamily?: string;
+        readonly remotePort?: number;
+
+        // Extended base methods
+        end(cb?: () => void): void;
+        end(buffer: Uint8Array | string, cb?: () => void): void;
+        end(str: Uint8Array | string, encoding?: string, cb?: () => void): void;
+
+        /**
+         * events.EventEmitter
+         *   1. close
+         *   2. connect
+         *   3. data
+         *   4. drain
+         *   5. end
+         *   6. error
+         *   7. lookup
+         *   8. timeout
+         */
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "close", listener: (had_error: boolean) => void): this;
+        addListener(event: "connect", listener: () => void): this;
+        addListener(event: "data", listener: (data: Buffer) => void): this;
+        addListener(event: "drain", listener: () => void): this;
+        addListener(event: "end", listener: () => void): this;
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        addListener(event: "timeout", listener: () => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "close", had_error: boolean): boolean;
+        emit(event: "connect"): boolean;
+        emit(event: "data", data: Buffer): boolean;
+        emit(event: "drain"): boolean;
+        emit(event: "end"): boolean;
+        emit(event: "error", err: Error): boolean;
+        emit(event: "lookup", err: Error, address: string, family: string | number, host: string): boolean;
+        emit(event: "timeout"): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "close", listener: (had_error: boolean) => void): this;
+        on(event: "connect", listener: () => void): this;
+        on(event: "data", listener: (data: Buffer) => void): this;
+        on(event: "drain", listener: () => void): this;
+        on(event: "end", listener: () => void): this;
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        on(event: "timeout", listener: () => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "close", listener: (had_error: boolean) => void): this;
+        once(event: "connect", listener: () => void): this;
+        once(event: "data", listener: (data: Buffer) => void): this;
+        once(event: "drain", listener: () => void): this;
+        once(event: "end", listener: () => void): this;
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        once(event: "timeout", listener: () => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "close", listener: (had_error: boolean) => void): this;
+        prependListener(event: "connect", listener: () => void): this;
+        prependListener(event: "data", listener: (data: Buffer) => void): this;
+        prependListener(event: "drain", listener: () => void): this;
+        prependListener(event: "end", listener: () => void): this;
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        prependListener(event: "timeout", listener: () => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "close", listener: (had_error: boolean) => void): this;
+        prependOnceListener(event: "connect", listener: () => void): this;
+        prependOnceListener(event: "data", listener: (data: Buffer) => void): this;
+        prependOnceListener(event: "drain", listener: () => void): this;
+        prependOnceListener(event: "end", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        prependOnceListener(event: "timeout", listener: () => void): this;
+    }
+
+    interface ListenOptions {
+        port?: number;
+        host?: string;
+        backlog?: number;
+        path?: string;
+        exclusive?: boolean;
+        readableAll?: boolean;
+        writableAll?: boolean;
+        /**
+         * @default false
+         */
+        ipv6Only?: boolean;
+    }
+
+    // https://github.com/nodejs/node/blob/master/lib/net.js
+    class Server extends events.EventEmitter {
+        constructor(connectionListener?: (socket: Socket) => void);
+        constructor(options?: { allowHalfOpen?: boolean, pauseOnConnect?: boolean }, connectionListener?: (socket: Socket) => void);
+
+        listen(port?: number, hostname?: string, backlog?: number, listeningListener?: () => void): this;
+        listen(port?: number, hostname?: string, listeningListener?: () => void): this;
+        listen(port?: number, backlog?: number, listeningListener?: () => void): this;
+        listen(port?: number, listeningListener?: () => void): this;
+        listen(path: string, backlog?: number, listeningListener?: () => void): this;
+        listen(path: string, listeningListener?: () => void): this;
+        listen(options: ListenOptions, listeningListener?: () => void): this;
+        listen(handle: any, backlog?: number, listeningListener?: () => void): this;
+        listen(handle: any, listeningListener?: () => void): this;
+        close(callback?: (err?: Error) => void): this;
+        address(): AddressInfo | string | null;
+        getConnections(cb: (error: Error | null, count: number) => void): void;
+        ref(): this;
+        unref(): this;
+        maxConnections: number;
+        connections: number;
+        listening: boolean;
+
+        /**
+         * events.EventEmitter
+         *   1. close
+         *   2. connection
+         *   3. error
+         *   4. listening
+         */
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "close", listener: () => void): this;
+        addListener(event: "connection", listener: (socket: Socket) => void): this;
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: "listening", listener: () => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "close"): boolean;
+        emit(event: "connection", socket: Socket): boolean;
+        emit(event: "error", err: Error): boolean;
+        emit(event: "listening"): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "close", listener: () => void): this;
+        on(event: "connection", listener: (socket: Socket) => void): this;
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: "listening", listener: () => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "close", listener: () => void): this;
+        once(event: "connection", listener: (socket: Socket) => void): this;
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: "listening", listener: () => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "connection", listener: (socket: Socket) => void): this;
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: "listening", listener: () => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "connection", listener: (socket: Socket) => void): this;
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: "listening", listener: () => void): this;
+    }
+
+    interface TcpNetConnectOpts extends TcpSocketConnectOpts, SocketConstructorOpts {
+        timeout?: number;
+    }
+
+    interface IpcNetConnectOpts extends IpcSocketConnectOpts, SocketConstructorOpts {
+        timeout?: number;
+    }
+
+    type NetConnectOpts = TcpNetConnectOpts | IpcNetConnectOpts;
+
+    function createServer(connectionListener?: (socket: Socket) => void): Server;
+    function createServer(options?: { allowHalfOpen?: boolean, pauseOnConnect?: boolean }, connectionListener?: (socket: Socket) => void): Server;
+    function connect(options: NetConnectOpts, connectionListener?: () => void): Socket;
+    function connect(port: number, host?: string, connectionListener?: () => void): Socket;
+    function connect(path: string, connectionListener?: () => void): Socket;
+    function createConnection(options: NetConnectOpts, connectionListener?: () => void): Socket;
+    function createConnection(port: number, host?: string, connectionListener?: () => void): Socket;
+    function createConnection(path: string, connectionListener?: () => void): Socket;
+    function isIP(input: string): number;
+    function isIPv4(input: string): boolean;
+    function isIPv6(input: string): boolean;
+}
+`;
+module.exports['os.d.ts'] = `declare module "os" {
+    interface CpuInfo {
+        model: string;
+        speed: number;
+        times: {
+            user: number;
+            nice: number;
+            sys: number;
+            idle: number;
+            irq: number;
+        };
+    }
+
+    interface NetworkInterfaceBase {
+        address: string;
+        netmask: string;
+        mac: string;
+        internal: boolean;
+        cidr: string | null;
+    }
+
+    interface NetworkInterfaceInfoIPv4 extends NetworkInterfaceBase {
+        family: "IPv4";
+    }
+
+    interface NetworkInterfaceInfoIPv6 extends NetworkInterfaceBase {
+        family: "IPv6";
+        scopeid: number;
+    }
+
+    interface UserInfo<T> {
+        username: T;
+        uid: number;
+        gid: number;
+        shell: T;
+        homedir: T;
+    }
+
+    type NetworkInterfaceInfo = NetworkInterfaceInfoIPv4 | NetworkInterfaceInfoIPv6;
+
+    function hostname(): string;
+    function loadavg(): number[];
+    function uptime(): number;
+    function freemem(): number;
+    function totalmem(): number;
+    function cpus(): CpuInfo[];
+    function type(): string;
+    function release(): string;
+    function networkInterfaces(): { [index: string]: NetworkInterfaceInfo[] };
+    function homedir(): string;
+    function userInfo(options: { encoding: 'buffer' }): UserInfo<Buffer>;
+    function userInfo(options?: { encoding: string }): UserInfo<string>;
+    const constants: {
+        UV_UDP_REUSEADDR: number;
+        // signals: { [key in NodeJS.Signals]: number; }; @todo: change after migration to typescript 2.1
+        signals: {
+            SIGHUP: number;
+            SIGINT: number;
+            SIGQUIT: number;
+            SIGILL: number;
+            SIGTRAP: number;
+            SIGABRT: number;
+            SIGIOT: number;
+            SIGBUS: number;
+            SIGFPE: number;
+            SIGKILL: number;
+            SIGUSR1: number;
+            SIGSEGV: number;
+            SIGUSR2: number;
+            SIGPIPE: number;
+            SIGALRM: number;
+            SIGTERM: number;
+            SIGCHLD: number;
+            SIGSTKFLT: number;
+            SIGCONT: number;
+            SIGSTOP: number;
+            SIGTSTP: number;
+            SIGBREAK: number;
+            SIGTTIN: number;
+            SIGTTOU: number;
+            SIGURG: number;
+            SIGXCPU: number;
+            SIGXFSZ: number;
+            SIGVTALRM: number;
+            SIGPROF: number;
+            SIGWINCH: number;
+            SIGIO: number;
+            SIGPOLL: number;
+            SIGLOST: number;
+            SIGPWR: number;
+            SIGINFO: number;
+            SIGSYS: number;
+            SIGUNUSED: number;
+        };
+        errno: {
+            E2BIG: number;
+            EACCES: number;
+            EADDRINUSE: number;
+            EADDRNOTAVAIL: number;
+            EAFNOSUPPORT: number;
+            EAGAIN: number;
+            EALREADY: number;
+            EBADF: number;
+            EBADMSG: number;
+            EBUSY: number;
+            ECANCELED: number;
+            ECHILD: number;
+            ECONNABORTED: number;
+            ECONNREFUSED: number;
+            ECONNRESET: number;
+            EDEADLK: number;
+            EDESTADDRREQ: number;
+            EDOM: number;
+            EDQUOT: number;
+            EEXIST: number;
+            EFAULT: number;
+            EFBIG: number;
+            EHOSTUNREACH: number;
+            EIDRM: number;
+            EILSEQ: number;
+            EINPROGRESS: number;
+            EINTR: number;
+            EINVAL: number;
+            EIO: number;
+            EISCONN: number;
+            EISDIR: number;
+            ELOOP: number;
+            EMFILE: number;
+            EMLINK: number;
+            EMSGSIZE: number;
+            EMULTIHOP: number;
+            ENAMETOOLONG: number;
+            ENETDOWN: number;
+            ENETRESET: number;
+            ENETUNREACH: number;
+            ENFILE: number;
+            ENOBUFS: number;
+            ENODATA: number;
+            ENODEV: number;
+            ENOENT: number;
+            ENOEXEC: number;
+            ENOLCK: number;
+            ENOLINK: number;
+            ENOMEM: number;
+            ENOMSG: number;
+            ENOPROTOOPT: number;
+            ENOSPC: number;
+            ENOSR: number;
+            ENOSTR: number;
+            ENOSYS: number;
+            ENOTCONN: number;
+            ENOTDIR: number;
+            ENOTEMPTY: number;
+            ENOTSOCK: number;
+            ENOTSUP: number;
+            ENOTTY: number;
+            ENXIO: number;
+            EOPNOTSUPP: number;
+            EOVERFLOW: number;
+            EPERM: number;
+            EPIPE: number;
+            EPROTO: number;
+            EPROTONOSUPPORT: number;
+            EPROTOTYPE: number;
+            ERANGE: number;
+            EROFS: number;
+            ESPIPE: number;
+            ESRCH: number;
+            ESTALE: number;
+            ETIME: number;
+            ETIMEDOUT: number;
+            ETXTBSY: number;
+            EWOULDBLOCK: number;
+            EXDEV: number;
+            WSAEINTR: number;
+            WSAEBADF: number;
+            WSAEACCES: number;
+            WSAEFAULT: number;
+            WSAEINVAL: number;
+            WSAEMFILE: number;
+            WSAEWOULDBLOCK: number;
+            WSAEINPROGRESS: number;
+            WSAEALREADY: number;
+            WSAENOTSOCK: number;
+            WSAEDESTADDRREQ: number;
+            WSAEMSGSIZE: number;
+            WSAEPROTOTYPE: number;
+            WSAENOPROTOOPT: number;
+            WSAEPROTONOSUPPORT: number;
+            WSAESOCKTNOSUPPORT: number;
+            WSAEOPNOTSUPP: number;
+            WSAEPFNOSUPPORT: number;
+            WSAEAFNOSUPPORT: number;
+            WSAEADDRINUSE: number;
+            WSAEADDRNOTAVAIL: number;
+            WSAENETDOWN: number;
+            WSAENETUNREACH: number;
+            WSAENETRESET: number;
+            WSAECONNABORTED: number;
+            WSAECONNRESET: number;
+            WSAENOBUFS: number;
+            WSAEISCONN: number;
+            WSAENOTCONN: number;
+            WSAESHUTDOWN: number;
+            WSAETOOMANYREFS: number;
+            WSAETIMEDOUT: number;
+            WSAECONNREFUSED: number;
+            WSAELOOP: number;
+            WSAENAMETOOLONG: number;
+            WSAEHOSTDOWN: number;
+            WSAEHOSTUNREACH: number;
+            WSAENOTEMPTY: number;
+            WSAEPROCLIM: number;
+            WSAEUSERS: number;
+            WSAEDQUOT: number;
+            WSAESTALE: number;
+            WSAEREMOTE: number;
+            WSASYSNOTREADY: number;
+            WSAVERNOTSUPPORTED: number;
+            WSANOTINITIALISED: number;
+            WSAEDISCON: number;
+            WSAENOMORE: number;
+            WSAECANCELLED: number;
+            WSAEINVALIDPROCTABLE: number;
+            WSAEINVALIDPROVIDER: number;
+            WSAEPROVIDERFAILEDINIT: number;
+            WSASYSCALLFAILURE: number;
+            WSASERVICE_NOT_FOUND: number;
+            WSATYPE_NOT_FOUND: number;
+            WSA_E_NO_MORE: number;
+            WSA_E_CANCELLED: number;
+            WSAEREFUSED: number;
+        };
+        priority: {
+            PRIORITY_LOW: number;
+            PRIORITY_BELOW_NORMAL: number;
+            PRIORITY_NORMAL: number;
+            PRIORITY_ABOVE_NORMAL: number;
+            PRIORITY_HIGH: number;
+            PRIORITY_HIGHEST: number;
+        }
+    };
+    function arch(): string;
+    function platform(): NodeJS.Platform;
+    function tmpdir(): string;
+    const EOL: string;
+    function endianness(): "BE" | "LE";
+    /**
+     * Gets the priority of a process.
+     * Defaults to current process.
+     */
+    function getPriority(pid?: number): number;
+    /**
+     * Sets the priority of the current process.
+     * @param priority Must be in range of -20 to 19
+     */
+    function setPriority(priority: number): void;
+    /**
+     * Sets the priority of the process specified process.
+     * @param priority Must be in range of -20 to 19
+     */
+    function setPriority(pid: number, priority: number): void;
+}
+`;
+module.exports['path.d.ts'] = `declare module "path" {
+    /**
+     * A parsed path object generated by path.parse() or consumed by path.format().
+     */
+    interface ParsedPath {
+        /**
+         * The root of the path such as '/' or 'c:\'
+         */
+        root: string;
+        /**
+         * The full directory path such as '/home/user/dir' or 'c:\path\dir'
+         */
+        dir: string;
+        /**
+         * The file name including extension (if any) such as 'index.html'
+         */
+        base: string;
+        /**
+         * The file extension (if any) such as '.html'
+         */
+        ext: string;
+        /**
+         * The file name without extension (if any) such as 'index'
+         */
+        name: string;
+    }
+    interface FormatInputPathObject {
+        /**
+         * The root of the path such as '/' or 'c:\'
+         */
+        root?: string;
+        /**
+         * The full directory path such as '/home/user/dir' or 'c:\path\dir'
+         */
+        dir?: string;
+        /**
+         * The file name including extension (if any) such as 'index.html'
+         */
+        base?: string;
+        /**
+         * The file extension (if any) such as '.html'
+         */
+        ext?: string;
+        /**
+         * The file name without extension (if any) such as 'index'
+         */
+        name?: string;
+    }
+
+    /**
+     * Normalize a string path, reducing '..' and '.' parts.
+     * When multiple slashes are found, they're replaced by a single one; when the path contains a trailing slash, it is preserved. On Windows backslashes are used.
+     *
+     * @param p string path to normalize.
+     */
+    function normalize(p: string): string;
+    /**
+     * Join all arguments together and normalize the resulting path.
+     * Arguments must be strings. In v0.8, non-string arguments were silently ignored. In v0.10 and up, an exception is thrown.
+     *
+     * @param paths paths to join.
+     */
+    function join(...paths: string[]): string;
+    /**
+     * The right-most parameter is considered {to}.  Other parameters are considered an array of {from}.
+     *
+     * Starting from leftmost {from} parameter, resolves {to} to an absolute path.
+     *
+     * If {to} isn't already absolute, {from} arguments are prepended in right to left order,
+     * until an absolute path is found. If after using all {from} paths still no absolute path is found,
+     * the current working directory is used as well. The resulting path is normalized,
+     * and trailing slashes are removed unless the path gets resolved to the root directory.
+     *
+     * @param pathSegments string paths to join.  Non-string arguments are ignored.
+     */
+    function resolve(...pathSegments: string[]): string;
+    /**
+     * Determines whether {path} is an absolute path. An absolute path will always resolve to the same location, regardless of the working directory.
+     *
+     * @param path path to test.
+     */
+    function isAbsolute(path: string): boolean;
+    /**
+     * Solve the relative path from {from} to {to}.
+     * At times we have two absolute paths, and we need to derive the relative path from one to the other. This is actually the reverse transform of path.resolve.
+     */
+    function relative(from: string, to: string): string;
+    /**
+     * Return the directory name of a path. Similar to the Unix dirname command.
+     *
+     * @param p the path to evaluate.
+     */
+    function dirname(p: string): string;
+    /**
+     * Return the last portion of a path. Similar to the Unix basename command.
+     * Often used to extract the file name from a fully qualified path.
+     *
+     * @param p the path to evaluate.
+     * @param ext optionally, an extension to remove from the result.
+     */
+    function basename(p: string, ext?: string): string;
+    /**
+     * Return the extension of the path, from the last '.' to end of string in the last portion of the path.
+     * If there is no '.' in the last portion of the path or the first character of it is '.', then it returns an empty string
+     *
+     * @param p the path to evaluate.
+     */
+    function extname(p: string): string;
+    /**
+     * The platform-specific file separator. '\\' or '/'.
+     */
+    const sep: '\\' | '/';
+    /**
+     * The platform-specific file delimiter. ';' or ':'.
+     */
+    const delimiter: ';' | ':';
+    /**
+     * Returns an object from a path string - the opposite of format().
+     *
+     * @param pathString path to evaluate.
+     */
+    function parse(pathString: string): ParsedPath;
+    /**
+     * Returns a path string from an object - the opposite of parse().
+     *
+     * @param pathString path to evaluate.
+     */
+    function format(pathObject: FormatInputPathObject): string;
+
+    namespace posix {
+        function normalize(p: string): string;
+        function join(...paths: string[]): string;
+        function resolve(...pathSegments: string[]): string;
+        function isAbsolute(p: string): boolean;
+        function relative(from: string, to: string): string;
+        function dirname(p: string): string;
+        function basename(p: string, ext?: string): string;
+        function extname(p: string): string;
+        const sep: string;
+        const delimiter: string;
+        function parse(p: string): ParsedPath;
+        function format(pP: FormatInputPathObject): string;
+    }
+
+    namespace win32 {
+        function normalize(p: string): string;
+        function join(...paths: string[]): string;
+        function resolve(...pathSegments: string[]): string;
+        function isAbsolute(p: string): boolean;
+        function relative(from: string, to: string): string;
+        function dirname(p: string): string;
+        function basename(p: string, ext?: string): string;
+        function extname(p: string): string;
+        const sep: string;
+        const delimiter: string;
+        function parse(p: string): ParsedPath;
+        function format(pP: FormatInputPathObject): string;
+    }
+}
+`;
+module.exports['perf_hooks.d.ts'] = `declare module "perf_hooks" {
+    import { AsyncResource } from "async_hooks";
+
+    interface PerformanceEntry {
+        /**
+         * The total number of milliseconds elapsed for this entry.
+         * This value will not be meaningful for all Performance Entry types.
+         */
+        readonly duration: number;
+
+        /**
+         * The name of the performance entry.
+         */
+        readonly name: string;
+
+        /**
+         * The high resolution millisecond timestamp marking the starting time of the Performance Entry.
+         */
+        readonly startTime: number;
+
+        /**
+         * The type of the performance entry.
+         * Currently it may be one of: 'node', 'mark', 'measure', 'gc', or 'function'.
+         */
+        readonly entryType: string;
+
+        /**
+         * When performanceEntry.entryType is equal to 'gc', the performance.kind property identifies
+         * the type of garbage collection operation that occurred.
+         * The value may be one of perf_hooks.constants.
+         */
+        readonly kind?: number;
+    }
+
+    interface PerformanceNodeTiming extends PerformanceEntry {
+        /**
+         * The high resolution millisecond timestamp at which the Node.js process completed bootstrap.
+         */
+        readonly bootstrapComplete: number;
+
+        /**
+         * The high resolution millisecond timestamp at which cluster processing ended.
+         */
+        readonly clusterSetupEnd: number;
+
+        /**
+         * The high resolution millisecond timestamp at which cluster processing started.
+         */
+        readonly clusterSetupStart: number;
+
+        /**
+         * The high resolution millisecond timestamp at which the Node.js event loop exited.
+         */
+        readonly loopExit: number;
+
+        /**
+         * The high resolution millisecond timestamp at which the Node.js event loop started.
+         */
+        readonly loopStart: number;
+
+        /**
+         * The high resolution millisecond timestamp at which main module load ended.
+         */
+        readonly moduleLoadEnd: number;
+
+        /**
+         * The high resolution millisecond timestamp at which main module load started.
+         */
+        readonly moduleLoadStart: number;
+
+        /**
+         * The high resolution millisecond timestamp at which the Node.js process was initialized.
+         */
+        readonly nodeStart: number;
+
+        /**
+         * The high resolution millisecond timestamp at which preload module load ended.
+         */
+        readonly preloadModuleLoadEnd: number;
+
+        /**
+         * The high resolution millisecond timestamp at which preload module load started.
+         */
+        readonly preloadModuleLoadStart: number;
+
+        /**
+         * The high resolution millisecond timestamp at which third_party_main processing ended.
+         */
+        readonly thirdPartyMainEnd: number;
+
+        /**
+         * The high resolution millisecond timestamp at which third_party_main processing started.
+         */
+        readonly thirdPartyMainStart: number;
+
+        /**
+         * The high resolution millisecond timestamp at which the V8 platform was initialized.
+         */
+        readonly v8Start: number;
+    }
+
+    interface Performance {
+        /**
+         * If name is not provided, removes all PerformanceFunction objects from the Performance Timeline.
+         * If name is provided, removes entries with name.
+         * @param name
+         */
+        clearFunctions(name?: string): void;
+
+        /**
+         * If name is not provided, removes all PerformanceMark objects from the Performance Timeline.
+         * If name is provided, removes only the named mark.
+         * @param name
+         */
+        clearMarks(name?: string): void;
+
+        /**
+         * If name is not provided, removes all PerformanceMeasure objects from the Performance Timeline.
+         * If name is provided, removes only objects whose performanceEntry.name matches name.
+         */
+        clearMeasures(name?: string): void;
+
+        /**
+         * Returns a list of all PerformanceEntry objects in chronological order with respect to performanceEntry.startTime.
+         * @return list of all PerformanceEntry objects
+         */
+        getEntries(): PerformanceEntry[];
+
+        /**
+         * Returns a list of all PerformanceEntry objects in chronological order with respect to performanceEntry.startTime
+         * whose performanceEntry.name is equal to name, and optionally, whose performanceEntry.entryType is equal to type.
+         * @param name
+         * @param type
+         * @return list of all PerformanceEntry objects
+         */
+        getEntriesByName(name: string, type?: string): PerformanceEntry[];
+
+        /**
+         * Returns a list of all PerformanceEntry objects in chronological order with respect to performanceEntry.startTime
+         * whose performanceEntry.entryType is equal to type.
+         * @param type
+         * @return list of all PerformanceEntry objects
+         */
+        getEntriesByType(type: string): PerformanceEntry[];
+
+        /**
+         * Creates a new PerformanceMark entry in the Performance Timeline.
+         * A PerformanceMark is a subclass of PerformanceEntry whose performanceEntry.entryType is always 'mark',
+         * and whose performanceEntry.duration is always 0.
+         * Performance marks are used to mark specific significant moments in the Performance Timeline.
+         * @param name
+         */
+        mark(name?: string): void;
+
+        /**
+         * Creates a new PerformanceMeasure entry in the Performance Timeline.
+         * A PerformanceMeasure is a subclass of PerformanceEntry whose performanceEntry.entryType is always 'measure',
+         * and whose performanceEntry.duration measures the number of milliseconds elapsed since startMark and endMark.
+         *
+         * The startMark argument may identify any existing PerformanceMark in the the Performance Timeline, or may identify
+         * any of the timestamp properties provided by the PerformanceNodeTiming class. If the named startMark does not exist,
+         * then startMark is set to timeOrigin by default.
+         *
+         * The endMark argument must identify any existing PerformanceMark in the the Performance Timeline or any of the timestamp
+         * properties provided by the PerformanceNodeTiming class. If the named endMark does not exist, an error will be thrown.
+         * @param name
+         * @param startMark
+         * @param endMark
+         */
+        measure(name: string, startMark: string, endMark: string): void;
+
+        /**
+         * An instance of the PerformanceNodeTiming class that provides performance metrics for specific Node.js operational milestones.
+         */
+        readonly nodeTiming: PerformanceNodeTiming;
+
+        /**
+         * @return the current high resolution millisecond timestamp
+         */
+        now(): number;
+
+        /**
+         * The timeOrigin specifies the high resolution millisecond timestamp from which all performance metric durations are measured.
+         */
+        readonly timeOrigin: number;
+
+        /**
+         * Wraps a function within a new function that measures the running time of the wrapped function.
+         * A PerformanceObserver must be subscribed to the 'function' event type in order for the timing details to be accessed.
+         * @param fn
+         */
+        timerify<T extends (...optionalParams: any[]) => any>(fn: T): T;
+    }
+
+    interface PerformanceObserverEntryList {
+        /**
+         * @return a list of PerformanceEntry objects in chronological order with respect to performanceEntry.startTime.
+         */
+        getEntries(): PerformanceEntry[];
+
+        /**
+         * @return a list of PerformanceEntry objects in chronological order with respect to performanceEntry.startTime
+         * whose performanceEntry.name is equal to name, and optionally, whose performanceEntry.entryType is equal to type.
+         */
+        getEntriesByName(name: string, type?: string): PerformanceEntry[];
+
+        /**
+         * @return Returns a list of PerformanceEntry objects in chronological order with respect to performanceEntry.startTime
+         * whose performanceEntry.entryType is equal to type.
+         */
+        getEntriesByType(type: string): PerformanceEntry[];
+    }
+
+    type PerformanceObserverCallback = (list: PerformanceObserverEntryList, observer: PerformanceObserver) => void;
+
+    class PerformanceObserver extends AsyncResource {
+        constructor(callback: PerformanceObserverCallback);
+
+        /**
+         * Disconnects the PerformanceObserver instance from all notifications.
+         */
+        disconnect(): void;
+
+        /**
+         * Subscribes the PerformanceObserver instance to notifications of new PerformanceEntry instances identified by options.entryTypes.
+         * When options.buffered is false, the callback will be invoked once for every PerformanceEntry instance.
+         * Property buffered defaults to false.
+         * @param options
+         */
+        observe(options: { entryTypes: string[], buffered?: boolean }): void;
+    }
+
+    namespace constants {
+        const NODE_PERFORMANCE_GC_MAJOR: number;
+        const NODE_PERFORMANCE_GC_MINOR: number;
+        const NODE_PERFORMANCE_GC_INCREMENTAL: number;
+        const NODE_PERFORMANCE_GC_WEAKCB: number;
+    }
+
+    const performance: Performance;
+
+    interface EventLoopMonitorOptions {
+        /**
+         * The sampling rate in milliseconds.
+         * Must be greater than zero.
+         * @default 10
+         */
+        resolution?: number;
+    }
+
+    interface EventLoopDelayMonitor {
+        /**
+         * Enables the event loop delay sample timer. Returns \`true\` if the timer was started, \`false\` if it was already started.
+         */
+        enable(): boolean;
+        /**
+         * Disables the event loop delay sample timer. Returns \`true\` if the timer was stopped, \`false\` if it was already stopped.
+         */
+        disable(): boolean;
+
+        /**
+         * Resets the collected histogram data.
+         */
+        reset(): void;
+
+        /**
+         * Returns the value at the given percentile.
+         * @param percentile A percentile value between 1 and 100.
+         */
+        percentile(percentile: number): number;
+
+        /**
+         * A \`Map\` object detailing the accumulated percentile distribution.
+         */
+        readonly percentiles: Map<number, number>;
+
+        /**
+         * The number of times the event loop delay exceeded the maximum 1 hour eventloop delay threshold.
+         */
+        readonly exceeds: number;
+
+        /**
+         * The minimum recorded event loop delay.
+         */
+        readonly min: number;
+
+        /**
+         * The maximum recorded event loop delay.
+         */
+        readonly max: number;
+
+        /**
+         * The mean of the recorded event loop delays.
+         */
+        readonly mean: number;
+
+        /**
+         * The standard deviation of the recorded event loop delays.
+         */
+        readonly stddev: number;
+    }
+
+    function monitorEventLoopDelay(options?: EventLoopMonitorOptions): EventLoopDelayMonitor;
+}
+`;
+module.exports['process.d.ts'] = `declare module "process" {
+    import * as tty from "tty";
+
+    global {
+        namespace NodeJS {
+            // this namespace merge is here because these are specifically used
+            // as the type for process.stdin, process.stdout, and process.stderr.
+            // they can't live in tty.d.ts because we need to disambiguate the imported name.
+            interface ReadStream extends tty.ReadStream {}
+            interface WriteStream extends tty.WriteStream {}
+        }
+    }
+
+    export = process;
+}
+`;
+module.exports['punycode.d.ts'] = `declare module "punycode" {
+    function decode(string: string): string;
+    function encode(string: string): string;
+    function toUnicode(domain: string): string;
+    function toASCII(domain: string): string;
+    const ucs2: ucs2;
+    interface ucs2 {
+        decode(string: string): number[];
+        encode(codePoints: number[]): string;
+    }
+    const version: string;
+}
+`;
+module.exports['querystring.d.ts'] = `declare module "querystring" {
+    interface StringifyOptions {
+        encodeURIComponent?: (str: string) => string;
+    }
+
+    interface ParseOptions {
+        maxKeys?: number;
+        decodeURIComponent?: (str: string) => string;
+    }
+
+    interface ParsedUrlQuery { [key: string]: string | string[]; }
+
+    interface ParsedUrlQueryInput {
+        [key: string]: string | number | boolean | string[] | number[] | boolean[] | undefined | null;
+    }
+
+    function stringify(obj?: ParsedUrlQueryInput, sep?: string, eq?: string, options?: StringifyOptions): string;
+    function parse(str: string, sep?: string, eq?: string, options?: ParseOptions): ParsedUrlQuery;
+    /**
+     * The querystring.encode() function is an alias for querystring.stringify().
+     */
+    const encode: typeof stringify;
+    /**
+     * The querystring.decode() function is an alias for querystring.parse().
+     */
+    const decode: typeof parse;
+    function escape(str: string): string;
+    function unescape(str: string): string;
+}
+`;
+module.exports['readline.d.ts'] = `declare module "readline" {
+    import * as events from "events";
+    import * as stream from "stream";
+
+    interface Key {
+        sequence?: string;
+        name?: string;
+        ctrl?: boolean;
+        meta?: boolean;
+        shift?: boolean;
+    }
+
+    class Interface extends events.EventEmitter {
+        readonly terminal: boolean;
+
+        // Need direct access to line/cursor data, for use in external processes
+        // see: https://github.com/nodejs/node/issues/30347
+        /** The current input data */
+        readonly line: string;
+        /** The current cursor position in the input line */
+        readonly cursor: number;
+
+        /**
+         * NOTE: According to the documentation:
+         *
+         * > Instances of the \`readline.Interface\` class are constructed using the
+         * > \`readline.createInterface()\` method.
+         *
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/readline.html#readline_class_interface
+         */
+        protected constructor(input: NodeJS.ReadableStream, output?: NodeJS.WritableStream, completer?: Completer | AsyncCompleter, terminal?: boolean);
+        /**
+         * NOTE: According to the documentation:
+         *
+         * > Instances of the \`readline.Interface\` class are constructed using the
+         * > \`readline.createInterface()\` method.
+         *
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/readline.html#readline_class_interface
+         */
+        protected constructor(options: ReadLineOptions);
+
+        setPrompt(prompt: string): void;
+        prompt(preserveCursor?: boolean): void;
+        question(query: string, callback: (answer: string) => void): void;
+        pause(): this;
+        resume(): this;
+        close(): void;
+        write(data: string | Buffer, key?: Key): void;
+
+        /**
+         * events.EventEmitter
+         * 1. close
+         * 2. line
+         * 3. pause
+         * 4. resume
+         * 5. SIGCONT
+         * 6. SIGINT
+         * 7. SIGTSTP
+         */
+
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "close", listener: () => void): this;
+        addListener(event: "line", listener: (input: string) => void): this;
+        addListener(event: "pause", listener: () => void): this;
+        addListener(event: "resume", listener: () => void): this;
+        addListener(event: "SIGCONT", listener: () => void): this;
+        addListener(event: "SIGINT", listener: () => void): this;
+        addListener(event: "SIGTSTP", listener: () => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "close"): boolean;
+        emit(event: "line", input: string): boolean;
+        emit(event: "pause"): boolean;
+        emit(event: "resume"): boolean;
+        emit(event: "SIGCONT"): boolean;
+        emit(event: "SIGINT"): boolean;
+        emit(event: "SIGTSTP"): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "close", listener: () => void): this;
+        on(event: "line", listener: (input: string) => void): this;
+        on(event: "pause", listener: () => void): this;
+        on(event: "resume", listener: () => void): this;
+        on(event: "SIGCONT", listener: () => void): this;
+        on(event: "SIGINT", listener: () => void): this;
+        on(event: "SIGTSTP", listener: () => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "close", listener: () => void): this;
+        once(event: "line", listener: (input: string) => void): this;
+        once(event: "pause", listener: () => void): this;
+        once(event: "resume", listener: () => void): this;
+        once(event: "SIGCONT", listener: () => void): this;
+        once(event: "SIGINT", listener: () => void): this;
+        once(event: "SIGTSTP", listener: () => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "line", listener: (input: string) => void): this;
+        prependListener(event: "pause", listener: () => void): this;
+        prependListener(event: "resume", listener: () => void): this;
+        prependListener(event: "SIGCONT", listener: () => void): this;
+        prependListener(event: "SIGINT", listener: () => void): this;
+        prependListener(event: "SIGTSTP", listener: () => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "line", listener: (input: string) => void): this;
+        prependOnceListener(event: "pause", listener: () => void): this;
+        prependOnceListener(event: "resume", listener: () => void): this;
+        prependOnceListener(event: "SIGCONT", listener: () => void): this;
+        prependOnceListener(event: "SIGINT", listener: () => void): this;
+        prependOnceListener(event: "SIGTSTP", listener: () => void): this;
+        [Symbol.asyncIterator](): AsyncIterableIterator<string>;
+    }
+
+    type ReadLine = Interface; // type forwarded for backwards compatiblity
+
+    type Completer = (line: string) => CompleterResult;
+    type AsyncCompleter = (line: string, callback: (err?: null | Error, result?: CompleterResult) => void) => any;
+
+    type CompleterResult = [string[], string];
+
+    interface ReadLineOptions {
+        input: NodeJS.ReadableStream;
+        output?: NodeJS.WritableStream;
+        completer?: Completer | AsyncCompleter;
+        terminal?: boolean;
+        historySize?: number;
+        prompt?: string;
+        crlfDelay?: number;
+        removeHistoryDuplicates?: boolean;
+        escapeCodeTimeout?: number;
+    }
+
+    function createInterface(input: NodeJS.ReadableStream, output?: NodeJS.WritableStream, completer?: Completer | AsyncCompleter, terminal?: boolean): Interface;
+    function createInterface(options: ReadLineOptions): Interface;
+    function emitKeypressEvents(stream: NodeJS.ReadableStream, readlineInterface?: Interface): void;
+
+    type Direction = -1 | 0 | 1;
+
+    /**
+     * Clears the current line of this WriteStream in a direction identified by \`dir\`.
+     */
+    function clearLine(stream: NodeJS.WritableStream, dir: Direction, callback?: () => void): boolean;
+    /**
+     * Clears this \`WriteStream\` from the current cursor down.
+     */
+    function clearScreenDown(stream: NodeJS.WritableStream, callback?: () => void): boolean;
+    /**
+     * Moves this WriteStream's cursor to the specified position.
+     */
+    function cursorTo(stream: NodeJS.WritableStream, x: number, y?: number, callback?: () => void): boolean;
+    /**
+     * Moves this WriteStream's cursor relative to its current position.
+     */
+    function moveCursor(stream: NodeJS.WritableStream, dx: number, dy: number, callback?: () => void): boolean;
+}
+`;
+module.exports['repl.d.ts'] = `declare module "repl" {
+    import { Interface, Completer, AsyncCompleter } from "readline";
+    import { Context } from "vm";
+    import { InspectOptions } from "util";
+
+    interface ReplOptions {
+        /**
+         * The input prompt to display.
+         * Default: \`"> "\`
+         */
+        prompt?: string;
+        /**
+         * The \`Readable\` stream from which REPL input will be read.
+         * Default: \`process.stdin\`
+         */
+        input?: NodeJS.ReadableStream;
+        /**
+         * The \`Writable\` stream to which REPL output will be written.
+         * Default: \`process.stdout\`
+         */
+        output?: NodeJS.WritableStream;
+        /**
+         * If \`true\`, specifies that the output should be treated as a TTY terminal, and have
+         * ANSI/VT100 escape codes written to it.
+         * Default: checking the value of the \`isTTY\` property on the output stream upon
+         * instantiation.
+         */
+        terminal?: boolean;
+        /**
+         * The function to be used when evaluating each given line of input.
+         * Default: an async wrapper for the JavaScript \`eval()\` function. An \`eval\` function can
+         * error with \`repl.Recoverable\` to indicate the input was incomplete and prompt for
+         * additional lines.
+         *
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_default_evaluation
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_custom_evaluation_functions
+         */
+        eval?: REPLEval;
+        /**
+         * If \`true\`, specifies that the default \`writer\` function should include ANSI color
+         * styling to REPL output. If a custom \`writer\` function is provided then this has no
+         * effect.
+         * Default: the REPL instance's \`terminal\` value.
+         */
+        useColors?: boolean;
+        /**
+         * If \`true\`, specifies that the default evaluation function will use the JavaScript
+         * \`global\` as the context as opposed to creating a new separate context for the REPL
+         * instance. The node CLI REPL sets this value to \`true\`.
+         * Default: \`false\`.
+         */
+        useGlobal?: boolean;
+        /**
+         * If \`true\`, specifies that the default writer will not output the return value of a
+         * command if it evaluates to \`undefined\`.
+         * Default: \`false\`.
+         */
+        ignoreUndefined?: boolean;
+        /**
+         * The function to invoke to format the output of each command before writing to \`output\`.
+         * Default: a wrapper for \`util.inspect\`.
+         *
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_customizing_repl_output
+         */
+        writer?: REPLWriter;
+        /**
+         * An optional function used for custom Tab auto completion.
+         *
+         * @see https://nodejs.org/dist/latest-v11.x/docs/api/readline.html#readline_use_of_the_completer_function
+         */
+        completer?: Completer | AsyncCompleter;
+        /**
+         * A flag that specifies whether the default evaluator executes all JavaScript commands in
+         * strict mode or default (sloppy) mode.
+         * Accepted values are:
+         * - \`repl.REPL_MODE_SLOPPY\` - evaluates expressions in sloppy mode.
+         * - \`repl.REPL_MODE_STRICT\` - evaluates expressions in strict mode. This is equivalent to
+         *   prefacing every repl statement with \`'use strict'\`.
+         */
+        replMode?: typeof REPL_MODE_SLOPPY | typeof REPL_MODE_STRICT;
+        /**
+         * Stop evaluating the current piece of code when \`SIGINT\` is received, i.e. \`Ctrl+C\` is
+         * pressed. This cannot be used together with a custom \`eval\` function.
+         * Default: \`false\`.
+         */
+        breakEvalOnSigint?: boolean;
+    }
+
+    type REPLEval = (this: REPLServer, evalCmd: string, context: Context, file: string, cb: (err: Error | null, result: any) => void) => void;
+    type REPLWriter = (this: REPLServer, obj: any) => string;
+
+    /**
+     * This is the default "writer" value, if none is passed in the REPL options,
+     * and it can be overridden by custom print functions.
+     */
+    const writer: REPLWriter & { options: InspectOptions };
+
+    type REPLCommandAction = (this: REPLServer, text: string) => void;
+
+    interface REPLCommand {
+        /**
+         * Help text to be displayed when \`.help\` is entered.
+         */
+        help?: string;
+        /**
+         * The function to execute, optionally accepting a single string argument.
+         */
+        action: REPLCommandAction;
+    }
+
+    /**
+     * Provides a customizable Read-Eval-Print-Loop (REPL).
+     *
+     * Instances of \`repl.REPLServer\` will accept individual lines of user input, evaluate those
+     * according to a user-defined evaluation function, then output the result. Input and output
+     * may be from \`stdin\` and \`stdout\`, respectively, or may be connected to any Node.js \`stream\`.
+     *
+     * Instances of \`repl.REPLServer\` support automatic completion of inputs, simplistic Emacs-style
+     * line editing, multi-line inputs, ANSI-styled output, saving and restoring current REPL session
+     * state, error recovery, and customizable evaluation functions.
+     *
+     * Instances of \`repl.REPLServer\` are created using the \`repl.start()\` method and _should not_
+     * be created directly using the JavaScript \`new\` keyword.
+     *
+     * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_repl
+     */
+    class REPLServer extends Interface {
+        /**
+         * The \`vm.Context\` provided to the \`eval\` function to be used for JavaScript
+         * evaluation.
+         */
+        readonly context: Context;
+        /**
+         * The \`Readable\` stream from which REPL input will be read.
+         */
+        readonly inputStream: NodeJS.ReadableStream;
+        /**
+         * The \`Writable\` stream to which REPL output will be written.
+         */
+        readonly outputStream: NodeJS.WritableStream;
+        /**
+         * The commands registered via \`replServer.defineCommand()\`.
+         */
+        readonly commands: { readonly [name: string]: REPLCommand | undefined };
+        /**
+         * A value indicating whether the REPL is currently in "editor mode".
+         *
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_commands_and_special_keys
+         */
+        readonly editorMode: boolean;
+        /**
+         * A value indicating whether the \`_\` variable has been assigned.
+         *
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
+         */
+        readonly underscoreAssigned: boolean;
+        /**
+         * The last evaluation result from the REPL (assigned to the \`_\` variable inside of the REPL).
+         *
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
+         */
+        readonly last: any;
+        /**
+         * A value indicating whether the \`_error\` variable has been assigned.
+         *
+         * @since v9.8.0
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
+         */
+        readonly underscoreErrAssigned: boolean;
+        /**
+         * The last error raised inside the REPL (assigned to the \`_error\` variable inside of the REPL).
+         *
+         * @since v9.8.0
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
+         */
+        readonly lastError: any;
+        /**
+         * Specified in the REPL options, this is the function to be used when evaluating each
+         * given line of input. If not specified in the REPL options, this is an async wrapper
+         * for the JavaScript \`eval()\` function.
+         */
+        readonly eval: REPLEval;
+        /**
+         * Specified in the REPL options, this is a value indicating whether the default
+         * \`writer\` function should include ANSI color styling to REPL output.
+         */
+        readonly useColors: boolean;
+        /**
+         * Specified in the REPL options, this is a value indicating whether the default \`eval\`
+         * function will use the JavaScript \`global\` as the context as opposed to creating a new
+         * separate context for the REPL instance.
+         */
+        readonly useGlobal: boolean;
+        /**
+         * Specified in the REPL options, this is a value indicating whether the default \`writer\`
+         * function should output the result of a command if it evaluates to \`undefined\`.
+         */
+        readonly ignoreUndefined: boolean;
+        /**
+         * Specified in the REPL options, this is the function to invoke to format the output of
+         * each command before writing to \`outputStream\`. If not specified in the REPL options,
+         * this will be a wrapper for \`util.inspect\`.
+         */
+        readonly writer: REPLWriter;
+        /**
+         * Specified in the REPL options, this is the function to use for custom Tab auto-completion.
+         */
+        readonly completer: Completer | AsyncCompleter;
+        /**
+         * Specified in the REPL options, this is a flag that specifies whether the default \`eval\`
+         * function should execute all JavaScript commands in strict mode or default (sloppy) mode.
+         * Possible values are:
+         * - \`repl.REPL_MODE_SLOPPY\` - evaluates expressions in sloppy mode.
+         * - \`repl.REPL_MODE_STRICT\` - evaluates expressions in strict mode. This is equivalent to
+         *    prefacing every repl statement with \`'use strict'\`.
+         */
+        readonly replMode: typeof REPL_MODE_SLOPPY | typeof REPL_MODE_STRICT;
+
+        /**
+         * NOTE: According to the documentation:
+         *
+         * > Instances of \`repl.REPLServer\` are created using the \`repl.start()\` method and
+         * > _should not_ be created directly using the JavaScript \`new\` keyword.
+         *
+         * \`REPLServer\` cannot be subclassed due to implementation specifics in NodeJS.
+         *
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_class_replserver
+         */
+        private constructor();
+
+        /**
+         * Used to add new \`.\`-prefixed commands to the REPL instance. Such commands are invoked
+         * by typing a \`.\` followed by the \`keyword\`.
+         *
+         * @param keyword The command keyword (_without_ a leading \`.\` character).
+         * @param cmd The function to invoke when the command is processed.
+         *
+         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_replserver_definecommand_keyword_cmd
+         */
+        defineCommand(keyword: string, cmd: REPLCommandAction | REPLCommand): void;
+        /**
+         * Readies the REPL instance for input from the user, printing the configured \`prompt\` to a
+         * new line in the \`output\` and resuming the \`input\` to accept new input.
+         *
+         * When multi-line input is being entered, an ellipsis is printed rather than the 'prompt'.
+         *
+         * This method is primarily intended to be called from within the action function for
+         * commands registered using the \`replServer.defineCommand()\` method.
+         *
+         * @param preserveCursor When \`true\`, the cursor placement will not be reset to \`0\`.
+         */
+        displayPrompt(preserveCursor?: boolean): void;
+        /**
+         * Clears any command that has been buffered but not yet executed.
+         *
+         * This method is primarily intended to be called from within the action function for
+         * commands registered using the \`replServer.defineCommand()\` method.
+         *
+         * @since v9.0.0
+         */
+        clearBufferedCommand(): void;
+
+        /**
+         * Initializes a history log file for the REPL instance. When executing the
+         * Node.js binary and using the command line REPL, a history file is initialized
+         * by default. However, this is not the case when creating a REPL
+         * programmatically. Use this method to initialize a history log file when working
+         * with REPL instances programmatically.
+         * @param path The path to the history file
+         */
+        setupHistory(path: string, cb: (err: Error | null, repl: this) => void): void;
+
+        /**
+         * events.EventEmitter
+         * 1. close - inherited from \`readline.Interface\`
+         * 2. line - inherited from \`readline.Interface\`
+         * 3. pause - inherited from \`readline.Interface\`
+         * 4. resume - inherited from \`readline.Interface\`
+         * 5. SIGCONT - inherited from \`readline.Interface\`
+         * 6. SIGINT - inherited from \`readline.Interface\`
+         * 7. SIGTSTP - inherited from \`readline.Interface\`
+         * 8. exit
+         * 9. reset
+         */
+
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "close", listener: () => void): this;
+        addListener(event: "line", listener: (input: string) => void): this;
+        addListener(event: "pause", listener: () => void): this;
+        addListener(event: "resume", listener: () => void): this;
+        addListener(event: "SIGCONT", listener: () => void): this;
+        addListener(event: "SIGINT", listener: () => void): this;
+        addListener(event: "SIGTSTP", listener: () => void): this;
+        addListener(event: "exit", listener: () => void): this;
+        addListener(event: "reset", listener: (context: Context) => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "close"): boolean;
+        emit(event: "line", input: string): boolean;
+        emit(event: "pause"): boolean;
+        emit(event: "resume"): boolean;
+        emit(event: "SIGCONT"): boolean;
+        emit(event: "SIGINT"): boolean;
+        emit(event: "SIGTSTP"): boolean;
+        emit(event: "exit"): boolean;
+        emit(event: "reset", context: Context): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "close", listener: () => void): this;
+        on(event: "line", listener: (input: string) => void): this;
+        on(event: "pause", listener: () => void): this;
+        on(event: "resume", listener: () => void): this;
+        on(event: "SIGCONT", listener: () => void): this;
+        on(event: "SIGINT", listener: () => void): this;
+        on(event: "SIGTSTP", listener: () => void): this;
+        on(event: "exit", listener: () => void): this;
+        on(event: "reset", listener: (context: Context) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "close", listener: () => void): this;
+        once(event: "line", listener: (input: string) => void): this;
+        once(event: "pause", listener: () => void): this;
+        once(event: "resume", listener: () => void): this;
+        once(event: "SIGCONT", listener: () => void): this;
+        once(event: "SIGINT", listener: () => void): this;
+        once(event: "SIGTSTP", listener: () => void): this;
+        once(event: "exit", listener: () => void): this;
+        once(event: "reset", listener: (context: Context) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "line", listener: (input: string) => void): this;
+        prependListener(event: "pause", listener: () => void): this;
+        prependListener(event: "resume", listener: () => void): this;
+        prependListener(event: "SIGCONT", listener: () => void): this;
+        prependListener(event: "SIGINT", listener: () => void): this;
+        prependListener(event: "SIGTSTP", listener: () => void): this;
+        prependListener(event: "exit", listener: () => void): this;
+        prependListener(event: "reset", listener: (context: Context) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "line", listener: (input: string) => void): this;
+        prependOnceListener(event: "pause", listener: () => void): this;
+        prependOnceListener(event: "resume", listener: () => void): this;
+        prependOnceListener(event: "SIGCONT", listener: () => void): this;
+        prependOnceListener(event: "SIGINT", listener: () => void): this;
+        prependOnceListener(event: "SIGTSTP", listener: () => void): this;
+        prependOnceListener(event: "exit", listener: () => void): this;
+        prependOnceListener(event: "reset", listener: (context: Context) => void): this;
+    }
+
+    /**
+     * A flag passed in the REPL options. Evaluates expressions in sloppy mode.
+     */
+    const REPL_MODE_SLOPPY: symbol; // TODO: unique symbol
+
+    /**
+     * A flag passed in the REPL options. Evaluates expressions in strict mode.
+     * This is equivalent to prefacing every repl statement with \`'use strict'\`.
+     */
+    const REPL_MODE_STRICT: symbol; // TODO: unique symbol
+
+    /**
+     * Creates and starts a \`repl.REPLServer\` instance.
+     *
+     * @param options The options for the \`REPLServer\`. If \`options\` is a string, then it specifies
+     * the input prompt.
+     */
+    function start(options?: string | ReplOptions): REPLServer;
+
+    /**
+     * Indicates a recoverable error that a \`REPLServer\` can use to support multi-line input.
+     *
+     * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_recoverable_errors
+     */
+    class Recoverable extends SyntaxError {
+        err: Error;
+
+        constructor(err: Error);
+    }
+}
+`;
+module.exports['stream.d.ts'] = `declare module "stream" {
+    import * as events from "events";
+
+    class internal extends events.EventEmitter {
+        pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean; }): T;
+    }
+
+    namespace internal {
+        class Stream extends internal { }
+
+        interface ReadableOptions {
+            highWaterMark?: number;
+            encoding?: string;
+            objectMode?: boolean;
+            read?(this: Readable, size: number): void;
+            destroy?(this: Readable, error: Error | null, callback: (error: Error | null) => void): void;
+            autoDestroy?: boolean;
+        }
+
+        class Readable extends Stream implements NodeJS.ReadableStream {
+            /**
+             * A utility method for creating Readable Streams out of iterators.
+             */
+            static from(iterable: Iterable<any> | AsyncIterable<any>, options?: ReadableOptions): Readable;
+
+            readable: boolean;
+            readonly readableHighWaterMark: number;
+            readonly readableLength: number;
+            readonly readableObjectMode: boolean;
+            destroyed: boolean;
+            constructor(opts?: ReadableOptions);
+            _read(size: number): void;
+            read(size?: number): any;
+            setEncoding(encoding: string): this;
+            pause(): this;
+            resume(): this;
+            isPaused(): boolean;
+            unpipe(destination?: NodeJS.WritableStream): this;
+            unshift(chunk: any, encoding?: BufferEncoding): void;
+            wrap(oldStream: NodeJS.ReadableStream): this;
+            push(chunk: any, encoding?: string): boolean;
+            _destroy(error: Error | null, callback: (error?: Error | null) => void): void;
+            destroy(error?: Error): void;
+
+            /**
+             * Event emitter
+             * The defined events on documents including:
+             * 1. close
+             * 2. data
+             * 3. end
+             * 4. readable
+             * 5. error
+             */
+            addListener(event: "close", listener: () => void): this;
+            addListener(event: "data", listener: (chunk: any) => void): this;
+            addListener(event: "end", listener: () => void): this;
+            addListener(event: "readable", listener: () => void): this;
+            addListener(event: "error", listener: (err: Error) => void): this;
+            addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            emit(event: "close"): boolean;
+            emit(event: "data", chunk: any): boolean;
+            emit(event: "end"): boolean;
+            emit(event: "readable"): boolean;
+            emit(event: "error", err: Error): boolean;
+            emit(event: string | symbol, ...args: any[]): boolean;
+
+            on(event: "close", listener: () => void): this;
+            on(event: "data", listener: (chunk: any) => void): this;
+            on(event: "end", listener: () => void): this;
+            on(event: "readable", listener: () => void): this;
+            on(event: "error", listener: (err: Error) => void): this;
+            on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            once(event: "close", listener: () => void): this;
+            once(event: "data", listener: (chunk: any) => void): this;
+            once(event: "end", listener: () => void): this;
+            once(event: "readable", listener: () => void): this;
+            once(event: "error", listener: (err: Error) => void): this;
+            once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            prependListener(event: "close", listener: () => void): this;
+            prependListener(event: "data", listener: (chunk: any) => void): this;
+            prependListener(event: "end", listener: () => void): this;
+            prependListener(event: "readable", listener: () => void): this;
+            prependListener(event: "error", listener: (err: Error) => void): this;
+            prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            prependOnceListener(event: "close", listener: () => void): this;
+            prependOnceListener(event: "data", listener: (chunk: any) => void): this;
+            prependOnceListener(event: "end", listener: () => void): this;
+            prependOnceListener(event: "readable", listener: () => void): this;
+            prependOnceListener(event: "error", listener: (err: Error) => void): this;
+            prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            removeListener(event: "close", listener: () => void): this;
+            removeListener(event: "data", listener: (chunk: any) => void): this;
+            removeListener(event: "end", listener: () => void): this;
+            removeListener(event: "readable", listener: () => void): this;
+            removeListener(event: "error", listener: (err: Error) => void): this;
+            removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            [Symbol.asyncIterator](): AsyncIterableIterator<any>;
+        }
+
+        interface WritableOptions {
+            highWaterMark?: number;
+            decodeStrings?: boolean;
+            defaultEncoding?: string;
+            objectMode?: boolean;
+            emitClose?: boolean;
+            write?(this: Writable, chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
+            writev?(this: Writable, chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            destroy?(this: Writable, error: Error | null, callback: (error: Error | null) => void): void;
+            final?(this: Writable, callback: (error?: Error | null) => void): void;
+            autoDestroy?: boolean;
+        }
+
+        class Writable extends Stream implements NodeJS.WritableStream {
+            readonly writable: boolean;
+            readonly writableEnded: boolean;
+            readonly writableFinished: boolean;
+            readonly writableHighWaterMark: number;
+            readonly writableLength: number;
+            readonly writableObjectMode: boolean;
+            destroyed: boolean;
+            constructor(opts?: WritableOptions);
+            _write(chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
+            _writev?(chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            _destroy(error: Error | null, callback: (error?: Error | null) => void): void;
+            _final(callback: (error?: Error | null) => void): void;
+            write(chunk: any, cb?: (error: Error | null | undefined) => void): boolean;
+            write(chunk: any, encoding: string, cb?: (error: Error | null | undefined) => void): boolean;
+            setDefaultEncoding(encoding: string): this;
+            end(cb?: () => void): void;
+            end(chunk: any, cb?: () => void): void;
+            end(chunk: any, encoding: string, cb?: () => void): void;
+            cork(): void;
+            uncork(): void;
+            destroy(error?: Error): void;
+
+            /**
+             * Event emitter
+             * The defined events on documents including:
+             * 1. close
+             * 2. drain
+             * 3. error
+             * 4. finish
+             * 5. pipe
+             * 6. unpipe
+             */
+            addListener(event: "close", listener: () => void): this;
+            addListener(event: "drain", listener: () => void): this;
+            addListener(event: "error", listener: (err: Error) => void): this;
+            addListener(event: "finish", listener: () => void): this;
+            addListener(event: "pipe", listener: (src: Readable) => void): this;
+            addListener(event: "unpipe", listener: (src: Readable) => void): this;
+            addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            emit(event: "close"): boolean;
+            emit(event: "drain"): boolean;
+            emit(event: "error", err: Error): boolean;
+            emit(event: "finish"): boolean;
+            emit(event: "pipe", src: Readable): boolean;
+            emit(event: "unpipe", src: Readable): boolean;
+            emit(event: string | symbol, ...args: any[]): boolean;
+
+            on(event: "close", listener: () => void): this;
+            on(event: "drain", listener: () => void): this;
+            on(event: "error", listener: (err: Error) => void): this;
+            on(event: "finish", listener: () => void): this;
+            on(event: "pipe", listener: (src: Readable) => void): this;
+            on(event: "unpipe", listener: (src: Readable) => void): this;
+            on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            once(event: "close", listener: () => void): this;
+            once(event: "drain", listener: () => void): this;
+            once(event: "error", listener: (err: Error) => void): this;
+            once(event: "finish", listener: () => void): this;
+            once(event: "pipe", listener: (src: Readable) => void): this;
+            once(event: "unpipe", listener: (src: Readable) => void): this;
+            once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            prependListener(event: "close", listener: () => void): this;
+            prependListener(event: "drain", listener: () => void): this;
+            prependListener(event: "error", listener: (err: Error) => void): this;
+            prependListener(event: "finish", listener: () => void): this;
+            prependListener(event: "pipe", listener: (src: Readable) => void): this;
+            prependListener(event: "unpipe", listener: (src: Readable) => void): this;
+            prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            prependOnceListener(event: "close", listener: () => void): this;
+            prependOnceListener(event: "drain", listener: () => void): this;
+            prependOnceListener(event: "error", listener: (err: Error) => void): this;
+            prependOnceListener(event: "finish", listener: () => void): this;
+            prependOnceListener(event: "pipe", listener: (src: Readable) => void): this;
+            prependOnceListener(event: "unpipe", listener: (src: Readable) => void): this;
+            prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+            removeListener(event: "close", listener: () => void): this;
+            removeListener(event: "drain", listener: () => void): this;
+            removeListener(event: "error", listener: (err: Error) => void): this;
+            removeListener(event: "finish", listener: () => void): this;
+            removeListener(event: "pipe", listener: (src: Readable) => void): this;
+            removeListener(event: "unpipe", listener: (src: Readable) => void): this;
+            removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+        }
+
+        interface DuplexOptions extends ReadableOptions, WritableOptions {
+            allowHalfOpen?: boolean;
+            readableObjectMode?: boolean;
+            writableObjectMode?: boolean;
+            readableHighWaterMark?: number;
+            writableHighWaterMark?: number;
+            read?(this: Duplex, size: number): void;
+            write?(this: Duplex, chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
+            writev?(this: Duplex, chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            final?(this: Duplex, callback: (error?: Error | null) => void): void;
+            destroy?(this: Duplex, error: Error | null, callback: (error: Error | null) => void): void;
+        }
+
+        // Note: Duplex extends both Readable and Writable.
+        class Duplex extends Readable implements Writable {
+            readonly writable: boolean;
+            readonly writableEnded: boolean;
+            readonly writableFinished: boolean;
+            readonly writableHighWaterMark: number;
+            readonly writableLength: number;
+            readonly writableObjectMode: boolean;
+            constructor(opts?: DuplexOptions);
+            _write(chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
+            _writev?(chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            _destroy(error: Error | null, callback: (error: Error | null) => void): void;
+            _final(callback: (error?: Error | null) => void): void;
+            write(chunk: any, encoding?: string, cb?: (error: Error | null | undefined) => void): boolean;
+            write(chunk: any, cb?: (error: Error | null | undefined) => void): boolean;
+            setDefaultEncoding(encoding: string): this;
+            end(cb?: () => void): void;
+            end(chunk: any, cb?: () => void): void;
+            end(chunk: any, encoding?: string, cb?: () => void): void;
+            cork(): void;
+            uncork(): void;
+        }
+
+        type TransformCallback = (error?: Error | null, data?: any) => void;
+
+        interface TransformOptions extends DuplexOptions {
+            read?(this: Transform, size: number): void;
+            write?(this: Transform, chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
+            writev?(this: Transform, chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            final?(this: Transform, callback: (error?: Error | null) => void): void;
+            destroy?(this: Transform, error: Error | null, callback: (error: Error | null) => void): void;
+            transform?(this: Transform, chunk: any, encoding: string, callback: TransformCallback): void;
+            flush?(this: Transform, callback: TransformCallback): void;
+        }
+
+        class Transform extends Duplex {
+            constructor(opts?: TransformOptions);
+            _transform(chunk: any, encoding: string, callback: TransformCallback): void;
+            _flush(callback: TransformCallback): void;
+        }
+
+        class PassThrough extends Transform { }
+
+        function finished(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream, callback: (err?: NodeJS.ErrnoException | null) => void): () => void;
+        namespace finished {
+            function __promisify__(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
+        }
+
+        function pipeline<T extends NodeJS.WritableStream>(stream1: NodeJS.ReadableStream, stream2: T, callback?: (err: NodeJS.ErrnoException | null) => void): T;
+        function pipeline<T extends NodeJS.WritableStream>(stream1: NodeJS.ReadableStream, stream2: NodeJS.ReadWriteStream, stream3: T, callback?: (err: NodeJS.ErrnoException | null) => void): T;
+        function pipeline<T extends NodeJS.WritableStream>(
+            stream1: NodeJS.ReadableStream,
+            stream2: NodeJS.ReadWriteStream,
+            stream3: NodeJS.ReadWriteStream,
+            stream4: T,
+            callback?: (err: NodeJS.ErrnoException | null) => void,
+        ): T;
+        function pipeline<T extends NodeJS.WritableStream>(
+            stream1: NodeJS.ReadableStream,
+            stream2: NodeJS.ReadWriteStream,
+            stream3: NodeJS.ReadWriteStream,
+            stream4: NodeJS.ReadWriteStream,
+            stream5: T,
+            callback?: (err: NodeJS.ErrnoException | null) => void,
+        ): T;
+        function pipeline(streams: Array<NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream>, callback?: (err: NodeJS.ErrnoException | null) => void): NodeJS.WritableStream;
+        function pipeline(
+            stream1: NodeJS.ReadableStream,
+            stream2: NodeJS.ReadWriteStream | NodeJS.WritableStream,
+            ...streams: Array<NodeJS.ReadWriteStream | NodeJS.WritableStream | ((err: NodeJS.ErrnoException | null) => void)>,
+        ): NodeJS.WritableStream;
+        namespace pipeline {
+            function __promisify__(stream1: NodeJS.ReadableStream, stream2: NodeJS.WritableStream): Promise<void>;
+            function __promisify__(stream1: NodeJS.ReadableStream, stream2: NodeJS.ReadWriteStream, stream3: NodeJS.WritableStream): Promise<void>;
+            function __promisify__(stream1: NodeJS.ReadableStream, stream2: NodeJS.ReadWriteStream, stream3: NodeJS.ReadWriteStream, stream4: NodeJS.WritableStream): Promise<void>;
+            function __promisify__(
+                stream1: NodeJS.ReadableStream,
+                stream2: NodeJS.ReadWriteStream,
+                stream3: NodeJS.ReadWriteStream,
+                stream4: NodeJS.ReadWriteStream,
+                stream5: NodeJS.WritableStream,
+            ): Promise<void>;
+            function __promisify__(streams: Array<NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream>): Promise<void>;
+            function __promisify__(
+                stream1: NodeJS.ReadableStream,
+                stream2: NodeJS.ReadWriteStream | NodeJS.WritableStream,
+                ...streams: Array<NodeJS.ReadWriteStream | NodeJS.WritableStream>,
+            ): Promise<void>;
+        }
+
+        interface Pipe {
+            close(): void;
+            hasRef(): boolean;
+            ref(): void;
+            unref(): void;
+        }
+    }
+
+    export = internal;
+}
+`;
+module.exports['string_decoder.d.ts'] = `declare module "string_decoder" {
+    class StringDecoder {
+        constructor(encoding?: string);
+        write(buffer: Buffer): string;
+        end(buffer?: Buffer): string;
+    }
+}
+`;
+module.exports['timers.d.ts'] = `declare module "timers" {
+    function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+    namespace setTimeout {
+        function __promisify__(ms: number): Promise<void>;
+        function __promisify__<T>(ms: number, value: T): Promise<T>;
+    }
+    function clearTimeout(timeoutId: NodeJS.Timeout): void;
+    function setInterval(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+    function clearInterval(intervalId: NodeJS.Timeout): void;
+    function setImmediate(callback: (...args: any[]) => void, ...args: any[]): NodeJS.Immediate;
+    namespace setImmediate {
+        function __promisify__(): Promise<void>;
+        function __promisify__<T>(value: T): Promise<T>;
+    }
+    function clearImmediate(immediateId: NodeJS.Immediate): void;
+}
+`;
+module.exports['tls.d.ts'] = `declare module "tls" {
+    import * as crypto from "crypto";
+    import * as dns from "dns";
+    import * as net from "net";
+    import * as stream from "stream";
+
+    const CLIENT_RENEG_LIMIT: number;
+    const CLIENT_RENEG_WINDOW: number;
+
+    interface Certificate {
+        /**
+         * Country code.
+         */
+        C: string;
+        /**
+         * Street.
+         */
+        ST: string;
+        /**
+         * Locality.
+         */
+        L: string;
+        /**
+         * Organization.
+         */
+        O: string;
+        /**
+         * Organizational unit.
+         */
+        OU: string;
+        /**
+         * Common name.
+         */
+        CN: string;
+    }
+
+    interface PeerCertificate {
+        subject: Certificate;
+        issuer: Certificate;
+        subjectaltname: string;
+        infoAccess: { [index: string]: string[] | undefined };
+        modulus: string;
+        exponent: string;
+        valid_from: string;
+        valid_to: string;
+        fingerprint: string;
+        ext_key_usage: string[];
+        serialNumber: string;
+        raw: Buffer;
+    }
+
+    interface DetailedPeerCertificate extends PeerCertificate {
+        issuerCertificate: DetailedPeerCertificate;
+    }
+
+    interface CipherNameAndProtocol {
+        /**
+         * The cipher name.
+         */
+        name: string;
+        /**
+         * SSL/TLS protocol version.
+         */
+        version: string;
+    }
+
+    interface EphemeralKeyInfo {
+        /**
+         * The supported types are 'DH' and 'ECDH'.
+         */
+        type: string;
+        /**
+         * The name property is available only when type is 'ECDH'.
+         */
+        name?: string;
+        /**
+         * The size of parameter of an ephemeral key exchange.
+         */
+        size: number;
+    }
+
+    interface KeyObject {
+        /**
+         * Private keys in PEM format.
+         */
+        pem: string | Buffer;
+        /**
+         * Optional passphrase.
+         */
+        passphrase?: string;
+    }
+
+    interface PxfObject {
+        /**
+         * PFX or PKCS12 encoded private key and certificate chain.
+         */
+        buf: string | Buffer;
+        /**
+         * Optional passphrase.
+         */
+        passphrase?: string;
+    }
+
+    interface TLSSocketOptions extends SecureContextOptions, CommonConnectionOptions {
+        /**
+         * If true the TLS socket will be instantiated in server-mode.
+         * Defaults to false.
+         */
+        isServer?: boolean;
+        /**
+         * An optional net.Server instance.
+         */
+        server?: net.Server;
+
+        /**
+         * An optional Buffer instance containing a TLS session.
+         */
+        session?: Buffer;
+        /**
+         * If true, specifies that the OCSP status request extension will be
+         * added to the client hello and an 'OCSPResponse' event will be
+         * emitted on the socket before establishing a secure communication
+         */
+        requestOCSP?: boolean;
+    }
+
+    class TLSSocket extends net.Socket {
+        /**
+         * Construct a new tls.TLSSocket object from an existing TCP socket.
+         */
+        constructor(socket: net.Socket, options?: TLSSocketOptions);
+
+        /**
+         * A boolean that is true if the peer certificate was signed by one of the specified CAs, otherwise false.
+         */
+        authorized: boolean;
+        /**
+         * The reason why the peer's certificate has not been verified.
+         * This property becomes available only when tlsSocket.authorized === false.
+         */
+        authorizationError: Error;
+        /**
+         * Static boolean value, always true.
+         * May be used to distinguish TLS sockets from regular ones.
+         */
+        encrypted: boolean;
+
+        /**
+         * String containing the selected ALPN protocol.
+         * When ALPN has no selected protocol, tlsSocket.alpnProtocol equals false.
+         */
+        alpnProtocol?: string;
+
+        /**
+         * Returns an object representing the local certificate. The returned
+         * object has some properties corresponding to the fields of the
+         * certificate.
+         *
+         * See tls.TLSSocket.getPeerCertificate() for an example of the
+         * certificate structure.
+         *
+         * If there is no local certificate, an empty object will be returned.
+         * If the socket has been destroyed, null will be returned.
+         */
+        getCertificate(): PeerCertificate | object | null;
+        /**
+         * Returns an object representing the cipher name and the SSL/TLS protocol version of the current connection.
+         * @returns Returns an object representing the cipher name
+         * and the SSL/TLS protocol version of the current connection.
+         */
+        getCipher(): CipherNameAndProtocol;
+        /**
+         * Returns an object representing the type, name, and size of parameter
+         * of an ephemeral key exchange in Perfect Forward Secrecy on a client
+         * connection. It returns an empty object when the key exchange is not
+         * ephemeral. As this is only supported on a client socket; null is
+         * returned if called on a server socket. The supported types are 'DH'
+         * and 'ECDH'. The name property is available only when type is 'ECDH'.
+         *
+         * For example: { type: 'ECDH', name: 'prime256v1', size: 256 }.
+         */
+        getEphemeralKeyInfo(): EphemeralKeyInfo | object | null;
+        /**
+         * Returns the latest Finished message that has
+         * been sent to the socket as part of a SSL/TLS handshake, or undefined
+         * if no Finished message has been sent yet.
+         *
+         * As the Finished messages are message digests of the complete
+         * handshake (with a total of 192 bits for TLS 1.0 and more for SSL
+         * 3.0), they can be used for external authentication procedures when
+         * the authentication provided by SSL/TLS is not desired or is not
+         * enough.
+         *
+         * Corresponds to the SSL_get_finished routine in OpenSSL and may be
+         * used to implement the tls-unique channel binding from RFC 5929.
+         */
+        getFinished(): Buffer | undefined;
+        /**
+         * Returns an object representing the peer's certificate.
+         * The returned object has some properties corresponding to the field of the certificate.
+         * If detailed argument is true the full chain with issuer property will be returned,
+         * if false only the top certificate without issuer property.
+         * If the peer does not provide a certificate, it returns null or an empty object.
+         * @param detailed - If true; the full chain with issuer property will be returned.
+         * @returns An object representing the peer's certificate.
+         */
+        getPeerCertificate(detailed: true): DetailedPeerCertificate;
+        getPeerCertificate(detailed?: false): PeerCertificate;
+        getPeerCertificate(detailed?: boolean): PeerCertificate | DetailedPeerCertificate;
+        /**
+         * Returns the latest Finished message that is expected or has actually
+         * been received from the socket as part of a SSL/TLS handshake, or
+         * undefined if there is no Finished message so far.
+         *
+         * As the Finished messages are message digests of the complete
+         * handshake (with a total of 192 bits for TLS 1.0 and more for SSL
+         * 3.0), they can be used for external authentication procedures when
+         * the authentication provided by SSL/TLS is not desired or is not
+         * enough.
+         *
+         * Corresponds to the SSL_get_peer_finished routine in OpenSSL and may
+         * be used to implement the tls-unique channel binding from RFC 5929.
+         */
+        getPeerFinished(): Buffer | undefined;
+        /**
+         * Returns a string containing the negotiated SSL/TLS protocol version of the current connection.
+         * The value \`'unknown'\` will be returned for connected sockets that have not completed the handshaking process.
+         * The value \`null\` will be returned for server sockets or disconnected client sockets.
+         * See https://www.openssl.org/docs/man1.0.2/ssl/SSL_get_version.html for more information.
+         * @returns negotiated SSL/TLS protocol version of the current connection
+         */
+        getProtocol(): string | null;
+        /**
+         * Could be used to speed up handshake establishment when reconnecting to the server.
+         * @returns ASN.1 encoded TLS session or undefined if none was negotiated.
+         */
+        getSession(): Buffer | undefined;
+        /**
+         * Returns a list of signature algorithms shared between the server and
+         * the client in the order of decreasing preference.
+         */
+        getSharedSigalgs(): string[];
+        /**
+         * NOTE: Works only with client TLS sockets.
+         * Useful only for debugging, for session reuse provide session option to tls.connect().
+         * @returns TLS session ticket or undefined if none was negotiated.
+         */
+        getTLSTicket(): Buffer | undefined;
+        /**
+         * Returns true if the session was reused, false otherwise.
+         */
+        isSessionReused(): boolean;
+        /**
+         * Initiate TLS renegotiation process.
+         *
+         * NOTE: Can be used to request peer's certificate after the secure connection has been established.
+         * ANOTHER NOTE: When running as the server, socket will be destroyed with an error after handshakeTimeout timeout.
+         * @param options - The options may contain the following fields: rejectUnauthorized,
+         * requestCert (See tls.createServer() for details).
+         * @param callback - callback(err) will be executed with null as err, once the renegotiation
+         * is successfully completed.
+         * @return \`undefined\` when socket is destroy, \`false\` if negotiaion can't be initiated.
+         */
+        renegotiate(options: { rejectUnauthorized?: boolean, requestCert?: boolean }, callback: (err: Error | null) => void): undefined | boolean;
+        /**
+         * Set maximum TLS fragment size (default and maximum value is: 16384, minimum is: 512).
+         * Smaller fragment size decreases buffering latency on the client: large fragments are buffered by
+         * the TLS layer until the entire fragment is received and its integrity is verified;
+         * large fragments can span multiple roundtrips, and their processing can be delayed due to packet
+         * loss or reordering. However, smaller fragments add extra TLS framing bytes and CPU overhead,
+         * which may decrease overall server throughput.
+         * @param size - TLS fragment size (default and maximum value is: 16384, minimum is: 512).
+         * @returns Returns true on success, false otherwise.
+         */
+        setMaxSendFragment(size: number): boolean;
+
+        /**
+         * Disables TLS renegotiation for this TLSSocket instance. Once called,
+         * attempts to renegotiate will trigger an 'error' event on the
+         * TLSSocket.
+         */
+        disableRenegotiation(): void;
+
+        /**
+         * When enabled, TLS packet trace information is written to \`stderr\`. This can be
+         * used to debug TLS connection problems.
+         *
+         * Note: The format of the output is identical to the output of \`openssl s_client
+         * -trace\` or \`openssl s_server -trace\`. While it is produced by OpenSSL's
+         * \`SSL_trace()\` function, the format is undocumented, can change without notice,
+         * and should not be relied on.
+         */
+        enableTrace(): void;
+
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "OCSPResponse", listener: (response: Buffer) => void): this;
+        addListener(event: "secureConnect", listener: () => void): this;
+        addListener(event: "session", listener: (session: Buffer) => void): this;
+        addListener(event: "keylog", listener: (line: Buffer) => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "OCSPResponse", response: Buffer): boolean;
+        emit(event: "secureConnect"): boolean;
+        emit(event: "session", session: Buffer): boolean;
+        emit(event: "keylog", line: Buffer): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "OCSPResponse", listener: (response: Buffer) => void): this;
+        on(event: "secureConnect", listener: () => void): this;
+        on(event: "session", listener: (session: Buffer) => void): this;
+        on(event: "keylog", listener: (line: Buffer) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "OCSPResponse", listener: (response: Buffer) => void): this;
+        once(event: "secureConnect", listener: () => void): this;
+        once(event: "session", listener: (session: Buffer) => void): this;
+        once(event: "keylog", listener: (line: Buffer) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "OCSPResponse", listener: (response: Buffer) => void): this;
+        prependListener(event: "secureConnect", listener: () => void): this;
+        prependListener(event: "session", listener: (session: Buffer) => void): this;
+        prependListener(event: "keylog", listener: (line: Buffer) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "OCSPResponse", listener: (response: Buffer) => void): this;
+        prependOnceListener(event: "secureConnect", listener: () => void): this;
+        prependOnceListener(event: "session", listener: (session: Buffer) => void): this;
+        prependOnceListener(event: "keylog", listener: (line: Buffer) => void): this;
+    }
+
+    interface CommonConnectionOptions {
+        /**
+         * An optional TLS context object from tls.createSecureContext()
+         */
+        secureContext?: SecureContext;
+
+        /**
+         * When enabled, TLS packet trace information is written to \`stderr\`. This can be
+         * used to debug TLS connection problems.
+         * @default false
+         */
+        enableTrace?: boolean;
+        /**
+         * If true the server will request a certificate from clients that
+         * connect and attempt to verify that certificate. Defaults to
+         * false.
+         */
+        requestCert?: boolean;
+        /**
+         * An array of strings or a Buffer naming possible ALPN protocols.
+         * (Protocols should be ordered by their priority.)
+         */
+        ALPNProtocols?: string[] | Uint8Array[] | Uint8Array;
+        /**
+         * SNICallback(servername, cb) <Function> A function that will be
+         * called if the client supports SNI TLS extension. Two arguments
+         * will be passed when called: servername and cb. SNICallback should
+         * invoke cb(null, ctx), where ctx is a SecureContext instance.
+         * (tls.createSecureContext(...) can be used to get a proper
+         * SecureContext.) If SNICallback wasn't provided the default callback
+         * with high-level API will be used (see below).
+         */
+        SNICallback?: (servername: string, cb: (err: Error | null, ctx: SecureContext) => void) => void;
+        /**
+         * If true the server will reject any connection which is not
+         * authorized with the list of supplied CAs. This option only has an
+         * effect if requestCert is true.
+         * @default true
+         */
+        rejectUnauthorized?: boolean;
+    }
+
+    interface TlsOptions extends SecureContextOptions, CommonConnectionOptions {
+        /**
+         * Abort the connection if the SSL/TLS handshake does not finish in the
+         * specified number of milliseconds. A 'tlsClientError' is emitted on
+         * the tls.Server object whenever a handshake times out. Default:
+         * 120000 (120 seconds).
+         */
+        handshakeTimeout?: number;
+        /**
+         * The number of seconds after which a TLS session created by the
+         * server will no longer be resumable. See Session Resumption for more
+         * information. Default: 300.
+         */
+        sessionTimeout?: number;
+        /**
+         * 48-bytes of cryptographically strong pseudo-random data.
+         */
+        ticketKeys?: Buffer;
+    }
+
+    interface ConnectionOptions extends SecureContextOptions, CommonConnectionOptions {
+        host?: string;
+        port?: number;
+        path?: string; // Creates unix socket connection to path. If this option is specified, \`host\` and \`port\` are ignored.
+        socket?: net.Socket; // Establish secure connection on a given socket rather than creating a new socket
+        checkServerIdentity?: typeof checkServerIdentity;
+        servername?: string; // SNI TLS Extension
+        session?: Buffer;
+        minDHSize?: number;
+        lookup?: net.LookupFunction;
+        timeout?: number;
+    }
+
+    class Server extends net.Server {
+        /**
+         * The server.addContext() method adds a secure context that will be
+         * used if the client request's SNI name matches the supplied hostname
+         * (or wildcard).
+         */
+        addContext(hostName: string, credentials: SecureContextOptions): void;
+        /**
+         * Returns the session ticket keys.
+         */
+        getTicketKeys(): Buffer;
+        /**
+         *
+         * The server.setSecureContext() method replaces the
+         * secure context of an existing server. Existing connections to the
+         * server are not interrupted.
+         */
+        setSecureContext(details: SecureContextOptions): void;
+        /**
+         * The server.setSecureContext() method replaces the secure context of
+         * an existing server. Existing connections to the server are not
+         * interrupted.
+         */
+        setTicketKeys(keys: Buffer): void;
+
+        /**
+         * events.EventEmitter
+         * 1. tlsClientError
+         * 2. newSession
+         * 3. OCSPRequest
+         * 4. resumeSession
+         * 5. secureConnection
+         * 6. keylog
+         */
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "tlsClientError", listener: (err: Error, tlsSocket: TLSSocket) => void): this;
+        addListener(event: "newSession", listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        addListener(event: "OCSPRequest", listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        addListener(event: "resumeSession", listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        addListener(event: "secureConnection", listener: (tlsSocket: TLSSocket) => void): this;
+        addListener(event: "keylog", listener: (line: Buffer, tlsSocket: TLSSocket) => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "tlsClientError", err: Error, tlsSocket: TLSSocket): boolean;
+        emit(event: "newSession", sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void): boolean;
+        emit(event: "OCSPRequest", certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void): boolean;
+        emit(event: "resumeSession", sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void): boolean;
+        emit(event: "secureConnection", tlsSocket: TLSSocket): boolean;
+        emit(event: "keylog", line: Buffer, tlsSocket: TLSSocket): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "tlsClientError", listener: (err: Error, tlsSocket: TLSSocket) => void): this;
+        on(event: "newSession", listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        on(event: "OCSPRequest", listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        on(event: "resumeSession", listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        on(event: "secureConnection", listener: (tlsSocket: TLSSocket) => void): this;
+        on(event: "keylog", listener: (line: Buffer, tlsSocket: TLSSocket) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "tlsClientError", listener: (err: Error, tlsSocket: TLSSocket) => void): this;
+        once(event: "newSession", listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        once(event: "OCSPRequest", listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        once(event: "resumeSession", listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        once(event: "secureConnection", listener: (tlsSocket: TLSSocket) => void): this;
+        once(event: "keylog", listener: (line: Buffer, tlsSocket: TLSSocket) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "tlsClientError", listener: (err: Error, tlsSocket: TLSSocket) => void): this;
+        prependListener(event: "newSession", listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        prependListener(event: "OCSPRequest", listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        prependListener(event: "resumeSession", listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        prependListener(event: "secureConnection", listener: (tlsSocket: TLSSocket) => void): this;
+        prependListener(event: "keylog", listener: (line: Buffer, tlsSocket: TLSSocket) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "tlsClientError", listener: (err: Error, tlsSocket: TLSSocket) => void): this;
+        prependOnceListener(event: "newSession", listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        prependOnceListener(event: "OCSPRequest", listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        prependOnceListener(event: "resumeSession", listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        prependOnceListener(event: "secureConnection", listener: (tlsSocket: TLSSocket) => void): this;
+        prependOnceListener(event: "keylog", listener: (line: Buffer, tlsSocket: TLSSocket) => void): this;
+    }
+
+    interface SecurePair {
+        encrypted: TLSSocket;
+        cleartext: TLSSocket;
+    }
+
+    type SecureVersion = 'TLSv1.3' | 'TLSv1.2' | 'TLSv1.1' | 'TLSv1';
+
+    interface SecureContextOptions {
+        /**
+         * Optionally override the trusted CA certificates. Default is to trust
+         * the well-known CAs curated by Mozilla. Mozilla's CAs are completely
+         * replaced when CAs are explicitly specified using this option.
+         */
+        ca?: string | Buffer | Array<string | Buffer>;
+        /**
+         *  Cert chains in PEM format. One cert chain should be provided per
+         *  private key. Each cert chain should consist of the PEM formatted
+         *  certificate for a provided private key, followed by the PEM
+         *  formatted intermediate certificates (if any), in order, and not
+         *  including the root CA (the root CA must be pre-known to the peer,
+         *  see ca). When providing multiple cert chains, they do not have to
+         *  be in the same order as their private keys in key. If the
+         *  intermediate certificates are not provided, the peer will not be
+         *  able to validate the certificate, and the handshake will fail.
+         */
+        cert?: string | Buffer | Array<string | Buffer>;
+        /**
+         *  Colon-separated list of supported signature algorithms. The list
+         *  can contain digest algorithms (SHA256, MD5 etc.), public key
+         *  algorithms (RSA-PSS, ECDSA etc.), combination of both (e.g
+         *  'RSA+SHA384') or TLS v1.3 scheme names (e.g. rsa_pss_pss_sha512).
+         */
+        sigalgs?: string;
+        /**
+         * Cipher suite specification, replacing the default. For more
+         * information, see modifying the default cipher suite. Permitted
+         * ciphers can be obtained via tls.getCiphers(). Cipher names must be
+         * uppercased in order for OpenSSL to accept them.
+         */
+        ciphers?: string;
+        /**
+         * Name of an OpenSSL engine which can provide the client certificate.
+         */
+        clientCertEngine?: string;
+        /**
+         * PEM formatted CRLs (Certificate Revocation Lists).
+         */
+        crl?: string | Buffer | Array<string | Buffer>;
+        /**
+         * Diffie Hellman parameters, required for Perfect Forward Secrecy. Use
+         * openssl dhparam to create the parameters. The key length must be
+         * greater than or equal to 1024 bits or else an error will be thrown.
+         * Although 1024 bits is permissible, use 2048 bits or larger for
+         * stronger security. If omitted or invalid, the parameters are
+         * silently discarded and DHE ciphers will not be available.
+         */
+        dhparam?: string | Buffer;
+        /**
+         * A string describing a named curve or a colon separated list of curve
+         * NIDs or names, for example P-521:P-384:P-256, to use for ECDH key
+         * agreement. Set to auto to select the curve automatically. Use
+         * crypto.getCurves() to obtain a list of available curve names. On
+         * recent releases, openssl ecparam -list_curves will also display the
+         * name and description of each available elliptic curve. Default:
+         * tls.DEFAULT_ECDH_CURVE.
+         */
+        ecdhCurve?: string;
+        /**
+         * Attempt to use the server's cipher suite preferences instead of the
+         * client's. When true, causes SSL_OP_CIPHER_SERVER_PREFERENCE to be
+         * set in secureOptions
+         */
+        honorCipherOrder?: boolean;
+        /**
+         * Private keys in PEM format. PEM allows the option of private keys
+         * being encrypted. Encrypted keys will be decrypted with
+         * options.passphrase. Multiple keys using different algorithms can be
+         * provided either as an array of unencrypted key strings or buffers,
+         * or an array of objects in the form {pem: <string|buffer>[,
+         * passphrase: <string>]}. The object form can only occur in an array.
+         * object.passphrase is optional. Encrypted keys will be decrypted with
+         * object.passphrase if provided, or options.passphrase if it is not.
+         */
+        key?: string | Buffer | Array<Buffer | KeyObject>;
+        /**
+         * Name of an OpenSSL engine to get private key from. Should be used
+         * together with privateKeyIdentifier.
+         */
+        privateKeyEngine?: string;
+        /**
+         * Identifier of a private key managed by an OpenSSL engine. Should be
+         * used together with privateKeyEngine. Should not be set together with
+         * key, because both options define a private key in different ways.
+         */
+        privateKeyIdentifier?: string;
+        /**
+         * Optionally set the maximum TLS version to allow. One
+         * of \`'TLSv1.3'\`, \`'TLSv1.2'\`, \`'TLSv1.1'\`, or \`'TLSv1'\`. Cannot be specified along with the
+         * \`secureProtocol\` option, use one or the other.
+         * **Default:** \`'TLSv1.3'\`, unless changed using CLI options. Using
+         * \`--tls-max-v1.2\` sets the default to \`'TLSv1.2'\`. Using \`--tls-max-v1.3\` sets the default to
+         * \`'TLSv1.3'\`. If multiple of the options are provided, the highest maximum is used.
+         */
+        maxVersion?: SecureVersion;
+        /**
+         * Optionally set the minimum TLS version to allow. One
+         * of \`'TLSv1.3'\`, \`'TLSv1.2'\`, \`'TLSv1.1'\`, or \`'TLSv1'\`. Cannot be specified along with the
+         * \`secureProtocol\` option, use one or the other.  It is not recommended to use
+         * less than TLSv1.2, but it may be required for interoperability.
+         * **Default:** \`'TLSv1.2'\`, unless changed using CLI options. Using
+         * \`--tls-v1.0\` sets the default to \`'TLSv1'\`. Using \`--tls-v1.1\` sets the default to
+         * \`'TLSv1.1'\`. Using \`--tls-min-v1.3\` sets the default to
+         * 'TLSv1.3'. If multiple of the options are provided, the lowest minimum is used.
+         */
+        minVersion?: SecureVersion;
+        /**
+         * Shared passphrase used for a single private key and/or a PFX.
+         */
+        passphrase?: string;
+        /**
+         * PFX or PKCS12 encoded private key and certificate chain. pfx is an
+         * alternative to providing key and cert individually. PFX is usually
+         * encrypted, if it is, passphrase will be used to decrypt it. Multiple
+         * PFX can be provided either as an array of unencrypted PFX buffers,
+         * or an array of objects in the form {buf: <string|buffer>[,
+         * passphrase: <string>]}. The object form can only occur in an array.
+         * object.passphrase is optional. Encrypted PFX will be decrypted with
+         * object.passphrase if provided, or options.passphrase if it is not.
+         */
+        pfx?: string | Buffer | Array<string | Buffer | PxfObject>;
+        /**
+         * Optionally affect the OpenSSL protocol behavior, which is not
+         * usually necessary. This should be used carefully if at all! Value is
+         * a numeric bitmask of the SSL_OP_* options from OpenSSL Options
+         */
+        secureOptions?: number; // Value is a numeric bitmask of the \`SSL_OP_*\` options
+        /**
+         * Legacy mechanism to select the TLS protocol version to use, it does
+         * not support independent control of the minimum and maximum version,
+         * and does not support limiting the protocol to TLSv1.3. Use
+         * minVersion and maxVersion instead. The possible values are listed as
+         * SSL_METHODS, use the function names as strings. For example, use
+         * 'TLSv1_1_method' to force TLS version 1.1, or 'TLS_method' to allow
+         * any TLS protocol version up to TLSv1.3. It is not recommended to use
+         * TLS versions less than 1.2, but it may be required for
+         * interoperability. Default: none, see minVersion.
+         */
+        secureProtocol?: string;
+        /**
+         * Opaque identifier used by servers to ensure session state is not
+         * shared between applications. Unused by clients.
+         */
+        sessionIdContext?: string;
+    }
+
+    interface SecureContext {
+        context: any;
+    }
+
+    /*
+     * Verifies the certificate \`cert\` is issued to host \`host\`.
+     * @host The hostname to verify the certificate against
+     * @cert PeerCertificate representing the peer's certificate
+     *
+     * Returns Error object, populating it with the reason, host and cert on failure.  On success, returns undefined.
+     */
+    function checkServerIdentity(host: string, cert: PeerCertificate): Error | undefined;
+    function createServer(secureConnectionListener?: (socket: TLSSocket) => void): Server;
+    function createServer(options: TlsOptions, secureConnectionListener?: (socket: TLSSocket) => void): Server;
+    function connect(options: ConnectionOptions, secureConnectListener?: () => void): TLSSocket;
+    function connect(port: number, host?: string, options?: ConnectionOptions, secureConnectListener?: () => void): TLSSocket;
+    function connect(port: number, options?: ConnectionOptions, secureConnectListener?: () => void): TLSSocket;
+    /**
+     * @deprecated
+     */
+    function createSecurePair(credentials?: SecureContext, isServer?: boolean, requestCert?: boolean, rejectUnauthorized?: boolean): SecurePair;
+    function createSecureContext(details: SecureContextOptions): SecureContext;
+    function getCiphers(): string[];
+
+    /**
+     * The default curve name to use for ECDH key agreement in a tls server.
+     * The default value is 'auto'. See tls.createSecureContext() for further
+     * information.
+     */
+    let DEFAULT_ECDH_CURVE: string;
+    /**
+     * The default value of the maxVersion option of
+     * tls.createSecureContext(). It can be assigned any of the supported TLS
+     * protocol versions, 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'. Default:
+     * 'TLSv1.3', unless changed using CLI options. Using --tls-max-v1.2 sets
+     * the default to 'TLSv1.2'. Using --tls-max-v1.3 sets the default to
+     * 'TLSv1.3'. If multiple of the options are provided, the highest maximum
+     * is used.
+     */
+    let DEFAULT_MAX_VERSION: SecureVersion;
+    /**
+     * The default value of the minVersion option of tls.createSecureContext().
+     * It can be assigned any of the supported TLS protocol versions,
+     * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'. Default: 'TLSv1.2', unless
+     * changed using CLI options. Using --tls-min-v1.0 sets the default to
+     * 'TLSv1'. Using --tls-min-v1.1 sets the default to 'TLSv1.1'. Using
+     * --tls-min-v1.3 sets the default to 'TLSv1.3'. If multiple of the options
+     * are provided, the lowest minimum is used.
+     */
+    let DEFAULT_MIN_VERSION: SecureVersion;
+
+    /**
+     * An immutable array of strings representing the root certificates (in PEM
+     * format) used for verifying peer certificates. This is the default value
+     * of the ca option to tls.createSecureContext().
+     */
+    const rootCertificates: ReadonlyArray<string>;
+}
+`;
+module.exports['trace_events.d.ts'] = `declare module "trace_events" {
+    /**
+     * The \`Tracing\` object is used to enable or disable tracing for sets of
+     * categories. Instances are created using the
+     * \`trace_events.createTracing()\` method.
+     *
+     * When created, the \`Tracing\` object is disabled. Calling the
+     * \`tracing.enable()\` method adds the categories to the set of enabled trace
+     * event categories. Calling \`tracing.disable()\` will remove the categories
+     * from the set of enabled trace event categories.
+     */
+    interface Tracing {
+        /**
+         * A comma-separated list of the trace event categories covered by this
+         * \`Tracing\` object.
+         */
+        readonly categories: string;
+
+        /**
+         * Disables this \`Tracing\` object.
+         *
+         * Only trace event categories _not_ covered by other enabled \`Tracing\`
+         * objects and _not_ specified by the \`--trace-event-categories\` flag
+         * will be disabled.
+         */
+        disable(): void;
+
+        /**
+         * Enables this \`Tracing\` object for the set of categories covered by
+         * the \`Tracing\` object.
+         */
+        enable(): void;
+
+        /**
+         * \`true\` only if the \`Tracing\` object has been enabled.
+         */
+        readonly enabled: boolean;
+    }
+
+    interface CreateTracingOptions {
+        /**
+         * An array of trace category names. Values included in the array are
+         * coerced to a string when possible. An error will be thrown if the
+         * value cannot be coerced.
+         */
+        categories: string[];
+    }
+
+    /**
+     * Creates and returns a Tracing object for the given set of categories.
+     */
+    function createTracing(options: CreateTracingOptions): Tracing;
+
+    /**
+     * Returns a comma-separated list of all currently-enabled trace event
+     * categories. The current set of enabled trace event categories is
+     * determined by the union of all currently-enabled \`Tracing\` objects and
+     * any categories enabled using the \`--trace-event-categories\` flag.
+     */
+    function getEnabledCategories(): string | undefined;
+}
+`;
+module.exports['tty.d.ts'] = `declare module "tty" {
+    import * as net from "net";
+
+    function isatty(fd: number): boolean;
+    class ReadStream extends net.Socket {
+        constructor(fd: number, options?: net.SocketConstructorOpts);
+        isRaw: boolean;
+        setRawMode(mode: boolean): this;
+        isTTY: boolean;
+    }
+    /**
+     * -1 - to the left from cursor
+     *  0 - the entire line
+     *  1 - to the right from cursor
+     */
+    type Direction = -1 | 0 | 1;
+    class WriteStream extends net.Socket {
+        constructor(fd: number);
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "resize", listener: () => void): this;
+
+        emit(event: string | symbol, ...args: any[]): boolean;
+        emit(event: "resize"): boolean;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "resize", listener: () => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "resize", listener: () => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "resize", listener: () => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "resize", listener: () => void): this;
+
+        /**
+         * Clears the current line of this WriteStream in a direction identified by \`dir\`.
+         */
+        clearLine(dir: Direction, callback?: () => void): boolean;
+        /**
+         * Clears this \`WriteStream\` from the current cursor down.
+         */
+        clearScreenDown(callback?: () => void): boolean;
+        /**
+         * Moves this WriteStream's cursor to the specified position.
+         */
+        cursorTo(x: number, y?: number, callback?: () => void): boolean;
+        cursorTo(x: number, callback: () => void): boolean;
+        /**
+         * Moves this WriteStream's cursor relative to its current position.
+         */
+        moveCursor(dx: number, dy: number, callback?: () => void): boolean;
+        /**
+         * @default \`process.env\`
+         */
+        getColorDepth(env?: {}): number;
+        hasColors(depth?: number): boolean;
+        hasColors(env?: {}): boolean;
+        hasColors(depth: number, env?: {}): boolean;
+        getWindowSize(): [number, number];
+        columns: number;
+        rows: number;
+        isTTY: boolean;
+    }
+}
+`;
+module.exports['url.d.ts'] = `declare module "url" {
+    import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
+
+    // Input to \`url.format\`
+    interface UrlObject {
+        auth?: string | null;
+        hash?: string | null;
+        host?: string | null;
+        hostname?: string | null;
+        href?: string | null;
+        path?: string | null;
+        pathname?: string | null;
+        protocol?: string | null;
+        search?: string | null;
+        slashes?: boolean | null;
+        port?: string | number | null;
+        query?: string | null | ParsedUrlQueryInput;
+    }
+
+    // Output of \`url.parse\`
+    interface Url {
+        auth: string | null;
+        hash: string | null;
+        host: string | null;
+        hostname: string | null;
+        href: string;
+        path: string | null;
+        pathname: string | null;
+        protocol: string | null;
+        search: string | null;
+        slashes: boolean | null;
+        port: string | null;
+        query: string | null | ParsedUrlQuery;
+    }
+
+    interface UrlWithParsedQuery extends Url {
+        query: ParsedUrlQuery;
+    }
+
+    interface UrlWithStringQuery extends Url {
+        query: string | null;
+    }
+
+    function parse(urlStr: string): UrlWithStringQuery;
+    function parse(urlStr: string, parseQueryString: false | undefined, slashesDenoteHost?: boolean): UrlWithStringQuery;
+    function parse(urlStr: string, parseQueryString: true, slashesDenoteHost?: boolean): UrlWithParsedQuery;
+    function parse(urlStr: string, parseQueryString: boolean, slashesDenoteHost?: boolean): Url;
+
+    function format(URL: URL, options?: URLFormatOptions): string;
+    function format(urlObject: UrlObject | string): string;
+    function resolve(from: string, to: string): string;
+
+    function domainToASCII(domain: string): string;
+    function domainToUnicode(domain: string): string;
+
+    /**
+     * This function ensures the correct decodings of percent-encoded characters as
+     * well as ensuring a cross-platform valid absolute path string.
+     * @param url The file URL string or URL object to convert to a path.
+     */
+    function fileURLToPath(url: string | URL): string;
+
+    /**
+     * This function ensures that path is resolved absolutely, and that the URL
+     * control characters are correctly encoded when converting into a File URL.
+     * @param url The path to convert to a File URL.
+     */
+    function pathToFileURL(url: string): URL;
+
+    interface URLFormatOptions {
+        auth?: boolean;
+        fragment?: boolean;
+        search?: boolean;
+        unicode?: boolean;
+    }
+
+    class URL {
+        constructor(input: string, base?: string | URL);
+        hash: string;
+        host: string;
+        hostname: string;
+        href: string;
+        readonly origin: string;
+        password: string;
+        pathname: string;
+        port: string;
+        protocol: string;
+        search: string;
+        readonly searchParams: URLSearchParams;
+        username: string;
+        toString(): string;
+        toJSON(): string;
+    }
+
+    class URLSearchParams implements Iterable<[string, string]> {
+        constructor(init?: URLSearchParams | string | { [key: string]: string | string[] | undefined } | Iterable<[string, string]> | Array<[string, string]>);
+        append(name: string, value: string): void;
+        delete(name: string): void;
+        entries(): IterableIterator<[string, string]>;
+        forEach(callback: (value: string, name: string, searchParams: this) => void): void;
+        get(name: string): string | null;
+        getAll(name: string): string[];
+        has(name: string): boolean;
+        keys(): IterableIterator<string>;
+        set(name: string, value: string): void;
+        sort(): void;
+        toString(): string;
+        values(): IterableIterator<string>;
+        [Symbol.iterator](): IterableIterator<[string, string]>;
+    }
+}
+`;
+module.exports['util.d.ts'] = `declare module "util" {
+    interface InspectOptions extends NodeJS.InspectOptions { }
+    function format(format: any, ...param: any[]): string;
+    function formatWithOptions(inspectOptions: InspectOptions, format: string, ...param: any[]): string;
+    /** @deprecated since v0.11.3 - use a third party module instead. */
+    function log(string: string): void;
+    function inspect(object: any, showHidden?: boolean, depth?: number | null, color?: boolean): string;
+    function inspect(object: any, options: InspectOptions): string;
+    namespace inspect {
+        let colors: {
+            [color: string]: [number, number] | undefined
+        };
+        let styles: {
+            [style: string]: string | undefined
+        };
+        let defaultOptions: InspectOptions;
+        /**
+         * Allows changing inspect settings from the repl.
+         */
+        let replDefaults: InspectOptions;
+    }
+    /** @deprecated since v4.0.0 - use \`Array.isArray()\` instead. */
+    function isArray(object: any): object is any[];
+    /** @deprecated since v4.0.0 - use \`util.types.isRegExp()\` instead. */
+    function isRegExp(object: any): object is RegExp;
+    /** @deprecated since v4.0.0 - use \`util.types.isDate()\` instead. */
+    function isDate(object: any): object is Date;
+    /** @deprecated since v4.0.0 - use \`util.types.isNativeError()\` instead. */
+    function isError(object: any): object is Error;
+    function inherits(constructor: any, superConstructor: any): void;
+    function debuglog(key: string): (msg: string, ...param: any[]) => void;
+    /** @deprecated since v4.0.0 - use \`typeof value === 'boolean'\` instead. */
+    function isBoolean(object: any): object is boolean;
+    /** @deprecated since v4.0.0 - use \`Buffer.isBuffer()\` instead. */
+    function isBuffer(object: any): object is Buffer;
+    /** @deprecated since v4.0.0 - use \`typeof value === 'function'\` instead. */
+    function isFunction(object: any): boolean;
+    /** @deprecated since v4.0.0 - use \`value === null\` instead. */
+    function isNull(object: any): object is null;
+    /** @deprecated since v4.0.0 - use \`value === null || value === undefined\` instead. */
+    function isNullOrUndefined(object: any): object is null | undefined;
+    /** @deprecated since v4.0.0 - use \`typeof value === 'number'\` instead. */
+    function isNumber(object: any): object is number;
+    /** @deprecated since v4.0.0 - use \`value !== null && typeof value === 'object'\` instead. */
+    function isObject(object: any): boolean;
+    /** @deprecated since v4.0.0 - use \`(typeof value !== 'object' && typeof value !== 'function') || value === null\` instead. */
+    function isPrimitive(object: any): boolean;
+    /** @deprecated since v4.0.0 - use \`typeof value === 'string'\` instead. */
+    function isString(object: any): object is string;
+    /** @deprecated since v4.0.0 - use \`typeof value === 'symbol'\` instead. */
+    function isSymbol(object: any): object is symbol;
+    /** @deprecated since v4.0.0 - use \`value === undefined\` instead. */
+    function isUndefined(object: any): object is undefined;
+    function deprecate<T extends Function>(fn: T, message: string, code?: string): T;
+    function isDeepStrictEqual(val1: any, val2: any): boolean;
+
+    interface CustomPromisify<TCustom extends Function> extends Function {
+        __promisify__: TCustom;
+    }
+
+    function callbackify(fn: () => Promise<void>): (callback: (err: NodeJS.ErrnoException) => void) => void;
+    function callbackify<TResult>(fn: () => Promise<TResult>): (callback: (err: NodeJS.ErrnoException, result: TResult) => void) => void;
+    function callbackify<T1>(fn: (arg1: T1) => Promise<void>): (arg1: T1, callback: (err: NodeJS.ErrnoException) => void) => void;
+    function callbackify<T1, TResult>(fn: (arg1: T1) => Promise<TResult>): (arg1: T1, callback: (err: NodeJS.ErrnoException, result: TResult) => void) => void;
+    function callbackify<T1, T2>(fn: (arg1: T1, arg2: T2) => Promise<void>): (arg1: T1, arg2: T2, callback: (err: NodeJS.ErrnoException) => void) => void;
+    function callbackify<T1, T2, TResult>(fn: (arg1: T1, arg2: T2) => Promise<TResult>): (arg1: T1, arg2: T2, callback: (err: NodeJS.ErrnoException | null, result: TResult) => void) => void;
+    function callbackify<T1, T2, T3>(fn: (arg1: T1, arg2: T2, arg3: T3) => Promise<void>): (arg1: T1, arg2: T2, arg3: T3, callback: (err: NodeJS.ErrnoException) => void) => void;
+    function callbackify<T1, T2, T3, TResult>(
+        fn: (arg1: T1, arg2: T2, arg3: T3) => Promise<TResult>): (arg1: T1, arg2: T2, arg3: T3, callback: (err: NodeJS.ErrnoException | null, result: TResult) => void) => void;
+    function callbackify<T1, T2, T3, T4>(
+        fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4) => Promise<void>): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, callback: (err: NodeJS.ErrnoException) => void) => void;
+    function callbackify<T1, T2, T3, T4, TResult>(
+        fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4) => Promise<TResult>): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, callback: (err: NodeJS.ErrnoException | null, result: TResult) => void) => void;
+    function callbackify<T1, T2, T3, T4, T5>(
+        fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5) => Promise<void>): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, callback: (err: NodeJS.ErrnoException) => void) => void;
+    function callbackify<T1, T2, T3, T4, T5, TResult>(
+        fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5) => Promise<TResult>,
+    ): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, callback: (err: NodeJS.ErrnoException | null, result: TResult) => void) => void;
+    function callbackify<T1, T2, T3, T4, T5, T6>(
+        fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, arg6: T6) => Promise<void>,
+    ): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, arg6: T6, callback: (err: NodeJS.ErrnoException) => void) => void;
+    function callbackify<T1, T2, T3, T4, T5, T6, TResult>(
+        fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, arg6: T6) => Promise<TResult>
+    ): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, arg6: T6, callback: (err: NodeJS.ErrnoException | null, result: TResult) => void) => void;
+
+    function promisify<TCustom extends Function>(fn: CustomPromisify<TCustom>): TCustom;
+    function promisify<TResult>(fn: (callback: (err: any, result: TResult) => void) => void): () => Promise<TResult>;
+    function promisify(fn: (callback: (err?: any) => void) => void): () => Promise<void>;
+    function promisify<T1, TResult>(fn: (arg1: T1, callback: (err: any, result: TResult) => void) => void): (arg1: T1) => Promise<TResult>;
+    function promisify<T1>(fn: (arg1: T1, callback: (err?: any) => void) => void): (arg1: T1) => Promise<void>;
+    function promisify<T1, T2, TResult>(fn: (arg1: T1, arg2: T2, callback: (err: any, result: TResult) => void) => void): (arg1: T1, arg2: T2) => Promise<TResult>;
+    function promisify<T1, T2>(fn: (arg1: T1, arg2: T2, callback: (err?: any) => void) => void): (arg1: T1, arg2: T2) => Promise<void>;
+    function promisify<T1, T2, T3, TResult>(fn: (arg1: T1, arg2: T2, arg3: T3, callback: (err: any, result: TResult) => void) => void):
+        (arg1: T1, arg2: T2, arg3: T3) => Promise<TResult>;
+    function promisify<T1, T2, T3>(fn: (arg1: T1, arg2: T2, arg3: T3, callback: (err?: any) => void) => void): (arg1: T1, arg2: T2, arg3: T3) => Promise<void>;
+    function promisify<T1, T2, T3, T4, TResult>(
+        fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, callback: (err: any, result: TResult) => void) => void,
+    ): (arg1: T1, arg2: T2, arg3: T3, arg4: T4) => Promise<TResult>;
+    function promisify<T1, T2, T3, T4>(fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, callback: (err?: any) => void) => void):
+        (arg1: T1, arg2: T2, arg3: T3, arg4: T4) => Promise<void>;
+    function promisify<T1, T2, T3, T4, T5, TResult>(
+        fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, callback: (err: any, result: TResult) => void) => void,
+    ): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5) => Promise<TResult>;
+    function promisify<T1, T2, T3, T4, T5>(
+        fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, callback: (err?: any) => void) => void,
+    ): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5) => Promise<void>;
+    function promisify(fn: Function): Function;
+
+    namespace types {
+        function isAnyArrayBuffer(object: any): boolean;
+        function isArgumentsObject(object: any): object is IArguments;
+        function isArrayBuffer(object: any): object is ArrayBuffer;
+        function isAsyncFunction(object: any): boolean;
+        function isBooleanObject(object: any): object is Boolean;
+        function isBoxedPrimitive(object: any): object is (Number | Boolean | String | Symbol /* | Object(BigInt) | Object(Symbol) */);
+        function isDataView(object: any): object is DataView;
+        function isDate(object: any): object is Date;
+        function isExternal(object: any): boolean;
+        function isFloat32Array(object: any): object is Float32Array;
+        function isFloat64Array(object: any): object is Float64Array;
+        function isGeneratorFunction(object: any): boolean;
+        function isGeneratorObject(object: any): boolean;
+        function isInt8Array(object: any): object is Int8Array;
+        function isInt16Array(object: any): object is Int16Array;
+        function isInt32Array(object: any): object is Int32Array;
+        function isMap(object: any): boolean;
+        function isMapIterator(object: any): boolean;
+        function isModuleNamespaceObject(value: any): boolean;
+        function isNativeError(object: any): object is Error;
+        function isNumberObject(object: any): object is Number;
+        function isPromise(object: any): boolean;
+        function isProxy(object: any): boolean;
+        function isRegExp(object: any): object is RegExp;
+        function isSet(object: any): boolean;
+        function isSetIterator(object: any): boolean;
+        function isSharedArrayBuffer(object: any): boolean;
+        function isStringObject(object: any): boolean;
+        function isSymbolObject(object: any): boolean;
+        function isTypedArray(object: any): object is NodeJS.TypedArray;
+        function isUint8Array(object: any): object is Uint8Array;
+        function isUint8ClampedArray(object: any): object is Uint8ClampedArray;
+        function isUint16Array(object: any): object is Uint16Array;
+        function isUint32Array(object: any): object is Uint32Array;
+        function isWeakMap(object: any): boolean;
+        function isWeakSet(object: any): boolean;
+        function isWebAssemblyCompiledModule(object: any): boolean;
+    }
+
+    class TextDecoder {
+        readonly encoding: string;
+        readonly fatal: boolean;
+        readonly ignoreBOM: boolean;
+        constructor(
+          encoding?: string,
+          options?: { fatal?: boolean; ignoreBOM?: boolean }
+        );
+        decode(
+          input?: NodeJS.ArrayBufferView | ArrayBuffer | null,
+          options?: { stream?: boolean }
+        ): string;
+    }
+
+    interface EncodeIntoResult {
+        /**
+         * The read Unicode code units of input.
+         */
+
+        read: number;
+        /**
+         * The written UTF-8 bytes of output.
+         */
+        written: number;
+    }
+
+    class TextEncoder {
+        readonly encoding: string;
+        encode(input?: string): Uint8Array;
+        encodeInto(input: string, output: Uint8Array): EncodeIntoResult;
+    }
+}
+`;
+module.exports['v8.d.ts'] = `declare module "v8" {
+    import { Readable } from "stream";
+
+    interface HeapSpaceInfo {
+        space_name: string;
+        space_size: number;
+        space_used_size: number;
+        space_available_size: number;
+        physical_space_size: number;
+    }
+
+    // ** Signifies if the --zap_code_space option is enabled or not.  1 == enabled, 0 == disabled. */
+    type DoesZapCodeSpaceFlag = 0 | 1;
+
+    interface HeapInfo {
+        total_heap_size: number;
+        total_heap_size_executable: number;
+        total_physical_size: number;
+        total_available_size: number;
+        used_heap_size: number;
+        heap_size_limit: number;
+        malloced_memory: number;
+        peak_malloced_memory: number;
+        does_zap_garbage: DoesZapCodeSpaceFlag;
+        number_of_native_contexts: number;
+        number_of_detached_contexts: number;
+    }
+
+    interface HeapCodeStatistics {
+        code_and_metadata_size: number;
+        bytecode_and_metadata_size: number;
+        external_script_source_size: number;
+    }
+
+    /**
+     * Returns an integer representing a "version tag" derived from the V8 version, command line flags and detected CPU features.
+     * This is useful for determining whether a vm.Script cachedData buffer is compatible with this instance of V8.
+     */
+    function cachedDataVersionTag(): number;
+
+    function getHeapStatistics(): HeapInfo;
+    function getHeapSpaceStatistics(): HeapSpaceInfo[];
+    function setFlagsFromString(flags: string): void;
+    /**
+     * Generates a snapshot of the current V8 heap and returns a Readable
+     * Stream that may be used to read the JSON serialized representation.
+     * This conversation was marked as resolved by joyeecheung
+     * This JSON stream format is intended to be used with tools such as
+     * Chrome DevTools. The JSON schema is undocumented and specific to the
+     * V8 engine, and may change from one version of V8 to the next.
+     */
+    function getHeapSnapshot(): Readable;
+
+    /**
+     *
+     * @param fileName The file path where the V8 heap snapshot is to be
+     * saved. If not specified, a file name with the pattern
+     * \`'Heap-\${yyyymmdd}-\${hhmmss}-\${pid}-\${thread_id}.heapsnapshot'\` will be
+     * generated, where \`{pid}\` will be the PID of the Node.js process,
+     * \`{thread_id}\` will be \`0\` when \`writeHeapSnapshot()\` is called from
+     * the main Node.js thread or the id of a worker thread.
+     */
+    function writeHeapSnapshot(fileName?: string): string;
+
+    function getHeapCodeStatistics(): HeapCodeStatistics;
+
+    /**
+     * @experimental
+     */
+    class Serializer {
+        /**
+         * Writes out a header, which includes the serialization format version.
+         */
+        writeHeader(): void;
+
+        /**
+         * Serializes a JavaScript value and adds the serialized representation to the internal buffer.
+         * This throws an error if value cannot be serialized.
+         */
+        writeValue(val: any): boolean;
+
+        /**
+         * Returns the stored internal buffer.
+         * This serializer should not be used once the buffer is released.
+         * Calling this method results in undefined behavior if a previous write has failed.
+         */
+        releaseBuffer(): Buffer;
+
+        /**
+         * Marks an ArrayBuffer as having its contents transferred out of band.\
+         * Pass the corresponding ArrayBuffer in the deserializing context to deserializer.transferArrayBuffer().
+         */
+        transferArrayBuffer(id: number, arrayBuffer: ArrayBuffer): void;
+
+        /**
+         * Write a raw 32-bit unsigned integer.
+         */
+        writeUint32(value: number): void;
+
+        /**
+         * Write a raw 64-bit unsigned integer, split into high and low 32-bit parts.
+         */
+        writeUint64(hi: number, lo: number): void;
+
+        /**
+         * Write a JS number value.
+         */
+        writeDouble(value: number): void;
+
+        /**
+         * Write raw bytes into the serializer’s internal buffer.
+         * The deserializer will require a way to compute the length of the buffer.
+         */
+        writeRawBytes(buffer: NodeJS.TypedArray): void;
+    }
+
+    /**
+     * A subclass of \`Serializer\` that serializes \`TypedArray\` (in particular \`Buffer\`) and \`DataView\` objects as host objects,
+     * and only stores the part of their underlying \`ArrayBuffers\` that they are referring to.
+     * @experimental
+     */
+    class DefaultSerializer extends Serializer {
+    }
+
+    /**
+     * @experimental
+     */
+    class Deserializer {
+        constructor(data: NodeJS.TypedArray);
+        /**
+         * Reads and validates a header (including the format version).
+         * May, for example, reject an invalid or unsupported wire format.
+         * In that case, an Error is thrown.
+         */
+        readHeader(): boolean;
+
+        /**
+         * Deserializes a JavaScript value from the buffer and returns it.
+         */
+        readValue(): any;
+
+        /**
+         * Marks an ArrayBuffer as having its contents transferred out of band.
+         * Pass the corresponding \`ArrayBuffer\` in the serializing context to serializer.transferArrayBuffer()
+         * (or return the id from serializer._getSharedArrayBufferId() in the case of SharedArrayBuffers).
+         */
+        transferArrayBuffer(id: number, arrayBuffer: ArrayBuffer): void;
+
+        /**
+         * Reads the underlying wire format version.
+         * Likely mostly to be useful to legacy code reading old wire format versions.
+         * May not be called before .readHeader().
+         */
+        getWireFormatVersion(): number;
+
+        /**
+         * Read a raw 32-bit unsigned integer and return it.
+         */
+        readUint32(): number;
+
+        /**
+         * Read a raw 64-bit unsigned integer and return it as an array [hi, lo] with two 32-bit unsigned integer entries.
+         */
+        readUint64(): [number, number];
+
+        /**
+         * Read a JS number value.
+         */
+        readDouble(): number;
+
+        /**
+         * Read raw bytes from the deserializer’s internal buffer.
+         * The length parameter must correspond to the length of the buffer that was passed to serializer.writeRawBytes().
+         */
+        readRawBytes(length: number): Buffer;
+    }
+
+    /**
+     * A subclass of \`Serializer\` that serializes \`TypedArray\` (in particular \`Buffer\`) and \`DataView\` objects as host objects,
+     * and only stores the part of their underlying \`ArrayBuffers\` that they are referring to.
+     * @experimental
+     */
+    class DefaultDeserializer extends Deserializer {
+    }
+
+    /**
+     * Uses a \`DefaultSerializer\` to serialize value into a buffer.
+     * @experimental
+     */
+    function serialize(value: any): Buffer;
+
+    /**
+     * Uses a \`DefaultDeserializer\` with default options to read a JS value from a buffer.
+     * @experimental
+     */
+    function deserialize(data: NodeJS.TypedArray): any;
+}
+`;
+module.exports['vm.d.ts'] = `declare module "vm" {
+    interface Context {
+        [key: string]: any;
+    }
+    interface BaseOptions {
+        /**
+         * Specifies the filename used in stack traces produced by this script.
+         * Default: \`''\`.
+         */
+        filename?: string;
+        /**
+         * Specifies the line number offset that is displayed in stack traces produced by this script.
+         * Default: \`0\`.
+         */
+        lineOffset?: number;
+        /**
+         * Specifies the column number offset that is displayed in stack traces produced by this script.
+         * Default: \`0\`
+         */
+        columnOffset?: number;
+    }
+    interface ScriptOptions extends BaseOptions {
+        displayErrors?: boolean;
+        timeout?: number;
+        cachedData?: Buffer;
+        produceCachedData?: boolean;
+    }
+    interface RunningScriptOptions extends BaseOptions {
+        /**
+         * When \`true\`, if an \`Error\` occurs while compiling the \`code\`, the line of code causing the error is attached to the stack trace.
+         * Default: \`true\`.
+         */
+        displayErrors?: boolean;
+        /**
+         * Specifies the number of milliseconds to execute code before terminating execution.
+         * If execution is terminated, an \`Error\` will be thrown. This value must be a strictly positive integer.
+         */
+        timeout?: number;
+        /**
+         * If \`true\`, the execution will be terminated when \`SIGINT\` (Ctrl+C) is received.
+         * Existing handlers for the event that have been attached via \`process.on('SIGINT')\` will be disabled during script execution, but will continue to work after that.
+         * If execution is terminated, an \`Error\` will be thrown.
+         * Default: \`false\`.
+         */
+        breakOnSigint?: boolean;
+    }
+    interface CompileFunctionOptions extends BaseOptions {
+        /**
+         * Provides an optional data with V8's code cache data for the supplied source.
+         */
+        cachedData?: Buffer;
+        /**
+         * Specifies whether to produce new cache data.
+         * Default: \`false\`,
+         */
+        produceCachedData?: boolean;
+        /**
+         * The sandbox/context in which the said function should be compiled in.
+         */
+        parsingContext?: Context;
+
+        /**
+         * An array containing a collection of context extensions (objects wrapping the current scope) to be applied while compiling
+         */
+        contextExtensions?: Object[];
+    }
+
+    interface CreateContextOptions {
+        /**
+         * Human-readable name of the newly created context.
+         * @default 'VM Context i' Where i is an ascending numerical index of the created context.
+         */
+        name?: string;
+        /**
+         * Corresponds to the newly created context for display purposes.
+         * The origin should be formatted like a \`URL\`, but with only the scheme, host, and port (if necessary),
+         * like the value of the \`url.origin\` property of a URL object.
+         * Most notably, this string should omit the trailing slash, as that denotes a path.
+         * @default ''
+         */
+        origin?: string;
+        codeGeneration?: {
+            /**
+             * If set to false any calls to eval or function constructors (Function, GeneratorFunction, etc)
+             * will throw an EvalError.
+             * @default true
+             */
+            strings?: boolean;
+            /**
+             * If set to false any attempt to compile a WebAssembly module will throw a WebAssembly.CompileError.
+             * @default true
+             */
+            wasm?: boolean;
+        };
+    }
+
+    class Script {
+        constructor(code: string, options?: ScriptOptions);
+        runInContext(contextifiedSandbox: Context, options?: RunningScriptOptions): any;
+        runInNewContext(sandbox?: Context, options?: RunningScriptOptions): any;
+        runInThisContext(options?: RunningScriptOptions): any;
+        createCachedData(): Buffer;
+    }
+    function createContext(sandbox?: Context, options?: CreateContextOptions): Context;
+    function isContext(sandbox: Context): boolean;
+    function runInContext(code: string, contextifiedSandbox: Context, options?: RunningScriptOptions | string): any;
+    function runInNewContext(code: string, sandbox?: Context, options?: RunningScriptOptions | string): any;
+    function runInThisContext(code: string, options?: RunningScriptOptions | string): any;
+    function compileFunction(code: string, params?: string[], options?: CompileFunctionOptions): Function;
+}
+`;
+module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {
+    import { Context } from "vm";
+    import { EventEmitter } from "events";
+    import { Readable, Writable } from "stream";
+
+    const isMainThread: boolean;
+    const parentPort: null | MessagePort;
+    const SHARE_ENV: unique symbol;
+    const threadId: number;
+    const workerData: any;
+
+    class MessageChannel {
+        readonly port1: MessagePort;
+        readonly port2: MessagePort;
+    }
+
+    class MessagePort extends EventEmitter {
+        close(): void;
+        postMessage(value: any, transferList?: Array<ArrayBuffer | MessagePort>): void;
+        ref(): void;
+        unref(): void;
+        start(): void;
+
+        addListener(event: "close", listener: () => void): this;
+        addListener(event: "message", listener: (value: any) => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "close"): boolean;
+        emit(event: "message", value: any): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "close", listener: () => void): this;
+        on(event: "message", listener: (value: any) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "close", listener: () => void): this;
+        once(event: "message", listener: (value: any) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "message", listener: (value: any) => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "message", listener: (value: any) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        removeListener(event: "close", listener: () => void): this;
+        removeListener(event: "message", listener: (value: any) => void): this;
+        removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        off(event: "close", listener: () => void): this;
+        off(event: "message", listener: (value: any) => void): this;
+        off(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+
+    interface WorkerOptions {
+        eval?: boolean;
+        env?: NodeJS.ProcessEnv | typeof SHARE_ENV;
+        workerData?: any;
+        stdin?: boolean;
+        stdout?: boolean;
+        stderr?: boolean;
+        execArgv?: string[];
+    }
+
+    class Worker extends EventEmitter {
+        readonly stdin: Writable | null;
+        readonly stdout: Readable;
+        readonly stderr: Readable;
+        readonly threadId: number;
+
+        constructor(filename: string, options?: WorkerOptions);
+
+        postMessage(value: any, transferList?: Array<ArrayBuffer | MessagePort>): void;
+        ref(): void;
+        unref(): void;
+        /**
+         * Stop all JavaScript execution in the worker thread as soon as possible.
+         * Returns a Promise for the exit code that is fulfilled when the \`exit\` event is emitted.
+         */
+        terminate(): Promise<number>;
+        /**
+         * Transfer a \`MessagePort\` to a different \`vm\` Context. The original \`port\`
+         * object will be rendered unusable, and the returned \`MessagePort\` instance will
+         * take its place.
+         *
+         * The returned \`MessagePort\` will be an object in the target context, and will
+         * inherit from its global \`Object\` class. Objects passed to the
+         * \`port.onmessage()\` listener will also be created in the target context
+         * and inherit from its global \`Object\` class.
+         *
+         * However, the created \`MessagePort\` will no longer inherit from
+         * \`EventEmitter\`, and only \`port.onmessage()\` can be used to receive
+         * events using it.
+         */
+        moveMessagePortToContext(port: MessagePort, context: Context): MessagePort;
+
+        /**
+         * Receive a single message from a given \`MessagePort\`. If no message is available,
+         * \`undefined\` is returned, otherwise an object with a single \`message\` property
+         * that contains the message payload, corresponding to the oldest message in the
+         * \`MessagePort\`’s queue.
+         */
+        receiveMessageOnPort(port: MessagePort): {} | undefined;
+
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: "exit", listener: (exitCode: number) => void): this;
+        addListener(event: "message", listener: (value: any) => void): this;
+        addListener(event: "online", listener: () => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        emit(event: "error", err: Error): boolean;
+        emit(event: "exit", exitCode: number): boolean;
+        emit(event: "message", value: any): boolean;
+        emit(event: "online"): boolean;
+        emit(event: string | symbol, ...args: any[]): boolean;
+
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: "exit", listener: (exitCode: number) => void): this;
+        on(event: "message", listener: (value: any) => void): this;
+        on(event: "online", listener: () => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: "exit", listener: (exitCode: number) => void): this;
+        once(event: "message", listener: (value: any) => void): this;
+        once(event: "online", listener: () => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: "exit", listener: (exitCode: number) => void): this;
+        prependListener(event: "message", listener: (value: any) => void): this;
+        prependListener(event: "online", listener: () => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: "exit", listener: (exitCode: number) => void): this;
+        prependOnceListener(event: "message", listener: (value: any) => void): this;
+        prependOnceListener(event: "online", listener: () => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        removeListener(event: "error", listener: (err: Error) => void): this;
+        removeListener(event: "exit", listener: (exitCode: number) => void): this;
+        removeListener(event: "message", listener: (value: any) => void): this;
+        removeListener(event: "online", listener: () => void): this;
+        removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+        off(event: "error", listener: (err: Error) => void): this;
+        off(event: "exit", listener: (exitCode: number) => void): this;
+        off(event: "message", listener: (value: any) => void): this;
+        off(event: "online", listener: () => void): this;
+        off(event: string | symbol, listener: (...args: any[]) => void): this;
+    }
+}
+`;
+module.exports['zlib.d.ts'] = `declare module "zlib" {
+    import * as stream from "stream";
+
+    interface ZlibOptions {
+        /**
+         * @default constants.Z_NO_FLUSH
+         */
+        flush?: number;
+        /**
+         * @default constants.Z_FINISH
+         */
+        finishFlush?: number;
+        /**
+         * @default 16*1024
+         */
+        chunkSize?: number;
+        windowBits?: number;
+        level?: number; // compression only
+        memLevel?: number; // compression only
+        strategy?: number; // compression only
+        dictionary?: NodeJS.ArrayBufferView | ArrayBuffer; // deflate/inflate only, empty dictionary by default
+    }
+
+    interface BrotliOptions {
+        /**
+         * @default constants.BROTLI_OPERATION_PROCESS
+         */
+        flush?: number;
+        /**
+         * @default constants.BROTLI_OPERATION_FINISH
+         */
+        finishFlush?: number;
+        /**
+         * @default 16*1024
+         */
+        chunkSize?: number;
+        params?: {
+            /**
+             * Each key is a \`constants.BROTLI_*\` constant.
+             */
+            [key: number]: boolean | number;
+        };
+    }
+
+    interface Zlib {
+        /** @deprecated Use bytesWritten instead. */
+        readonly bytesRead: number;
+        readonly bytesWritten: number;
+        shell?: boolean | string;
+        close(callback?: () => void): void;
+        flush(kind?: number | (() => void), callback?: () => void): void;
+    }
+
+    interface ZlibParams {
+        params(level: number, strategy: number, callback: () => void): void;
+    }
+
+    interface ZlibReset {
+        reset(): void;
+    }
+
+    interface BrotliCompress extends stream.Transform, Zlib { }
+    interface BrotliDecompress extends stream.Transform, Zlib { }
+    interface Gzip extends stream.Transform, Zlib { }
+    interface Gunzip extends stream.Transform, Zlib { }
+    interface Deflate extends stream.Transform, Zlib, ZlibReset, ZlibParams { }
+    interface Inflate extends stream.Transform, Zlib, ZlibReset { }
+    interface DeflateRaw extends stream.Transform, Zlib, ZlibReset, ZlibParams { }
+    interface InflateRaw extends stream.Transform, Zlib, ZlibReset { }
+    interface Unzip extends stream.Transform, Zlib { }
+
+    function createBrotliCompress(options?: BrotliOptions): BrotliCompress;
+    function createBrotliDecompress(options?: BrotliOptions): BrotliDecompress;
+    function createGzip(options?: ZlibOptions): Gzip;
+    function createGunzip(options?: ZlibOptions): Gunzip;
+    function createDeflate(options?: ZlibOptions): Deflate;
+    function createInflate(options?: ZlibOptions): Inflate;
+    function createDeflateRaw(options?: ZlibOptions): DeflateRaw;
+    function createInflateRaw(options?: ZlibOptions): InflateRaw;
+    function createUnzip(options?: ZlibOptions): Unzip;
+
+    type InputType = string | ArrayBuffer | NodeJS.ArrayBufferView;
+
+    type CompressCallback = (error: Error | null, result: Buffer) => void;
+
+    function brotliCompress(buf: InputType, options: BrotliOptions, callback: CompressCallback): void;
+    function brotliCompress(buf: InputType, callback: CompressCallback): void;
+    function brotliCompressSync(buf: InputType, options?: BrotliOptions): Buffer;
+    function brotliDecompress(buf: InputType, options: BrotliOptions, callback: CompressCallback): void;
+    function brotliDecompress(buf: InputType, callback: CompressCallback): void;
+    function brotliDecompressSync(buf: InputType, options?: BrotliOptions): Buffer;
+    function deflate(buf: InputType, callback: CompressCallback): void;
+    function deflate(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    function deflateSync(buf: InputType, options?: ZlibOptions): Buffer;
+    function deflateRaw(buf: InputType, callback: CompressCallback): void;
+    function deflateRaw(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    function deflateRawSync(buf: InputType, options?: ZlibOptions): Buffer;
+    function gzip(buf: InputType, callback: CompressCallback): void;
+    function gzip(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    function gzipSync(buf: InputType, options?: ZlibOptions): Buffer;
+    function gunzip(buf: InputType, callback: CompressCallback): void;
+    function gunzip(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    function gunzipSync(buf: InputType, options?: ZlibOptions): Buffer;
+    function inflate(buf: InputType, callback: CompressCallback): void;
+    function inflate(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    function inflateSync(buf: InputType, options?: ZlibOptions): Buffer;
+    function inflateRaw(buf: InputType, callback: CompressCallback): void;
+    function inflateRaw(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    function inflateRawSync(buf: InputType, options?: ZlibOptions): Buffer;
+    function unzip(buf: InputType, callback: CompressCallback): void;
+    function unzip(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    function unzipSync(buf: InputType, options?: ZlibOptions): Buffer;
+
+    namespace constants {
+        const BROTLI_DECODE: number;
+        const BROTLI_DECODER_ERROR_ALLOC_BLOCK_TYPE_TREES: number;
+        const BROTLI_DECODER_ERROR_ALLOC_CONTEXT_MAP: number;
+        const BROTLI_DECODER_ERROR_ALLOC_CONTEXT_MODES: number;
+        const BROTLI_DECODER_ERROR_ALLOC_RING_BUFFER_1: number;
+        const BROTLI_DECODER_ERROR_ALLOC_RING_BUFFER_2: number;
+        const BROTLI_DECODER_ERROR_ALLOC_TREE_GROUPS: number;
+        const BROTLI_DECODER_ERROR_DICTIONARY_NOT_SET: number;
+        const BROTLI_DECODER_ERROR_FORMAT_BLOCK_LENGTH_1: number;
+        const BROTLI_DECODER_ERROR_FORMAT_BLOCK_LENGTH_2: number;
+        const BROTLI_DECODER_ERROR_FORMAT_CL_SPACE: number;
+        const BROTLI_DECODER_ERROR_FORMAT_CONTEXT_MAP_REPEAT: number;
+        const BROTLI_DECODER_ERROR_FORMAT_DICTIONARY: number;
+        const BROTLI_DECODER_ERROR_FORMAT_DISTANCE: number;
+        const BROTLI_DECODER_ERROR_FORMAT_EXUBERANT_META_NIBBLE: number;
+        const BROTLI_DECODER_ERROR_FORMAT_EXUBERANT_NIBBLE: number;
+        const BROTLI_DECODER_ERROR_FORMAT_HUFFMAN_SPACE: number;
+        const BROTLI_DECODER_ERROR_FORMAT_PADDING_1: number;
+        const BROTLI_DECODER_ERROR_FORMAT_PADDING_2: number;
+        const BROTLI_DECODER_ERROR_FORMAT_RESERVED: number;
+        const BROTLI_DECODER_ERROR_FORMAT_SIMPLE_HUFFMAN_ALPHABET: number;
+        const BROTLI_DECODER_ERROR_FORMAT_SIMPLE_HUFFMAN_SAME: number;
+        const BROTLI_DECODER_ERROR_FORMAT_TRANSFORM: number;
+        const BROTLI_DECODER_ERROR_FORMAT_WINDOW_BITS: number;
+        const BROTLI_DECODER_ERROR_INVALID_ARGUMENTS: number;
+        const BROTLI_DECODER_ERROR_UNREACHABLE: number;
+        const BROTLI_DECODER_NEEDS_MORE_INPUT: number;
+        const BROTLI_DECODER_NEEDS_MORE_OUTPUT: number;
+        const BROTLI_DECODER_NO_ERROR: number;
+        const BROTLI_DECODER_PARAM_DISABLE_RING_BUFFER_REALLOCATION: number;
+        const BROTLI_DECODER_PARAM_LARGE_WINDOW: number;
+        const BROTLI_DECODER_RESULT_ERROR: number;
+        const BROTLI_DECODER_RESULT_NEEDS_MORE_INPUT: number;
+        const BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT: number;
+        const BROTLI_DECODER_RESULT_SUCCESS: number;
+        const BROTLI_DECODER_SUCCESS: number;
+
+        const BROTLI_DEFAULT_MODE: number;
+        const BROTLI_DEFAULT_QUALITY: number;
+        const BROTLI_DEFAULT_WINDOW: number;
+        const BROTLI_ENCODE: number;
+        const BROTLI_LARGE_MAX_WINDOW_BITS: number;
+        const BROTLI_MAX_INPUT_BLOCK_BITS: number;
+        const BROTLI_MAX_QUALITY: number;
+        const BROTLI_MAX_WINDOW_BITS: number;
+        const BROTLI_MIN_INPUT_BLOCK_BITS: number;
+        const BROTLI_MIN_QUALITY: number;
+        const BROTLI_MIN_WINDOW_BITS: number;
+
+        const BROTLI_MODE_FONT: number;
+        const BROTLI_MODE_GENERIC: number;
+        const BROTLI_MODE_TEXT: number;
+
+        const BROTLI_OPERATION_EMIT_METADATA: number;
+        const BROTLI_OPERATION_FINISH: number;
+        const BROTLI_OPERATION_FLUSH: number;
+        const BROTLI_OPERATION_PROCESS: number;
+
+        const BROTLI_PARAM_DISABLE_LITERAL_CONTEXT_MODELING: number;
+        const BROTLI_PARAM_LARGE_WINDOW: number;
+        const BROTLI_PARAM_LGBLOCK: number;
+        const BROTLI_PARAM_LGWIN: number;
+        const BROTLI_PARAM_MODE: number;
+        const BROTLI_PARAM_NDIRECT: number;
+        const BROTLI_PARAM_NPOSTFIX: number;
+        const BROTLI_PARAM_QUALITY: number;
+        const BROTLI_PARAM_SIZE_HINT: number;
+
+        const DEFLATE: number;
+        const DEFLATERAW: number;
+        const GUNZIP: number;
+        const GZIP: number;
+        const INFLATE: number;
+        const INFLATERAW: number;
+        const UNZIP: number;
+
+        const Z_BEST_COMPRESSION: number;
+        const Z_BEST_SPEED: number;
+        const Z_BLOCK: number;
+        const Z_BUF_ERROR: number;
+        const Z_DATA_ERROR: number;
+
+        const Z_DEFAULT_CHUNK: number;
+        const Z_DEFAULT_COMPRESSION: number;
+        const Z_DEFAULT_LEVEL: number;
+        const Z_DEFAULT_MEMLEVEL: number;
+        const Z_DEFAULT_STRATEGY: number;
+        const Z_DEFAULT_WINDOWBITS: number;
+
+        const Z_ERRNO: number;
+        const Z_FILTERED: number;
+        const Z_FINISH: number;
+        const Z_FIXED: number;
+        const Z_FULL_FLUSH: number;
+        const Z_HUFFMAN_ONLY: number;
+        const Z_MAX_CHUNK: number;
+        const Z_MAX_LEVEL: number;
+        const Z_MAX_MEMLEVEL: number;
+        const Z_MAX_WINDOWBITS: number;
+        const Z_MEM_ERROR: number;
+        const Z_MIN_CHUNK: number;
+        const Z_MIN_LEVEL: number;
+        const Z_MIN_MEMLEVEL: number;
+        const Z_MIN_WINDOWBITS: number;
+        const Z_NEED_DICT: number;
+        const Z_NO_COMPRESSION: number;
+        const Z_NO_FLUSH: number;
+        const Z_OK: number;
+        const Z_PARTIAL_FLUSH: number;
+        const Z_RLE: number;
+        const Z_STREAM_END: number;
+        const Z_STREAM_ERROR: number;
+        const Z_SYNC_FLUSH: number;
+        const Z_VERSION_ERROR: number;
+        const ZLIB_VERNUM: number;
+    }
+
+    /**
+     * @deprecated
+     */
+    const Z_NO_FLUSH: number;
+    /**
+     * @deprecated
+     */
+    const Z_PARTIAL_FLUSH: number;
+    /**
+     * @deprecated
+     */
+    const Z_SYNC_FLUSH: number;
+    /**
+     * @deprecated
+     */
+    const Z_FULL_FLUSH: number;
+    /**
+     * @deprecated
+     */
+    const Z_FINISH: number;
+    /**
+     * @deprecated
+     */
+    const Z_BLOCK: number;
+    /**
+     * @deprecated
+     */
+    const Z_TREES: number;
+    /**
+     * @deprecated
+     */
+    const Z_OK: number;
+    /**
+     * @deprecated
+     */
+    const Z_STREAM_END: number;
+    /**
+     * @deprecated
+     */
+    const Z_NEED_DICT: number;
+    /**
+     * @deprecated
+     */
+    const Z_ERRNO: number;
+    /**
+     * @deprecated
+     */
+    const Z_STREAM_ERROR: number;
+    /**
+     * @deprecated
+     */
+    const Z_DATA_ERROR: number;
+    /**
+     * @deprecated
+     */
+    const Z_MEM_ERROR: number;
+    /**
+     * @deprecated
+     */
+    const Z_BUF_ERROR: number;
+    /**
+     * @deprecated
+     */
+    const Z_VERSION_ERROR: number;
+    /**
+     * @deprecated
+     */
+    const Z_NO_COMPRESSION: number;
+    /**
+     * @deprecated
+     */
+    const Z_BEST_SPEED: number;
+    /**
+     * @deprecated
+     */
+    const Z_BEST_COMPRESSION: number;
+    /**
+     * @deprecated
+     */
+    const Z_DEFAULT_COMPRESSION: number;
+    /**
+     * @deprecated
+     */
+    const Z_FILTERED: number;
+    /**
+     * @deprecated
+     */
+    const Z_HUFFMAN_ONLY: number;
+    /**
+     * @deprecated
+     */
+    const Z_RLE: number;
+    /**
+     * @deprecated
+     */
+    const Z_FIXED: number;
+    /**
+     * @deprecated
+     */
+    const Z_DEFAULT_STRATEGY: number;
+    /**
+     * @deprecated
+     */
+    const Z_BINARY: number;
+    /**
+     * @deprecated
+     */
+    const Z_TEXT: number;
+    /**
+     * @deprecated
+     */
+    const Z_ASCII: number;
+    /**
+     * @deprecated
+     */
+    const Z_UNKNOWN: number;
+    /**
+     * @deprecated
+     */
+    const Z_DEFLATED: number;
+}
+`;
