@@ -52,7 +52,9 @@ function findRealTexturePath(model: BlockModel.Resolved, variantKey: string) {
     let texturePath = model.textures[variantKey] as string;
     while (texturePath.startsWith("#")) {
         const next = model.textures[texturePath.substring(1, texturePath.length)];
-        if (!next) { return undefined; }
+        if (!next) {
+            return undefined;
+        }
         texturePath = next;
     }
     return texturePath;
@@ -143,7 +145,7 @@ export class BlockModelFactory {
     /**
      * Get threejs `Object3D` for that block model.
      */
-    getObject(model: BlockModel.Resolved) {
+    getObject(model: BlockModel.Resolved, options?: { uvlock?: boolean; y?: number; x?: number }) {
         const option = this.option;
         const textureRegistry = this.textureRegistry;
 
@@ -155,41 +157,44 @@ export class BlockModelFactory {
         group.name = "wrapper";
 
         const materials: Material[] = [BlockModelFactory.TRANSPARENT_MATERIAL];
-        const materialIndex: { [variant: string]: number } = {};
-        const materialPathIndex: { [texPath: string]: number } = {};
+        const materialIndexes: { [variant: string]: number } = {};
 
+        const materialPathIndexes: { [texPath: string]: number } = {};
         for (const variant of Object.keys(model.textures)) {
             const texPath = findRealTexturePath(model, variant);
+            let materialIndex = 0;
+
             if (!texPath) {
                 console.error(`Cannot find texture @${texPath}`);
-                materialIndex[variant] = 0; // transparent material
-            } else if (texPath in materialPathIndex) {
-                materialIndex[variant] = materialPathIndex[texPath];
-            } else if (texPath in this.cachedMaterial) { // cached
-                materialIndex[variant] = materials.length;
-                materialPathIndex[texPath] = materialIndex.length;
-                materials.push(this.cachedMaterial[texPath]);
-            } else if (texPath in textureRegistry) { // in reg
-                // build new material
-                const tex = textureRegistry[texPath];
-                const texture = this.loader.load(tex.url);
-
-                // sharp pixels and smooth edges
-                texture.magFilter = NearestFilter;
-                texture.minFilter = LinearFilter;
-
-                // map texture to material, keep transparency and fix transparent z-fighting
-                const mat = new MeshLambertMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
-
-                materialIndex[variant] = materials.length;
-                materialPathIndex[texPath] = materialIndex.length;
-                this.cachedMaterial[texPath] = mat;
-
-                materials.push(mat);
             } else {
-                console.error(`Cannot find texture @${texPath}`);
-                materialIndex[variant] = 0; // transparent material
+                let materialPathIndex = materialPathIndexes[texPath];
+                if (materialPathIndex) {
+                    // noop
+                } else if (texPath in this.cachedMaterial) {
+                    materialPathIndex = materials.length;
+                    materials.push(this.cachedMaterial[texPath]);
+                } else if (texPath in textureRegistry) {
+                    // build new material
+                    const tex = textureRegistry[texPath];
+                    const texture = this.loader.load(tex.url);
+
+                    // sharp pixels and smooth edges
+                    texture.magFilter = NearestFilter;
+                    texture.minFilter = LinearFilter;
+
+                    // map texture to material, keep transparency and fix transparent z-fighting
+                    const mat = new MeshLambertMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
+
+                    materialPathIndex = materials.length;
+                    this.cachedMaterial[texPath] = mat;
+
+                    materials.push(mat);
+                }
+                materialPathIndexes[texPath] = materialPathIndex;
+                materialIndex = materialPathIndex;
             }
+
+            materialIndexes[variant] = materialIndex;
         }
 
         for (const element of model.elements) {
@@ -221,7 +226,7 @@ export class BlockModelFactory {
                 const face = element.faces[faces[i]];
                 if (face) {
                     // get material index
-                    const index = materialIndex[face.texture.substring(1, face.texture.length)];  // references.indexOf(ref[0] == '#' ? ref.substring(1) : ref)
+                    const index = materialIndexes[face.texture.substring(1, face.texture.length)];  // references.indexOf(ref[0] == '#' ? ref.substring(1) : ref)
 
                     blockGeometry.faces[i * 2].materialIndex = index;
                     blockGeometry.faces[i * 2 + 1].materialIndex = index;
