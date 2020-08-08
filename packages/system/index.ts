@@ -76,6 +76,10 @@ class NodeZipFileSystem extends FileSystem {
         this.fileRoot = root;
     }
 
+    close(): void {
+        this.zip.close();
+    }
+
     get root() { return this.fileRoot + (this.zipRoot.length === 0 ? "" : `/${this.zipRoot}`); }
 
     protected normalizePath(name: string): string {

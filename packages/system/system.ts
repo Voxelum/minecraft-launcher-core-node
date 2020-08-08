@@ -24,6 +24,8 @@ export abstract class FileSystem {
 
     abstract cd(name: string): void;
 
+    close(): void { }
+
     // extension methods
 
     async missingFile(name: string) {
