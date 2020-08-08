@@ -10,11 +10,13 @@ i18next.init({
     $('.bar').localize();
 });
 
-$('#languages').dropdown({
-    onChange: function (src, _, elem) {
-        i18next.changeLanguage(elem.attr('value'), (err, r) => {
-            $('.section').localize();
-            $('.bar').localize();
-        })
-    }
-});
+$(document).ready(function () {
+    $('#languages').dropdown({
+        onChange: function (src, _, elem) {
+            i18next.changeLanguage(elem.attr('value'), (err, r) => {
+                $('.section').localize();
+                $('.bar').localize();
+            })
+        }
+    });
+})
