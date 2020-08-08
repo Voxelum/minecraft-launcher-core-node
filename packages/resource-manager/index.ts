@@ -1,6 +1,6 @@
 import { PackMeta, ResourcePack, Resource, ResourceLocation } from "@xmcl/resourcepack";
 
-interface ResourceSourceWrapper {
+export interface ResourcePackWrapper {
     source: ResourcePack;
     info: PackMeta.Pack;
     domains: string[];
@@ -10,9 +10,9 @@ interface ResourceSourceWrapper {
  * The resource manager just like Minecraft. Design to be able to use in both nodejs and browser environment.
  */
 export class ResourceManager {
-    get allResourcePacks() { return this.list.map((l) => l.info); }
+    constructor(public list: Array<ResourcePackWrapper> = []) { }
 
-    constructor(private list: Array<ResourceSourceWrapper> = []) { }
+    get allResourcePacks() { return this.list.map((l) => l.info); }
 
     /**
      * Add a new resource source to the end of the resource list.
@@ -28,13 +28,19 @@ export class ResourceManager {
         const wrapper = { info, source: resourcePack, domains };
 
         this.list.push(wrapper);
+
+        return wrapper;
+    }
+
+    remove(index: number) {
+        return this.list.splice(index, 1)[0];
     }
 
     /**
      * Clear all resource packs in this manager
      */
     clear() {
-        this.list.splice(0, this.list.length);
+        return this.list.splice(0, this.list.length);
     }
 
     /**
