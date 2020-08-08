@@ -401,6 +401,7 @@ export function stringify(setting: GameSetting | Frame | any, original?: string,
         .filter((key) => key !== undefined && key !== "undefined")
         .map((key) => {
             const val = model[key];
+            if (typeof val === undefined) { return ""; }
             return typeof val !== "string" ? `${key}:${JSON.stringify(val)}` : `${key}:${val}`;
         }).join(eol);
 }
