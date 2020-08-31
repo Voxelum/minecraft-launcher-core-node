@@ -299,16 +299,29 @@ export class HttpDownloader implements Downloader {
 
         msg.resume();
         let { headers, url: resultUrl, statusCode } = msg;
+        statusCode = statusCode ?? 0;
+        if (statusCode >= 300 && statusCode < 400) {
+            throw new Error(`URL Moved: Status code ${statusCode} on ${resultUrl}`);
+        }
+        if (statusCode >= 400 && statusCode < 500) {
+            throw new Error(`HTTP Request Error: Status code ${statusCode} on ${resultUrl}`);
+        }
+        if (statusCode >= 500 && statusCode < 600) {
+            throw new Error(`HTTP Server Error: Status code ${statusCode} on ${resultUrl}`);
+        }
         if (statusCode !== 200 && statusCode !== 201) {
             throw new Error(`HTTP Error: Status code ${statusCode} on ${resultUrl}`);
         }
-        return {
-            url: resultUrl ?? format(parsedURL),
-            acceptRanges: headers["accept-ranges"] === "bytes",
-            contentLength: headers["content-length"] ? Number.parseInt(headers["content-length"]) : -1,
-            lastModified: headers["last-modified"],
-            eTag: headers.etag as string | undefined,
-        };
+        if (statusCode >= 200 && statusCode < 300) {
+            return {
+                url: resultUrl ?? format(parsedURL),
+                acceptRanges: headers["accept-ranges"] === "bytes",
+                contentLength: headers["content-length"] ? Number.parseInt(headers["content-length"]) : -1,
+                lastModified: headers["last-modified"],
+                eTag: headers.etag as string | undefined,
+            };
+        }
+        throw new Error(`Unexpected Error: Status code ${statusCode} on ${resultUrl}`);
     }
 
     protected async downloads(fd: number, originalUrl: UrlWithStringQuery, option: DownloadOption) {
