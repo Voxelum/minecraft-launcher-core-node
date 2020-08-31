@@ -3652,7 +3652,11 @@ export declare class BlockModelFactory {
     /**
      * Get threejs \`Object3D\` for that block model.
      */
-    getObject(model: BlockModel.Resolved): BlockModelObject;
+    getObject(model: BlockModel.Resolved, options?: {
+        uvlock?: boolean;
+        y?: number;
+        x?: number;
+    }): BlockModelObject;
 }
 export {};
 `;
@@ -3863,7 +3867,7 @@ export declare const deflate: (buf: Uint8Array) => Promise<Uint8Array>;
 export { gzipSync, gunzipSync, inflateSync, deflateSync };
 `;
 module.exports['@xmcl/resource-manager/index.d.ts'] = `import { PackMeta, ResourcePack, Resource, ResourceLocation } from "@xmcl/resourcepack";
-interface ResourceSourceWrapper {
+export interface ResourcePackWrapper {
     source: ResourcePack;
     info: PackMeta.Pack;
     domains: string[];
@@ -3872,17 +3876,22 @@ interface ResourceSourceWrapper {
  * The resource manager just like Minecraft. Design to be able to use in both nodejs and browser environment.
  */
 export declare class ResourceManager {
-    private list;
+    list: Array<ResourcePackWrapper>;
+    constructor(list?: Array<ResourcePackWrapper>);
     get allResourcePacks(): PackMeta.Pack[];
-    constructor(list?: Array<ResourceSourceWrapper>);
     /**
      * Add a new resource source to the end of the resource list.
      */
-    addResourcePack(resourcePack: ResourcePack): Promise<void>;
+    addResourcePack(resourcePack: ResourcePack): Promise<{
+        info: PackMeta.Pack;
+        source: ResourcePack;
+        domains: string[];
+    }>;
+    remove(index: number): ResourcePackWrapper;
     /**
      * Clear all resource packs in this manager
      */
-    clear(): void;
+    clear(): ResourcePackWrapper[];
     /**
      * Swap the resource source priority.
      */
@@ -4384,6 +4393,7 @@ module.exports['@xmcl/system/system.d.ts'] = `export declare abstract class File
     getUrl(name: string): string;
     abstract listFiles(name: string): Promise<string[]>;
     abstract cd(name: string): void;
+    close(): void;
     missingFile(name: string): Promise<boolean>;
     walkFiles(target: string, walker: (path: string) => void | Promise<void>): Promise<void>;
 }
