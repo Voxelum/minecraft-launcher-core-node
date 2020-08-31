@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.6.0
+### @xmcl/gamesetting@2.0.2
+#### Bug Fixes
+
+- fix: should not serailize undefined to options.txt ([ce6dd4b847a51b6c60c2ccf93bcc9874fe7d2dce](https://github.com/voxelum/minecraft-launcher-core-node/commit/ce6dd4b847a51b6c60c2ccf93bcc9874fe7d2dce))
+### @xmcl/installer@2.9.8
+#### Bug Fixes
+
+- fix: correctly handle the http code ([4a70756c6cd4e4dee848635bcc00a248a0163f61](https://github.com/voxelum/minecraft-launcher-core-node/commit/4a70756c6cd4e4dee848635bcc00a248a0163f61))
+### @xmcl/system@2.2.0
+#### Features
+
+- feat: add close API to close fs ([40b1f08a63870f9d39678c8ff1e80d8951e75109](https://github.com/voxelum/minecraft-launcher-core-node/commit/40b1f08a63870f9d39678c8ff1e80d8951e75109))
+### @xmcl/mod-parser@2.0.10
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.0.14
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@1.0.14
+#### Bug Fixes
+
+- fix: wrong material index computing ([c87ed412bf14e77db9c10cd55c8c83e4d7fa6255](https://github.com/voxelum/minecraft-launcher-core-node/commit/c87ed412bf14e77db9c10cd55c8c83e4d7fa6255))
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@2.1.0
+#### Features
+
+- feat: expose more api to make it more flexible ([d853ccbf4983ad5b8cb4f02fbdf99314fbdfedfa](https://github.com/voxelum/minecraft-launcher-core-node/commit/d853ccbf4983ad5b8cb4f02fbdf99314fbdfedfa))
+- Dependency @xmcl/system bump **patch**
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/world@1.1.3
+- Dependency @xmcl/system bump **patch**
+
+
 ## 3.5.6
 ### @xmcl/installer@2.9.7
 #### Bug Fixes
