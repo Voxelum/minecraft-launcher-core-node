@@ -132,7 +132,7 @@ export class ResourcePack {
      * @param location THe resource location
      */
     async get(location: ResourceLocation): Promise<Resource | undefined> {
-        if (this.has(location)) {
+        if (await this.has(location)) {
             return {
                 location,
                 url: this.getUrl(location),
