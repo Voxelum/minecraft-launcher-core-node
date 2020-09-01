@@ -6,10 +6,18 @@ export interface ResourcePackWrapper {
     domains: string[];
 }
 
+export interface ResourceLoader {
+    /**
+    * Get the resource in that location. This will walk through current resource source list to load the resource.
+    * @param location The resource location
+    */
+    get(location: ResourceLocation): Promise<Resource | undefined>;
+}
+
 /**
  * The resource manager just like Minecraft. Design to be able to use in both nodejs and browser environment.
  */
-export class ResourceManager {
+export class ResourceManager implements ResourceLoader {
     constructor(
         /**
          * The list order is just like the order in options.txt. The last element is the highest priority one.
