@@ -10,12 +10,17 @@ export interface ResourcePackWrapper {
  * The resource manager just like Minecraft. Design to be able to use in both nodejs and browser environment.
  */
 export class ResourceManager {
-    constructor(public list: Array<ResourcePackWrapper> = []) { }
+    constructor(
+        /**
+         * The list order is just like the order in options.txt. The last element is the highest priority one.
+         * The resource will load from the last one to the first one.
+         */
+        public list: Array<ResourcePackWrapper> = []) { }
 
     get allResourcePacks() { return this.list.map((l) => l.info); }
 
     /**
-     * Add a new resource source to the end of the resource list.
+     * Add a new resource source as the first priority of the resource list.
      */
     async addResourcePack(resourcePack: ResourcePack) {
         let info;
@@ -61,8 +66,9 @@ export class ResourceManager {
     * @param location The resource location
     */
     async get(location: ResourceLocation): Promise<Resource | undefined> {
-        for (const src of this.list) {
-            let resource = await src.source.get(location);
+        for (let i = this.list.length - 1; i >= 0; i--) {
+            const src = this.list[i];
+            const resource = await src.source.get(location);
             if (resource) { return resource; }
         }
         return undefined;
