@@ -712,5 +712,5 @@ export function ensureFile(target: string) {
 export async function checksum(path: string, algorithm: string = "sha1"): Promise<string> {
     let hash = createHash(algorithm).setEncoding("hex");
     await pipeline(createReadStream(path), hash);
-    return hash.read();
+    return hash.read() as string;
 }

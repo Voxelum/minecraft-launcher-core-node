@@ -743,8 +743,8 @@ const DEFAULT_MAVENS = ["https://repo1.maven.org/maven2/"];
  * @param library The resolved library
  * @param libraryOptions The library install options
  */
-export function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOption) {
-    const libraryHosts = libraryOptions.libraryHost?.(library);
+export function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOption): string[] {
+    const libraryHosts = libraryOptions.libraryHost?.(library) ?? [];
 
     return [
         // user defined alternative host to download
