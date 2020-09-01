@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.6.1
+### @xmcl/resourcepack@1.0.15
+#### Bug Fixes
+
+- fix: not await the ResourcePack#has to get ([220c666d86f4cfcb7cc9812cdc2f11f711c2174c](https://github.com/voxelum/minecraft-launcher-core-node/commit/220c666d86f4cfcb7cc9812cdc2f11f711c2174c))
+### @xmcl/model@1.0.15
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@2.1.1
+#### Bug Fixes
+
+- fix: make the model loader not directly depend on resource manager ([bc93ad71e9f28a6769dcd630939b2f978862ca12](https://github.com/voxelum/minecraft-launcher-core-node/commit/bc93ad71e9f28a6769dcd630939b2f978862ca12))
+- fix: align the load order to the order of resourcePacks in options.txt ([2065843ba1013519ea49ef7d183f7de994f7c231](https://github.com/voxelum/minecraft-launcher-core-node/commit/2065843ba1013519ea49ef7d183f7de994f7c231))
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 3.6.0
 ### @xmcl/gamesetting@2.0.2
 #### Bug Fixes
