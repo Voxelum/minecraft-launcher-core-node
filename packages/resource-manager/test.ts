@@ -59,18 +59,51 @@ describe("ResourceManager", () => {
         expect(man.allResourcePacks).toHaveLength(1);
         expect(man.allResourcePacks[0]).toEqual({});
     });
-    test("#get", async () => {
-        const man = new ResourceManager();
-        const dummy: any = {
-            info() { return {}; },
-            domains() { return []; },
-            get() { return { location: { domain: "a", path: "b" } }; },
-        };
-        await man.addResourcePack(dummy);
-        await expect(man.get(ResourceLocation.fromPath("abc")))
-            .resolves
-            .toEqual({ location: { domain: "a", path: "b" } });
+    describe("#get", () => {
+        test("should get the resource", async () => {
+            const man = new ResourceManager();
+            const dummy: any = {
+                info() { return {}; },
+                domains() { return []; },
+                get() { return { location: { domain: "a", path: "b" } }; },
+            };
+            await man.addResourcePack(dummy);
+            await expect(man.get(ResourceLocation.fromPath("abc")))
+                .resolves
+                .toEqual({ location: { domain: "a", path: "b" } });
+        });
+        test("should return empty if resource not found", async () => {
+            const man = new ResourceManager();
+            const dummy: any = {
+                info() { return {}; },
+                domains() { return []; },
+                get() { return undefined },
+            };
+            await man.addResourcePack(dummy);
+            await expect(man.get(ResourceLocation.fromPath("abc")))
+                .resolves
+                .toEqual(undefined);
+        });
+        test("should iterate resource sources from back to front", async () => {
+            const man = new ResourceManager();
+            const srcA: any = {
+                info() { return {}; },
+                domains() { return []; },
+                get(r: any) { return { location: { domain: "a", path: "a" } } },
+            };
+            const srcB: any = {
+                info() { return {}; },
+                domains() { return []; },
+                get(r: any) { return { location: { domain: "b", path: "b" } } },
+            };
+            await man.addResourcePack(srcA);
+            await man.addResourcePack(srcB);
+            await expect(man.get(ResourceLocation.fromPath("abc")))
+                .resolves
+                .toEqual({ location: { domain: "b", path: "b" } });
+        });
     });
+
     test("#clear", async () => {
         const man = new ResourceManager();
         const monitor = jest.fn();

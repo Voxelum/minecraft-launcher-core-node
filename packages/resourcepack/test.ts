@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ResourcePack, readPackMetaAndIcon, readPackMeta } from "./index";
+import { ResourcePack, readPackMetaAndIcon, readPackMeta, ResourceLocation } from "./index";
 
 describe("Resourcepack", () => {
     const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
@@ -98,6 +98,29 @@ describe("Resourcepack", () => {
             await expect(pack.icon())
                 .resolves
                 .toBeTruthy();
+        });
+    });
+
+    describe("#get", () => {
+        test("should return undefined if it does not have the resource", async () => {
+            const dummyFs: any = {
+                async existsFile() { return false }
+            };
+            const pack = await ResourcePack.open(dummyFs);
+            await expect(pack.get(ResourceLocation.fromPath("abc")))
+                .resolves
+                .toBeUndefined();
+        });
+        test("should return the resource if it has the resource", async () => {
+            const dummyFs: any = {
+                async existsFile() { return true },
+                getUrl() { return "" },
+            };
+            const pack = await ResourcePack.open(dummyFs);
+            await expect(pack.get(ResourceLocation.fromPath("abc")))
+                .resolves
+                .not
+                .toBeUndefined();
         });
     });
 });
