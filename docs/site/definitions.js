@@ -3872,15 +3872,31 @@ export interface ResourcePackWrapper {
     info: PackMeta.Pack;
     domains: string[];
 }
+export interface ResourceLoader {
+    /**
+    * Get the resource in that location. This will walk through current resource source list to load the resource.
+    * @param location The resource location
+    */
+    get(location: ResourceLocation): Promise<Resource | undefined>;
+}
 /**
  * The resource manager just like Minecraft. Design to be able to use in both nodejs and browser environment.
  */
-export declare class ResourceManager {
+export declare class ResourceManager implements ResourceLoader {
+    /**
+     * The list order is just like the order in options.txt. The last element is the highest priority one.
+     * The resource will load from the last one to the first one.
+     */
     list: Array<ResourcePackWrapper>;
-    constructor(list?: Array<ResourcePackWrapper>);
+    constructor(
+    /**
+     * The list order is just like the order in options.txt. The last element is the highest priority one.
+     * The resource will load from the last one to the first one.
+     */
+    list?: Array<ResourcePackWrapper>);
     get allResourcePacks(): PackMeta.Pack[];
     /**
-     * Add a new resource source to the end of the resource list.
+     * Add a new resource source as the first priority of the resource list.
      */
     addResourcePack(resourcePack: ResourcePack): Promise<{
         info: PackMeta.Pack;
@@ -3905,12 +3921,12 @@ export declare class ResourceManager {
 export * from "./model-loader";
 `;
 module.exports['@xmcl/resource-manager/model-loader.d.ts'] = `import { BlockModel, Resource } from "@xmcl/resourcepack";
-import { ResourceManager } from "./index";
+import { ResourceLoader } from "./index";
 /**
  * The model loader load the resource
  */
 export declare class ModelLoader {
-    readonly manager: ResourceManager;
+    readonly loader: ResourceLoader;
     static findRealTexturePath(model: BlockModel.Resolved, variantKey: string): string | undefined;
     /**
      * All required texture raw resources
@@ -3921,9 +3937,9 @@ export declare class ModelLoader {
      */
     readonly models: Record<string, BlockModel.Resolved>;
     /**
-     * @param manager The resource manager
+     * @param loader The resource loader
      */
-    constructor(manager: ResourceManager);
+    constructor(loader: ResourceLoader);
     /**
      * Load a model by search its parent. It will throw an error if the model is not found.
      */
