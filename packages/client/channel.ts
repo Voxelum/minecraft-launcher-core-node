@@ -118,6 +118,7 @@ export class Channel extends EventEmitter {
             this.connection.once("error", (e) => { reject(e); });
             this.connection.once("timeout", () => { reject(new Error("Connection timeout.")); });
         });
+        this.connection.on("error", (e) => { this.emit("error", e); });
 
         this.emit("listen");
     }
