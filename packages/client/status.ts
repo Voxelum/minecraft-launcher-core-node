@@ -177,21 +177,31 @@ async function query(channel: Channel, host: string, port: number, timeout: numb
         channel.oncePacket(ServerStatus, (e) => {
             resolve(e);
         });
-        channel.send(new Handshake(), {
-            protocolVersion: protocol,
-            serverAddress: host,
-            serverPort: port,
-            nextState: 1,
-        });
-        channel.state = "status";
-        channel.send(new ServerQuery());
+        channel.once("error", reject)
+        try {
+            channel.send(new Handshake(), {
+                protocolVersion: protocol,
+                serverAddress: host,
+                serverPort: port,
+                nextState: 1,
+            });
+            channel.state = "status";
+            channel.send(new ServerQuery());
+        } catch (e) {
+            reject(e);
+        }
     });
 
     const { ping } = await new Promise<Pong>((resolve, reject) => {
         channel.once<Pong>("packet:Pong", (e) => {
             resolve(e);
         });
-        channel.send(new Ping());
+        channel.once("error", reject);
+        try {
+            channel.send(new Ping());
+        } catch (e) {
+            reject(e);
+        }
     });
     status.ping = Date.now() - ping.toNumber();
 
