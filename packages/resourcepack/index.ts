@@ -25,6 +25,17 @@ export class ResourceLocation {
         return new ResourceLocation(path.substring(0, idx), `textures/${path.substring(idx + 1, path.length)}.png`);
     }
 
+    static ofBlockModelPath(path: string) {
+        const splited = path.split(":");
+        const domain = (splited.length > 1 && splited[0]) ? splited[0] : "minecraft";
+        let blockPath = splited.length > 1 ? splited[1] : splited[0];
+        if (!blockPath.startsWith("block/")) {
+            // 1.12
+            blockPath = `block/${blockPath}`
+        }
+        return new ResourceLocation(domain, `models/${blockPath}.json`);
+    }
+
     /**
      * build from model path
      */

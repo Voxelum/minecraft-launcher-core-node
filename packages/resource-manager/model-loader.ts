@@ -33,8 +33,8 @@ export class ModelLoader {
      * Load a model by search its parent. It will throw an error if the model is not found.
      */
     async loadModel(modelPath: string): Promise<BlockModel.Resolved> {
-        const res = await this.loader.get(ResourceLocation.ofModelPath(modelPath));
-        if (!res) { throw new Error(`Model ${modelPath} (${ResourceLocation.ofModelPath(modelPath)}) not found`); }
+        const res = await this.loader.get(ResourceLocation.ofBlockModelPath(modelPath));
+        if (!res) { throw new Error(`Model ${modelPath} (${ResourceLocation.ofBlockModelPath(modelPath)}) not found`); }
         const raw = JSON.parse(await res.read("utf-8")) as BlockModel;
 
         if (!raw.textures) { raw.textures = {}; }
