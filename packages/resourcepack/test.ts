@@ -124,3 +124,24 @@ describe("Resourcepack", () => {
         });
     });
 });
+
+describe("ResourceLocation", () => {
+    describe("#ofBlockModelPath", () => {
+        test("should be able to parse normal model path", () => {
+            expect(ResourceLocation.ofBlockModelPath("block/abc"))
+                .toEqual(ResourceLocation.fromPath("minecraft:models/block/abc.json"));
+        });
+        test("should be able to parse domain model path", () => {
+            expect(ResourceLocation.ofBlockModelPath("abc:block/abc"))
+                .toEqual(ResourceLocation.fromPath("abc:models/block/abc.json"));
+        });
+        test("should be able to parse absent block model path", () => {
+            expect(ResourceLocation.ofBlockModelPath("abc:abc"))
+                .toEqual(ResourceLocation.fromPath("abc:models/block/abc.json"));
+        });
+        test("should be able to parse partial domain block model path", () => {
+            expect(ResourceLocation.ofBlockModelPath(":abc"))
+                .toEqual(ResourceLocation.fromPath("minecraft:models/block/abc.json"));
+        });
+    });
+});
