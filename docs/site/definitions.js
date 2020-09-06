@@ -4224,6 +4224,7 @@ export declare class ResourceLocation {
      * build from texture path
      */
     static ofTexturePath(path: string): ResourceLocation;
+    static ofBlockModelPath(path: string): ResourceLocation;
     /**
      * build from model path
      */

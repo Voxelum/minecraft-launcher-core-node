@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.6.2
+### @xmcl/client@2.0.6
+#### Bug Fixes
+
+- fix: capture the socket error after connect ([a5bdd3ce1f4610ac83b1b7a91d880f9e3337ab8e](https://github.com/voxelum/minecraft-launcher-core-node/commit/a5bdd3ce1f4610ac83b1b7a91d880f9e3337ab8e))
+### @xmcl/resourcepack@1.0.16
+#### Bug Fixes
+
+- fix: compatible with minecraft 1.12 model location ([d47b4c6a7d9b870b54dcc104064aee8b6563a218](https://github.com/voxelum/minecraft-launcher-core-node/commit/d47b4c6a7d9b870b54dcc104064aee8b6563a218))
+### @xmcl/model@1.0.16
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/resource-manager@2.1.2
+#### Bug Fixes
+
+- fix: compatible with minecraft 1.12 model location ([d47b4c6a7d9b870b54dcc104064aee8b6563a218](https://github.com/voxelum/minecraft-launcher-core-node/commit/d47b4c6a7d9b870b54dcc104064aee8b6563a218))
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 3.6.1
 ### @xmcl/resourcepack@1.0.15
 #### Bug Fixes
