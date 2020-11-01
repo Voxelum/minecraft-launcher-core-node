@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.6.3
+### @xmcl/mod-parser@2.0.11
+#### Bug Fixes
+
+- fix: identify the nei and ccc mod (#187) ([cdcb8b8036bcad246edc1e91896fa1fd960d62aa](https://github.com/voxelum/minecraft-launcher-core-node/commit/cdcb8b8036bcad246edc1e91896fa1fd960d62aa))
+
+
 ## 3.6.2
 ### @xmcl/client@2.0.6
 #### Bug Fixes
