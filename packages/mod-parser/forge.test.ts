@@ -20,7 +20,11 @@ describe("Forge", () => {
                 loaderVersion: "[14,)",
                 displayName: "Just Enough Items",
                 description: "JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n",
-                url: "https://minecraft.curseforge.com/projects/jei"
+                url: "https://minecraft.curseforge.com/projects/jei",
+                usedForgePackage: true,
+                usedLegacyFMLPackage: true,
+                usedMinecraftClientPackage: true,
+                usedMinecraftPackage: true,
             }
         ])
     });
@@ -56,14 +60,28 @@ describe("Forge", () => {
                 authors: ["Guichaguri"],
                 version: "1.4.8",
                 description: "Performance Improvements",
-                url: "http://guichaguri.github.io/BetterFps/"
+                url: "http://guichaguri.github.io/BetterFps/",
+                usedForgePackage: false,
+                usedLegacyFMLPackage: false,
+                usedMinecraftClientPackage: false,
+                usedMinecraftPackage: false,
             }
         ]);
     });
 
     test("should read dummy mod in jar", async () => {
         const metadata = await Forge.readModMetaData(`${root}/mods/dummy-mod.jar`);
-        expect(metadata).toEqual([{ modid: "mousedelayfix", name: "MouseDelayFix", version: "1.0" }])
+        expect(metadata).toEqual([
+            {
+                modid: "mousedelayfix",
+                name: "MouseDelayFix",
+                version: "1.0",
+                usedForgePackage: true,
+                usedLegacyFMLPackage: true,
+                usedMinecraftClientPackage: true,
+                usedMinecraftPackage: true,
+            }
+        ])
     });
 
 
