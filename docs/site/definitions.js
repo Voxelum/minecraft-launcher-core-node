@@ -3529,16 +3529,30 @@ export declare namespace Config {
      */
     function parse(body: string): Config;
 }
-export interface ModIndentity {
+export declare type ModMetaData = ModMetadata;
+export interface ModBaseInfo {
+    /**
+     * Does class files contain cpw package
+     */
+    usedLegacyFMLPackage: boolean;
+    /**
+     * Does class files contain forge package
+     */
+    usedForgePackage: boolean;
+    /**
+     * Does class files contain minecraft package
+     */
+    usedMinecraftPackage: boolean;
+    /**
+     * Does class files contain minecraft.client package
+     */
+    usedMinecraftClientPackage: boolean;
+}
+export interface ModMetadata extends ModBaseInfo {
     readonly modid: string;
     readonly version: string;
-}
-export declare type ModMetaData = ModMetadata;
-export interface ModMetadata extends ModIndentity {
-    readonly modid: string;
     readonly name: string;
     readonly description?: string;
-    readonly version: string;
     readonly mcversion?: string;
     readonly acceptedMinecraftVersions?: string;
     readonly updateJSON?: string;
@@ -3574,9 +3588,18 @@ export interface ModMetadata extends ModIndentity {
  * This will scan the mcmod.info file, all class file for \`@Mod\` & coremod \`DummyModContainer\` class.
  * This will also scan the manifest file on \`META-INF/MANIFEST.MF\` for tweak mod.
  *
+ * If the input is totally not a mod. It will throw {@link NonForgeModFileError}.
+ *
+ * @throws {@link NonForgeModFileError}
  * @param mod The mod path or data
+ * @returns The mod metadata
  */
 export declare function readModMetaData(mod: Uint8Array | string | FileSystem): Promise<ModMetadata[]>;
+export declare class ForgeModParseFailedError extends Error {
+    readonly mod: Uint8Array | string | FileSystem;
+    readonly baseInfo: ModBaseInfo;
+    constructor(mod: Uint8Array | string | FileSystem, baseInfo: ModBaseInfo);
+}
 `;
 module.exports['@xmcl/mod-parser/forge.test.d.ts'] = `export {};
 `;
