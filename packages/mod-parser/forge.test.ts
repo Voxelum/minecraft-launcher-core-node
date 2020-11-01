@@ -37,6 +37,16 @@ describe("Forge", () => {
         )).toBeTruthy();
     });
 
+    test("should read ccc mod plugin in jar", async () => {
+        const metadata = await Forge.readModMetaData(`${root}/mods/sample-ccc-mod.jar`);
+        expect(metadata.length).toEqual(1);
+    });
+
+    test("should read nei mod plugin in jar", async () => {
+        const metadata = await Forge.readModMetaData(`${root}/mods/sample-nei-mod.jar`);
+        expect(metadata.length).toEqual(1);
+    });
+
     test("should read tweak class in jar", async () => {
         const metadata = await Forge.readModMetaData(`${root}/mods/tweak-class.jar`);
         expect(metadata).toEqual([
