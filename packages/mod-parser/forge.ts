@@ -49,14 +49,35 @@ class ModClassVisitor extends ClassVisitor {
     public isPluginClass: boolean = false;
 
     public commonFields: any = {};
-    public constructor(readonly map: { [key: string]: any }, public guess: any, readonly corePlugin?: string) {
+
+    public constructor(readonly map: { [key: string]: any }, public guess: any, private baseInfo: ModBaseInfo, readonly corePlugin?: string) {
         super(Opcodes.ASM5);
     }
+
+    private validateType(desc: string) {
+        if (desc.indexOf("net/minecraftforge") !== undefined) {
+            this.baseInfo.usedForgePackage = true;
+        }
+        if (desc.indexOf("net/minecraft") !== undefined) {
+            this.baseInfo.usedMinecraftPackage = true;
+        }
+        if (desc.indexOf("cpw/mods/fml") !== undefined) {
+            this.baseInfo.usedLegacyFMLPackage = true;
+        }
+        if (desc.indexOf("net/minecraftforge/client") !== undefined) {
+            this.baseInfo.usedMinecraftClientPackage = true;
+        }
+    }
+
     visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
         this.className = name;
         this.isPluginClass = name === this.corePlugin;
         if (superName === "net/minecraftforge/fml/common/DummyModContainer") {
             this.isDummyModContainer = true;
+        }
+        this.validateType(superName);
+        for (const intef of interfaces) {
+            this.validateType(intef);
         }
     }
 
@@ -64,6 +85,7 @@ class ModClassVisitor extends ClassVisitor {
         if (this.isDummyModContainer && name === "<init>") {
             return new DummyModConstructorVisitor(this, Opcodes.ASM5);
         }
+        this.validateType(desc);
         return null;
     }
 
@@ -167,12 +189,12 @@ async function tomlMetadata(fs: FileSystem, modidTree: ModidTree, manifest: any)
     }
 }
 
-async function asmMetaData(fs: FileSystem, modidTree: ModidTree, manifest?: Record<string, string>) {
+async function asmMetaData(fs: FileSystem, modidTree: ModidTree, baseInfo: ModBaseInfo, manifest?: Record<string, string>) {
     let corePluginClass: string | undefined;
     if (manifest) {
         if (typeof manifest.FMLCorePlugin === "string") {
             const clazz = manifest.FMLCorePlugin.replace(/\./g, "/");
-            if (await fs.existsFile(manifest.FMLCorePlugin.replace(/\./g, "/"))) {
+            if (await fs.existsFile(clazz) || await fs.existsFile(`/${clazz}`)) {
                 corePluginClass = clazz;
             }
         }
@@ -182,7 +204,7 @@ async function asmMetaData(fs: FileSystem, modidTree: ModidTree, manifest?: Reco
         if (!f.endsWith(".class")) { return; }
         const data = await fs.readFile(f);
         const metaContainer: any = {};
-        const visitor = new ModClassVisitor(metaContainer, guessing, corePluginClass);
+        const visitor = new ModClassVisitor(metaContainer, guessing, baseInfo, corePluginClass);
         new ClassReader(data).accept(visitor);
         if (Object.keys(metaContainer).length === 0) {
             if (visitor.className === "Config" && visitor.fields && visitor.fields.OF_NAME) {
@@ -243,6 +265,18 @@ async function jsonMetaData(fs: FileSystem, modidTree: ModidTree) {
     if (await fs.existsFile("mcmod.info")) {
         try {
             const json = JSON.parse((await fs.readFile("mcmod.info", "utf-8")).replace(/^\uFEFF/, ""));
+            readJsonMetadata(json);
+        } catch (e) { }
+    } else if (await fs.existsFile("cccmod.info")) {
+        try {
+            const text = (await fs.readFile("cccmod.info", "utf-8")).replace(/^\uFEFF/, "").replace(/\n\n/g, "\\n").replace(/\n/g, "");
+            const json = JSON.parse(text);
+            readJsonMetadata(json);
+        } catch (e) { }
+    } else if (await fs.existsFile("neimod.info")) {
+        try {
+            const text = (await fs.readFile("neimod.info", "utf-8")).replace(/^\uFEFF/, "").replace(/\n\n/g, "\\n").replace(/\n/g, "");
+            const json = JSON.parse(text);
             readJsonMetadata(json);
         } catch (e) { }
     }
@@ -439,17 +473,32 @@ export namespace Config {
     }
 }
 
-export interface ModIndentity {
-    readonly modid: string;
-    readonly version: string;
+export type ModMetaData = ModMetadata;
+
+export interface ModBaseInfo {
+    /**
+     * Does class files contain cpw package
+     */
+    usedLegacyFMLPackage: boolean;
+    /**
+     * Does class files contain forge package
+     */
+    usedForgePackage: boolean;
+    /**
+     * Does class files contain minecraft package
+     */
+    usedMinecraftPackage: boolean;
+    /**
+     * Does class files contain minecraft.client package
+     */
+    usedMinecraftClientPackage: boolean;
 }
 
-export type ModMetaData = ModMetadata;
-export interface ModMetadata extends ModIndentity {
+export interface ModMetadata extends ModBaseInfo {
     readonly modid: string;
+    readonly version: string;
     readonly name: string;
     readonly description?: string;
-    readonly version: string;
     readonly mcversion?: string;
     readonly acceptedMinecraftVersions?: string;
     readonly updateJSON?: string;
@@ -479,23 +528,44 @@ export interface ModMetadata extends ModIndentity {
     */
     readonly displayName?: string;
 }
+
 /**
  * Read metadata of the input mod.
  *
  * This will scan the mcmod.info file, all class file for `@Mod` & coremod `DummyModContainer` class.
  * This will also scan the manifest file on `META-INF/MANIFEST.MF` for tweak mod.
  *
+ * If the input is totally not a mod. It will throw {@link NonForgeModFileError}.
+ *
+ * @throws {@link NonForgeModFileError}
  * @param mod The mod path or data
+ * @returns The mod metadata
  */
 export async function readModMetaData(mod: Uint8Array | string | FileSystem) {
     const fs = await resolveFileSystem(mod);
     const modidTree: ModidTree = {};
+    const base: ModBaseInfo = {
+        usedLegacyFMLPackage: false,
+        usedForgePackage: false,
+        usedMinecraftClientPackage: false,
+        usedMinecraftPackage: false
+    }
     await jsonMetaData(fs, modidTree);
     const manifest = await tweakMetadata(fs, modidTree);
     await tomlMetadata(fs, modidTree, manifest);
-    await asmMetaData(fs, modidTree, manifest);
+    await asmMetaData(fs, modidTree, base, manifest);
     const modids = Object.keys(modidTree);
-    if (modids.length === 0) { throw { type: "NonmodTypeFile" }; }
-    return modids.map((k) => modidTree[k] as ModMetadata)
+    if (modids.length === 0) { throw new ForgeModParseFailedError(mod, base); }
+    const mods = modids.map((k) => modidTree[k] as ModMetadata)
         .filter((m) => m.modid !== undefined);
+    for (const mod of mods) {
+        Object.assign(mod, base);
+    }
+    return mods;
+}
+
+export class ForgeModParseFailedError extends Error {
+    constructor(readonly mod: Uint8Array | string | FileSystem, readonly baseInfo: ModBaseInfo) {
+        super("Cannot find the mod metadata in the mod!");
+    }
 }
