@@ -1,7 +1,7 @@
 {
   "name": "@xmcl/task",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "author": {
     "name": "cijhn@hotmail.com"
   },
@@ -10,11 +10,6 @@
     "access": "public"
   },
   "license": "MIT",
-  "scripts": {
-    "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile",
-    "test": ""
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
