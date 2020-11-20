@@ -1,14 +1,16 @@
-import { createExtractStream } from "@xmcl/unzip";
-import { validateSha1, readFile, writeFile, getSha1, mkdir, link } from "./util";
+import { open, openEntryReadStream, walkEntriesGenerator } from "@xmcl/unzip";
 import { ChildProcess, spawn, SpawnOptions } from "child_process";
-import { createReadStream, existsSync } from "fs";
-import { join, isAbsolute, resolve, delimiter, dirname } from "path";
+import { EventEmitter } from "events";
+import { createWriteStream, existsSync } from "fs";
+import { EOL } from "os";
+import { delimiter, dirname, isAbsolute, join, resolve } from "path";
+import { pipeline } from "stream";
+import { promisify } from "util";
 import { v4 } from "uuid";
 import { MinecraftFolder } from "./folder";
-import { Platform, getPlatform } from "./platform";
-import { Version, ResolvedNative, ResolvedVersion, ResolvedLibrary } from "./version";
-import { EventEmitter } from "events";
-import { EOL } from "os";
+import { getPlatform, Platform } from "./platform";
+import { getSha1, link, mkdir, readFile, validateSha1, writeFile } from "./util";
+import { ResolvedLibrary, ResolvedNative, ResolvedVersion, Version } from "./version";
 
 function format(template: string, args: any) {
     return template.replace(/\$\{(.*?)}/g, (key) => {
@@ -303,15 +305,16 @@ export namespace LaunchPrecheck {
             const notSha1AndNotGit = (p: string) => !(p.endsWith(".sha1") || p.endsWith(".git"));
 
             const from = resource.getLibraryByPath(n.download.path);
-            await createReadStream(from).pipe(createExtractStream(native, {
-                entryHandler: (dest, entry) => {
-                    const filtered = containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName) ? entry.fileName : undefined;
-                    if (filtered) {
-                        extractedNatives.push({ file: entry.fileName, name: n.name, sha1: "" });
-                    }
-                    return filtered;
+            const promises: Promise<void>[] = [];
+            const zip = await open(from, { lazyEntries: true, autoClose: false });
+            for await (const entry of walkEntriesGenerator(zip)) {
+                if (containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName)) {
+                    const dest = join(native, entry.fileName);
+                    extractedNatives.push({ file: entry.fileName, name: n.name, sha1: "" });
+                    promises.push(promisify(pipeline)(await openEntryReadStream(zip, entry), createWriteStream(dest)));
                 }
-            })).wait();
+            }
+            await Promise.all(promises);
         }
         if (shaEntries) {
             const validEntries: { [name: string]: boolean } = {};
