@@ -1,8 +1,9 @@
-import { open, CachedZipFile } from "@xmcl/unzip";
+import { open, readEntry, readAllEntries } from "@xmcl/unzip";
 import { access, stat, writeFile, readFile, readdir } from "fs";
 import { join, sep } from "path";
 import { FileSystem } from "./system";
 import { promisify } from "util";
+import { ZipFile, Entry } from "yauzl";
 
 const paccess = promisify(access);
 const pstat = promisify(stat);
@@ -16,12 +17,22 @@ export async function openFileSystem(basePath: string | Uint8Array): Promise<Fil
         if (stat.isDirectory()) {
             return new NodeFileSystem(basePath);
         } else {
-            const zip = await open(basePath, { lazyEntries: false });
-            return new NodeZipFileSystem(basePath, zip);
+            const zip = await open(basePath);
+            const entries = await readAllEntries(zip);
+            const entriesRecord: Record<string, Entry> = {};
+            for (const entry of entries) {
+                entriesRecord[entry.fileName] = entry;
+            }
+            return new NodeZipFileSystem(basePath, zip, entriesRecord);
         }
     } else {
-        const zip = await open(basePath as Buffer, { lazyEntries: false });
-        return new NodeZipFileSystem("", zip);
+        const zip = await open(basePath as Buffer);
+        const entries = await readAllEntries(zip);
+        const entriesRecord: Record<string, Entry> = {};
+        for (const entry of entries) {
+            entriesRecord[entry.fileName] = entry;
+        }
+        return new NodeZipFileSystem("", zip, entriesRecord);
     }
 }
 export function resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem> {
@@ -71,7 +82,7 @@ class NodeZipFileSystem extends FileSystem {
 
     private fileRoot: string;
 
-    constructor(root: string, private zip: CachedZipFile) {
+    constructor(root: string, private zip: ZipFile, private entries: Record<string, Entry>) {
         super();
         this.fileRoot = root;
     }
@@ -100,31 +111,31 @@ class NodeZipFileSystem extends FileSystem {
         if (name === "") {
             return Promise.resolve(true);
         }
-        if (this.zip.entries[name]) {
+        if (this.entries[name]) {
             return Promise.resolve(name.endsWith("/"));
         }
-        if (this.zip.entries[name + "/"]) {
+        if (this.entries[name + "/"]) {
             return Promise.resolve(true);
         }
         // the root dir won't have entries
         // therefore we need to do an extra track here
-        const entries = Object.keys(this.zip.entries);
+        const entries = Object.keys(this.entries);
         return Promise.resolve(entries.some((e) => e.startsWith(name + "/")));
     }
     existsFile(name: string): Promise<boolean> {
         name = this.normalizePath(name);
-        if (this.zip.entries[name]
-            || this.zip.entries[name + "/"]) { return Promise.resolve(true); }
+        if (this.entries[name]
+            || this.entries[name + "/"]) { return Promise.resolve(true); }
         // the root dir won't have entries
         // therefore we need to do an extra track here
-        const entries = Object.keys(this.zip.entries);
+        const entries = Object.keys(this.entries);
         return Promise.resolve(entries.some((e) => e.startsWith(name + "/")));
     }
     async readFile(name: string, encoding?: "utf-8" | "base64"): Promise<any> {
         name = this.normalizePath(name);
-        const entry = this.zip.entries[name];
+        const entry = this.entries[name];
         if (!entry) { throw new Error(`Not found file named ${name}`); }
-        const buffer = await this.zip.readEntry(entry);
+        const buffer = await readEntry(this.zip, entry);
         if (encoding === "utf-8") {
             return buffer.toString("utf-8");
         }
@@ -136,7 +147,7 @@ class NodeZipFileSystem extends FileSystem {
     listFiles(name: string): Promise<string[]> {
         name = this.normalizePath(name);
         return Promise.resolve([
-            ...new Set(Object.keys(this.zip.entries)
+            ...new Set(Object.keys(this.entries)
                 .filter((n) => n.startsWith(name))
                 .map((n) => n.substring(name.length))
                 .map((n) => n.startsWith("/") ? n.substring(1) : n)
@@ -170,7 +181,7 @@ class NodeZipFileSystem extends FileSystem {
     async walkFiles(startingDir: string, walker: (path: string) => void | Promise<void>) {
         startingDir = this.normalizePath(startingDir);
         const root = startingDir.startsWith("/") ? startingDir.substring(1) : startingDir;
-        for (const child of Object.keys(this.zip.entries).filter((e) => e.startsWith(root))) {
+        for (const child of Object.keys(this.entries).filter((e) => e.startsWith(root))) {
             if (child.endsWith("/")) { continue; }
             const result = walker(child);
             if (result instanceof Promise) {
