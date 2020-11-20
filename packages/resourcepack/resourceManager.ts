@@ -1,4 +1,4 @@
-import { PackMeta, ResourcePack, Resource, ResourceLocation } from "@xmcl/resourcepack";
+import { PackMeta, ResourcePack, Resource, ResourceLocation } from "./resourcePack";
 
 export interface ResourcePackWrapper {
     source: ResourcePack;
@@ -82,5 +82,3 @@ export class ResourceManager implements ResourceLoader {
         return undefined;
     }
 }
-
-export * from "./model-loader";
