@@ -1,6 +1,7 @@
 import { existsSync, statSync, rmdirSync, unlinkSync, readdirSync } from "fs";
 import { resolve, join, normalize } from "path";
-import { CurseforgeInstaller } from ".";
+import { installCurseforgeModpack } from ".";
+import nock from "nock";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
 const mockRoot = normalize(join(__dirname, "..", "..", "mock"));
@@ -22,10 +23,14 @@ function remove(f: string) {
 
 describe("CurseforgeInstaller", () => {
     describe("#install", () => {
+        jest.setTimeout(1000000);
         test("should be able to install curseforge", async () => {
+
             let dest = join(root, "modpack-test-root");
             remove(dest);
-            const manifest = await CurseforgeInstaller.installCurseforgeModpack(join(mockRoot, "modpack.zip"), dest, {});
+            nock.cleanAll();
+            nock.restore();
+            const manifest = await installCurseforgeModpack(join(mockRoot, "modpack.zip"), dest, {});
             expect(existsSync(join(dest, "mods", "# LibLoader.jar"))).toBeTruthy();
             expect(existsSync(join(dest, "mods", "jei_1.12.2-4.15.0.291.jar"))).toBeTruthy();
             expect(existsSync(join(dest, "mods", "RealisticTorches-1.12.2-2.1.1.jar"))).toBeTruthy();

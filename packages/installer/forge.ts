@@ -1,11 +1,13 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
 import { parse as parseForge } from "@xmcl/forge-site-parser";
-import { Task } from "@xmcl/task";
-import { Entry, open } from "@xmcl/unzip";
+import { Task, task } from "@xmcl/task";
+import { filterEntries, open, openEntryReadStream, readEntry } from "@xmcl/unzip";
 import { createWriteStream } from "fs";
 import { join } from "path";
-import { installByProfileTask, InstallProfile, InstallProfileOption, LibraryOption, resolveLibraryDownloadUrls } from "./minecraft";
-import { downloadFileTask, getAndParseIfUpdate, InstallOptions as InstallOptionsBase, UpdatedObject, HasDownloader, normalizeArray, createErr, DownloaderOptions, ensureFile, pipeline, writeFile, resolveDownloader } from "./util";
+import { Entry, ZipFile } from "yauzl";
+import { DownloadFallbackTask, getAndParseIfUpdate, Timestamped, withAgents } from "./http";
+import { installByProfileTask, InstallProfile, InstallProfileOption, LibraryOptions, resolveLibraryDownloadUrls } from "./minecraft";
+import { ensureFile, errorFrom, InstallOptions as InstallOptionsBase, normalizeArray, pipeline, writeFile } from "./utils";
 
 export interface BadForgeInstallerJarError {
     error: "BadForgeInstallerJar";
@@ -24,14 +26,14 @@ export interface BadForgeUniversalJarError {
 
 export type ForgeError = BadForgeInstallerJarError | BadForgeUniversalJarError;
 
-export interface VersionList extends UpdatedObject {
+export interface ForgeVersionList extends Timestamped {
     mcversion: string;
-    versions: Version[];
+    versions: ForgeVersion[];
 }
 /**
  * The forge version metadata to download a forge
  */
-export interface Version {
+export interface ForgeVersion {
     /**
      * The installer info
      */
@@ -63,6 +65,45 @@ export interface Version {
     type: "buggy" | "recommended" | "common" | "latest";
 }
 
+
+/**
+ * All the useful entries in forge installer jar
+ */
+export interface ForgeInstallerEntries {
+    /**
+     *  maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar
+     */
+    forgeJar?: Entry
+    /**
+     *  maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar
+     */
+    forgeUniversalJar?: Entry
+    /**
+     * data/client.lzma
+     */
+    clientLzma?: Entry
+    /**
+     * data/server.lzma
+     */
+    serverLzma?: Entry
+    /**
+     * install_profile.json
+     */
+    installProfileJson?: Entry
+    /**
+     * version.json
+     */
+    versionJson?: Entry
+    /**
+     * forge-${forgeVersion}-universal.jar
+     */
+    legacyUniversalJar?: Entry
+}
+
+export type ForgeInstallerEntriesPattern = ForgeInstallerEntries & Required<Pick<ForgeInstallerEntries, "forgeJar" | "versionJson" | "installProfileJson">>;
+export type ForgeLegacyInstallerEntriesPattern = Required<Pick<ForgeInstallerEntries, "installProfileJson" | "legacyUniversalJar">>;
+
+
 type RequiredVersion = {
     /**
      * The installer info.
@@ -91,154 +132,205 @@ export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
 /**
  * The options to install forge.
  */
-export interface Options extends DownloaderOptions, LibraryOption, InstallOptionsBase, InstallProfileOption {
+export interface InstallForgeOptions extends LibraryOptions, InstallOptionsBase, InstallProfileOption {
 }
 
-function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLocation, options: Options) {
-    function getForgeArtifactVersion() {
-        let [_, minor] = version.mcversion.split(".");
-        let minorVersion = Number.parseInt(minor);
-        if (minorVersion >= 7 && minorVersion <= 8) {
-            return `${version.mcversion}-${version.version}-${version.mcversion}`;
-        }
-        return `${version.mcversion}-${version.version}`;
-    }
+export class DownloadForgeInstallerTask extends DownloadFallbackTask {
+    readonly installJarPath: string
 
-    return Task.create("installForge", (context) => resolveDownloader(options, async function (options) {
-        const mc = MinecraftFolder.from(minecraft);
-        const forgeVersion = getForgeArtifactVersion();
+    constructor(forgeVersion: string, installer: RequiredVersion["installer"], minecraft: MinecraftFolder, options: InstallForgeOptions) {
+        const path = installer ? installer.path : `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
 
-        let inf = version.installer;
-        let path = inf ? inf.path : `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`;
-
-        let forgeMavenPath = path.replace("/maven", "").replace("maven", "");
-        let library = VersionJson.resolveLibrary({
+        const forgeMavenPath = path.replace("/maven", "").replace("maven", "");
+        const library = VersionJson.resolveLibrary({
             name: `net.minecraftforge:forge:${forgeVersion}:installer`,
             downloads: {
                 artifact: {
                     url: `${DEFAULT_FORGE_MAVEN}${forgeMavenPath}`,
                     path: `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`,
                     size: -1,
-                    sha1: version.installer?.sha1 || "",
+                    sha1: installer?.sha1 || "",
                 }
             }
         })!;
-        let mavenHost = options.mavenHost ? [...normalizeArray(options.mavenHost), DEFAULT_FORGE_MAVEN] : [DEFAULT_FORGE_MAVEN];
-        let urls = resolveLibraryDownloadUrls(library, { ...options, mavenHost });
+        const mavenHost = options.mavenHost ? [...normalizeArray(options.mavenHost), DEFAULT_FORGE_MAVEN] : [DEFAULT_FORGE_MAVEN];
+        const urls = resolveLibraryDownloadUrls(library, { ...options, mavenHost });
 
-        context.update(0, 120);
-
-        let installJarPath = mc.getLibraryByPath(library.path);
-        let downloadTask = Task.create("downloadInstaller", downloadFileTask({
-            url: urls,
+        const installJarPath = minecraft.getLibraryByPath(library.path);
+        super({
+            urls,
             destination: installJarPath,
-            checksum: version.installer?.sha1 ? {
-                hash: version.installer.sha1,
+            checksum: installer?.sha1 ? {
+                hash: installer.sha1,
                 algorithm: "sha1",
             } : undefined,
-        }, options));
+            overwriteWhen: options.overwriteWhen,
+            agents: options.agents,
+            headers: options.headers,
+            segmentThreshold: options.segmentThreshold,
+        })
 
-        await context.execute(downloadTask, 20);
+        this.installJarPath = installJarPath;
+        this.name = "downloadInstaller";
+        this.param = { version: forgeVersion };
+    }
+}
 
-        let zip = await open(installJarPath, { lazyEntries: true });
-        let [forgeEntry, forgeUniversalEntry, clientDataEntry, serverDataEntry, installProfileEntry, versionEntry, legacyUniversalEntry] = await zip.filterEntries([
-            `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`,
-            `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`,
-            "data/client.lzma",
-            "data/server.lzma",
-            "install_profile.json",
-            "version.json",
-            `forge-${forgeVersion}-universal.jar`, // legacy installer format
-        ]);
 
-        function getLibraryPathWithoutMaven(name: string) {
-            // remove the maven/ prefix
-            return mc.getLibraryByPath(name.substring(name.indexOf("/") + 1));
-        }
-        function extractEntryTo(e: Entry, dest: string) {
-            return zip.openEntry(e).then((stream) => pipeline(stream, createWriteStream(dest)));
-        }
+function getLibraryPathWithoutMaven(mc: MinecraftFolder, name: string) {
+    // remove the maven/ prefix
+    return mc.getLibraryByPath(name.substring(name.indexOf("/") + 1));
+}
+function extractEntryTo(zip: ZipFile, e: Entry, dest: string) {
+    return openEntryReadStream(zip, e).then((stream) => pipeline(stream, createWriteStream(dest)));
+}
 
-        if (legacyUniversalEntry) {
-            if (!installProfileEntry) { throw createErr({ error: "BadForgeInstallerJar", entry: "install_profile.json" }, "Missing install profile"); }
+async function installLegacyForgeFromZip(zip: ZipFile, entries: ForgeLegacyInstallerEntriesPattern, profile: InstallProfile, mc: MinecraftFolder, options: InstallForgeOptions) {
+    const versionJson = profile.versionInfo!;
 
-            let profile: InstallProfile = await zip.readEntry(installProfileEntry).then((b) => b.toString()).then(JSON.parse);
-            let versionJson = profile.versionInfo!;
+    // apply override for inheritsFrom
+    versionJson.id = options.versionId || versionJson.id;
+    versionJson.inheritsFrom = options.inheritsFrom || versionJson.inheritsFrom;
 
-            // apply override for inheritsFrom
-            versionJson.id = options.versionId || versionJson.id;
-            versionJson.inheritsFrom = options.inheritsFrom || versionJson.inheritsFrom;
+    const rootPath = mc.getVersionRoot(versionJson.id);
+    const versionJsonPath = join(rootPath, `${versionJson.id}.json`);
+    await ensureFile(versionJsonPath);
 
-            let rootPath = mc.getVersionRoot(versionJson.id);
+    const library = LibraryInfo.resolve(versionJson.libraries.find((l) => l.name.startsWith("net.minecraftforge:forge"))!);
 
-            let versionJsonPath = join(rootPath, `${versionJson.id}.json`);
-            await ensureFile(versionJsonPath);
+    await Promise.all([
+        writeFile(versionJsonPath, JSON.stringify(versionJson, undefined, 4)),
+        extractEntryTo(zip, entries.legacyUniversalJar, mc.getLibraryByPath(library.path)),
+    ]);
 
-            let library = LibraryInfo.resolve(versionJson.libraries.find((l) => l.name.startsWith("net.minecraftforge:forge"))!);
+    return versionJson.id;
+}
 
-            await Promise.all([
-                writeFile(versionJsonPath, JSON.stringify(versionJson, undefined, 4)),
-                extractEntryTo(legacyUniversalEntry, mc.getLibraryByPath(library.path)),
-            ]);
+async function installForgeFromZip(zip: ZipFile, entries: ForgeInstallerEntriesPattern, forgeVersion: string, profile: InstallProfile, mc: MinecraftFolder, options: InstallForgeOptions) {
+    const versionJson: VersionJson = await readEntry(zip, entries.versionJson).then((b) => b.toString()).then(JSON.parse);
 
-            return versionJson.id;
-        } else {
-            if (!forgeEntry) { throw createErr({ error: "BadForgeInstallerJar", entry: `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar` }, "Missing forge jar entry") }
-            if (!installProfileEntry) { throw createErr({ error: "BadForgeInstallerJar", entry: "install_profile.json" }, "Missing install profile"); }
-            if (!versionEntry) { throw createErr({ error: "BadForgeInstallerJar", entry: "version.json" }, "Missing version entry"); }
+    // apply override for inheritsFrom
+    versionJson.id = options.versionId || versionJson.id;
+    versionJson.inheritsFrom = options.inheritsFrom || versionJson.inheritsFrom;
 
-            let profile: InstallProfile = await zip.readEntry(installProfileEntry).then((b) => b.toString()).then(JSON.parse);
-            let versionJson: VersionJson = await zip.readEntry(versionEntry).then((b) => b.toString()).then(JSON.parse);
+    // resolve all the required paths
+    const rootPath = mc.getVersionRoot(versionJson.id);
 
-            // apply override for inheritsFrom
-            versionJson.id = options.versionId || versionJson.id;
-            versionJson.inheritsFrom = options.inheritsFrom || versionJson.inheritsFrom;
+    const versionJsonPath = join(rootPath, `${versionJson.id}.json`);
+    const installJsonPath = join(rootPath, "install_profile.json");
 
-            // resolve all the required paths
-            let rootPath = mc.getVersionRoot(versionJson.id);
+    await ensureFile(versionJsonPath);
 
-            let versionJsonPath = join(rootPath, `${versionJson.id}.json`);
-            let installJsonPath = join(rootPath, "install_profile.json");
+    const promises: Promise<void>[] = [];
+    if (entries.forgeUniversalJar) {
+        promises.push(extractEntryTo(zip, entries.forgeUniversalJar, getLibraryPathWithoutMaven(mc, entries.forgeUniversalJar.fileName)));
+    }
 
-            await ensureFile(versionJsonPath);
+    if (entries.serverLzma) {
+        // forge version and mavens, compatible with twitch api
+        const serverMaven = `net.minecraftforge:forge:${forgeVersion}:serverdata@lzma`;
+        // override forge bin patch location
+        profile.data.BINPATCH.server = `[${serverMaven}]`;
 
-            let promises: Promise<void>[] = [];
-            if (forgeUniversalEntry) {
-                promises.push(extractEntryTo(forgeUniversalEntry, getLibraryPathWithoutMaven(forgeUniversalEntry.fileName)));
+        const serverBinPath = mc.getLibraryByPath(LibraryInfo.resolve(serverMaven).path);
+        await ensureFile(serverBinPath);
+        promises.push(extractEntryTo(zip, entries.serverLzma, serverBinPath));
+    }
+
+    if (entries.clientLzma) {
+        // forge version and mavens, compatible with twitch api
+        const clientMaven = `net.minecraftforge:forge:${forgeVersion}:clientdata@lzma`;
+        // override forge bin patch location
+        profile.data.BINPATCH.client = `[${clientMaven}]`;
+
+        const clientBinPath = mc.getLibraryByPath(LibraryInfo.resolve(clientMaven).path);
+        await ensureFile(clientBinPath);
+        promises.push(extractEntryTo(zip, entries.clientLzma, clientBinPath));
+    }
+
+    promises.push(
+        writeFile(installJsonPath, JSON.stringify(profile)),
+        writeFile(versionJsonPath, JSON.stringify(versionJson)),
+        extractEntryTo(zip, entries.forgeJar, getLibraryPathWithoutMaven(mc, entries.forgeJar.fileName)),
+    );
+
+    await Promise.all(promises);
+
+    return versionJson.id;
+}
+
+export function isLegacyForgeInstallerEntries(entries: ForgeInstallerEntries): entries is ForgeLegacyInstallerEntriesPattern {
+    return !!entries.legacyUniversalJar && !!entries.installProfileJson;
+}
+
+export function isForgeInstallerEntries(entries: ForgeInstallerEntries): entries is ForgeInstallerEntriesPattern {
+    return !!entries.forgeJar && !!entries.installProfileJson && !!entries.versionJson;
+}
+
+/**
+ * Walk the forge installer file to find key entries
+ * @param zip THe forge instal
+ * @param forgeVersion Forge version to install
+ */
+export async function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: string): Promise<ForgeInstallerEntries> {
+    const [forgeJar, forgeUniversalJar, clientLzma, serverLzma, installProfileJson, versionJson, legacyUniversalJar] = await filterEntries(zip, [
+        `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`,
+        `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`,
+        "data/client.lzma",
+        "data/server.lzma",
+        "install_profile.json",
+        "version.json",
+        `forge-${forgeVersion}-universal.jar`, // legacy installer format
+    ]);
+    return {
+        forgeJar,
+        forgeUniversalJar,
+        clientLzma,
+        serverLzma,
+        installProfileJson,
+        versionJson,
+        legacyUniversalJar
+    };
+}
+
+function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLocation, options: InstallForgeOptions) {
+    return task("installForge", async function () {
+        function getForgeArtifactVersion() {
+            let [_, minor] = version.mcversion.split(".");
+            let minorVersion = Number.parseInt(minor);
+            if (minorVersion >= 7 && minorVersion <= 8) {
+                return `${version.mcversion}-${version.version}-${version.mcversion}`;
             }
-            if (serverDataEntry) {
-                // forge version and mavens, compatible with twitch api
-                let serverMaven = `net.minecraftforge:forge:${forgeVersion}:serverdata@lzma`;
-                // override forge bin patch location
-                profile.data.BINPATCH.server = `[${serverMaven}]`;
-
-                let serverBinPath = mc.getLibraryByPath(LibraryInfo.resolve(serverMaven).path);
-                await ensureFile(serverBinPath);
-                promises.push(extractEntryTo(serverDataEntry, serverBinPath));
-            }
-            if (clientDataEntry) {
-                // forge version and mavens, compatible with twitch api
-                let clientMaven = `net.minecraftforge:forge:${forgeVersion}:clientdata@lzma`;
-                // override forge bin patch location
-                profile.data.BINPATCH.client = `[${clientMaven}]`;
-
-                let clientBinPath = mc.getLibraryByPath(LibraryInfo.resolve(clientMaven).path);
-                await ensureFile(clientBinPath);
-                promises.push(extractEntryTo(clientDataEntry, clientBinPath));
-            }
-            promises.push(
-                writeFile(installJsonPath, JSON.stringify(profile)),
-                writeFile(versionJsonPath, JSON.stringify(versionJson)),
-                extractEntryTo(forgeEntry, getLibraryPathWithoutMaven(forgeEntry.fileName)),
-            );
-
-            await Promise.all(promises);
-
-            await installByProfileTask(profile, minecraft, options).run(context);
-
-            return versionJson.id;
+            return `${version.mcversion}-${version.version}`;
         }
-    }));
+        const forgeVersion = getForgeArtifactVersion();
+        const mc = MinecraftFolder.from(minecraft);
+
+        return withAgents(options, async (options) => {
+            const jarPath = await this.yield(new DownloadForgeInstallerTask(forgeVersion, version.installer, mc, options)
+                .map(function () { return this.installJarPath }));
+
+            const zip = await open(jarPath, { lazyEntries: true, autoClose: false });
+            const entries = await walkForgeInstallerEntries(zip, forgeVersion);
+
+            if (!entries.installProfileJson) {
+                throw errorFrom({ error: "BadForgeInstallerJar", entry: "install_profile.json" }, "Missing install profile");
+            }
+            const profile: InstallProfile = await readEntry(zip, entries.installProfileJson).then((b) => b.toString()).then(JSON.parse);
+            if (isForgeInstallerEntries(entries)) {
+                // new forge
+                const versionId = await installForgeFromZip(zip, entries, forgeVersion, profile, mc, options);
+                await this.concat(installByProfileTask(profile, minecraft, options));
+                return versionId;
+            } else if (isLegacyForgeInstallerEntries(entries)) {
+                // legacy forge
+                return installLegacyForgeFromZip(zip, entries, profile, mc, options);
+            } else {
+                // bad forge
+                throw errorFrom({ error: "BadForgeInstallerJar" });
+            }
+        });
+    });
 }
 
 /**
@@ -248,8 +340,8 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
  * @returns The installed version name.
  * @throws {@link ForgeError}
  */
-export function install(version: RequiredVersion, minecraft: MinecraftLocation, options?: Options) {
-    return Task.execute(installTask(version, minecraft, options)).wait();
+export function installForge(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions) {
+    return installForgeTask(version, minecraft, options).startAndWait();
 }
 
 /**
@@ -259,7 +351,7 @@ export function install(version: RequiredVersion, minecraft: MinecraftLocation, 
  * @returns The task to install the forge
  * @throws {@link ForgeError}
  */
-export function installTask(version: RequiredVersion, minecraft: MinecraftLocation, options: Options = {}): Task<string> {
+export function installForgeTask(version: RequiredVersion, minecraft: MinecraftLocation, options: InstallForgeOptions = {}): Task<string> {
     return installByInstallerTask(version, minecraft, options);
 }
 
@@ -271,7 +363,7 @@ export function installTask(version: RequiredVersion, minecraft: MinecraftLocati
  *
  * @param option The option can control querying minecraft version, and page caching.
  */
-export async function getVersionList(option: {
+export async function getForgeVersionList(option: {
     /**
      * The minecraft version you are requesting
      */
@@ -282,8 +374,8 @@ export async function getVersionList(option: {
      * If the server believes there is no modification after the original one,
      * it will directly return the orignal one.
      */
-    original?: VersionList;
-} = {}): Promise<VersionList> {
+    original?: ForgeVersionList;
+} = {}): Promise<ForgeVersionList> {
     const mcversion = option.mcversion || "";
     const url = mcversion === "" ? "http://files.minecraftforge.net/maven/net/minecraftforge/forge/index.html" : `http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_${mcversion}.html`;
     return getAndParseIfUpdate(url, parseForge, option.original);

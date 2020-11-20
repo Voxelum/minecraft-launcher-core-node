@@ -1,13 +1,14 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
-import { Task } from "@xmcl/task";
+import { Task, task } from "@xmcl/task";
 import { join } from "path";
-import { getAndParseIfUpdate, UpdatedObject, InstallOptions, createErr, ensureDir, missing, readFile, writeFile } from "./util";
+import { errorFrom, ensureDir, InstallOptions, missing, readFile, writeFile } from "./utils";
+import { getAndParseIfUpdate, Timestamped } from "./http";
 
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
 /**
  * The liteloader version list. Containing the minecraft version -> liteloader version info mapping.
  */
-export interface VersionList extends UpdatedObject {
+export interface LiteloaderVersionList extends Timestamped {
     meta: {
         description: string,
         authors: string,
@@ -15,7 +16,7 @@ export interface VersionList extends UpdatedObject {
         updated: string,
         updatedTime: number,
     };
-    versions: { [version: string]: { snapshot?: Version, release?: Version } };
+    versions: { [version: string]: { snapshot?: LiteloaderVersion, release?: LiteloaderVersion } };
 }
 function processLibraries(lib: { name: string, url?: string }) {
     if (Object.keys(lib).length === 1 && lib.name) {
@@ -25,12 +26,12 @@ function processLibraries(lib: { name: string, url?: string }) {
     }
     return lib;
 }
-export namespace VersionList {
+export namespace LiteloaderVersionList {
     export function parse(content: string) {
         const result = JSON.parse(content);
         const metalist = { meta: result.meta, versions: {} };
         for (const mcversion in result.versions) {
-            const versions: { release?: Version, snapshot?: Version }
+            const versions: { release?: LiteloaderVersion, snapshot?: LiteloaderVersion }
                 = (metalist.versions as any)[mcversion] = {};
             const snapshots = result.versions[mcversion].snapshots;
             const artifacts = result.versions[mcversion].artefacts; // that's right, artefact
@@ -74,7 +75,7 @@ export namespace VersionList {
 /**
  * A liteloader remote version information
  */
-export interface Version {
+export interface LiteloaderVersion {
     version: string;
     url: string;
     file: string;
@@ -105,20 +106,20 @@ export interface MissingVersionJsonError {
  *
  * This will request liteloader offical json by default. You can replace the request by assigning the remote option.
  */
-export function getVersionList(option: {
+export function getLiteloaderVersionList(option: {
     /**
      * If this presents, it will send request with the original list timestamp.
      *
      * If the server believes there is no modification after the original one,
      * it will directly return the orignal one.
      */
-    original?: VersionList;
+    original?: LiteloaderVersionList;
     /**
      * The optional requesting version json url.
      */
     remote?: string;
-} = {}): Promise<VersionList> {
-    return getAndParseIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST, VersionList.parse, option.original);
+} = {}): Promise<LiteloaderVersionList> {
+    return getAndParseIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST, LiteloaderVersionList.parse, option.original);
 }
 
 /**
@@ -133,12 +134,12 @@ export function getVersionList(option: {
  * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
  * @throws {@link MissingVersionJsonError}
  */
-export function install(versionMeta: Version, location: MinecraftLocation, options?: InstallOptions) {
-    return Task.execute(installTask(versionMeta, location, options)).wait();
+export function installLiteloader(versionMeta: LiteloaderVersion, location: MinecraftLocation, options?: InstallOptions) {
+    return installLiteloaderTask(versionMeta, location, options).startAndWait();
 }
 
 
-function buildVersionInfo(versionMeta: Version, mountedJSON: any) {
+function buildVersionInfo(versionMeta: LiteloaderVersion, mountedJSON: any) {
     const id = `${mountedJSON.id}-Liteloader${versionMeta.mcversion}-${versionMeta.version}`;
     const time = new Date(Number.parseInt(versionMeta.timestamp, 10) * 1000).toISOString();
     const releaseTime = time;
@@ -182,20 +183,20 @@ function buildVersionInfo(versionMeta: Version, mountedJSON: any) {
  * @param location The minecraft location you want to install
  * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
  */
-export function installTask(versionMeta: Version, location: MinecraftLocation, options: InstallOptions = {}): Task<string> {
-    return Task.create("installLiteloader", async function installLiteloader(context) {
+export function installLiteloaderTask(versionMeta: LiteloaderVersion, location: MinecraftLocation, options: InstallOptions = {}): Task<string> {
+    return task("installLiteloader", async function installLiteloader() {
         const mc: MinecraftFolder = MinecraftFolder.from(location);
 
         const mountVersion = options.inheritsFrom || versionMeta.mcversion;
 
-        const mountedJSON: any = await context.execute(Task.create("resolveVersionJson", async function resolveVersionJson() {
+        const mountedJSON: any = await this.yield(task("resolveVersionJson", async function resolveVersionJson() {
             if (await missing(mc.getVersionJson(mountVersion))) {
-                throw createErr({ error: "MissingVersionJson", version: mountVersion, path: mc.getVersionJson(mountVersion) });
+                throw errorFrom({ error: "MissingVersionJson", version: mountVersion, path: mc.getVersionJson(mountVersion) });
             }
             return readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
-        }), 50);
+        }));
 
-        const versionInf = await context.execute(Task.create("generateLiteloaderJson", async function generateLiteloaderJson() {
+        const versionInf = await this.yield(task("generateLiteloaderJson", async function generateLiteloaderJson() {
             const inf = buildVersionInfo(versionMeta, mountedJSON);
 
             inf.id = options.versionId || inf.id;
@@ -207,7 +208,7 @@ export function installTask(versionMeta: Version, location: MinecraftLocation, o
             await writeFile(join(versionPath, inf.id + ".json"), JSON.stringify(inf, undefined, 4));
 
             return inf;
-        }), 50);
+        }));
         return versionInf.id as string;
     });
 }
