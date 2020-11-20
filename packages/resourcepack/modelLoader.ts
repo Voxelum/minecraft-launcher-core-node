@@ -1,5 +1,5 @@
-import { BlockModel, Resource, ResourceLocation } from "@xmcl/resourcepack";
-import { ResourceLoader } from "./index";
+import { BlockModel, Resource, ResourceLocation } from "./resourcePack";
+import { ResourceLoader } from "./resourceManager";
 
 /**
  * The model loader load the resource
