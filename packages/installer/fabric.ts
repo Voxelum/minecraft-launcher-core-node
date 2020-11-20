@@ -1,5 +1,6 @@
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
-import { ensureFile, writeFile, InstallOptions, UpdatedObject, getLastModified, fetchJson } from "./util";
+import { fetchJson, getLastModified, Timestamped } from "./http";
+import { ensureFile, InstallOptions, writeFile } from "./utils";
 
 export const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
@@ -8,7 +9,7 @@ export const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-
  * Fabric Yarn version list
  * @see https://github.com/FabricMC/yarn
  */
-export interface YarnVersionList extends UpdatedObject {
+export interface YarnVersionList extends Timestamped {
     versions: FabricArtifactVersion[];
 }
 
@@ -16,7 +17,7 @@ export interface YarnVersionList extends UpdatedObject {
  * Fabric mod loader version list
  * @see https://fabricmc.net/
  */
-export interface LoaderVersionList extends UpdatedObject {
+export interface LoaderVersionList extends Timestamped {
     versions: FabricArtifactVersion[];
 }
 
@@ -170,7 +171,7 @@ export async function getLoaderVersionList(option: {
  * @param minecraft The minecraft location
  * @returns The installed version id
  */
-export async function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options: InstallOptions = {}) {
+export async function installFabricYarnAndLoader(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options: InstallOptions = {}) {
     const folder = MinecraftFolder.from(minecraft);
     const mcversion = yarnVersion.split("+")[0];
     const id = options.versionId || `${mcversion}-fabric${yarnVersion}-${loaderVersion}`;
@@ -202,7 +203,7 @@ export interface FabricInstallOptions extends InstallOptions {
  * @param options The options
  * @beta
  */
-export async function installFromVersionMeta(loader: LoaderArtifact, minecraft: MinecraftLocation, options: FabricInstallOptions = {}) {
+export async function installFabric(loader: LoaderArtifact, minecraft: MinecraftLocation, options: FabricInstallOptions = {}) {
     const folder = MinecraftFolder.from(minecraft);
 
     let yarn: string | undefined;

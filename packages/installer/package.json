@@ -1,8 +1,8 @@
 {
   "name": "@xmcl/installer",
   "version": "2.9.8",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "description": "Provides Minecraft/Forge/Fabric/Liteloader installers",
   "engines": {
     "node": ">=10.0"
@@ -11,14 +11,12 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/core": "file:../core",
-    "@xmcl/forge-site-parser": "file:../forge-site-parser",
-    "@xmcl/task": "file:../task",
-    "java-asm": "^0.0.6"
-  },
-  "scripts": {
-    "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile"
+    "@xmcl/core": "^2.4.0",
+    "@xmcl/forge-site-parser": "^2.0.5",
+    "@xmcl/task": "^2.2.0",
+    "@xmcl/unzip": "^1.2.0",
+    "@xmcl/asm": "0.0.1",
+    "yauzl": "^2.10.0"
   },
   "repository": {
     "type": "git",
