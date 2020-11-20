@@ -1,10 +1,10 @@
-import { MinecraftFolder } from "./folder";
 import assert from "assert";
-import { ChildProcess, exec, spawnSync } from "child_process";
+import { ChildProcess, spawnSync } from "child_process";
 import { existsSync } from "fs";
 import { EOL } from "os";
 import * as path from "path";
-import { DEFAULT_EXTRA_JVM_ARGS, LaunchOption, LaunchPrecheck, generateArguments, generateArgumentsServer, launch, launchServer } from "./launch";
+import { MinecraftFolder } from "./folder";
+import { DEFAULT_EXTRA_JVM_ARGS, generateArguments, generateArgumentsServer, launch, LaunchOption, LaunchPrecheck, launchServer } from "./launch";
 import { Version } from "./version";
 
 function getJavaVersion(javaPath: string) {
@@ -25,7 +25,7 @@ function getJavaVersion(javaPath: string) {
 function waitGameProcess(process: ChildProcess, ...hints: string[]) {
     const found = new Array<boolean>(hints.length);
     found.fill(false);
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         process.stdout!!.on("data", (chunk) => {
             const content = chunk.toString();
             for (let i = 0; i < hints.length; i++) {
@@ -97,7 +97,7 @@ describe("Launcher", () => {
                 path: root,
                 version: "1.12.2",
             });
-            await new Promise((resolve, reject) => {
+            await new Promise<void>((resolve, reject) => {
                 proc.stdout!!.on("data", (buf) => {
                     const str = buf.toString();
                     console.warn(str);
