@@ -1,27 +1,65 @@
+jest.mock("yauzl");
+
 import { createReadStream, existsSync } from "fs";
 import { join } from "path";
-import { extract, createExtractStream } from ".";
+import { open } from "./index";
 
 const mockRoot = join(__dirname, "..", "..", "mock");
 const tempRoot = join(__dirname, "..", "..", "temp");
 
 describe("Unzip", () => {
-    describe("#extractEntries", () => {
-        test("should extract the exact entry", async () => {
-            await extract(join(mockRoot, "mods", "sample-mod.jar"), tempRoot, { entries: ["mcmod.info"] });
-            expect(existsSync(join(tempRoot, "mcmod.info"))).toBeTruthy();
+    describe("#open", () => {
+        it("should call yauzl open", async () => {
+            const value = "test.zip";
+            let target: any
+            let options: any
+            let ret: any = {};
+            (require("yauzl").open as jest.Mock).mockImplementationOnce((_target, _options, cb) => {
+                target = _target
+                options = _options
+                cb(undefined, ret)
+            });
+            await expect(open(value)).resolves.toEqual(ret);
+            expect(target).toEqual("test.zip");
+            expect(options).toEqual({ "autoClose": false, "lazyEntries": true });
         });
-        test("should extract the nested entry", async () => {
-            await extract(join(mockRoot, "mods", "sample-mod-1.13.jar"), join(tempRoot, "unzip-test"));
-            expect(existsSync(join(tempRoot, "unzip-test", "mezz", "jei", "JustEnoughItems.class"))).toBeTruthy();
+        it("should call yauzl fromBuffer", async () => {
+            const buff = Buffer.from([0]);
+            let target: any
+            let options: any
+            let ret: any = {};
+            (require("yauzl").fromBuffer as jest.Mock).mockImplementationOnce((_target, _options, cb) => {
+                target = _target
+                options = _options
+                cb(undefined, ret)
+            });
+            await expect(open(buff)).resolves.toEqual(ret);
+            expect(target).toEqual(buff);
+            expect(options).toEqual({ "autoClose": false, "lazyEntries": true });
         });
-    });
-    describe("#createExtractStream", () => {
-        test("should extract the exact entry", async () => {
-            await createReadStream(join(mockRoot, "mods", "sample-mod.jar"))
-                .pipe(createExtractStream(tempRoot, { entries: ["Config.class"] }))
-                .wait();
-            expect(existsSync(join(tempRoot, "Config.class"))).toBeTruthy();
+        it("should call yauzl fromFd", async () => {
+            const value = 1;
+            let target: any
+            let options: any
+            let ret: any = {};
+            (require("yauzl").fromFd as jest.Mock).mockImplementationOnce((_target, _options, cb) => {
+                target = _target
+                options = _options
+                cb(undefined, ret)
+            });
+            await expect(open(value)).resolves.toEqual(ret);
+            expect(target).toEqual(value);
+            expect(options).toEqual({ "autoClose": false, "lazyEntries": true });
+        });
+        it("should catch error", async () => {
+            (require("yauzl").open as jest.Mock).mockImplementationOnce((_target, _options, cb) => {
+                cb(new Error("ERROR!"))
+            });
+            await expect(open("test.zip")).rejects.toEqual(new Error("ERROR!"));
+            (require("yauzl").open as jest.Mock).mockImplementationOnce((_target, _options, cb) => {
+                cb(undefined)
+            });
+            await expect(open("test.zip")).rejects.toEqual(new Error("Cannot open zip!"));
         });
     });
 });
