@@ -7,12 +7,16 @@
         "curseforge.ts",
         "optifine.ts",
         "fabric.ts",
-        "util.ts"
+        "utils.ts",
+        "http.ts",
+        "unzip.ts",
+        "java.ts",
+        "diagnose.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "CommonJS",
-        "outDir": "cjs",
+        "module": "esnext",
+        
         "lib": [
             "dom"
         ],

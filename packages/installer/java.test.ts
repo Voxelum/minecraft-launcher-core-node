@@ -1,7 +1,5 @@
-import { parseJavaVersion } from "./java";
-import { JavaInstaller } from ".";
 import { join, normalize } from "path";
-import { writeFile, ensureFile } from "./util";
+import { installJreFromMojang, parseJavaVersion } from "./java";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));
 
@@ -25,29 +23,6 @@ describe("JavaInstaller", () => {
             let version = "java aaaa 2018-04-17";
             const inf = parseJavaVersion(version);
             expect(inf).toEqual(undefined);
-        });
-    });
-    describe("#install", () => {
-        test("should install from mojang src from windows", async () => {
-            const mock = jest.fn();
-            const downloadMock = jest.fn();
-            await JavaInstaller.installJreFromMojang({
-                destination: join(root, "jre"),
-                cacheDir: join(root),
-                unpackLZMA: async (rt, d) => { mock(d) },
-                downloader: {
-                    async downloadFile(option) {
-                        downloadMock();
-                        await ensureFile(option.destination);
-                        await writeFile(option.destination, "");
-                    },
-                },
-                platform: {
-                    name: "windows",
-                    arch: "x64",
-                    version: "",
-                },
-            });
         });
     });
 });
