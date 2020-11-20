@@ -4,11 +4,7 @@
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "CommonJS",
-        "outDir": "cjs",
-        "lib": [
-            "dom"
-        ],
+        "module": "ESNext",
         "experimentalDecorators": true,
         "declaration": true,
         "downlevelIteration": true,
