@@ -281,8 +281,7 @@ Detach from the parent process. So your launcher's exit/crash won't affact the M
 You can use this to load Minecraft block model and texture just like Minecraft.
 
 ```ts
-    import { ResourcePack, Resource, BlockModel } from "@xmcl/resourcepack"; 
-    import { ResourceManager, ModelLoader } from "@xmcl/resource-manager";
+    import { ResourcePack, Resource, BlockModel,ResourceManager, ModelLoader } from "@xmcl/resourcepack"; 
     import { openFileSystem } from "@xmcl/system";
 
     const man = new ResourceManager();
@@ -302,14 +301,14 @@ You can use this to load Minecraft block model and texture just like Minecraft.
     const resolvedModel: BlockModel.Resolved = models["block/grass"];
 ```
 
+
 ### Load Minecraft Resource
 
 You can use this module in nodejs/electron:
 
 ```ts
 import { openFileSystem } from "@xmcl/system"; 
-import { ResourcePack, Resource } from "@xmcl/resourcepack"; 
-import { ResourceManager, ResourceLocation } from "@xmcl/resource-manager"
+import { ResourcePack, Resource, ResourceManager, ResourceLocation  } from "@xmcl/resourcepack"; 
 const manager: ResourceManager = new ResourceManager();
 
 // add a resource source which load resource from file
@@ -331,7 +330,6 @@ You can clear the cache by:
 ```ts
 manager.clearCache();
 ```
-
 
 ### Mojang Security API
 
@@ -457,6 +455,39 @@ Parse minecraft version as a resolved version, which is used for launching proce
     const resolvedVersion: ResolvedVersion = await Version.parse(minecraftLocation, minecraftVersionId);
 ```
 
+
+### Ping Minecraft Server  
+
+The usage is just like asm library in java:
+
+```ts
+    import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from '@xmcl/asm'
+
+
+    class CustomClassVisitor extends ClassVisitor {
+        public constructor() {
+            super(Opcodes.ASM5);
+        }
+
+        // visit the class 
+        visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
+        }
+
+        // visit method
+        public visitMethod(access: number, name: string, desc: string, signature: string, exceptions: string[]) {
+            return null;
+        }
+
+        // visit field
+        public visitField(access: number, name: string, desc: string, signature: string, value: any) {
+            return null;
+        }
+    }
+
+    const visitor = new CustomClassVisitor();
+    const classData: Buffer = await fs.readFile("path/to/some.class");
+    new ClassReader(classData).accept(visitor);
+```
 
 ### Ping Minecraft Server  
 
@@ -713,6 +744,7 @@ You can read resource pack content just like Minecraft:
         const metadata: PackMeta = await resource.readMetadata();
     }
 ```
+
 
 ### Save/World Data Loading
 
