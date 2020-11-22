@@ -1,4 +1,5 @@
-import { PackMeta, ResourcePack, Resource, ResourceLocation } from "./resourcePack";
+import { PackMeta } from "./format";
+import { ResourcePack, Resource, ResourceLocation } from "./resourcePack";
 
 export interface ResourcePackWrapper {
     source: ResourcePack;
@@ -34,7 +35,7 @@ export class ResourceManager implements ResourceLoader {
         let info;
         try {
             info = await resourcePack.info();
-        } catch{
+        } catch {
             info = { pack_format: -1, description: "" };
         }
         const domains = await resourcePack.domains();
