@@ -74,7 +74,7 @@ export const httpRequester: HttpRequester = async (option) => {
 }
 
 export async function verify(data: string, signature: string, pemKey: string | Uint8Array) {
-    return createVerify("SHA1").update(data, "utf8").verify(pemKey, signature, "base64");
+    return createVerify("SHA1").update(data, "utf8").verify(pemKey as Buffer, signature, "base64");
 }
 
 export function decodeBase64(s: string) {
