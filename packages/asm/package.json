@@ -1,0 +1,30 @@
+{
+  "name": "@xmcl/asm",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "description": "Java ASM module transferred into the typescript",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
+  },
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+}
