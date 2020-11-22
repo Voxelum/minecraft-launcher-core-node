@@ -1,0 +1,43 @@
+{
+    "files": [
+        "libs/utils.ts",
+        "libs/AnnotationVisitor.ts",
+        "libs/bits.ts",
+        "libs/ClassReader.ts",
+        "libs/ClassWriter.ts",
+        "libs/CurrentFrame.ts",
+        "libs/FieldVisitor.ts",
+        "libs/Frame.ts",
+        "libs/Item.ts",
+        "libs/MethodVisitor.ts",
+        "libs/Opcodes.ts",
+        "libs/TypePath.ts",
+        "libs/AnnotationWriter.ts",
+        "libs/Attribute.ts",
+        "libs/ByteVector.ts",
+        "libs/ClassVisitor.ts",
+        "libs/Context.ts",
+        "libs/Edge.ts",
+        "libs/FieldWriter.ts",
+        "libs/Handle.ts",
+        "libs/Label.ts",
+        "libs/MethodWriter.ts",
+        "libs/Type.ts",
+        "libs/TypeReference.ts",
+        "index.ts"
+    ],
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "esnext",
+        "sourceMap": true,
+        "experimentalDecorators": true,
+        "declaration": true,
+        "downlevelIteration": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "moduleResolution": "node",
+        "noImplicitAny": false,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    }
+}
