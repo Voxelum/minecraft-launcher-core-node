@@ -1,30 +1,22 @@
-import { Installer } from '@xmcl/installer';
-import { Task } from "@xmcl/task";
+import { install, VersionList, getVersionList, Version, installTask } from '@xmcl/installer';
 
-let versionMetaList: Installer.VersionList;
+let versionMetaList: VersionList;
 let minecraftLocation: string; "my/path/to/minecraft"
 
 async function updateVersionList() {
-    versionMetaList = await Installer.getVersionList({ original: versionMetaList });
+    versionMetaList = await getVersionList({ original: versionMetaList });
 }
 
-async function installVersion(versionMeta: Installer.Version) {
-    await Installer.install("client", versionMeta, minecraftLocation);
+async function installVersion(versionMeta: Version) {
+    await install(versionMeta, minecraftLocation);
 }
 
-async function installButMonitorProgress(versionMeta: Installer.Version) {
-    const task = Installer.installTask("client", versionMeta, minecraftLocation);
-    const handle = Task.execute(task);
-    handle.on("execute", (taskState, parent) => {
-        console.log(`${taskState.name} executed!`);
+async function installButMonitorProgress(versionMeta: Version) {
+    const task = installTask(versionMeta, minecraftLocation);
+    const result = await task.startAndWait((event) => {
+        if (event.type === "update") {
+            console.log(`Downloaded url: ${event.from} to file ${event.to}. Progress: ${event.progress / event.total}. Transferr: ${event.chunkSize} bytes.`);
+        }
     });
-    handle.on("update", ({ progress, total, message }, state) => {
-        // path is the full name in format of `thisTask.path = parentTask.path.thisTask.name`
-        console.log(`${state.path} ${progress} ${total}, ${message}`);
-        // you might want to update this info to your UI !
-    });
-    const result = await handle.wait();
     return result;
 }
-
-
