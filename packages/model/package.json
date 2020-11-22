@@ -1,8 +1,8 @@
 {
   "name": "@xmcl/model",
   "version": "1.0.16",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
   "description": "Create Three.js model for player and block",
   "engines": {
     "node": ">=10.0"
@@ -10,16 +10,11 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "@xmcl/resourcepack": "file:../resourcepack"
-  },
   "peerDependencies": {
-    "three": "^0.110.0"
+    "three": "^0.115.0",
+    "@xmcl/resourcepack": "^1.0.16"
   },
-  "scripts": {
-    "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile"
-  },
+  
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"

@@ -3,12 +3,16 @@
         "index.ts",
         "auth.ts",
         "mojang.ts",
+        "base.ts",
         "service.ts",
+        "util/base.ts",
+        "util/index.ts",
+        "util/index.browser.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "CommonJS",
-        "outDir": "cjs",
+        "module": "esnext",
+        
         "lib": [
             "dom"
         ],

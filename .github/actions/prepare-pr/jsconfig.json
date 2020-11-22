@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "strict": true,
+        "noImplicitAny": false,
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true
+    },
+    "files": ["index.js", "index.d.ts"]
+}

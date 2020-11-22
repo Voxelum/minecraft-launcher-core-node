@@ -1,5 +1,5 @@
 import { BlockModel, PackMeta } from "@xmcl/resourcepack";
-import { Material } from "three";
+import { Material } from "three/src/materials/Material";
 import { LinearFilter, NearestFilter } from "three/src/constants";
 import { Object3D } from "three/src/core/Object3D";
 import { TextureLoader } from "three/src/loaders/TextureLoader";

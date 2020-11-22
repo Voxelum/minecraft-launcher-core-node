@@ -1,8 +1,8 @@
 {
   "name": "@xmcl/core",
   "version": "2.4.0",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
   "description": "Minecraft version parsing and game launching.",
   "engines": {
     "node": ">=10.0"
@@ -10,12 +10,9 @@
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {
-    "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile"
-  },
   "dependencies": {
-    "@xmcl/unzip": "file:../unzip"
+    "@xmcl/unzip": "^1.2.0",
+    "yauzl": "^2.10.0"
   },
   "repository": {
     "type": "git",

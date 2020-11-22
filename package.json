@@ -2,100 +2,78 @@
     "private": true,
     "version": "3.6.3",
     "scripts": {
-        "build": "npm run lint && npm run compile && node scripts/generate-definition.js && npm run build:readme",
+        "build": "npm run lint && npm run compile && npm run build:definition && npm run build:readme",
         "build:clean": "node scripts/clean.js",
+        "build:definition": "node scripts/generate-definition.js",
+        "build:readme": "node scripts/build-readme.js",
         "build:docs": "node scripts/build-docs.js",
         "build:web": "sh scripts/build_workers.sh && parcel build docs/site/index.html -d docs/build --public-url ./",
-        "build:readme": "node scripts/build-readme.js",
-        "clean": "lerna clean --yes",
-        "compile": "tsc && npm run compile:cjs",
-        "compile:cjs": "node scripts/build-cjs.js",
+        "compile": "rollup -c rollup.config.js",
         "compile:dry": "tsc --noEmit",
         "lint": "eslint packages --ext .ts",
         "lint:fix": "eslint packages --ext .ts --fix",
         "test": "jest packages --runInBand",
+        "test:e2e": "jest packages/installer/e2e.test.ts --verbose --runInBand",
         "test:full": "jest packages/installer/e2e.test.ts --verbose --runInBand && jest packages --coverage --verbose --runInBand",
-        "update": "lerna bootstrap",
         "dev": "node scripts/dev.js",
-        "dev:web": "sh scripts/build_workers.sh && parcel serve docs/site/index.html -d docs/build"
+        "dev:web": "sh scripts/build_workers.sh && parcel serve docs/site/index.html -d docs/build",
+        "publish": "node scripts/publish.js",
+        "publish:beta": "node scripts/publish.js beta"
     },
-    "dependencies": {
-        "@xmcl/client": "file:packages\\client",
-        "@xmcl/core": "file:packages\\core",
-        "@xmcl/curseforge": "file:packages\\curseforge",
-        "@xmcl/forge-site-parser": "file:packages\\forge-site-parser",
-        "@xmcl/gamesetting": "file:packages\\gamesetting",
-        "@xmcl/installer": "file:packages\\installer",
-        "@xmcl/mod-parser": "file:packages\\mod-parser",
-        "@xmcl/model": "file:packages\\model",
-        "@xmcl/nbt": "file:packages\\nbt",
-        "@xmcl/resource-manager": "file:packages\\resource-manager",
-        "@xmcl/resourcepack": "file:packages\\resourcepack",
-        "@xmcl/server-info": "file:packages\\server-info",
-        "@xmcl/system": "file:packages\\system",
-        "@xmcl/task": "file:packages\\task",
-        "@xmcl/text-component": "file:packages\\text-component",
-        "@xmcl/unzip": "file:packages\\unzip",
-        "@xmcl/user": "file:packages\\user",
-        "@xmcl/world": "file:packages\\world"
-    },
+    "workspaces": [
+        "packages/asm",
+        "packages/client",
+        "packages/core",
+        "packages/curseforge",
+        "packages/forge-site-parser",
+        "packages/gamesetting",
+        "packages/installer",
+        "packages/mod-parser",
+        "packages/model",
+        "packages/nbt",
+        "packages/resourcepack",
+        "packages/server-info",
+        "packages/system",
+        "packages/task",
+        "packages/text-component",
+        "packages/unzip",
+        "packages/user",
+        "packages/world"
+    ],
     "devDependencies": {
         "@actions/core": "^1.2.3",
         "@rollup/plugin-commonjs": "^11.0.2",
+        "@rollup/plugin-html": "^0.2.0",
         "@rollup/plugin-json": "^4.0.2",
         "@rollup/plugin-node-resolve": "^7.1.1",
+        "@rollup/plugin-typescript": "^6.1.0",
         "@types/bytebuffer": "^5.0.37",
-        "@types/jest": "^25.1.4",
+        "@types/jest": "^26.0.15",
         "@types/jszip": "^3.1.6",
         "@types/long": "^4.0.1",
-        "@types/node": "^12.12.31",
+        "@types/node": "^14.14.9",
         "@types/pako": "^1.0.1",
         "@types/uuid": "^7.0.2",
         "@types/yauzl": "^2.9.1",
-        "@typescript-eslint/eslint-plugin": "^2.25.0",
-        "@typescript-eslint/parser": "^2.25.0",
+        "@typescript-eslint/eslint-plugin": "^4.8.1",
+        "@typescript-eslint/parser": "^4.8.1",
         "conventional-recommended-bump": "^6.0.0",
-        "eslint": "^6.6.0",
-        "git-semver-tags": "^3.0.0",
-        "jest": "^25.2.2",
-        "lerna": "^3.20.2",
+        "eslint": "^7.13.0",
+        "form-data": "^3.0.0",
+        "jest": "^26.6.3",
         "monaco-editor": "^0.20.0",
         "nock": "^12.0.3",
         "pako": "^1.0.11",
         "parcel": "^1.12.4",
-        "rollup": "^2.2.0",
-        "rollup-plugin-typescript2": "^0.26.0",
-        "rusha": "^0.8.13",
+        "rollup": "^2.33.3",
+        "rollup-plugin-postcss": "^3.1.8",
         "three": "^0.115.0",
         "three-orbitcontrols": "^2.110.1",
-        "ts-jest": "^25.2.1",
-        "ts-md5": "^1.2.7",
+        "ts-jest": "^26.4.4",
         "typedoc": "^0.17.3",
-        "typescript": "^3.8.3"
+        "typescript": "^3.9.7"
     },
     "browserslist": [
         "last 1 Chrome versions"
-    ],
-    "jest": {
-        "globals": {
-            "ts-jest": {
-                "tsConfig": "tsconfig.json"
-            }
-        },
-        "moduleFileExtensions": [
-            "ts",
-            "js",
-            "json"
-        ],
-        "modulePaths": [
-            "packages"
-        ],
-        "preset": "ts-jest",
-        "testEnvironment": "./scripts/test-env.js",
-        "testRegex": "packages/.*test\\.ts",
-        "testSequencer": "./scripts/test-sequencer.js",
-        "transform": {
-            "^.+\\.(ts|tsx)?$": "ts-jest"
-        }
-    }
+    ]
 }
