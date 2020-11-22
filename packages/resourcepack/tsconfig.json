@@ -1,12 +1,15 @@
 {
     "files": [
         "format.ts",
-        "index.ts"
+        "index.ts",
+        "modelLoader.ts",
+        "resourceManager.ts",
+        "resourcePack.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "CommonJS",
-        "outDir": "cjs",
+        "module": "esnext",
+        
         "lib": [
             "dom"
         ],

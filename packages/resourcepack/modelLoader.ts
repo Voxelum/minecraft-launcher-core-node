@@ -1,5 +1,6 @@
-import { BlockModel, Resource, ResourceLocation } from "./resourcePack";
+import { Resource, ResourceLocation } from "./resourcePack";
 import { ResourceLoader } from "./resourceManager";
+import { BlockModel } from "./format";
 
 /**
  * The model loader load the resource
