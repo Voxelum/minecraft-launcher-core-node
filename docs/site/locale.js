@@ -8,6 +8,11 @@ i18next.init({
     jqueryI18next.init(i18next, $);
     $('.section').localize();
     $('.bar').localize();
+    if (i18next.language === "zh-CN" || i18next === "zh") {
+        $('#languages .text').text("简体中文")
+    } else {
+        $('#languages .text').text("English")
+    }
 });
 
 $(document).ready(function () {

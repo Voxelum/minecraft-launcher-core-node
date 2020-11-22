@@ -1,5 +1,4 @@
-module.exports['@xmcl/client/channel.d.ts'] = `/// <reference types="node" />
-import { EventEmitter } from "events";
+module.exports['@xmcl/client/channel.d.ts'] = `\/\// <reference types="node" /> import { EventEmitter } from "events";
 import { NetConnectOpts } from "net";
 import { Coder } from "./coders";
 import { PacketRegistryEntry, Side } from "./packet";
@@ -60,9 +59,8 @@ declare class PacketCoders {
     };
 }
 export {};
-`;
-module.exports['@xmcl/client/coders.d.ts'] = `/// <reference types="long" />
-import ByteBuffer from "bytebuffer";
+\/\/# sourceMappingURL=channel.d.ts.map`;
+module.exports['@xmcl/client/coders.d.ts'] = `\/\// <reference types="long" /> import * as ByteBuffer from "bytebuffer";
 export interface SlotData {
     blockId: number;
     itemCount?: number;
@@ -92,11 +90,8 @@ export declare const String: Coder<string>;
 export declare const Json: Coder<any>;
 export declare const Slot: Coder<SlotData>;
 export declare const ByteArray: Coder<Int8Array>;
-`;
-module.exports['@xmcl/client/coders.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/client/index.d.ts'] = `/**
- * The client for Minecraft protocol. I can create the connection with Minecraft server and ping the server status.
+\/\/# sourceMappingURL=coders.d.ts.map`;
+module.exports['@xmcl/client/index.d.ts'] = `/**  * The client for Minecraft protocol. I can create the connection with Minecraft server and ping the server status.
  *
  * You can use {@link queryStatus} with {@link QueryOptions} to ping a {@link Status} of a server
  *
@@ -106,9 +101,8 @@ export * from "./coders";
 export * from "./packet";
 export * from "./channel";
 export * from "./status";
-`;
-module.exports['@xmcl/client/packet.d.ts'] = `import { State } from "./channel";
-import { Coder } from "./coders";
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/client/packet.d.ts'] = `import { State } from "./channel"; import { Coder } from "./coders";
 export declare type Side = "server" | "client";
 export interface PacketRegistryEntry {
     readonly id: number;
@@ -143,9 +137,8 @@ export declare function Field<T>(type: Coder<T>): (target: any, key: string) => 
  * @param state The state of you packet should be
  */
 export declare function Packet(side: Side, id: number, state: State, name?: string): (constructor: Function) => void;
-`;
-module.exports['@xmcl/client/status.d.ts'] = `import { TextComponent } from "@xmcl/text-component";
-import Long from "long";
+\/\/# sourceMappingURL=packet.d.ts.map`;
+module.exports['@xmcl/client/status.d.ts'] = `import { TextComponent } from "@xmcl/text-component"; import Long from "long";
 import { Channel } from "./channel";
 export declare class Handshake {
     protocolVersion: number;
@@ -226,7 +219,7 @@ interface ForgeModIdentity {
 }
 export interface QueryOptions {
     /**
-     * see http://wiki.vg/Protocol_version_numbers
+     * see http:\/\/wiki.vg/Protocol_version_numbers
      */
     protocol?: number;
     /**
@@ -264,11 +257,8 @@ export declare function createClient(protocol: number, timeout?: number): {
     query(host: string, port?: number): Promise<Status>;
 };
 export {};
-`;
-module.exports['@xmcl/client/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/core/folder.d.ts'] = `export interface MinecraftFolder {
-    readonly root: string;
+\/\/# sourceMappingURL=status.d.ts.map`;
+module.exports['@xmcl/core/folder.d.ts'] = `export interface MinecraftFolder {     readonly root: string;
 }
 /**
  * The Minecraft folder structure. All method will return the path related to a minecraft root like \`.minecraft\`.
@@ -334,11 +324,8 @@ export declare namespace MinecraftPath {
     function getAsset(hash: string): string;
 }
 export declare type MinecraftLocation = MinecraftFolder | string;
-`;
-module.exports['@xmcl/core/folder.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/core/index.d.ts'] = `/**
- * The core package for launching Minecraft.
+\/\/# sourceMappingURL=folder.d.ts.map`;
+module.exports['@xmcl/core/index.d.ts'] = `/**  * The core package for launching Minecraft.
  * It provides the {@link Version.parse} function to parse Minecraft version,
  * and the {@link launch} function to launch the game.
  *
@@ -348,13 +335,12 @@ export * from "./launch";
 export * from "./version";
 export * from "./platform";
 export * from "./folder";
-`;
-module.exports['@xmcl/core/launch.d.ts'] = `/// <reference types="node" />
-import { ChildProcess, SpawnOptions } from "child_process";
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/core/launch.d.ts'] = `\/\// <reference types="node" /> import { ChildProcess, SpawnOptions } from "child_process";
+import { EventEmitter } from "events";
 import { MinecraftFolder } from "./folder";
 import { Platform } from "./platform";
-import { ResolvedVersion, ResolvedLibrary } from "./version";
-import { EventEmitter } from "events";
+import { ResolvedLibrary, ResolvedVersion } from "./version";
 export declare const DEFAULT_EXTRA_JVM_ARGS: readonly string[];
 export interface EnabledFeatures {
     [featureName: string]: object | boolean | undefined;
@@ -470,7 +456,7 @@ export interface LaunchOption {
      */
     features?: EnabledFeatures;
     /**
-     * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
+     * Support yushi's yggdrasil agent https:\/\/github.com/to2mbn/authlib-injector/wiki
      */
     yggdrasilAgent?: {
         /**
@@ -668,8 +654,8 @@ export declare function createMinecraftProcessWatcher(process: ChildProcess, emi
  * \`\`\`
  *
  * @param options The detail options for this launching.
- * @see [ChildProcess](https://nodejs.org/api/child_process.html)
- * @see [spawn](https://nodejs.org/api/spawn.html)
+ * @see [ChildProcess](https:\/\/nodejs.org/api/child_process.html)
+ * @see [spawn](https:\/\/nodejs.org/api/spawn.html)
  * @see {@link generateArguments}
  * @see {@link createMinecraftProcessWatcher}
  */
@@ -686,11 +672,8 @@ export declare function generateArgumentsServer(options: MinecraftServerOptions 
  * @throws TypeError if options does not fully fulfill the requirement
  */
 export declare function generateArguments(options: LaunchOption): Promise<string[]>;
-`;
-module.exports['@xmcl/core/launch.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/core/platform.d.ts'] = `/**
- * The platform information related to current operating system.
+\/\/# sourceMappingURL=launch.d.ts.map`;
+module.exports['@xmcl/core/platform.d.ts'] = `/**  * The platform information related to current operating system.
  */
 export interface Platform {
     /**
@@ -715,11 +698,10 @@ export declare function getPlatform(): Platform;
  * @deprecated Will be removed in next patch
  */
 export declare const currentPlatform: Platform;
-`;
-module.exports['@xmcl/core/util.d.ts'] = `/**
- * @ignore
+\/\/# sourceMappingURL=platform.d.ts.map`;
+module.exports['@xmcl/core/util.d.ts'] = `/**  * @ignore
  */
-/// <reference types="node" />
+\/\// <reference types="node" />
 import { readFile as freadFile, writeFile as fwriteFile, mkdir as fmkdir, link as flink } from "fs";
 /** @ignore */
 export declare const link: typeof flink.__promisify__;
@@ -739,11 +721,8 @@ export declare function validateSha1(target: string, hash?: string, strict?: boo
  * @ignore
  */
 export declare function getSha1(target: string): Promise<any>;
-`;
-module.exports['@xmcl/core/util.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/core/version.d.ts'] = `import { MinecraftLocation } from "./folder";
-import { Platform } from "./platform";
+\/\/# sourceMappingURL=util.d.ts.map`;
+module.exports['@xmcl/core/version.d.ts'] = `import { MinecraftLocation } from "./folder"; import { Platform } from "./platform";
 interface PartialResolvedVersion extends Version {
     libraries: ResolvedLibrary[];
     arguments: {
@@ -982,9 +961,9 @@ export declare namespace Version {
      * } catch (e) {
      *   let err = e as VersionParseError;
      *   switch (err.error) {
-     *     case "BadVersionJson": // do things...
-     *     // handle other cases
-     *     default: // this means this is not a VersionParseError, handle error normally.
+     *     case "BadVersionJson": \/\/ do things...
+     *     \/\/ handle other cases
+     *     default: \/\/ this means this is not a VersionParseError, handle error normally.
      *   }
      * }
      * \`\`\`
@@ -1111,11 +1090,8 @@ export interface Version {
     };
 }
 export {};
-`;
-module.exports['@xmcl/core/version.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/curseforge/http/base.d.ts'] = `/// <reference types="node" />
-import { Agent } from "https";
+\/\/# sourceMappingURL=version.d.ts.map`;
+module.exports['@xmcl/curseforge/http/base.d.ts'] = `\/\// <reference types="node" /> import { Agent } from "https";
 /**
  * Abstract layer for http requester.
  */
@@ -1138,15 +1114,12 @@ export declare type HttpRequester = (option: {
     statusMessage: string;
     statusCode: number;
 }>;
-`;
-module.exports['@xmcl/curseforge/http/index.browser.d.ts'] = `import { HttpRequester } from "./base";
-export declare const httpRequester: HttpRequester;
-`;
-module.exports['@xmcl/curseforge/http/index.d.ts'] = `import { HttpRequester } from "./base";
-export declare const httpRequester: HttpRequester;
-`;
-module.exports['@xmcl/curseforge/index.d.ts'] = `/// <reference types="node" />
-import { Agent } from "https";
+\/\/# sourceMappingURL=base.d.ts.map`;
+module.exports['@xmcl/curseforge/http/index.browser.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
+\/\/# sourceMappingURL=index.browser.d.ts.map`;
+module.exports['@xmcl/curseforge/http/index.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/curseforge/index.d.ts'] = `\/\// <reference types="node" /> import { Agent } from "https";
 export interface AddonInfo {
     /**
      * The addon id. You can use this in many functions required the \`addonID\`
@@ -1423,9 +1396,9 @@ export interface SearchOptions {
      * \`\`\`ts
      * const cat = await getCategories();
      * const sectionIds = cat
-     *  .filter(c => c.gameId === 432) // 432 is minecraft game id
+     *  .filter(c => c.gameId === 432) \/\/ 432 is minecraft game id
      *  .filter(c => c.rootGameCategoryId === null).map(c => c.id);
-     * // the sectionIds is all normal sections here
+     * \/\/ the sectionIds is all normal sections here
      * \`\`\`
      *
      * @see {@link getCategories}
@@ -1438,12 +1411,12 @@ export interface SearchOptions {
      *
      * \`\`\`ts
      * const cat = await getCategories();
-     * const sectionId = 6; // the mods
+     * const sectionId = 6; \/\/ the mods
      * const categoryIds = cat
-     *  .filter(c => c.gameId === 432) // 432 is minecraft game id
-     *  .filter(c => c.rootGameCategoryId === sectionId) // only under the section id
+     *  .filter(c => c.gameId === 432) \/\/ 432 is minecraft game id
+     *  .filter(c => c.rootGameCategoryId === sectionId) \/\/ only under the section id
      *  .map(c => c.id);
-     * // Use categoryIds' id to search under the corresponding section id.
+     * \/\/ Use categoryIds' id to search under the corresponding section id.
      * \`\`\`
      *
      * @see {@link getCategories}
@@ -1565,11 +1538,8 @@ export declare function getCategories(options?: QueryOption): Promise<Category[]
  * It should return the \`Date\` string like "2019-06-09T23:34:29.103Z"
  */
 export declare function getCategoryTimestamp(options?: QueryOption): Promise<any>;
-`;
-module.exports['@xmcl/curseforge/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/forge-site-parser/index.d.ts'] = `/**
- * One forge version download info
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/forge-site-parser/index.d.ts'] = `/**  * One forge version download info
  */
 interface Download {
     md5: string;
@@ -1615,11 +1585,8 @@ export interface ForgeWebPage {
     mcversion: string;
 }
 export {};
-`;
-module.exports['@xmcl/forge-site-parser/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/gamesetting/index.d.ts'] = `/**
- * Provide function to {@link parse} the options.txt and also {@link stringify} it into the string.
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/gamesetting/index.d.ts'] = `/**  * Provide function to {@link parse} the options.txt and also {@link stringify} it into the string.
  *
  * @packageDocumentation
  */
@@ -1903,15 +1870,13 @@ export declare function parse(str: string, strict?: boolean): GameSetting | Fram
 export declare function stringify(setting: GameSetting | Frame | any, original?: string, eol?: string): string;
 export declare type GameSetting = ReturnType<typeof getDefaultFrame>;
 export {};
-`;
-module.exports['@xmcl/gamesetting/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/installer/curseforge.d.ts'] = `/// <reference types="node" />
-import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
-import { Task } from "@xmcl/task";
-import { CachedZipFile } from "@xmcl/unzip";
-import { DownloaderOption } from "./minecraft";
-export interface Options extends DownloaderOption {
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/installer/curseforge.d.ts'] = `\/\// <reference types="node" /> import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
+import { BaseTask } from "@xmcl/task";
+import { Entry, ZipFile } from "yauzl";
+import { DownloadCommonOptions } from "./http";
+import { UnzipTask } from "./unzip";
+export interface CurseforgeOptions extends DownloadCommonOptions {
     /**
      * The function to query a curseforge project downloadable url.
      */
@@ -1932,13 +1897,16 @@ export interface Options extends DownloaderOption {
      */
     filePathResolver?: FilePathResolver;
 }
-export interface InstallFileOptions extends DownloaderOption {
+export interface InstallFileOptions extends DownloadCommonOptions {
     /**
      * The function to query a curseforge project downloadable url.
      */
     queryFileUrl?: CurseforgeURLQuery;
 }
-declare type InputType = string | Buffer | CachedZipFile;
+declare type InputType = string | Buffer | {
+    zip: ZipFile;
+    entries: Entry[];
+};
 export interface BadCurseforgeModpackError {
     error: "BadCurseforgeModpack";
     /**
@@ -1981,7 +1949,7 @@ export interface File {
  * Read the mainifest data from modpack
  * @throws {@link BadCurseforgeModpackError}
  */
-export declare function readManifestTask(zip: InputType): Task<Manifest>;
+export declare function readManifestTask(input: InputType): import("@xmcl/task").TaskRoutine<Manifest>;
 /**
  * Read the mainifest data from modpack
  * @throws {@link BadCurseforgeModpackError}
@@ -1998,19 +1966,36 @@ export declare function createDefaultCurseforgeQuery(): CurseforgeURLQuery;
  * @param minecraft The minecraft location
  * @param options The options for query curseforge
  */
-export declare function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLocation, options?: Options): Promise<Manifest>;
+export declare function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLocation, options?: CurseforgeOptions): Promise<Manifest>;
+export declare class DownloadCurseforgeFilesTask extends BaseTask<void> {
+    readonly manifest: Manifest;
+    readonly minecraft: MinecraftFolder;
+    readonly options: CurseforgeOptions;
+    constructor(manifest: Manifest, minecraft: MinecraftFolder, options: CurseforgeOptions);
+    private tasks;
+    protected run(): Promise<void>;
+    protected onCancel(): void;
+    protected onPause(): void;
+    protected onResume(): void;
+}
+export declare class DeployTask extends UnzipTask {
+    private manifest;
+    name: string;
+    param: object;
+    constructor(zipFile: ZipFile, entries: Entry[], manifest: Manifest, minecraft: MinecraftFolder);
+}
 /**
  * Install curseforge modpack to a specific Minecraft location.
  *
  * This will NOT install the Minecraft version in the modpack, and will NOT install the forge or other modload listed in modpack!
  * Please resolve them by yourself.
  *
- * @param zip The curseforge modpack zip buffer or file path
+ * @param input The curseforge modpack zip buffer or file path
  * @param minecraft The minecraft location
  * @param options The options for query curseforge
  * @throws {@link BadCurseforgeModpackError}
  */
-export declare function installCurseforgeModpackTask(zip: InputType, minecraft: MinecraftLocation, options?: Options): Task<Manifest>;
+export declare function installCurseforgeModpackTask(input: InputType, minecraft: MinecraftLocation, options?: CurseforgeOptions): import("@xmcl/task").TaskRoutine<Manifest>;
 /**
  * Install a cureseforge xml file to a specific locations
  */
@@ -2018,14 +2003,10 @@ export declare function installCurseforgeFile(file: File, destination: string, o
 /**
  * Install a cureseforge xml file to a specific locations
  */
-export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): Task<void>;
+export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): import("@xmcl/task").TaskRoutine<void>;
 export {};
-`;
-module.exports['@xmcl/installer/curseforge.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/installer/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary } from "@xmcl/core";
-import { Task } from "@xmcl/task";
-import { InstallProfile } from "./minecraft";
+\/\/# sourceMappingURL=curseforge.d.ts.map`;
+module.exports['@xmcl/installer/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core"; import { InstallProfile } from "./minecraft";
 declare type Processor = InstallProfile["processors"][number];
 export interface Issue {
     /**
@@ -2146,25 +2127,14 @@ export interface InstallProfileIssueReport {
  * @param minecraft The minecraft location
  * @beta
  */
-export declare function diagnoseTask(version: string, minecraftLocation: MinecraftLocation): Task<MinecraftIssueReport>;
-/**
- * Diagnose the version. It will check the version json/jar, libraries and assets.
- * @beta
- *
- * @param version The version id string
- * @param minecraft The minecraft location
- */
-export declare function diagnose(version: string, minecraft: MinecraftLocation): Promise<MinecraftIssueReport>;
-/**
- * Diagnose a install profile status. Check if it processor output correctly processed.
- *
- * This can be used for check if forge correctly installed when minecraft >= 1.13
- * @beta
- *
- * @param installProfile The install profile.
- * @param minecraftLocation The minecraft location
- */
-export declare function diagnoseInstallTask(installProfile: InstallProfile, minecraftLocation: MinecraftLocation): Task<InstallProfileIssueReport>;
+export declare function diagnose(version: string, minecraftLocation: MinecraftLocation): Promise<MinecraftIssueReport>;
+export declare function diagnoseAssets(assetObjects: Record<string, {
+    hash: string;
+    size: number;
+}>, minecraft: MinecraftFolder): Promise<AssetIssue[]>;
+export declare function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<Array<LibraryIssue>>;
+export declare function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<AssetIndexIssue | undefined>;
+export declare function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<MinecraftJarIssue | undefined>;
 /**
  * Diagnose a install profile status. Check if it processor output correctly processed.
  *
@@ -2176,25 +2146,23 @@ export declare function diagnoseInstallTask(installProfile: InstallProfile, mine
  */
 export declare function diagnoseInstall(installProfile: InstallProfile, minecraftLocation: MinecraftLocation): Promise<InstallProfileIssueReport>;
 export {};
-`;
-module.exports['@xmcl/installer/e2e.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
-import { InstallOptions, UpdatedObject } from "./util";
-export declare const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
-export declare const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
+\/\/# sourceMappingURL=diagnose.d.ts.map`;
+module.exports['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Timestamped } from "./http";
+import { InstallOptions } from "./utils";
+export declare const YARN_MAVEN_URL = "https:\/\/maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
+export declare const LOADER_MAVEN_URL = "https:\/\/maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
 /**
  * Fabric Yarn version list
- * @see https://github.com/FabricMC/yarn
+ * @see https:\/\/github.com/FabricMC/yarn
  */
-export interface YarnVersionList extends UpdatedObject {
+export interface YarnVersionList extends Timestamped {
     versions: FabricArtifactVersion[];
 }
 /**
  * Fabric mod loader version list
- * @see https://fabricmc.net/
+ * @see https:\/\/fabricmc.net/
  */
-export interface LoaderVersionList extends UpdatedObject {
+export interface LoaderVersionList extends Timestamped {
     versions: FabricArtifactVersion[];
 }
 export interface FabricArtifactVersion {
@@ -2234,7 +2202,7 @@ export interface LoaderArtifact {
         };
     };
 }
-export declare const DEFAULT_FABRIC_API = "https://meta.fabricmc.net/v2";
+export declare const DEFAULT_FABRIC_API = "https:\/\/meta.fabricmc.net/v2";
 /**
  * Get all the artifacts provided by fabric
  * @param remote The fabric API host
@@ -2317,7 +2285,7 @@ export declare function getLoaderVersionList(option: {
  * @param minecraft The minecraft location
  * @returns The installed version id
  */
-export declare function install(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options?: InstallOptions): Promise<string>;
+export declare function installFabricYarnAndLoader(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options?: InstallOptions): Promise<string>;
 export interface FabricInstallOptions extends InstallOptions {
     side?: "client" | "server";
     yarnVersion?: string | FabricArtifactVersion;
@@ -2331,12 +2299,13 @@ export interface FabricInstallOptions extends InstallOptions {
  * @param options The options
  * @beta
  */
-export declare function installFromVersionMeta(loader: LoaderArtifact, minecraft: MinecraftLocation, options?: FabricInstallOptions): Promise<string>;
-`;
-module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
-import { Task } from "@xmcl/task";
-import { InstallProfileOption, LibraryOption } from "./minecraft";
-import { InstallOptions as InstallOptionsBase, UpdatedObject, DownloaderOptions } from "./util";
+export declare function installFabric(loader: LoaderArtifact, minecraft: MinecraftLocation, options?: FabricInstallOptions): Promise<string>;
+\/\/# sourceMappingURL=fabric.d.ts.map`;
+module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
+import { Entry, ZipFile } from "yauzl";
+import { DownloadFallbackTask, Timestamped } from "./http";
+import { InstallProfileOption, LibraryOptions } from "./minecraft";
+import { InstallOptions as InstallOptionsBase } from "./utils";
 export interface BadForgeInstallerJarError {
     error: "BadForgeInstallerJar";
     /**
@@ -2352,14 +2321,14 @@ export interface BadForgeUniversalJarError {
     entry: string;
 }
 export declare type ForgeError = BadForgeInstallerJarError | BadForgeUniversalJarError;
-export interface VersionList extends UpdatedObject {
+export interface ForgeVersionList extends Timestamped {
     mcversion: string;
-    versions: Version[];
+    versions: ForgeVersion[];
 }
 /**
  * The forge version metadata to download a forge
  */
-export interface Version {
+export interface ForgeVersion {
     /**
      * The installer info
      */
@@ -2389,6 +2358,41 @@ export interface Version {
     version: string;
     type: "buggy" | "recommended" | "common" | "latest";
 }
+/**
+ * All the useful entries in forge installer jar
+ */
+export interface ForgeInstallerEntries {
+    /**
+     *  maven/net/minecraftforge/forge/\${forgeVersion}/forge-\${forgeVersion}.jar
+     */
+    forgeJar?: Entry;
+    /**
+     *  maven/net/minecraftforge/forge/\${forgeVersion}/forge-\${forgeVersion}-universal.jar
+     */
+    forgeUniversalJar?: Entry;
+    /**
+     * data/client.lzma
+     */
+    clientLzma?: Entry;
+    /**
+     * data/server.lzma
+     */
+    serverLzma?: Entry;
+    /**
+     * install_profile.json
+     */
+    installProfileJson?: Entry;
+    /**
+     * version.json
+     */
+    versionJson?: Entry;
+    /**
+     * forge-\${forgeVersion}-universal.jar
+     */
+    legacyUniversalJar?: Entry;
+}
+export declare type ForgeInstallerEntriesPattern = ForgeInstallerEntries & Required<Pick<ForgeInstallerEntries, "forgeJar" | "versionJson" | "installProfileJson">>;
+export declare type ForgeLegacyInstallerEntriesPattern = Required<Pick<ForgeInstallerEntries, "installProfileJson" | "legacyUniversalJar">>;
 declare type RequiredVersion = {
     /**
      * The installer info.
@@ -2411,12 +2415,24 @@ declare type RequiredVersion = {
      */
     version: string;
 };
-export declare const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
+export declare const DEFAULT_FORGE_MAVEN = "http:\/\/files.minecraftforge.net/maven";
 /**
  * The options to install forge.
  */
-export interface Options extends DownloaderOptions, LibraryOption, InstallOptionsBase, InstallProfileOption {
+export interface InstallForgeOptions extends LibraryOptions, InstallOptionsBase, InstallProfileOption {
 }
+export declare class DownloadForgeInstallerTask extends DownloadFallbackTask {
+    readonly installJarPath: string;
+    constructor(forgeVersion: string, installer: RequiredVersion["installer"], minecraft: MinecraftFolder, options: InstallForgeOptions);
+}
+export declare function isLegacyForgeInstallerEntries(entries: ForgeInstallerEntries): entries is ForgeLegacyInstallerEntriesPattern;
+export declare function isForgeInstallerEntries(entries: ForgeInstallerEntries): entries is ForgeInstallerEntriesPattern;
+/**
+ * Walk the forge installer file to find key entries
+ * @param zip THe forge instal
+ * @param forgeVersion Forge version to install
+ */
+export declare function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: string): Promise<ForgeInstallerEntries>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
@@ -2424,7 +2440,7 @@ export interface Options extends DownloaderOptions, LibraryOption, InstallOption
  * @returns The installed version name.
  * @throws {@link ForgeError}
  */
-export declare function install(version: RequiredVersion, minecraft: MinecraftLocation, options?: Options): Promise<string>;
+export declare function installForge(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions): Promise<string>;
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
@@ -2432,7 +2448,7 @@ export declare function install(version: RequiredVersion, minecraft: MinecraftLo
  * @returns The task to install the forge
  * @throws {@link ForgeError}
  */
-export declare function installTask(version: RequiredVersion, minecraft: MinecraftLocation, options?: Options): Task<string>;
+export declare function installForgeTask(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions): Task<string>;
 /**
  * Query the webpage content from files.minecraftforge.net.
  *
@@ -2441,7 +2457,7 @@ export declare function installTask(version: RequiredVersion, minecraft: Minecra
  *
  * @param option The option can control querying minecraft version, and page caching.
  */
-export declare function getVersionList(option?: {
+export declare function getForgeVersionList(option?: {
     /**
      * The minecraft version you are requesting
      */
@@ -2452,37 +2468,229 @@ export declare function getVersionList(option?: {
      * If the server believes there is no modification after the original one,
      * it will directly return the orignal one.
      */
-    original?: VersionList;
-}): Promise<VersionList>;
+    original?: ForgeVersionList;
+}): Promise<ForgeVersionList>;
 export {};
-`;
-module.exports['@xmcl/installer/index.d.ts'] = `/**
- * The installer module provides commonly used installation functions for Minecraft.
- *
- * To install Minecraft, use module {@link minecraft} or \`Installer\`
- *
- * To install Forge, use module {@link forge} or \`ForgeInstaller\`
- *
- * To install Liteloader, use module {@link liteloader} or \`LiteloaderInstaller\`
- *
- * To install Fabric, use module {@link fabric} or \`FabricInstaller\`
- *
+\/\/# sourceMappingURL=forge.d.ts.map`;
+module.exports['@xmcl/installer/http.d.ts'] = `\/\// <reference types="node" /> import { LoopedTask } from "@xmcl/task";
+import { WriteStream } from "fs";
+import { Agent as HttpAgent, ClientRequest, IncomingMessage } from "http";
+import { Agent as HttpsAgent } from "https";
+/**
+ * The http(s) agents object for requesting
+ */
+export interface Agents {
+    http?: HttpAgent;
+    https?: HttpsAgent;
+}
+export interface Timestamped {
+    timestamp: string;
+}
+export declare class ChecksumNotMatchError extends Error {
+    readonly algorithm: string;
+    readonly expect: string;
+    readonly actual: string;
+    readonly file: string;
+    constructor(algorithm: string, expect: string, actual: string, file: string);
+}
+/**
+ * Join two urls
+ */
+export declare function joinUrl(a: string, b: string): string;
+export declare function fetchText(url: string, agent?: Agents): Promise<string>;
+export declare function fetchJson(url: string, agent?: Agents): Promise<any>;
+export declare function getIfUpdate(url: string, timestamp?: string, agent?: Agents): Promise<{
+    timestamp: string;
+    content: string | undefined;
+}>;
+export declare function getAndParseIfUpdate<T extends Timestamped>(url: string, parser: (s: string) => any, lastObject: T | undefined): Promise<T>;
+export declare function getLastModified(url: string, timestamp: string | undefined, agent?: Agents): Promise<readonly [true, string | undefined] | readonly [false, string | undefined]>;
+export interface Segment {
+    start: number;
+    end?: number;
+}
+export interface DownloadBaseOptions {
+    /**
+     * The header of the request
+     */
+    headers?: Record<string, any>;
+    /**
+     * The agent of the request
+     */
+    agents?: Agents;
+    /**
+     * The minimum bytes a segment should have.
+     * @default 2MB
+     */
+    segmentThreshold?: number;
+    /**
+     * Decide should downloader redownload and overwrite existed file.
+     *
+     * It has such options:
+     *
+     * - \`checksumNotMatch\`: Only the file with checksum provided and not matched will be redownload.
+     * - \`checksumNotMatchOrEmpty\`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
+     * - \`always\`: Always redownload files.
+     *
+     * @default "checksumNotMatch"
+     */
+    overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
+}
+export interface DownloadSingleUrlOptions extends DownloadBaseOptions {
+    destination: string;
+    url: string;
+    /**
+    * The checksum info of the file
+    */
+    checksum?: {
+        algorithm: string;
+        hash: string;
+    };
+}
+export interface DownloadMultiUrlOptions extends DownloadBaseOptions {
+    destination: string;
+    urls: string[];
+    /**
+    * The checksum info of the file
+    */
+    checksum?: {
+        algorithm: string;
+        hash: string;
+    };
+}
+export interface DownloadFromPathOptions extends DownloadBaseOptions {
+    destination: string;
+    path: string;
+    /**
+    * The checksum info of the file
+    */
+    checksum?: {
+        algorithm: string;
+        hash: string;
+    };
+}
+/**
+ */
+export interface DownloadCommonOptions extends DownloadBaseOptions {
+    /**
+     * Should throw the donwload process immediately after ANY resource download failed.
+     */
+    throwErrorImmediately?: boolean;
+    /**
+     * The suggested max concurrency of the download. This is not a strict criteria.
+     *
+     * This is used to generate the \`agents\` maxSocket.
+     * If \`agents\` is assigned, this will be ignore.
+     */
+    maxSocket?: number;
+    /**
+  * The suggested max concurrency of the download. This is not a strict criteria.
+  *
+  * This is used to generate the \`agents\` maxFreeSocket.
+  * If \`agents\` is assigned, this will be ignore.
+  */
+    maxFreeSocket?: number;
+}
+interface Connections {
+    request: ClientRequest;
+    response: IncomingMessage;
+}
+export declare class DownloadTask extends LoopedTask<Segment[]> {
+    protected segments: Segment[];
+    protected outputs: WriteStream[];
+    protected connections: Connections[];
+    /**
+     * The original request url
+     */
+    protected originalUrl: string;
+    /**
+    * The checksum info of the file
+    */
+    protected checksum?: {
+        algorithm: string;
+        hash: string;
+    };
+    /**
+     * The header of the request
+     */
+    protected headers: Record<string, any>;
+    /**
+     * The agent of the request
+     */
+    protected agents: Agents;
+    /**
+     * The minimum bytes a segment should have.
+     * @default 2MB
+     */
+    protected segmentThreshold: number;
+    /**
+     * Decide should downloader redownload and overwrite existed file.
+     *
+     * It has such options:
+     *
+     * - \`checksumNotMatch\`: Only the file with checksum provided and not matched will be redownload.
+     * - \`checksumNotMatchOrEmpty\`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
+     * - \`always\`: Always redownload files.
+     *
+     * @default "checksumNotMatch"
+     */
+    protected overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
+    protected acceptRanges: boolean;
+    protected contentLength: number;
+    protected lastModified?: string;
+    protected eTag?: string;
+    get url(): string;
+    set url(url: string);
+    get destination(): string;
+    set destination(destination: string);
+    /**
+     * current fd
+     */
+    protected fd: number;
+    constructor(options: DownloadSingleUrlOptions);
+    protected updateMetadata(): Promise<void>;
+    protected startSegmentDownload(seg: Segment, output: WriteStream): Promise<readonly [Promise<boolean>] | readonly [Promise<boolean>, ClientRequest, IncomingMessage]>;
+    protected download(): Promise<boolean>;
+    protected computeSegmenets(total: number, chunkSize: number, concurrency: number): Segment[];
+    protected shouldProcess(): Promise<boolean>;
+    protected process(): Promise<[boolean, Segment[]]>;
+    protected abort(): void;
+    protected shouldTolerant(e: any): boolean;
+    protected validate(): Promise<void>;
+    protected reset(): Promise<void>;
+}
+export declare class DownloadFallbackTask extends DownloadTask {
+    protected urls: string[];
+    constructor(options: DownloadMultiUrlOptions);
+    run(): Promise<Segment[]>;
+}
+export declare const DEFAULT_AGENTS: Agents;
+export declare function getDefaultAgents(): void;
+export declare function createDefaultAgents(): Agents;
+export declare function createAgents(options: DownloadCommonOptions): {
+    http: HttpAgent;
+    https: HttpsAgent;
+};
+export declare function ensureAgent<T extends DownloadCommonOptions, R>(options: T, scope: (options: T) => R): Promise<R>;
+export {};
+\/\/# sourceMappingURL=http.d.ts.map`;
+module.exports['@xmcl/installer/index.d.ts'] = `/**  * The installer module provides commonly used installation functions for Minecraft.
  * @packageDocumentation
  */
-import * as FabricInstaller from "./fabric";
-import * as LiteLoaderInstaller from "./liteloader";
-import * as ForgeInstaller from "./forge";
-import * as Installer from "./minecraft";
-import * as CurseforgeInstaller from "./curseforge";
-import * as OptifineInstaller from "./optifine";
-import * as JavaInstaller from "./java";
-import * as Diagnosis from "./diagnose";
-export { DownloadOption, Downloader, HttpDownloader as DefaultDownloader, HttpDownloader, MultipleError, downloadFileTask, InstallOptions, DownloaderOptions, } from "./util";
-export { JavaInstaller, Installer, ForgeInstaller, LiteLoaderInstaller, FabricInstaller, Diagnosis, CurseforgeInstaller, OptifineInstaller };
-`;
-module.exports['@xmcl/installer/java.d.ts'] = `import { Platform } from "@xmcl/core";
-import { Task } from "@xmcl/task";
-import { DownloaderOption } from "./minecraft";
+export * from "./fabric";
+export * from "./liteloader";
+export * from "./forge";
+export * from "./minecraft";
+export * from "./curseforge";
+export * from "./optifine";
+export * from "./java";
+export * from "./diagnose";
+export * from "./utils";
+export * from "./http";
+export * from "./unzip";
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/installer/java.d.ts'] = `import { Platform } from "@xmcl/core"; import { Task } from "@xmcl/task";
+import { DownloadCommonOptions, DownloadTask } from "./http";
 export interface JavaInfo {
     /**
      * Full java executable path
@@ -2497,7 +2705,7 @@ export interface JavaInfo {
      */
     majorVersion: number;
 }
-export interface Options extends DownloaderOption {
+export interface InstallJavaOptions extends DownloadCommonOptions {
     /**
      * The destination of this installation
      */
@@ -2515,18 +2723,27 @@ export interface Options extends DownloaderOption {
     /**
      * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
      */
-    unpackLZMA: (src: string, dest: string) => Promise<void>;
+    unpackLZMA: UnpackLZMAFunction;
+}
+export declare type UnpackLZMAFunction = ((src: string, dest: string) => Promise<void>) | ((src: string, dest: string) => Task<void>);
+export declare class DownloadJRETask extends DownloadTask {
+    constructor(jre: DownloadInfo, dir: string, options: InstallJavaOptions);
+}
+interface DownloadInfo {
+    sha1: string;
+    url: string;
+    version: string;
 }
 /**
  * Install JRE from Mojang offical resource. It should install jdk 8.
  * @param options The install options
  */
-export declare function installJreFromMojangTask(options: Options): Task<void>;
+export declare function installJreFromMojangTask(options: InstallJavaOptions): import("@xmcl/task").TaskRoutine<void>;
 /**
  * Install JRE from Mojang offical resource. It should install jdk 8.
  * @param options The install options
  */
-export declare function installJreFromMojang(options: Options): Promise<void>;
+export declare function installJreFromMojang(options: InstallJavaOptions): Promise<void>;
 /**
  * Try to resolve a java info at this path. This will call \`java -version\`
  * @param path The java exectuable path.
@@ -2561,17 +2778,16 @@ export declare function getPotentialJavaLocations(): Promise<string[]>;
  * @returns All validate java info
  */
 export declare function scanLocalJava(locations: string[]): Promise<JavaInfo[]>;
-`;
-module.exports['@xmcl/installer/java.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core";
-import { Task } from "@xmcl/task";
-import { UpdatedObject, InstallOptions } from "./util";
-export declare const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
+export {};
+\/\/# sourceMappingURL=java.d.ts.map`;
+module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
+import { InstallOptions } from "./utils";
+import { Timestamped } from "./http";
+export declare const DEFAULT_VERSION_MANIFEST = "http:\/\/dl.liteloader.com/versions/versions.json";
 /**
  * The liteloader version list. Containing the minecraft version -> liteloader version info mapping.
  */
-export interface VersionList extends UpdatedObject {
+export interface LiteloaderVersionList extends Timestamped {
     meta: {
         description: string;
         authors: string;
@@ -2581,12 +2797,12 @@ export interface VersionList extends UpdatedObject {
     };
     versions: {
         [version: string]: {
-            snapshot?: Version;
-            release?: Version;
+            snapshot?: LiteloaderVersion;
+            release?: LiteloaderVersion;
         };
     };
 }
-export declare namespace VersionList {
+export declare namespace LiteloaderVersionList {
     function parse(content: string): {
         meta: any;
         versions: {};
@@ -2595,7 +2811,7 @@ export declare namespace VersionList {
 /**
  * A liteloader remote version information
  */
-export interface Version {
+export interface LiteloaderVersion {
     version: string;
     url: string;
     file: string;
@@ -2625,19 +2841,19 @@ export interface MissingVersionJsonError {
  *
  * This will request liteloader offical json by default. You can replace the request by assigning the remote option.
  */
-export declare function getVersionList(option?: {
+export declare function getLiteloaderVersionList(option?: {
     /**
      * If this presents, it will send request with the original list timestamp.
      *
      * If the server believes there is no modification after the original one,
      * it will directly return the orignal one.
      */
-    original?: VersionList;
+    original?: LiteloaderVersionList;
     /**
      * The optional requesting version json url.
      */
     remote?: string;
-}): Promise<VersionList>;
+}): Promise<LiteloaderVersionList>;
 /**
  * Install the liteloader to specific minecraft location.
  *
@@ -2650,7 +2866,7 @@ export declare function getVersionList(option?: {
  * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
  * @throws {@link MissingVersionJsonError}
  */
-export declare function install(versionMeta: Version, location: MinecraftLocation, options?: InstallOptions): Promise<string>;
+export declare function installLiteloader(versionMeta: LiteloaderVersion, location: MinecraftLocation, options?: InstallOptions): Promise<string>;
 /**
  * Install the liteloader to specific minecraft location.
  *
@@ -2664,29 +2880,49 @@ export declare function install(versionMeta: Version, location: MinecraftLocatio
  * @param location The minecraft location you want to install
  * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
  */
-export declare function installTask(versionMeta: Version, location: MinecraftLocation, options?: InstallOptions): Task<string>;
-`;
-module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
-import { Task } from "@xmcl/task";
-import { DownloaderOptions, UpdatedObject } from "./util";
+export declare function installLiteloaderTask(versionMeta: LiteloaderVersion, location: MinecraftLocation, options?: InstallOptions): Task<string>;
+\/\/# sourceMappingURL=liteloader.d.ts.map`;
+module.exports['@xmcl/installer/minecraft.d.ts'] = `import { LibraryInfo, MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core"; import { LoopedTask, TaskRoutine } from "@xmcl/task";
+import { DownloadCommonOptions, DownloadFallbackTask, Timestamped } from "./http";
 /**
  * The function to swap library host.
  */
 export declare type LibraryHost = (library: ResolvedLibrary) => string | string[] | undefined;
+export interface VersionBaseInfo {
+    /**
+     * The version id, like 1.14.4
+     */
+    id: string;
+    /**
+  * The version json download url
+  */
+    url: string;
+}
 /**
  * The version metadata containing the version information, like download url
  */
-export interface Version {
+export interface Version extends VersionBaseInfo {
+    /**
+     * The version id, like 1.14.4
+     */
     id: string;
     type: string;
     time: string;
     releaseTime: string;
+    /**
+     * The version json download url
+     */
     url: string;
+}
+export interface AssetInfo {
+    name: string;
+    hash: string;
+    size: number;
 }
 /**
  * Minecraft version metadata list
  */
-export interface VersionList extends UpdatedObject {
+export interface VersionList extends Timestamped {
     latest: {
         /**
          * Snapshot version id of the Minecraft
@@ -2764,11 +3000,11 @@ export interface InstallProfile {
 /**
  * Default minecraft version manifest url.
  */
-export declare const DEFAULT_VERSION_MANIFEST_URL = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+export declare const DEFAULT_VERSION_MANIFEST_URL = "https:\/\/launchermeta.mojang.com/mc/game/version_manifest.json";
 /**
  * Default resource/assets url root
  */
-export declare const DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.net";
+export declare const DEFAULT_RESOURCE_ROOT_URL = "https:\/\/resources.download.minecraft.net";
 /**
  * Get and update the version list.
  * This try to send http GET request to offical Minecraft metadata endpoint by default.
@@ -2789,11 +3025,10 @@ export declare function getVersionList(option?: {
      */
     remote?: string;
 }): Promise<VersionList>;
-export declare type DownloaderOption = DownloaderOptions;
 /**
  * Change the library host url
  */
-export interface LibraryOption extends DownloaderOptions {
+export interface LibraryOptions extends DownloadCommonOptions {
     /**
      * A more flexiable way to control library download url.
      * @see mavenHost
@@ -2814,7 +3049,7 @@ export interface LibraryOption extends DownloaderOptions {
 /**
  * Change the host url of assets download
  */
-export interface AssetsOption extends DownloaderOptions {
+export interface AssetsOptions extends DownloadCommonOptions {
     /**
      * The alternative assets host to download asset. It will try to use these host from the \`[0]\` to the \`[assetsHost.length - 1]\`
      */
@@ -2831,14 +3066,15 @@ export interface AssetsOption extends DownloaderOptions {
      */
     assetsIndexUrl?: string | string[] | ((version: ResolvedVersion) => string | string[]);
 }
+export declare type InstallLibraryVersion = Pick<ResolvedVersion, "libraries" | "minecraftDirectory">;
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloaderOptions {
+export interface JarOption extends DownloadCommonOptions {
     /**
      * The version json url replacement
      */
-    json?: string | string[] | ((version: RequiredVersion) => string | string[]);
+    json?: string | string[] | ((version: VersionBaseInfo) => string | string[]);
     /**
      * The client jar url replacement
      */
@@ -2848,8 +3084,19 @@ export interface JarOption extends DownloaderOptions {
      */
     server?: string | string[] | ((version: ResolvedVersion) => string | string[]);
 }
-export declare type Option = AssetsOption & JarOption & LibraryOption;
-declare type RequiredVersion = Pick<Version, "id" | "url">;
+export interface InstallSideOption {
+    /**
+     * The installation side
+     */
+    side?: "client" | "server";
+}
+export interface InstallProfileOption extends LibraryOptions, InstallSideOption {
+    /**
+     * New forge (>=1.13) require java to install. Can be a executor or java executable path.
+     */
+    java?: string;
+}
+export declare type Options = DownloadCommonOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
 export interface PostProcessFailedError {
     error: "PostProcessFailed";
     jar: string;
@@ -2865,6 +3112,23 @@ export interface PostProcessBadJarError {
     causeBy: Error;
 }
 export declare type PostProcessError = PostProcessBadJarError | PostProcessFailedError | PostProcessNoMainClassError;
+export interface MinecraftInstallEvent {
+    eventTarget: "asset" | "library" | "jar";
+    chunkSize: number;
+    progress: number;
+    size: number;
+    from: string;
+    to: string;
+}
+export interface LibraryEvent extends LibraryInfo, MinecraftInstallEvent {
+    eventTarget: "library";
+}
+export interface AssetEvent extends AssetInfo, MinecraftInstallEvent {
+    eventTarget: "asset";
+}
+export interface JarEvent extends VersionBaseInfo, MinecraftInstallEvent {
+    eventTarget: "jar";
+}
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -2875,30 +3139,7 @@ export declare type PostProcessError = PostProcessBadJarError | PostProcessFaile
  * @param minecraft The Minecraft location
  * @param option
  */
-export declare function install(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: Option): Promise<ResolvedVersion>;
-/**
- * Install the Minecraft game to a location by version metadata
- *
- * This will install version json, version jar, and all dependencies (assets, libraries)
- *
- * Tasks emmitted:
- * - install
- *  - installVersion
- *   - json
- *   - jar
- *  - installDependencies
- *   - installAssets
- *     - assetsJson
- *     - asset
- *   - installLibraries
- *     - library
- *
- * @param type The type of game, client or server
- * @param versionMeta The version metadata
- * @param minecraft The Minecraft location
- * @param option
- */
-export declare function installTask(type: "server" | "client", versionMeta: RequiredVersion, minecraft: MinecraftLocation, option?: Option): Task<ResolvedVersion>;
+export declare function install(versionMeta: VersionBaseInfo, minecraft: MinecraftLocation, option?: Options): Promise<ResolvedVersion>;
 /**
  * Only install the json/jar. Do not install dependencies.
  *
@@ -2906,128 +3147,34 @@ export declare function installTask(type: "server" | "client", versionMeta: Requ
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
  */
-export declare function installVersion(type: "client" | "server", versionMeta: Version, minecraft: MinecraftLocation, option?: JarOption): Promise<ResolvedVersion>;
-/**
- * Only install the json/jar. Do not check dependencies;
- *
- * Task emmitted:
- * - installVersion
- *   - json
- *   - jar
- *
- * @param type client or server
- * @param versionMeta the version metadata; get from updateVersionMeta
- * @param minecraft minecraft location
- */
-export declare function installVersionTask(type: "client" | "server", versionMeta: RequiredVersion, minecraft: MinecraftLocation, options?: JarOption): Task<ResolvedVersion>;
+export declare function installVersion(versionMeta: VersionBaseInfo, minecraft: MinecraftLocation, options?: JarOption): Promise<ResolvedVersion>;
 /**
  * Install the completeness of the Minecraft game assets and libraries on a existed version.
  *
  * @param version The resolved version produced by Version.parse
  * @param minecraft The minecraft location
  */
-export declare function installDependencies(version: ResolvedVersion, option?: Option): Promise<ResolvedVersion>;
-/**
- * Install the completeness of the Minecraft game assets and libraries.
- *
- * Tasks emitted:
- * - installDependencies
- *  - installAssets
- *   - assetsJson
- *   - asset
- *  - installLibraries
- *   - library
- *
- * @param version The resolved version produced by Version.parse
- * @param minecraft The minecraft location
- */
-export declare function installDependenciesTask(version: ResolvedVersion, options?: Option): Task<ResolvedVersion>;
+export declare function installDependencies(version: ResolvedVersion, option?: Options): Promise<ResolvedVersion>;
 /**
  * Install or check the assets to resolved version
- * @param version The target version
- * @param options The option to replace assets host url
- */
-export declare function installAssets(version: ResolvedVersion, options?: AssetsOption): Promise<ResolvedVersion>;
-/**
- * Install or check the assets to resolved version
- *
- * Task emitted:
- * - installAssets
- *  - assetsJson
- *  - asset
  *
  * @param version The target version
  * @param options The option to replace assets host url
  */
-export declare function installAssetsTask(version: ResolvedVersion, options?: AssetsOption): Task<ResolvedVersion>;
+export declare function installAssets(version: ResolvedVersion, options?: AssetsOptions): Promise<ResolvedVersion>;
 /**
  * Install all the libraries of providing version
  * @param version The target version
  * @param option The library host swap option
  */
-export declare function installLibraries(version: ResolvedVersion, option?: LibraryOption): Promise<void>;
-/**
- * Install all the libraries of providing version
- *
- * Task emmitted:
- * - installLibraries
- *  - library
- *
- * @param version The target version
- * @param option The library host swap option
- */
-export declare function installLibrariesTask<T extends Pick<ResolvedVersion, "minecraftDirectory" | "libraries">>(version: T, option?: LibraryOption): Task<void>;
-/**
- * Only install several resolved assets.
- * @param assets The assets to install
- * @param folder The minecraft folder
- * @param options The asset option
- */
-export declare function installResolvedAssetsTask(assets: {
-    name: string;
-    hash: string;
-    size: number;
-}[], folder: MinecraftFolder, options?: AssetsOption): Task<void>;
-/**
- * Only install several resolved assets.
- * @param assets The assets to install
- * @param folder The minecraft folder
- * @param options The asset option
- */
-export declare function installResolvedAssets(assets: {
-    name: string;
-    hash: string;
-    size: number;
-}[], folder: MinecraftFolder, options?: AssetsOption): Promise<void>;
+export declare function installLibraries(version: ResolvedVersion, option?: LibraryOptions): Promise<void>;
 /**
  * Only install several resolved libraries
  * @param libraries The resolved libraries
  * @param minecraft The minecraft location
  * @param option The install option
  */
-export declare function installResolvedLibraries(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Promise<void>;
-/**
- * Only install several resolved libraries.
- *
- * Task emmitted:
- * - installLibraries
- *  - library
- *
- * @param libraries The resolved libraries
- * @param minecraft The minecraft location
- * @param option The install option
- */
-export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOption): Task<void>;
-export interface InstallProfileOption extends LibraryOption {
-    /**
-     * New forge (>=1.13) require java to install. Can be a executor or java executable path.
-     */
-    java?: string;
-    /**
-     * The installation side
-     */
-    side?: "client" | "server";
-}
+export declare function installResolvedLibraries(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOptions): Promise<void>;
 /**
  * Resolve processors in install profile
  */
@@ -3055,15 +3202,6 @@ export declare function resolveProcessors(side: "client" | "server", installProf
  */
 export declare function postProcess(processors: InstallProfile["processors"], minecraft: MinecraftFolder, java: string): Promise<void>;
 /**
- * Post process the post processors from \`InstallProfile\`.
- *
- * @param processors The processor info
- * @param minecraft The minecraft location
- * @param java The java executable path
- * @throws {@link PostProcessError}
- */
-export declare function postProcessTask(processors: InstallProfile["processors"], minecraft: MinecraftFolder, java: string): Task<void>;
-/**
  * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
  *
  * @param installProfile The install profile
@@ -3073,25 +3211,115 @@ export declare function postProcessTask(processors: InstallProfile["processors"]
  */
 export declare function installByProfile(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): Promise<void>;
 /**
+ * Install the Minecraft game to a location by version metadata.
+ *
+ * This will install version json, version jar, and all dependencies (assets, libraries)
+ *
+ * @param type The type of game, client or server
+ * @param versionMeta The version metadata
+ * @param minecraft The Minecraft location
+ * @param options
+ */
+export declare function installTask(versionMeta: VersionBaseInfo, minecraft: MinecraftLocation, options?: Options): TaskRoutine<ResolvedVersion>;
+/**
+ * Only install the json/jar. Do not install dependencies.
+ *
+ * @param type client or server
+ * @param versionMeta the version metadata; get from updateVersionMeta
+ * @param minecraft minecraft location
+ */
+export declare function installVersionTask(versionMeta: VersionBaseInfo, minecraft: MinecraftLocation, options?: JarOption): TaskRoutine<ResolvedVersion>;
+/**
+ * Install the completeness of the Minecraft game assets and libraries on a existed version.
+ *
+ * @param version The resolved version produced by Version.parse
+ * @param minecraft The minecraft location
+ */
+export declare function installDependenciesTask(version: ResolvedVersion, options?: Options): TaskRoutine<ResolvedVersion>;
+/**
+ * Install or check the assets to resolved version
+ *
+ * @param version The target version
+ * @param options The option to replace assets host url
+ */
+export declare function installAssetsTask(version: ResolvedVersion, options?: AssetsOptions): TaskRoutine<ResolvedVersion>;
+/**
+ * Install all the libraries of providing version
+ * @param version The target version
+ * @param options The library host swap option
+ */
+export declare function installLibrariesTask(version: InstallLibraryVersion, options?: LibraryOptions): TaskRoutine<void>;
+/**
+ * Only install several resolved libraries
+ * @param libraries The resolved libraries
+ * @param minecraft The minecraft location
+ * @param option The install option
+ */
+export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOptions): TaskRoutine<void>;
+/**
+ * Only install several resolved assets.
+ * @param assets The assets to install
+ * @param folder The minecraft folder
+ * @param options The asset option
+ */
+export declare function installResolvedAssetsTask(assets: AssetInfo[], folder: MinecraftFolder, options?: AssetsOptions): TaskRoutine<void>;
+/**
  * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
  *
  * @param installProfile The install profile
  * @param minecraft The minecraft location
  * @param options The options to install
  */
-export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): Task<void>;
+export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): TaskRoutine<void>;
+/**
+ * Post process the post processors from \`InstallProfile\`.
+ *
+ * @param processors The processor info
+ * @param minecraft The minecraft location
+ * @param java The java executable path
+ * @throws {@link PostProcessError}
+ */
+export declare class PostProcessingTask extends LoopedTask<void> {
+    private processors;
+    private minecraft;
+    private java;
+    readonly name: string;
+    readonly param: object;
+    private pointer;
+    constructor(processors: InstallProfile["processors"], minecraft: MinecraftFolder, java: string);
+    protected shouldProcess(proc: InstallProfile["processors"][number], shouldProcessDefault: boolean): Promise<boolean>;
+    protected findMainClass(lib: string): Promise<string>;
+    protected postProcess(mc: MinecraftFolder, proc: InstallProfile["processors"][number], java: string): Promise<void>;
+    protected process(): Promise<[boolean, void | undefined]>;
+    protected validate(): Promise<void>;
+    protected shouldTolerant(e: any): boolean;
+    protected abort(isCancelled: boolean): Promise<void>;
+    protected reset(): void;
+}
+export declare class InstallJsonTask extends DownloadFallbackTask {
+    constructor(version: VersionBaseInfo, minecraft: MinecraftLocation, options: Options);
+}
+export declare class InstallJarTask extends DownloadFallbackTask {
+    constructor(version: ResolvedVersion, minecraft: MinecraftLocation, options: Options);
+}
+export declare class InstallAssetIndexTask extends DownloadFallbackTask {
+    constructor(version: ResolvedVersion, options?: AssetsOptions);
+}
+export declare class InstallLibraryTask extends DownloadFallbackTask {
+    constructor(lib: ResolvedLibrary, folder: MinecraftFolder, options: LibraryOptions);
+}
+export declare class InstallAssetTask extends DownloadFallbackTask {
+    constructor(asset: AssetInfo, folder: MinecraftFolder, options: AssetsOptions);
+}
 /**
  * Resolve a library download urls with fallback.
  *
  * @param library The resolved library
  * @param libraryOptions The library install options
  */
-export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOption): string[];
-export {};
-`;
-module.exports['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core";
-import { Task } from "@xmcl/task";
-import { InstallOptions } from "./util";
+export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOptions): string[];
+\/\/# sourceMappingURL=minecraft.d.ts.map`;
+module.exports['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core"; import { InstallOptions } from "./utils";
 export interface BadOptifineJarError {
     error: "BadOptifineJar";
     /**
@@ -3123,7 +3351,7 @@ export interface InstallOptifineOptions extends InstallOptions {
  * @beta Might be changed and don't break the major version
  * @throws {@link BadOptifineJarError}
  */
-export declare function installByInstaller(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Promise<string>;
+export declare function installOptifine(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Promise<string>;
 /**
  * Install optifine by optifine installer task
  *
@@ -3133,152 +3361,41 @@ export declare function installByInstaller(installer: string, minecraft: Minecra
  * @beta Might be changed and don't break the major version
  * @throws {@link BadOptifineJarError}
  */
-export declare function installByInstallerTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Task<string>;
-`;
-module.exports['@xmcl/installer/util.d.ts'] = `/// <reference types="node" />
-import { Task } from "@xmcl/task";
-import { ExecOptions } from "child_process";
-import { mkdir as fmkdir, readFile as freadFile, stat as fstat, unlink as funlink, writeFile as fwriteFile } from "fs";
-import { Agent as HttpAgent } from "http";
-import { Agent as HttpsAgent } from "https";
+export declare function installOptifineTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): import("@xmcl/task").TaskRoutine<string>;
+\/\/# sourceMappingURL=optifine.d.ts.map`;
+module.exports['@xmcl/installer/unzip.d.ts'] = `import { LoopedTask } from "@xmcl/task"; import { Entry, ZipFile } from "yauzl";
+export interface EntryResolver {
+    (entry: Entry): Promise<string> | string;
+}
+export declare function getDefaultEntryResolver(): EntryResolver;
+export declare abstract class UnzipTask extends LoopedTask<void> {
+    readonly zipFile: ZipFile;
+    readonly entries: Entry[];
+    readonly resolver: EntryResolver;
+    private streams;
+    constructor(zipFile: ZipFile, entries: Entry[], destination: string, resolver?: EntryResolver);
+    protected handleEntry(entry: Entry, relativePath: string): Promise<void>;
+    protected process(): Promise<[boolean, void | undefined]>;
+    protected validate(): Promise<void>;
+    protected shouldTolerant(e: any): boolean;
+    protected abort(isCancelled: boolean): void;
+    protected reset(): void;
+}
+\/\/# sourceMappingURL=unzip.d.ts.map`;
+module.exports['@xmcl/installer/utils.d.ts'] = `\/\// <reference types="node" /> import { ExecOptions } from "child_process";
+import { access as faccess, close as fclose, copyFile as fcopyFile, ftruncate, mkdir as fmkdir, open as fopen, readFile as freadFile, stat as fstat, unlink as funlink, writeFile as fwriteFile } from "fs";
 import { pipeline as pip } from "stream";
-import { UrlWithStringQuery } from "url";
 export declare const pipeline: typeof pip.__promisify__;
 export declare const unlink: typeof funlink.__promisify__;
 export declare const stat: typeof fstat.__promisify__;
 export declare const readFile: typeof freadFile.__promisify__;
 export declare const writeFile: typeof fwriteFile.__promisify__;
 export declare const mkdir: typeof fmkdir.__promisify__;
-export interface UpdatedObject {
-    timestamp: string;
-}
-export interface Agents {
-    http?: HttpAgent;
-    https?: HttpsAgent;
-}
-export declare function fetchText(url: string, agent?: Agents): Promise<string>;
-export declare function fetchJson(url: string, agent?: Agents): Promise<any>;
-export declare function getIfUpdate(url: string, timestamp?: string, agent?: Agents): Promise<{
-    timestamp: string;
-    content: string | undefined;
-}>;
-export declare function getAndParseIfUpdate<T extends UpdatedObject>(url: string, parser: (s: string) => any, lastObject: T | undefined): Promise<T>;
-export declare function getLastModified(url: string, timestamp: string | undefined, agent?: Agents): Promise<readonly [true, string | undefined] | readonly [false, string | undefined]>;
-export interface DownloadOption {
-    url: string | string[];
-    headers?: {
-        [key: string]: string;
-    };
-    /**
-     * The minimum bytes a segment should have.
-     * @default 2MB
-     */
-    segmentThreshold?: number;
-    /**
-     * If user wants to know the progress, pass this in, and \`Downloader\` should call this when there is a progress.
-     * @param chunkLength The length of just transferred chunk
-     * @param written The chunk already written to the disk
-     * @param total The total bytes of the download file
-     * @param url The remote url of the file
-     */
-    progress?: (chunkLength: number, written: number, total: number, url: string) => boolean | void;
-    /**
-     * If user wants to pause/resume/cancel the download, pass this in, and \`Downloader\` should call this to tell user how to pause and resume.
-     */
-    handlers?: (pauseFunc: () => void, resumeFunc: () => void, cancelFunc: () => void) => void;
-    /**
-     * The destination of the download on the disk
-     */
-    destination: string;
-    /**
-     * The checksum info of the file
-     */
-    checksum?: {
-        algorithm: string;
-        hash: string;
-    };
-}
-export interface Downloader {
-    /**
-     * Download file to the disk
-     *
-     * @returns The downloaded file full path
-     */
-    downloadFile(option: DownloadOption): Promise<void>;
-}
-/**
- * The options pass into the {@link Downloader}.
- */
-export interface DownloaderOptions {
-    /**
-     * An customized downloader to swap default downloader.
-     */
-    downloader?: Downloader;
-    /**
-     * Decide should downloader redownload and overwrite existed file.
-     *
-     * It has such options:
-     *
-     * - \`checksumNotMatch\`: Only the file with checksum provided and not matched will be redownload.
-     * - \`checksumNotMatchOrEmpty\`: Not only when the file checksum is not matched, but also when the file has no checksum, the file will be redownloaded.
-     * - \`always\`: Always redownload files.
-     *
-     * @default "checksumNotMatch"
-     */
-    overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
-    /**
-     * Should hault the donwload process immediately after ANY resource download failed.
-     */
-    throwErrorImmediately?: boolean;
-    /**
-     * The suggested max concurrency of the download. This is not a strict criteria.
-     */
-    maxConcurrency?: number;
-    /**
-     * The suggested minimum bytes a segment should have.
-     * @default 2MB
-     */
-    segmentThreshold?: number;
-}
-export interface Segment {
-    start: number;
-    end?: number;
-}
-interface DownloadMetadata {
-    url: string;
-    acceptRanges: boolean;
-    contentLength: number;
-    lastModified?: string;
-    eTag?: string;
-}
-export declare class ChecksumNotMatchError extends Error {
-    readonly algorithm: string;
-    readonly expect: string;
-    readonly actual: string;
-    readonly file: string;
-    constructor(algorithm: string, expect: string, actual: string, file: string);
-}
-/**
- * The default downloader based on nodejs http/https which support range (segment) download
- * and optimized for many small files downloading.
- * @beta
- */
-export declare class HttpDownloader implements Downloader {
-    readonly agents: Agents;
-    readonly headers: Record<string, string | string[] | null>;
-    constructor(agents?: Agents, headers?: Record<string, string | string[] | null>);
-    protected resolveMetadata(parsedURL: UrlWithStringQuery): Promise<DownloadMetadata>;
-    protected downloads(fd: number, originalUrl: UrlWithStringQuery, option: DownloadOption): Promise<Segment[]>;
-    /**
-     * Download file by the option provided.
-     */
-    downloadFile(option: DownloadOption): Promise<void>;
-    destroy(): void;
-}
-/**
- * Wrapped task function of download file if absent task
- */
-export declare function downloadFileTask(option: DownloadOption, downloaderOptions: HasDownloader<DownloaderOptions>): Task.Function<void>;
+export declare const access: typeof faccess.__promisify__;
+export declare const open: typeof fopen.__promisify__;
+export declare const close: typeof fclose.__promisify__;
+export declare const copyFile: typeof fcopyFile.__promisify__;
+export declare const truncate: typeof ftruncate.__promisify__;
 /**
  * Shared install options
  */
@@ -3297,15 +3414,16 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
-export declare function resolveDownloader<O extends DownloaderOptions, T>(options: O, closure: (options: HasDownloader<O>) => Promise<T>): Promise<T>;
-export declare type HasDownloader<T> = T & {
-    downloader: Downloader;
-    dispose?: () => void;
-};
 export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
-export declare function batchedTask(context: Task.Context, tasks: Task<unknown>[], sizes: number[], maxConcurrency?: number, throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<void>;
+export declare function createErr<T>(error: T, message?: string): T & Error;
+export declare function exists(target: string): Promise<boolean>;
+export declare function missing(target: string): Promise<boolean>;
+export declare function ensureDir(target: string): Promise<void>;
+export declare function ensureFile(target: string): Promise<void>;
+export declare function checksum(path: string, algorithm?: string): Promise<string>;
+export declare function isNotNull<T>(v: T | undefined): v is T;
+export declare function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:";
 export declare function normalizeArray<T>(arr?: T | T[]): T[];
-export declare function joinUrl(a: string, b: string): string;
 /**
  * The collection of errors happened during a parallel process
  */
@@ -3313,18 +3431,9 @@ export declare class MultipleError extends Error {
     errors: unknown[];
     constructor(errors: unknown[], message?: string);
 }
-export declare function createErr<T>(error: T, message?: string): T & Error;
-export declare function exists(target: string): Promise<boolean>;
-export declare function missing(target: string): Promise<boolean>;
-export declare function ensureDir(target: string): Promise<void>;
-export declare function ensureFile(target: string): Promise<void>;
-export declare function checksum(path: string, algorithm?: string): Promise<string>;
-export {};
-`;
-module.exports['@xmcl/installer/util.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system";
-declare type Person = {
+export declare function all(promises: Promise<any>[], throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<any[]>;
+\/\/# sourceMappingURL=utils.d.ts.map`;
+module.exports['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system"; declare type Person = {
     /**
      * The real name, or username, of the person. Mandatory.
      */
@@ -3375,11 +3484,11 @@ export interface ModMetadata {
      *      "net.fabricmc.example.ExampleMod::handle"
      *  ]
      * \`\`\`
-     *  - If you're using any other language, consult the language adapter's documentation. The Kotlin one is located [here](https://github.com/FabricMC/fabric-language-kotlin/blob/master/README.md).
+     *  - If you're using any other language, consult the language adapter's documentation. The Kotlin one is located [here](https:\/\/github.com/FabricMC/fabric-language-kotlin/blob/master/README.md).
      */
     entrypoints?: string[];
     /**
-     * A list of nested JARs inside your mod's JAR to load. Before using the field, check out [the guidelines on the usage of the nested JARs](https://fabricmc.net/wiki/tutorial:loader04x#nested_jars). Each entry is an object containing file key. That should be a path inside your mod's JAR to the nested JAR. For example:
+     * A list of nested JARs inside your mod's JAR to load. Before using the field, check out [the guidelines on the usage of the nested JARs](https:\/\/fabricmc.net/wiki/tutorial:loader04x#nested_jars). Each entry is an object containing file key. That should be a path inside your mod's JAR to the nested JAR. For example:
      * \`\`\`json
      * "jars": [
      *     {
@@ -3453,7 +3562,7 @@ export interface ModMetadata {
          */
         email: string;
         /**
-         * IRC channel pertaining to the mod. Must be of a valid URL format - for example: irc://irc.esper.net:6667/charset for #charset at EsperNet - the port is optional, and assumed to be 6667 if not present.
+         * IRC channel pertaining to the mod. Must be of a valid URL format - for example: irc:\/\/irc.esper.net:6667/charset for #charset at EsperNet - the port is optional, and assumed to be 6667 if not present.
          */
         irc: string;
         /**
@@ -3498,11 +3607,8 @@ export interface ModMetadata {
  */
 export declare function readModMetaData(file: FileSystem | string | Uint8Array): Promise<ModMetadata>;
 export {};
-`;
-module.exports['@xmcl/mod-parser/fabric.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/mod-parser/forge.d.ts'] = `import { FileSystem } from "@xmcl/system";
-/**
+\/\/# sourceMappingURL=fabric.d.ts.map`;
+module.exports['@xmcl/mod-parser/forge.d.ts'] = `import { FileSystem } from "@xmcl/system"; /**
  * Represent the forge config file
  */
 export interface Config {
@@ -3600,16 +3706,12 @@ export declare class ForgeModParseFailedError extends Error {
     readonly baseInfo: ModBaseInfo;
     constructor(mod: Uint8Array | string | FileSystem, baseInfo: ModBaseInfo);
 }
-`;
-module.exports['@xmcl/mod-parser/forge.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/mod-parser/index.d.ts'] = `import * as Forge from "./forge";
-import * as LiteLoader from "./liteloader";
+\/\/# sourceMappingURL=forge.d.ts.map`;
+module.exports['@xmcl/mod-parser/index.d.ts'] = `import * as Forge from "./forge"; import * as LiteLoader from "./liteloader";
 import * as Fabric from "./fabric";
 export { Forge, LiteLoader, Fabric };
-`;
-module.exports['@xmcl/mod-parser/liteloader.d.ts'] = `import { FileSystem } from "@xmcl/system";
-export declare const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/mod-parser/liteloader.d.ts'] = `import { FileSystem } from "@xmcl/system"; export declare const DEFAULT_VERSION_MANIFEST = "http:\/\/dl.liteloader.com/versions/versions.json";
 export interface MetaData {
     readonly mcversion: string;
     readonly name: string;
@@ -3639,11 +3741,8 @@ export interface VersionMeta {
     tweakClass: string;
 }
 export declare function readModMetaData(mod: string | Uint8Array | FileSystem): Promise<MetaData>;
-`;
-module.exports['@xmcl/mod-parser/liteloader.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/model/block.d.ts'] = `import { BlockModel, PackMeta } from "@xmcl/resourcepack";
-import { Object3D } from "three/src/core/Object3D";
+\/\/# sourceMappingURL=liteloader.d.ts.map`;
+module.exports['@xmcl/model/block.d.ts'] = `import { BlockModel, PackMeta } from "@xmcl/resourcepack"; import { Object3D } from "three/src/core/Object3D";
 import { Vector3 } from "three/src/math/Vector3";
 interface Texture {
     url: string;
@@ -3682,12 +3781,10 @@ export declare class BlockModelFactory {
     }): BlockModelObject;
 }
 export {};
-`;
-module.exports['@xmcl/model/index.d.ts'] = `export * from "./block";
-export * from "./player";
-`;
-module.exports['@xmcl/model/player-model.d.ts'] = `export interface ModelTemplate {
-    head: Part;
+\/\/# sourceMappingURL=block.d.ts.map`;
+module.exports['@xmcl/model/index.d.ts'] = `export * from "./block"; export * from "./player";
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/model/player-model.d.ts'] = `export interface ModelTemplate {     head: Part;
     rightLeg: Part;
     leftLeg: Part;
     torso: Part;
@@ -3723,9 +3820,8 @@ declare const _default: {
     alex: ModelTemplate;
 };
 export default _default;
-`;
-module.exports['@xmcl/model/player.d.ts'] = `import { Object3D } from "three/src/core/Object3D";
-import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
+\/\/# sourceMappingURL=player-model.d.ts.map`;
+module.exports['@xmcl/model/player.d.ts'] = `import { Object3D } from "three/src/core/Object3D"; import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
 import { CanvasTexture } from "three/src/textures/CanvasTexture";
 declare type TextureSource = string | HTMLImageElement;
 export declare class PlayerObject3D extends Object3D {
@@ -3747,9 +3843,8 @@ export declare class PlayerModel {
     setCape(cape: TextureSource | undefined): Promise<void>;
 }
 export default PlayerModel;
-`;
-module.exports['@xmcl/nbt/index.d.ts'] = `/**
- * The nbt module provides nbt {@link serialize} and {@link deserialize} functions.
+\/\/# sourceMappingURL=player.d.ts.map`;
+module.exports['@xmcl/nbt/index.d.ts'] = `/**  * The nbt module provides nbt {@link serialize} and {@link deserialize} functions.
  *
  * @packageDocumentation
  */
@@ -3866,113 +3961,25 @@ export declare class WriteContext {
     fork(schemaOrTagType: TagType | Schema): WriteContext;
 }
 export {};
-`;
-module.exports['@xmcl/nbt/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/nbt/utils.d.ts'] = `/// <reference types="bytebuffer" />
-export declare function writeUTF8(out: ByteBuffer, str: string): number;
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/nbt/utils.d.ts'] = `\/\// <reference types="bytebuffer" /> export declare function writeUTF8(out: ByteBuffer, str: string): number;
 export declare function readUTF8(buff: ByteBuffer): string;
-`;
-module.exports['@xmcl/nbt/zlib/index.browser.d.ts'] = `export declare function gzip(buffer: Uint8Array): Promise<Uint8Array>;
-export declare function gzipSync(buffer: Uint8Array): Uint8Array;
+\/\/# sourceMappingURL=utils.d.ts.map`;
+module.exports['@xmcl/nbt/zlib/index.browser.d.ts'] = `export declare function gzip(buffer: Uint8Array): Promise<Uint8Array>; export declare function gzipSync(buffer: Uint8Array): Uint8Array;
 export declare function ungzip(buffer: Uint8Array): Promise<Uint8Array>;
 export declare function gunzipSync(buffer: Uint8Array): Uint8Array;
 export declare function inflate(buffer: Uint8Array): Promise<Uint8Array>;
 export declare function deflate(buffer: Uint8Array): Promise<Uint8Array>;
 export declare function inflateSync(buffer: Uint8Array): Uint8Array;
 export declare function deflateSync(buffer: Uint8Array): Uint8Array;
-`;
-module.exports['@xmcl/nbt/zlib/index.d.ts'] = `import { deflateSync, gunzipSync, gzipSync, inflateSync } from "zlib";
-export declare const gzip: (buf: Uint8Array) => Promise<Uint8Array>;
+\/\/# sourceMappingURL=index.browser.d.ts.map`;
+module.exports['@xmcl/nbt/zlib/index.d.ts'] = `import { deflateSync, gunzipSync, gzipSync, inflateSync } from "zlib"; export declare const gzip: (buf: Uint8Array) => Promise<Uint8Array>;
 export declare const ungzip: (buf: Uint8Array) => Promise<Uint8Array>;
 export declare const inflate: (buf: Uint8Array) => Promise<Uint8Array>;
 export declare const deflate: (buf: Uint8Array) => Promise<Uint8Array>;
 export { gzipSync, gunzipSync, inflateSync, deflateSync };
-`;
-module.exports['@xmcl/resource-manager/index.d.ts'] = `import { PackMeta, ResourcePack, Resource, ResourceLocation } from "@xmcl/resourcepack";
-export interface ResourcePackWrapper {
-    source: ResourcePack;
-    info: PackMeta.Pack;
-    domains: string[];
-}
-export interface ResourceLoader {
-    /**
-    * Get the resource in that location. This will walk through current resource source list to load the resource.
-    * @param location The resource location
-    */
-    get(location: ResourceLocation): Promise<Resource | undefined>;
-}
-/**
- * The resource manager just like Minecraft. Design to be able to use in both nodejs and browser environment.
- */
-export declare class ResourceManager implements ResourceLoader {
-    /**
-     * The list order is just like the order in options.txt. The last element is the highest priority one.
-     * The resource will load from the last one to the first one.
-     */
-    list: Array<ResourcePackWrapper>;
-    constructor(
-    /**
-     * The list order is just like the order in options.txt. The last element is the highest priority one.
-     * The resource will load from the last one to the first one.
-     */
-    list?: Array<ResourcePackWrapper>);
-    get allResourcePacks(): PackMeta.Pack[];
-    /**
-     * Add a new resource source as the first priority of the resource list.
-     */
-    addResourcePack(resourcePack: ResourcePack): Promise<{
-        info: PackMeta.Pack;
-        source: ResourcePack;
-        domains: string[];
-    }>;
-    remove(index: number): ResourcePackWrapper;
-    /**
-     * Clear all resource packs in this manager
-     */
-    clear(): ResourcePackWrapper[];
-    /**
-     * Swap the resource source priority.
-     */
-    swap(first: number, second: number): void;
-    /**
-    * Get the resource in that location. This will walk through current resource source list to load the resource.
-    * @param location The resource location
-    */
-    get(location: ResourceLocation): Promise<Resource | undefined>;
-}
-export * from "./model-loader";
-`;
-module.exports['@xmcl/resource-manager/model-loader.d.ts'] = `import { BlockModel, Resource } from "@xmcl/resourcepack";
-import { ResourceLoader } from "./index";
-/**
- * The model loader load the resource
- */
-export declare class ModelLoader {
-    readonly loader: ResourceLoader;
-    static findRealTexturePath(model: BlockModel.Resolved, variantKey: string): string | undefined;
-    /**
-     * All required texture raw resources
-     */
-    readonly textures: Record<string, Resource>;
-    /**
-     * All the resolved model
-     */
-    readonly models: Record<string, BlockModel.Resolved>;
-    /**
-     * @param loader The resource loader
-     */
-    constructor(loader: ResourceLoader);
-    /**
-     * Load a model by search its parent. It will throw an error if the model is not found.
-     */
-    loadModel(modelPath: string): Promise<BlockModel.Resolved>;
-}
-`;
-module.exports['@xmcl/resource-manager/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/resourcepack/format.d.ts'] = `/**
- * The pack meta json format
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/resourcepack/format.d.ts'] = `/**  * The pack meta json format
  */
 export interface PackMeta {
     texture?: PackMeta.Texture;
@@ -4225,9 +4232,125 @@ export declare namespace BlockModel {
     };
 }
 export {};
-`;
-module.exports['@xmcl/resourcepack/index.d.ts'] = `/**
- * The resource pack module to read Minecraft resource pack just like Minecraft in-game.
+\/\/# sourceMappingURL=format.d.ts.map`;
+module.exports['@xmcl/resourcepack/index.d.ts'] = `/**  * The resource pack module to read Minecraft resource pack just like Minecraft in-game.
+ *
+ * You can open the ResourcePack by {@link ResourcePack.open} and get resource by {@link ResourcePack.get}.
+ *
+ * Or you can just load resource pack metadata by {@link readPackMetaAndIcon}.
+ *
+ * @packageDocumentation
+ */
+import { FileSystem } from "@xmcl/system";
+import { PackMeta } from "./format";
+export * from "./resourceManager";
+export * from "./resourcePack";
+export * from "./modelLoader";
+export * from "./format";
+/**
+ * Read the resource pack metadata from zip file or directory.
+ *
+ * If you have already read the data of the zip file, you can pass it as the second parameter. The second parameter will be ignored on reading directory.
+ *
+ * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
+ */
+export declare function readPackMeta(resourcePack: string | Uint8Array | FileSystem): Promise<PackMeta.Pack>;
+/**
+ * Read the resource pack icon png binary.
+ * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
+ */
+export declare function readIcon(resourcePack: string | Uint8Array | FileSystem): Promise<Uint8Array>;
+/**
+ * Read both metadata and icon
+ *
+ * @see {@link readIcon}
+ * @see {@link readPackMeta}
+ */
+export declare function readPackMetaAndIcon(resourcePack: string | Uint8Array | FileSystem): Promise<{
+    metadata: PackMeta.Pack;
+    icon: Uint8Array | undefined;
+}>;
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/resourcepack/modelLoader.d.ts'] = `import { Resource } from "./resourcePack"; import { ResourceLoader } from "./resourceManager";
+import { BlockModel } from "./format";
+/**
+ * The model loader load the resource
+ */
+export declare class ModelLoader {
+    readonly loader: ResourceLoader;
+    static findRealTexturePath(model: BlockModel.Resolved, variantKey: string): string | undefined;
+    /**
+     * All required texture raw resources
+     */
+    readonly textures: Record<string, Resource>;
+    /**
+     * All the resolved model
+     */
+    readonly models: Record<string, BlockModel.Resolved>;
+    /**
+     * @param loader The resource loader
+     */
+    constructor(loader: ResourceLoader);
+    /**
+     * Load a model by search its parent. It will throw an error if the model is not found.
+     */
+    loadModel(modelPath: string): Promise<BlockModel.Resolved>;
+}
+\/\/# sourceMappingURL=modelLoader.d.ts.map`;
+module.exports['@xmcl/resourcepack/resourceManager.d.ts'] = `import { PackMeta } from "./format"; import { ResourcePack, Resource, ResourceLocation } from "./resourcePack";
+export interface ResourcePackWrapper {
+    source: ResourcePack;
+    info: PackMeta.Pack;
+    domains: string[];
+}
+export interface ResourceLoader {
+    /**
+    * Get the resource in that location. This will walk through current resource source list to load the resource.
+    * @param location The resource location
+    */
+    get(location: ResourceLocation): Promise<Resource | undefined>;
+}
+/**
+ * The resource manager just like Minecraft. Design to be able to use in both nodejs and browser environment.
+ */
+export declare class ResourceManager implements ResourceLoader {
+    /**
+     * The list order is just like the order in options.txt. The last element is the highest priority one.
+     * The resource will load from the last one to the first one.
+     */
+    list: Array<ResourcePackWrapper>;
+    constructor(
+    /**
+     * The list order is just like the order in options.txt. The last element is the highest priority one.
+     * The resource will load from the last one to the first one.
+     */
+    list?: Array<ResourcePackWrapper>);
+    get allResourcePacks(): PackMeta.Pack[];
+    /**
+     * Add a new resource source as the first priority of the resource list.
+     */
+    addResourcePack(resourcePack: ResourcePack): Promise<{
+        info: PackMeta.Pack;
+        source: ResourcePack;
+        domains: string[];
+    }>;
+    remove(index: number): ResourcePackWrapper;
+    /**
+     * Clear all resource packs in this manager
+     */
+    clear(): ResourcePackWrapper[];
+    /**
+     * Swap the resource source priority.
+     */
+    swap(first: number, second: number): void;
+    /**
+    * Get the resource in that location. This will walk through current resource source list to load the resource.
+    * @param location The resource location
+    */
+    get(location: ResourceLocation): Promise<Resource | undefined>;
+}
+\/\/# sourceMappingURL=resourceManager.d.ts.map`;
+module.exports['@xmcl/resourcepack/resourcePack.d.ts'] = `/**  * The resource pack module to read Minecraft resource pack just like Minecraft in-game.
  *
  * You can open the ResourcePack by {@link ResourcePack.open} and get resource by {@link ResourcePack.get}.
  *
@@ -4309,7 +4432,7 @@ export declare class ResourcePack {
      * Get the url of the resource location.
      * Please notice that this is depended on \`FileSystem\` implementation of the \`getUrl\`.
      *
-     * @returns The absolute url like \`file://\` or \`http://\` depending on underlaying \`FileSystem\`.
+     * @returns The absolute url like \`file:\/\/\` or \`http:\/\/\` depending on underlaying \`FileSystem\`.
      * @see {@link FileSystem}
      */
     getUrl(location: ResourceLocation): string;
@@ -4339,35 +4462,8 @@ export declare class ResourcePack {
     private getPath;
     static open(resourcePack: string | Uint8Array | FileSystem): Promise<ResourcePack>;
 }
-export * from "./format";
-/**
- * Read the resource pack metadata from zip file or directory.
- *
- * If you have already read the data of the zip file, you can pass it as the second parameter. The second parameter will be ignored on reading directory.
- *
- * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
- */
-export declare function readPackMeta(resourcePack: string | Uint8Array | FileSystem): Promise<PackMeta.Pack>;
-/**
- * Read the resource pack icon png binary.
- * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
- */
-export declare function readIcon(resourcePack: string | Uint8Array | FileSystem): Promise<Uint8Array>;
-/**
- * Read both metadata and icon
- *
- * @see {@link readIcon}
- * @see {@link readPackMeta}
- */
-export declare function readPackMetaAndIcon(resourcePack: string | Uint8Array | FileSystem): Promise<{
-    metadata: PackMeta.Pack;
-    icon: Uint8Array | undefined;
-}>;
-`;
-module.exports['@xmcl/resourcepack/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/server-info/index.d.ts'] = `export declare class ServerInfo {
-    icon: string;
+\/\/# sourceMappingURL=resourcePack.d.ts.map`;
+module.exports['@xmcl/server-info/index.d.ts'] = `export declare class ServerInfo {     icon: string;
     ip: string;
     name: string;
     acceptTextures: number;
@@ -4402,21 +4498,16 @@ export declare function readInfoSync(buff: Uint8Array): ServerInfo[];
  * @param infos The array of server information.
  */
 export declare function writeInfoSync(infos: ServerInfo[]): Uint8Array;
-`;
-module.exports['@xmcl/server-info/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/system/index.browser.d.ts'] = `import { FileSystem } from "./system";
-export declare function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/system/index.browser.d.ts'] = `import { FileSystem } from "./system"; export declare function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
 export declare function resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem>;
 export * from "./system";
-`;
-module.exports['@xmcl/system/index.d.ts'] = `import { FileSystem } from "./system";
-export declare function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
+\/\/# sourceMappingURL=index.browser.d.ts.map`;
+module.exports['@xmcl/system/index.d.ts'] = `import { FileSystem } from "./system"; export declare function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
 export declare function resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem>;
 export * from "./system";
-`;
-module.exports['@xmcl/system/system.d.ts'] = `export declare abstract class FileSystem {
-    abstract readonly root: string;
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/system/system.d.ts'] = `export declare abstract class FileSystem {     abstract readonly root: string;
     abstract readonly sep: string;
     abstract readonly type: "zip" | "path";
     abstract readonly writeable: boolean;
@@ -4437,230 +4528,143 @@ module.exports['@xmcl/system/system.d.ts'] = `export declare abstract class File
     missingFile(name: string): Promise<boolean>;
     walkFiles(target: string, walker: (path: string) => void | Promise<void>): Promise<void>;
 }
-`;
-module.exports['@xmcl/system/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/task/index.d.ts'] = `/// <reference types="node" />
-import { EventEmitter } from "events";
-export declare type TaskNode = Task.State;
-export interface TaskListener<N extends Task.State = Task.State> extends EventEmitter {
-    /**
-     * Emitted when the some task starts to execute. The listener will get both this task state and parent task state.
-     *
-     * If there is no parent, it will be undefined.
-     */
-    on(event: "execute", listener: (node: N, parent?: N) => void): this;
-    /**
-     * Emitted when the some task failed.
-     */
-    on(event: "fail", listener: (error: any, node: N) => void): this;
-    /**
-     * Emitted when the task has update.
-     *
-     * The progress and total are arbitary number which designed by task creator.
-     * You might want to convert them to percentage by yourself by directly dividing them.
-     *
-     * The message is a totally optional and arbitary string for hint.
-     */
-    on(event: "update", listener: (update: {
-        progress: number;
-        total?: number;
-        message?: string;
-    }, node: N) => void): this;
-    /**
-     * Emitted the when some task is finished
-     */
-    on(event: "finish", listener: (result: any, node: N) => void): this;
-    /**
-     * Emitted the pause event after user toggle the \`pause\` in handle
-     */
-    on(event: "pause", listener: (node: N) => void): this;
-    /**
-     * Emitted the resume event after use toggle the \`resume\` in handle
-     */
-    on(event: "resume", listener: (node: N) => void): this;
-    /**
-     * Emitted the cancel event after some task is cancelled.
-     */
-    on(event: "cancel", listener: (node: N) => void): this;
-    once(event: "execute", listener: (node: N, parent?: N) => void): this;
-    once(event: "fail", listener: (error: any, node: N) => void): this;
-    once(event: "update", listener: (update: {
-        progress: number;
-        total?: number;
-        message?: string;
-    }, node: N) => void): this;
-    once(event: "finish", listener: (result: any, node: N) => void): this;
-    once(event: "pause", listener: (node: N) => void): this;
-    once(event: "resume", listener: (node: N) => void): this;
-    once(event: "cancel", listener: (node: N) => void): this;
+\/\/# sourceMappingURL=system.d.ts.map`;
+module.exports['@xmcl/task/index.d.ts'] = `export declare class CancelledError<T> extends Error {     readonly partialResult: T | undefined;
+    constructor(partialResult: T | undefined);
 }
-/**
- * An intergrated environment to run the task. If you want to manage all your tasks together, you should use this.
- */
-export declare class TaskRuntime<N extends Task.State = Task.State> extends EventEmitter implements TaskListener<N> {
-    readonly factory: Task.StateFactory<N>;
-    protected bridge: TaskBridge<N>;
-    constructor(factory: Task.StateFactory<N>, schedular: Task.Schedualer);
+export interface UpdateData {
     /**
-     * Emitted when the some task starts to execute. The listener will get both this task state and parent task state.
-     *
-     * If there is no parent, it will be undefined.
-     */
-    on(event: "execute", listener: (node: N, parent?: N) => void): this;
+    * The chunk size of this update event process
+    */
+    chunkSize: number;
     /**
-     * Emitted when the task has update.
-     *
-     * The progress and total are arbitary number which designed by task creator.
-     * You might want to convert them to percentage by yourself by directly dividing them.
-     *
-     * The message is a totally optional and arbitary string for hint.
+     * The progress already processed by current task
      */
-    on(event: "update", listener: (update: {
-        progress: number;
-        total?: number;
-        message?: string;
-    }, node: N) => void): this;
+    progress: number;
     /**
-     * Emitted the when some task is finished
+     * The total number need to be done of this task
      */
-    on(event: "finish", listener: (result: any, node: N) => void): this;
+    total: number;
     /**
-     * Emitted when the some task failed.
+     * Source path or url of the task
      */
-    on(event: "fail", listener: (error: any, node: N) => void): this;
+    from?: string;
     /**
-     * Emitted the pause event after user toggle the \`pause\` in handle
+     * Destination path or url of the task
      */
-    on(event: "pause", listener: (node: N) => void): this;
-    /**
-     * Emitted the resume event after use toggle the \`resume\` in handle
-     */
-    on(event: "resume", listener: (node: N) => void): this;
-    /**
-     * Emitted the cancel event after some task is cancelled.
-     */
-    on(event: "cancel", listener: (node: N) => void): this;
-    once(event: "execute", listener: (node: N, parent?: N) => void): this;
-    once(event: "fail", listener: (error: any, node: N) => void): this;
-    once(event: "update", listener: (update: {
-        progress: number;
-        total?: number;
-        message?: string;
-    }, node: N) => void): this;
-    once(event: "finish", listener: (result: any, node: N) => void): this;
-    once(event: "pause", listener: (node: N) => void): this;
-    once(event: "resume", listener: (node: N) => void): this;
-    once(event: "cancel", listener: (node: N) => void): this;
-    submit<T>(task: Task<T>): TaskHandle<T, N>;
+    to?: string;
 }
-export declare class TaskSignal {
-    _paused: boolean;
-    _cancelled: boolean;
-    _started: boolean;
-    _onPause: Array<() => void>;
-    _onResume: Array<() => void>;
-    _onCancel: Array<() => void>;
+export interface Event extends UpdateData {
+    type: "update" | "start" | "success" | "fail" | "pause" | "cancel" | "resume";
+    paths: string[];
+    name: string;
+    param: object;
 }
-export declare class TaskBridge<X extends Task.State = Task.State> {
-    readonly emitter: EventEmitter;
-    readonly factory: Task.StateFactory<X>;
-    readonly scheduler: <N>(r: () => Promise<N>) => Promise<N>;
-    constructor(emitter: EventEmitter, factory: Task.StateFactory<X>, scheduler: <N>(r: () => Promise<N>) => Promise<N>);
-    submit<T>(task: Task<T>): TaskHandle<T, X>;
-    protected enqueueTask<T>(signal: TaskSignal, task: Task<T>, parent?: {
-        node: X;
-        progressUpdate: (progress: number, total: number, message?: string) => void;
-    }): {
-        node: X;
-        promise: Promise<T>;
-    };
+export interface TaskContext {
+    (event: Event): void;
 }
-export interface TaskHandle<T, N extends Task.State> {
-    /**
-     * Wait the task to complete
-     */
-    wait(): Promise<T>;
-    /**
-     * Cancel the task.
-     */
-    cancel(): void;
-    /**
-     * Pause the task if possible.
-     */
+export declare enum State {
+    Idel = 0,
+    Running = 1,
+    Cancelled = 2,
+    Paused = 3,
+    Successed = 4,
+    Failed = 5
+}
+export declare abstract class BaseTask<T> implements Task<T> {
+    protected _state: State;
+    protected _promise: Promise<T>;
+    protected resolve: (value: T) => void;
+    protected reject: (err: any) => void;
+    protected _from: string | undefined;
+    protected _to: string | undefined;
+    protected _progress: number;
+    protected _total: number;
+    protected context: TaskContext | undefined;
+    name: string;
+    param: object;
+    setName(name: string, param?: object): this;
+    get progress(): number;
+    get total(): number;
+    get to(): string | undefined;
+    get from(): string | undefined;
+    get state(): State;
+    get isCancelled(): boolean;
+    get isPaused(): boolean;
+    get isDone(): boolean;
+    get isRunning(): boolean;
     pause(): void;
     resume(): void;
-    readonly root: N;
+    cancel(): void;
+    wait(): Promise<T>;
+    start(context?: TaskContext): void;
+    startAndWait(context?: TaskContext): Promise<T>;
+    private fire;
+    protected update(data: UpdateData): void;
+    protected abstract run(): Promise<T>;
+    protected abstract onCancel(): void;
+    protected abstract onPause(): void;
+    protected abstract onResume(): void;
+    map<N>(transform: Transform<this, N>): Task<N>;
+}
+export interface Task<T> {
+    readonly progress: number;
+    readonly total: number;
+    readonly from: string | undefined;
+    readonly to: string | undefined;
     readonly isCancelled: boolean;
     readonly isPaused: boolean;
-    readonly isStarted: boolean;
+    readonly isDone: boolean;
+    readonly isRunning: boolean;
+    pause(): void;
+    resume(): void;
+    cancel(): void;
+    start(): void;
+    wait(): Promise<T>;
+    startAndWait(context?: TaskContext): Promise<T>;
+    map<N>(transform: Transform<this, N>): Task<N>;
 }
-export declare class Task<T> {
+export interface Transform<T, N> {
+    (this: T, value: T): N;
+}
+export declare abstract class LoopedTask<T> extends BaseTask<T> {
+    protected _pausing: Promise<void>;
+    protected _unpause: () => void;
+    protected abstract process(): Promise<[boolean, T | undefined]>;
+    protected abstract validate(): Promise<void>;
+    protected abstract shouldTolerant(e: any): boolean;
+    protected abstract abort(isCancelled: boolean): void;
+    protected abstract reset(): void;
+    protected onCancel(): void;
+    protected onPause(): void;
+    protected onResume(): void;
+    protected run(): Promise<NonNullable<T>>;
+}
+export interface TaskRuntime {
+    yield<T>(task: Task<T>): Promise<T>;
+    concat<T>(task: TaskRoutine<T>): Promise<T>;
+}
+export declare type TaskExecutor<T> = (this: TaskRoutine<any>) => Promise<T> | T;
+export declare class TaskRoutine<T> extends BaseTask<T> implements TaskRuntime {
     readonly name: string;
-    readonly parameters: object | undefined;
-    readonly run: (context: Task.Context) => (Promise<T> | T);
-    constructor(name: string, parameters: object | undefined, run: (context: Task.Context) => (Promise<T> | T));
+    readonly executor: TaskExecutor<T>;
+    readonly param: object;
+    protected routines: Task<any>[];
+    constructor(name: string, executor: TaskExecutor<T>, param?: object);
+    readonly context: TaskContext | undefined;
+    concat<T>(task: TaskRoutine<T>): Promise<T>;
     /**
-     * Execute this task immediately (not in runtime).
-     * This will have the same behavior like \`Task.execute\`.
-     *
-     * @see Task.execute
+     * Yield a new child task to this routine
      */
-    execute(): TaskHandle<T, Task.State> & TaskListener<Task.State>;
+    yield<T>(task: Task<T>): Promise<T>;
+    protected run(): Promise<T>;
+    protected onCancel(): void;
+    protected onPause(): void;
+    protected onResume(): void;
 }
-export declare namespace Task {
-    interface Function<T> {
-        (context: Task.Context): (Promise<T> | T);
-    }
-    interface Object<T> {
-        readonly name: string;
-        readonly parameters?: object;
-        readonly run: (context: Task.Context) => (Promise<T> | T);
-    }
-    /**
-     * You'll recive this if the task is cancelled.
-     */
-    class CancelledError extends Error {
-        constructor();
-    }
-    type Schedualer = <N>(r: () => Promise<N>) => Promise<N>;
-    interface Context {
-        setup(onPause?: () => void, onResume?: () => void, onCancel?: () => void): void;
-        update(progress: number, total?: number, message?: string): void | boolean;
-        execute<T>(task: Task<T>, pushProgress?: number): Promise<T>;
-        waitPause(): Promise<void>;
-    }
-    type StateFactory<X extends Task.State = Task.State> = (node: Task.State, parent?: X) => X;
-    const DEFAULT_STATE_FACTORY: StateFactory;
-    /**
-     * Run the task immediately without a integrated runtime
-     * @param task The task will be run
-     */
-    function execute<T>(task: Task<T>): TaskHandle<T, Task.State> & TaskListener;
-    /**
-     * Create a central managed runtime for task execution. You can listen the tasks status at one place.
-     * @param factory The state factory. It's used to customize your task state.
-     * @param schedular The task schedular provided
-     */
-    function createRuntime<X extends Task.State = Task.State>(factory?: StateFactory<X>, schedular?: Schedualer): TaskRuntime<X>;
-    interface State {
-        name: string;
-        arguments?: {
-            [key: string]: any;
-        };
-        path: string;
-    }
-    function create<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T>;
-}
-/**
- * Create new task
- */
-export declare function task<T>(name: string, task: Task.Function<T>, parameters?: any): Task<T>;
-`;
-module.exports['@xmcl/task/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/text-component/index.d.ts'] = `/**
- * @see https://minecraft.gamepedia.com/Raw_JSON_text_format
+export declare function task<E, T>(name: string, executor: TaskExecutor<T>, param?: object): TaskRoutine<T>;
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/text-component/index.d.ts'] = `/**  * @see https:\/\/minecraft.gamepedia.com/Raw_JSON_text_format
  */
 export interface TextComponent {
     /**
@@ -4831,177 +4835,55 @@ export declare function toFormattedString(comp: TextComponent): string;
  * @param formatted The formatted string
  */
 export declare function fromFormattedString(formatted: string): TextComponent;
-`;
-module.exports['@xmcl/text-component/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/unzip/index.d.ts'] = `/// <reference types="node" />
-import { Readable, Writable } from "stream";
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/unzip/index.d.ts'] = `\/\// <reference types="node" /> import { Readable } from "stream";
+import { Entry, ZipFile, ZipFileOptions, Options } from "yauzl";
 export declare type OpenTarget = string | Buffer | number;
-export interface ZipFileOptions {
-    decompress?: boolean | null;
-    decrypt?: boolean | null;
-    start?: number | null;
-    end?: number | null;
-}
-export interface Entry {
-    readonly comment: string;
-    readonly compressedSize: number;
-    readonly compressionMethod: number;
-    readonly crc32: number;
-    readonly externalFileAttributes: number;
-    readonly extraFieldLength: number;
-    readonly extraFields: Array<{
-        id: number;
-        data: Buffer;
-    }>;
-    readonly fileCommentLength: number;
-    readonly fileName: string;
-    readonly fileNameLength: number;
-    readonly generalPurposeBitFlag: number;
-    readonly internalFileAttributes: number;
-    readonly lastModFileDate: number;
-    readonly lastModFileTime: number;
-    readonly relativeOffsetOfLocalHeader: number;
-    readonly uncompressedSize: number;
-    readonly versionMadeBy: number;
-    readonly versionNeededToExtract: number;
-    getLastModDate(): Date;
-    isEncrypted(): boolean;
-    isCompressed(): boolean;
-}
-export interface Options {
-    lazyEntries?: boolean;
-    decodeStrings?: boolean;
-    validateEntrySizes?: boolean;
-    strictFileNames?: boolean;
-}
-interface LazyOptions extends Options {
-    lazyEntries: true;
-}
-interface CacheOptions extends Options {
-    lazyEntries?: false;
-}
-export interface ZipFile {
-    readonly comment: string;
-    readonly decodeStrings: boolean;
-    readonly entryCount: number;
-    readonly fileSize: number;
-    readonly isOpen: boolean;
-    readonly validateEntrySizes: boolean;
-    readEntry(entry: Entry, options?: ZipFileOptions): Promise<Buffer>;
-    openEntry(entry: Entry, options?: ZipFileOptions): Promise<Readable>;
-    extractEntries(dest: string, options?: ExtractOptions): Promise<void>;
-    close(): void;
-}
-export interface CachedZipFile extends ZipFile {
-    readonly entries: {
-        [name: string]: Entry | undefined;
-    };
-    filterEntries(filter: (e: Entry) => boolean): Entry[];
-}
-export interface LazyZipFile extends ZipFile {
-    /**
-     * How many entries you have read
-     */
-    readonly entriesRead: number;
-    readonly readEntryCursor: boolean;
-    nextEntry(): Promise<Entry>;
-    /**
-     * When you know which entries you want, you can use this function to get the entries you want at once.
-     *
-     * This will return the entries in array. If any entry does not exist, it will leave undefined in that position.
-     *
-     * For more complex requirement, please use walkEntries.
-     *
-     * @param entries The entries' names you want
-     * @returns The entries in the same order
-     */
-    filterEntries(entries: string[]): Promise<(Entry | undefined)[]>;
-    /**
-     * When you know which entries you want, you can use this function to get the entries you want at once.
-     *
-     * This will return the entires in key-value object.
-     *
-     * For more complex requirement, please use walkEntries.
-     *
-     * @param entries The entries' names you want
-     */
-    findEntries<T extends string>(entries: T[]): Promise<{
-        [K in T]: Entry | undefined;
-    }>;
-    /**
-     * Start to walk all the unread entries.
-     * @param onEntry The function to handle an entry. Return true to stop the walk.
-     */
-    walkEntries(onEntry: (entry: Entry) => Promise<any> | boolean | void): Promise<void>;
-}
-export interface ParseStream extends Writable {
-    wait(): Promise<LazyZipFile>;
-}
-export interface ParseEntriesStream extends Writable {
-    wait(): Promise<CachedZipFile>;
-}
-export interface ExtractStream extends Writable {
-    wait(): Promise<void>;
-}
-export interface WalkEntriesStream extends Writable {
-    wait(): Promise<void>;
-}
-export declare function open(target: OpenTarget, options: CacheOptions): Promise<CachedZipFile>;
-export declare function open(target: OpenTarget, options: LazyOptions): Promise<LazyZipFile>;
-export declare function open(target: OpenTarget, options: CacheOptions | LazyOptions): Promise<LazyZipFile | CachedZipFile>;
-export declare function open(target: OpenTarget): Promise<CachedZipFile>;
-export declare function createParseStream(options?: CacheOptions): ParseEntriesStream;
-export declare function createParseStream(options?: LazyOptions): ParseStream;
-export declare function createExtractStream(destination: string, options?: ExtractOptions): ExtractStream;
-export declare function createWalkEntriesStream(onEntry: (entry: Entry) => Promise<any> | boolean | undefined): WalkEntriesStream;
 /**
- * Extract the zip file with a filter into a folder. The default filter is filter nothing, which will unzip all the content in zip.
- *
- * @param zipfile The zip file
- * @param dest The destination folder
- * @param filter The entry filter
+ * Open a yauzl zip
+ * @param target The zip path or buffer or file descriptor
+ * @param options The option to open
  */
-export declare function extract(openFile: OpenTarget, dest: string, options?: ExtractOptions): Promise<void>;
+export declare function open(target: OpenTarget, options?: Options): Promise<ZipFile>;
 /**
- * @param destinationRoot The root dir of extraction
- * @param entry The entry
- * @returns The relative path related to the root to extract
+ * Open the entry readstream for the zip file
+ * @param zip The zip file object
+ * @param entry The entry to open
+ * @param options The options to open stream
  */
-export declare type EntryHandler = (destinationRoot: string, entry: Entry) => string | undefined | Promise<string | undefined>;
-export interface ExtractOptions {
-    /**
-     * Only extract on these entries
-     */
-    entries?: string[];
-    /**
-     * The handler to decide the entry extraction path
-     */
-    entryHandler?: EntryHandler;
-    /**
-     * \`true\` to replace the if the entry destination existed, \`false\` to not replace.
-     * @default false
-     */
-    replaceExisted?: boolean;
-    /**
-     * The hook called after a entry extracted.
-     */
-    onAfterExtracted?: (destination: string, entry: Entry) => void;
-}
-export {};
-`;
-module.exports['@xmcl/unzip/task/index.d.ts'] = `import { OpenTarget, ExtractOptions } from "../index";
-import { Task } from "@xmcl/task";
+export declare function openEntryReadStream(zip: ZipFile, entry: Entry, options?: ZipFileOptions): Promise<Readable>;
 /**
- * This might be released as a seperate package, or removed later since this is a reversed dependency
- * @internal
+ * Read the entry to buffer
+ * @param zip The zip file object
+ * @param entry The entry to open
+ * @param options The options to open stream
  */
-export declare function extractTaskFunction(openFile: OpenTarget, dest: string, options?: ExtractOptions): Task.Function<void>;
-`;
-module.exports['@xmcl/unzip/test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/user/auth.d.ts'] = `import { GameProfile } from "./base";
-declare type LoginWithUser = {
+export declare function readEntry(zip: ZipFile, entry: Entry, options?: ZipFileOptions): Promise<Buffer>;
+/**
+ * Get the async entry generator for the zip file
+ * @param zip The zip file
+ */
+export declare function walkEntriesGenerator(zip: ZipFile): AsyncGenerator<Entry, void, boolean | undefined>;
+/**
+ * Walk all the entries of the zip and once provided entries are all found, then terminate the walk process
+ * @param zip The zip file
+ * @param entries The entry to read
+ */
+export declare function filterEntries(zip: ZipFile, entries: string[]): Promise<(Entry | undefined)[]>;
+/**
+ * Walk all the entries of a unread zip file
+ * @param zip The unread zip file
+ * @param entryHandler The handler to recieve entries. Return true or Promise<true> to stop the walk
+ */
+export declare function walkEntries(zip: ZipFile, entryHandler: (entry: Entry) => Promise<boolean> | boolean | void): Promise<void>;
+export declare function getEntriesRecord(entries: Entry[]): Record<string, Entry>;
+/**
+ * Walk all entries of the zip file
+ * @param zipFile The zip file object
+ */
+export declare function readAllEntries(zipFile: ZipFile): Promise<Entry[]>;
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/user/auth.d.ts'] = `import { GameProfile } from "./base"; declare type LoginWithUser = {
     username: string;
     password: string;
     requestUser: true;
@@ -5018,7 +4900,7 @@ declare type LoginOption = LoginWithUser | LoginWithoutUser;
 /**
  * The auth response format.
  *
- * Please refer https://wiki.vg/Authentication
+ * Please refer https:\/\/wiki.vg/Authentication
  */
 export interface Authentication {
     /**
@@ -5122,7 +5004,7 @@ export declare class Authenticator {
 }
 export interface YggdrasilAuthAPI {
     /**
-     * The host url, like https://xxx.xxx.com
+     * The host url, like https:\/\/xxx.xxx.com
      */
     readonly hostName: string;
     /**
@@ -5213,11 +5095,8 @@ export declare function signout(option: {
  */
 export declare function offline(username: string): Authentication;
 export {};
-`;
-module.exports['@xmcl/user/auth.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/user/base.d.ts'] = `/**
- * The game profile of the user.
+\/\/# sourceMappingURL=auth.d.ts.map`;
+module.exports['@xmcl/user/base.d.ts'] = `/**  * The game profile of the user.
  *
  * In auth response, it will usually carry the \`userId\`, \`createdAt\` properties.
  *
@@ -5316,14 +5195,12 @@ export interface ItemBlob {
 export interface FormItems {
     [name: string]: ItemBlob | string;
 }
-`;
-module.exports['@xmcl/user/index.d.ts'] = `export * from "./auth";
-export { GameProfile, GameProfileWithProperties } from "./base";
+\/\/# sourceMappingURL=base.d.ts.map`;
+module.exports['@xmcl/user/index.d.ts'] = `export * from "./auth"; export { GameProfile, GameProfileWithProperties } from "./base";
 export * from "./mojang";
 export * from "./service";
-`;
-module.exports['@xmcl/user/mojang.d.ts'] = `/**
- * Users defined question when they register this account
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/user/mojang.d.ts'] = `/**  * Users defined question when they register this account
  *
  * The question id, content mapping is:
  *
@@ -5408,11 +5285,8 @@ export declare function getChallenges(accessToken: string): Promise<MojangChalle
  * @returns True for correctly responsed all questions
  */
 export declare function responseChallenges(accessToken: string, responses: MojangChallengeResponse[]): Promise<boolean>;
-`;
-module.exports['@xmcl/user/mojang.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/user/service.d.ts'] = `import { GameProfile, GameProfileWithProperties } from "./base";
-export interface ProfileLookupException {
+\/\/# sourceMappingURL=mojang.d.ts.map`;
+module.exports['@xmcl/user/service.d.ts'] = `import { GameProfile, GameProfileWithProperties } from "./base"; export interface ProfileLookupException {
     /**
      * - statusCode=204 -> error="NoPlayerFound"
      * - statusCode=400 -> error="IllegalArgumentException" (parsed from body)
@@ -5541,11 +5415,8 @@ export declare class ProfileLookuper {
     rateLimit?: number);
     lookup(uuid: string): Promise<GameProfileWithProperties>;
 }
-`;
-module.exports['@xmcl/user/service.test.d.ts'] = `export {};
-`;
-module.exports['@xmcl/user/util/base.d.ts'] = `/**
- * Abstract layer for http requester.
+\/\/# sourceMappingURL=service.d.ts.map`;
+module.exports['@xmcl/user/util/base.d.ts'] = `/**  * Abstract layer for http requester.
  */
 export declare type HttpRequester = (option: {
     url: string;
@@ -5576,19 +5447,16 @@ export interface ItemBlob {
 export interface FormItems {
     [name: string]: ItemBlob | string;
 }
-`;
-module.exports['@xmcl/user/util/index.browser.d.ts'] = `import { HttpRequester } from "./base";
-export declare const httpRequester: HttpRequester;
+\/\/# sourceMappingURL=base.d.ts.map`;
+module.exports['@xmcl/user/util/index.browser.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
 export declare function verify(data: string, signature: string, pemKey: string | Uint8Array): Promise<boolean>;
 export declare function decodeBase64(b: string): string;
-`;
-module.exports['@xmcl/user/util/index.d.ts'] = `import { HttpRequester } from "./base";
-export declare const httpRequester: HttpRequester;
+\/\/# sourceMappingURL=index.browser.d.ts.map`;
+module.exports['@xmcl/user/util/index.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
 export declare function verify(data: string, signature: string, pemKey: string | Uint8Array): Promise<boolean>;
 export declare function decodeBase64(s: string): string;
-`;
-module.exports['@xmcl/world/index.d.ts'] = `import { FileSystem } from "@xmcl/system";
-import Long from "long";
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/world/index.d.ts'] = `import { FileSystem } from "@xmcl/system"; import Long from "long";
 export declare class WorldReader {
     private fs;
     static create(path: string | Uint8Array): Promise<WorldReader>;
@@ -5931,12 +5799,11 @@ export interface RegionDataFrame {
     ForgeDataVersion?: number;
 }
 export {};
-`;
-module.exports['@xmcl/world/test.d.ts'] = `export {};
-`;
-module.exports['assert.d.ts'] = `declare module "assert" {
-    function internal(value: any, message?: string | Error): void;
-    namespace internal {
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['assert.d.ts'] = `declare module 'assert' {
+    /** An alias of \`assert.ok()\`. */
+    function assert(value: any, message?: string | Error): asserts value;
+    namespace assert {
         class AssertionError implements Error {
             name: string;
             message: string;
@@ -5947,50 +5814,139 @@ module.exports['assert.d.ts'] = `declare module "assert" {
             code: 'ERR_ASSERTION';
 
             constructor(options?: {
-                message?: string; actual?: any; expected?: any;
-                operator?: string; stackStartFn?: Function
+                /** If provided, the error message is set to this value. */
+                message?: string;
+                /** The \`actual\` property on the error instance. */
+                actual?: any;
+                /** The \`expected\` property on the error instance. */
+                expected?: any;
+                /** The \`operator\` property on the error instance. */
+                operator?: string;
+                /** If provided, the generated stack trace omits frames before this function. */
+                stackStartFn?: Function;
             });
         }
 
+        class CallTracker {
+            calls(exact?: number): () => void;
+            calls<Func extends (...args: any[]) => any>(fn?: Func, exact?: number): Func;
+            report(): CallTrackerReportInformation[];
+            verify(): void;
+        }
+        interface CallTrackerReportInformation {
+            message: string;
+            /** The actual number of times the function was called. */
+            actual: number;
+            /** The number of times the function was expected to be called. */
+            expected: number;
+            /** The name of the function that is wrapped. */
+            operator: string;
+            /** A stack trace of the function. */
+            stack: object;
+        }
+
+        type AssertPredicate = RegExp | (new () => object) | ((thrown: any) => boolean) | object | Error;
+
         function fail(message?: string | Error): never;
         /** @deprecated since v10.0.0 - use fail([message]) or other assert functions instead. */
-        function fail(actual: any, expected: any, message?: string | Error, operator?: string, stackStartFn?: Function): never;
-        function ok(value: any, message?: string | Error): void;
+        function fail(
+            actual: any,
+            expected: any,
+            message?: string | Error,
+            operator?: string,
+            stackStartFn?: Function,
+        ): never;
+        function ok(value: any, message?: string | Error): asserts value;
+        /** @deprecated since v9.9.0 - use strictEqual() instead. */
         function equal(actual: any, expected: any, message?: string | Error): void;
+        /** @deprecated since v9.9.0 - use notStrictEqual() instead. */
         function notEqual(actual: any, expected: any, message?: string | Error): void;
+        /** @deprecated since v9.9.0 - use deepStrictEqual() instead. */
         function deepEqual(actual: any, expected: any, message?: string | Error): void;
+        /** @deprecated since v9.9.0 - use notDeepStrictEqual() instead. */
         function notDeepEqual(actual: any, expected: any, message?: string | Error): void;
-        function strictEqual(actual: any, expected: any, message?: string | Error): void;
+        function strictEqual<T>(actual: any, expected: T, message?: string | Error): asserts actual is T;
         function notStrictEqual(actual: any, expected: any, message?: string | Error): void;
-        function deepStrictEqual(actual: any, expected: any, message?: string | Error): void;
+        function deepStrictEqual<T>(actual: any, expected: T, message?: string | Error): asserts actual is T;
         function notDeepStrictEqual(actual: any, expected: any, message?: string | Error): void;
 
         function throws(block: () => any, message?: string | Error): void;
-        function throws(block: () => any, error: RegExp | Function | Object | Error, message?: string | Error): void;
+        function throws(block: () => any, error: AssertPredicate, message?: string | Error): void;
         function doesNotThrow(block: () => any, message?: string | Error): void;
         function doesNotThrow(block: () => any, error: RegExp | Function, message?: string | Error): void;
 
-        function ifError(value: any): void;
+        function ifError(value: any): asserts value is null | undefined;
 
         function rejects(block: (() => Promise<any>) | Promise<any>, message?: string | Error): Promise<void>;
-        function rejects(block: (() => Promise<any>) | Promise<any>, error: RegExp | Function | Object | Error, message?: string | Error): Promise<void>;
+        function rejects(
+            block: (() => Promise<any>) | Promise<any>,
+            error: AssertPredicate,
+            message?: string | Error,
+        ): Promise<void>;
         function doesNotReject(block: (() => Promise<any>) | Promise<any>, message?: string | Error): Promise<void>;
-        function doesNotReject(block: (() => Promise<any>) | Promise<any>, error: RegExp | Function, message?: string | Error): Promise<void>;
+        function doesNotReject(
+            block: (() => Promise<any>) | Promise<any>,
+            error: RegExp | Function,
+            message?: string | Error,
+        ): Promise<void>;
 
-        const strict: typeof internal;
+        function match(value: string, regExp: RegExp, message?: string | Error): void;
+        function doesNotMatch(value: string, regExp: RegExp, message?: string | Error): void;
+
+        const strict: Omit<
+            typeof assert,
+            | 'equal'
+            | 'notEqual'
+            | 'deepEqual'
+            | 'notDeepEqual'
+            | 'ok'
+            | 'strictEqual'
+            | 'deepStrictEqual'
+            | 'ifError'
+            | 'strict'
+        > & {
+            (value: any, message?: string | Error): asserts value;
+            equal: typeof strictEqual;
+            notEqual: typeof notStrictEqual;
+            deepEqual: typeof deepStrictEqual;
+            notDeepEqual: typeof notDeepStrictEqual;
+
+            \/\/ Mapped types and assertion functions are incompatible?
+            \/\/ TS2775: Assertions require every name in the call target
+            \/\/ to be declared with an explicit type annotation.
+            ok: typeof ok;
+            strictEqual: typeof strictEqual;
+            deepStrictEqual: typeof deepStrictEqual;
+            ifError: typeof ifError;
+            strict: typeof strict;
+        };
     }
 
-    export = internal;
+    export = assert;
 }
 `;
 module.exports['async_hooks.d.ts'] = `/**
- * Async Hooks module: https://nodejs.org/api/async_hooks.html
+ * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
  */
 declare module "async_hooks" {
     /**
      * Returns the asyncId of the current execution context.
      */
     function executionAsyncId(): number;
+
+    /**
+     * The resource representing the current execution.
+     *  Useful to store data within the resource.
+     *
+     * Resource objects returned by \`executionAsyncResource()\` are most often internal
+     * Node.js handle objects with undocumented APIs. Using any functions or properties
+     * on the object is likely to crash your application and should be avoided.
+     *
+     * Using \`executionAsyncResource()\` in the top-level execution context will
+     * return an empty object as there is no handle or request object to use,
+     * but having an object representing the top-level can be helpful.
+     */
+    function executionAsyncResource(): object;
 
     /**
      * Returns the ID of the resource responsible for calling the callback that is currently being executed.
@@ -6005,7 +5961,7 @@ declare module "async_hooks" {
          * @param triggerAsyncId the unique ID of the async resource in whose execution context this async resource was created
          * @param resource reference to the resource representing the async operation, needs to be released during destroy
          */
-        init?(asyncId: number, type: string, triggerAsyncId: number, resource: Object): void;
+        init?(asyncId: number, type: string, triggerAsyncId: number, resource: object): void;
 
         /**
          * When an asynchronous operation is initiated or completes a callback is called to notify the user.
@@ -6087,6 +6043,19 @@ declare module "async_hooks" {
         constructor(type: string, triggerAsyncId?: number|AsyncResourceOptions);
 
         /**
+         * Binds the given function to the current execution context.
+         * @param fn The function to bind to the current execution context.
+         * @param type An optional name to associate with the underlying \`AsyncResource\`.
+         */
+        static bind<Func extends (...args: any[]) => any>(fn: Func, type?: string): Func & { asyncResource: AsyncResource };
+
+        /**
+         * Binds the given function to execute to this \`AsyncResource\`'s scope.
+         * @param fn The function to bind to the current \`AsyncResource\`.
+         */
+        bind<Func extends (...args: any[]) => any>(fn: Func): Func & { asyncResource: AsyncResource };
+
+        /**
          * Call the provided function with the provided arguments in the
          * execution context of the async resource. This will establish the
          * context, trigger the AsyncHooks before callbacks, call the function,
@@ -6114,49 +6083,94 @@ declare module "async_hooks" {
          */
         triggerAsyncId(): number;
     }
+
+    /**
+     * When having multiple instances of \`AsyncLocalStorage\`, they are independent
+     * from each other. It is safe to instantiate this class multiple times.
+     */
+    class AsyncLocalStorage<T> {
+        /**
+         * This method disables the instance of \`AsyncLocalStorage\`. All subsequent calls
+         * to \`asyncLocalStorage.getStore()\` will return \`undefined\` until
+         * \`asyncLocalStorage.run()\` is called again.
+         *
+         * When calling \`asyncLocalStorage.disable()\`, all current contexts linked to the
+         * instance will be exited.
+         *
+         * Calling \`asyncLocalStorage.disable()\` is required before the
+         * \`asyncLocalStorage\` can be garbage collected. This does not apply to stores
+         * provided by the \`asyncLocalStorage\`, as those objects are garbage collected
+         * along with the corresponding async resources.
+         *
+         * This method is to be used when the \`asyncLocalStorage\` is not in use anymore
+         * in the current process.
+         */
+        disable(): void;
+
+        /**
+         * This method returns the current store. If this method is called outside of an
+         * asynchronous context initialized by calling \`asyncLocalStorage.run\`, it will
+         * return \`undefined\`.
+         */
+        getStore(): T | undefined;
+
+        /**
+         * This methods runs a function synchronously within a context and return its
+         * return value. The store is not accessible outside of the callback function or
+         * the asynchronous operations created within the callback.
+         *
+         * Optionally, arguments can be passed to the function. They will be passed to the
+         * callback function.
+         *
+         * I the callback function throws an error, it will be thrown by \`run\` too. The
+         * stacktrace will not be impacted by this call and the context will be exited.
+         */
+        \/\/ TODO: Apply generic vararg once available
+        run<R>(store: T, callback: (...args: any[]) => R, ...args: any[]): R;
+
+        /**
+         * This methods runs a function synchronously outside of a context and return its
+         * return value. The store is not accessible within the callback function or the
+         * asynchronous operations created within the callback.
+         *
+         * Optionally, arguments can be passed to the function. They will be passed to the
+         * callback function.
+         *
+         * If the callback function throws an error, it will be thrown by \`exit\` too. The
+         * stacktrace will not be impacted by this call and the context will be
+         * re-entered.
+         */
+        \/\/ TODO: Apply generic vararg once available
+        exit<R>(callback: (...args: any[]) => R, ...args: any[]): R;
+
+        /**
+         * Calling \`asyncLocalStorage.enterWith(store)\` will transition into the context
+         * for the remainder of the current synchronous execution and will persist
+         * through any following asynchronous calls.
+         */
+        enterWith(store: T): void;
+    }
 }
 `;
-module.exports['base.d.ts'] = `// base definnitions for all NodeJS modules that are not specific to any version of TypeScript
-/// <reference path="globals.d.ts" />
-/// <reference path="assert.d.ts" />
-/// <reference path="async_hooks.d.ts" />
-/// <reference path="buffer.d.ts" />
-/// <reference path="child_process.d.ts" />
-/// <reference path="cluster.d.ts" />
-/// <reference path="console.d.ts" />
-/// <reference path="constants.d.ts" />
-/// <reference path="crypto.d.ts" />
-/// <reference path="dgram.d.ts" />
-/// <reference path="dns.d.ts" />
-/// <reference path="domain.d.ts" />
-/// <reference path="events.d.ts" />
-/// <reference path="fs.d.ts" />
-/// <reference path="http.d.ts" />
-/// <reference path="http2.d.ts" />
-/// <reference path="https.d.ts" />
-/// <reference path="inspector.d.ts" />
-/// <reference path="module.d.ts" />
-/// <reference path="net.d.ts" />
-/// <reference path="os.d.ts" />
-/// <reference path="path.d.ts" />
-/// <reference path="perf_hooks.d.ts" />
-/// <reference path="process.d.ts" />
-/// <reference path="punycode.d.ts" />
-/// <reference path="querystring.d.ts" />
-/// <reference path="readline.d.ts" />
-/// <reference path="repl.d.ts" />
-/// <reference path="stream.d.ts" />
-/// <reference path="string_decoder.d.ts" />
-/// <reference path="timers.d.ts" />
-/// <reference path="tls.d.ts" />
-/// <reference path="trace_events.d.ts" />
-/// <reference path="tty.d.ts" />
-/// <reference path="url.d.ts" />
-/// <reference path="util.d.ts" />
-/// <reference path="v8.d.ts" />
-/// <reference path="vm.d.ts" />
-/// <reference path="worker_threads.d.ts" />
-/// <reference path="zlib.d.ts" />
+module.exports['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7.
+
+\/\/ NOTE: TypeScript version-specific augmentations can be found in the following paths:
+\/\/          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
+\/\/          - ~/index.d.ts        - Definitions specific to TypeScript 2.1
+\/\/          - ~/ts3.7/base.d.ts   - Definitions specific to TypeScript 3.7
+\/\/          - ~/ts3.7/index.d.ts  - Definitions specific to TypeScript 3.7 with assert pulled in
+
+\/\/ Reference required types from the default lib:
+\/\// <reference lib="es2018" />
+\/\// <reference lib="esnext.asynciterable" />
+\/\// <reference lib="esnext.intl" />
+\/\// <reference lib="esnext.bigint" />
+
+\/\/ Base definitions for all NodeJS modules that are not specific to any version of TypeScript:
+\/\// <reference path="ts3.6/base.d.ts" />
+
+\/\/ TypeScript 3.7-specific augmentations:
+\/\// <reference path="assert.d.ts" />
 `;
 module.exports['buffer.d.ts'] = `declare module "buffer" {
     export const INSPECT_MAX_BYTES: number;
@@ -6173,7 +6187,7 @@ module.exports['buffer.d.ts'] = `declare module "buffer" {
     export function transcode(source: Uint8Array, fromEnc: TranscodeEncoding, toEnc: TranscodeEncoding): Buffer;
 
     export const SlowBuffer: {
-        /** @deprecated since v6.0.0, use Buffer.allocUnsafeSlow() */
+        /** @deprecated since v6.0.0, use \`Buffer.allocUnsafeSlow()\` */
         new(size: number): Buffer;
         prototype: Buffer;
     };
@@ -6182,9 +6196,13 @@ module.exports['buffer.d.ts'] = `declare module "buffer" {
 }
 `;
 module.exports['child_process.d.ts'] = `declare module "child_process" {
+    import { BaseEncodingOptions } from 'fs';
     import * as events from "events";
     import * as net from "net";
     import { Writable, Readable, Stream, Pipe } from "stream";
+
+    type Serializable = string | object | number | boolean;
+    type SendHandle = net.Socket | net.Server;
 
     interface ChildProcess extends events.EventEmitter {
         stdin: Writable | null;
@@ -6192,19 +6210,23 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         stderr: Readable | null;
         readonly channel?: Pipe | null;
         readonly stdio: [
-            Writable | null, // stdin
-            Readable | null, // stdout
-            Readable | null, // stderr
-            Readable | Writable | null | undefined, // extra
-            Readable | Writable | null | undefined // extra
+            Writable | null, \/\/ stdin
+            Readable | null, \/\/ stdout
+            Readable | null, \/\/ stderr
+            Readable | Writable | null | undefined, \/\/ extra
+            Readable | Writable | null | undefined \/\/ extra
         ];
         readonly killed: boolean;
         readonly pid: number;
         readonly connected: boolean;
-        kill(signal?: NodeJS.Signals | number): void;
-        send(message: any, callback?: (error: Error | null) => void): boolean;
-        send(message: any, sendHandle?: net.Socket | net.Server, callback?: (error: Error | null) => void): boolean;
-        send(message: any, sendHandle?: net.Socket | net.Server, options?: MessageOptions, callback?: (error: Error | null) => void): boolean;
+        readonly exitCode: number | null;
+        readonly signalCode: NodeJS.Signals | null;
+        readonly spawnargs: string[];
+        readonly spawnfile: string;
+        kill(signal?: NodeJS.Signals | number): boolean;
+        send(message: Serializable, callback?: (error: Error | null) => void): boolean;
+        send(message: Serializable, sendHandle?: SendHandle, callback?: (error: Error | null) => void): boolean;
+        send(message: Serializable, sendHandle?: SendHandle, options?: MessageOptions, callback?: (error: Error | null) => void): boolean;
         disconnect(): void;
         unref(): void;
         ref(): void;
@@ -6223,59 +6245,59 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         addListener(event: "disconnect", listener: () => void): this;
         addListener(event: "error", listener: (err: Error) => void): this;
         addListener(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
-        addListener(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+        addListener(event: "message", listener: (message: Serializable, sendHandle: SendHandle) => void): this;
 
         emit(event: string | symbol, ...args: any[]): boolean;
         emit(event: "close", code: number, signal: NodeJS.Signals): boolean;
         emit(event: "disconnect"): boolean;
         emit(event: "error", err: Error): boolean;
         emit(event: "exit", code: number | null, signal: NodeJS.Signals | null): boolean;
-        emit(event: "message", message: any, sendHandle: net.Socket | net.Server): boolean;
+        emit(event: "message", message: Serializable, sendHandle: SendHandle): boolean;
 
         on(event: string, listener: (...args: any[]) => void): this;
         on(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
         on(event: "disconnect", listener: () => void): this;
         on(event: "error", listener: (err: Error) => void): this;
         on(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
-        on(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+        on(event: "message", listener: (message: Serializable, sendHandle: SendHandle) => void): this;
 
         once(event: string, listener: (...args: any[]) => void): this;
         once(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
         once(event: "disconnect", listener: () => void): this;
         once(event: "error", listener: (err: Error) => void): this;
         once(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
-        once(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+        once(event: "message", listener: (message: Serializable, sendHandle: SendHandle) => void): this;
 
         prependListener(event: string, listener: (...args: any[]) => void): this;
         prependListener(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
         prependListener(event: "disconnect", listener: () => void): this;
         prependListener(event: "error", listener: (err: Error) => void): this;
         prependListener(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
-        prependListener(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+        prependListener(event: "message", listener: (message: Serializable, sendHandle: SendHandle) => void): this;
 
         prependOnceListener(event: string, listener: (...args: any[]) => void): this;
         prependOnceListener(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
         prependOnceListener(event: "disconnect", listener: () => void): this;
         prependOnceListener(event: "error", listener: (err: Error) => void): this;
         prependOnceListener(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
-        prependOnceListener(event: "message", listener: (message: any, sendHandle: net.Socket | net.Server) => void): this;
+        prependOnceListener(event: "message", listener: (message: Serializable, sendHandle: SendHandle) => void): this;
     }
 
-    // return this object when stdio option is undefined or not specified
+    \/\/ return this object when stdio option is undefined or not specified
     interface ChildProcessWithoutNullStreams extends ChildProcess {
         stdin: Writable;
         stdout: Readable;
         stderr: Readable;
         readonly stdio: [
-            Writable, // stdin
-            Readable, // stdout
-            Readable, // stderr
-            Readable | Writable | null | undefined, // extra, no modification
-            Readable | Writable | null | undefined // extra, no modification
+            Writable, \/\/ stdin
+            Readable, \/\/ stdout
+            Readable, \/\/ stderr
+            Readable | Writable | null | undefined, \/\/ extra, no modification
+            Readable | Writable | null | undefined \/\/ extra, no modification
         ];
     }
 
-    // return this object when stdio option is a tuple of 3
+    \/\/ return this object when stdio option is a tuple of 3
     interface ChildProcessByStdio<
         I extends null | Writable,
         O extends null | Readable,
@@ -6288,8 +6310,8 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
             I,
             O,
             E,
-            Readable | Writable | null | undefined, // extra, no modification
-            Readable | Writable | null | undefined // extra, no modification
+            Readable | Writable | null | undefined, \/\/ extra, no modification
+            Readable | Writable | null | undefined \/\/ extra, no modification
         ];
     }
 
@@ -6298,6 +6320,16 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
     }
 
     type StdioOptions = "pipe" | "ignore" | "inherit" | Array<("pipe" | "ipc" | "ignore" | "inherit" | Stream | number | null | undefined)>;
+
+    type SerializationType = 'json' | 'advanced';
+
+    interface MessagingOptions {
+        /**
+         * Specify the kind of serialization used for sending messages between processes.
+         * @default 'json'
+         */
+        serialization?: SerializationType;
+    }
 
     interface ProcessEnvOptions {
         uid?: number;
@@ -6317,12 +6349,15 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         timeout?: number;
     }
 
-    interface SpawnOptions extends CommonOptions {
+    interface CommonSpawnOptions extends CommonOptions, MessagingOptions {
         argv0?: string;
         stdio?: StdioOptions;
-        detached?: boolean;
         shell?: boolean | string;
         windowsVerbatimArguments?: boolean;
+    }
+
+    interface SpawnOptions extends CommonSpawnOptions {
+        detached?: boolean;
     }
 
     interface SpawnOptionsWithoutStdio extends SpawnOptions {
@@ -6340,7 +6375,7 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         stdio: [Stdin, Stdout, Stderr];
     }
 
-    // overloads of spawn without 'args'
+    \/\/ overloads of spawn without 'args'
     function spawn(command: string, options?: SpawnOptionsWithoutStdio): ChildProcessWithoutNullStreams;
 
     function spawn(
@@ -6378,7 +6413,7 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
 
     function spawn(command: string, options: SpawnOptions): ChildProcess;
 
-    // overloads of spawn with 'args'
+    \/\/ overloads of spawn with 'args'
     function spawn(command: string, args?: ReadonlyArray<string>, options?: SpawnOptionsWithoutStdio): ChildProcessWithoutNullStreams;
 
     function spawn(
@@ -6435,7 +6470,7 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
     }
 
     interface ExecOptionsWithBufferEncoding extends ExecOptions {
-        encoding: string | null; // specify \`null\`.
+        encoding: BufferEncoding | null; \/\/ specify \`null\`.
     }
 
     interface ExecException extends Error {
@@ -6445,26 +6480,30 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         signal?: NodeJS.Signals;
     }
 
-    // no \`options\` definitely means stdout/stderr are \`string\`.
+    \/\/ no \`options\` definitely means stdout/stderr are \`string\`.
     function exec(command: string, callback?: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
 
-    // \`options\` with \`"buffer"\` or \`null\` for \`encoding\` means stdout/stderr are definitely \`Buffer\`.
+    \/\/ \`options\` with \`"buffer"\` or \`null\` for \`encoding\` means stdout/stderr are definitely \`Buffer\`.
     function exec(command: string, options: { encoding: "buffer" | null } & ExecOptions, callback?: (error: ExecException | null, stdout: Buffer, stderr: Buffer) => void): ChildProcess;
 
-    // \`options\` with well known \`encoding\` means stdout/stderr are definitely \`string\`.
+    \/\/ \`options\` with well known \`encoding\` means stdout/stderr are definitely \`string\`.
     function exec(command: string, options: { encoding: BufferEncoding } & ExecOptions, callback?: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
 
-    // \`options\` with an \`encoding\` whose type is \`string\` means stdout/stderr could either be \`Buffer\` or \`string\`.
-    // There is no guarantee the \`encoding\` is unknown as \`string\` is a superset of \`BufferEncoding\`.
-    function exec(command: string, options: { encoding: string } & ExecOptions, callback?: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void): ChildProcess;
-
-    // \`options\` without an \`encoding\` means stdout/stderr are definitely \`string\`.
-    function exec(command: string, options: ExecOptions, callback?: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
-
-    // fallback if nothing else matches. Worst case is always \`string | Buffer\`.
+    \/\/ \`options\` with an \`encoding\` whose type is \`string\` means stdout/stderr could either be \`Buffer\` or \`string\`.
+    \/\/ There is no guarantee the \`encoding\` is unknown as \`string\` is a superset of \`BufferEncoding\`.
     function exec(
         command: string,
-        options: ({ encoding?: string | null } & ExecOptions) | undefined | null,
+        options: { encoding: BufferEncoding } & ExecOptions,
+        callback?: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
+    ): ChildProcess;
+
+    \/\/ \`options\` without an \`encoding\` means stdout/stderr are definitely \`string\`.
+    function exec(command: string, options: ExecOptions, callback?: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+
+    \/\/ fallback if nothing else matches. Worst case is always \`string | Buffer\`.
+    function exec(
+        command: string,
+        options: (BaseEncodingOptions & ExecOptions) | undefined | null,
         callback?: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
     ): ChildProcess;
 
@@ -6472,13 +6511,13 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         child: ChildProcess;
     }
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
     namespace exec {
         function __promisify__(command: string): PromiseWithChild<{ stdout: string, stderr: string }>;
         function __promisify__(command: string, options: { encoding: "buffer" | null } & ExecOptions): PromiseWithChild<{ stdout: Buffer, stderr: Buffer }>;
         function __promisify__(command: string, options: { encoding: BufferEncoding } & ExecOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
         function __promisify__(command: string, options: ExecOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
-        function __promisify__(command: string, options?: ({ encoding?: string | null } & ExecOptions) | null): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
+        function __promisify__(command: string, options?: (BaseEncodingOptions & ExecOptions) | null): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
     }
 
     interface ExecFileOptions extends CommonOptions {
@@ -6494,19 +6533,19 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         encoding: 'buffer' | null;
     }
     interface ExecFileOptionsWithOtherEncoding extends ExecFileOptions {
-        encoding: string;
+        encoding: BufferEncoding;
     }
 
     function execFile(file: string): ChildProcess;
-    function execFile(file: string, options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null): ChildProcess;
+    function execFile(file: string, options: (BaseEncodingOptions & ExecFileOptions) | undefined | null): ChildProcess;
     function execFile(file: string, args?: ReadonlyArray<string> | null): ChildProcess;
-    function execFile(file: string, args: ReadonlyArray<string> | undefined | null, options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null): ChildProcess;
+    function execFile(file: string, args: ReadonlyArray<string> | undefined | null, options: (BaseEncodingOptions & ExecFileOptions) | undefined | null): ChildProcess;
 
-    // no \`options\` definitely means stdout/stderr are \`string\`.
+    \/\/ no \`options\` definitely means stdout/stderr are \`string\`.
     function execFile(file: string, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
     function execFile(file: string, args: ReadonlyArray<string> | undefined | null, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
 
-    // \`options\` with \`"buffer"\` or \`null\` for \`encoding\` means stdout/stderr are definitely \`Buffer\`.
+    \/\/ \`options\` with \`"buffer"\` or \`null\` for \`encoding\` means stdout/stderr are definitely \`Buffer\`.
     function execFile(file: string, options: ExecFileOptionsWithBufferEncoding, callback: (error: ExecException | null, stdout: Buffer, stderr: Buffer) => void): ChildProcess;
     function execFile(
         file: string,
@@ -6515,7 +6554,7 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         callback: (error: ExecException | null, stdout: Buffer, stderr: Buffer) => void,
     ): ChildProcess;
 
-    // \`options\` with well known \`encoding\` means stdout/stderr are definitely \`string\`.
+    \/\/ \`options\` with well known \`encoding\` means stdout/stderr are definitely \`string\`.
     function execFile(file: string, options: ExecFileOptionsWithStringEncoding, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
     function execFile(
         file: string,
@@ -6524,8 +6563,8 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         callback: (error: ExecException | null, stdout: string, stderr: string) => void,
     ): ChildProcess;
 
-    // \`options\` with an \`encoding\` whose type is \`string\` means stdout/stderr could either be \`Buffer\` or \`string\`.
-    // There is no guarantee the \`encoding\` is unknown as \`string\` is a superset of \`BufferEncoding\`.
+    \/\/ \`options\` with an \`encoding\` whose type is \`string\` means stdout/stderr could either be \`Buffer\` or \`string\`.
+    \/\/ There is no guarantee the \`encoding\` is unknown as \`string\` is a superset of \`BufferEncoding\`.
     function execFile(
         file: string,
         options: ExecFileOptionsWithOtherEncoding,
@@ -6538,7 +6577,7 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         callback: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
     ): ChildProcess;
 
-    // \`options\` without an \`encoding\` means stdout/stderr are definitely \`string\`.
+    \/\/ \`options\` without an \`encoding\` means stdout/stderr are definitely \`string\`.
     function execFile(file: string, options: ExecFileOptions, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
     function execFile(
         file: string,
@@ -6547,40 +6586,44 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         callback: (error: ExecException | null, stdout: string, stderr: string) => void
     ): ChildProcess;
 
-    // fallback if nothing else matches. Worst case is always \`string | Buffer\`.
+    \/\/ fallback if nothing else matches. Worst case is always \`string | Buffer\`.
     function execFile(
         file: string,
-        options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null,
+        options: (BaseEncodingOptions & ExecFileOptions) | undefined | null,
         callback: ((error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void) | undefined | null,
     ): ChildProcess;
     function execFile(
         file: string,
         args: ReadonlyArray<string> | undefined | null,
-        options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null,
+        options: (BaseEncodingOptions & ExecFileOptions) | undefined | null,
         callback: ((error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void) | undefined | null,
     ): ChildProcess;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
     namespace execFile {
         function __promisify__(file: string): PromiseWithChild<{ stdout: string, stderr: string }>;
-        function __promisify__(file: string, args: string[] | undefined | null): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, args: ReadonlyArray<string> | undefined | null): PromiseWithChild<{ stdout: string, stderr: string }>;
         function __promisify__(file: string, options: ExecFileOptionsWithBufferEncoding): PromiseWithChild<{ stdout: Buffer, stderr: Buffer }>;
-        function __promisify__(file: string, args: string[] | undefined | null, options: ExecFileOptionsWithBufferEncoding): PromiseWithChild<{ stdout: Buffer, stderr: Buffer }>;
+        function __promisify__(file: string, args: ReadonlyArray<string> | undefined | null, options: ExecFileOptionsWithBufferEncoding): PromiseWithChild<{ stdout: Buffer, stderr: Buffer }>;
         function __promisify__(file: string, options: ExecFileOptionsWithStringEncoding): PromiseWithChild<{ stdout: string, stderr: string }>;
-        function __promisify__(file: string, args: string[] | undefined | null, options: ExecFileOptionsWithStringEncoding): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, args: ReadonlyArray<string> | undefined | null, options: ExecFileOptionsWithStringEncoding): PromiseWithChild<{ stdout: string, stderr: string }>;
         function __promisify__(file: string, options: ExecFileOptionsWithOtherEncoding): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
-        function __promisify__(file: string, args: string[] | undefined | null, options: ExecFileOptionsWithOtherEncoding): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
-        function __promisify__(file: string, options: ExecFileOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
-        function __promisify__(file: string, args: string[] | undefined | null, options: ExecFileOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
-        function __promisify__(file: string, options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
         function __promisify__(
             file: string,
-            args: string[] | undefined | null,
-            options: ({ encoding?: string | null } & ExecFileOptions) | undefined | null,
+            args: ReadonlyArray<string> | undefined | null,
+            options: ExecFileOptionsWithOtherEncoding,
+        ): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
+        function __promisify__(file: string, options: ExecFileOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, args: ReadonlyArray<string> | undefined | null, options: ExecFileOptions): PromiseWithChild<{ stdout: string, stderr: string }>;
+        function __promisify__(file: string, options: (BaseEncodingOptions & ExecFileOptions) | undefined | null): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
+        function __promisify__(
+            file: string,
+            args: ReadonlyArray<string> | undefined | null,
+            options: (BaseEncodingOptions & ExecFileOptions) | undefined | null,
         ): PromiseWithChild<{ stdout: string | Buffer, stderr: string | Buffer }>;
     }
 
-    interface ForkOptions extends ProcessEnvOptions {
+    interface ForkOptions extends ProcessEnvOptions, MessagingOptions {
         execPath?: string;
         execArgv?: string[];
         silent?: boolean;
@@ -6588,23 +6631,20 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         detached?: boolean;
         windowsVerbatimArguments?: boolean;
     }
+    function fork(modulePath: string, options?: ForkOptions): ChildProcess;
     function fork(modulePath: string, args?: ReadonlyArray<string>, options?: ForkOptions): ChildProcess;
 
-    interface SpawnSyncOptions extends CommonOptions {
-        argv0?: string; // Not specified in the docs
+    interface SpawnSyncOptions extends CommonSpawnOptions {
         input?: string | NodeJS.ArrayBufferView;
-        stdio?: StdioOptions;
         killSignal?: NodeJS.Signals | number;
         maxBuffer?: number;
-        encoding?: string;
-        shell?: boolean | string;
-        windowsVerbatimArguments?: boolean;
+        encoding?: BufferEncoding | 'buffer' | null;
     }
     interface SpawnSyncOptionsWithStringEncoding extends SpawnSyncOptions {
         encoding: BufferEncoding;
     }
     interface SpawnSyncOptionsWithBufferEncoding extends SpawnSyncOptions {
-        encoding: string; // specify \`null\`.
+        encoding?: 'buffer' | null;
     }
     interface SpawnSyncReturns<T> {
         pid: number;
@@ -6629,13 +6669,13 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         shell?: string;
         killSignal?: NodeJS.Signals | number;
         maxBuffer?: number;
-        encoding?: string;
+        encoding?: BufferEncoding | 'buffer' | null;
     }
     interface ExecSyncOptionsWithStringEncoding extends ExecSyncOptions {
         encoding: BufferEncoding;
     }
     interface ExecSyncOptionsWithBufferEncoding extends ExecSyncOptions {
-        encoding: string; // specify \`null\`.
+        encoding?: 'buffer' | null;
     }
     function execSync(command: string): Buffer;
     function execSync(command: string, options?: ExecSyncOptionsWithStringEncoding): string;
@@ -6647,14 +6687,14 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
         stdio?: StdioOptions;
         killSignal?: NodeJS.Signals | number;
         maxBuffer?: number;
-        encoding?: string;
+        encoding?: BufferEncoding;
         shell?: boolean | string;
     }
     interface ExecFileSyncOptionsWithStringEncoding extends ExecFileSyncOptions {
         encoding: BufferEncoding;
     }
     interface ExecFileSyncOptionsWithBufferEncoding extends ExecFileSyncOptions {
-        encoding: string; // specify \`null\`.
+        encoding: BufferEncoding; \/\/ specify \`null\`.
     }
     function execFileSync(command: string): Buffer;
     function execFileSync(command: string, options?: ExecFileSyncOptionsWithStringEncoding): string;
@@ -6670,9 +6710,9 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
     import * as events from "events";
     import * as net from "net";
 
-    // interfaces
+    \/\/ interfaces
     interface ClusterSettings {
-        execArgv?: string[]; // default: process.execArgv
+        execArgv?: string[]; \/\/ default: process.execArgv
         exec?: string;
         args?: string[];
         silent?: boolean;
@@ -6685,13 +6725,13 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
     interface Address {
         address: string;
         port: number;
-        addressType: number | "udp4" | "udp6";  // 4, 6, -1, "udp4", "udp6"
+        addressType: number | "udp4" | "udp6";  \/\/ 4, 6, -1, "udp4", "udp6"
     }
 
     class Worker extends events.EventEmitter {
         id: number;
         process: child.ChildProcess;
-        send(message: any, sendHandle?: any, callback?: (error: Error | null) => void): boolean;
+        send(message: child.Serializable, sendHandle?: child.SendHandle, callback?: (error: Error | null) => void): boolean;
         kill(signal?: string): void;
         destroy(signal?: string): void;
         disconnect(): void;
@@ -6713,7 +6753,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         addListener(event: "error", listener: (error: Error) => void): this;
         addListener(event: "exit", listener: (code: number, signal: string) => void): this;
         addListener(event: "listening", listener: (address: Address) => void): this;
-        addListener(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        addListener(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
         addListener(event: "online", listener: () => void): this;
 
         emit(event: string | symbol, ...args: any[]): boolean;
@@ -6729,7 +6769,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         on(event: "error", listener: (error: Error) => void): this;
         on(event: "exit", listener: (code: number, signal: string) => void): this;
         on(event: "listening", listener: (address: Address) => void): this;
-        on(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        on(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
         on(event: "online", listener: () => void): this;
 
         once(event: string, listener: (...args: any[]) => void): this;
@@ -6737,7 +6777,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         once(event: "error", listener: (error: Error) => void): this;
         once(event: "exit", listener: (code: number, signal: string) => void): this;
         once(event: "listening", listener: (address: Address) => void): this;
-        once(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        once(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
         once(event: "online", listener: () => void): this;
 
         prependListener(event: string, listener: (...args: any[]) => void): this;
@@ -6745,7 +6785,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         prependListener(event: "error", listener: (error: Error) => void): this;
         prependListener(event: "exit", listener: (code: number, signal: string) => void): this;
         prependListener(event: "listening", listener: (address: Address) => void): this;
-        prependListener(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        prependListener(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
         prependListener(event: "online", listener: () => void): this;
 
         prependOnceListener(event: string, listener: (...args: any[]) => void): this;
@@ -6753,7 +6793,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         prependOnceListener(event: "error", listener: (error: Error) => void): this;
         prependOnceListener(event: "exit", listener: (code: number, signal: string) => void): this;
         prependOnceListener(event: "listening", listener: (address: Address) => void): this;
-        prependOnceListener(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        prependOnceListener(event: "message", listener: (message: any, handle: net.Socket | net.Server) => void): this;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
         prependOnceListener(event: "online", listener: () => void): this;
     }
 
@@ -6763,13 +6803,14 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         fork(env?: any): Worker;
         isMaster: boolean;
         isWorker: boolean;
-        // TODO: cluster.schedulingPolicy
+        schedulingPolicy: number;
         settings: ClusterSettings;
         setupMaster(settings?: ClusterSettings): void;
         worker?: Worker;
-        workers?: {
-            [index: string]: Worker | undefined
-        };
+        workers?: NodeJS.Dict<Worker>;
+
+        readonly SCHED_NONE: number;
+        readonly SCHED_RR: number;
 
         /**
          * events.EventEmitter
@@ -6786,7 +6827,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         addListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
         addListener(event: "fork", listener: (worker: Worker) => void): this;
         addListener(event: "listening", listener: (worker: Worker, address: Address) => void): this;
-        addListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        addListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
         addListener(event: "online", listener: (worker: Worker) => void): this;
         addListener(event: "setup", listener: (settings: ClusterSettings) => void): this;
 
@@ -6804,7 +6845,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         on(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
         on(event: "fork", listener: (worker: Worker) => void): this;
         on(event: "listening", listener: (worker: Worker, address: Address) => void): this;
-        on(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        on(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
         on(event: "online", listener: (worker: Worker) => void): this;
         on(event: "setup", listener: (settings: ClusterSettings) => void): this;
 
@@ -6813,7 +6854,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         once(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
         once(event: "fork", listener: (worker: Worker) => void): this;
         once(event: "listening", listener: (worker: Worker, address: Address) => void): this;
-        once(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        once(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
         once(event: "online", listener: (worker: Worker) => void): this;
         once(event: "setup", listener: (settings: ClusterSettings) => void): this;
 
@@ -6822,7 +6863,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         prependListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
         prependListener(event: "fork", listener: (worker: Worker) => void): this;
         prependListener(event: "listening", listener: (worker: Worker, address: Address) => void): this;
-        prependListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  // the handle is a net.Socket or net.Server object, or undefined.
+        prependListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
         prependListener(event: "online", listener: (worker: Worker) => void): this;
         prependListener(event: "setup", listener: (settings: ClusterSettings) => void): this;
 
@@ -6831,23 +6872,24 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
         prependOnceListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): this;
         prependOnceListener(event: "fork", listener: (worker: Worker) => void): this;
         prependOnceListener(event: "listening", listener: (worker: Worker, address: Address) => void): this;
-        // the handle is a net.Socket or net.Server object, or undefined.
+        \/\/ the handle is a net.Socket or net.Server object, or undefined.
         prependOnceListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): this;
         prependOnceListener(event: "online", listener: (worker: Worker) => void): this;
         prependOnceListener(event: "setup", listener: (settings: ClusterSettings) => void): this;
     }
 
+    const SCHED_NONE: number;
+    const SCHED_RR: number;
+
     function disconnect(callback?: () => void): void;
     function fork(env?: any): Worker;
     const isMaster: boolean;
     const isWorker: boolean;
-    // TODO: cluster.schedulingPolicy
+    let schedulingPolicy: number;
     const settings: ClusterSettings;
     function setupMaster(settings?: ClusterSettings): void;
     const worker: Worker;
-    const workers: {
-        [index: string]: Worker | undefined
-    };
+    const workers: NodeJS.Dict<Worker>;
 
     /**
      * events.EventEmitter
@@ -6864,7 +6906,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
     function addListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
     function addListener(event: "fork", listener: (worker: Worker) => void): Cluster;
     function addListener(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
-     // the handle is a net.Socket or net.Server object, or undefined.
+     \/\/ the handle is a net.Socket or net.Server object, or undefined.
     function addListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;
     function addListener(event: "online", listener: (worker: Worker) => void): Cluster;
     function addListener(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
@@ -6883,7 +6925,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
     function on(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
     function on(event: "fork", listener: (worker: Worker) => void): Cluster;
     function on(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
-    function on(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;  // the handle is a net.Socket or net.Server object, or undefined.
+    function on(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
     function on(event: "online", listener: (worker: Worker) => void): Cluster;
     function on(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
 
@@ -6892,7 +6934,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
     function once(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
     function once(event: "fork", listener: (worker: Worker) => void): Cluster;
     function once(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
-    function once(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;  // the handle is a net.Socket or net.Server object, or undefined.
+    function once(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;  \/\/ the handle is a net.Socket or net.Server object, or undefined.
     function once(event: "online", listener: (worker: Worker) => void): Cluster;
     function once(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
 
@@ -6908,7 +6950,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
     function prependListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
     function prependListener(event: "fork", listener: (worker: Worker) => void): Cluster;
     function prependListener(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
-     // the handle is a net.Socket or net.Server object, or undefined.
+     \/\/ the handle is a net.Socket or net.Server object, or undefined.
     function prependListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;
     function prependListener(event: "online", listener: (worker: Worker) => void): Cluster;
     function prependListener(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
@@ -6918,7 +6960,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
     function prependOnceListener(event: "exit", listener: (worker: Worker, code: number, signal: string) => void): Cluster;
     function prependOnceListener(event: "fork", listener: (worker: Worker) => void): Cluster;
     function prependOnceListener(event: "listening", listener: (worker: Worker, address: Address) => void): Cluster;
-     // the handle is a net.Socket or net.Server object, or undefined.
+     \/\/ the handle is a net.Socket or net.Server object, or undefined.
     function prependOnceListener(event: "message", listener: (worker: Worker, message: any, handle: net.Socket | net.Server) => void): Cluster;
     function prependOnceListener(event: "online", listener: (worker: Worker) => void): Cluster;
     function prependOnceListener(event: "setup", listener: (settings: ClusterSettings) => void): Cluster;
@@ -6927,456 +6969,146 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
 }
 `;
 module.exports['console.d.ts'] = `declare module "console" {
+    import { InspectOptions } from 'util';
+
+    global {
+        \/\/ This needs to be global to avoid TS2403 in case lib.dom.d.ts is present in the same build
+        interface Console {
+            Console: NodeJS.ConsoleConstructor;
+            /**
+             * A simple assertion test that verifies whether \`value\` is truthy.
+             * If it is not, an \`AssertionError\` is thrown.
+             * If provided, the error \`message\` is formatted using \`util.format()\` and used as the error message.
+             */
+            assert(value: any, message?: string, ...optionalParams: any[]): void;
+            /**
+             * When \`stdout\` is a TTY, calling \`console.clear()\` will attempt to clear the TTY.
+             * When \`stdout\` is not a TTY, this method does nothing.
+             */
+            clear(): void;
+            /**
+             * Maintains an internal counter specific to \`label\` and outputs to \`stdout\` the number of times \`console.count()\` has been called with the given \`label\`.
+             */
+            count(label?: string): void;
+            /**
+             * Resets the internal counter specific to \`label\`.
+             */
+            countReset(label?: string): void;
+            /**
+             * The \`console.debug()\` function is an alias for {@link console.log()}.
+             */
+            debug(message?: any, ...optionalParams: any[]): void;
+            /**
+             * Uses {@link util.inspect()} on \`obj\` and prints the resulting string to \`stdout\`.
+             * This function bypasses any custom \`inspect()\` function defined on \`obj\`.
+             */
+            dir(obj: any, options?: InspectOptions): void;
+            /**
+             * This method calls {@link console.log()} passing it the arguments received. Please note that this method does not produce any XML formatting
+             */
+            dirxml(...data: any[]): void;
+            /**
+             * Prints to \`stderr\` with newline.
+             */
+            error(message?: any, ...optionalParams: any[]): void;
+            /**
+             * Increases indentation of subsequent lines by two spaces.
+             * If one or more \`label\`s are provided, those are printed first without the additional indentation.
+             */
+            group(...label: any[]): void;
+            /**
+             * The \`console.groupCollapsed()\` function is an alias for {@link console.group()}.
+             */
+            groupCollapsed(...label: any[]): void;
+            /**
+             * Decreases indentation of subsequent lines by two spaces.
+             */
+            groupEnd(): void;
+            /**
+             * The {@link console.info()} function is an alias for {@link console.log()}.
+             */
+            info(message?: any, ...optionalParams: any[]): void;
+            /**
+             * Prints to \`stdout\` with newline.
+             */
+            log(message?: any, ...optionalParams: any[]): void;
+            /**
+             * This method does not display anything unless used in the inspector.
+             *  Prints to \`stdout\` the array \`array\` formatted as a table.
+             */
+            table(tabularData: any, properties?: ReadonlyArray<string>): void;
+            /**
+             * Starts a timer that can be used to compute the duration of an operation. Timers are identified by a unique \`label\`.
+             */
+            time(label?: string): void;
+            /**
+             * Stops a timer that was previously started by calling {@link console.time()} and prints the result to \`stdout\`.
+             */
+            timeEnd(label?: string): void;
+            /**
+             * For a timer that was previously started by calling {@link console.time()}, prints the elapsed time and other \`data\` arguments to \`stdout\`.
+             */
+            timeLog(label?: string, ...data: any[]): void;
+            /**
+             * Prints to \`stderr\` the string 'Trace :', followed by the {@link util.format()} formatted message and stack trace to the current position in the code.
+             */
+            trace(message?: any, ...optionalParams: any[]): void;
+            /**
+             * The {@link console.warn()} function is an alias for {@link console.error()}.
+             */
+            warn(message?: any, ...optionalParams: any[]): void;
+
+            \/\/ --- Inspector mode only ---
+            /**
+             * This method does not display anything unless used in the inspector.
+             *  Starts a JavaScript CPU profile with an optional label.
+             */
+            profile(label?: string): void;
+            /**
+             * This method does not display anything unless used in the inspector.
+             *  Stops the current JavaScript CPU profiling session if one has been started and prints the report to the Profiles panel of the inspector.
+             */
+            profileEnd(label?: string): void;
+            /**
+             * This method does not display anything unless used in the inspector.
+             *  Adds an event with the label \`label\` to the Timeline panel of the inspector.
+             */
+            timeStamp(label?: string): void;
+        }
+
+        var console: Console;
+
+        namespace NodeJS {
+            interface ConsoleConstructorOptions {
+                stdout: WritableStream;
+                stderr?: WritableStream;
+                ignoreErrors?: boolean;
+                colorMode?: boolean | 'auto';
+                inspectOptions?: InspectOptions;
+            }
+
+            interface ConsoleConstructor {
+                prototype: Console;
+                new(stdout: WritableStream, stderr?: WritableStream, ignoreErrors?: boolean): Console;
+                new(options: ConsoleConstructorOptions): Console;
+            }
+
+            interface Global {
+                console: typeof console;
+            }
+        }
+    }
+
     export = console;
 }
 `;
 module.exports['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */
 declare module "constants" {
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.E2BIG\` instead. */
-    const E2BIG: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EACCES\` instead. */
-    const EACCES: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EADDRINUSE\` instead. */
-    const EADDRINUSE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EADDRNOTAVAIL\` instead. */
-    const EADDRNOTAVAIL: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EAFNOSUPPORT\` instead. */
-    const EAFNOSUPPORT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EAGAIN\` instead. */
-    const EAGAIN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EALREADY\` instead. */
-    const EALREADY: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EBADF\` instead. */
-    const EBADF: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EBADMSG\` instead. */
-    const EBADMSG: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EBUSY\` instead. */
-    const EBUSY: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECANCELED\` instead. */
-    const ECANCELED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECHILD\` instead. */
-    const ECHILD: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECONNABORTED\` instead. */
-    const ECONNABORTED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECONNREFUSED\` instead. */
-    const ECONNREFUSED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ECONNRESET\` instead. */
-    const ECONNRESET: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EDEADLK\` instead. */
-    const EDEADLK: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EDESTADDRREQ\` instead. */
-    const EDESTADDRREQ: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EDOM\` instead. */
-    const EDOM: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EEXIST\` instead. */
-    const EEXIST: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EFAULT\` instead. */
-    const EFAULT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EFBIG\` instead. */
-    const EFBIG: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EHOSTUNREACH\` instead. */
-    const EHOSTUNREACH: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EIDRM\` instead. */
-    const EIDRM: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EILSEQ\` instead. */
-    const EILSEQ: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EINPROGRESS\` instead. */
-    const EINPROGRESS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EINTR\` instead. */
-    const EINTR: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EINVAL\` instead. */
-    const EINVAL: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EIO\` instead. */
-    const EIO: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EISCONN\` instead. */
-    const EISCONN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EISDIR\` instead. */
-    const EISDIR: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ELOOP\` instead. */
-    const ELOOP: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EMFILE\` instead. */
-    const EMFILE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EMLINK\` instead. */
-    const EMLINK: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EMSGSIZE\` instead. */
-    const EMSGSIZE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENAMETOOLONG\` instead. */
-    const ENAMETOOLONG: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENETDOWN\` instead. */
-    const ENETDOWN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENETRESET\` instead. */
-    const ENETRESET: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENETUNREACH\` instead. */
-    const ENETUNREACH: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENFILE\` instead. */
-    const ENFILE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOBUFS\` instead. */
-    const ENOBUFS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENODATA\` instead. */
-    const ENODATA: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENODEV\` instead. */
-    const ENODEV: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOENT\` instead. */
-    const ENOENT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOEXEC\` instead. */
-    const ENOEXEC: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOLCK\` instead. */
-    const ENOLCK: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOLINK\` instead. */
-    const ENOLINK: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOMEM\` instead. */
-    const ENOMEM: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOMSG\` instead. */
-    const ENOMSG: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOPROTOOPT\` instead. */
-    const ENOPROTOOPT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOSPC\` instead. */
-    const ENOSPC: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOSR\` instead. */
-    const ENOSR: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOSTR\` instead. */
-    const ENOSTR: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOSYS\` instead. */
-    const ENOSYS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTCONN\` instead. */
-    const ENOTCONN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTDIR\` instead. */
-    const ENOTDIR: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTEMPTY\` instead. */
-    const ENOTEMPTY: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTSOCK\` instead. */
-    const ENOTSOCK: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTSUP\` instead. */
-    const ENOTSUP: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENOTTY\` instead. */
-    const ENOTTY: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ENXIO\` instead. */
-    const ENXIO: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EOPNOTSUPP\` instead. */
-    const EOPNOTSUPP: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EOVERFLOW\` instead. */
-    const EOVERFLOW: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPERM\` instead. */
-    const EPERM: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPIPE\` instead. */
-    const EPIPE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPROTO\` instead. */
-    const EPROTO: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPROTONOSUPPORT\` instead. */
-    const EPROTONOSUPPORT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EPROTOTYPE\` instead. */
-    const EPROTOTYPE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ERANGE\` instead. */
-    const ERANGE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EROFS\` instead. */
-    const EROFS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ESPIPE\` instead. */
-    const ESPIPE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ESRCH\` instead. */
-    const ESRCH: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ETIME\` instead. */
-    const ETIME: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ETIMEDOUT\` instead. */
-    const ETIMEDOUT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.ETXTBSY\` instead. */
-    const ETXTBSY: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EWOULDBLOCK\` instead. */
-    const EWOULDBLOCK: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.EXDEV\` instead. */
-    const EXDEV: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINTR\` instead. */
-    const WSAEINTR: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEBADF\` instead. */
-    const WSAEBADF: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEACCES\` instead. */
-    const WSAEACCES: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEFAULT\` instead. */
-    const WSAEFAULT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINVAL\` instead. */
-    const WSAEINVAL: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEMFILE\` instead. */
-    const WSAEMFILE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEWOULDBLOCK\` instead. */
-    const WSAEWOULDBLOCK: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINPROGRESS\` instead. */
-    const WSAEINPROGRESS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEALREADY\` instead. */
-    const WSAEALREADY: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOTSOCK\` instead. */
-    const WSAENOTSOCK: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEDESTADDRREQ\` instead. */
-    const WSAEDESTADDRREQ: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEMSGSIZE\` instead. */
-    const WSAEMSGSIZE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPROTOTYPE\` instead. */
-    const WSAEPROTOTYPE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOPROTOOPT\` instead. */
-    const WSAENOPROTOOPT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPROTONOSUPPORT\` instead. */
-    const WSAEPROTONOSUPPORT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAESOCKTNOSUPPORT\` instead. */
-    const WSAESOCKTNOSUPPORT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEOPNOTSUPP\` instead. */
-    const WSAEOPNOTSUPP: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPFNOSUPPORT\` instead. */
-    const WSAEPFNOSUPPORT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEAFNOSUPPORT\` instead. */
-    const WSAEAFNOSUPPORT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEADDRINUSE\` instead. */
-    const WSAEADDRINUSE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEADDRNOTAVAIL\` instead. */
-    const WSAEADDRNOTAVAIL: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENETDOWN\` instead. */
-    const WSAENETDOWN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENETUNREACH\` instead. */
-    const WSAENETUNREACH: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENETRESET\` instead. */
-    const WSAENETRESET: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAECONNABORTED\` instead. */
-    const WSAECONNABORTED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAECONNRESET\` instead. */
-    const WSAECONNRESET: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOBUFS\` instead. */
-    const WSAENOBUFS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEISCONN\` instead. */
-    const WSAEISCONN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOTCONN\` instead. */
-    const WSAENOTCONN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAESHUTDOWN\` instead. */
-    const WSAESHUTDOWN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAETOOMANYREFS\` instead. */
-    const WSAETOOMANYREFS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAETIMEDOUT\` instead. */
-    const WSAETIMEDOUT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAECONNREFUSED\` instead. */
-    const WSAECONNREFUSED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAELOOP\` instead. */
-    const WSAELOOP: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENAMETOOLONG\` instead. */
-    const WSAENAMETOOLONG: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEHOSTDOWN\` instead. */
-    const WSAEHOSTDOWN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEHOSTUNREACH\` instead. */
-    const WSAEHOSTUNREACH: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOTEMPTY\` instead. */
-    const WSAENOTEMPTY: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPROCLIM\` instead. */
-    const WSAEPROCLIM: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEUSERS\` instead. */
-    const WSAEUSERS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEDQUOT\` instead. */
-    const WSAEDQUOT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAESTALE\` instead. */
-    const WSAESTALE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEREMOTE\` instead. */
-    const WSAEREMOTE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSASYSNOTREADY\` instead. */
-    const WSASYSNOTREADY: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAVERNOTSUPPORTED\` instead. */
-    const WSAVERNOTSUPPORTED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSANOTINITIALISED\` instead. */
-    const WSANOTINITIALISED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEDISCON\` instead. */
-    const WSAEDISCON: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAENOMORE\` instead. */
-    const WSAENOMORE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAECANCELLED\` instead. */
-    const WSAECANCELLED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINVALIDPROCTABLE\` instead. */
-    const WSAEINVALIDPROCTABLE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEINVALIDPROVIDER\` instead. */
-    const WSAEINVALIDPROVIDER: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEPROVIDERFAILEDINIT\` instead. */
-    const WSAEPROVIDERFAILEDINIT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSASYSCALLFAILURE\` instead. */
-    const WSASYSCALLFAILURE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSASERVICE_NOT_FOUND\` instead. */
-    const WSASERVICE_NOT_FOUND: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSATYPE_NOT_FOUND\` instead. */
-    const WSATYPE_NOT_FOUND: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSA_E_NO_MORE\` instead. */
-    const WSA_E_NO_MORE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSA_E_CANCELLED\` instead. */
-    const WSA_E_CANCELLED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.errno.WSAEREFUSED\` instead. */
-    const WSAEREFUSED: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGHUP\` instead. */
-    const SIGHUP: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGINT\` instead. */
-    const SIGINT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGILL\` instead. */
-    const SIGILL: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGABRT\` instead. */
-    const SIGABRT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGFPE\` instead. */
-    const SIGFPE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGKILL\` instead. */
-    const SIGKILL: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGSEGV\` instead. */
-    const SIGSEGV: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTERM\` instead. */
-    const SIGTERM: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGBREAK\` instead. */
-    const SIGBREAK: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGWINCH\` instead. */
-    const SIGWINCH: number;
-    const SSL_OP_ALL: number;
-    const SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION: number;
-    const SSL_OP_CIPHER_SERVER_PREFERENCE: number;
-    const SSL_OP_CISCO_ANYCONNECT: number;
-    const SSL_OP_COOKIE_EXCHANGE: number;
-    const SSL_OP_CRYPTOPRO_TLSEXT_BUG: number;
-    const SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS: number;
-    const SSL_OP_EPHEMERAL_RSA: number;
-    const SSL_OP_LEGACY_SERVER_CONNECT: number;
-    const SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER: number;
-    const SSL_OP_MICROSOFT_SESS_ID_BUG: number;
-    const SSL_OP_MSIE_SSLV2_RSA_PADDING: number;
-    const SSL_OP_NETSCAPE_CA_DN_BUG: number;
-    const SSL_OP_NETSCAPE_CHALLENGE_BUG: number;
-    const SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG: number;
-    const SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG: number;
-    const SSL_OP_NO_COMPRESSION: number;
-    const SSL_OP_NO_QUERY_MTU: number;
-    const SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION: number;
-    const SSL_OP_NO_SSLv2: number;
-    const SSL_OP_NO_SSLv3: number;
-    const SSL_OP_NO_TICKET: number;
-    const SSL_OP_NO_TLSv1: number;
-    const SSL_OP_NO_TLSv1_1: number;
-    const SSL_OP_NO_TLSv1_2: number;
-    const SSL_OP_PKCS1_CHECK_1: number;
-    const SSL_OP_PKCS1_CHECK_2: number;
-    const SSL_OP_SINGLE_DH_USE: number;
-    const SSL_OP_SINGLE_ECDH_USE: number;
-    const SSL_OP_SSLEAY_080_CLIENT_DH_BUG: number;
-    const SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG: number;
-    const SSL_OP_TLS_BLOCK_PADDING_BUG: number;
-    const SSL_OP_TLS_D5_BUG: number;
-    const SSL_OP_TLS_ROLLBACK_BUG: number;
-    const ENGINE_METHOD_DSA: number;
-    const ENGINE_METHOD_DH: number;
-    const ENGINE_METHOD_RAND: number;
-    const ENGINE_METHOD_ECDH: number;
-    const ENGINE_METHOD_ECDSA: number;
-    const ENGINE_METHOD_CIPHERS: number;
-    const ENGINE_METHOD_DIGESTS: number;
-    const ENGINE_METHOD_STORE: number;
-    const ENGINE_METHOD_PKEY_METHS: number;
-    const ENGINE_METHOD_PKEY_ASN1_METHS: number;
-    const ENGINE_METHOD_ALL: number;
-    const ENGINE_METHOD_NONE: number;
-    const DH_CHECK_P_NOT_SAFE_PRIME: number;
-    const DH_CHECK_P_NOT_PRIME: number;
-    const DH_UNABLE_TO_CHECK_GENERATOR: number;
-    const DH_NOT_SUITABLE_GENERATOR: number;
-    const RSA_PKCS1_PADDING: number;
-    const RSA_SSLV23_PADDING: number;
-    const RSA_NO_PADDING: number;
-    const RSA_PKCS1_OAEP_PADDING: number;
-    const RSA_X931_PADDING: number;
-    const RSA_PKCS1_PSS_PADDING: number;
-    const POINT_CONVERSION_COMPRESSED: number;
-    const POINT_CONVERSION_UNCOMPRESSED: number;
-    const POINT_CONVERSION_HYBRID: number;
-    const O_RDONLY: number;
-    const O_WRONLY: number;
-    const O_RDWR: number;
-    const S_IFMT: number;
-    const S_IFREG: number;
-    const S_IFDIR: number;
-    const S_IFCHR: number;
-    const S_IFBLK: number;
-    const S_IFIFO: number;
-    const S_IFSOCK: number;
-    const S_IRWXU: number;
-    const S_IRUSR: number;
-    const S_IWUSR: number;
-    const S_IXUSR: number;
-    const S_IRWXG: number;
-    const S_IRGRP: number;
-    const S_IWGRP: number;
-    const S_IXGRP: number;
-    const S_IRWXO: number;
-    const S_IROTH: number;
-    const S_IWOTH: number;
-    const S_IXOTH: number;
-    const S_IFLNK: number;
-    const O_CREAT: number;
-    const O_EXCL: number;
-    const O_NOCTTY: number;
-    const O_DIRECTORY: number;
-    const O_NOATIME: number;
-    const O_NOFOLLOW: number;
-    const O_SYNC: number;
-    const O_DSYNC: number;
-    const O_SYMLINK: number;
-    const O_DIRECT: number;
-    const O_NONBLOCK: number;
-    const O_TRUNC: number;
-    const O_APPEND: number;
-    const F_OK: number;
-    const R_OK: number;
-    const W_OK: number;
-    const X_OK: number;
-    const COPYFILE_EXCL: number;
-    const COPYFILE_FICLONE: number;
-    const COPYFILE_FICLONE_FORCE: number;
-    const UV_UDP_REUSEADDR: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGQUIT\` instead. */
-    const SIGQUIT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTRAP\` instead. */
-    const SIGTRAP: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGIOT\` instead. */
-    const SIGIOT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGBUS\` instead. */
-    const SIGBUS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGUSR1\` instead. */
-    const SIGUSR1: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGUSR2\` instead. */
-    const SIGUSR2: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGPIPE\` instead. */
-    const SIGPIPE: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGALRM\` instead. */
-    const SIGALRM: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGCHLD\` instead. */
-    const SIGCHLD: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGSTKFLT\` instead. */
-    const SIGSTKFLT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGCONT\` instead. */
-    const SIGCONT: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGSTOP\` instead. */
-    const SIGSTOP: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTSTP\` instead. */
-    const SIGTSTP: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTTIN\` instead. */
-    const SIGTTIN: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGTTOU\` instead. */
-    const SIGTTOU: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGURG\` instead. */
-    const SIGURG: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGXCPU\` instead. */
-    const SIGXCPU: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGXFSZ\` instead. */
-    const SIGXFSZ: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGVTALRM\` instead. */
-    const SIGVTALRM: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGPROF\` instead. */
-    const SIGPROF: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGIO\` instead. */
-    const SIGIO: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGPOLL\` instead. */
-    const SIGPOLL: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGPWR\` instead. */
-    const SIGPWR: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGSYS\` instead. */
-    const SIGSYS: number;
-    /** @deprecated since v6.3.0 - use \`os.constants.signals.SIGUNUSED\` instead. */
-    const SIGUNUSED: number;
-    const defaultCoreCipherList: string;
-    const defaultCipherList: string;
-    const ENGINE_METHOD_RSA: number;
-    const ALPN_ENABLED: number;
+    import { constants as osConstants, SignalConstants } from 'os';
+    import { constants as cryptoConstants } from 'crypto';
+    import { constants as fsConstants } from 'fs';
+    const exp: typeof osConstants.errno & typeof osConstants.priority & SignalConstants & typeof cryptoConstants & typeof fsConstants;
+    export = exp;
 }
 `;
 module.exports['crypto.d.ts'] = `declare module "crypto" {
@@ -7392,14 +7124,14 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
         (): Certificate;
     };
 
-    namespace constants { // https://nodejs.org/dist/latest-v10.x/docs/api/crypto.html#crypto_crypto_constants
+    namespace constants { \/\/ https:\/\/nodejs.org/dist/latest-v10.x/docs/api/crypto.html#crypto_crypto_constants
         const OPENSSL_VERSION_NUMBER: number;
 
-        /** Applies multiple bug workarounds within OpenSSL. See https://www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html for detail. */
+        /** Applies multiple bug workarounds within OpenSSL. See https:\/\/www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html for detail. */
         const SSL_OP_ALL: number;
-        /** Allows legacy insecure renegotiation between OpenSSL and unpatched clients or servers. See https://www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html. */
+        /** Allows legacy insecure renegotiation between OpenSSL and unpatched clients or servers. See https:\/\/www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html. */
         const SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION: number;
-        /** Attempts to use the server's preferences instead of the client's when selecting a cipher. See https://www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html. */
+        /** Attempts to use the server's preferences instead of the client's when selecting a cipher. See https:\/\/www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html. */
         const SSL_OP_CIPHER_SERVER_PREFERENCE: number;
         /** Instructs OpenSSL to use Cisco's "speshul" version of DTLS_BAD_VER. */
         const SSL_OP_CISCO_ANYCONNECT: number;
@@ -7499,7 +7231,7 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
     const fips: boolean;
 
     function createHash(algorithm: string, options?: HashOptions): Hash;
-    function createHmac(algorithm: string, key: BinaryLike, options?: stream.TransformOptions): Hmac;
+    function createHmac(algorithm: string, key: BinaryLike | KeyObject, options?: stream.TransformOptions): Hmac;
 
     type Utf8AsciiLatin1Encoding = "utf8" | "ascii" | "latin1";
     type HexBase64Latin1Encoding = "latin1" | "hex" | "base64";
@@ -7509,6 +7241,7 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
 
     class Hash extends stream.Transform {
         private constructor();
+        copy(): Hash;
         update(data: BinaryLike): Hash;
         update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Hash;
         digest(): Buffer;
@@ -7545,7 +7278,7 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
         type: KeyObjectType;
     }
 
-    type CipherCCMTypes = 'aes-128-ccm' | 'aes-192-ccm' | 'aes-256-ccm';
+    type CipherCCMTypes = 'aes-128-ccm' | 'aes-192-ccm' | 'aes-256-ccm' | 'chacha20-poly1305';
     type CipherGCMTypes = 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm';
 
     type BinaryLike = string | NodeJS.ArrayBufferView;
@@ -7558,11 +7291,11 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
     interface CipherGCMOptions extends stream.TransformOptions {
         authTagLength?: number;
     }
-    /** @deprecated since v10.0.0 use createCipheriv() */
+    /** @deprecated since v10.0.0 use \`createCipheriv()\` */
     function createCipher(algorithm: CipherCCMTypes, password: BinaryLike, options: CipherCCMOptions): CipherCCM;
-    /** @deprecated since v10.0.0 use createCipheriv() */
+    /** @deprecated since v10.0.0 use \`createCipheriv()\` */
     function createCipher(algorithm: CipherGCMTypes, password: BinaryLike, options?: CipherGCMOptions): CipherGCM;
-    /** @deprecated since v10.0.0 use createCipheriv() */
+    /** @deprecated since v10.0.0 use \`createCipheriv()\` */
     function createCipher(algorithm: string, password: BinaryLike, options?: stream.TransformOptions): Cipher;
 
     function createCipheriv(
@@ -7588,39 +7321,39 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
         update(data: NodeJS.ArrayBufferView, input_encoding: undefined, output_encoding: HexBase64BinaryEncoding): string;
         update(data: string, input_encoding: Utf8AsciiBinaryEncoding | undefined, output_encoding: HexBase64BinaryEncoding): string;
         final(): Buffer;
-        final(output_encoding: string): string;
+        final(output_encoding: BufferEncoding): string;
         setAutoPadding(auto_padding?: boolean): this;
-        // getAuthTag(): Buffer;
-        // setAAD(buffer: Buffer): this; // docs only say buffer
+        \/\/ getAuthTag(): Buffer;
+        \/\/ setAAD(buffer: NodeJS.ArrayBufferView): this;
     }
     interface CipherCCM extends Cipher {
-        setAAD(buffer: Buffer, options: { plaintextLength: number }): this;
+        setAAD(buffer: NodeJS.ArrayBufferView, options: { plaintextLength: number }): this;
         getAuthTag(): Buffer;
     }
     interface CipherGCM extends Cipher {
-        setAAD(buffer: Buffer, options?: { plaintextLength: number }): this;
+        setAAD(buffer: NodeJS.ArrayBufferView, options?: { plaintextLength: number }): this;
         getAuthTag(): Buffer;
     }
-    /** @deprecated since v10.0.0 use createDecipheriv() */
+    /** @deprecated since v10.0.0 use \`createDecipheriv()\` */
     function createDecipher(algorithm: CipherCCMTypes, password: BinaryLike, options: CipherCCMOptions): DecipherCCM;
-    /** @deprecated since v10.0.0 use createDecipheriv() */
+    /** @deprecated since v10.0.0 use \`createDecipheriv()\` */
     function createDecipher(algorithm: CipherGCMTypes, password: BinaryLike, options?: CipherGCMOptions): DecipherGCM;
-    /** @deprecated since v10.0.0 use createDecipheriv() */
+    /** @deprecated since v10.0.0 use \`createDecipheriv()\` */
     function createDecipher(algorithm: string, password: BinaryLike, options?: stream.TransformOptions): Decipher;
 
     function createDecipheriv(
         algorithm: CipherCCMTypes,
-        key: BinaryLike,
+        key: CipherKey,
         iv: BinaryLike | null,
         options: CipherCCMOptions,
     ): DecipherCCM;
     function createDecipheriv(
         algorithm: CipherGCMTypes,
-        key: BinaryLike,
+        key: CipherKey,
         iv: BinaryLike | null,
         options?: CipherGCMOptions,
     ): DecipherGCM;
-    function createDecipheriv(algorithm: string, key: BinaryLike, iv: BinaryLike | null, options?: stream.TransformOptions): Decipher;
+    function createDecipheriv(algorithm: string, key: CipherKey, iv: BinaryLike | null, options?: stream.TransformOptions): Decipher;
 
     class Decipher extends stream.Transform {
         private constructor();
@@ -7629,10 +7362,10 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
         update(data: NodeJS.ArrayBufferView, input_encoding: HexBase64BinaryEncoding | undefined, output_encoding: Utf8AsciiBinaryEncoding): string;
         update(data: string, input_encoding: HexBase64BinaryEncoding | undefined, output_encoding: Utf8AsciiBinaryEncoding): string;
         final(): Buffer;
-        final(output_encoding: string): string;
+        final(output_encoding: BufferEncoding): string;
         setAutoPadding(auto_padding?: boolean): this;
-        // setAuthTag(tag: NodeJS.ArrayBufferView): this;
-        // setAAD(buffer: NodeJS.ArrayBufferView): this;
+        \/\/ setAuthTag(tag: NodeJS.ArrayBufferView): this;
+        \/\/ setAAD(buffer: NodeJS.ArrayBufferView): this;
     }
     interface DecipherCCM extends Decipher {
         setAuthTag(buffer: NodeJS.ArrayBufferView): this;
@@ -7658,9 +7391,11 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
 
     function createPrivateKey(key: PrivateKeyInput | string | Buffer): KeyObject;
     function createPublicKey(key: PublicKeyInput | string | Buffer | KeyObject): KeyObject;
-    function createSecretKey(key: Buffer): KeyObject;
+    function createSecretKey(key: NodeJS.ArrayBufferView): KeyObject;
 
     function createSign(algorithm: string, options?: stream.WritableOptions): Signer;
+
+    type DSAEncoding = 'der' | 'ieee-p1363';
 
     interface SigningOptions {
         /**
@@ -7668,9 +7403,18 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
          */
         padding?: number;
         saltLength?: number;
+        dsaEncoding?: DSAEncoding;
     }
 
     interface SignPrivateKeyInput extends PrivateKeyInput, SigningOptions {
+    }
+    interface SignKeyObjectInput extends SigningOptions {
+        key: KeyObject;
+    }
+    interface VerifyPublicKeyInput extends PublicKeyInput, SigningOptions {
+    }
+    interface VerifyKeyObjectInput extends SigningOptions {
+        key: KeyObject;
     }
 
     type KeyLike = string | Buffer | KeyObject;
@@ -7680,8 +7424,8 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
 
         update(data: BinaryLike): Signer;
         update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Signer;
-        sign(private_key: SignPrivateKeyInput | KeyLike): Buffer;
-        sign(private_key: SignPrivateKeyInput | KeyLike, output_format: HexBase64Latin1Encoding): string;
+        sign(private_key: KeyLike | SignKeyObjectInput | SignPrivateKeyInput): Buffer;
+        sign(private_key: KeyLike | SignKeyObjectInput | SignPrivateKeyInput, output_format: HexBase64Latin1Encoding): string;
     }
 
     function createVerify(algorithm: string, options?: stream.WritableOptions): Verify;
@@ -7690,10 +7434,10 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
 
         update(data: BinaryLike): Verify;
         update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Verify;
-        verify(object: Object | KeyLike, signature: NodeJS.ArrayBufferView): boolean;
-        verify(object: Object | KeyLike, signature: string, signature_format?: HexBase64Latin1Encoding): boolean;
-        // https://nodejs.org/api/crypto.html#crypto_verifier_verify_object_signature_signature_format
-        // The signature field accepts a TypedArray type, but it is only available starting ES2017
+        verify(object: KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput, signature: NodeJS.ArrayBufferView): boolean;
+        verify(object: KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput, signature: string, signature_format?: HexBase64Latin1Encoding): boolean;
+        \/\/ https:\/\/nodejs.org/api/crypto.html#crypto_verifier_verify_object_signature_signature_format
+        \/\/ The signature field accepts a TypedArray type, but it is only available starting ES2017
     }
     function createDiffieHellman(prime_length: number, generator?: number | NodeJS.ArrayBufferView): DiffieHellman;
     function createDiffieHellman(prime: NodeJS.ArrayBufferView): DiffieHellman;
@@ -7717,9 +7461,9 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
         getPrivateKey(): Buffer;
         getPrivateKey(encoding: HexBase64Latin1Encoding): string;
         setPublicKey(public_key: NodeJS.ArrayBufferView): void;
-        setPublicKey(public_key: string, encoding: string): void;
+        setPublicKey(public_key: string, encoding: BufferEncoding): void;
         setPrivateKey(private_key: NodeJS.ArrayBufferView): void;
-        setPrivateKey(private_key: string, encoding: string): void;
+        setPrivateKey(private_key: string, encoding: BufferEncoding): void;
         verifyError: number;
     }
     function getDiffieHellman(group_name: string): DiffieHellman;
@@ -7737,6 +7481,11 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
     function randomBytes(size: number, callback: (err: Error | null, buf: Buffer) => void): void;
     function pseudoRandomBytes(size: number): Buffer;
     function pseudoRandomBytes(size: number, callback: (err: Error | null, buf: Buffer) => void): void;
+
+    function randomInt(max: number): number;
+    function randomInt(min: number, max: number): number;
+    function randomInt(max: number, callback: (err: Error | null, value: number) => void): void;
+    function randomInt(min: number, max: number, callback: (err: Error | null, value: number) => void): void;
 
     function randomFillSync<T extends NodeJS.ArrayBufferView>(buffer: T, offset?: number, size?: number): T;
     function randomFill<T extends NodeJS.ArrayBufferView>(buffer: T, callback: (err: Error | null, buf: T) => void): void;
@@ -7783,6 +7532,7 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
     function privateEncrypt(private_key: RsaPrivateKey | KeyLike, buffer: NodeJS.ArrayBufferView): Buffer;
     function getCiphers(): string[];
     function getCurves(): string[];
+    function getFips(): 1 | 0;
     function getHashes(): string[];
     class ECDH {
         private constructor();
@@ -7809,9 +7559,9 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
     function createECDH(curve_name: string): ECDH;
     function timingSafeEqual(a: NodeJS.ArrayBufferView, b: NodeJS.ArrayBufferView): boolean;
     /** @deprecated since v10.0.0 */
-    const DEFAULT_ENCODING: string;
+    const DEFAULT_ENCODING: BufferEncoding;
 
-    type KeyType = 'rsa' | 'dsa' | 'ec';
+    type KeyType = 'rsa' | 'dsa' | 'ec' | 'ed25519' | 'ed448' | 'x25519' | 'x448';
     type KeyFormat = 'pem' | 'der';
 
     interface BasePrivateKeyEncodingOptions<T extends KeyFormat> {
@@ -7823,6 +7573,30 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
     interface KeyPairKeyObjectResult {
         publicKey: KeyObject;
         privateKey: KeyObject;
+    }
+
+    interface ED25519KeyPairKeyObjectOptions {
+        /**
+         * No options.
+         */
+    }
+
+    interface ED448KeyPairKeyObjectOptions {
+        /**
+         * No options.
+         */
+    }
+
+    interface X25519KeyPairKeyObjectOptions {
+       /**
+        * No options.
+        */
+    }
+
+    interface X448KeyPairKeyObjectOptions {
+       /**
+        * No options.
+        */
     }
 
     interface ECKeyPairKeyObjectOptions {
@@ -7909,6 +7683,46 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
         };
     }
 
+    interface ED25519KeyPairOptions<PubF extends KeyFormat, PrivF extends KeyFormat> {
+        publicKeyEncoding: {
+            type: 'spki';
+            format: PubF;
+        };
+        privateKeyEncoding: BasePrivateKeyEncodingOptions<PrivF> & {
+            type: 'pkcs8';
+        };
+    }
+
+    interface ED448KeyPairOptions<PubF extends KeyFormat, PrivF extends KeyFormat> {
+        publicKeyEncoding: {
+            type: 'spki';
+            format: PubF;
+        };
+        privateKeyEncoding: BasePrivateKeyEncodingOptions<PrivF> & {
+            type: 'pkcs8';
+        };
+    }
+
+    interface X25519KeyPairOptions<PubF extends KeyFormat, PrivF extends KeyFormat> {
+        publicKeyEncoding: {
+            type: 'spki';
+            format: PubF;
+        };
+        privateKeyEncoding: BasePrivateKeyEncodingOptions<PrivF> & {
+            type: 'pkcs8';
+        };
+    }
+
+    interface X448KeyPairOptions<PubF extends KeyFormat, PrivF extends KeyFormat> {
+        publicKeyEncoding: {
+            type: 'spki';
+            format: PubF;
+        };
+        privateKeyEncoding: BasePrivateKeyEncodingOptions<PrivF> & {
+            type: 'pkcs8';
+        };
+    }
+
     interface KeyPairSyncResult<T1 extends string | Buffer, T2 extends string | Buffer> {
         publicKey: T1;
         privateKey: T2;
@@ -7932,6 +7746,30 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
     function generateKeyPairSync(type: 'ec', options: ECKeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
     function generateKeyPairSync(type: 'ec', options: ECKeyPairKeyObjectOptions): KeyPairKeyObjectResult;
 
+    function generateKeyPairSync(type: 'ed25519', options: ED25519KeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(type: 'ed25519', options: ED25519KeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(type: 'ed25519', options: ED25519KeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(type: 'ed25519', options: ED25519KeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(type: 'ed25519', options?: ED25519KeyPairKeyObjectOptions): KeyPairKeyObjectResult;
+
+    function generateKeyPairSync(type: 'ed448', options: ED448KeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(type: 'ed448', options: ED448KeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(type: 'ed448', options: ED448KeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(type: 'ed448', options: ED448KeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(type: 'ed448', options?: ED448KeyPairKeyObjectOptions): KeyPairKeyObjectResult;
+
+    function generateKeyPairSync(type: 'x25519', options: X25519KeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(type: 'x25519', options: X25519KeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(type: 'x25519', options: X25519KeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(type: 'x25519', options: X25519KeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(type: 'x25519', options?: X25519KeyPairKeyObjectOptions): KeyPairKeyObjectResult;
+
+    function generateKeyPairSync(type: 'x448', options: X448KeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(type: 'x448', options: X448KeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(type: 'x448', options: X448KeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(type: 'x448', options: X448KeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(type: 'x448', options?: X448KeyPairKeyObjectOptions): KeyPairKeyObjectResult;
+
     function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
     function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
     function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
@@ -7949,6 +7787,30 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
     function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
     function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
     function generateKeyPair(type: 'ec', options: ECKeyPairKeyObjectOptions, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+
+    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
+    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
+    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairKeyObjectOptions | undefined, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+
+    function generateKeyPair(type: 'ed448', options: ED448KeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
+    function generateKeyPair(type: 'ed448', options: ED448KeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'ed448', options: ED448KeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
+    function generateKeyPair(type: 'ed448', options: ED448KeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'ed448', options: ED448KeyPairKeyObjectOptions | undefined, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+
+    function generateKeyPair(type: 'x25519', options: X25519KeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
+    function generateKeyPair(type: 'x25519', options: X25519KeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'x25519', options: X25519KeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
+    function generateKeyPair(type: 'x25519', options: X25519KeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'x25519', options: X25519KeyPairKeyObjectOptions | undefined, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+
+    function generateKeyPair(type: 'x448', options: X448KeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
+    function generateKeyPair(type: 'x448', options: X448KeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'x448', options: X448KeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
+    function generateKeyPair(type: 'x448', options: X448KeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
+    function generateKeyPair(type: 'x448', options: X448KeyPairKeyObjectOptions | undefined, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
 
     namespace generateKeyPair {
         function __promisify__(type: "rsa", options: RSAKeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
@@ -7968,6 +7830,30 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
         function __promisify__(type: "ec", options: ECKeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
         function __promisify__(type: "ec", options: ECKeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
         function __promisify__(type: "ec", options: ECKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+
+        function __promisify__(type: "ed25519", options: ED25519KeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
+        function __promisify__(type: "ed25519", options: ED25519KeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
+        function __promisify__(type: "ed25519", options: ED25519KeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
+        function __promisify__(type: "ed25519", options: ED25519KeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
+        function __promisify__(type: "ed25519", options?: ED25519KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+
+        function __promisify__(type: "ed448", options: ED448KeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
+        function __promisify__(type: "ed448", options: ED448KeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
+        function __promisify__(type: "ed448", options: ED448KeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
+        function __promisify__(type: "ed448", options: ED448KeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
+        function __promisify__(type: "ed448", options?: ED448KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+
+        function __promisify__(type: "x25519", options: X25519KeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
+        function __promisify__(type: "x25519", options: X25519KeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
+        function __promisify__(type: "x25519", options: X25519KeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
+        function __promisify__(type: "x25519", options: X25519KeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
+        function __promisify__(type: "x25519", options?: X25519KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+
+        function __promisify__(type: "x448", options: X448KeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
+        function __promisify__(type: "x448", options: X448KeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
+        function __promisify__(type: "x448", options: X448KeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
+        function __promisify__(type: "x448", options: X448KeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
+        function __promisify__(type: "x448", options?: X448KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
     }
 
     /**
@@ -7978,10 +7864,7 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
      * If \`key\` is not a [\`KeyObject\`][], this function behaves as if \`key\` had been
      * passed to [\`crypto.createPrivateKey()\`][].
      */
-    function sign(algorithm: string | null | undefined, data: NodeJS.ArrayBufferView, key: KeyLike | SignPrivateKeyInput): Buffer;
-
-    interface VerifyKeyWithOptions extends KeyObject, SigningOptions {
-    }
+    function sign(algorithm: string | null | undefined, data: NodeJS.ArrayBufferView, key: KeyLike | SignKeyObjectInput | SignPrivateKeyInput): Buffer;
 
     /**
      * Calculates and returns the signature for \`data\` using the given private key and
@@ -7991,7 +7874,17 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
      * If \`key\` is not a [\`KeyObject\`][], this function behaves as if \`key\` had been
      * passed to [\`crypto.createPublicKey()\`][].
      */
-    function verify(algorithm: string | null | undefined, data: NodeJS.ArrayBufferView, key: KeyLike | VerifyKeyWithOptions, signature: NodeJS.ArrayBufferView): Buffer;
+    function verify(algorithm: string | null | undefined, data: NodeJS.ArrayBufferView, key: KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput, signature: NodeJS.ArrayBufferView): boolean;
+
+    /**
+     * Computes the Diffie-Hellman secret based on a privateKey and a publicKey.
+     * Both keys must have the same asymmetricKeyType, which must be one of
+     * 'dh' (for Diffie-Hellman), 'ec' (for ECDH), 'x448', or 'x25519' (for ECDH-ES).
+     */
+    function diffieHellman(options: {
+        privateKey: KeyObject;
+        publicKey: KeyObject
+    }): Buffer;
 }
 `;
 module.exports['dgram.d.ts'] = `declare module "dgram" {
@@ -8046,9 +7939,9 @@ module.exports['dgram.d.ts'] = `declare module "dgram" {
         getSendBufferSize(): number;
         ref(): this;
         remoteAddress(): AddressInfo;
-        send(msg: string | Uint8Array | any[], port?: number, address?: string, callback?: (error: Error | null, bytes: number) => void): void;
-        send(msg: string | Uint8Array | any[], port?: number, callback?: (error: Error | null, bytes: number) => void): void;
-        send(msg: string | Uint8Array | any[], callback?: (error: Error | null, bytes: number) => void): void;
+        send(msg: string | Uint8Array | ReadonlyArray<any>, port?: number, address?: string, callback?: (error: Error | null, bytes: number) => void): void;
+        send(msg: string | Uint8Array | ReadonlyArray<any>, port?: number, callback?: (error: Error | null, bytes: number) => void): void;
+        send(msg: string | Uint8Array | ReadonlyArray<any>, callback?: (error: Error | null, bytes: number) => void): void;
         send(msg: string | Uint8Array, offset: number, length: number, port?: number, address?: string, callback?: (error: Error | null, bytes: number) => void): void;
         send(msg: string | Uint8Array, offset: number, length: number, port?: number, callback?: (error: Error | null, bytes: number) => void): void;
         send(msg: string | Uint8Array, offset: number, length: number, callback?: (error: Error | null, bytes: number) => void): void;
@@ -8060,6 +7953,29 @@ module.exports['dgram.d.ts'] = `declare module "dgram" {
         setSendBufferSize(size: number): void;
         setTTL(ttl: number): void;
         unref(): this;
+        /**
+         * Tells the kernel to join a source-specific multicast channel at the given
+         * \`sourceAddress\` and \`groupAddress\`, using the \`multicastInterface\` with the
+         * \`IP_ADD_SOURCE_MEMBERSHIP\` socket option.
+         * If the \`multicastInterface\` argument
+         * is not specified, the operating system will choose one interface and will add
+         * membership to it.
+         * To add membership to every available interface, call
+         * \`socket.addSourceSpecificMembership()\` multiple times, once per interface.
+         */
+        addSourceSpecificMembership(sourceAddress: string, groupAddress: string, multicastInterface?: string): void;
+
+        /**
+         * Instructs the kernel to leave a source-specific multicast channel at the given
+         * \`sourceAddress\` and \`groupAddress\` using the \`IP_DROP_SOURCE_MEMBERSHIP\`
+         * socket option. This method is automatically called by the kernel when the
+         * socket is closed or the process terminates, so most apps will never have
+         * reason to call this.
+         *
+         * If \`multicastInterface\` is not specified, the operating system will attempt to
+         * drop membership on all valid interfaces.
+         */
+        dropSourceSpecificMembership(sourceAddress: string, groupAddress: string, multicastInterface?: string): void;
 
         /**
          * events.EventEmitter
@@ -8114,9 +8030,14 @@ module.exports['dgram.d.ts'] = `declare module "dgram" {
 }
 `;
 module.exports['dns.d.ts'] = `declare module "dns" {
-    // Supported getaddrinfo flags.
+    \/\/ Supported getaddrinfo flags.
     const ADDRCONFIG: number;
     const V4MAPPED: number;
+    /**
+     * If \`dns.V4MAPPED\` is specified, return resolved IPv6 addresses as
+     * well as IPv4 mapped IPv6 addresses.
+     */
+    const ALL: number;
 
     interface LookupOptions {
         family?: number;
@@ -8144,7 +8065,7 @@ module.exports['dns.d.ts'] = `declare module "dns" {
     function lookup(hostname: string, options: LookupOptions, callback: (err: NodeJS.ErrnoException | null, address: string | LookupAddress[], family: number) => void): void;
     function lookup(hostname: string, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
     namespace lookup {
         function __promisify__(hostname: string, options: LookupAllOptions): Promise<LookupAddress[]>;
         function __promisify__(hostname: string, options?: LookupOneOptions | number): Promise<LookupAddress>;
@@ -8170,7 +8091,7 @@ module.exports['dns.d.ts'] = `declare module "dns" {
         ttl: number;
     }
 
-    /** @deprecated Use AnyARecord or AnyAaaaRecord instead. */
+    /** @deprecated Use \`AnyARecord\` or \`AnyAaaaRecord\` instead. */
     type AnyRecordWithTtl = AnyARecord | AnyAaaaRecord;
 
     interface AnyARecord extends RecordWithTtl {
@@ -8277,7 +8198,7 @@ module.exports['dns.d.ts'] = `declare module "dns" {
         callback: (err: NodeJS.ErrnoException | null, addresses: string[] | MxRecord[] | NaptrRecord[] | SoaRecord | SrvRecord[] | string[][] | AnyRecord[]) => void,
     ): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
     namespace resolve {
         function __promisify__(hostname: string, rrtype?: "A" | "AAAA" | "CNAME" | "NS" | "PTR"): Promise<string[]>;
         function __promisify__(hostname: string, rrtype: "ANY"): Promise<AnyRecord[]>;
@@ -8293,7 +8214,7 @@ module.exports['dns.d.ts'] = `declare module "dns" {
     function resolve4(hostname: string, options: ResolveWithTtlOptions, callback: (err: NodeJS.ErrnoException | null, addresses: RecordWithTtl[]) => void): void;
     function resolve4(hostname: string, options: ResolveOptions, callback: (err: NodeJS.ErrnoException | null, addresses: string[] | RecordWithTtl[]) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
     namespace resolve4 {
         function __promisify__(hostname: string): Promise<string[]>;
         function __promisify__(hostname: string, options: ResolveWithTtlOptions): Promise<RecordWithTtl[]>;
@@ -8304,7 +8225,7 @@ module.exports['dns.d.ts'] = `declare module "dns" {
     function resolve6(hostname: string, options: ResolveWithTtlOptions, callback: (err: NodeJS.ErrnoException | null, addresses: RecordWithTtl[]) => void): void;
     function resolve6(hostname: string, options: ResolveOptions, callback: (err: NodeJS.ErrnoException | null, addresses: string[] | RecordWithTtl[]) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
     namespace resolve6 {
         function __promisify__(hostname: string): Promise<string[]>;
         function __promisify__(hostname: string, options: ResolveWithTtlOptions): Promise<RecordWithTtl[]>;
@@ -8360,7 +8281,7 @@ module.exports['dns.d.ts'] = `declare module "dns" {
     function setServers(servers: ReadonlyArray<string>): void;
     function getServers(): string[];
 
-    // Error codes
+    \/\/ Error codes
     const NODATA: string;
     const FORMERR: string;
     const SERVFAIL: string;
@@ -8481,15 +8402,23 @@ module.exports['dns.d.ts'] = `declare module "dns" {
 }
 `;
 module.exports['domain.d.ts'] = `declare module "domain" {
-    import * as events from "events";
+    import { EventEmitter } from "events";
 
-    class Domain extends events.EventEmitter implements NodeJS.Domain {
-        run<T>(fn: (...args: any[]) => T, ...args: any[]): T;
-        add(emitter: events.EventEmitter | NodeJS.Timer): void;
-        remove(emitter: events.EventEmitter | NodeJS.Timer): void;
-        bind<T extends Function>(cb: T): T;
-        intercept<T extends Function>(cb: T): T;
-        members: Array<events.EventEmitter | NodeJS.Timer>;
+    global {
+        namespace NodeJS {
+            interface Domain extends EventEmitter {
+                run<T>(fn: (...args: any[]) => T, ...args: any[]): T;
+                add(emitter: EventEmitter | Timer): void;
+                remove(emitter: EventEmitter | Timer): void;
+                bind<T extends Function>(cb: T): T;
+                intercept<T extends Function>(cb: T): T;
+            }
+        }
+    }
+
+    interface Domain extends NodeJS.Domain {}
+    class Domain extends EventEmitter {
+        members: Array<EventEmitter | NodeJS.Timer>;
         enter(): void;
         exit(): void;
     }
@@ -8498,7 +8427,12 @@ module.exports['domain.d.ts'] = `declare module "domain" {
 }
 `;
 module.exports['events.d.ts'] = `declare module "events" {
-    class internal extends NodeJS.EventEmitter { }
+    interface EventEmitterOptions {
+        /**
+         * Enables automatic capturing of promise rejection.
+         */
+        captureRejections?: boolean;
+    }
 
     interface NodeEventTarget {
         once(event: string | symbol, listener: (...args: any[]) => void): this;
@@ -8508,48 +8442,99 @@ module.exports['events.d.ts'] = `declare module "events" {
         addEventListener(event: string, listener: (...args: any[]) => void, opts?: { once: boolean }): any;
     }
 
-    namespace internal {
+    namespace EventEmitter {
         function once(emitter: NodeEventTarget, event: string | symbol): Promise<any[]>;
         function once(emitter: DOMEventTarget, event: string): Promise<any[]>;
-         class EventEmitter extends internal {
+        function on(emitter: EventEmitter, event: string): AsyncIterableIterator<any>;
+        const captureRejectionSymbol: unique symbol;
+
+        /**
+         * This symbol shall be used to install a listener for only monitoring \`'error'\`
+         * events. Listeners installed using this symbol are called before the regular
+         * \`'error'\` listeners are called.
+         *
+         * Installing a listener using this symbol does not change the behavior once an
+         * \`'error'\` event is emitted, therefore the process will still crash if no
+         * regular \`'error'\` listener is installed.
+         */
+        const errorMonitor: unique symbol;
+        /**
+         * Sets or gets the default captureRejection value for all emitters.
+         */
+        let captureRejections: boolean;
+
+        interface EventEmitter extends NodeJS.EventEmitter {
+        }
+
+        class EventEmitter {
+            constructor(options?: EventEmitterOptions);
             /** @deprecated since v4.0.0 */
             static listenerCount(emitter: EventEmitter, event: string | symbol): number;
             static defaultMaxListeners: number;
-
-            addListener(event: string | symbol, listener: (...args: any[]) => void): this;
-            on(event: string | symbol, listener: (...args: any[]) => void): this;
-            once(event: string | symbol, listener: (...args: any[]) => void): this;
-            prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
-            prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
-            removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
-            off(event: string | symbol, listener: (...args: any[]) => void): this;
-            removeAllListeners(event?: string | symbol): this;
-            setMaxListeners(n: number): this;
-            getMaxListeners(): number;
-            listeners(event: string | symbol): Function[];
-            rawListeners(event: string | symbol): Function[];
-            emit(event: string | symbol, ...args: any[]): boolean;
-            eventNames(): Array<string | symbol>;
-            listenerCount(type: string | symbol): number;
+            /**
+             * This symbol shall be used to install a listener for only monitoring \`'error'\`
+             * events. Listeners installed using this symbol are called before the regular
+             * \`'error'\` listeners are called.
+             *
+             * Installing a listener using this symbol does not change the behavior once an
+             * \`'error'\` event is emitted, therefore the process will still crash if no
+             * regular \`'error'\` listener is installed.
+             */
+            static readonly errorMonitor: unique symbol;
         }
     }
 
-    export = internal;
+    global {
+        namespace NodeJS {
+            interface EventEmitter {
+                addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+                on(event: string | symbol, listener: (...args: any[]) => void): this;
+                once(event: string | symbol, listener: (...args: any[]) => void): this;
+                removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+                off(event: string | symbol, listener: (...args: any[]) => void): this;
+                removeAllListeners(event?: string | symbol): this;
+                setMaxListeners(n: number): this;
+                getMaxListeners(): number;
+                listeners(event: string | symbol): Function[];
+                rawListeners(event: string | symbol): Function[];
+                emit(event: string | symbol, ...args: any[]): boolean;
+                listenerCount(event: string | symbol): number;
+                \/\/ Added in Node 6...
+                prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+                prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+                eventNames(): Array<string | symbol>;
+            }
+        }
+    }
+
+    export = EventEmitter;
 }
 `;
 module.exports['fs.d.ts'] = `declare module "fs" {
     import * as stream from "stream";
     import * as events from "events";
     import { URL } from "url";
+    import * as promises from 'fs/promises';
 
+    export { promises };
     /**
      * Valid types for path values in "fs".
      */
-    type PathLike = string | Buffer | URL;
+    export type PathLike = string | Buffer | URL;
 
-    type NoParamCallback = (err: NodeJS.ErrnoException | null) => void;
+    export type NoParamCallback = (err: NodeJS.ErrnoException | null) => void;
 
-    interface StatsBase<T> {
+    export type BufferEncodingOption = 'buffer' | { encoding: 'buffer' };
+
+    export interface BaseEncodingOptions {
+        encoding?: BufferEncoding | null;
+    }
+
+    export type OpenMode = number | string;
+
+    export type Mode = number | string;
+
+    export interface StatsBase<T> {
         isFile(): boolean;
         isDirectory(): boolean;
         isBlockDevice(): boolean;
@@ -8578,13 +8563,13 @@ module.exports['fs.d.ts'] = `declare module "fs" {
         birthtime: Date;
     }
 
-    interface Stats extends StatsBase<number> {
+    export interface Stats extends StatsBase<number> {
     }
 
-    class Stats {
+    export class Stats {
     }
 
-    class Dirent {
+    export class Dirent {
         isFile(): boolean;
         isDirectory(): boolean;
         isBlockDevice(): boolean;
@@ -8598,7 +8583,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
     /**
      * A class representing a directory stream.
      */
-    class Dir {
+    export class Dir {
         readonly path: string;
 
         /**
@@ -8635,7 +8620,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
         readSync(): Dirent;
     }
 
-    interface FSWatcher extends events.EventEmitter {
+    export interface FSWatcher extends events.EventEmitter {
         close(): void;
 
         /**
@@ -8669,66 +8654,135 @@ module.exports['fs.d.ts'] = `declare module "fs" {
         prependOnceListener(event: "close", listener: () => void): this;
     }
 
-    class ReadStream extends stream.Readable {
+    export class ReadStream extends stream.Readable {
         close(): void;
         bytesRead: number;
         path: string | Buffer;
+        pending: boolean;
 
         /**
          * events.EventEmitter
          *   1. open
          *   2. close
+         *   3. ready
          */
-        addListener(event: string, listener: (...args: any[]) => void): this;
-        addListener(event: "open", listener: (fd: number) => void): this;
         addListener(event: "close", listener: () => void): this;
+        addListener(event: "data", listener: (chunk: Buffer | string) => void): this;
+        addListener(event: "end", listener: () => void): this;
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: "open", listener: (fd: number) => void): this;
+        addListener(event: "pause", listener: () => void): this;
+        addListener(event: "readable", listener: () => void): this;
+        addListener(event: "ready", listener: () => void): this;
+        addListener(event: "resume", listener: () => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
-        on(event: string, listener: (...args: any[]) => void): this;
-        on(event: "open", listener: (fd: number) => void): this;
         on(event: "close", listener: () => void): this;
+        on(event: "data", listener: (chunk: Buffer | string) => void): this;
+        on(event: "end", listener: () => void): this;
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: "open", listener: (fd: number) => void): this;
+        on(event: "pause", listener: () => void): this;
+        on(event: "readable", listener: () => void): this;
+        on(event: "ready", listener: () => void): this;
+        on(event: "resume", listener: () => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
 
-        once(event: string, listener: (...args: any[]) => void): this;
-        once(event: "open", listener: (fd: number) => void): this;
         once(event: "close", listener: () => void): this;
+        once(event: "data", listener: (chunk: Buffer | string) => void): this;
+        once(event: "end", listener: () => void): this;
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: "open", listener: (fd: number) => void): this;
+        once(event: "pause", listener: () => void): this;
+        once(event: "readable", listener: () => void): this;
+        once(event: "ready", listener: () => void): this;
+        once(event: "resume", listener: () => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
 
-        prependListener(event: string, listener: (...args: any[]) => void): this;
-        prependListener(event: "open", listener: (fd: number) => void): this;
         prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "data", listener: (chunk: Buffer | string) => void): this;
+        prependListener(event: "end", listener: () => void): this;
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: "open", listener: (fd: number) => void): this;
+        prependListener(event: "pause", listener: () => void): this;
+        prependListener(event: "readable", listener: () => void): this;
+        prependListener(event: "ready", listener: () => void): this;
+        prependListener(event: "resume", listener: () => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
-        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
-        prependOnceListener(event: "open", listener: (fd: number) => void): this;
         prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "data", listener: (chunk: Buffer | string) => void): this;
+        prependOnceListener(event: "end", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: "open", listener: (fd: number) => void): this;
+        prependOnceListener(event: "pause", listener: () => void): this;
+        prependOnceListener(event: "readable", listener: () => void): this;
+        prependOnceListener(event: "ready", listener: () => void): this;
+        prependOnceListener(event: "resume", listener: () => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
     }
 
-    class WriteStream extends stream.Writable {
+    export class WriteStream extends stream.Writable {
         close(): void;
         bytesWritten: number;
         path: string | Buffer;
+        pending: boolean;
 
         /**
          * events.EventEmitter
          *   1. open
          *   2. close
+         *   3. ready
          */
-        addListener(event: string, listener: (...args: any[]) => void): this;
-        addListener(event: "open", listener: (fd: number) => void): this;
         addListener(event: "close", listener: () => void): this;
+        addListener(event: "drain", listener: () => void): this;
+        addListener(event: "error", listener: (err: Error) => void): this;
+        addListener(event: "finish", listener: () => void): this;
+        addListener(event: "open", listener: (fd: number) => void): this;
+        addListener(event: "pipe", listener: (src: stream.Readable) => void): this;
+        addListener(event: "ready", listener: () => void): this;
+        addListener(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
-        on(event: string, listener: (...args: any[]) => void): this;
-        on(event: "open", listener: (fd: number) => void): this;
         on(event: "close", listener: () => void): this;
+        on(event: "drain", listener: () => void): this;
+        on(event: "error", listener: (err: Error) => void): this;
+        on(event: "finish", listener: () => void): this;
+        on(event: "open", listener: (fd: number) => void): this;
+        on(event: "pipe", listener: (src: stream.Readable) => void): this;
+        on(event: "ready", listener: () => void): this;
+        on(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        on(event: string | symbol, listener: (...args: any[]) => void): this;
 
-        once(event: string, listener: (...args: any[]) => void): this;
-        once(event: "open", listener: (fd: number) => void): this;
         once(event: "close", listener: () => void): this;
+        once(event: "drain", listener: () => void): this;
+        once(event: "error", listener: (err: Error) => void): this;
+        once(event: "finish", listener: () => void): this;
+        once(event: "open", listener: (fd: number) => void): this;
+        once(event: "pipe", listener: (src: stream.Readable) => void): this;
+        once(event: "ready", listener: () => void): this;
+        once(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        once(event: string | symbol, listener: (...args: any[]) => void): this;
 
-        prependListener(event: string, listener: (...args: any[]) => void): this;
-        prependListener(event: "open", listener: (fd: number) => void): this;
         prependListener(event: "close", listener: () => void): this;
+        prependListener(event: "drain", listener: () => void): this;
+        prependListener(event: "error", listener: (err: Error) => void): this;
+        prependListener(event: "finish", listener: () => void): this;
+        prependListener(event: "open", listener: (fd: number) => void): this;
+        prependListener(event: "pipe", listener: (src: stream.Readable) => void): this;
+        prependListener(event: "ready", listener: () => void): this;
+        prependListener(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
-        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
-        prependOnceListener(event: "open", listener: (fd: number) => void): this;
         prependOnceListener(event: "close", listener: () => void): this;
+        prependOnceListener(event: "drain", listener: () => void): this;
+        prependOnceListener(event: "error", listener: (err: Error) => void): this;
+        prependOnceListener(event: "finish", listener: () => void): this;
+        prependOnceListener(event: "open", listener: (fd: number) => void): this;
+        prependOnceListener(event: "pipe", listener: (src: stream.Readable) => void): this;
+        prependOnceListener(event: "ready", listener: () => void): this;
+        prependOnceListener(event: "unpipe", listener: (src: stream.Readable) => void): this;
+        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
     }
 
     /**
@@ -8738,10 +8792,10 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function rename(oldPath: PathLike, newPath: PathLike, callback: NoParamCallback): void;
+    export function rename(oldPath: PathLike, newPath: PathLike, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace rename {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace rename {
         /**
          * Asynchronous rename(2) - Change the name or location of a file or directory.
          * @param oldPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -8759,24 +8813,24 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function renameSync(oldPath: PathLike, newPath: PathLike): void;
+    export function renameSync(oldPath: PathLike, newPath: PathLike): void;
 
     /**
      * Asynchronous truncate(2) - Truncate a file to a specified length.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param len If not specified, defaults to \`0\`.
      */
-    function truncate(path: PathLike, len: number | undefined | null, callback: NoParamCallback): void;
+    export function truncate(path: PathLike, len: number | undefined | null, callback: NoParamCallback): void;
 
     /**
      * Asynchronous truncate(2) - Truncate a file to a specified length.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function truncate(path: PathLike, callback: NoParamCallback): void;
+    export function truncate(path: PathLike, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace truncate {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace truncate {
         /**
          * Asynchronous truncate(2) - Truncate a file to a specified length.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -8790,23 +8844,23 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param len If not specified, defaults to \`0\`.
      */
-    function truncateSync(path: PathLike, len?: number | null): void;
+    export function truncateSync(path: PathLike, len?: number | null): void;
 
     /**
      * Asynchronous ftruncate(2) - Truncate a file to a specified length.
      * @param fd A file descriptor.
      * @param len If not specified, defaults to \`0\`.
      */
-    function ftruncate(fd: number, len: number | undefined | null, callback: NoParamCallback): void;
+    export function ftruncate(fd: number, len: number | undefined | null, callback: NoParamCallback): void;
 
     /**
      * Asynchronous ftruncate(2) - Truncate a file to a specified length.
      * @param fd A file descriptor.
      */
-    function ftruncate(fd: number, callback: NoParamCallback): void;
+    export function ftruncate(fd: number, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace ftruncate {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace ftruncate {
         /**
          * Asynchronous ftruncate(2) - Truncate a file to a specified length.
          * @param fd A file descriptor.
@@ -8820,16 +8874,16 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param fd A file descriptor.
      * @param len If not specified, defaults to \`0\`.
      */
-    function ftruncateSync(fd: number, len?: number | null): void;
+    export function ftruncateSync(fd: number, len?: number | null): void;
 
     /**
      * Asynchronous chown(2) - Change ownership of a file.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function chown(path: PathLike, uid: number, gid: number, callback: NoParamCallback): void;
+    export function chown(path: PathLike, uid: number, gid: number, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace chown {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace chown {
         /**
          * Asynchronous chown(2) - Change ownership of a file.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -8841,16 +8895,16 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous chown(2) - Change ownership of a file.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function chownSync(path: PathLike, uid: number, gid: number): void;
+    export function chownSync(path: PathLike, uid: number, gid: number): void;
 
     /**
      * Asynchronous fchown(2) - Change ownership of a file.
      * @param fd A file descriptor.
      */
-    function fchown(fd: number, uid: number, gid: number, callback: NoParamCallback): void;
+    export function fchown(fd: number, uid: number, gid: number, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace fchown {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace fchown {
         /**
          * Asynchronous fchown(2) - Change ownership of a file.
          * @param fd A file descriptor.
@@ -8862,16 +8916,16 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous fchown(2) - Change ownership of a file.
      * @param fd A file descriptor.
      */
-    function fchownSync(fd: number, uid: number, gid: number): void;
+    export function fchownSync(fd: number, uid: number, gid: number): void;
 
     /**
      * Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function lchown(path: PathLike, uid: number, gid: number, callback: NoParamCallback): void;
+    export function lchown(path: PathLike, uid: number, gid: number, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace lchown {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace lchown {
         /**
          * Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -8883,23 +8937,56 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function lchownSync(path: PathLike, uid: number, gid: number): void;
+    export function lchownSync(path: PathLike, uid: number, gid: number): void;
+
+    /**
+     * Changes the access and modification times of a file in the same way as \`fs.utimes()\`,
+     * with the difference that if the path refers to a symbolic link, then the link is not
+     * dereferenced: instead, the timestamps of the symbolic link itself are changed.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param atime The last access time. If a string is provided, it will be coerced to number.
+     * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+     */
+    export function lutimes(path: PathLike, atime: string | number | Date, mtime: string | number | Date, callback: NoParamCallback): void;
+
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace lutimes {
+        /**
+         * Changes the access and modification times of a file in the same way as \`fsPromises.utimes()\`,
+         * with the difference that if the path refers to a symbolic link, then the link is not
+         * dereferenced: instead, the timestamps of the symbolic link itself are changed.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param atime The last access time. If a string is provided, it will be coerced to number.
+         * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+         */
+        function __promisify__(path: PathLike, atime: string | number | Date, mtime: string | number | Date): Promise<void>;
+    }
+
+    /**
+     * Change the file system timestamps of the symbolic link referenced by \`path\`. Returns \`undefined\`,
+     * or throws an exception when parameters are incorrect or the operation fails.
+     * This is the synchronous version of \`fs.lutimes()\`.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param atime The last access time. If a string is provided, it will be coerced to number.
+     * @param mtime The last modified time. If a string is provided, it will be coerced to number.
+     */
+    export function lutimesSync(path: PathLike, atime: string | number | Date, mtime: string | number | Date): void;
 
     /**
      * Asynchronous chmod(2) - Change permissions of a file.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
      */
-    function chmod(path: PathLike, mode: string | number, callback: NoParamCallback): void;
+    export function chmod(path: PathLike, mode: Mode, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace chmod {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace chmod {
         /**
          * Asynchronous chmod(2) - Change permissions of a file.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
          */
-        function __promisify__(path: PathLike, mode: string | number): Promise<void>;
+        function __promisify__(path: PathLike, mode: Mode): Promise<void>;
     }
 
     /**
@@ -8907,23 +8994,23 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
      */
-    function chmodSync(path: PathLike, mode: string | number): void;
+    export function chmodSync(path: PathLike, mode: Mode): void;
 
     /**
      * Asynchronous fchmod(2) - Change permissions of a file.
      * @param fd A file descriptor.
      * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
      */
-    function fchmod(fd: number, mode: string | number, callback: NoParamCallback): void;
+    export function fchmod(fd: number, mode: Mode, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace fchmod {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace fchmod {
         /**
          * Asynchronous fchmod(2) - Change permissions of a file.
          * @param fd A file descriptor.
          * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
          */
-        function __promisify__(fd: number, mode: string | number): Promise<void>;
+        function __promisify__(fd: number, mode: Mode): Promise<void>;
     }
 
     /**
@@ -8931,23 +9018,23 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param fd A file descriptor.
      * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
      */
-    function fchmodSync(fd: number, mode: string | number): void;
+    export function fchmodSync(fd: number, mode: Mode): void;
 
     /**
      * Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
      */
-    function lchmod(path: PathLike, mode: string | number, callback: NoParamCallback): void;
+    export function lchmod(path: PathLike, mode: Mode, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace lchmod {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace lchmod {
         /**
          * Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
          */
-        function __promisify__(path: PathLike, mode: string | number): Promise<void>;
+        function __promisify__(path: PathLike, mode: Mode): Promise<void>;
     }
 
     /**
@@ -8955,20 +9042,24 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
      */
-    function lchmodSync(path: PathLike, mode: string | number): void;
+    export function lchmodSync(path: PathLike, mode: Mode): void;
 
     /**
      * Asynchronous stat(2) - Get file status.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function stat(path: PathLike, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+    export function stat(path: PathLike, options: BigIntOptions, callback: (err: NodeJS.ErrnoException | null, stats: BigIntStats) => void): void;
+    export function stat(path: PathLike, options: StatOptions, callback: (err: NodeJS.ErrnoException | null, stats: Stats | BigIntStats) => void): void;
+    export function stat(path: PathLike, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace stat {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace stat {
         /**
          * Asynchronous stat(2) - Get file status.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          */
+        function __promisify__(path: PathLike, options: BigIntOptions): Promise<BigIntStats>;
+        function __promisify__(path: PathLike, options: StatOptions): Promise<Stats | BigIntStats>;
         function __promisify__(path: PathLike): Promise<Stats>;
     }
 
@@ -8976,16 +9067,18 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous stat(2) - Get file status.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function statSync(path: PathLike): Stats;
+    export function statSync(path: PathLike, options: BigIntOptions): BigIntStats;
+    export function statSync(path: PathLike, options: StatOptions): Stats | BigIntStats;
+    export function statSync(path: PathLike): Stats;
 
     /**
      * Asynchronous fstat(2) - Get file status.
      * @param fd A file descriptor.
      */
-    function fstat(fd: number, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+    export function fstat(fd: number, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace fstat {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace fstat {
         /**
          * Asynchronous fstat(2) - Get file status.
          * @param fd A file descriptor.
@@ -8997,16 +9090,16 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous fstat(2) - Get file status.
      * @param fd A file descriptor.
      */
-    function fstatSync(fd: number): Stats;
+    export function fstatSync(fd: number): Stats;
 
     /**
      * Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function lstat(path: PathLike, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+    export function lstat(path: PathLike, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace lstat {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace lstat {
         /**
          * Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -9018,17 +9111,17 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous lstat(2) - Get file status. Does not dereference symbolic links.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function lstatSync(path: PathLike): Stats;
+    export function lstatSync(path: PathLike): Stats;
 
     /**
      * Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
      * @param existingPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function link(existingPath: PathLike, newPath: PathLike, callback: NoParamCallback): void;
+    export function link(existingPath: PathLike, newPath: PathLike, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace link {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace link {
         /**
          * Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
          * @param existingPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -9042,7 +9135,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param existingPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function linkSync(existingPath: PathLike, newPath: PathLike): void;
+    export function linkSync(existingPath: PathLike, newPath: PathLike): void;
 
     /**
      * Asynchronous symlink(2) - Create a new symbolic link to an existing file.
@@ -9051,17 +9144,17 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param type May be set to \`'dir'\`, \`'file'\`, or \`'junction'\` (default is \`'file'\`) and is only available on Windows (ignored on other platforms).
      * When using \`'junction'\`, the \`target\` argument will automatically be normalized to an absolute path.
      */
-    function symlink(target: PathLike, path: PathLike, type: symlink.Type | undefined | null, callback: NoParamCallback): void;
+    export function symlink(target: PathLike, path: PathLike, type: symlink.Type | undefined | null, callback: NoParamCallback): void;
 
     /**
      * Asynchronous symlink(2) - Create a new symbolic link to an existing file.
      * @param target A path to an existing file. If a URL is provided, it must use the \`file:\` protocol.
      * @param path A path to the new symlink. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function symlink(target: PathLike, path: PathLike, callback: NoParamCallback): void;
+    export function symlink(target: PathLike, path: PathLike, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace symlink {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace symlink {
         /**
          * Asynchronous symlink(2) - Create a new symbolic link to an existing file.
          * @param target A path to an existing file. If a URL is provided, it must use the \`file:\` protocol.
@@ -9081,16 +9174,16 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param type May be set to \`'dir'\`, \`'file'\`, or \`'junction'\` (default is \`'file'\`) and is only available on Windows (ignored on other platforms).
      * When using \`'junction'\`, the \`target\` argument will automatically be normalized to an absolute path.
      */
-    function symlinkSync(target: PathLike, path: PathLike, type?: symlink.Type | null): void;
+    export function symlinkSync(target: PathLike, path: PathLike, type?: symlink.Type | null): void;
 
     /**
      * Asynchronous readlink(2) - read value of a symbolic link.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readlink(
+    export function readlink(
         path: PathLike,
-        options: { encoding?: BufferEncoding | null } | BufferEncoding | undefined | null,
+        options: BaseEncodingOptions | BufferEncoding | undefined | null,
         callback: (err: NodeJS.ErrnoException | null, linkString: string) => void
     ): void;
 
@@ -9099,43 +9192,43 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readlink(path: PathLike, options: { encoding: "buffer" } | "buffer", callback: (err: NodeJS.ErrnoException | null, linkString: Buffer) => void): void;
+    export function readlink(path: PathLike, options: BufferEncodingOption, callback: (err: NodeJS.ErrnoException | null, linkString: Buffer) => void): void;
 
     /**
      * Asynchronous readlink(2) - read value of a symbolic link.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readlink(path: PathLike, options: { encoding?: string | null } | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, linkString: string | Buffer) => void): void;
+    export function readlink(path: PathLike, options: BaseEncodingOptions | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, linkString: string | Buffer) => void): void;
 
     /**
      * Asynchronous readlink(2) - read value of a symbolic link.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function readlink(path: PathLike, callback: (err: NodeJS.ErrnoException | null, linkString: string) => void): void;
+    export function readlink(path: PathLike, callback: (err: NodeJS.ErrnoException | null, linkString: string) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace readlink {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace readlink {
         /**
          * Asynchronous readlink(2) - read value of a symbolic link.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
-
-        /**
-         * Asynchronous readlink(2) - read value of a symbolic link.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function __promisify__(path: PathLike, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
+        function __promisify__(path: PathLike, options?: BaseEncodingOptions | BufferEncoding | null): Promise<string>;
 
         /**
          * Asynchronous readlink(2) - read value of a symbolic link.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(path: PathLike, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
+        function __promisify__(path: PathLike, options: BufferEncodingOption): Promise<Buffer>;
+
+        /**
+         * Asynchronous readlink(2) - read value of a symbolic link.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options?: BaseEncodingOptions | string | null): Promise<string | Buffer>;
     }
 
     /**
@@ -9143,30 +9236,30 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readlinkSync(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): string;
+    export function readlinkSync(path: PathLike, options?: BaseEncodingOptions | BufferEncoding | null): string;
 
     /**
      * Synchronous readlink(2) - read value of a symbolic link.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readlinkSync(path: PathLike, options: { encoding: "buffer" } | "buffer"): Buffer;
+    export function readlinkSync(path: PathLike, options: BufferEncodingOption): Buffer;
 
     /**
      * Synchronous readlink(2) - read value of a symbolic link.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readlinkSync(path: PathLike, options?: { encoding?: string | null } | string | null): string | Buffer;
+    export function readlinkSync(path: PathLike, options?: BaseEncodingOptions | string | null): string | Buffer;
 
     /**
      * Asynchronous realpath(3) - return the canonicalized absolute pathname.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function realpath(
+    export function realpath(
         path: PathLike,
-        options: { encoding?: BufferEncoding | null } | BufferEncoding | undefined | null,
+        options: BaseEncodingOptions | BufferEncoding | undefined | null,
         callback: (err: NodeJS.ErrnoException | null, resolvedPath: string) => void
     ): void;
 
@@ -9175,51 +9268,51 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function realpath(path: PathLike, options: { encoding: "buffer" } | "buffer", callback: (err: NodeJS.ErrnoException | null, resolvedPath: Buffer) => void): void;
+    export function realpath(path: PathLike, options: BufferEncodingOption, callback: (err: NodeJS.ErrnoException | null, resolvedPath: Buffer) => void): void;
 
     /**
      * Asynchronous realpath(3) - return the canonicalized absolute pathname.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function realpath(path: PathLike, options: { encoding?: string | null } | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string | Buffer) => void): void;
+    export function realpath(path: PathLike, options: BaseEncodingOptions | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string | Buffer) => void): void;
 
     /**
      * Asynchronous realpath(3) - return the canonicalized absolute pathname.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function realpath(path: PathLike, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string) => void): void;
+    export function realpath(path: PathLike, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace realpath {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace realpath {
         /**
          * Asynchronous realpath(3) - return the canonicalized absolute pathname.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
-
-        /**
-         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function __promisify__(path: PathLike, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
+        function __promisify__(path: PathLike, options?: BaseEncodingOptions | BufferEncoding | null): Promise<string>;
 
         /**
          * Asynchronous realpath(3) - return the canonicalized absolute pathname.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(path: PathLike, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
+        function __promisify__(path: PathLike, options: BufferEncodingOption): Promise<Buffer>;
+
+        /**
+         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(path: PathLike, options?: BaseEncodingOptions | string | null): Promise<string | Buffer>;
 
         function native(
             path: PathLike,
-            options: { encoding?: BufferEncoding | null } | BufferEncoding | undefined | null,
+            options: BaseEncodingOptions | BufferEncoding | undefined | null,
             callback: (err: NodeJS.ErrnoException | null, resolvedPath: string) => void
         ): void;
-        function native(path: PathLike, options: { encoding: "buffer" } | "buffer", callback: (err: NodeJS.ErrnoException | null, resolvedPath: Buffer) => void): void;
-        function native(path: PathLike, options: { encoding?: string | null } | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string | Buffer) => void): void;
+        function native(path: PathLike, options: BufferEncodingOption, callback: (err: NodeJS.ErrnoException | null, resolvedPath: Buffer) => void): void;
+        function native(path: PathLike, options: BaseEncodingOptions | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string | Buffer) => void): void;
         function native(path: PathLike, callback: (err: NodeJS.ErrnoException | null, resolvedPath: string) => void): void;
     }
 
@@ -9228,36 +9321,36 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function realpathSync(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): string;
+    export function realpathSync(path: PathLike, options?: BaseEncodingOptions | BufferEncoding | null): string;
 
     /**
      * Synchronous realpath(3) - return the canonicalized absolute pathname.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function realpathSync(path: PathLike, options: { encoding: "buffer" } | "buffer"): Buffer;
+    export function realpathSync(path: PathLike, options: BufferEncodingOption): Buffer;
 
     /**
      * Synchronous realpath(3) - return the canonicalized absolute pathname.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function realpathSync(path: PathLike, options?: { encoding?: string | null } | string | null): string | Buffer;
+    export function realpathSync(path: PathLike, options?: BaseEncodingOptions | string | null): string | Buffer;
 
-    namespace realpathSync {
-        function native(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): string;
-        function native(path: PathLike, options: { encoding: "buffer" } | "buffer"): Buffer;
-        function native(path: PathLike, options?: { encoding?: string | null } | string | null): string | Buffer;
+    export namespace realpathSync {
+        function native(path: PathLike, options?: BaseEncodingOptions | BufferEncoding | null): string;
+        function native(path: PathLike, options: BufferEncodingOption): Buffer;
+        function native(path: PathLike, options?: BaseEncodingOptions | string | null): string | Buffer;
     }
 
     /**
      * Asynchronous unlink(2) - delete a name and possibly the file it refers to.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function unlink(path: PathLike, callback: NoParamCallback): void;
+    export function unlink(path: PathLike, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace unlink {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace unlink {
         /**
          * Asynchronous unlink(2) - delete a name and possibly the file it refers to.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -9269,71 +9362,121 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous unlink(2) - delete a name and possibly the file it refers to.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function unlinkSync(path: PathLike): void;
+    export function unlinkSync(path: PathLike): void;
 
-    interface RmDirOptions {
+    export interface RmDirOptions {
         /**
+         * If an \`EBUSY\`, \`EMFILE\`, \`ENFILE\`, \`ENOTEMPTY\`, or
+         * \`EPERM\` error is encountered, Node.js will retry the operation with a linear
+         * backoff wait of \`retryDelay\` ms longer on each try. This option represents the
+         * number of retries. This option is ignored if the \`recursive\` option is not
+         * \`true\`.
+         * @default 0
+         */
+        maxRetries?: number;
+        /**
+         * @deprecated since v14.14.0 In future versions of Node.js,
+         * \`fs.rmdir(path, { recursive: true })\` will throw on nonexistent
+         * paths, or when given a file as a target.
+         * Use \`fs.rm(path, { recursive: true, force: true })\` instead.
+         *
          * If \`true\`, perform a recursive directory removal. In
          * recursive mode, errors are not reported if \`path\` does not exist, and
          * operations are retried on failure.
-         * @experimental
          * @default false
          */
         recursive?: boolean;
-    }
-
-    interface RmDirAsyncOptions extends RmDirOptions {
         /**
-         * If an \`EMFILE\` error is encountered, Node.js will
-         * retry the operation with a linear backoff of 1ms longer on each try until the
-         * timeout duration passes this limit. This option is ignored if the \`recursive\`
-         * option is not \`true\`.
-         * @default 1000
+         * The amount of time in milliseconds to wait between retries.
+         * This option is ignored if the \`recursive\` option is not \`true\`.
+         * @default 100
          */
-        emfileWait?: number;
-        /**
-         * If an \`EBUSY\`, \`ENOTEMPTY\`, or \`EPERM\` error is
-         * encountered, Node.js will retry the operation with a linear backoff wait of
-         * 100ms longer on each try. This option represents the number of retries. This
-         * option is ignored if the \`recursive\` option is not \`true\`.
-         * @default 3
-         */
-        maxBusyTries?: number;
+        retryDelay?: number;
     }
 
     /**
      * Asynchronous rmdir(2) - delete a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function rmdir(path: PathLike, callback: NoParamCallback): void;
-    function rmdir(path: PathLike, options: RmDirAsyncOptions, callback: NoParamCallback): void;
+    export function rmdir(path: PathLike, callback: NoParamCallback): void;
+    export function rmdir(path: PathLike, options: RmDirOptions, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace rmdir {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace rmdir {
         /**
          * Asynchronous rmdir(2) - delete a directory.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          */
-        function __promisify__(path: PathLike, options?: RmDirAsyncOptions): Promise<void>;
+        function __promisify__(path: PathLike, options?: RmDirOptions): Promise<void>;
     }
 
     /**
      * Synchronous rmdir(2) - delete a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function rmdirSync(path: PathLike, options?: RmDirOptions): void;
+    export function rmdirSync(path: PathLike, options?: RmDirOptions): void;
 
-    interface MakeDirectoryOptions {
+    export interface RmOptions {
+        /**
+         * When \`true\`, exceptions will be ignored if \`path\` does not exist.
+         * @default false
+         */
+        force?: boolean;
+        /**
+         * If an \`EBUSY\`, \`EMFILE\`, \`ENFILE\`, \`ENOTEMPTY\`, or
+         * \`EPERM\` error is encountered, Node.js will retry the operation with a linear
+         * backoff wait of \`retryDelay\` ms longer on each try. This option represents the
+         * number of retries. This option is ignored if the \`recursive\` option is not
+         * \`true\`.
+         * @default 0
+         */
+        maxRetries?: number;
+        /**
+         * If \`true\`, perform a recursive directory removal. In
+         * recursive mode, errors are not reported if \`path\` does not exist, and
+         * operations are retried on failure.
+         * @default false
+         */
+        recursive?: boolean;
+        /**
+         * The amount of time in milliseconds to wait between retries.
+         * This option is ignored if the \`recursive\` option is not \`true\`.
+         * @default 100
+         */
+        retryDelay?: number;
+    }
+
+    /**
+     * Asynchronously removes files and directories (modeled on the standard POSIX \`rm\` utility).
+     */
+    export function rm(path: PathLike, callback: NoParamCallback): void;
+    export function rm(path: PathLike, options: RmOptions, callback: NoParamCallback): void;
+
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace rm {
+        /**
+         * Asynchronously removes files and directories (modeled on the standard POSIX \`rm\` utility).
+         */
+        function __promisify__(path: PathLike, options?: RmOptions): Promise<void>;
+    }
+
+    /**
+     * Synchronously removes files and directories (modeled on the standard POSIX \`rm\` utility).
+     */
+    export function rmSync(path: PathLike, options?: RmOptions): void;
+
+    export interface MakeDirectoryOptions {
         /**
          * Indicates whether parent folders should be created.
+         * If a folder was created, the path to the first created folder will be returned.
          * @default false
          */
         recursive?: boolean;
         /**
          * A file mode. If a string is passed, it is parsed as an octal integer. If not specified
-         * @default 0o777.
+         * @default 0o777
          */
-        mode?: number | string;
+        mode?: Mode;
     }
 
     /**
@@ -9342,23 +9485,55 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
      * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
      */
-    function mkdir(path: PathLike, options: number | string | MakeDirectoryOptions | undefined | null, callback: NoParamCallback): void;
+    export function mkdir(path: PathLike, options: MakeDirectoryOptions & { recursive: true }, callback: (err: NodeJS.ErrnoException | null, path: string) => void): void;
+
+    /**
+     * Asynchronous mkdir(2) - create a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+     * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+     */
+    export function mkdir(path: PathLike, options: Mode | (MakeDirectoryOptions & { recursive?: false; }) | null | undefined, callback: NoParamCallback): void;
+
+    /**
+     * Asynchronous mkdir(2) - create a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+     * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+     */
+    export function mkdir(path: PathLike, options: Mode | MakeDirectoryOptions | null | undefined, callback: (err: NodeJS.ErrnoException | null, path: string | undefined) => void): void;
 
     /**
      * Asynchronous mkdir(2) - create a directory with a mode of \`0o777\`.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function mkdir(path: PathLike, callback: NoParamCallback): void;
+    export function mkdir(path: PathLike, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace mkdir {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace mkdir {
         /**
          * Asynchronous mkdir(2) - create a directory.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
          * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
          */
-        function __promisify__(path: PathLike, options?: number | string | MakeDirectoryOptions | null): Promise<void>;
+        function __promisify__(path: PathLike, options: MakeDirectoryOptions & { recursive: true; }): Promise<string>;
+
+        /**
+         * Asynchronous mkdir(2) - create a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+         * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+         */
+        function __promisify__(path: PathLike, options?: Mode | (MakeDirectoryOptions & { recursive?: false; }) | null): Promise<void>;
+
+        /**
+         * Asynchronous mkdir(2) - create a directory.
+         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+         * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+         * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+         */
+        function __promisify__(path: PathLike, options?: Mode | MakeDirectoryOptions | null): Promise<string | undefined>;
     }
 
     /**
@@ -9367,57 +9542,73 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
      * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
      */
-    function mkdirSync(path: PathLike, options?: number | string | MakeDirectoryOptions | null): void;
+    export function mkdirSync(path: PathLike, options: MakeDirectoryOptions & { recursive: true; }): string;
+
+    /**
+     * Synchronous mkdir(2) - create a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+     * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+     */
+    export function mkdirSync(path: PathLike, options?: Mode | (MakeDirectoryOptions & { recursive?: false; }) | null): void;
+
+    /**
+     * Synchronous mkdir(2) - create a directory.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
+     * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
+     */
+    export function mkdirSync(path: PathLike, options?: Mode | MakeDirectoryOptions | null): string | undefined;
 
     /**
      * Asynchronously creates a unique temporary directory.
      * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function mkdtemp(prefix: string, options: { encoding?: BufferEncoding | null } | BufferEncoding | undefined | null, callback: (err: NodeJS.ErrnoException | null, folder: string) => void): void;
+    export function mkdtemp(prefix: string, options: BaseEncodingOptions | BufferEncoding | undefined | null, callback: (err: NodeJS.ErrnoException | null, folder: string) => void): void;
 
     /**
      * Asynchronously creates a unique temporary directory.
      * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function mkdtemp(prefix: string, options: "buffer" | { encoding: "buffer" }, callback: (err: NodeJS.ErrnoException | null, folder: Buffer) => void): void;
+    export function mkdtemp(prefix: string, options: "buffer" | { encoding: "buffer" }, callback: (err: NodeJS.ErrnoException | null, folder: Buffer) => void): void;
 
     /**
      * Asynchronously creates a unique temporary directory.
      * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function mkdtemp(prefix: string, options: { encoding?: string | null } | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, folder: string | Buffer) => void): void;
+    export function mkdtemp(prefix: string, options: BaseEncodingOptions | string | undefined | null, callback: (err: NodeJS.ErrnoException | null, folder: string | Buffer) => void): void;
 
     /**
      * Asynchronously creates a unique temporary directory.
      * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
      */
-    function mkdtemp(prefix: string, callback: (err: NodeJS.ErrnoException | null, folder: string) => void): void;
+    export function mkdtemp(prefix: string, callback: (err: NodeJS.ErrnoException | null, folder: string) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace mkdtemp {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace mkdtemp {
         /**
          * Asynchronously creates a unique temporary directory.
          * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(prefix: string, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
-
-        /**
-         * Asynchronously creates a unique temporary directory.
-         * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function __promisify__(prefix: string, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
+        function __promisify__(prefix: string, options?: BaseEncodingOptions | BufferEncoding | null): Promise<string>;
 
         /**
          * Asynchronously creates a unique temporary directory.
          * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(prefix: string, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
+        function __promisify__(prefix: string, options: BufferEncodingOption): Promise<Buffer>;
+
+        /**
+         * Asynchronously creates a unique temporary directory.
+         * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
+         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
+         */
+        function __promisify__(prefix: string, options?: BaseEncodingOptions | string | null): Promise<string | Buffer>;
     }
 
     /**
@@ -9425,28 +9616,28 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function mkdtempSync(prefix: string, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): string;
+    export function mkdtempSync(prefix: string, options?: BaseEncodingOptions | BufferEncoding | null): string;
 
     /**
      * Synchronously creates a unique temporary directory.
      * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function mkdtempSync(prefix: string, options: { encoding: "buffer" } | "buffer"): Buffer;
+    export function mkdtempSync(prefix: string, options: BufferEncodingOption): Buffer;
 
     /**
      * Synchronously creates a unique temporary directory.
      * Generates six random characters to be appended behind a required prefix to create a unique temporary directory.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function mkdtempSync(prefix: string, options?: { encoding?: string | null } | string | null): string | Buffer;
+    export function mkdtempSync(prefix: string, options?: BaseEncodingOptions | string | null): string | Buffer;
 
     /**
      * Asynchronous readdir(3) - read a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readdir(
+    export function readdir(
         path: PathLike,
         options: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | undefined | null,
         callback: (err: NodeJS.ErrnoException | null, files: string[]) => void,
@@ -9457,16 +9648,16 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readdir(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer", callback: (err: NodeJS.ErrnoException | null, files: Buffer[]) => void): void;
+    export function readdir(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer", callback: (err: NodeJS.ErrnoException | null, files: Buffer[]) => void): void;
 
     /**
      * Asynchronous readdir(3) - read a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readdir(
+    export function readdir(
         path: PathLike,
-        options: { encoding?: string | null; withFileTypes?: false } | string | undefined | null,
+        options: BaseEncodingOptions & { withFileTypes?: false } | BufferEncoding | undefined | null,
         callback: (err: NodeJS.ErrnoException | null, files: string[] | Buffer[]) => void,
     ): void;
 
@@ -9474,17 +9665,17 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Asynchronous readdir(3) - read a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function readdir(path: PathLike, callback: (err: NodeJS.ErrnoException | null, files: string[]) => void): void;
+    export function readdir(path: PathLike, callback: (err: NodeJS.ErrnoException | null, files: string[]) => void): void;
 
     /**
      * Asynchronous readdir(3) - read a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options If called with \`withFileTypes: true\` the result data will be an array of Dirent.
      */
-    function readdir(path: PathLike, options: { encoding?: string | null; withFileTypes: true }, callback: (err: NodeJS.ErrnoException | null, files: Dirent[]) => void): void;
+    export function readdir(path: PathLike, options: BaseEncodingOptions & { withFileTypes: true }, callback: (err: NodeJS.ErrnoException | null, files: Dirent[]) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace readdir {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace readdir {
         /**
          * Asynchronous readdir(3) - read a directory.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -9504,14 +9695,14 @@ module.exports['fs.d.ts'] = `declare module "fs" {
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(path: PathLike, options?: { encoding?: string | null; withFileTypes?: false } | string | null): Promise<string[] | Buffer[]>;
+        function __promisify__(path: PathLike, options?: BaseEncodingOptions & { withFileTypes?: false } | BufferEncoding | null): Promise<string[] | Buffer[]>;
 
         /**
          * Asynchronous readdir(3) - read a directory.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options If called with \`withFileTypes: true\` the result data will be an array of Dirent
          */
-        function __promisify__(path: PathLike, options: { encoding?: string | null; withFileTypes: true }): Promise<Dirent[]>;
+        function __promisify__(path: PathLike, options: BaseEncodingOptions & { withFileTypes: true }): Promise<Dirent[]>;
     }
 
     /**
@@ -9519,37 +9710,37 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readdirSync(path: PathLike, options?: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null): string[];
+    export function readdirSync(path: PathLike, options?: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null): string[];
 
     /**
      * Synchronous readdir(3) - read a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readdirSync(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer"): Buffer[];
+    export function readdirSync(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer"): Buffer[];
 
     /**
      * Synchronous readdir(3) - read a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    function readdirSync(path: PathLike, options?: { encoding?: string | null; withFileTypes?: false } | string | null): string[] | Buffer[];
+    export function readdirSync(path: PathLike, options?: BaseEncodingOptions & { withFileTypes?: false } | BufferEncoding | null): string[] | Buffer[];
 
     /**
      * Synchronous readdir(3) - read a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options If called with \`withFileTypes: true\` the result data will be an array of Dirent.
      */
-    function readdirSync(path: PathLike, options: { encoding?: string | null; withFileTypes: true }): Dirent[];
+    export function readdirSync(path: PathLike, options: BaseEncodingOptions & { withFileTypes: true }): Dirent[];
 
     /**
      * Asynchronous close(2) - close a file descriptor.
      * @param fd A file descriptor.
      */
-    function close(fd: number, callback: NoParamCallback): void;
+    export function close(fd: number, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace close {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace close {
         /**
          * Asynchronous close(2) - close a file descriptor.
          * @param fd A file descriptor.
@@ -9561,29 +9752,29 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous close(2) - close a file descriptor.
      * @param fd A file descriptor.
      */
-    function closeSync(fd: number): void;
+    export function closeSync(fd: number): void;
 
     /**
      * Asynchronous open(2) - open and possibly create a file.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param mode A file mode. If a string is passed, it is parsed as an octal integer. If not supplied, defaults to \`0o666\`.
      */
-    function open(path: PathLike, flags: string | number, mode: string | number | undefined | null, callback: (err: NodeJS.ErrnoException | null, fd: number) => void): void;
+    export function open(path: PathLike, flags: OpenMode, mode: Mode | undefined | null, callback: (err: NodeJS.ErrnoException | null, fd: number) => void): void;
 
     /**
      * Asynchronous open(2) - open and possibly create a file. If the file is created, its mode will be \`0o666\`.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    function open(path: PathLike, flags: string | number, callback: (err: NodeJS.ErrnoException | null, fd: number) => void): void;
+    export function open(path: PathLike, flags: OpenMode, callback: (err: NodeJS.ErrnoException | null, fd: number) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace open {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace open {
         /**
          * Asynchronous open(2) - open and possibly create a file.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param mode A file mode. If a string is passed, it is parsed as an octal integer. If not supplied, defaults to \`0o666\`.
          */
-        function __promisify__(path: PathLike, flags: string | number, mode?: string | number | null): Promise<number>;
+        function __promisify__(path: PathLike, flags: OpenMode, mode?: Mode | null): Promise<number>;
     }
 
     /**
@@ -9591,7 +9782,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param mode A file mode. If a string is passed, it is parsed as an octal integer. If not supplied, defaults to \`0o666\`.
      */
-    function openSync(path: PathLike, flags: string | number, mode?: string | number | null): number;
+    export function openSync(path: PathLike, flags: OpenMode, mode?: Mode | null): number;
 
     /**
      * Asynchronously change file timestamps of the file referenced by the supplied path.
@@ -9599,10 +9790,10 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param atime The last access time. If a string is provided, it will be coerced to number.
      * @param mtime The last modified time. If a string is provided, it will be coerced to number.
      */
-    function utimes(path: PathLike, atime: string | number | Date, mtime: string | number | Date, callback: NoParamCallback): void;
+    export function utimes(path: PathLike, atime: string | number | Date, mtime: string | number | Date, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace utimes {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace utimes {
         /**
          * Asynchronously change file timestamps of the file referenced by the supplied path.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -9618,7 +9809,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param atime The last access time. If a string is provided, it will be coerced to number.
      * @param mtime The last modified time. If a string is provided, it will be coerced to number.
      */
-    function utimesSync(path: PathLike, atime: string | number | Date, mtime: string | number | Date): void;
+    export function utimesSync(path: PathLike, atime: string | number | Date, mtime: string | number | Date): void;
 
     /**
      * Asynchronously change file timestamps of the file referenced by the supplied file descriptor.
@@ -9626,10 +9817,10 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param atime The last access time. If a string is provided, it will be coerced to number.
      * @param mtime The last modified time. If a string is provided, it will be coerced to number.
      */
-    function futimes(fd: number, atime: string | number | Date, mtime: string | number | Date, callback: NoParamCallback): void;
+    export function futimes(fd: number, atime: string | number | Date, mtime: string | number | Date, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace futimes {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace futimes {
         /**
          * Asynchronously change file timestamps of the file referenced by the supplied file descriptor.
          * @param fd A file descriptor.
@@ -9645,16 +9836,16 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param atime The last access time. If a string is provided, it will be coerced to number.
      * @param mtime The last modified time. If a string is provided, it will be coerced to number.
      */
-    function futimesSync(fd: number, atime: string | number | Date, mtime: string | number | Date): void;
+    export function futimesSync(fd: number, atime: string | number | Date, mtime: string | number | Date): void;
 
     /**
      * Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
      * @param fd A file descriptor.
      */
-    function fsync(fd: number, callback: NoParamCallback): void;
+    export function fsync(fd: number, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace fsync {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace fsync {
         /**
          * Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
          * @param fd A file descriptor.
@@ -9666,7 +9857,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
      * @param fd A file descriptor.
      */
-    function fsyncSync(fd: number): void;
+    export function fsyncSync(fd: number): void;
 
     /**
      * Asynchronously writes \`buffer\` to the file referenced by the supplied file descriptor.
@@ -9675,7 +9866,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
      * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
      */
-    function write<TBuffer extends NodeJS.ArrayBufferView>(
+    export function write<TBuffer extends NodeJS.ArrayBufferView>(
         fd: number,
         buffer: TBuffer,
         offset: number | undefined | null,
@@ -9690,7 +9881,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
      * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
      */
-    function write<TBuffer extends NodeJS.ArrayBufferView>(
+    export function write<TBuffer extends NodeJS.ArrayBufferView>(
         fd: number,
         buffer: TBuffer,
         offset: number | undefined | null,
@@ -9703,7 +9894,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param fd A file descriptor.
      * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
      */
-    function write<TBuffer extends NodeJS.ArrayBufferView>(
+    export function write<TBuffer extends NodeJS.ArrayBufferView>(
         fd: number,
         buffer: TBuffer,
         offset: number | undefined | null,
@@ -9714,40 +9905,40 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Asynchronously writes \`buffer\` to the file referenced by the supplied file descriptor.
      * @param fd A file descriptor.
      */
-    function write<TBuffer extends NodeJS.ArrayBufferView>(fd: number, buffer: TBuffer, callback: (err: NodeJS.ErrnoException | null, written: number, buffer: TBuffer) => void): void;
+    export function write<TBuffer extends NodeJS.ArrayBufferView>(fd: number, buffer: TBuffer, callback: (err: NodeJS.ErrnoException | null, written: number, buffer: TBuffer) => void): void;
 
     /**
      * Asynchronously writes \`string\` to the file referenced by the supplied file descriptor.
      * @param fd A file descriptor.
-     * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+     * @param string A string to write.
      * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
      * @param encoding The expected string encoding.
      */
-    function write(
+    export function write(
         fd: number,
-        string: any,
+        string: string,
         position: number | undefined | null,
-        encoding: string | undefined | null,
+        encoding: BufferEncoding | undefined | null,
         callback: (err: NodeJS.ErrnoException | null, written: number, str: string) => void,
     ): void;
 
     /**
      * Asynchronously writes \`string\` to the file referenced by the supplied file descriptor.
      * @param fd A file descriptor.
-     * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+     * @param string A string to write.
      * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
      */
-    function write(fd: number, string: any, position: number | undefined | null, callback: (err: NodeJS.ErrnoException | null, written: number, str: string) => void): void;
+    export function write(fd: number, string: string, position: number | undefined | null, callback: (err: NodeJS.ErrnoException | null, written: number, str: string) => void): void;
 
     /**
      * Asynchronously writes \`string\` to the file referenced by the supplied file descriptor.
      * @param fd A file descriptor.
-     * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+     * @param string A string to write.
      */
-    function write(fd: number, string: any, callback: (err: NodeJS.ErrnoException | null, written: number, str: string) => void): void;
+    export function write(fd: number, string: string, callback: (err: NodeJS.ErrnoException | null, written: number, str: string) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace write {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace write {
         /**
          * Asynchronously writes \`buffer\` to the file referenced by the supplied file descriptor.
          * @param fd A file descriptor.
@@ -9766,11 +9957,11 @@ module.exports['fs.d.ts'] = `declare module "fs" {
         /**
          * Asynchronously writes \`string\` to the file referenced by the supplied file descriptor.
          * @param fd A file descriptor.
-         * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+         * @param string A string to write.
          * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
          * @param encoding The expected string encoding.
          */
-        function __promisify__(fd: number, string: any, position?: number | null, encoding?: string | null): Promise<{ bytesWritten: number, buffer: string }>;
+        function __promisify__(fd: number, string: string, position?: number | null, encoding?: BufferEncoding | null): Promise<{ bytesWritten: number, buffer: string }>;
     }
 
     /**
@@ -9780,16 +9971,16 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
      * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
      */
-    function writeSync(fd: number, buffer: NodeJS.ArrayBufferView, offset?: number | null, length?: number | null, position?: number | null): number;
+    export function writeSync(fd: number, buffer: NodeJS.ArrayBufferView, offset?: number | null, length?: number | null, position?: number | null): number;
 
     /**
      * Synchronously writes \`string\` to the file referenced by the supplied file descriptor, returning the number of bytes written.
      * @param fd A file descriptor.
-     * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
+     * @param string A string to write.
      * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
      * @param encoding The expected string encoding.
      */
-    function writeSync(fd: number, string: any, position?: number | null, encoding?: string | null): number;
+    export function writeSync(fd: number, string: string, position?: number | null, encoding?: BufferEncoding | null): number;
 
     /**
      * Asynchronously reads data from the file referenced by the supplied file descriptor.
@@ -9799,7 +9990,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param length The number of bytes to read.
      * @param position The offset from the beginning of the file from which data should be read. If \`null\`, data will be read from the current position.
      */
-    function read<TBuffer extends NodeJS.ArrayBufferView>(
+    export function read<TBuffer extends NodeJS.ArrayBufferView>(
         fd: number,
         buffer: TBuffer,
         offset: number,
@@ -9808,8 +9999,8 @@ module.exports['fs.d.ts'] = `declare module "fs" {
         callback: (err: NodeJS.ErrnoException | null, bytesRead: number, buffer: TBuffer) => void,
     ): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace read {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace read {
         /**
          * @param fd A file descriptor.
          * @param buffer The buffer that the data will be written to.
@@ -9826,6 +10017,21 @@ module.exports['fs.d.ts'] = `declare module "fs" {
         ): Promise<{ bytesRead: number, buffer: TBuffer }>;
     }
 
+    export interface ReadSyncOptions {
+        /**
+         * @default 0
+         */
+        offset?: number;
+        /**
+         * @default \`length of buffer\`
+         */
+        length?: number;
+        /**
+         * @default null
+         */
+        position?: number | null;
+    }
+
     /**
      * Synchronously reads data from the file referenced by the supplied file descriptor, returning the number of bytes read.
      * @param fd A file descriptor.
@@ -9834,7 +10040,13 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param length The number of bytes to read.
      * @param position The offset from the beginning of the file from which data should be read. If \`null\`, data will be read from the current position.
      */
-    function readSync(fd: number, buffer: NodeJS.ArrayBufferView, offset: number, length: number, position: number | null): number;
+    export function readSync(fd: number, buffer: NodeJS.ArrayBufferView, offset: number, length: number, position: number | null): number;
+
+    /**
+     * Similar to the above \`fs.readSync\` function, this version takes an optional \`options\` object.
+     * If no \`options\` object is specified, it will default with the above values.
+     */
+    export function readSync(fd: number, buffer: NodeJS.ArrayBufferView, opts?: ReadSyncOptions): number;
 
     /**
      * Asynchronously reads the entire contents of a file.
@@ -9843,7 +10055,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param options An object that may contain an optional flag.
      * If a flag is not provided, it defaults to \`'r'\`.
      */
-    function readFile(path: PathLike | number, options: { encoding?: null; flag?: string; } | undefined | null, callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void): void;
+    export function readFile(path: PathLike | number, options: { encoding?: null; flag?: string; } | undefined | null, callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void): void;
 
     /**
      * Asynchronously reads the entire contents of a file.
@@ -9853,7 +10065,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
      * If a flag is not provided, it defaults to \`'r'\`.
      */
-    function readFile(path: PathLike | number, options: { encoding: string; flag?: string; } | string, callback: (err: NodeJS.ErrnoException | null, data: string) => void): void;
+    export function readFile(path: PathLike | number, options: { encoding: BufferEncoding; flag?: string; } | string, callback: (err: NodeJS.ErrnoException | null, data: string) => void): void;
 
     /**
      * Asynchronously reads the entire contents of a file.
@@ -9863,9 +10075,9 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
      * If a flag is not provided, it defaults to \`'r'\`.
      */
-    function readFile(
+    export function readFile(
         path: PathLike | number,
-        options: { encoding?: string | null; flag?: string; } | string | undefined | null,
+        options: BaseEncodingOptions & { flag?: string; } | string | undefined | null,
         callback: (err: NodeJS.ErrnoException | null, data: string | Buffer) => void,
     ): void;
 
@@ -9874,10 +10086,10 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
      */
-    function readFile(path: PathLike | number, callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void): void;
+    export function readFile(path: PathLike | number, callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace readFile {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace readFile {
         /**
          * Asynchronously reads the entire contents of a file.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -9895,7 +10107,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
          * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
          * If a flag is not provided, it defaults to \`'r'\`.
          */
-        function __promisify__(path: PathLike | number, options: { encoding: string; flag?: string; } | string): Promise<string>;
+        function __promisify__(path: PathLike | number, options: { encoding: BufferEncoding; flag?: string; } | string): Promise<string>;
 
         /**
          * Asynchronously reads the entire contents of a file.
@@ -9905,7 +10117,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
          * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
          * If a flag is not provided, it defaults to \`'r'\`.
          */
-        function __promisify__(path: PathLike | number, options?: { encoding?: string | null; flag?: string; } | string | null): Promise<string | Buffer>;
+        function __promisify__(path: PathLike | number, options?: BaseEncodingOptions & { flag?: string; } | string | null): Promise<string | Buffer>;
     }
 
     /**
@@ -9915,7 +10127,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
      * @param options An object that may contain an optional flag. If a flag is not provided, it defaults to \`'r'\`.
      */
-    function readFileSync(path: PathLike | number, options?: { encoding?: null; flag?: string; } | null): Buffer;
+    export function readFileSync(path: PathLike | number, options?: { encoding?: null; flag?: string; } | null): Buffer;
 
     /**
      * Synchronously reads the entire contents of a file.
@@ -9925,7 +10137,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
      * If a flag is not provided, it defaults to \`'r'\`.
      */
-    function readFileSync(path: PathLike | number, options: { encoding: string; flag?: string; } | string): string;
+    export function readFileSync(path: PathLike | number, options: { encoding: BufferEncoding; flag?: string; } | BufferEncoding): string;
 
     /**
      * Synchronously reads the entire contents of a file.
@@ -9935,9 +10147,9 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
      * If a flag is not provided, it defaults to \`'r'\`.
      */
-    function readFileSync(path: PathLike | number, options?: { encoding?: string | null; flag?: string; } | string | null): string | Buffer;
+    export function readFileSync(path: PathLike | number, options?: BaseEncodingOptions & { flag?: string; } | BufferEncoding | null): string | Buffer;
 
-    type WriteFileOptions = { encoding?: string | null; mode?: number | string; flag?: string; } | string | null;
+    export type WriteFileOptions = BaseEncodingOptions & { mode?: Mode; flag?: string; } | string | null;
 
     /**
      * Asynchronously writes data to a file, replacing the file if it already exists.
@@ -9951,7 +10163,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If \`mode\` is a string, it is parsed as an octal integer.
      * If \`flag\` is not supplied, the default of \`'w'\` is used.
      */
-    function writeFile(path: PathLike | number, data: any, options: WriteFileOptions, callback: NoParamCallback): void;
+    export function writeFile(path: PathLike | number, data: string | NodeJS.ArrayBufferView, options: WriteFileOptions, callback: NoParamCallback): void;
 
     /**
      * Asynchronously writes data to a file, replacing the file if it already exists.
@@ -9960,10 +10172,10 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
      * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
      */
-    function writeFile(path: PathLike | number, data: any, callback: NoParamCallback): void;
+    export function writeFile(path: PathLike | number, data: string | NodeJS.ArrayBufferView, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace writeFile {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace writeFile {
         /**
          * Asynchronously writes data to a file, replacing the file if it already exists.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -9976,7 +10188,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
          * If \`mode\` is a string, it is parsed as an octal integer.
          * If \`flag\` is not supplied, the default of \`'w'\` is used.
          */
-        function __promisify__(path: PathLike | number, data: any, options?: WriteFileOptions): Promise<void>;
+        function __promisify__(path: PathLike | number, data: string | NodeJS.ArrayBufferView, options?: WriteFileOptions): Promise<void>;
     }
 
     /**
@@ -9991,7 +10203,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If \`mode\` is a string, it is parsed as an octal integer.
      * If \`flag\` is not supplied, the default of \`'w'\` is used.
      */
-    function writeFileSync(path: PathLike | number, data: any, options?: WriteFileOptions): void;
+    export function writeFileSync(path: PathLike | number, data: string | NodeJS.ArrayBufferView, options?: WriteFileOptions): void;
 
     /**
      * Asynchronously append data to a file, creating the file if it does not exist.
@@ -10005,7 +10217,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If \`mode\` is a string, it is parsed as an octal integer.
      * If \`flag\` is not supplied, the default of \`'a'\` is used.
      */
-    function appendFile(file: PathLike | number, data: any, options: WriteFileOptions, callback: NoParamCallback): void;
+    export function appendFile(file: PathLike | number, data: string | Uint8Array, options: WriteFileOptions, callback: NoParamCallback): void;
 
     /**
      * Asynchronously append data to a file, creating the file if it does not exist.
@@ -10014,10 +10226,10 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
      * @param data The data to write. If something other than a Buffer or Uint8Array is provided, the value is coerced to a string.
      */
-    function appendFile(file: PathLike | number, data: any, callback: NoParamCallback): void;
+    export function appendFile(file: PathLike | number, data: string | Uint8Array, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace appendFile {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace appendFile {
         /**
          * Asynchronously append data to a file, creating the file if it does not exist.
          * @param file A path to a file. If a URL is provided, it must use the \`file:\` protocol.
@@ -10030,7 +10242,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
          * If \`mode\` is a string, it is parsed as an octal integer.
          * If \`flag\` is not supplied, the default of \`'a'\` is used.
          */
-        function __promisify__(file: PathLike | number, data: any, options?: WriteFileOptions): Promise<void>;
+        function __promisify__(file: PathLike | number, data: string | Uint8Array, options?: WriteFileOptions): Promise<void>;
     }
 
     /**
@@ -10045,26 +10257,26 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If \`mode\` is a string, it is parsed as an octal integer.
      * If \`flag\` is not supplied, the default of \`'a'\` is used.
      */
-    function appendFileSync(file: PathLike | number, data: any, options?: WriteFileOptions): void;
+    export function appendFileSync(file: PathLike | number, data: string | Uint8Array, options?: WriteFileOptions): void;
 
     /**
      * Watch for changes on \`filename\`. The callback \`listener\` will be called each time the file is accessed.
      */
-    function watchFile(filename: PathLike, options: { persistent?: boolean; interval?: number; } | undefined, listener: (curr: Stats, prev: Stats) => void): void;
+    export function watchFile(filename: PathLike, options: { persistent?: boolean; interval?: number; } | undefined, listener: (curr: Stats, prev: Stats) => void): void;
 
     /**
      * Watch for changes on \`filename\`. The callback \`listener\` will be called each time the file is accessed.
      * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function watchFile(filename: PathLike, listener: (curr: Stats, prev: Stats) => void): void;
+    export function watchFile(filename: PathLike, listener: (curr: Stats, prev: Stats) => void): void;
 
     /**
      * Stop watching for changes on \`filename\`.
      * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function unwatchFile(filename: PathLike, listener?: (curr: Stats, prev: Stats) => void): void;
+    export function unwatchFile(filename: PathLike, listener?: (curr: Stats, prev: Stats) => void): void;
 
     /**
      * Watch for changes on \`filename\`, where \`filename\` is either a file or a directory, returning an \`FSWatcher\`.
@@ -10075,7 +10287,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If \`persistent\` is not supplied, the default of \`true\` is used.
      * If \`recursive\` is not supplied, the default of \`false\` is used.
      */
-    function watch(
+    export function watch(
         filename: PathLike,
         options: { encoding?: BufferEncoding | null, persistent?: boolean, recursive?: boolean } | BufferEncoding | undefined | null,
         listener?: (event: string, filename: string) => void,
@@ -10090,7 +10302,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If \`persistent\` is not supplied, the default of \`true\` is used.
      * If \`recursive\` is not supplied, the default of \`false\` is used.
      */
-    function watch(filename: PathLike, options: { encoding: "buffer", persistent?: boolean, recursive?: boolean } | "buffer", listener?: (event: string, filename: Buffer) => void): FSWatcher;
+    export function watch(filename: PathLike, options: { encoding: "buffer", persistent?: boolean, recursive?: boolean } | "buffer", listener?: (event: string, filename: Buffer) => void): FSWatcher;
 
     /**
      * Watch for changes on \`filename\`, where \`filename\` is either a file or a directory, returning an \`FSWatcher\`.
@@ -10101,9 +10313,9 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * If \`persistent\` is not supplied, the default of \`true\` is used.
      * If \`recursive\` is not supplied, the default of \`false\` is used.
      */
-    function watch(
+    export function watch(
         filename: PathLike,
-        options: { encoding?: string | null, persistent?: boolean, recursive?: boolean } | string | null,
+        options: { encoding?: BufferEncoding | null, persistent?: boolean, recursive?: boolean } | string | null,
         listener?: (event: string, filename: string | Buffer) => void,
     ): FSWatcher;
 
@@ -10112,18 +10324,18 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function watch(filename: PathLike, listener?: (event: string, filename: string) => any): FSWatcher;
+    export function watch(filename: PathLike, listener?: (event: string, filename: string) => any): FSWatcher;
 
     /**
      * Asynchronously tests whether or not the given path exists by checking with the file system.
-     * @deprecated
+     * @deprecated since v1.0.0 Use \`fs.stat()\` or \`fs.access()\` instead
      * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function exists(path: PathLike, callback: (exists: boolean) => void): void;
+    export function exists(path: PathLike, callback: (exists: boolean) => void): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace exists {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace exists {
         /**
          * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
          * URL support is _experimental_.
@@ -10136,10 +10348,10 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function existsSync(path: PathLike): boolean;
+    export function existsSync(path: PathLike): boolean;
 
-    namespace constants {
-        // File Access Constants
+    export namespace constants {
+        \/\/ File Access Constants
 
         /** Constant for fs.access(). File is visible to the calling process. */
         const F_OK: number;
@@ -10153,7 +10365,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
         /** Constant for fs.access(). File can be executed by the calling process. */
         const X_OK: number;
 
-        // File Copy Constants
+        \/\/ File Copy Constants
 
         /** Constant for fs.copyFile. Flag indicating the destination file should not be overwritten if it already exists. */
         const COPYFILE_EXCL: number;
@@ -10170,7 +10382,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
          */
         const COPYFILE_FICLONE_FORCE: number;
 
-        // File Open Constants
+        \/\/ File Open Constants
 
         /** Constant for fs.open(). Flag indicating to open a file for read-only access. */
         const O_RDONLY: number;
@@ -10229,7 +10441,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
         /** Constant for fs.open(). Flag indicating to open the file in nonblocking mode when possible. */
         const O_NONBLOCK: number;
 
-        // File Type Constants
+        \/\/ File Type Constants
 
         /** Constant for fs.Stats mode property for determining a file's type. Bit mask used to extract the file type code. */
         const S_IFMT: number;
@@ -10255,7 +10467,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
         /** Constant for fs.Stats mode property for determining a file's type. File type constant for a socket. */
         const S_IFSOCK: number;
 
-        // File Mode Constants
+        \/\/ File Mode Constants
 
         /** Constant for fs.Stats mode property for determining access permissions for a file. File mode indicating readable, writable and executable by owner. */
         const S_IRWXU: number;
@@ -10306,17 +10518,17 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function access(path: PathLike, mode: number | undefined, callback: NoParamCallback): void;
+    export function access(path: PathLike, mode: number | undefined, callback: NoParamCallback): void;
 
     /**
      * Asynchronously tests a user's permissions for the file specified by path.
      * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function access(path: PathLike, callback: NoParamCallback): void;
+    export function access(path: PathLike, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace access {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace access {
         /**
          * Asynchronously tests a user's permissions for the file specified by path.
          * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
@@ -10330,16 +10542,16 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function accessSync(path: PathLike, mode?: number): void;
+    export function accessSync(path: PathLike, mode?: number): void;
 
     /**
      * Returns a new \`ReadStream\` object.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function createReadStream(path: PathLike, options?: string | {
+    export function createReadStream(path: PathLike, options?: string | {
         flags?: string;
-        encoding?: string;
+        encoding?: BufferEncoding;
         fd?: number;
         mode?: number;
         autoClose?: boolean;
@@ -10357,9 +10569,9 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    function createWriteStream(path: PathLike, options?: string | {
+    export function createWriteStream(path: PathLike, options?: string | {
         flags?: string;
-        encoding?: string;
+        encoding?: BufferEncoding;
         fd?: number;
         mode?: number;
         autoClose?: boolean;
@@ -10372,10 +10584,10 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
      * @param fd A file descriptor.
      */
-    function fdatasync(fd: number, callback: NoParamCallback): void;
+    export function fdatasync(fd: number, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace fdatasync {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace fdatasync {
         /**
          * Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
          * @param fd A file descriptor.
@@ -10387,7 +10599,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * Synchronous fdatasync(2) - synchronize a file's in-core state with storage device.
      * @param fd A file descriptor.
      */
-    function fdatasyncSync(fd: number): void;
+    export function fdatasyncSync(fd: number): void;
 
     /**
      * Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
@@ -10398,7 +10610,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param src A path to the source file.
      * @param dest A path to the destination file.
      */
-    function copyFile(src: PathLike, dest: PathLike, callback: NoParamCallback): void;
+    export function copyFile(src: PathLike, dest: PathLike, callback: NoParamCallback): void;
     /**
      * Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
      * No arguments other than a possible exception are given to the callback function.
@@ -10409,10 +10621,10 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param dest A path to the destination file.
      * @param flags An integer that specifies the behavior of the copy operation. The only supported flag is fs.constants.COPYFILE_EXCL, which causes the copy operation to fail if dest already exists.
      */
-    function copyFile(src: PathLike, dest: PathLike, flags: number, callback: NoParamCallback): void;
+    export function copyFile(src: PathLike, dest: PathLike, flags: number, callback: NoParamCallback): void;
 
-    // NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
-    namespace copyFile {
+    \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
+    export namespace copyFile {
         /**
          * Asynchronously copies src to dest. By default, dest is overwritten if it already exists.
          * No arguments other than a possible exception are given to the callback function.
@@ -10438,7 +10650,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * @param flags An optional integer that specifies the behavior of the copy operation.
      * The only supported flag is fs.constants.COPYFILE_EXCL, which causes the copy operation to fail if dest already exists.
      */
-    function copyFileSync(src: PathLike, dest: PathLike, flags?: number): void;
+    export function copyFileSync(src: PathLike, dest: PathLike, flags?: number): void;
 
     /**
      * Write an array of ArrayBufferViews to the file specified by fd using writev().
@@ -10447,703 +10659,123 @@ module.exports['fs.d.ts'] = `declare module "fs" {
      * On Linux, positional writes don't work when the file is opened in append mode.
      * The kernel ignores the position argument and always appends the data to the end of the file.
      */
-    function writev(
+    export function writev(
         fd: number,
-        buffers: NodeJS.ArrayBufferView[],
+        buffers: ReadonlyArray<NodeJS.ArrayBufferView>,
         cb: (err: NodeJS.ErrnoException | null, bytesWritten: number, buffers: NodeJS.ArrayBufferView[]) => void
     ): void;
-    function writev(
+    export function writev(
         fd: number,
-        buffers: NodeJS.ArrayBufferView[],
+        buffers: ReadonlyArray<NodeJS.ArrayBufferView>,
         position: number,
         cb: (err: NodeJS.ErrnoException | null, bytesWritten: number, buffers: NodeJS.ArrayBufferView[]) => void
     ): void;
 
-    interface WriteVResult {
+    export interface WriteVResult {
         bytesWritten: number;
         buffers: NodeJS.ArrayBufferView[];
     }
 
-    namespace writev {
-        function __promisify__(fd: number, buffers: NodeJS.ArrayBufferView[], position?: number): Promise<WriteVResult>;
+    export namespace writev {
+        function __promisify__(fd: number, buffers: ReadonlyArray<NodeJS.ArrayBufferView>, position?: number): Promise<WriteVResult>;
     }
 
     /**
      * See \`writev\`.
      */
-    function writevSync(fd: number, buffers: NodeJS.ArrayBufferView[], position?: number): number;
+    export function writevSync(fd: number, buffers: ReadonlyArray<NodeJS.ArrayBufferView>, position?: number): number;
 
-    interface OpenDirOptions {
-        encoding?: BufferEncoding;
+    export function readv(
+        fd: number,
+        buffers: ReadonlyArray<NodeJS.ArrayBufferView>,
+        cb: (err: NodeJS.ErrnoException | null, bytesRead: number, buffers: NodeJS.ArrayBufferView[]) => void
+    ): void;
+    export function readv(
+        fd: number,
+        buffers: ReadonlyArray<NodeJS.ArrayBufferView>,
+        position: number,
+        cb: (err: NodeJS.ErrnoException | null, bytesRead: number, buffers: NodeJS.ArrayBufferView[]) => void
+    ): void;
+
+    export interface ReadVResult {
+        bytesRead: number;
+        buffers: NodeJS.ArrayBufferView[];
     }
 
-    function opendirSync(path: string, options?: OpenDirOptions): Dir;
+    export namespace readv {
+        function __promisify__(fd: number, buffers: ReadonlyArray<NodeJS.ArrayBufferView>, position?: number): Promise<ReadVResult>;
+    }
 
-    function opendir(path: string, cb: (err: NodeJS.ErrnoException | null, dir: Dir) => void): void;
-    function opendir(path: string, options: OpenDirOptions, cb: (err: NodeJS.ErrnoException | null, dir: Dir) => void): void;
+    /**
+     * See \`readv\`.
+     */
+    export function readvSync(fd: number, buffers: ReadonlyArray<NodeJS.ArrayBufferView>, position?: number): number;
 
-    namespace opendir {
+    export interface OpenDirOptions {
+        encoding?: BufferEncoding;
+        /**
+         * Number of directory entries that are buffered
+         * internally when reading from the directory. Higher values lead to better
+         * performance but higher memory usage.
+         * @default 32
+         */
+        bufferSize?: number;
+    }
+
+    export function opendirSync(path: string, options?: OpenDirOptions): Dir;
+
+    export function opendir(path: string, cb: (err: NodeJS.ErrnoException | null, dir: Dir) => void): void;
+    export function opendir(path: string, options: OpenDirOptions, cb: (err: NodeJS.ErrnoException | null, dir: Dir) => void): void;
+
+    export namespace opendir {
         function __promisify__(path: string, options?: OpenDirOptions): Promise<Dir>;
     }
 
-    namespace promises {
-        interface FileHandle {
-            /**
-             * Gets the file descriptor for this file handle.
-             */
-            readonly fd: number;
+    export interface BigIntStats extends StatsBase<bigint> {
+    }
 
-            /**
-             * Asynchronously append data to a file, creating the file if it does not exist. The underlying file will _not_ be closed automatically.
-             * The \`FileHandle\` must have been opened for appending.
-             * @param data The data to write. If something other than a \`Buffer\` or \`Uint8Array\` is provided, the value is coerced to a string.
-             * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
-             * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
-             * If \`mode\` is not supplied, the default of \`0o666\` is used.
-             * If \`mode\` is a string, it is parsed as an octal integer.
-             * If \`flag\` is not supplied, the default of \`'a'\` is used.
-             */
-            appendFile(data: any, options?: { encoding?: string | null, mode?: string | number, flag?: string | number } | string | null): Promise<void>;
+    export class BigIntStats {
+        atimeNs: bigint;
+        mtimeNs: bigint;
+        ctimeNs: bigint;
+        birthtimeNs: bigint;
+    }
 
-            /**
-             * Asynchronous fchown(2) - Change ownership of a file.
-             */
-            chown(uid: number, gid: number): Promise<void>;
+    export interface BigIntOptions {
+        bigint: true;
+    }
 
-            /**
-             * Asynchronous fchmod(2) - Change permissions of a file.
-             * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
-             */
-            chmod(mode: string | number): Promise<void>;
-
-            /**
-             * Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
-             */
-            datasync(): Promise<void>;
-
-            /**
-             * Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
-             */
-            sync(): Promise<void>;
-
-            /**
-             * Asynchronously reads data from the file.
-             * The \`FileHandle\` must have been opened for reading.
-             * @param buffer The buffer that the data will be written to.
-             * @param offset The offset in the buffer at which to start writing.
-             * @param length The number of bytes to read.
-             * @param position The offset from the beginning of the file from which data should be read. If \`null\`, data will be read from the current position.
-             */
-            read<TBuffer extends Uint8Array>(buffer: TBuffer, offset?: number | null, length?: number | null, position?: number | null): Promise<{ bytesRead: number, buffer: TBuffer }>;
-
-            /**
-             * Asynchronously reads the entire contents of a file. The underlying file will _not_ be closed automatically.
-             * The \`FileHandle\` must have been opened for reading.
-             * @param options An object that may contain an optional flag.
-             * If a flag is not provided, it defaults to \`'r'\`.
-             */
-            readFile(options?: { encoding?: null, flag?: string | number } | null): Promise<Buffer>;
-
-            /**
-             * Asynchronously reads the entire contents of a file. The underlying file will _not_ be closed automatically.
-             * The \`FileHandle\` must have been opened for reading.
-             * @param options An object that may contain an optional flag.
-             * If a flag is not provided, it defaults to \`'r'\`.
-             */
-            readFile(options: { encoding: BufferEncoding, flag?: string | number } | BufferEncoding): Promise<string>;
-
-            /**
-             * Asynchronously reads the entire contents of a file. The underlying file will _not_ be closed automatically.
-             * The \`FileHandle\` must have been opened for reading.
-             * @param options An object that may contain an optional flag.
-             * If a flag is not provided, it defaults to \`'r'\`.
-             */
-            readFile(options?: { encoding?: string | null, flag?: string | number } | string | null): Promise<string | Buffer>;
-
-            /**
-             * Asynchronous fstat(2) - Get file status.
-             */
-            stat(): Promise<Stats>;
-
-            /**
-             * Asynchronous ftruncate(2) - Truncate a file to a specified length.
-             * @param len If not specified, defaults to \`0\`.
-             */
-            truncate(len?: number): Promise<void>;
-
-            /**
-             * Asynchronously change file timestamps of the file.
-             * @param atime The last access time. If a string is provided, it will be coerced to number.
-             * @param mtime The last modified time. If a string is provided, it will be coerced to number.
-             */
-            utimes(atime: string | number | Date, mtime: string | number | Date): Promise<void>;
-
-            /**
-             * Asynchronously writes \`buffer\` to the file.
-             * The \`FileHandle\` must have been opened for writing.
-             * @param buffer The buffer that the data will be written to.
-             * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
-             * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
-             * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
-             */
-            write<TBuffer extends Uint8Array>(buffer: TBuffer, offset?: number | null, length?: number | null, position?: number | null): Promise<{ bytesWritten: number, buffer: TBuffer }>;
-
-            /**
-             * Asynchronously writes \`string\` to the file.
-             * The \`FileHandle\` must have been opened for writing.
-             * It is unsafe to call \`write()\` multiple times on the same file without waiting for the \`Promise\`
-             * to be resolved (or rejected). For this scenario, \`fs.createWriteStream\` is strongly recommended.
-             * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
-             * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
-             * @param encoding The expected string encoding.
-             */
-            write(data: any, position?: number | null, encoding?: string | null): Promise<{ bytesWritten: number, buffer: string }>;
-
-            /**
-             * Asynchronously writes data to a file, replacing the file if it already exists. The underlying file will _not_ be closed automatically.
-             * The \`FileHandle\` must have been opened for writing.
-             * It is unsafe to call \`writeFile()\` multiple times on the same file without waiting for the \`Promise\` to be resolved (or rejected).
-             * @param data The data to write. If something other than a \`Buffer\` or \`Uint8Array\` is provided, the value is coerced to a string.
-             * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
-             * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
-             * If \`mode\` is not supplied, the default of \`0o666\` is used.
-             * If \`mode\` is a string, it is parsed as an octal integer.
-             * If \`flag\` is not supplied, the default of \`'w'\` is used.
-             */
-            writeFile(data: any, options?: { encoding?: string | null, mode?: string | number, flag?: string | number } | string | null): Promise<void>;
-
-            /**
-             * See \`fs.writev\` promisified version.
-             */
-            writev(buffers: NodeJS.ArrayBufferView[], position?: number): Promise<WriteVResult>;
-
-            /**
-             * Asynchronous close(2) - close a \`FileHandle\`.
-             */
-            close(): Promise<void>;
-        }
-
-        /**
-         * Asynchronously tests a user's permissions for the file specified by path.
-         * @param path A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
-         * URL support is _experimental_.
-         */
-        function access(path: PathLike, mode?: number): Promise<void>;
-
-        /**
-         * Asynchronously copies \`src\` to \`dest\`. By default, \`dest\` is overwritten if it already exists.
-         * Node.js makes no guarantees about the atomicity of the copy operation.
-         * If an error occurs after the destination file has been opened for writing, Node.js will attempt
-         * to remove the destination.
-         * @param src A path to the source file.
-         * @param dest A path to the destination file.
-         * @param flags An optional integer that specifies the behavior of the copy operation. The only
-         * supported flag is \`fs.constants.COPYFILE_EXCL\`, which causes the copy operation to fail if
-         * \`dest\` already exists.
-         */
-        function copyFile(src: PathLike, dest: PathLike, flags?: number): Promise<void>;
-
-        /**
-         * Asynchronous open(2) - open and possibly create a file.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param mode A file mode. If a string is passed, it is parsed as an octal integer. If not
-         * supplied, defaults to \`0o666\`.
-         */
-        function open(path: PathLike, flags: string | number, mode?: string | number): Promise<FileHandle>;
-
-        /**
-         * Asynchronously reads data from the file referenced by the supplied \`FileHandle\`.
-         * @param handle A \`FileHandle\`.
-         * @param buffer The buffer that the data will be written to.
-         * @param offset The offset in the buffer at which to start writing.
-         * @param length The number of bytes to read.
-         * @param position The offset from the beginning of the file from which data should be read. If
-         * \`null\`, data will be read from the current position.
-         */
-        function read<TBuffer extends Uint8Array>(
-            handle: FileHandle,
-            buffer: TBuffer,
-            offset?: number | null,
-            length?: number | null,
-            position?: number | null,
-        ): Promise<{ bytesRead: number, buffer: TBuffer }>;
-
-        /**
-         * Asynchronously writes \`buffer\` to the file referenced by the supplied \`FileHandle\`.
-         * It is unsafe to call \`fsPromises.write()\` multiple times on the same file without waiting for the \`Promise\`
-         * to be resolved (or rejected). For this scenario, \`fs.createWriteStream\` is strongly recommended.
-         * @param handle A \`FileHandle\`.
-         * @param buffer The buffer that the data will be written to.
-         * @param offset The part of the buffer to be written. If not supplied, defaults to \`0\`.
-         * @param length The number of bytes to write. If not supplied, defaults to \`buffer.length - offset\`.
-         * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
-         */
-        function write<TBuffer extends Uint8Array>(
-            handle: FileHandle,
-            buffer: TBuffer,
-            offset?: number | null,
-            length?: number | null, position?: number | null): Promise<{ bytesWritten: number, buffer: TBuffer }>;
-
-        /**
-         * Asynchronously writes \`string\` to the file referenced by the supplied \`FileHandle\`.
-         * It is unsafe to call \`fsPromises.write()\` multiple times on the same file without waiting for the \`Promise\`
-         * to be resolved (or rejected). For this scenario, \`fs.createWriteStream\` is strongly recommended.
-         * @param handle A \`FileHandle\`.
-         * @param string A string to write. If something other than a string is supplied it will be coerced to a string.
-         * @param position The offset from the beginning of the file where this data should be written. If not supplied, defaults to the current position.
-         * @param encoding The expected string encoding.
-         */
-        function write(handle: FileHandle, string: any, position?: number | null, encoding?: string | null): Promise<{ bytesWritten: number, buffer: string }>;
-
-        /**
-         * Asynchronous rename(2) - Change the name or location of a file or directory.
-         * @param oldPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * URL support is _experimental_.
-         * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * URL support is _experimental_.
-         */
-        function rename(oldPath: PathLike, newPath: PathLike): Promise<void>;
-
-        /**
-         * Asynchronous truncate(2) - Truncate a file to a specified length.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param len If not specified, defaults to \`0\`.
-         */
-        function truncate(path: PathLike, len?: number): Promise<void>;
-
-        /**
-         * Asynchronous ftruncate(2) - Truncate a file to a specified length.
-         * @param handle A \`FileHandle\`.
-         * @param len If not specified, defaults to \`0\`.
-         */
-        function ftruncate(handle: FileHandle, len?: number): Promise<void>;
-
-        /**
-         * Asynchronous rmdir(2) - delete a directory.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         */
-        function rmdir(path: PathLike, options?: RmDirAsyncOptions): Promise<void>;
-
-        /**
-         * Asynchronous fdatasync(2) - synchronize a file's in-core state with storage device.
-         * @param handle A \`FileHandle\`.
-         */
-        function fdatasync(handle: FileHandle): Promise<void>;
-
-        /**
-         * Asynchronous fsync(2) - synchronize a file's in-core state with the underlying storage device.
-         * @param handle A \`FileHandle\`.
-         */
-        function fsync(handle: FileHandle): Promise<void>;
-
-        /**
-         * Asynchronous mkdir(2) - create a directory.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
-         * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
-         */
-        function mkdir(path: PathLike, options?: number | string | MakeDirectoryOptions | null): Promise<void>;
-
-        /**
-         * Asynchronous readdir(3) - read a directory.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function readdir(path: PathLike, options?: { encoding?: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null): Promise<string[]>;
-
-        /**
-         * Asynchronous readdir(3) - read a directory.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function readdir(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer"): Promise<Buffer[]>;
-
-        /**
-         * Asynchronous readdir(3) - read a directory.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function readdir(path: PathLike, options?: { encoding?: string | null; withFileTypes?: false } | string | null): Promise<string[] | Buffer[]>;
-
-        /**
-         * Asynchronous readdir(3) - read a directory.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options If called with \`withFileTypes: true\` the result data will be an array of Dirent.
-         */
-        function readdir(path: PathLike, options: { encoding?: string | null; withFileTypes: true }): Promise<Dirent[]>;
-
-        /**
-         * Asynchronous readlink(2) - read value of a symbolic link.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function readlink(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
-
-        /**
-         * Asynchronous readlink(2) - read value of a symbolic link.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function readlink(path: PathLike, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
-
-        /**
-         * Asynchronous readlink(2) - read value of a symbolic link.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function readlink(path: PathLike, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
-
-        /**
-         * Asynchronous symlink(2) - Create a new symbolic link to an existing file.
-         * @param target A path to an existing file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param path A path to the new symlink. If a URL is provided, it must use the \`file:\` protocol.
-         * @param type May be set to \`'dir'\`, \`'file'\`, or \`'junction'\` (default is \`'file'\`) and is only available on Windows (ignored on other platforms).
-         * When using \`'junction'\`, the \`target\` argument will automatically be normalized to an absolute path.
-         */
-        function symlink(target: PathLike, path: PathLike, type?: string | null): Promise<void>;
-
-        /**
-         * Asynchronous fstat(2) - Get file status.
-         * @param handle A \`FileHandle\`.
-         */
-        function fstat(handle: FileHandle): Promise<Stats>;
-
-        /**
-         * Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         */
-        function lstat(path: PathLike): Promise<Stats>;
-
-        /**
-         * Asynchronous stat(2) - Get file status.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         */
-        function stat(path: PathLike): Promise<Stats>;
-
-        /**
-         * Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
-         * @param existingPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param newPath A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         */
-        function link(existingPath: PathLike, newPath: PathLike): Promise<void>;
-
-        /**
-         * Asynchronous unlink(2) - delete a name and possibly the file it refers to.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         */
-        function unlink(path: PathLike): Promise<void>;
-
-        /**
-         * Asynchronous fchmod(2) - Change permissions of a file.
-         * @param handle A \`FileHandle\`.
-         * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
-         */
-        function fchmod(handle: FileHandle, mode: string | number): Promise<void>;
-
-        /**
-         * Asynchronous chmod(2) - Change permissions of a file.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
-         */
-        function chmod(path: PathLike, mode: string | number): Promise<void>;
-
-        /**
-         * Asynchronous lchmod(2) - Change permissions of a file. Does not dereference symbolic links.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param mode A file mode. If a string is passed, it is parsed as an octal integer.
-         */
-        function lchmod(path: PathLike, mode: string | number): Promise<void>;
-
-        /**
-         * Asynchronous lchown(2) - Change ownership of a file. Does not dereference symbolic links.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         */
-        function lchown(path: PathLike, uid: number, gid: number): Promise<void>;
-
-        /**
-         * Asynchronous fchown(2) - Change ownership of a file.
-         * @param handle A \`FileHandle\`.
-         */
-        function fchown(handle: FileHandle, uid: number, gid: number): Promise<void>;
-
-        /**
-         * Asynchronous chown(2) - Change ownership of a file.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         */
-        function chown(path: PathLike, uid: number, gid: number): Promise<void>;
-
-        /**
-         * Asynchronously change file timestamps of the file referenced by the supplied path.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param atime The last access time. If a string is provided, it will be coerced to number.
-         * @param mtime The last modified time. If a string is provided, it will be coerced to number.
-         */
-        function utimes(path: PathLike, atime: string | number | Date, mtime: string | number | Date): Promise<void>;
-
-        /**
-         * Asynchronously change file timestamps of the file referenced by the supplied \`FileHandle\`.
-         * @param handle A \`FileHandle\`.
-         * @param atime The last access time. If a string is provided, it will be coerced to number.
-         * @param mtime The last modified time. If a string is provided, it will be coerced to number.
-         */
-        function futimes(handle: FileHandle, atime: string | number | Date, mtime: string | number | Date): Promise<void>;
-
-        /**
-         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function realpath(path: PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
-
-        /**
-         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function realpath(path: PathLike, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
-
-        /**
-         * Asynchronous realpath(3) - return the canonicalized absolute pathname.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function realpath(path: PathLike, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
-
-        /**
-         * Asynchronously creates a unique temporary directory.
-         * Generates six random characters to be appended behind a required \`prefix\` to create a unique temporary directory.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function mkdtemp(prefix: string, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null): Promise<string>;
-
-        /**
-         * Asynchronously creates a unique temporary directory.
-         * Generates six random characters to be appended behind a required \`prefix\` to create a unique temporary directory.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function mkdtemp(prefix: string, options: { encoding: "buffer" } | "buffer"): Promise<Buffer>;
-
-        /**
-         * Asynchronously creates a unique temporary directory.
-         * Generates six random characters to be appended behind a required \`prefix\` to create a unique temporary directory.
-         * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
-         */
-        function mkdtemp(prefix: string, options?: { encoding?: string | null } | string | null): Promise<string | Buffer>;
-
-        /**
-         * Asynchronously writes data to a file, replacing the file if it already exists.
-         * It is unsafe to call \`fsPromises.writeFile()\` multiple times on the same file without waiting for the \`Promise\` to be resolved (or rejected).
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * URL support is _experimental_.
-         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
-         * @param data The data to write. If something other than a \`Buffer\` or \`Uint8Array\` is provided, the value is coerced to a string.
-         * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
-         * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
-         * If \`mode\` is not supplied, the default of \`0o666\` is used.
-         * If \`mode\` is a string, it is parsed as an octal integer.
-         * If \`flag\` is not supplied, the default of \`'w'\` is used.
-         */
-        function writeFile(path: PathLike | FileHandle, data: any, options?: { encoding?: string | null, mode?: string | number, flag?: string | number } | string | null): Promise<void>;
-
-        /**
-         * Asynchronously append data to a file, creating the file if it does not exist.
-         * @param file A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * URL support is _experimental_.
-         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
-         * @param data The data to write. If something other than a \`Buffer\` or \`Uint8Array\` is provided, the value is coerced to a string.
-         * @param options Either the encoding for the file, or an object optionally specifying the encoding, file mode, and flag.
-         * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
-         * If \`mode\` is not supplied, the default of \`0o666\` is used.
-         * If \`mode\` is a string, it is parsed as an octal integer.
-         * If \`flag\` is not supplied, the default of \`'a'\` is used.
-         */
-        function appendFile(path: PathLike | FileHandle, data: any, options?: { encoding?: string | null, mode?: string | number, flag?: string | number } | string | null): Promise<void>;
-
-        /**
-         * Asynchronously reads the entire contents of a file.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
-         * @param options An object that may contain an optional flag.
-         * If a flag is not provided, it defaults to \`'r'\`.
-         */
-        function readFile(path: PathLike | FileHandle, options?: { encoding?: null, flag?: string | number } | null): Promise<Buffer>;
-
-        /**
-         * Asynchronously reads the entire contents of a file.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
-         * @param options An object that may contain an optional flag.
-         * If a flag is not provided, it defaults to \`'r'\`.
-         */
-        function readFile(path: PathLike | FileHandle, options: { encoding: BufferEncoding, flag?: string | number } | BufferEncoding): Promise<string>;
-
-        /**
-         * Asynchronously reads the entire contents of a file.
-         * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-         * If a \`FileHandle\` is provided, the underlying file will _not_ be closed automatically.
-         * @param options An object that may contain an optional flag.
-         * If a flag is not provided, it defaults to \`'r'\`.
-         */
-        function readFile(path: PathLike | FileHandle, options?: { encoding?: string | null, flag?: string | number } | string | null): Promise<string | Buffer>;
-
-        function opendir(path: string, options?: OpenDirOptions): Promise<Dir>;
+    export interface StatOptions {
+        bigint: boolean;
     }
 }
 `;
-module.exports['globals.d.ts'] = `// This needs to be global to avoid TS2403 in case lib.dom.d.ts is present in the same build
-interface Console {
-    Console: NodeJS.ConsoleConstructor;
-    /**
-     * A simple assertion test that verifies whether \`value\` is truthy.
-     * If it is not, an \`AssertionError\` is thrown.
-     * If provided, the error \`message\` is formatted using \`util.format()\` and used as the error message.
-     */
-    assert(value: any, message?: string, ...optionalParams: any[]): void;
-    /**
-     * When \`stdout\` is a TTY, calling \`console.clear()\` will attempt to clear the TTY.
-     * When \`stdout\` is not a TTY, this method does nothing.
-     */
-    clear(): void;
-    /**
-     * Maintains an internal counter specific to \`label\` and outputs to \`stdout\` the number of times \`console.count()\` has been called with the given \`label\`.
-     */
-    count(label?: string): void;
-    /**
-     * Resets the internal counter specific to \`label\`.
-     */
-    countReset(label?: string): void;
-    /**
-     * The \`console.debug()\` function is an alias for {@link console.log()}.
-     */
-    debug(message?: any, ...optionalParams: any[]): void;
-    /**
-     * Uses {@link util.inspect()} on \`obj\` and prints the resulting string to \`stdout\`.
-     * This function bypasses any custom \`inspect()\` function defined on \`obj\`.
-     */
-    dir(obj: any, options?: NodeJS.InspectOptions): void;
-    /**
-     * This method calls {@link console.log()} passing it the arguments received. Please note that this method does not produce any XML formatting
-     */
-    dirxml(...data: any[]): void;
-    /**
-     * Prints to \`stderr\` with newline.
-     */
-    error(message?: any, ...optionalParams: any[]): void;
-    /**
-     * Increases indentation of subsequent lines by two spaces.
-     * If one or more \`label\`s are provided, those are printed first without the additional indentation.
-     */
-    group(...label: any[]): void;
-    /**
-     * The \`console.groupCollapsed()\` function is an alias for {@link console.group()}.
-     */
-    groupCollapsed(...label: any[]): void;
-    /**
-     * Decreases indentation of subsequent lines by two spaces.
-     */
-    groupEnd(): void;
-    /**
-     * The {@link console.info()} function is an alias for {@link console.log()}.
-     */
-    info(message?: any, ...optionalParams: any[]): void;
-    /**
-     * Prints to \`stdout\` with newline.
-     */
-    log(message?: any, ...optionalParams: any[]): void;
-    /**
-     * This method does not display anything unless used in the inspector.
-     *  Prints to \`stdout\` the array \`array\` formatted as a table.
-     */
-    table(tabularData: any, properties?: string[]): void;
-    /**
-     * Starts a timer that can be used to compute the duration of an operation. Timers are identified by a unique \`label\`.
-     */
-    time(label?: string): void;
-    /**
-     * Stops a timer that was previously started by calling {@link console.time()} and prints the result to \`stdout\`.
-     */
-    timeEnd(label?: string): void;
-    /**
-     * For a timer that was previously started by calling {@link console.time()}, prints the elapsed time and other \`data\` arguments to \`stdout\`.
-     */
-    timeLog(label?: string, ...data: any[]): void;
-    /**
-     * Prints to \`stderr\` the string 'Trace :', followed by the {@link util.format()} formatted message and stack trace to the current position in the code.
-     */
-    trace(message?: any, ...optionalParams: any[]): void;
-    /**
-     * The {@link console.warn()} function is an alias for {@link console.error()}.
-     */
-    warn(message?: any, ...optionalParams: any[]): void;
-
-    // --- Inspector mode only ---
-    /**
-     * This method does not display anything unless used in the inspector.
-     *  The console.markTimeline() method is the deprecated form of console.timeStamp().
-     *
-     * @deprecated Use console.timeStamp() instead.
-     */
-    markTimeline(label?: string): void;
-    /**
-     * This method does not display anything unless used in the inspector.
-     *  Starts a JavaScript CPU profile with an optional label.
-     */
-    profile(label?: string): void;
-    /**
-     * This method does not display anything unless used in the inspector.
-     *  Stops the current JavaScript CPU profiling session if one has been started and prints the report to the Profiles panel of the inspector.
-     */
-    profileEnd(label?: string): void;
-    /**
-     * This method does not display anything unless used in the inspector.
-     *  Adds an event with the label \`label\` to the Timeline panel of the inspector.
-     */
-    timeStamp(label?: string): void;
-    /**
-     * This method does not display anything unless used in the inspector.
-     *  The console.timeline() method is the deprecated form of console.time().
-     *
-     * @deprecated Use console.time() instead.
-     */
-    timeline(label?: string): void;
-    /**
-     * This method does not display anything unless used in the inspector.
-     *  The console.timelineEnd() method is the deprecated form of console.timeEnd().
-     *
-     * @deprecated Use console.timeEnd() instead.
-     */
-    timelineEnd(label?: string): void;
-}
-
-interface Error {
-    stack?: string;
-}
-
-// Declare "static" methods in Error
+module.exports['globals.d.ts'] = `\/\/ Declare "static" methods in Error
 interface ErrorConstructor {
     /** Create .stack property on a target object */
-    captureStackTrace(targetObject: Object, constructorOpt?: Function): void;
+    captureStackTrace(targetObject: object, constructorOpt?: Function): void;
 
     /**
      * Optional override for formatting stack traces
      *
-     * @see https://github.com/v8/v8/wiki/Stack%20Trace%20API#customizing-stack-traces
+     * @see https:\/\/github.com/v8/v8/wiki/Stack%20Trace%20API#customizing-stack-traces
      */
     prepareStackTrace?: (err: Error, stackTraces: NodeJS.CallSite[]) => any;
 
     stackTraceLimit: number;
 }
 
-interface SymbolConstructor {
-    readonly observable: symbol;
-}
-
-// Node.js ESNEXT support
+\/\/ Node.js ESNEXT support
 interface String {
     /** Removes whitespace from the left end of a string. */
     trimLeft(): string;
     /** Removes whitespace from the right end of a string. */
     trimRight(): string;
+
+    /** Returns a copy with leading whitespace removed. */
+    trimStart(): string;
+    /** Returns a copy with trailing whitespace removed. */
+    trimEnd(): string;
 }
 
 interface ImportMeta {
@@ -11155,8 +10787,13 @@ interface ImportMeta {
  *                   GLOBAL                      *
  *                                               *
  ------------------------------------------------*/
+
+\/\/ For backwards compability
+interface NodeRequire extends NodeJS.Require {}
+interface RequireResolve extends NodeJS.RequireResolve {}
+interface NodeModule extends NodeJS.Module {}
+
 declare var process: NodeJS.Process;
-declare var global: NodeJS.Global;
 declare var console: Console;
 
 declare var __filename: string;
@@ -11179,62 +10816,14 @@ declare function clearImmediate(immediateId: NodeJS.Immediate): void;
 
 declare function queueMicrotask(callback: () => void): void;
 
-// TODO: change to \`type NodeRequireFunction = (id: string) => any;\` in next mayor version.
-interface NodeRequireFunction {
-    /* tslint:disable-next-line:callable-types */
-    (id: string): any;
-}
-
-interface NodeRequireCache {
-    [path: string]: NodeModule;
-}
-
-interface NodeRequire extends NodeRequireFunction {
-    resolve: RequireResolve;
-    cache: NodeRequireCache;
-    /**
-     * @deprecated
-     */
-    extensions: NodeExtensions;
-    main: NodeModule | undefined;
-}
-
-interface RequireResolve {
-    (id: string, options?: { paths?: string[]; }): string;
-    paths(request: string): string[] | null;
-}
-
-interface NodeExtensions {
-    '.js': (m: NodeModule, filename: string) => any;
-    '.json': (m: NodeModule, filename: string) => any;
-    '.node': (m: NodeModule, filename: string) => any;
-    [ext: string]: (m: NodeModule, filename: string) => any;
-}
-
 declare var require: NodeRequire;
-
-interface NodeModule {
-    exports: any;
-    require: NodeRequireFunction;
-    id: string;
-    filename: string;
-    loaded: boolean;
-    parent: NodeModule | null;
-    children: NodeModule[];
-    paths: string[];
-}
-
 declare var module: NodeModule;
 
-// Same as module.exports
+\/\/ Same as module.exports
 declare var exports: any;
 
-// Buffer class
+\/\/ Buffer class
 type BufferEncoding = "ascii" | "utf8" | "utf-8" | "utf16le" | "ucs2" | "ucs-2" | "base64" | "latin1" | "binary" | "hex";
-
-interface Buffer {
-    constructor: typeof Buffer;
-}
 
 /**
  * Raw data is stored in instances of the Buffer class.
@@ -11279,7 +10868,7 @@ declare class Buffer extends Uint8Array {
      * @param array The octets to store.
      * @deprecated since v10.0.0 - Use \`Buffer.from(array)\` instead.
      */
-    constructor(array: any[]);
+    constructor(array: ReadonlyArray<any>);
     /**
      * Copies the passed {buffer} data onto a new {Buffer} instance.
      *
@@ -11300,7 +10889,7 @@ declare class Buffer extends Uint8Array {
      * Creates a new Buffer using the passed {data}
      * @param data data to create a new Buffer
      */
-    static from(data: number[]): Buffer;
+    static from(data: ReadonlyArray<number>): Buffer;
     static from(data: Uint8Array): Buffer;
     /**
      * Creates a new buffer containing the coerced value of an object
@@ -11354,7 +10943,7 @@ declare class Buffer extends Uint8Array {
      * @param totalLength Total length of the buffers when concatenated.
      *   If totalLength is not provided, it is read from the buffers in the list. However, this adds an additional loop to the function, so it is faster to provide the length explicitly.
      */
-    static concat(list: Uint8Array[], totalLength?: number): Buffer;
+    static concat(list: ReadonlyArray<Uint8Array>, totalLength?: number): Buffer;
     /**
      * The same as buf1.compare(buf2).
      */
@@ -11390,7 +10979,7 @@ declare class Buffer extends Uint8Array {
     write(string: string, encoding?: BufferEncoding): number;
     write(string: string, offset: number, encoding?: BufferEncoding): number;
     write(string: string, offset: number, length: number, encoding?: BufferEncoding): number;
-    toString(encoding?: string, start?: number, end?: number): string;
+    toString(encoding?: BufferEncoding, start?: number, end?: number): string;
     toJSON(): { type: 'Buffer'; data: number[] };
     equals(otherBuffer: Uint8Array): boolean;
     compare(
@@ -11419,46 +11008,54 @@ declare class Buffer extends Uint8Array {
      * @param end Where the new \`Buffer\` will end (not inclusive). Default: \`buf.length\`.
      */
     subarray(begin?: number, end?: number): Buffer;
+    writeBigInt64BE(value: bigint, offset?: number): number;
+    writeBigInt64LE(value: bigint, offset?: number): number;
+    writeBigUInt64BE(value: bigint, offset?: number): number;
+    writeBigUInt64LE(value: bigint, offset?: number): number;
     writeUIntLE(value: number, offset: number, byteLength: number): number;
     writeUIntBE(value: number, offset: number, byteLength: number): number;
     writeIntLE(value: number, offset: number, byteLength: number): number;
     writeIntBE(value: number, offset: number, byteLength: number): number;
+    readBigUInt64BE(offset?: number): bigint;
+    readBigUInt64LE(offset?: number): bigint;
+    readBigInt64BE(offset?: number): bigint;
+    readBigInt64LE(offset?: number): bigint;
     readUIntLE(offset: number, byteLength: number): number;
     readUIntBE(offset: number, byteLength: number): number;
     readIntLE(offset: number, byteLength: number): number;
     readIntBE(offset: number, byteLength: number): number;
-    readUInt8(offset: number): number;
-    readUInt16LE(offset: number): number;
-    readUInt16BE(offset: number): number;
-    readUInt32LE(offset: number): number;
-    readUInt32BE(offset: number): number;
-    readInt8(offset: number): number;
-    readInt16LE(offset: number): number;
-    readInt16BE(offset: number): number;
-    readInt32LE(offset: number): number;
-    readInt32BE(offset: number): number;
-    readFloatLE(offset: number): number;
-    readFloatBE(offset: number): number;
-    readDoubleLE(offset: number): number;
-    readDoubleBE(offset: number): number;
+    readUInt8(offset?: number): number;
+    readUInt16LE(offset?: number): number;
+    readUInt16BE(offset?: number): number;
+    readUInt32LE(offset?: number): number;
+    readUInt32BE(offset?: number): number;
+    readInt8(offset?: number): number;
+    readInt16LE(offset?: number): number;
+    readInt16BE(offset?: number): number;
+    readInt32LE(offset?: number): number;
+    readInt32BE(offset?: number): number;
+    readFloatLE(offset?: number): number;
+    readFloatBE(offset?: number): number;
+    readDoubleLE(offset?: number): number;
+    readDoubleBE(offset?: number): number;
     reverse(): this;
     swap16(): Buffer;
     swap32(): Buffer;
     swap64(): Buffer;
-    writeUInt8(value: number, offset: number): number;
-    writeUInt16LE(value: number, offset: number): number;
-    writeUInt16BE(value: number, offset: number): number;
-    writeUInt32LE(value: number, offset: number): number;
-    writeUInt32BE(value: number, offset: number): number;
-    writeInt8(value: number, offset: number): number;
-    writeInt16LE(value: number, offset: number): number;
-    writeInt16BE(value: number, offset: number): number;
-    writeInt32LE(value: number, offset: number): number;
-    writeInt32BE(value: number, offset: number): number;
-    writeFloatLE(value: number, offset: number): number;
-    writeFloatBE(value: number, offset: number): number;
-    writeDoubleLE(value: number, offset: number): number;
-    writeDoubleBE(value: number, offset: number): number;
+    writeUInt8(value: number, offset?: number): number;
+    writeUInt16LE(value: number, offset?: number): number;
+    writeUInt16BE(value: number, offset?: number): number;
+    writeUInt32LE(value: number, offset?: number): number;
+    writeUInt32BE(value: number, offset?: number): number;
+    writeInt8(value: number, offset?: number): number;
+    writeInt16LE(value: number, offset?: number): number;
+    writeInt16BE(value: number, offset?: number): number;
+    writeInt32LE(value: number, offset?: number): number;
+    writeInt32BE(value: number, offset?: number): number;
+    writeFloatLE(value: number, offset?: number): number;
+    writeFloatBE(value: number, offset?: number): number;
+    writeDoubleLE(value: number, offset?: number): number;
+    writeDoubleBE(value: number, offset?: number): number;
 
     fill(value: string | Uint8Array | number, offset?: number, end?: number, encoding?: BufferEncoding): this;
 
@@ -11495,6 +11092,13 @@ declare namespace NodeJS {
         customInspect?: boolean;
         showProxy?: boolean;
         maxArrayLength?: number | null;
+        /**
+         * Specifies the maximum number of characters to
+         * include when formatting. Set to \`null\` or \`Infinity\` to show all elements.
+         * Set to \`0\` or negative to show no characters.
+         * @default Infinity
+         */
+        maxStringLength?: number | null;
         breakLength?: number;
         /**
          * Setting this to \`false\` causes each object key
@@ -11508,20 +11112,6 @@ declare namespace NodeJS {
          */
         compact?: boolean | number;
         sorted?: boolean | ((a: string, b: string) => number);
-    }
-
-    interface ConsoleConstructorOptions {
-        stdout: WritableStream;
-        stderr?: WritableStream;
-        ignoreErrors?: boolean;
-        colorMode?: boolean | 'auto';
-        inspectOptions?: InspectOptions;
-    }
-
-    interface ConsoleConstructor {
-        prototype: Console;
-        new(stdout: WritableStream, stderr?: WritableStream, ignoreErrors?: boolean): Console;
-        new(options: ConsoleConstructorOptions): Console;
     }
 
     interface CallSite {
@@ -11606,29 +11196,10 @@ declare namespace NodeJS {
         stack?: string;
     }
 
-    class EventEmitter {
-        addListener(event: string | symbol, listener: (...args: any[]) => void): this;
-        on(event: string | symbol, listener: (...args: any[]) => void): this;
-        once(event: string | symbol, listener: (...args: any[]) => void): this;
-        removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
-        off(event: string | symbol, listener: (...args: any[]) => void): this;
-        removeAllListeners(event?: string | symbol): this;
-        setMaxListeners(n: number): this;
-        getMaxListeners(): number;
-        listeners(event: string | symbol): Function[];
-        rawListeners(event: string | symbol): Function[];
-        emit(event: string | symbol, ...args: any[]): boolean;
-        listenerCount(type: string | symbol): number;
-        // Added in Node 6...
-        prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
-        prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
-        eventNames(): Array<string | symbol>;
-    }
-
     interface ReadableStream extends EventEmitter {
         readable: boolean;
         read(size?: number): string | Buffer;
-        setEncoding(encoding: string): this;
+        setEncoding(encoding: BufferEncoding): this;
         pause(): this;
         resume(): this;
         isPaused(): boolean;
@@ -11642,403 +11213,13 @@ declare namespace NodeJS {
     interface WritableStream extends EventEmitter {
         writable: boolean;
         write(buffer: Uint8Array | string, cb?: (err?: Error | null) => void): boolean;
-        write(str: string, encoding?: string, cb?: (err?: Error | null) => void): boolean;
+        write(str: string, encoding?: BufferEncoding, cb?: (err?: Error | null) => void): boolean;
         end(cb?: () => void): void;
         end(data: string | Uint8Array, cb?: () => void): void;
-        end(str: string, encoding?: string, cb?: () => void): void;
+        end(str: string, encoding?: BufferEncoding, cb?: () => void): void;
     }
 
     interface ReadWriteStream extends ReadableStream, WritableStream { }
-
-    interface Domain extends EventEmitter {
-        run<T>(fn: (...args: any[]) => T, ...args: any[]): T;
-        add(emitter: EventEmitter | Timer): void;
-        remove(emitter: EventEmitter | Timer): void;
-        bind<T extends Function>(cb: T): T;
-        intercept<T extends Function>(cb: T): T;
-
-        addListener(event: string, listener: (...args: any[]) => void): this;
-        on(event: string, listener: (...args: any[]) => void): this;
-        once(event: string, listener: (...args: any[]) => void): this;
-        removeListener(event: string, listener: (...args: any[]) => void): this;
-        removeAllListeners(event?: string): this;
-    }
-
-    interface MemoryUsage {
-        rss: number;
-        heapTotal: number;
-        heapUsed: number;
-        external: number;
-    }
-
-    interface CpuUsage {
-        user: number;
-        system: number;
-    }
-
-    interface ProcessRelease {
-        name: string;
-        sourceUrl?: string;
-        headersUrl?: string;
-        libUrl?: string;
-        lts?: string;
-    }
-
-    interface ProcessVersions {
-        http_parser: string;
-        node: string;
-        v8: string;
-        ares: string;
-        uv: string;
-        zlib: string;
-        modules: string;
-        openssl: string;
-    }
-
-    type Platform = 'aix'
-        | 'android'
-        | 'darwin'
-        | 'freebsd'
-        | 'linux'
-        | 'openbsd'
-        | 'sunos'
-        | 'win32'
-        | 'cygwin'
-        | 'netbsd';
-
-    type Signals =
-        "SIGABRT" | "SIGALRM" | "SIGBUS" | "SIGCHLD" | "SIGCONT" | "SIGFPE" | "SIGHUP" | "SIGILL" | "SIGINT" | "SIGIO" |
-        "SIGIOT" | "SIGKILL" | "SIGPIPE" | "SIGPOLL" | "SIGPROF" | "SIGPWR" | "SIGQUIT" | "SIGSEGV" | "SIGSTKFLT" |
-        "SIGSTOP" | "SIGSYS" | "SIGTERM" | "SIGTRAP" | "SIGTSTP" | "SIGTTIN" | "SIGTTOU" | "SIGUNUSED" | "SIGURG" |
-        "SIGUSR1" | "SIGUSR2" | "SIGVTALRM" | "SIGWINCH" | "SIGXCPU" | "SIGXFSZ" | "SIGBREAK" | "SIGLOST" | "SIGINFO";
-
-    type MultipleResolveType = 'resolve' | 'reject';
-
-    type BeforeExitListener = (code: number) => void;
-    type DisconnectListener = () => void;
-    type ExitListener = (code: number) => void;
-    type RejectionHandledListener = (promise: Promise<any>) => void;
-    type UncaughtExceptionListener = (error: Error) => void;
-    type UnhandledRejectionListener = (reason: {} | null | undefined, promise: Promise<any>) => void;
-    type WarningListener = (warning: Error) => void;
-    type MessageListener = (message: any, sendHandle: any) => void;
-    type SignalsListener = (signal: Signals) => void;
-    type NewListenerListener = (type: string | symbol, listener: (...args: any[]) => void) => void;
-    type RemoveListenerListener = (type: string | symbol, listener: (...args: any[]) => void) => void;
-    type MultipleResolveListener = (type: MultipleResolveType, promise: Promise<any>, value: any) => void;
-
-    interface Socket extends ReadWriteStream {
-        isTTY?: true;
-    }
-
-    interface ProcessEnv {
-        [key: string]: string | undefined;
-    }
-
-    interface HRTime {
-        (time?: [number, number]): [number, number];
-    }
-
-    interface ProcessReport {
-        /**
-         * Directory where the report is written.
-         * working directory of the Node.js process.
-         * @default '' indicating that reports are written to the current
-         */
-        directory: string;
-
-        /**
-         * Filename where the report is written.
-         * The default value is the empty string.
-         * @default '' the output filename will be comprised of a timestamp,
-         * PID, and sequence number.
-         */
-        filename: string;
-
-        /**
-         * Returns a JSON-formatted diagnostic report for the running process.
-         * The report's JavaScript stack trace is taken from err, if present.
-         */
-        getReport(err?: Error): string;
-
-        /**
-         * If true, a diagnostic report is generated on fatal errors,
-         * such as out of memory errors or failed C++ assertions.
-         * @default false
-         */
-        reportOnFatalError: boolean;
-
-        /**
-         * If true, a diagnostic report is generated when the process
-         * receives the signal specified by process.report.signal.
-         * @defaul false
-         */
-        reportOnSignal: boolean;
-
-        /**
-         * If true, a diagnostic report is generated on uncaught exception.
-         * @default false
-         */
-        reportOnUncaughtException: boolean;
-
-        /**
-         * The signal used to trigger the creation of a diagnostic report.
-         * @default 'SIGUSR2'
-         */
-        signal: Signals;
-
-        /**
-         * Writes a diagnostic report to a file. If filename is not provided, the default filename
-         * includes the date, time, PID, and a sequence number.
-         * The report's JavaScript stack trace is taken from err, if present.
-         *
-         * @param fileName Name of the file where the report is written.
-         * This should be a relative path, that will be appended to the directory specified in
-         * \`process.report.directory\`, or the current working directory of the Node.js process,
-         * if unspecified.
-         * @param error A custom error used for reporting the JavaScript stack.
-         * @return Filename of the generated report.
-         */
-        writeReport(fileName?: string): string;
-        writeReport(error?: Error): string;
-        writeReport(fileName?: string, err?: Error): string;
-    }
-
-    interface ResourceUsage {
-        fsRead: number;
-        fsWrite: number;
-        involuntaryContextSwitches: number;
-        ipcReceived: number;
-        ipcSent: number;
-        majorPageFault: number;
-        maxRSS: number;
-        minorPageFault: number;
-        sharedMemorySize: number;
-        signalsCount: number;
-        swappedOut: number;
-        systemCPUTime: number;
-        unsharedDataSize: number;
-        unsharedStackSize: number;
-        userCPUTime: number;
-        voluntaryContextSwitches: number;
-    }
-
-    interface Process extends EventEmitter {
-        /**
-         * Can also be a tty.WriteStream, not typed due to limitation.s
-         */
-        stdout: WriteStream;
-        /**
-         * Can also be a tty.WriteStream, not typed due to limitation.s
-         */
-        stderr: WriteStream;
-        stdin: ReadStream;
-        openStdin(): Socket;
-        argv: string[];
-        argv0: string;
-        execArgv: string[];
-        execPath: string;
-        abort(): void;
-        chdir(directory: string): void;
-        cwd(): string;
-        debugPort: number;
-        emitWarning(warning: string | Error, name?: string, ctor?: Function): void;
-        env: ProcessEnv;
-        exit(code?: number): never;
-        exitCode?: number;
-        getgid(): number;
-        setgid(id: number | string): void;
-        getuid(): number;
-        setuid(id: number | string): void;
-        geteuid(): number;
-        seteuid(id: number | string): void;
-        getegid(): number;
-        setegid(id: number | string): void;
-        getgroups(): number[];
-        setgroups(groups: Array<string | number>): void;
-        setUncaughtExceptionCaptureCallback(cb: ((err: Error) => void) | null): void;
-        hasUncaughtExceptionCaptureCallback(): boolean;
-        version: string;
-        versions: ProcessVersions;
-        config: {
-            target_defaults: {
-                cflags: any[];
-                default_configuration: string;
-                defines: string[];
-                include_dirs: string[];
-                libraries: string[];
-            };
-            variables: {
-                clang: number;
-                host_arch: string;
-                node_install_npm: boolean;
-                node_install_waf: boolean;
-                node_prefix: string;
-                node_shared_openssl: boolean;
-                node_shared_v8: boolean;
-                node_shared_zlib: boolean;
-                node_use_dtrace: boolean;
-                node_use_etw: boolean;
-                node_use_openssl: boolean;
-                target_arch: string;
-                v8_no_strict_aliasing: number;
-                v8_use_snapshot: boolean;
-                visibility: string;
-            };
-        };
-        kill(pid: number, signal?: string | number): void;
-        pid: number;
-        ppid: number;
-        title: string;
-        arch: string;
-        platform: Platform;
-        mainModule?: NodeModule;
-        memoryUsage(): MemoryUsage;
-        cpuUsage(previousValue?: CpuUsage): CpuUsage;
-        nextTick(callback: Function, ...args: any[]): void;
-        release: ProcessRelease;
-        features: {
-            inspector: boolean;
-            debug: boolean;
-            uv: boolean;
-            ipv6: boolean;
-            tls_alpn: boolean;
-            tls_sni: boolean;
-            tls_ocsp: boolean;
-            tls: boolean;
-        };
-        /**
-         * Can only be set if not in worker thread.
-         */
-        umask(mask?: number): number;
-        uptime(): number;
-        hrtime: HRTime;
-        domain: Domain;
-
-        // Worker
-        send?(message: any, sendHandle?: any, options?: { swallowErrors?: boolean}, callback?: (error: Error | null) => void): boolean;
-        disconnect(): void;
-        connected: boolean;
-
-        /**
-         * The \`process.allowedNodeEnvironmentFlags\` property is a special,
-         * read-only \`Set\` of flags allowable within the [\`NODE_OPTIONS\`][]
-         * environment variable.
-         */
-        allowedNodeEnvironmentFlags: ReadonlySet<string>;
-
-        /**
-         * Only available with \`--experimental-report\`
-         */
-        report?: ProcessReport;
-
-        resourceUsage(): ResourceUsage;
-
-        /**
-         * EventEmitter
-         *   1. beforeExit
-         *   2. disconnect
-         *   3. exit
-         *   4. message
-         *   5. rejectionHandled
-         *   6. uncaughtException
-         *   7. unhandledRejection
-         *   8. warning
-         *   9. message
-         *  10. <All OS Signals>
-         *  11. newListener/removeListener inherited from EventEmitter
-         */
-        addListener(event: "beforeExit", listener: BeforeExitListener): this;
-        addListener(event: "disconnect", listener: DisconnectListener): this;
-        addListener(event: "exit", listener: ExitListener): this;
-        addListener(event: "rejectionHandled", listener: RejectionHandledListener): this;
-        addListener(event: "uncaughtException", listener: UncaughtExceptionListener): this;
-        addListener(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
-        addListener(event: "warning", listener: WarningListener): this;
-        addListener(event: "message", listener: MessageListener): this;
-        addListener(event: Signals, listener: SignalsListener): this;
-        addListener(event: "newListener", listener: NewListenerListener): this;
-        addListener(event: "removeListener", listener: RemoveListenerListener): this;
-        addListener(event: "multipleResolves", listener: MultipleResolveListener): this;
-
-        emit(event: "beforeExit", code: number): boolean;
-        emit(event: "disconnect"): boolean;
-        emit(event: "exit", code: number): boolean;
-        emit(event: "rejectionHandled", promise: Promise<any>): boolean;
-        emit(event: "uncaughtException", error: Error): boolean;
-        emit(event: "unhandledRejection", reason: any, promise: Promise<any>): boolean;
-        emit(event: "warning", warning: Error): boolean;
-        emit(event: "message", message: any, sendHandle: any): this;
-        emit(event: Signals, signal: Signals): boolean;
-        emit(event: "newListener", eventName: string | symbol, listener: (...args: any[]) => void): this;
-        emit(event: "removeListener", eventName: string, listener: (...args: any[]) => void): this;
-        emit(event: "multipleResolves", listener: MultipleResolveListener): this;
-
-        on(event: "beforeExit", listener: BeforeExitListener): this;
-        on(event: "disconnect", listener: DisconnectListener): this;
-        on(event: "exit", listener: ExitListener): this;
-        on(event: "rejectionHandled", listener: RejectionHandledListener): this;
-        on(event: "uncaughtException", listener: UncaughtExceptionListener): this;
-        on(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
-        on(event: "warning", listener: WarningListener): this;
-        on(event: "message", listener: MessageListener): this;
-        on(event: Signals, listener: SignalsListener): this;
-        on(event: "newListener", listener: NewListenerListener): this;
-        on(event: "removeListener", listener: RemoveListenerListener): this;
-        on(event: "multipleResolves", listener: MultipleResolveListener): this;
-
-        once(event: "beforeExit", listener: BeforeExitListener): this;
-        once(event: "disconnect", listener: DisconnectListener): this;
-        once(event: "exit", listener: ExitListener): this;
-        once(event: "rejectionHandled", listener: RejectionHandledListener): this;
-        once(event: "uncaughtException", listener: UncaughtExceptionListener): this;
-        once(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
-        once(event: "warning", listener: WarningListener): this;
-        once(event: "message", listener: MessageListener): this;
-        once(event: Signals, listener: SignalsListener): this;
-        once(event: "newListener", listener: NewListenerListener): this;
-        once(event: "removeListener", listener: RemoveListenerListener): this;
-        once(event: "multipleResolves", listener: MultipleResolveListener): this;
-
-        prependListener(event: "beforeExit", listener: BeforeExitListener): this;
-        prependListener(event: "disconnect", listener: DisconnectListener): this;
-        prependListener(event: "exit", listener: ExitListener): this;
-        prependListener(event: "rejectionHandled", listener: RejectionHandledListener): this;
-        prependListener(event: "uncaughtException", listener: UncaughtExceptionListener): this;
-        prependListener(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
-        prependListener(event: "warning", listener: WarningListener): this;
-        prependListener(event: "message", listener: MessageListener): this;
-        prependListener(event: Signals, listener: SignalsListener): this;
-        prependListener(event: "newListener", listener: NewListenerListener): this;
-        prependListener(event: "removeListener", listener: RemoveListenerListener): this;
-        prependListener(event: "multipleResolves", listener: MultipleResolveListener): this;
-
-        prependOnceListener(event: "beforeExit", listener: BeforeExitListener): this;
-        prependOnceListener(event: "disconnect", listener: DisconnectListener): this;
-        prependOnceListener(event: "exit", listener: ExitListener): this;
-        prependOnceListener(event: "rejectionHandled", listener: RejectionHandledListener): this;
-        prependOnceListener(event: "uncaughtException", listener: UncaughtExceptionListener): this;
-        prependOnceListener(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
-        prependOnceListener(event: "warning", listener: WarningListener): this;
-        prependOnceListener(event: "message", listener: MessageListener): this;
-        prependOnceListener(event: Signals, listener: SignalsListener): this;
-        prependOnceListener(event: "newListener", listener: NewListenerListener): this;
-        prependOnceListener(event: "removeListener", listener: RemoveListenerListener): this;
-        prependOnceListener(event: "multipleResolves", listener: MultipleResolveListener): this;
-
-        listeners(event: "beforeExit"): BeforeExitListener[];
-        listeners(event: "disconnect"): DisconnectListener[];
-        listeners(event: "exit"): ExitListener[];
-        listeners(event: "rejectionHandled"): RejectionHandledListener[];
-        listeners(event: "uncaughtException"): UncaughtExceptionListener[];
-        listeners(event: "unhandledRejection"): UnhandledRejectionListener[];
-        listeners(event: "warning"): WarningListener[];
-        listeners(event: "message"): MessageListener[];
-        listeners(event: Signals): SignalsListener[];
-        listeners(event: "newListener"): NewListenerListener[];
-        listeners(event: "removeListener"): RemoveListenerListener[];
-        listeners(event: "multipleResolves"): MultipleResolveListener[];
-    }
 
     interface Global {
         Array: typeof Array;
@@ -12052,7 +11233,6 @@ declare namespace NodeJS {
         Float32Array: typeof Float32Array;
         Float64Array: typeof Float64Array;
         Function: typeof Function;
-        GLOBAL: Global;
         Infinity: typeof Infinity;
         Int16Array: typeof Int16Array;
         Int32Array: typeof Int32Array;
@@ -12064,7 +11244,7 @@ declare namespace NodeJS {
         NaN: typeof NaN;
         Number: typeof Number;
         Object: typeof Object;
-        Promise: Function;
+        Promise: typeof Promise;
         RangeError: typeof RangeError;
         ReferenceError: typeof ReferenceError;
         RegExp: typeof RegExp;
@@ -12077,13 +11257,12 @@ declare namespace NodeJS {
         Uint16Array: typeof Uint16Array;
         Uint32Array: typeof Uint32Array;
         Uint8Array: typeof Uint8Array;
-        Uint8ClampedArray: Function;
+        Uint8ClampedArray: typeof Uint8ClampedArray;
         WeakMap: WeakMapConstructor;
         WeakSet: WeakSetConstructor;
         clearImmediate: (immediateId: Immediate) => void;
         clearInterval: (intervalId: Timeout) => void;
         clearTimeout: (timeoutId: Timeout) => void;
-        console: typeof console;
         decodeURI: typeof decodeURI;
         decodeURIComponent: typeof decodeURIComponent;
         encodeURI: typeof encodeURI;
@@ -12095,8 +11274,6 @@ declare namespace NodeJS {
         isNaN: typeof isNaN;
         parseFloat: typeof parseFloat;
         parseInt: typeof parseInt;
-        process: Process;
-        root: Global;
         setImmediate: (callback: (...args: any[]) => void, ...args: any[]) => Immediate;
         setInterval: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => Timeout;
         setTimeout: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => Timeout;
@@ -12107,69 +11284,89 @@ declare namespace NodeJS {
         v8debug?: any;
     }
 
-    // compatibility with older typings
-    interface Timer {
-        hasRef(): boolean;
+    interface RefCounted {
         ref(): this;
+        unref(): this;
+    }
+
+    \/\/ compatibility with older typings
+    interface Timer extends RefCounted {
+        hasRef(): boolean;
         refresh(): this;
-        unref(): this;
+        [Symbol.toPrimitive](): number;
     }
 
-    class Immediate {
+    interface Immediate extends RefCounted {
         hasRef(): boolean;
-        ref(): this;
-        unref(): this;
-        _onImmediate: Function; // to distinguish it from the Timeout class
+        _onImmediate: Function; \/\/ to distinguish it from the Timeout class
     }
 
-    class Timeout implements Timer {
+    interface Timeout extends Timer {
         hasRef(): boolean;
-        ref(): this;
         refresh(): this;
-        unref(): this;
-    }
-
-    class Module {
-        static runMain(): void;
-        static wrap(code: string): string;
-
-        /**
-         * @deprecated Deprecated since: v12.2.0. Please use createRequire() instead.
-         */
-        static createRequireFromPath(path: string): NodeRequire;
-        static createRequire(path: string): NodeRequire;
-        static builtinModules: string[];
-
-        static Module: typeof Module;
-
-        exports: any;
-        require: NodeRequireFunction;
-        id: string;
-        filename: string;
-        loaded: boolean;
-        parent: Module | null;
-        children: Module[];
-        paths: string[];
-
-        constructor(id: string, parent?: Module);
+        [Symbol.toPrimitive](): number;
     }
 
     type TypedArray = Uint8Array | Uint8ClampedArray | Uint16Array | Uint32Array | Int8Array | Int16Array | Int32Array | Float32Array | Float64Array;
     type ArrayBufferView = TypedArray | DataView;
 
-    // The value type here is a "poor man's \`unknown\`". When these types support TypeScript
-    // 3.0+, we can replace this with \`unknown\`.
-    type PoorMansUnknown = {} | null | undefined;
+    interface Require {
+        (id: string): any;
+        resolve: RequireResolve;
+        cache: Dict<NodeModule>;
+        /**
+         * @deprecated
+         */
+        extensions: RequireExtensions;
+        main: Module | undefined;
+    }
+
+    interface RequireResolve {
+        (id: string, options?: { paths?: string[]; }): string;
+        paths(request: string): string[] | null;
+    }
+
+    interface RequireExtensions extends Dict<(m: Module, filename: string) => any> {
+        '.js': (m: Module, filename: string) => any;
+        '.json': (m: Module, filename: string) => any;
+        '.node': (m: Module, filename: string) => any;
+    }
+    interface Module {
+        exports: any;
+        require: Require;
+        id: string;
+        filename: string;
+        loaded: boolean;
+        /** @deprecated since 14.6.0 Please use \`require.main\` and \`module.children\` instead. */
+        parent: Module | null | undefined;
+        children: Module[];
+        /**
+         * @since 11.14.0
+         *
+         * The directory name of the module. This is usually the same as the path.dirname() of the module.id.
+         */
+        path: string;
+        paths: string[];
+    }
+
+    interface Dict<T> {
+        [key: string]: T | undefined;
+    }
+
+    interface ReadOnlyDict<T> {
+        readonly [key: string]: T | undefined;
+    }
 }
 `;
+module.exports['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis;
+`;
 module.exports['http.d.ts'] = `declare module "http" {
-    import * as events from "events";
     import * as stream from "stream";
     import { URL } from "url";
     import { Socket, Server as NetServer } from "net";
 
-    // incoming headers will never contain number
-    interface IncomingHttpHeaders {
+    \/\/ incoming headers will never contain number
+    interface IncomingHttpHeaders extends NodeJS.Dict<string | string[]> {
         'accept'?: string;
         'accept-language'?: string;
         'accept-patch'?: string;
@@ -12180,6 +11377,8 @@ module.exports['http.d.ts'] = `declare module "http" {
         'access-control-allow-origin'?: string;
         'access-control-expose-headers'?: string;
         'access-control-max-age'?: string;
+        'access-control-request-headers'?: string;
+        'access-control-request-method'?: string;
         'age'?: string;
         'allow'?: string;
         'alt-svc'?: string;
@@ -12206,6 +11405,7 @@ module.exports['http.d.ts'] = `declare module "http" {
         'if-unmodified-since'?: string;
         'last-modified'?: string;
         'location'?: string;
+        'origin'?: string;
         'pragma'?: string;
         'proxy-authenticate'?: string;
         'proxy-authorization'?: string;
@@ -12213,6 +11413,11 @@ module.exports['http.d.ts'] = `declare module "http" {
         'range'?: string;
         'referer'?: string;
         'retry-after'?: string;
+        'sec-websocket-accept'?: string;
+        'sec-websocket-extensions'?: string;
+        'sec-websocket-key'?: string;
+        'sec-websocket-protocol'?: string;
+        'sec-websocket-version'?: string;
         'set-cookie'?: string[];
         'strict-transport-security'?: string;
         'tk'?: string;
@@ -12224,12 +11429,12 @@ module.exports['http.d.ts'] = `declare module "http" {
         'via'?: string;
         'warning'?: string;
         'www-authenticate'?: string;
-        [header: string]: string | string[] | undefined;
     }
 
-    // outgoing headers allows numbers (as they are converted internally to strings)
-    interface OutgoingHttpHeaders {
-        [header: string]: number | string | string[] | undefined;
+    \/\/ outgoing headers allows numbers (as they are converted internally to strings)
+    type OutgoingHttpHeader = number | string | string[];
+
+    interface OutgoingHttpHeaders extends NodeJS.Dict<OutgoingHttpHeader> {
     }
 
     interface ClientRequestArgs {
@@ -12241,6 +11446,10 @@ module.exports['http.d.ts'] = `declare module "http" {
         defaultPort?: number | string;
         localAddress?: string;
         socketPath?: string;
+        /**
+         * @default 8192
+         */
+        maxHeaderSize?: number;
         method?: string;
         path?: string | null;
         headers?: OutgoingHttpHeaders;
@@ -12249,78 +11458,107 @@ module.exports['http.d.ts'] = `declare module "http" {
         _defaultAgent?: Agent;
         timeout?: number;
         setHost?: boolean;
-        // https://github.com/nodejs/node/blob/master/lib/_http_client.js#L278
+        \/\/ https:\/\/github.com/nodejs/node/blob/master/lib/_http_client.js#L278
         createConnection?: (options: ClientRequestArgs, oncreate: (err: Error, socket: Socket) => void) => Socket;
     }
 
     interface ServerOptions {
         IncomingMessage?: typeof IncomingMessage;
         ServerResponse?: typeof ServerResponse;
+        /**
+         * Optionally overrides the value of
+         * [\`--max-http-header-size\`][] for requests received by this server, i.e.
+         * the maximum length of request headers in bytes.
+         * @default 8192
+         */
+        maxHeaderSize?: number;
+        /**
+         * Use an insecure HTTP parser that accepts invalid HTTP headers when true.
+         * Using the insecure parser should be avoided.
+         * See --insecure-http-parser for more information.
+         * @default false
+         */
+        insecureHTTPParser?: boolean;
     }
 
     type RequestListener = (req: IncomingMessage, res: ServerResponse) => void;
 
-    class Server extends NetServer {
-        constructor(requestListener?: RequestListener);
-        constructor(options: ServerOptions, requestListener?: RequestListener);
-
+    interface HttpBase {
         setTimeout(msecs?: number, callback?: () => void): this;
         setTimeout(callback: () => void): this;
         /**
          * Limits maximum incoming headers count. If set to 0, no limit will be applied.
          * @default 2000
-         * {@link https://nodejs.org/api/http.html#http_server_maxheaderscount}
+         * {@link https:\/\/nodejs.org/api/http.html#http_server_maxheaderscount}
          */
         maxHeadersCount: number | null;
         timeout: number;
         /**
          * Limit the amount of time the parser will wait to receive the complete HTTP headers.
-         * @default 40000
-         * {@link https://nodejs.org/api/http.html#http_server_headerstimeout}
+         * @default 60000
+         * {@link https:\/\/nodejs.org/api/http.html#http_server_headerstimeout}
          */
         headersTimeout: number;
         keepAliveTimeout: number;
+        /**
+         * Sets the timeout value in milliseconds for receiving the entire request from the client.
+         * @default 0
+         * {@link https:\/\/nodejs.org/api/http.html#http_server_requesttimeout}
+         */
+        requestTimeout: number;
     }
 
-    // https://github.com/nodejs/node/blob/master/lib/_http_outgoing.js
+    interface Server extends HttpBase {}
+    class Server extends NetServer {
+        constructor(requestListener?: RequestListener);
+        constructor(options: ServerOptions, requestListener?: RequestListener);
+    }
+
+    \/\/ https:\/\/github.com/nodejs/node/blob/master/lib/_http_outgoing.js
     class OutgoingMessage extends stream.Writable {
         upgrading: boolean;
         chunkedEncoding: boolean;
         shouldKeepAlive: boolean;
         useChunkedEncodingByDefault: boolean;
         sendDate: boolean;
+        /**
+         * @deprecated Use \`writableEnded\` instead.
+         */
         finished: boolean;
         headersSent: boolean;
-        connection: Socket;
+        /**
+         * @deprecate Use \`socket\` instead.
+         */
+        connection: Socket | null;
+        socket: Socket | null;
 
         constructor();
 
         setTimeout(msecs: number, callback?: () => void): this;
-        setHeader(name: string, value: number | string | string[]): void;
+        setHeader(name: string, value: number | string | ReadonlyArray<string>): void;
         getHeader(name: string): number | string | string[] | undefined;
         getHeaders(): OutgoingHttpHeaders;
         getHeaderNames(): string[];
         hasHeader(name: string): boolean;
         removeHeader(name: string): void;
-        addTrailers(headers: OutgoingHttpHeaders | Array<[string, string]>): void;
+        addTrailers(headers: OutgoingHttpHeaders | ReadonlyArray<[string, string]>): void;
         flushHeaders(): void;
     }
 
-    // https://github.com/nodejs/node/blob/master/lib/_http_server.js#L108-L256
+    \/\/ https:\/\/github.com/nodejs/node/blob/master/lib/_http_server.js#L108-L256
     class ServerResponse extends OutgoingMessage {
         statusCode: number;
         statusMessage: string;
-        writableFinished: boolean;
 
         constructor(req: IncomingMessage);
 
         assignSocket(socket: Socket): void;
         detachSocket(socket: Socket): void;
-        // https://github.com/nodejs/node/blob/master/test/parallel/test-http-write-callbacks.js#L53
-        // no args in writeContinue callback
+        \/\/ https:\/\/github.com/nodejs/node/blob/master/test/parallel/test-http-write-callbacks.js#L53
+        \/\/ no args in writeContinue callback
         writeContinue(callback?: () => void): void;
-        writeHead(statusCode: number, reasonPhrase?: string, headers?: OutgoingHttpHeaders): this;
-        writeHead(statusCode: number, headers?: OutgoingHttpHeaders): this;
+        writeHead(statusCode: number, reasonPhrase?: string, headers?: OutgoingHttpHeaders | OutgoingHttpHeader[]): this;
+        writeHead(statusCode: number, headers?: OutgoingHttpHeaders | OutgoingHttpHeader[]): this;
         writeProcessing(): void;
     }
 
@@ -12334,15 +11572,16 @@ module.exports['http.d.ts'] = `declare module "http" {
         rawHeaders: string[];
     }
 
-    // https://github.com/nodejs/node/blob/master/lib/_http_client.js#L77
+    \/\/ https:\/\/github.com/nodejs/node/blob/master/lib/_http_client.js#L77
     class ClientRequest extends OutgoingMessage {
-        connection: Socket;
-        socket: Socket;
-        aborted: number;
+        aborted: boolean;
+        host: string;
+        protocol: string;
 
         constructor(url: string | URL | ClientRequestArgs, cb?: (res: IncomingMessage) => void);
 
-        readonly path: string;
+        method: string;
+        path: string;
         abort(): void;
         onSocket(socket: Socket): void;
         setTimeout(timeout: number, callback?: () => void): this;
@@ -12438,10 +11677,14 @@ module.exports['http.d.ts'] = `declare module "http" {
         httpVersionMajor: number;
         httpVersionMinor: number;
         complete: boolean;
+        /**
+         * @deprecate Use \`socket\` instead.
+         */
         connection: Socket;
+        socket: Socket;
         headers: IncomingHttpHeaders;
         rawHeaders: string[];
-        trailers: { [key: string]: string | undefined };
+        trailers: NodeJS.Dict<string>;
         rawTrailers: string[];
         setTimeout(msecs: number, callback?: () => void): this;
         /**
@@ -12460,7 +11703,6 @@ module.exports['http.d.ts'] = `declare module "http" {
          * Only valid for response obtained from http.ClientRequest.
          */
         statusMessage?: string;
-        socket: Socket;
         destroy(error?: Error): void;
     }
 
@@ -12479,6 +11721,10 @@ module.exports['http.d.ts'] = `declare module "http" {
          */
         maxSockets?: number;
         /**
+         * Maximum number of sockets allowed for all hosts in total. Each request will use a new socket until the maximum is reached. Default: Infinity.
+         */
+        maxTotalSockets?: number;
+        /**
          * Maximum number of sockets to leave open in a free state. Only relevant if keepAlive is set to true. Default = 256.
          */
         maxFreeSockets?: number;
@@ -12486,17 +11732,19 @@ module.exports['http.d.ts'] = `declare module "http" {
          * Socket timeout in milliseconds. This will set the timeout after the socket is connected.
          */
         timeout?: number;
+        /**
+         * Scheduling strategy to apply when picking the next free socket to use. Default: 'fifo'.
+         */
+        scheduling?: 'fifo' | 'lifo';
     }
 
     class Agent {
         maxFreeSockets: number;
         maxSockets: number;
-        readonly sockets: {
-            readonly [key: string]: Socket[];
-        };
-        readonly requests: {
-            readonly [key: string]: IncomingMessage[];
-        };
+        maxTotalSockets: number;
+        readonly freeSockets: NodeJS.ReadOnlyDict<Socket[]>;
+        readonly sockets: NodeJS.ReadOnlyDict<Socket[]>;
+        readonly requests: NodeJS.ReadOnlyDict<IncomingMessage[]>;
 
         constructor(opts?: AgentOptions);
 
@@ -12519,8 +11767,8 @@ module.exports['http.d.ts'] = `declare module "http" {
     function createServer(requestListener?: RequestListener): Server;
     function createServer(options: ServerOptions, requestListener?: RequestListener): Server;
 
-    // although RequestOptions are passed as ClientRequestArgs to ClientRequest directly,
-    // create interface RequestOptions would make the naming more clear to developers
+    \/\/ although RequestOptions are passed as ClientRequestArgs to ClientRequest directly,
+    \/\/ create interface RequestOptions would make the naming more clear to developers
     interface RequestOptions extends ClientRequestArgs { }
     function request(options: RequestOptions | string | URL, callback?: (res: IncomingMessage) => void): ClientRequest;
     function request(url: string | URL, options: RequestOptions, callback?: (res: IncomingMessage) => void): ClientRequest;
@@ -12530,7 +11778,7 @@ module.exports['http.d.ts'] = `declare module "http" {
 
     /**
      * Read-only property specifying the maximum allowed size of HTTP headers in bytes.
-     * Defaults to 8KB. Configurable using the [\`--max-http-header-size\`][] CLI option.
+     * Defaults to 16KB. Configurable using the [\`--max-http-header-size\`][] CLI option.
      */
     const maxHeaderSize: number;
 }
@@ -12557,7 +11805,7 @@ module.exports['http2.d.ts'] = `declare module "http2" {
         ":scheme"?: string;
     }
 
-    // Http2Stream
+    \/\/ Http2Stream
 
     export interface StreamPriorityOptions {
         exclusive?: boolean;
@@ -12766,7 +12014,7 @@ module.exports['http2.d.ts'] = `declare module "http2" {
         respondWithFile(path: string, headers?: OutgoingHttpHeaders, options?: ServerStreamFileResponseOptionsWithError): void;
     }
 
-    // Http2Session
+    \/\/ Http2Session
 
     export interface Settings {
         headerTableSize?: number;
@@ -12893,7 +12141,7 @@ module.exports['http2.d.ts'] = `declare module "http2" {
         addListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
         emit(event: "altsvc", alt: string, origin: string, stream: number): boolean;
-        emit(event: "origin", origins: string[]): boolean;
+        emit(event: "origin", origins: ReadonlyArray<string>): boolean;
         emit(event: "connect", session: ClientHttp2Session, socket: net.Socket | tls.TLSSocket): boolean;
         emit(event: "stream", stream: ClientHttp2Stream, headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number): boolean;
         emit(event: string | symbol, ...args: any[]): boolean;
@@ -12958,7 +12206,7 @@ module.exports['http2.d.ts'] = `declare module "http2" {
         prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
     }
 
-    // Http2Server
+    \/\/ Http2Server
 
     export interface SessionOptions {
         maxDeflateDynamicTableSize?: number;
@@ -12977,6 +12225,7 @@ module.exports['http2.d.ts'] = `declare module "http2" {
     export interface ClientSessionOptions extends SessionOptions {
         maxReservedRemoteStreams?: number;
         createConnection?: (authority: url.URL, option: SessionOptions) => stream.Duplex;
+        protocol?: 'http:' | 'https:';
     }
 
     export interface ServerSessionOptions extends SessionOptions {
@@ -13107,12 +12356,16 @@ module.exports['http2.d.ts'] = `declare module "http2" {
     }
 
     export class Http2ServerRequest extends stream.Readable {
-        constructor(stream: ServerHttp2Stream, headers: IncomingHttpHeaders, options: stream.ReadableOptions, rawHeaders: string[]);
+        constructor(stream: ServerHttp2Stream, headers: IncomingHttpHeaders, options: stream.ReadableOptions, rawHeaders: ReadonlyArray<string>);
 
         readonly aborted: boolean;
         readonly authority: string;
+        readonly connection: net.Socket | tls.TLSSocket;
+        readonly complete: boolean;
         readonly headers: IncomingHttpHeaders;
         readonly httpVersion: string;
+        readonly httpVersionMinor: number;
+        readonly httpVersionMajor: number;
         readonly method: string;
         readonly rawHeaders: string[];
         readonly rawTrailers: string[];
@@ -13188,16 +12441,16 @@ module.exports['http2.d.ts'] = `declare module "http2" {
         addTrailers(trailers: OutgoingHttpHeaders): void;
         end(callback?: () => void): void;
         end(data: string | Uint8Array, callback?: () => void): void;
-        end(data: string | Uint8Array, encoding: string, callback?: () => void): void;
+        end(data: string | Uint8Array, encoding: BufferEncoding, callback?: () => void): void;
         getHeader(name: string): string;
         getHeaderNames(): string[];
         getHeaders(): OutgoingHttpHeaders;
         hasHeader(name: string): boolean;
         removeHeader(name: string): void;
-        setHeader(name: string, value: number | string | string[]): void;
+        setHeader(name: string, value: number | string | ReadonlyArray<string>): void;
         setTimeout(msecs: number, callback?: () => void): void;
         write(chunk: string | Uint8Array, callback?: (err: Error) => void): boolean;
-        write(chunk: string | Uint8Array, encoding: string, callback?: (err: Error) => void): boolean;
+        write(chunk: string | Uint8Array, encoding: BufferEncoding, callback?: (err: Error) => void): boolean;
         writeContinue(): void;
         writeHead(statusCode: number, headers?: OutgoingHttpHeaders): this;
         writeHead(statusCode: number, statusMessage: string, headers?: OutgoingHttpHeaders): this;
@@ -13252,7 +12505,7 @@ module.exports['http2.d.ts'] = `declare module "http2" {
         prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
     }
 
-    // Public API
+    \/\/ Public API
 
     export namespace constants {
         const NGHTTP2_SESSION_SERVER: number;
@@ -13492,8 +12745,8 @@ module.exports['https.d.ts'] = `declare module "https" {
     type ServerOptions = tls.SecureContextOptions & tls.TlsOptions & http.ServerOptions;
 
     type RequestOptions = http.RequestOptions & tls.SecureContextOptions & {
-        rejectUnauthorized?: boolean; // Defaults to true
-        servername?: string; // SNI TLS Extension
+        rejectUnauthorized?: boolean; \/\/ Defaults to true
+        servername?: string; \/\/ SNI TLS Extension
     };
 
     interface AgentOptions extends http.AgentOptions, tls.ConnectionOptions {
@@ -13506,26 +12759,10 @@ module.exports['https.d.ts'] = `declare module "https" {
         options: AgentOptions;
     }
 
+    interface Server extends http.HttpBase {}
     class Server extends tls.Server {
         constructor(requestListener?: http.RequestListener);
         constructor(options: ServerOptions, requestListener?: http.RequestListener);
-
-        setTimeout(callback: () => void): this;
-        setTimeout(msecs?: number, callback?: () => void): this;
-        /**
-         * Limits maximum incoming headers count. If set to 0, no limit will be applied.
-         * @default 2000
-         * {@link https://nodejs.org/api/http.html#http_server_maxheaderscount}
-         */
-        maxHeadersCount: number | null;
-        timeout: number;
-        /**
-         * Limit the amount of time the parser will wait to receive the complete HTTP headers.
-         * @default 40000
-         * {@link https://nodejs.org/api/http.html#http_server_headerstimeout}
-         */
-        headersTimeout: number;
-        keepAliveTimeout: number;
     }
 
     function createServer(requestListener?: http.RequestListener): Server;
@@ -13537,120 +12774,76 @@ module.exports['https.d.ts'] = `declare module "https" {
     let globalAgent: Agent;
 }
 `;
-module.exports['index.d.ts'] = `// Type definitions for non-npm package Node.js 12.12
-// Project: http://nodejs.org/
-// Definitions by: Microsoft TypeScript <https://github.com/Microsoft>
-//                 DefinitelyTyped <https://github.com/DefinitelyTyped>
-//                 Alberto Schiabel <https://github.com/jkomyno>
-//                 Alexander T. <https://github.com/a-tarasyuk>
-//                 Alvis HT Tang <https://github.com/alvis>
-//                 Andrew Makarov <https://github.com/r3nya>
-//                 Benjamin Toueg <https://github.com/btoueg>
-//                 Bruno Scheufler <https://github.com/brunoscheufler>
-//                 Chigozirim C. <https://github.com/smac89>
-//                 Christian Vaagland Tellnes <https://github.com/tellnes>
-//                 David Junger <https://github.com/touffy>
-//                 Deividas Bakanas <https://github.com/DeividasBakanas>
-//                 Eugene Y. Q. Shen <https://github.com/eyqs>
-//                 Flarna <https://github.com/Flarna>
-//                 Hannes Magnusson <https://github.com/Hannes-Magnusson-CK>
-//                 Hoàng Văn Khải <https://github.com/KSXGitHub>
-//                 Huw <https://github.com/hoo29>
-//                 Kelvin Jin <https://github.com/kjin>
-//                 Klaus Meinhardt <https://github.com/ajafff>
-//                 Lishude <https://github.com/islishude>
-//                 Mariusz Wiktorczyk <https://github.com/mwiktorczyk>
-//                 Mohsen Azimi <https://github.com/mohsen1>
-//                 Nicolas Even <https://github.com/n-e>
-//                 Nicolas Voigt <https://github.com/octo-sniffle>
-//                 Nikita Galkin <https://github.com/galkin>
-//                 Parambir Singh <https://github.com/parambirs>
-//                 Sebastian Silbermann <https://github.com/eps1lon>
-//                 Simon Schick <https://github.com/SimonSchick>
-//                 Thomas den Hollander <https://github.com/ThomasdenH>
-//                 Wilco Bakker <https://github.com/WilcoBakker>
-//                 wwwy3y3 <https://github.com/wwwy3y3>
-//                 Zane Hannan AU <https://github.com/ZaneHannanAU>
-//                 Samuel Ainsworth <https://github.com/samuela>
-//                 Kyle Uehlein <https://github.com/kuehlein>
-//                 Jordi Oliveras Rovira <https://github.com/j-oliveras>
-//                 Thanik Bhongbhibhat <https://github.com/bhongy>
-//                 Marcin Kopacz <https://github.com/chyzwar>
-//                 Trivikram Kamat <https://github.com/trivikr>
-//                 Minh Son Nguyen <https://github.com/nguymin4>
-//                 Junxiao Shi <https://github.com/yoursunny>
-//                 Ilia Baryshnikov <https://github.com/qwelias>
-//                 ExE Boss <https://github.com/ExE-Boss>
-// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+module.exports['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14
+\/\/ Project: http:\/\/nodejs.org/
+\/\/ Definitions by: Microsoft TypeScript <https:\/\/github.com/Microsoft>
+\/\/                 DefinitelyTyped <https:\/\/github.com/DefinitelyTyped>
+\/\/                 Alberto Schiabel <https:\/\/github.com/jkomyno>
+\/\/                 Alexander T. <https:\/\/github.com/a-tarasyuk>
+\/\/                 Alvis HT Tang <https:\/\/github.com/alvis>
+\/\/                 Andrew Makarov <https:\/\/github.com/r3nya>
+\/\/                 Benjamin Toueg <https:\/\/github.com/btoueg>
+\/\/                 Bruno Scheufler <https:\/\/github.com/brunoscheufler>
+\/\/                 Chigozirim C. <https:\/\/github.com/smac89>
+\/\/                 David Junger <https:\/\/github.com/touffy>
+\/\/                 Deividas Bakanas <https:\/\/github.com/DeividasBakanas>
+\/\/                 Eugene Y. Q. Shen <https:\/\/github.com/eyqs>
+\/\/                 Flarna <https:\/\/github.com/Flarna>
+\/\/                 Hannes Magnusson <https:\/\/github.com/Hannes-Magnusson-CK>
+\/\/                 Hoàng Văn Khải <https:\/\/github.com/KSXGitHub>
+\/\/                 Huw <https:\/\/github.com/hoo29>
+\/\/                 Kelvin Jin <https:\/\/github.com/kjin>
+\/\/                 Klaus Meinhardt <https:\/\/github.com/ajafff>
+\/\/                 Lishude <https:\/\/github.com/islishude>
+\/\/                 Mariusz Wiktorczyk <https:\/\/github.com/mwiktorczyk>
+\/\/                 Mohsen Azimi <https:\/\/github.com/mohsen1>
+\/\/                 Nicolas Even <https:\/\/github.com/n-e>
+\/\/                 Nikita Galkin <https:\/\/github.com/galkin>
+\/\/                 Parambir Singh <https:\/\/github.com/parambirs>
+\/\/                 Sebastian Silbermann <https:\/\/github.com/eps1lon>
+\/\/                 Simon Schick <https:\/\/github.com/SimonSchick>
+\/\/                 Thomas den Hollander <https:\/\/github.com/ThomasdenH>
+\/\/                 Wilco Bakker <https:\/\/github.com/WilcoBakker>
+\/\/                 wwwy3y3 <https:\/\/github.com/wwwy3y3>
+\/\/                 Samuel Ainsworth <https:\/\/github.com/samuela>
+\/\/                 Kyle Uehlein <https:\/\/github.com/kuehlein>
+\/\/                 Jordi Oliveras Rovira <https:\/\/github.com/j-oliveras>
+\/\/                 Thanik Bhongbhibhat <https:\/\/github.com/bhongy>
+\/\/                 Marcin Kopacz <https:\/\/github.com/chyzwar>
+\/\/                 Trivikram Kamat <https:\/\/github.com/trivikr>
+\/\/                 Minh Son Nguyen <https:\/\/github.com/nguymin4>
+\/\/                 Junxiao Shi <https:\/\/github.com/yoursunny>
+\/\/                 Ilia Baryshnikov <https:\/\/github.com/qwelias>
+\/\/                 ExE Boss <https:\/\/github.com/ExE-Boss>
+\/\/                 Surasak Chaisurin <https:\/\/github.com/Ryan-Willpower>
+\/\/                 Piotr Błażejewicz <https:\/\/github.com/peterblazejewicz>
+\/\/                 Anna Henningsen <https:\/\/github.com/addaleax>
+\/\/                 Jason Kwok <https:\/\/github.com/JasonHK>
+\/\/                 Victor Perin <https:\/\/github.com/victorperin>
+\/\/ Definitions: https:\/\/github.com/DefinitelyTyped/DefinitelyTyped
 
-// NOTE: These definitions support NodeJS and TypeScript 3.2.
+\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7.
+\/\/ Typically type modifications should be made in base.d.ts instead of here
 
-// NOTE: TypeScript version-specific augmentations can be found in the following paths:
-//          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
-//          - ~/index.d.ts        - Definitions specific to TypeScript 2.1
-//          - ~/ts3.2/index.d.ts  - Definitions specific to TypeScript 3.2
+\/\// <reference path="base.d.ts" />
 
-// NOTE: Augmentations for TypeScript 3.2 and later should use individual files for overrides
-//       within the respective ~/ts3.2 (or later) folder. However, this is disallowed for versions
-//       prior to TypeScript 3.2, so the older definitions will be found here.
+\/\/ NOTE: TypeScript version-specific augmentations can be found in the following paths:
+\/\/          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
+\/\/          - ~/index.d.ts        - Definitions specific to TypeScript 2.8
+\/\/          - ~/ts3.5/index.d.ts  - Definitions specific to TypeScript 3.5
 
-// Base definitions for all NodeJS modules that are not specific to any version of TypeScript:
-/// <reference path="base.d.ts" />
-
-// TypeScript 2.1-specific augmentations:
-
-// Forward-declarations for needed types from es2015 and later (in case users are using \`--lib es5\`)
-// Empty interfaces are used here which merge fine with the real declarations in the lib XXX files
-// just to ensure the names are known and node typings can be used without importing these libs.
-// if someone really needs these types the libs need to be added via --lib or in tsconfig.json
-interface MapConstructor { }
-interface WeakMapConstructor { }
-interface SetConstructor { }
-interface WeakSetConstructor { }
-interface Set<T> {}
-interface Map<K, V> {}
-interface ReadonlySet<T> {}
-interface Iterable<T> { }
-interface IteratorResult<T> { }
-interface AsyncIterable<T> { }
-interface Iterator<T> {
-    next(value?: any): IteratorResult<T>;
-}
-interface IterableIterator<T> { }
-interface AsyncIterableIterator<T> {}
-interface SymbolConstructor {
-    readonly iterator: symbol;
-    readonly asyncIterator: symbol;
-}
-declare var Symbol: SymbolConstructor;
-// even this is just a forward declaration some properties are added otherwise
-// it would be allowed to pass anything to e.g. Buffer.from()
-interface SharedArrayBuffer {
-    readonly byteLength: number;
-    slice(begin?: number, end?: number): SharedArrayBuffer;
-}
-
-declare module "util" {
-    namespace inspect {
-        const custom: symbol;
-    }
-    namespace promisify {
-        const custom: symbol;
-    }
-    namespace types {
-        function isBigInt64Array(value: any): boolean;
-        function isBigUint64Array(value: any): boolean;
-    }
-}
+\/\/ NOTE: Augmentations for TypeScript 3.5 and later should use individual files for overrides
+\/\/       within the respective ~/ts3.5 (or later) folder. However, this is disallowed for versions
+\/\/       prior to TypeScript 3.5, so the older definitions will be found here.
 `;
-module.exports['inspector.d.ts'] = `// tslint:disable-next-line:dt-header
-// Type definitions for inspector
+module.exports['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header
+\/\/ Type definitions for inspector
 
-// These definitions are auto-generated.
-// Please see https://github.com/DefinitelyTyped/DefinitelyTyped/pull/19330
-// for more information.
+\/\/ These definitions are auto-generated.
+\/\/ Please see https:\/\/github.com/DefinitelyTyped/DefinitelyTyped/pull/19330
+\/\/ for more information.
 
-// tslint:disable:max-line-length
+\/\/ tslint:disable:max-line-length
 
 /**
  * The inspector module provides an API for interacting with the V8 inspector.
@@ -15989,7 +15182,7 @@ declare module "inspector" {
         post(method: "NodeRuntime.notifyWhenWaitingForDisconnect", params?: NodeRuntime.NotifyWhenWaitingForDisconnectParameterType, callback?: (err: Error | null) => void): void;
         post(method: "NodeRuntime.notifyWhenWaitingForDisconnect", callback?: (err: Error | null) => void): void;
 
-        // Events
+        \/\/ Events
 
         addListener(event: string, listener: (...args: any[]) => void): this;
 
@@ -16656,7 +15849,7 @@ declare module "inspector" {
         prependOnceListener(event: "NodeRuntime.waitingForDisconnect", listener: () => void): this;
     }
 
-    // Top Level API
+    \/\/ Top Level API
 
     /**
      * Activate inspector on host and port. Equivalent to node --inspect=[[host:]port], but can be done programatically after node has started.
@@ -16676,10 +15869,66 @@ declare module "inspector" {
      * Return the URL of the active inspector, or \`undefined\` if there is none.
      */
     function url(): string | undefined;
+
+    /**
+     * Blocks until a client (existing or connected later) has sent
+     * \`Runtime.runIfWaitingForDebugger\` command.
+     * An exception will be thrown if there is no active inspector.
+     */
+    function waitForDebugger(): void;
 }
 `;
 module.exports['module.d.ts'] = `declare module "module" {
-    export = NodeJS.Module;
+    import { URL } from "url";
+    namespace Module {
+        /**
+         * Updates all the live bindings for builtin ES Modules to match the properties of the CommonJS exports.
+         * It does not add or remove exported names from the ES Modules.
+         */
+        function syncBuiltinESMExports(): void;
+
+        function findSourceMap(path: string, error?: Error): SourceMap;
+        interface SourceMapPayload {
+            file: string;
+            version: number;
+            sources: string[];
+            sourcesContent: string[];
+            names: string[];
+            mappings: string;
+            sourceRoot: string;
+        }
+
+        interface SourceMapping {
+            generatedLine: number;
+            generatedColumn: number;
+            originalSource: string;
+            originalLine: number;
+            originalColumn: number;
+        }
+
+        class SourceMap {
+            readonly payload: SourceMapPayload;
+            constructor(payload: SourceMapPayload);
+            findEntry(line: number, column: number): SourceMapping;
+        }
+    }
+    interface Module extends NodeModule {}
+    class Module {
+        static runMain(): void;
+        static wrap(code: string): string;
+
+        /**
+         * @deprecated Deprecated since: v12.2.0. Please use createRequire() instead.
+         */
+        static createRequireFromPath(path: string): NodeRequire;
+        static createRequire(path: string | URL): NodeRequire;
+        static builtinModules: string[];
+
+        static Module: typeof Module;
+
+        constructor(id: string, parent?: Module);
+    }
+    export = Module;
 }
 `;
 module.exports['net.d.ts'] = `declare module "net" {
@@ -16740,24 +15989,24 @@ module.exports['net.d.ts'] = `declare module "net" {
     class Socket extends stream.Duplex {
         constructor(options?: SocketConstructorOpts);
 
-        // Extended base methods
+        \/\/ Extended base methods
         write(buffer: Uint8Array | string, cb?: (err?: Error) => void): boolean;
-        write(str: Uint8Array | string, encoding?: string, cb?: (err?: Error) => void): boolean;
+        write(str: Uint8Array | string, encoding?: BufferEncoding, cb?: (err?: Error) => void): boolean;
 
         connect(options: SocketConnectOpts, connectionListener?: () => void): this;
         connect(port: number, host: string, connectionListener?: () => void): this;
         connect(port: number, connectionListener?: () => void): this;
         connect(path: string, connectionListener?: () => void): this;
 
-        setEncoding(encoding?: string): this;
+        setEncoding(encoding?: BufferEncoding): this;
         pause(): this;
         resume(): this;
         setTimeout(timeout: number, callback?: () => void): this;
         setNoDelay(noDelay?: boolean): this;
         setKeepAlive(enable?: boolean, initialDelay?: number): this;
-        address(): AddressInfo | string;
-        unref(): void;
-        ref(): void;
+        address(): AddressInfo | {};
+        unref(): this;
+        ref(): this;
 
         readonly bufferSize: number;
         readonly bytesRead: number;
@@ -16770,10 +16019,10 @@ module.exports['net.d.ts'] = `declare module "net" {
         readonly remoteFamily?: string;
         readonly remotePort?: number;
 
-        // Extended base methods
+        \/\/ Extended base methods
         end(cb?: () => void): void;
         end(buffer: Uint8Array | string, cb?: () => void): void;
-        end(str: Uint8Array | string, encoding?: string, cb?: () => void): void;
+        end(str: Uint8Array | string, encoding?: BufferEncoding, cb?: () => void): void;
 
         /**
          * events.EventEmitter
@@ -16861,7 +16110,7 @@ module.exports['net.d.ts'] = `declare module "net" {
         ipv6Only?: boolean;
     }
 
-    // https://github.com/nodejs/node/blob/master/lib/net.js
+    \/\/ https:\/\/github.com/nodejs/node/blob/master/lib/net.js
     class Server extends events.EventEmitter {
         constructor(connectionListener?: (socket: Socket) => void);
         constructor(options?: { allowHalfOpen?: boolean, pauseOnConnect?: boolean }, connectionListener?: (socket: Socket) => void);
@@ -16999,201 +16248,177 @@ module.exports['os.d.ts'] = `declare module "os" {
     function cpus(): CpuInfo[];
     function type(): string;
     function release(): string;
-    function networkInterfaces(): { [index: string]: NetworkInterfaceInfo[] };
+    function networkInterfaces(): NodeJS.Dict<NetworkInterfaceInfo[]>;
     function homedir(): string;
     function userInfo(options: { encoding: 'buffer' }): UserInfo<Buffer>;
-    function userInfo(options?: { encoding: string }): UserInfo<string>;
-    const constants: {
-        UV_UDP_REUSEADDR: number;
-        // signals: { [key in NodeJS.Signals]: number; }; @todo: change after migration to typescript 2.1
-        signals: {
-            SIGHUP: number;
-            SIGINT: number;
-            SIGQUIT: number;
-            SIGILL: number;
-            SIGTRAP: number;
-            SIGABRT: number;
-            SIGIOT: number;
-            SIGBUS: number;
-            SIGFPE: number;
-            SIGKILL: number;
-            SIGUSR1: number;
-            SIGSEGV: number;
-            SIGUSR2: number;
-            SIGPIPE: number;
-            SIGALRM: number;
-            SIGTERM: number;
-            SIGCHLD: number;
-            SIGSTKFLT: number;
-            SIGCONT: number;
-            SIGSTOP: number;
-            SIGTSTP: number;
-            SIGBREAK: number;
-            SIGTTIN: number;
-            SIGTTOU: number;
-            SIGURG: number;
-            SIGXCPU: number;
-            SIGXFSZ: number;
-            SIGVTALRM: number;
-            SIGPROF: number;
-            SIGWINCH: number;
-            SIGIO: number;
-            SIGPOLL: number;
-            SIGLOST: number;
-            SIGPWR: number;
-            SIGINFO: number;
-            SIGSYS: number;
-            SIGUNUSED: number;
-        };
-        errno: {
-            E2BIG: number;
-            EACCES: number;
-            EADDRINUSE: number;
-            EADDRNOTAVAIL: number;
-            EAFNOSUPPORT: number;
-            EAGAIN: number;
-            EALREADY: number;
-            EBADF: number;
-            EBADMSG: number;
-            EBUSY: number;
-            ECANCELED: number;
-            ECHILD: number;
-            ECONNABORTED: number;
-            ECONNREFUSED: number;
-            ECONNRESET: number;
-            EDEADLK: number;
-            EDESTADDRREQ: number;
-            EDOM: number;
-            EDQUOT: number;
-            EEXIST: number;
-            EFAULT: number;
-            EFBIG: number;
-            EHOSTUNREACH: number;
-            EIDRM: number;
-            EILSEQ: number;
-            EINPROGRESS: number;
-            EINTR: number;
-            EINVAL: number;
-            EIO: number;
-            EISCONN: number;
-            EISDIR: number;
-            ELOOP: number;
-            EMFILE: number;
-            EMLINK: number;
-            EMSGSIZE: number;
-            EMULTIHOP: number;
-            ENAMETOOLONG: number;
-            ENETDOWN: number;
-            ENETRESET: number;
-            ENETUNREACH: number;
-            ENFILE: number;
-            ENOBUFS: number;
-            ENODATA: number;
-            ENODEV: number;
-            ENOENT: number;
-            ENOEXEC: number;
-            ENOLCK: number;
-            ENOLINK: number;
-            ENOMEM: number;
-            ENOMSG: number;
-            ENOPROTOOPT: number;
-            ENOSPC: number;
-            ENOSR: number;
-            ENOSTR: number;
-            ENOSYS: number;
-            ENOTCONN: number;
-            ENOTDIR: number;
-            ENOTEMPTY: number;
-            ENOTSOCK: number;
-            ENOTSUP: number;
-            ENOTTY: number;
-            ENXIO: number;
-            EOPNOTSUPP: number;
-            EOVERFLOW: number;
-            EPERM: number;
-            EPIPE: number;
-            EPROTO: number;
-            EPROTONOSUPPORT: number;
-            EPROTOTYPE: number;
-            ERANGE: number;
-            EROFS: number;
-            ESPIPE: number;
-            ESRCH: number;
-            ESTALE: number;
-            ETIME: number;
-            ETIMEDOUT: number;
-            ETXTBSY: number;
-            EWOULDBLOCK: number;
-            EXDEV: number;
-            WSAEINTR: number;
-            WSAEBADF: number;
-            WSAEACCES: number;
-            WSAEFAULT: number;
-            WSAEINVAL: number;
-            WSAEMFILE: number;
-            WSAEWOULDBLOCK: number;
-            WSAEINPROGRESS: number;
-            WSAEALREADY: number;
-            WSAENOTSOCK: number;
-            WSAEDESTADDRREQ: number;
-            WSAEMSGSIZE: number;
-            WSAEPROTOTYPE: number;
-            WSAENOPROTOOPT: number;
-            WSAEPROTONOSUPPORT: number;
-            WSAESOCKTNOSUPPORT: number;
-            WSAEOPNOTSUPP: number;
-            WSAEPFNOSUPPORT: number;
-            WSAEAFNOSUPPORT: number;
-            WSAEADDRINUSE: number;
-            WSAEADDRNOTAVAIL: number;
-            WSAENETDOWN: number;
-            WSAENETUNREACH: number;
-            WSAENETRESET: number;
-            WSAECONNABORTED: number;
-            WSAECONNRESET: number;
-            WSAENOBUFS: number;
-            WSAEISCONN: number;
-            WSAENOTCONN: number;
-            WSAESHUTDOWN: number;
-            WSAETOOMANYREFS: number;
-            WSAETIMEDOUT: number;
-            WSAECONNREFUSED: number;
-            WSAELOOP: number;
-            WSAENAMETOOLONG: number;
-            WSAEHOSTDOWN: number;
-            WSAEHOSTUNREACH: number;
-            WSAENOTEMPTY: number;
-            WSAEPROCLIM: number;
-            WSAEUSERS: number;
-            WSAEDQUOT: number;
-            WSAESTALE: number;
-            WSAEREMOTE: number;
-            WSASYSNOTREADY: number;
-            WSAVERNOTSUPPORTED: number;
-            WSANOTINITIALISED: number;
-            WSAEDISCON: number;
-            WSAENOMORE: number;
-            WSAECANCELLED: number;
-            WSAEINVALIDPROCTABLE: number;
-            WSAEINVALIDPROVIDER: number;
-            WSAEPROVIDERFAILEDINIT: number;
-            WSASYSCALLFAILURE: number;
-            WSASERVICE_NOT_FOUND: number;
-            WSATYPE_NOT_FOUND: number;
-            WSA_E_NO_MORE: number;
-            WSA_E_CANCELLED: number;
-            WSAEREFUSED: number;
-        };
-        priority: {
-            PRIORITY_LOW: number;
-            PRIORITY_BELOW_NORMAL: number;
-            PRIORITY_NORMAL: number;
-            PRIORITY_ABOVE_NORMAL: number;
-            PRIORITY_HIGH: number;
-            PRIORITY_HIGHEST: number;
-        }
+    function userInfo(options?: { encoding: BufferEncoding }): UserInfo<string>;
+
+    type SignalConstants = {
+        [key in NodeJS.Signals]: number;
     };
+
+    namespace constants {
+        const UV_UDP_REUSEADDR: number;
+        namespace signals {}
+        const signals: SignalConstants;
+        namespace errno {
+            const E2BIG: number;
+            const EACCES: number;
+            const EADDRINUSE: number;
+            const EADDRNOTAVAIL: number;
+            const EAFNOSUPPORT: number;
+            const EAGAIN: number;
+            const EALREADY: number;
+            const EBADF: number;
+            const EBADMSG: number;
+            const EBUSY: number;
+            const ECANCELED: number;
+            const ECHILD: number;
+            const ECONNABORTED: number;
+            const ECONNREFUSED: number;
+            const ECONNRESET: number;
+            const EDEADLK: number;
+            const EDESTADDRREQ: number;
+            const EDOM: number;
+            const EDQUOT: number;
+            const EEXIST: number;
+            const EFAULT: number;
+            const EFBIG: number;
+            const EHOSTUNREACH: number;
+            const EIDRM: number;
+            const EILSEQ: number;
+            const EINPROGRESS: number;
+            const EINTR: number;
+            const EINVAL: number;
+            const EIO: number;
+            const EISCONN: number;
+            const EISDIR: number;
+            const ELOOP: number;
+            const EMFILE: number;
+            const EMLINK: number;
+            const EMSGSIZE: number;
+            const EMULTIHOP: number;
+            const ENAMETOOLONG: number;
+            const ENETDOWN: number;
+            const ENETRESET: number;
+            const ENETUNREACH: number;
+            const ENFILE: number;
+            const ENOBUFS: number;
+            const ENODATA: number;
+            const ENODEV: number;
+            const ENOENT: number;
+            const ENOEXEC: number;
+            const ENOLCK: number;
+            const ENOLINK: number;
+            const ENOMEM: number;
+            const ENOMSG: number;
+            const ENOPROTOOPT: number;
+            const ENOSPC: number;
+            const ENOSR: number;
+            const ENOSTR: number;
+            const ENOSYS: number;
+            const ENOTCONN: number;
+            const ENOTDIR: number;
+            const ENOTEMPTY: number;
+            const ENOTSOCK: number;
+            const ENOTSUP: number;
+            const ENOTTY: number;
+            const ENXIO: number;
+            const EOPNOTSUPP: number;
+            const EOVERFLOW: number;
+            const EPERM: number;
+            const EPIPE: number;
+            const EPROTO: number;
+            const EPROTONOSUPPORT: number;
+            const EPROTOTYPE: number;
+            const ERANGE: number;
+            const EROFS: number;
+            const ESPIPE: number;
+            const ESRCH: number;
+            const ESTALE: number;
+            const ETIME: number;
+            const ETIMEDOUT: number;
+            const ETXTBSY: number;
+            const EWOULDBLOCK: number;
+            const EXDEV: number;
+            const WSAEINTR: number;
+            const WSAEBADF: number;
+            const WSAEACCES: number;
+            const WSAEFAULT: number;
+            const WSAEINVAL: number;
+            const WSAEMFILE: number;
+            const WSAEWOULDBLOCK: number;
+            const WSAEINPROGRESS: number;
+            const WSAEALREADY: number;
+            const WSAENOTSOCK: number;
+            const WSAEDESTADDRREQ: number;
+            const WSAEMSGSIZE: number;
+            const WSAEPROTOTYPE: number;
+            const WSAENOPROTOOPT: number;
+            const WSAEPROTONOSUPPORT: number;
+            const WSAESOCKTNOSUPPORT: number;
+            const WSAEOPNOTSUPP: number;
+            const WSAEPFNOSUPPORT: number;
+            const WSAEAFNOSUPPORT: number;
+            const WSAEADDRINUSE: number;
+            const WSAEADDRNOTAVAIL: number;
+            const WSAENETDOWN: number;
+            const WSAENETUNREACH: number;
+            const WSAENETRESET: number;
+            const WSAECONNABORTED: number;
+            const WSAECONNRESET: number;
+            const WSAENOBUFS: number;
+            const WSAEISCONN: number;
+            const WSAENOTCONN: number;
+            const WSAESHUTDOWN: number;
+            const WSAETOOMANYREFS: number;
+            const WSAETIMEDOUT: number;
+            const WSAECONNREFUSED: number;
+            const WSAELOOP: number;
+            const WSAENAMETOOLONG: number;
+            const WSAEHOSTDOWN: number;
+            const WSAEHOSTUNREACH: number;
+            const WSAENOTEMPTY: number;
+            const WSAEPROCLIM: number;
+            const WSAEUSERS: number;
+            const WSAEDQUOT: number;
+            const WSAESTALE: number;
+            const WSAEREMOTE: number;
+            const WSASYSNOTREADY: number;
+            const WSAVERNOTSUPPORTED: number;
+            const WSANOTINITIALISED: number;
+            const WSAEDISCON: number;
+            const WSAENOMORE: number;
+            const WSAECANCELLED: number;
+            const WSAEINVALIDPROCTABLE: number;
+            const WSAEINVALIDPROVIDER: number;
+            const WSAEPROVIDERFAILEDINIT: number;
+            const WSASYSCALLFAILURE: number;
+            const WSASERVICE_NOT_FOUND: number;
+            const WSATYPE_NOT_FOUND: number;
+            const WSA_E_NO_MORE: number;
+            const WSA_E_CANCELLED: number;
+            const WSAEREFUSED: number;
+        }
+        namespace priority {
+            const PRIORITY_LOW: number;
+            const PRIORITY_BELOW_NORMAL: number;
+            const PRIORITY_NORMAL: number;
+            const PRIORITY_ABOVE_NORMAL: number;
+            const PRIORITY_HIGH: number;
+            const PRIORITY_HIGHEST: number;
+        }
+    }
+
     function arch(): string;
+    /**
+     * Returns a string identifying the kernel version.
+     * On POSIX systems, the operating system release is determined by calling
+     * [uname(3)][]. On Windows, \`pRtlGetVersion\` is used, and if it is not available,
+     * \`GetVersionExW()\` will be used. See
+     * https:\/\/en.wikipedia.org/wiki/Uname#Examples for more information.
+     */
+    function version(): string;
     function platform(): NodeJS.Platform;
     function tmpdir(): string;
     const EOL: string;
@@ -17216,167 +16441,163 @@ module.exports['os.d.ts'] = `declare module "os" {
 }
 `;
 module.exports['path.d.ts'] = `declare module "path" {
-    /**
-     * A parsed path object generated by path.parse() or consumed by path.format().
-     */
-    interface ParsedPath {
+    namespace path {
         /**
-         * The root of the path such as '/' or 'c:\'
+         * A parsed path object generated by path.parse() or consumed by path.format().
          */
-        root: string;
-        /**
-         * The full directory path such as '/home/user/dir' or 'c:\path\dir'
-         */
-        dir: string;
-        /**
-         * The file name including extension (if any) such as 'index.html'
-         */
-        base: string;
-        /**
-         * The file extension (if any) such as '.html'
-         */
-        ext: string;
-        /**
-         * The file name without extension (if any) such as 'index'
-         */
-        name: string;
-    }
-    interface FormatInputPathObject {
-        /**
-         * The root of the path such as '/' or 'c:\'
-         */
-        root?: string;
-        /**
-         * The full directory path such as '/home/user/dir' or 'c:\path\dir'
-         */
-        dir?: string;
-        /**
-         * The file name including extension (if any) such as 'index.html'
-         */
-        base?: string;
-        /**
-         * The file extension (if any) such as '.html'
-         */
-        ext?: string;
-        /**
-         * The file name without extension (if any) such as 'index'
-         */
-        name?: string;
-    }
+        interface ParsedPath {
+            /**
+             * The root of the path such as '/' or 'c:\'
+             */
+            root: string;
+            /**
+             * The full directory path such as '/home/user/dir' or 'c:\path\dir'
+             */
+            dir: string;
+            /**
+             * The file name including extension (if any) such as 'index.html'
+             */
+            base: string;
+            /**
+             * The file extension (if any) such as '.html'
+             */
+            ext: string;
+            /**
+             * The file name without extension (if any) such as 'index'
+             */
+            name: string;
+        }
 
-    /**
-     * Normalize a string path, reducing '..' and '.' parts.
-     * When multiple slashes are found, they're replaced by a single one; when the path contains a trailing slash, it is preserved. On Windows backslashes are used.
-     *
-     * @param p string path to normalize.
-     */
-    function normalize(p: string): string;
-    /**
-     * Join all arguments together and normalize the resulting path.
-     * Arguments must be strings. In v0.8, non-string arguments were silently ignored. In v0.10 and up, an exception is thrown.
-     *
-     * @param paths paths to join.
-     */
-    function join(...paths: string[]): string;
-    /**
-     * The right-most parameter is considered {to}.  Other parameters are considered an array of {from}.
-     *
-     * Starting from leftmost {from} parameter, resolves {to} to an absolute path.
-     *
-     * If {to} isn't already absolute, {from} arguments are prepended in right to left order,
-     * until an absolute path is found. If after using all {from} paths still no absolute path is found,
-     * the current working directory is used as well. The resulting path is normalized,
-     * and trailing slashes are removed unless the path gets resolved to the root directory.
-     *
-     * @param pathSegments string paths to join.  Non-string arguments are ignored.
-     */
-    function resolve(...pathSegments: string[]): string;
-    /**
-     * Determines whether {path} is an absolute path. An absolute path will always resolve to the same location, regardless of the working directory.
-     *
-     * @param path path to test.
-     */
-    function isAbsolute(path: string): boolean;
-    /**
-     * Solve the relative path from {from} to {to}.
-     * At times we have two absolute paths, and we need to derive the relative path from one to the other. This is actually the reverse transform of path.resolve.
-     */
-    function relative(from: string, to: string): string;
-    /**
-     * Return the directory name of a path. Similar to the Unix dirname command.
-     *
-     * @param p the path to evaluate.
-     */
-    function dirname(p: string): string;
-    /**
-     * Return the last portion of a path. Similar to the Unix basename command.
-     * Often used to extract the file name from a fully qualified path.
-     *
-     * @param p the path to evaluate.
-     * @param ext optionally, an extension to remove from the result.
-     */
-    function basename(p: string, ext?: string): string;
-    /**
-     * Return the extension of the path, from the last '.' to end of string in the last portion of the path.
-     * If there is no '.' in the last portion of the path or the first character of it is '.', then it returns an empty string
-     *
-     * @param p the path to evaluate.
-     */
-    function extname(p: string): string;
-    /**
-     * The platform-specific file separator. '\\' or '/'.
-     */
-    const sep: '\\' | '/';
-    /**
-     * The platform-specific file delimiter. ';' or ':'.
-     */
-    const delimiter: ';' | ':';
-    /**
-     * Returns an object from a path string - the opposite of format().
-     *
-     * @param pathString path to evaluate.
-     */
-    function parse(pathString: string): ParsedPath;
-    /**
-     * Returns a path string from an object - the opposite of parse().
-     *
-     * @param pathString path to evaluate.
-     */
-    function format(pathObject: FormatInputPathObject): string;
+        interface FormatInputPathObject {
+            /**
+             * The root of the path such as '/' or 'c:\'
+             */
+            root?: string;
+            /**
+             * The full directory path such as '/home/user/dir' or 'c:\path\dir'
+             */
+            dir?: string;
+            /**
+             * The file name including extension (if any) such as 'index.html'
+             */
+            base?: string;
+            /**
+             * The file extension (if any) such as '.html'
+             */
+            ext?: string;
+            /**
+             * The file name without extension (if any) such as 'index'
+             */
+            name?: string;
+        }
 
-    namespace posix {
-        function normalize(p: string): string;
-        function join(...paths: string[]): string;
-        function resolve(...pathSegments: string[]): string;
-        function isAbsolute(p: string): boolean;
-        function relative(from: string, to: string): string;
-        function dirname(p: string): string;
-        function basename(p: string, ext?: string): string;
-        function extname(p: string): string;
-        const sep: string;
-        const delimiter: string;
-        function parse(p: string): ParsedPath;
-        function format(pP: FormatInputPathObject): string;
+        interface PlatformPath {
+            /**
+             * Normalize a string path, reducing '..' and '.' parts.
+             * When multiple slashes are found, they're replaced by a single one; when the path contains a trailing slash, it is preserved. On Windows backslashes are used.
+             *
+             * @param p string path to normalize.
+             */
+            normalize(p: string): string;
+            /**
+             * Join all arguments together and normalize the resulting path.
+             * Arguments must be strings. In v0.8, non-string arguments were silently ignored. In v0.10 and up, an exception is thrown.
+             *
+             * @param paths paths to join.
+             */
+            join(...paths: string[]): string;
+            /**
+             * The right-most parameter is considered {to}.  Other parameters are considered an array of {from}.
+             *
+             * Starting from leftmost {from} parameter, resolves {to} to an absolute path.
+             *
+             * If {to} isn't already absolute, {from} arguments are prepended in right to left order,
+             * until an absolute path is found. If after using all {from} paths still no absolute path is found,
+             * the current working directory is used as well. The resulting path is normalized,
+             * and trailing slashes are removed unless the path gets resolved to the root directory.
+             *
+             * @param pathSegments string paths to join.  Non-string arguments are ignored.
+             */
+            resolve(...pathSegments: string[]): string;
+            /**
+             * Determines whether {path} is an absolute path. An absolute path will always resolve to the same location, regardless of the working directory.
+             *
+             * @param path path to test.
+             */
+            isAbsolute(p: string): boolean;
+            /**
+             * Solve the relative path from {from} to {to}.
+             * At times we have two absolute paths, and we need to derive the relative path from one to the other. This is actually the reverse transform of path.resolve.
+             */
+            relative(from: string, to: string): string;
+            /**
+             * Return the directory name of a path. Similar to the Unix dirname command.
+             *
+             * @param p the path to evaluate.
+             */
+            dirname(p: string): string;
+            /**
+             * Return the last portion of a path. Similar to the Unix basename command.
+             * Often used to extract the file name from a fully qualified path.
+             *
+             * @param p the path to evaluate.
+             * @param ext optionally, an extension to remove from the result.
+             */
+            basename(p: string, ext?: string): string;
+            /**
+             * Return the extension of the path, from the last '.' to end of string in the last portion of the path.
+             * If there is no '.' in the last portion of the path or the first character of it is '.', then it returns an empty string
+             *
+             * @param p the path to evaluate.
+             */
+            extname(p: string): string;
+            /**
+             * The platform-specific file separator. '\\' or '/'.
+             */
+            readonly sep: string;
+            /**
+             * The platform-specific file delimiter. ';' or ':'.
+             */
+            readonly delimiter: string;
+            /**
+             * Returns an object from a path string - the opposite of format().
+             *
+             * @param pathString path to evaluate.
+             */
+            parse(p: string): ParsedPath;
+            /**
+             * Returns a path string from an object - the opposite of parse().
+             *
+             * @param pathString path to evaluate.
+             */
+            format(pP: FormatInputPathObject): string;
+            /**
+             * On Windows systems only, returns an equivalent namespace-prefixed path for the given path.
+             * If path is not a string, path will be returned without modifications.
+             * This method is meaningful only on Windows system.
+             * On POSIX systems, the method is non-operational and always returns path without modifications.
+             */
+            toNamespacedPath(path: string): string;
+            /**
+             * Posix specific pathing.
+             * Same as parent object on posix.
+             */
+            readonly posix: PlatformPath;
+            /**
+             * Windows specific pathing.
+             * Same as parent object on windows
+             */
+            readonly win32: PlatformPath;
+        }
     }
-
-    namespace win32 {
-        function normalize(p: string): string;
-        function join(...paths: string[]): string;
-        function resolve(...pathSegments: string[]): string;
-        function isAbsolute(p: string): boolean;
-        function relative(from: string, to: string): string;
-        function dirname(p: string): string;
-        function basename(p: string, ext?: string): string;
-        function extname(p: string): string;
-        const sep: string;
-        const delimiter: string;
-        function parse(p: string): ParsedPath;
-        function format(pP: FormatInputPathObject): string;
-    }
+    const path: path.PlatformPath;
+    export = path;
 }
 `;
-module.exports['perf_hooks.d.ts'] = `declare module "perf_hooks" {
-    import { AsyncResource } from "async_hooks";
+module.exports['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
+    import { AsyncResource } from 'async_hooks';
+
+    type EntryType = 'node' | 'mark' | 'measure' | 'gc' | 'function' | 'http2' | 'http';
 
     interface PerformanceEntry {
         /**
@@ -17399,14 +16620,21 @@ module.exports['perf_hooks.d.ts'] = `declare module "perf_hooks" {
          * The type of the performance entry.
          * Currently it may be one of: 'node', 'mark', 'measure', 'gc', or 'function'.
          */
-        readonly entryType: string;
+        readonly entryType: EntryType;
 
         /**
-         * When performanceEntry.entryType is equal to 'gc', the performance.kind property identifies
+         * When \`performanceEntry.entryType\` is equal to 'gc', \`the performance.kind\` property identifies
          * the type of garbage collection operation that occurred.
-         * The value may be one of perf_hooks.constants.
+         * See perf_hooks.constants for valid values.
          */
         readonly kind?: number;
+
+        /**
+         * When \`performanceEntry.entryType\` is equal to 'gc', the \`performance.flags\`
+         * property contains additional information about garbage collection operation.
+         * See perf_hooks.constants for valid values.
+         */
+        readonly flags?: number;
     }
 
     interface PerformanceNodeTiming extends PerformanceEntry {
@@ -17416,59 +16644,29 @@ module.exports['perf_hooks.d.ts'] = `declare module "perf_hooks" {
         readonly bootstrapComplete: number;
 
         /**
-         * The high resolution millisecond timestamp at which cluster processing ended.
+         * The high resolution millisecond timestamp at which the Node.js process completed bootstrapping.
+         * If bootstrapping has not yet finished, the property has the value of -1.
          */
-        readonly clusterSetupEnd: number;
+        readonly environment: number;
 
         /**
-         * The high resolution millisecond timestamp at which cluster processing started.
+         * The high resolution millisecond timestamp at which the Node.js environment was initialized.
          */
-        readonly clusterSetupStart: number;
+        readonly idleTime: number;
 
         /**
-         * The high resolution millisecond timestamp at which the Node.js event loop exited.
+         * The high resolution millisecond timestamp of the amount of time the event loop has been idle
+         *  within the event loop's event provider (e.g. \`epoll_wait\`). This does not take CPU usage
+         * into consideration. If the event loop has not yet started (e.g., in the first tick of the main script),
+         *  the property has the value of 0.
          */
         readonly loopExit: number;
 
         /**
          * The high resolution millisecond timestamp at which the Node.js event loop started.
+         * If the event loop has not yet started (e.g., in the first tick of the main script), the property has the value of -1.
          */
         readonly loopStart: number;
-
-        /**
-         * The high resolution millisecond timestamp at which main module load ended.
-         */
-        readonly moduleLoadEnd: number;
-
-        /**
-         * The high resolution millisecond timestamp at which main module load started.
-         */
-        readonly moduleLoadStart: number;
-
-        /**
-         * The high resolution millisecond timestamp at which the Node.js process was initialized.
-         */
-        readonly nodeStart: number;
-
-        /**
-         * The high resolution millisecond timestamp at which preload module load ended.
-         */
-        readonly preloadModuleLoadEnd: number;
-
-        /**
-         * The high resolution millisecond timestamp at which preload module load started.
-         */
-        readonly preloadModuleLoadStart: number;
-
-        /**
-         * The high resolution millisecond timestamp at which third_party_main processing ended.
-         */
-        readonly thirdPartyMainEnd: number;
-
-        /**
-         * The high resolution millisecond timestamp at which third_party_main processing started.
-         */
-        readonly thirdPartyMainStart: number;
 
         /**
          * The high resolution millisecond timestamp at which the V8 platform was initialized.
@@ -17476,49 +16674,19 @@ module.exports['perf_hooks.d.ts'] = `declare module "perf_hooks" {
         readonly v8Start: number;
     }
 
-    interface Performance {
-        /**
-         * If name is not provided, removes all PerformanceFunction objects from the Performance Timeline.
-         * If name is provided, removes entries with name.
-         * @param name
-         */
-        clearFunctions(name?: string): void;
+    interface EventLoopUtilization {
+        idle: number;
+        active: number;
+        utilization: number;
+    }
 
+    interface Performance {
         /**
          * If name is not provided, removes all PerformanceMark objects from the Performance Timeline.
          * If name is provided, removes only the named mark.
          * @param name
          */
         clearMarks(name?: string): void;
-
-        /**
-         * If name is not provided, removes all PerformanceMeasure objects from the Performance Timeline.
-         * If name is provided, removes only objects whose performanceEntry.name matches name.
-         */
-        clearMeasures(name?: string): void;
-
-        /**
-         * Returns a list of all PerformanceEntry objects in chronological order with respect to performanceEntry.startTime.
-         * @return list of all PerformanceEntry objects
-         */
-        getEntries(): PerformanceEntry[];
-
-        /**
-         * Returns a list of all PerformanceEntry objects in chronological order with respect to performanceEntry.startTime
-         * whose performanceEntry.name is equal to name, and optionally, whose performanceEntry.entryType is equal to type.
-         * @param name
-         * @param type
-         * @return list of all PerformanceEntry objects
-         */
-        getEntriesByName(name: string, type?: string): PerformanceEntry[];
-
-        /**
-         * Returns a list of all PerformanceEntry objects in chronological order with respect to performanceEntry.startTime
-         * whose performanceEntry.entryType is equal to type.
-         * @param type
-         * @return list of all PerformanceEntry objects
-         */
-        getEntriesByType(type: string): PerformanceEntry[];
 
         /**
          * Creates a new PerformanceMark entry in the Performance Timeline.
@@ -17567,6 +16735,16 @@ module.exports['perf_hooks.d.ts'] = `declare module "perf_hooks" {
          * @param fn
          */
         timerify<T extends (...optionalParams: any[]) => any>(fn: T): T;
+
+        /**
+         * eventLoopUtilization is similar to CPU utilization except that it is calculated using high precision wall-clock time.
+         * It represents the percentage of time the event loop has spent outside the event loop's event provider (e.g. epoll_wait).
+         * No other CPU idle time is taken into consideration.
+         *
+         * @param util1 The result of a previous call to eventLoopUtilization()
+         * @param util2 The result of a previous call to eventLoopUtilization() prior to util1
+         */
+        eventLoopUtilization(util1?: EventLoopUtilization, util2?: EventLoopUtilization): EventLoopUtilization;
     }
 
     interface PerformanceObserverEntryList {
@@ -17579,13 +16757,13 @@ module.exports['perf_hooks.d.ts'] = `declare module "perf_hooks" {
          * @return a list of PerformanceEntry objects in chronological order with respect to performanceEntry.startTime
          * whose performanceEntry.name is equal to name, and optionally, whose performanceEntry.entryType is equal to type.
          */
-        getEntriesByName(name: string, type?: string): PerformanceEntry[];
+        getEntriesByName(name: string, type?: EntryType): PerformanceEntry[];
 
         /**
          * @return Returns a list of PerformanceEntry objects in chronological order with respect to performanceEntry.startTime
          * whose performanceEntry.entryType is equal to type.
          */
-        getEntriesByType(type: string): PerformanceEntry[];
+        getEntriesByType(type: EntryType): PerformanceEntry[];
     }
 
     type PerformanceObserverCallback = (list: PerformanceObserverEntryList, observer: PerformanceObserver) => void;
@@ -17604,7 +16782,7 @@ module.exports['perf_hooks.d.ts'] = `declare module "perf_hooks" {
          * Property buffered defaults to false.
          * @param options
          */
-        observe(options: { entryTypes: string[], buffered?: boolean }): void;
+        observe(options: { entryTypes: ReadonlyArray<EntryType>; buffered?: boolean }): void;
     }
 
     namespace constants {
@@ -17612,6 +16790,14 @@ module.exports['perf_hooks.d.ts'] = `declare module "perf_hooks" {
         const NODE_PERFORMANCE_GC_MINOR: number;
         const NODE_PERFORMANCE_GC_INCREMENTAL: number;
         const NODE_PERFORMANCE_GC_WEAKCB: number;
+
+        const NODE_PERFORMANCE_GC_FLAGS_NO: number;
+        const NODE_PERFORMANCE_GC_FLAGS_CONSTRUCT_RETAINED: number;
+        const NODE_PERFORMANCE_GC_FLAGS_FORCED: number;
+        const NODE_PERFORMANCE_GC_FLAGS_SYNCHRONOUS_PHANTOM_PROCESSING: number;
+        const NODE_PERFORMANCE_GC_FLAGS_ALL_AVAILABLE_GARBAGE: number;
+        const NODE_PERFORMANCE_GC_FLAGS_ALL_EXTERNAL_MEMORY: number;
+        const NODE_PERFORMANCE_GC_FLAGS_SCHEDULE_IDLE: number;
     }
 
     const performance: Performance;
@@ -17684,12 +16870,405 @@ module.exports['process.d.ts'] = `declare module "process" {
     import * as tty from "tty";
 
     global {
+        var process: NodeJS.Process;
+
         namespace NodeJS {
-            // this namespace merge is here because these are specifically used
-            // as the type for process.stdin, process.stdout, and process.stderr.
-            // they can't live in tty.d.ts because we need to disambiguate the imported name.
+            \/\/ this namespace merge is here because these are specifically used
+            \/\/ as the type for process.stdin, process.stdout, and process.stderr.
+            \/\/ they can't live in tty.d.ts because we need to disambiguate the imported name.
             interface ReadStream extends tty.ReadStream {}
             interface WriteStream extends tty.WriteStream {}
+
+            interface MemoryUsage {
+                rss: number;
+                heapTotal: number;
+                heapUsed: number;
+                external: number;
+                arrayBuffers: number;
+            }
+
+            interface CpuUsage {
+                user: number;
+                system: number;
+            }
+
+            interface ProcessRelease {
+                name: string;
+                sourceUrl?: string;
+                headersUrl?: string;
+                libUrl?: string;
+                lts?: string;
+            }
+
+            interface ProcessVersions extends Dict<string> {
+                http_parser: string;
+                node: string;
+                v8: string;
+                ares: string;
+                uv: string;
+                zlib: string;
+                modules: string;
+                openssl: string;
+            }
+
+            type Platform = 'aix'
+                | 'android'
+                | 'darwin'
+                | 'freebsd'
+                | 'linux'
+                | 'openbsd'
+                | 'sunos'
+                | 'win32'
+                | 'cygwin'
+                | 'netbsd';
+
+            type Signals =
+                "SIGABRT" | "SIGALRM" | "SIGBUS" | "SIGCHLD" | "SIGCONT" | "SIGFPE" | "SIGHUP" | "SIGILL" | "SIGINT" | "SIGIO" |
+                "SIGIOT" | "SIGKILL" | "SIGPIPE" | "SIGPOLL" | "SIGPROF" | "SIGPWR" | "SIGQUIT" | "SIGSEGV" | "SIGSTKFLT" |
+                "SIGSTOP" | "SIGSYS" | "SIGTERM" | "SIGTRAP" | "SIGTSTP" | "SIGTTIN" | "SIGTTOU" | "SIGUNUSED" | "SIGURG" |
+                "SIGUSR1" | "SIGUSR2" | "SIGVTALRM" | "SIGWINCH" | "SIGXCPU" | "SIGXFSZ" | "SIGBREAK" | "SIGLOST" | "SIGINFO";
+
+            type MultipleResolveType = 'resolve' | 'reject';
+
+            type BeforeExitListener = (code: number) => void;
+            type DisconnectListener = () => void;
+            type ExitListener = (code: number) => void;
+            type RejectionHandledListener = (promise: Promise<any>) => void;
+            type UncaughtExceptionListener = (error: Error) => void;
+            type UnhandledRejectionListener = (reason: {} | null | undefined, promise: Promise<any>) => void;
+            type WarningListener = (warning: Error) => void;
+            type MessageListener = (message: any, sendHandle: any) => void;
+            type SignalsListener = (signal: Signals) => void;
+            type NewListenerListener = (type: string | symbol, listener: (...args: any[]) => void) => void;
+            type RemoveListenerListener = (type: string | symbol, listener: (...args: any[]) => void) => void;
+            type MultipleResolveListener = (type: MultipleResolveType, promise: Promise<any>, value: any) => void;
+
+            interface Socket extends ReadWriteStream {
+                isTTY?: true;
+            }
+
+            \/\/ Alias for compatibility
+            interface ProcessEnv extends Dict<string> {}
+
+            interface HRTime {
+                (time?: [number, number]): [number, number];
+                bigint(): bigint;
+            }
+
+            interface ProcessReport {
+                /**
+                 * Directory where the report is written.
+                 * working directory of the Node.js process.
+                 * @default '' indicating that reports are written to the current
+                 */
+                directory: string;
+
+                /**
+                 * Filename where the report is written.
+                 * The default value is the empty string.
+                 * @default '' the output filename will be comprised of a timestamp,
+                 * PID, and sequence number.
+                 */
+                filename: string;
+
+                /**
+                 * Returns a JSON-formatted diagnostic report for the running process.
+                 * The report's JavaScript stack trace is taken from err, if present.
+                 */
+                getReport(err?: Error): string;
+
+                /**
+                 * If true, a diagnostic report is generated on fatal errors,
+                 * such as out of memory errors or failed C++ assertions.
+                 * @default false
+                 */
+                reportOnFatalError: boolean;
+
+                /**
+                 * If true, a diagnostic report is generated when the process
+                 * receives the signal specified by process.report.signal.
+                 * @defaul false
+                 */
+                reportOnSignal: boolean;
+
+                /**
+                 * If true, a diagnostic report is generated on uncaught exception.
+                 * @default false
+                 */
+                reportOnUncaughtException: boolean;
+
+                /**
+                 * The signal used to trigger the creation of a diagnostic report.
+                 * @default 'SIGUSR2'
+                 */
+                signal: Signals;
+
+                /**
+                 * Writes a diagnostic report to a file. If filename is not provided, the default filename
+                 * includes the date, time, PID, and a sequence number.
+                 * The report's JavaScript stack trace is taken from err, if present.
+                 *
+                 * @param fileName Name of the file where the report is written.
+                 * This should be a relative path, that will be appended to the directory specified in
+                 * \`process.report.directory\`, or the current working directory of the Node.js process,
+                 * if unspecified.
+                 * @param error A custom error used for reporting the JavaScript stack.
+                 * @return Filename of the generated report.
+                 */
+                writeReport(fileName?: string): string;
+                writeReport(error?: Error): string;
+                writeReport(fileName?: string, err?: Error): string;
+            }
+
+            interface ResourceUsage {
+                fsRead: number;
+                fsWrite: number;
+                involuntaryContextSwitches: number;
+                ipcReceived: number;
+                ipcSent: number;
+                majorPageFault: number;
+                maxRSS: number;
+                minorPageFault: number;
+                sharedMemorySize: number;
+                signalsCount: number;
+                swappedOut: number;
+                systemCPUTime: number;
+                unsharedDataSize: number;
+                unsharedStackSize: number;
+                userCPUTime: number;
+                voluntaryContextSwitches: number;
+            }
+
+            interface Process extends EventEmitter {
+                /**
+                 * Can also be a tty.WriteStream, not typed due to limitations.
+                 */
+                stdout: WriteStream & {
+                    fd: 1;
+                };
+                /**
+                 * Can also be a tty.WriteStream, not typed due to limitations.
+                 */
+                stderr: WriteStream & {
+                    fd: 2;
+                };
+                stdin: ReadStream & {
+                    fd: 0;
+                };
+                openStdin(): Socket;
+                argv: string[];
+                argv0: string;
+                execArgv: string[];
+                execPath: string;
+                abort(): never;
+                chdir(directory: string): void;
+                cwd(): string;
+                debugPort: number;
+                emitWarning(warning: string | Error, name?: string, ctor?: Function): void;
+                env: ProcessEnv;
+                exit(code?: number): never;
+                exitCode?: number;
+                getgid(): number;
+                setgid(id: number | string): void;
+                getuid(): number;
+                setuid(id: number | string): void;
+                geteuid(): number;
+                seteuid(id: number | string): void;
+                getegid(): number;
+                setegid(id: number | string): void;
+                getgroups(): number[];
+                setgroups(groups: ReadonlyArray<string | number>): void;
+                setUncaughtExceptionCaptureCallback(cb: ((err: Error) => void) | null): void;
+                hasUncaughtExceptionCaptureCallback(): boolean;
+                version: string;
+                versions: ProcessVersions;
+                config: {
+                    target_defaults: {
+                        cflags: any[];
+                        default_configuration: string;
+                        defines: string[];
+                        include_dirs: string[];
+                        libraries: string[];
+                    };
+                    variables: {
+                        clang: number;
+                        host_arch: string;
+                        node_install_npm: boolean;
+                        node_install_waf: boolean;
+                        node_prefix: string;
+                        node_shared_openssl: boolean;
+                        node_shared_v8: boolean;
+                        node_shared_zlib: boolean;
+                        node_use_dtrace: boolean;
+                        node_use_etw: boolean;
+                        node_use_openssl: boolean;
+                        target_arch: string;
+                        v8_no_strict_aliasing: number;
+                        v8_use_snapshot: boolean;
+                        visibility: string;
+                    };
+                };
+                kill(pid: number, signal?: string | number): true;
+                pid: number;
+                ppid: number;
+                title: string;
+                arch: string;
+                platform: Platform;
+                /** @deprecated since v14.0.0 - use \`require.main\` instead. */
+                mainModule?: Module;
+                memoryUsage(): MemoryUsage;
+                cpuUsage(previousValue?: CpuUsage): CpuUsage;
+                nextTick(callback: Function, ...args: any[]): void;
+                release: ProcessRelease;
+                features: {
+                    inspector: boolean;
+                    debug: boolean;
+                    uv: boolean;
+                    ipv6: boolean;
+                    tls_alpn: boolean;
+                    tls_sni: boolean;
+                    tls_ocsp: boolean;
+                    tls: boolean;
+                };
+                /**
+                 * @deprecated since v14.0.0 - Calling process.umask() with no argument causes
+                 * the process-wide umask to be written twice. This introduces a race condition between threads,
+                 * and is a potential security vulnerability. There is no safe, cross-platform alternative API.
+                 */
+                umask(): number;
+                /**
+                 * Can only be set if not in worker thread.
+                 */
+                umask(mask: string | number): number;
+                uptime(): number;
+                hrtime: HRTime;
+                domain: Domain;
+
+                \/\/ Worker
+                send?(message: any, sendHandle?: any, options?: { swallowErrors?: boolean}, callback?: (error: Error | null) => void): boolean;
+                disconnect(): void;
+                connected: boolean;
+
+                /**
+                 * The \`process.allowedNodeEnvironmentFlags\` property is a special,
+                 * read-only \`Set\` of flags allowable within the [\`NODE_OPTIONS\`][]
+                 * environment variable.
+                 */
+                allowedNodeEnvironmentFlags: ReadonlySet<string>;
+
+                /**
+                 * Only available with \`--experimental-report\`
+                 */
+                report?: ProcessReport;
+
+                resourceUsage(): ResourceUsage;
+
+                traceDeprecation: boolean;
+
+                /* EventEmitter */
+                addListener(event: "beforeExit", listener: BeforeExitListener): this;
+                addListener(event: "disconnect", listener: DisconnectListener): this;
+                addListener(event: "exit", listener: ExitListener): this;
+                addListener(event: "rejectionHandled", listener: RejectionHandledListener): this;
+                addListener(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+                addListener(event: "uncaughtExceptionMonitor", listener: UncaughtExceptionListener): this;
+                addListener(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+                addListener(event: "warning", listener: WarningListener): this;
+                addListener(event: "message", listener: MessageListener): this;
+                addListener(event: Signals, listener: SignalsListener): this;
+                addListener(event: "newListener", listener: NewListenerListener): this;
+                addListener(event: "removeListener", listener: RemoveListenerListener): this;
+                addListener(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+                emit(event: "beforeExit", code: number): boolean;
+                emit(event: "disconnect"): boolean;
+                emit(event: "exit", code: number): boolean;
+                emit(event: "rejectionHandled", promise: Promise<any>): boolean;
+                emit(event: "uncaughtException", error: Error): boolean;
+                emit(event: "uncaughtExceptionMonitor", error: Error): boolean;
+                emit(event: "unhandledRejection", reason: any, promise: Promise<any>): boolean;
+                emit(event: "warning", warning: Error): boolean;
+                emit(event: "message", message: any, sendHandle: any): this;
+                emit(event: Signals, signal: Signals): boolean;
+                emit(event: "newListener", eventName: string | symbol, listener: (...args: any[]) => void): this;
+                emit(event: "removeListener", eventName: string, listener: (...args: any[]) => void): this;
+                emit(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+                on(event: "beforeExit", listener: BeforeExitListener): this;
+                on(event: "disconnect", listener: DisconnectListener): this;
+                on(event: "exit", listener: ExitListener): this;
+                on(event: "rejectionHandled", listener: RejectionHandledListener): this;
+                on(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+                on(event: "uncaughtExceptionMonitor", listener: UncaughtExceptionListener): this;
+                on(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+                on(event: "warning", listener: WarningListener): this;
+                on(event: "message", listener: MessageListener): this;
+                on(event: Signals, listener: SignalsListener): this;
+                on(event: "newListener", listener: NewListenerListener): this;
+                on(event: "removeListener", listener: RemoveListenerListener): this;
+                on(event: "multipleResolves", listener: MultipleResolveListener): this;
+                on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+                once(event: "beforeExit", listener: BeforeExitListener): this;
+                once(event: "disconnect", listener: DisconnectListener): this;
+                once(event: "exit", listener: ExitListener): this;
+                once(event: "rejectionHandled", listener: RejectionHandledListener): this;
+                once(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+                once(event: "uncaughtExceptionMonitor", listener: UncaughtExceptionListener): this;
+                once(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+                once(event: "warning", listener: WarningListener): this;
+                once(event: "message", listener: MessageListener): this;
+                once(event: Signals, listener: SignalsListener): this;
+                once(event: "newListener", listener: NewListenerListener): this;
+                once(event: "removeListener", listener: RemoveListenerListener): this;
+                once(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+                prependListener(event: "beforeExit", listener: BeforeExitListener): this;
+                prependListener(event: "disconnect", listener: DisconnectListener): this;
+                prependListener(event: "exit", listener: ExitListener): this;
+                prependListener(event: "rejectionHandled", listener: RejectionHandledListener): this;
+                prependListener(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+                prependListener(event: "uncaughtExceptionMonitor", listener: UncaughtExceptionListener): this;
+                prependListener(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+                prependListener(event: "warning", listener: WarningListener): this;
+                prependListener(event: "message", listener: MessageListener): this;
+                prependListener(event: Signals, listener: SignalsListener): this;
+                prependListener(event: "newListener", listener: NewListenerListener): this;
+                prependListener(event: "removeListener", listener: RemoveListenerListener): this;
+                prependListener(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+                prependOnceListener(event: "beforeExit", listener: BeforeExitListener): this;
+                prependOnceListener(event: "disconnect", listener: DisconnectListener): this;
+                prependOnceListener(event: "exit", listener: ExitListener): this;
+                prependOnceListener(event: "rejectionHandled", listener: RejectionHandledListener): this;
+                prependOnceListener(event: "uncaughtException", listener: UncaughtExceptionListener): this;
+                prependOnceListener(event: "uncaughtExceptionMonitor", listener: UncaughtExceptionListener): this;
+                prependOnceListener(event: "unhandledRejection", listener: UnhandledRejectionListener): this;
+                prependOnceListener(event: "warning", listener: WarningListener): this;
+                prependOnceListener(event: "message", listener: MessageListener): this;
+                prependOnceListener(event: Signals, listener: SignalsListener): this;
+                prependOnceListener(event: "newListener", listener: NewListenerListener): this;
+                prependOnceListener(event: "removeListener", listener: RemoveListenerListener): this;
+                prependOnceListener(event: "multipleResolves", listener: MultipleResolveListener): this;
+
+                listeners(event: "beforeExit"): BeforeExitListener[];
+                listeners(event: "disconnect"): DisconnectListener[];
+                listeners(event: "exit"): ExitListener[];
+                listeners(event: "rejectionHandled"): RejectionHandledListener[];
+                listeners(event: "uncaughtException"): UncaughtExceptionListener[];
+                listeners(event: "uncaughtExceptionMonitor"): UncaughtExceptionListener[];
+                listeners(event: "unhandledRejection"): UnhandledRejectionListener[];
+                listeners(event: "warning"): WarningListener[];
+                listeners(event: "message"): MessageListener[];
+                listeners(event: Signals): SignalsListener[];
+                listeners(event: "newListener"): NewListenerListener[];
+                listeners(event: "removeListener"): RemoveListenerListener[];
+                listeners(event: "multipleResolves"): MultipleResolveListener[];
+            }
+
+            interface Global {
+                process: Process;
+            }
         }
     }
 
@@ -17697,15 +17276,71 @@ module.exports['process.d.ts'] = `declare module "process" {
 }
 `;
 module.exports['punycode.d.ts'] = `declare module "punycode" {
+    /**
+     * @deprecated since v7.0.0
+     * The version of the punycode module bundled in Node.js is being deprecated.
+     * In a future major version of Node.js this module will be removed.
+     * Users currently depending on the punycode module should switch to using
+     * the userland-provided Punycode.js module instead.
+     */
     function decode(string: string): string;
+    /**
+     * @deprecated since v7.0.0
+     * The version of the punycode module bundled in Node.js is being deprecated.
+     * In a future major version of Node.js this module will be removed.
+     * Users currently depending on the punycode module should switch to using
+     * the userland-provided Punycode.js module instead.
+     */
     function encode(string: string): string;
+    /**
+     * @deprecated since v7.0.0
+     * The version of the punycode module bundled in Node.js is being deprecated.
+     * In a future major version of Node.js this module will be removed.
+     * Users currently depending on the punycode module should switch to using
+     * the userland-provided Punycode.js module instead.
+     */
     function toUnicode(domain: string): string;
+    /**
+     * @deprecated since v7.0.0
+     * The version of the punycode module bundled in Node.js is being deprecated.
+     * In a future major version of Node.js this module will be removed.
+     * Users currently depending on the punycode module should switch to using
+     * the userland-provided Punycode.js module instead.
+     */
     function toASCII(domain: string): string;
+    /**
+     * @deprecated since v7.0.0
+     * The version of the punycode module bundled in Node.js is being deprecated.
+     * In a future major version of Node.js this module will be removed.
+     * Users currently depending on the punycode module should switch to using
+     * the userland-provided Punycode.js module instead.
+     */
     const ucs2: ucs2;
     interface ucs2 {
+        /**
+         * @deprecated since v7.0.0
+         * The version of the punycode module bundled in Node.js is being deprecated.
+         * In a future major version of Node.js this module will be removed.
+         * Users currently depending on the punycode module should switch to using
+         * the userland-provided Punycode.js module instead.
+         */
         decode(string: string): number[];
-        encode(codePoints: number[]): string;
+        /**
+         * @deprecated since v7.0.0
+         * The version of the punycode module bundled in Node.js is being deprecated.
+         * In a future major version of Node.js this module will be removed.
+         * Users currently depending on the punycode module should switch to using
+         * the userland-provided Punycode.js module instead.
+         */
+        encode(codePoints: ReadonlyArray<number>): string;
     }
+    /**
+     * @deprecated since v7.0.0
+     * The version of the punycode module bundled in Node.js is being deprecated.
+     * In a future major version of Node.js this module will be removed.
+     * Users currently depending on the punycode module should switch to using
+     * the userland-provided Punycode.js module instead.
+     */
     const version: string;
 }
 `;
@@ -17719,10 +17354,9 @@ module.exports['querystring.d.ts'] = `declare module "querystring" {
         decodeURIComponent?: (str: string) => string;
     }
 
-    interface ParsedUrlQuery { [key: string]: string | string[]; }
+    interface ParsedUrlQuery extends NodeJS.Dict<string | string[]> { }
 
-    interface ParsedUrlQueryInput {
-        [key: string]: string | number | boolean | string[] | number[] | boolean[] | undefined | null;
+    interface ParsedUrlQueryInput extends NodeJS.Dict<string | number | boolean | ReadonlyArray<string> | ReadonlyArray<number> | ReadonlyArray<boolean> | null> {
     }
 
     function stringify(obj?: ParsedUrlQueryInput, sep?: string, eq?: string, options?: StringifyOptions): string;
@@ -17754,8 +17388,8 @@ module.exports['readline.d.ts'] = `declare module "readline" {
     class Interface extends events.EventEmitter {
         readonly terminal: boolean;
 
-        // Need direct access to line/cursor data, for use in external processes
-        // see: https://github.com/nodejs/node/issues/30347
+        \/\/ Need direct access to line/cursor data, for use in external processes
+        \/\/ see: https:\/\/github.com/nodejs/node/issues/30347
         /** The current input data */
         readonly line: string;
         /** The current cursor position in the input line */
@@ -17767,7 +17401,7 @@ module.exports['readline.d.ts'] = `declare module "readline" {
          * > Instances of the \`readline.Interface\` class are constructed using the
          * > \`readline.createInterface()\` method.
          *
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/readline.html#readline_class_interface
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/readline.html#readline_class_interface
          */
         protected constructor(input: NodeJS.ReadableStream, output?: NodeJS.WritableStream, completer?: Completer | AsyncCompleter, terminal?: boolean);
         /**
@@ -17776,7 +17410,7 @@ module.exports['readline.d.ts'] = `declare module "readline" {
          * > Instances of the \`readline.Interface\` class are constructed using the
          * > \`readline.createInterface()\` method.
          *
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/readline.html#readline_class_interface
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/readline.html#readline_class_interface
          */
         protected constructor(options: ReadLineOptions);
 
@@ -17787,6 +17421,13 @@ module.exports['readline.d.ts'] = `declare module "readline" {
         resume(): this;
         close(): void;
         write(data: string | Buffer, key?: Key): void;
+
+        /**
+         * Returns the real position of the cursor in relation to the input
+         * prompt + string.  Long input (wrapping) strings, as well as multiple
+         * line prompts are included in the calculations.
+         */
+        getCursorPos(): CursorPos;
 
         /**
          * events.EventEmitter
@@ -17855,7 +17496,7 @@ module.exports['readline.d.ts'] = `declare module "readline" {
         [Symbol.asyncIterator](): AsyncIterableIterator<string>;
     }
 
-    type ReadLine = Interface; // type forwarded for backwards compatiblity
+    type ReadLine = Interface; \/\/ type forwarded for backwards compatiblity
 
     type Completer = (line: string) => CompleterResult;
     type AsyncCompleter = (line: string, callback: (err?: null | Error, result?: CompleterResult) => void) => any;
@@ -17872,6 +17513,7 @@ module.exports['readline.d.ts'] = `declare module "readline" {
         crlfDelay?: number;
         removeHistoryDuplicates?: boolean;
         escapeCodeTimeout?: number;
+        tabSize?: number;
     }
 
     function createInterface(input: NodeJS.ReadableStream, output?: NodeJS.WritableStream, completer?: Completer | AsyncCompleter, terminal?: boolean): Interface;
@@ -17879,6 +17521,11 @@ module.exports['readline.d.ts'] = `declare module "readline" {
     function emitKeypressEvents(stream: NodeJS.ReadableStream, readlineInterface?: Interface): void;
 
     type Direction = -1 | 0 | 1;
+
+    interface CursorPos {
+        rows: number;
+        cols: number;
+    }
 
     /**
      * Clears the current line of this WriteStream in a direction identified by \`dir\`.
@@ -17932,10 +17579,15 @@ module.exports['repl.d.ts'] = `declare module "repl" {
          * error with \`repl.Recoverable\` to indicate the input was incomplete and prompt for
          * additional lines.
          *
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_default_evaluation
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_custom_evaluation_functions
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_default_evaluation
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_custom_evaluation_functions
          */
         eval?: REPLEval;
+        /**
+         * Defines if the repl prints output previews or not.
+         * @default \`true\` Always \`false\` in case \`terminal\` is falsy.
+         */
+        preview?: boolean;
         /**
          * If \`true\`, specifies that the default \`writer\` function should include ANSI color
          * styling to REPL output. If a custom \`writer\` function is provided then this has no
@@ -17960,13 +17612,13 @@ module.exports['repl.d.ts'] = `declare module "repl" {
          * The function to invoke to format the output of each command before writing to \`output\`.
          * Default: a wrapper for \`util.inspect\`.
          *
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_customizing_repl_output
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_customizing_repl_output
          */
         writer?: REPLWriter;
         /**
          * An optional function used for custom Tab auto completion.
          *
-         * @see https://nodejs.org/dist/latest-v11.x/docs/api/readline.html#readline_use_of_the_completer_function
+         * @see https:\/\/nodejs.org/dist/latest-v11.x/docs/api/readline.html#readline_use_of_the_completer_function
          */
         completer?: Completer | AsyncCompleter;
         /**
@@ -18022,7 +17674,7 @@ module.exports['repl.d.ts'] = `declare module "repl" {
      * Instances of \`repl.REPLServer\` are created using the \`repl.start()\` method and _should not_
      * be created directly using the JavaScript \`new\` keyword.
      *
-     * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_repl
+     * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_repl
      */
     class REPLServer extends Interface {
         /**
@@ -18031,47 +17683,55 @@ module.exports['repl.d.ts'] = `declare module "repl" {
          */
         readonly context: Context;
         /**
-         * The \`Readable\` stream from which REPL input will be read.
+         * @deprecated since v14.3.0 - Use \`input\` instead.
          */
         readonly inputStream: NodeJS.ReadableStream;
         /**
-         * The \`Writable\` stream to which REPL output will be written.
+         * @deprecated since v14.3.0 - Use \`output\` instead.
          */
         readonly outputStream: NodeJS.WritableStream;
         /**
+         * The \`Readable\` stream from which REPL input will be read.
+         */
+        readonly input: NodeJS.ReadableStream;
+        /**
+         * The \`Writable\` stream to which REPL output will be written.
+         */
+        readonly output: NodeJS.WritableStream;
+        /**
          * The commands registered via \`replServer.defineCommand()\`.
          */
-        readonly commands: { readonly [name: string]: REPLCommand | undefined };
+        readonly commands: NodeJS.ReadOnlyDict<REPLCommand>;
         /**
          * A value indicating whether the REPL is currently in "editor mode".
          *
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_commands_and_special_keys
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_commands_and_special_keys
          */
         readonly editorMode: boolean;
         /**
          * A value indicating whether the \`_\` variable has been assigned.
          *
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
          */
         readonly underscoreAssigned: boolean;
         /**
          * The last evaluation result from the REPL (assigned to the \`_\` variable inside of the REPL).
          *
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
          */
         readonly last: any;
         /**
          * A value indicating whether the \`_error\` variable has been assigned.
          *
          * @since v9.8.0
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
          */
         readonly underscoreErrAssigned: boolean;
         /**
          * The last error raised inside the REPL (assigned to the \`_error\` variable inside of the REPL).
          *
          * @since v9.8.0
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_assignment_of_the_underscore_variable
          */
         readonly lastError: any;
         /**
@@ -18124,7 +17784,7 @@ module.exports['repl.d.ts'] = `declare module "repl" {
          *
          * \`REPLServer\` cannot be subclassed due to implementation specifics in NodeJS.
          *
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_class_replserver
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_class_replserver
          */
         private constructor();
 
@@ -18135,7 +17795,7 @@ module.exports['repl.d.ts'] = `declare module "repl" {
          * @param keyword The command keyword (_without_ a leading \`.\` character).
          * @param cmd The function to invoke when the command is processed.
          *
-         * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_replserver_definecommand_keyword_cmd
+         * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_replserver_definecommand_keyword_cmd
          */
         defineCommand(keyword: string, cmd: REPLCommandAction | REPLCommand): void;
         /**
@@ -18253,13 +17913,13 @@ module.exports['repl.d.ts'] = `declare module "repl" {
     /**
      * A flag passed in the REPL options. Evaluates expressions in sloppy mode.
      */
-    const REPL_MODE_SLOPPY: symbol; // TODO: unique symbol
+    const REPL_MODE_SLOPPY: unique symbol;
 
     /**
      * A flag passed in the REPL options. Evaluates expressions in strict mode.
      * This is equivalent to prefacing every repl statement with \`'use strict'\`.
      */
-    const REPL_MODE_STRICT: symbol; // TODO: unique symbol
+    const REPL_MODE_STRICT: unique symbol;
 
     /**
      * Creates and starts a \`repl.REPLServer\` instance.
@@ -18272,7 +17932,7 @@ module.exports['repl.d.ts'] = `declare module "repl" {
     /**
      * Indicates a recoverable error that a \`REPLServer\` can use to support multi-line input.
      *
-     * @see https://nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_recoverable_errors
+     * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_recoverable_errors
      */
     class Recoverable extends SyntaxError {
         err: Error;
@@ -18289,11 +17949,13 @@ module.exports['stream.d.ts'] = `declare module "stream" {
     }
 
     namespace internal {
-        class Stream extends internal { }
+        class Stream extends internal {
+            constructor(opts?: ReadableOptions);
+        }
 
         interface ReadableOptions {
             highWaterMark?: number;
-            encoding?: string;
+            encoding?: BufferEncoding;
             objectMode?: boolean;
             read?(this: Readable, size: number): void;
             destroy?(this: Readable, error: Error | null, callback: (error: Error | null) => void): void;
@@ -18307,6 +17969,9 @@ module.exports['stream.d.ts'] = `declare module "stream" {
             static from(iterable: Iterable<any> | AsyncIterable<any>, options?: ReadableOptions): Readable;
 
             readable: boolean;
+            readonly readableEncoding: BufferEncoding | null;
+            readonly readableEnded: boolean;
+            readonly readableFlowing: boolean | null;
             readonly readableHighWaterMark: number;
             readonly readableLength: number;
             readonly readableObjectMode: boolean;
@@ -18314,14 +17979,14 @@ module.exports['stream.d.ts'] = `declare module "stream" {
             constructor(opts?: ReadableOptions);
             _read(size: number): void;
             read(size?: number): any;
-            setEncoding(encoding: string): this;
+            setEncoding(encoding: BufferEncoding): this;
             pause(): this;
             resume(): this;
             isPaused(): boolean;
             unpipe(destination?: NodeJS.WritableStream): this;
             unshift(chunk: any, encoding?: BufferEncoding): void;
             wrap(oldStream: NodeJS.ReadableStream): this;
-            push(chunk: any, encoding?: string): boolean;
+            push(chunk: any, encoding?: BufferEncoding): boolean;
             _destroy(error: Error | null, callback: (error?: Error | null) => void): void;
             destroy(error?: Error): void;
 
@@ -18331,56 +17996,72 @@ module.exports['stream.d.ts'] = `declare module "stream" {
              * 1. close
              * 2. data
              * 3. end
-             * 4. readable
-             * 5. error
+             * 4. error
+             * 5. pause
+             * 6. readable
+             * 7. resume
              */
             addListener(event: "close", listener: () => void): this;
             addListener(event: "data", listener: (chunk: any) => void): this;
             addListener(event: "end", listener: () => void): this;
-            addListener(event: "readable", listener: () => void): this;
             addListener(event: "error", listener: (err: Error) => void): this;
+            addListener(event: "pause", listener: () => void): this;
+            addListener(event: "readable", listener: () => void): this;
+            addListener(event: "resume", listener: () => void): this;
             addListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
             emit(event: "close"): boolean;
             emit(event: "data", chunk: any): boolean;
             emit(event: "end"): boolean;
-            emit(event: "readable"): boolean;
             emit(event: "error", err: Error): boolean;
+            emit(event: "pause"): boolean;
+            emit(event: "readable"): boolean;
+            emit(event: "resume"): boolean;
             emit(event: string | symbol, ...args: any[]): boolean;
 
             on(event: "close", listener: () => void): this;
             on(event: "data", listener: (chunk: any) => void): this;
             on(event: "end", listener: () => void): this;
-            on(event: "readable", listener: () => void): this;
             on(event: "error", listener: (err: Error) => void): this;
+            on(event: "pause", listener: () => void): this;
+            on(event: "readable", listener: () => void): this;
+            on(event: "resume", listener: () => void): this;
             on(event: string | symbol, listener: (...args: any[]) => void): this;
 
             once(event: "close", listener: () => void): this;
             once(event: "data", listener: (chunk: any) => void): this;
             once(event: "end", listener: () => void): this;
-            once(event: "readable", listener: () => void): this;
             once(event: "error", listener: (err: Error) => void): this;
+            once(event: "pause", listener: () => void): this;
+            once(event: "readable", listener: () => void): this;
+            once(event: "resume", listener: () => void): this;
             once(event: string | symbol, listener: (...args: any[]) => void): this;
 
             prependListener(event: "close", listener: () => void): this;
             prependListener(event: "data", listener: (chunk: any) => void): this;
             prependListener(event: "end", listener: () => void): this;
-            prependListener(event: "readable", listener: () => void): this;
             prependListener(event: "error", listener: (err: Error) => void): this;
+            prependListener(event: "pause", listener: () => void): this;
+            prependListener(event: "readable", listener: () => void): this;
+            prependListener(event: "resume", listener: () => void): this;
             prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
             prependOnceListener(event: "close", listener: () => void): this;
             prependOnceListener(event: "data", listener: (chunk: any) => void): this;
             prependOnceListener(event: "end", listener: () => void): this;
-            prependOnceListener(event: "readable", listener: () => void): this;
             prependOnceListener(event: "error", listener: (err: Error) => void): this;
+            prependOnceListener(event: "pause", listener: () => void): this;
+            prependOnceListener(event: "readable", listener: () => void): this;
+            prependOnceListener(event: "resume", listener: () => void): this;
             prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
             removeListener(event: "close", listener: () => void): this;
             removeListener(event: "data", listener: (chunk: any) => void): this;
             removeListener(event: "end", listener: () => void): this;
-            removeListener(event: "readable", listener: () => void): this;
             removeListener(event: "error", listener: (err: Error) => void): this;
+            removeListener(event: "pause", listener: () => void): this;
+            removeListener(event: "readable", listener: () => void): this;
+            removeListener(event: "resume", listener: () => void): this;
             removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
             [Symbol.asyncIterator](): AsyncIterableIterator<any>;
@@ -18389,11 +18070,11 @@ module.exports['stream.d.ts'] = `declare module "stream" {
         interface WritableOptions {
             highWaterMark?: number;
             decodeStrings?: boolean;
-            defaultEncoding?: string;
+            defaultEncoding?: BufferEncoding;
             objectMode?: boolean;
             emitClose?: boolean;
-            write?(this: Writable, chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
-            writev?(this: Writable, chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            write?(this: Writable, chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void;
+            writev?(this: Writable, chunks: Array<{ chunk: any, encoding: BufferEncoding }>, callback: (error?: Error | null) => void): void;
             destroy?(this: Writable, error: Error | null, callback: (error: Error | null) => void): void;
             final?(this: Writable, callback: (error?: Error | null) => void): void;
             autoDestroy?: boolean;
@@ -18406,18 +18087,19 @@ module.exports['stream.d.ts'] = `declare module "stream" {
             readonly writableHighWaterMark: number;
             readonly writableLength: number;
             readonly writableObjectMode: boolean;
+            readonly writableCorked: number;
             destroyed: boolean;
             constructor(opts?: WritableOptions);
-            _write(chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
-            _writev?(chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void;
+            _writev?(chunks: Array<{ chunk: any, encoding: BufferEncoding }>, callback: (error?: Error | null) => void): void;
             _destroy(error: Error | null, callback: (error?: Error | null) => void): void;
             _final(callback: (error?: Error | null) => void): void;
             write(chunk: any, cb?: (error: Error | null | undefined) => void): boolean;
-            write(chunk: any, encoding: string, cb?: (error: Error | null | undefined) => void): boolean;
-            setDefaultEncoding(encoding: string): this;
+            write(chunk: any, encoding: BufferEncoding, cb?: (error: Error | null | undefined) => void): boolean;
+            setDefaultEncoding(encoding: BufferEncoding): this;
             end(cb?: () => void): void;
             end(chunk: any, cb?: () => void): void;
-            end(chunk: any, encoding: string, cb?: () => void): void;
+            end(chunk: any, encoding: BufferEncoding, cb?: () => void): void;
             cork(): void;
             uncork(): void;
             destroy(error?: Error): void;
@@ -18495,14 +18177,15 @@ module.exports['stream.d.ts'] = `declare module "stream" {
             writableObjectMode?: boolean;
             readableHighWaterMark?: number;
             writableHighWaterMark?: number;
+            writableCorked?: number;
             read?(this: Duplex, size: number): void;
-            write?(this: Duplex, chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
-            writev?(this: Duplex, chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            write?(this: Duplex, chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void;
+            writev?(this: Duplex, chunks: Array<{ chunk: any, encoding: BufferEncoding }>, callback: (error?: Error | null) => void): void;
             final?(this: Duplex, callback: (error?: Error | null) => void): void;
             destroy?(this: Duplex, error: Error | null, callback: (error: Error | null) => void): void;
         }
 
-        // Note: Duplex extends both Readable and Writable.
+        \/\/ Note: Duplex extends both Readable and Writable.
         class Duplex extends Readable implements Writable {
             readonly writable: boolean;
             readonly writableEnded: boolean;
@@ -18510,17 +18193,18 @@ module.exports['stream.d.ts'] = `declare module "stream" {
             readonly writableHighWaterMark: number;
             readonly writableLength: number;
             readonly writableObjectMode: boolean;
+            readonly writableCorked: number;
             constructor(opts?: DuplexOptions);
-            _write(chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
-            _writev?(chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void;
+            _writev?(chunks: Array<{ chunk: any, encoding: BufferEncoding }>, callback: (error?: Error | null) => void): void;
             _destroy(error: Error | null, callback: (error: Error | null) => void): void;
             _final(callback: (error?: Error | null) => void): void;
-            write(chunk: any, encoding?: string, cb?: (error: Error | null | undefined) => void): boolean;
+            write(chunk: any, encoding?: BufferEncoding, cb?: (error: Error | null | undefined) => void): boolean;
             write(chunk: any, cb?: (error: Error | null | undefined) => void): boolean;
-            setDefaultEncoding(encoding: string): this;
+            setDefaultEncoding(encoding: BufferEncoding): this;
             end(cb?: () => void): void;
             end(chunk: any, cb?: () => void): void;
-            end(chunk: any, encoding?: string, cb?: () => void): void;
+            end(chunk: any, encoding?: BufferEncoding, cb?: () => void): void;
             cork(): void;
             uncork(): void;
         }
@@ -18529,25 +18213,31 @@ module.exports['stream.d.ts'] = `declare module "stream" {
 
         interface TransformOptions extends DuplexOptions {
             read?(this: Transform, size: number): void;
-            write?(this: Transform, chunk: any, encoding: string, callback: (error?: Error | null) => void): void;
-            writev?(this: Transform, chunks: Array<{ chunk: any, encoding: string }>, callback: (error?: Error | null) => void): void;
+            write?(this: Transform, chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void;
+            writev?(this: Transform, chunks: Array<{ chunk: any, encoding: BufferEncoding }>, callback: (error?: Error | null) => void): void;
             final?(this: Transform, callback: (error?: Error | null) => void): void;
             destroy?(this: Transform, error: Error | null, callback: (error: Error | null) => void): void;
-            transform?(this: Transform, chunk: any, encoding: string, callback: TransformCallback): void;
+            transform?(this: Transform, chunk: any, encoding: BufferEncoding, callback: TransformCallback): void;
             flush?(this: Transform, callback: TransformCallback): void;
         }
 
         class Transform extends Duplex {
             constructor(opts?: TransformOptions);
-            _transform(chunk: any, encoding: string, callback: TransformCallback): void;
+            _transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback): void;
             _flush(callback: TransformCallback): void;
         }
 
         class PassThrough extends Transform { }
 
+        interface FinishedOptions {
+            error?: boolean;
+            readable?: boolean;
+            writable?: boolean;
+        }
+        function finished(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream, options: FinishedOptions, callback: (err?: NodeJS.ErrnoException | null) => void): () => void;
         function finished(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream, callback: (err?: NodeJS.ErrnoException | null) => void): () => void;
         namespace finished {
-            function __promisify__(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream): Promise<void>;
+            function __promisify__(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream, options?: FinishedOptions): Promise<void>;
         }
 
         function pipeline<T extends NodeJS.WritableStream>(stream1: NodeJS.ReadableStream, stream2: T, callback?: (err: NodeJS.ErrnoException | null) => void): T;
@@ -18567,7 +18257,10 @@ module.exports['stream.d.ts'] = `declare module "stream" {
             stream5: T,
             callback?: (err: NodeJS.ErrnoException | null) => void,
         ): T;
-        function pipeline(streams: Array<NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream>, callback?: (err: NodeJS.ErrnoException | null) => void): NodeJS.WritableStream;
+        function pipeline(
+            streams: ReadonlyArray<NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream>,
+            callback?: (err: NodeJS.ErrnoException | null) => void,
+        ): NodeJS.WritableStream;
         function pipeline(
             stream1: NodeJS.ReadableStream,
             stream2: NodeJS.ReadWriteStream | NodeJS.WritableStream,
@@ -18584,7 +18277,7 @@ module.exports['stream.d.ts'] = `declare module "stream" {
                 stream4: NodeJS.ReadWriteStream,
                 stream5: NodeJS.WritableStream,
             ): Promise<void>;
-            function __promisify__(streams: Array<NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream>): Promise<void>;
+            function __promisify__(streams: ReadonlyArray<NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream>): Promise<void>;
             function __promisify__(
                 stream1: NodeJS.ReadableStream,
                 stream2: NodeJS.ReadWriteStream | NodeJS.WritableStream,
@@ -18605,7 +18298,7 @@ module.exports['stream.d.ts'] = `declare module "stream" {
 `;
 module.exports['string_decoder.d.ts'] = `declare module "string_decoder" {
     class StringDecoder {
-        constructor(encoding?: string);
+        constructor(encoding?: BufferEncoding);
         write(buffer: Buffer): string;
         end(buffer?: Buffer): string;
     }
@@ -18668,12 +18361,13 @@ module.exports['tls.d.ts'] = `declare module "tls" {
         subject: Certificate;
         issuer: Certificate;
         subjectaltname: string;
-        infoAccess: { [index: string]: string[] | undefined };
+        infoAccess: NodeJS.Dict<string[]>;
         modulus: string;
         exponent: string;
         valid_from: string;
         valid_to: string;
         fingerprint: string;
+        fingerprint256: string;
         ext_key_usage: string[];
         serialNumber: string;
         raw: Buffer;
@@ -18692,6 +18386,11 @@ module.exports['tls.d.ts'] = `declare module "tls" {
          * SSL/TLS protocol version.
          */
         version: string;
+
+        /**
+         * IETF name for the cipher suite.
+         */
+        standardName: string;
     }
 
     interface EphemeralKeyInfo {
@@ -18856,7 +18555,7 @@ module.exports['tls.d.ts'] = `declare module "tls" {
          * Returns a string containing the negotiated SSL/TLS protocol version of the current connection.
          * The value \`'unknown'\` will be returned for connected sockets that have not completed the handshaking process.
          * The value \`null\` will be returned for server sockets or disconnected client sockets.
-         * See https://www.openssl.org/docs/man1.0.2/ssl/SSL_get_version.html for more information.
+         * See https:\/\/www.openssl.org/docs/man1.0.2/ssl/SSL_get_version.html for more information.
          * @returns negotiated SSL/TLS protocol version of the current connection
          */
         getProtocol(): string | null;
@@ -18921,6 +18620,14 @@ module.exports['tls.d.ts'] = `declare module "tls" {
          * and should not be relied on.
          */
         enableTrace(): void;
+
+        /**
+         * @param length number of bytes to retrieve from keying material
+         * @param label an application specific label, typically this will be a value from the
+         * [IANA Exporter Label Registry](https:\/\/www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#exporter-labels).
+         * @param context optionally provide a context.
+         */
+        exportKeyingMaterial(length: number, label: string, context: Buffer): Buffer;
 
         addListener(event: string, listener: (...args: any[]) => void): this;
         addListener(event: "OCSPResponse", listener: (response: Buffer) => void): this;
@@ -19019,19 +18726,71 @@ module.exports['tls.d.ts'] = `declare module "tls" {
          * 48-bytes of cryptographically strong pseudo-random data.
          */
         ticketKeys?: Buffer;
+
+        /**
+         *
+         * @param socket
+         * @param identity identity parameter sent from the client.
+         * @return pre-shared key that must either be
+         * a buffer or \`null\` to stop the negotiation process. Returned PSK must be
+         * compatible with the selected cipher's digest.
+         *
+         * When negotiating TLS-PSK (pre-shared keys), this function is called
+         * with the identity provided by the client.
+         * If the return value is \`null\` the negotiation process will stop and an
+         * "unknown_psk_identity" alert message will be sent to the other party.
+         * If the server wishes to hide the fact that the PSK identity was not known,
+         * the callback must provide some random data as \`psk\` to make the connection
+         * fail with "decrypt_error" before negotiation is finished.
+         * PSK ciphers are disabled by default, and using TLS-PSK thus
+         * requires explicitly specifying a cipher suite with the \`ciphers\` option.
+         * More information can be found in the RFC 4279.
+         */
+
+        pskCallback?(socket: TLSSocket, identity: string): DataView | NodeJS.TypedArray | null;
+        /**
+         * hint to send to a client to help
+         * with selecting the identity during TLS-PSK negotiation. Will be ignored
+         * in TLS 1.3. Upon failing to set pskIdentityHint \`tlsClientError\` will be
+         * emitted with \`ERR_TLS_PSK_SET_IDENTIY_HINT_FAILED\` code.
+         */
+        pskIdentityHint?: string;
+    }
+
+    interface PSKCallbackNegotation {
+        psk: DataView | NodeJS.TypedArray;
+        identitty: string;
     }
 
     interface ConnectionOptions extends SecureContextOptions, CommonConnectionOptions {
         host?: string;
         port?: number;
-        path?: string; // Creates unix socket connection to path. If this option is specified, \`host\` and \`port\` are ignored.
-        socket?: net.Socket; // Establish secure connection on a given socket rather than creating a new socket
+        path?: string; \/\/ Creates unix socket connection to path. If this option is specified, \`host\` and \`port\` are ignored.
+        socket?: net.Socket; \/\/ Establish secure connection on a given socket rather than creating a new socket
         checkServerIdentity?: typeof checkServerIdentity;
-        servername?: string; // SNI TLS Extension
+        servername?: string; \/\/ SNI TLS Extension
         session?: Buffer;
         minDHSize?: number;
         lookup?: net.LookupFunction;
         timeout?: number;
+        /**
+         * When negotiating TLS-PSK (pre-shared keys), this function is called
+         * with optional identity \`hint\` provided by the server or \`null\`
+         * in case of TLS 1.3 where \`hint\` was removed.
+         * It will be necessary to provide a custom \`tls.checkServerIdentity()\`
+         * for the connection as the default one will try to check hostname/IP
+         * of the server against the certificate but that's not applicable for PSK
+         * because there won't be a certificate present.
+         * More information can be found in the RFC 4279.
+         *
+         * @param hint message sent from the server to help client
+         * decide which identity to use during negotiation.
+         * Always \`null\` if TLS 1.3 is used.
+         * @returns Return \`null\` to stop the negotiation process. \`psk\` must be
+         * compatible with the selected cipher's digest.
+         * \`identity\` must use UTF-8 encoding.
+         */
+        pskCallback?(hint: string | null): PSKCallbackNegotation | null;
     }
 
     class Server extends net.Server {
@@ -19252,7 +19011,7 @@ module.exports['tls.d.ts'] = `declare module "tls" {
          * usually necessary. This should be used carefully if at all! Value is
          * a numeric bitmask of the SSL_OP_* options from OpenSSL Options
          */
-        secureOptions?: number; // Value is a numeric bitmask of the \`SSL_OP_*\` options
+        secureOptions?: number; \/\/ Value is a numeric bitmask of the \`SSL_OP_*\` options
         /**
          * Legacy mechanism to select the TLS protocol version to use, it does
          * not support independent control of the minimum and maximum version,
@@ -19270,6 +19029,17 @@ module.exports['tls.d.ts'] = `declare module "tls" {
          * shared between applications. Unused by clients.
          */
         sessionIdContext?: string;
+        /**
+         * 48-bytes of cryptographically strong pseudo-random data.
+         * See Session Resumption for more information.
+         */
+        ticketKeys?: Buffer;
+        /**
+         * The number of seconds after which a TLS session created by the
+         * server will no longer be resumable. See Session Resumption for more
+         * information. Default: 300.
+         */
+        sessionTimeout?: number;
     }
 
     interface SecureContext {
@@ -19290,10 +19060,10 @@ module.exports['tls.d.ts'] = `declare module "tls" {
     function connect(port: number, host?: string, options?: ConnectionOptions, secureConnectListener?: () => void): TLSSocket;
     function connect(port: number, options?: ConnectionOptions, secureConnectListener?: () => void): TLSSocket;
     /**
-     * @deprecated
+     * @deprecated since v0.11.3 Use \`tls.TLSSocket\` instead.
      */
     function createSecurePair(credentials?: SecureContext, isServer?: boolean, requestCert?: boolean, rejectUnauthorized?: boolean): SecurePair;
-    function createSecureContext(details: SecureContextOptions): SecureContext;
+    function createSecureContext(options?: SecureContextOptions): SecureContext;
     function getCiphers(): string[];
 
     /**
@@ -19463,14 +19233,13 @@ module.exports['tty.d.ts'] = `declare module "tty" {
 module.exports['url.d.ts'] = `declare module "url" {
     import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
 
-    // Input to \`url.format\`
+    \/\/ Input to \`url.format\`
     interface UrlObject {
         auth?: string | null;
         hash?: string | null;
         host?: string | null;
         hostname?: string | null;
         href?: string | null;
-        path?: string | null;
         pathname?: string | null;
         protocol?: string | null;
         search?: string | null;
@@ -19479,7 +19248,7 @@ module.exports['url.d.ts'] = `declare module "url" {
         query?: string | null | ParsedUrlQueryInput;
     }
 
-    // Output of \`url.parse\`
+    \/\/ Output of \`url.parse\`
     interface Url {
         auth: string | null;
         hash: string | null;
@@ -19555,7 +19324,7 @@ module.exports['url.d.ts'] = `declare module "url" {
     }
 
     class URLSearchParams implements Iterable<[string, string]> {
-        constructor(init?: URLSearchParams | string | { [key: string]: string | string[] | undefined } | Iterable<[string, string]> | Array<[string, string]>);
+        constructor(init?: URLSearchParams | string | NodeJS.Dict<string | ReadonlyArray<string>> | Iterable<[string, string]> | ReadonlyArray<[string, string]>);
         append(name: string, value: string): void;
         delete(name: string): void;
         entries(): IterableIterator<[string, string]>;
@@ -19574,6 +19343,11 @@ module.exports['url.d.ts'] = `declare module "url" {
 `;
 module.exports['util.d.ts'] = `declare module "util" {
     interface InspectOptions extends NodeJS.InspectOptions { }
+    type Style = 'special' | 'number' | 'bigint' | 'boolean' | 'undefined' | 'null' | 'string' | 'symbol' | 'date' | 'regexp' | 'module';
+    type CustomInspectFunction = (depth: number, options: InspectOptionsStylized) => string;
+    interface InspectOptionsStylized extends InspectOptions {
+        stylize(text: string, styleType: Style): string;
+    }
     function format(format: any, ...param: any[]): string;
     function formatWithOptions(inspectOptions: InspectOptions, format: string, ...param: any[]): string;
     /** @deprecated since v0.11.3 - use a third party module instead. */
@@ -19581,17 +19355,16 @@ module.exports['util.d.ts'] = `declare module "util" {
     function inspect(object: any, showHidden?: boolean, depth?: number | null, color?: boolean): string;
     function inspect(object: any, options: InspectOptions): string;
     namespace inspect {
-        let colors: {
-            [color: string]: [number, number] | undefined
-        };
+        let colors: NodeJS.Dict<[number, number]>;
         let styles: {
-            [style: string]: string | undefined
+            [K in Style]: string
         };
         let defaultOptions: InspectOptions;
         /**
          * Allows changing inspect settings from the repl.
          */
         let replDefaults: InspectOptions;
+        const custom: unique symbol;
     }
     /** @deprecated since v4.0.0 - use \`Array.isArray()\` instead. */
     function isArray(object: any): object is any[];
@@ -19628,10 +19401,6 @@ module.exports['util.d.ts'] = `declare module "util" {
     function deprecate<T extends Function>(fn: T, message: string, code?: string): T;
     function isDeepStrictEqual(val1: any, val2: any): boolean;
 
-    interface CustomPromisify<TCustom extends Function> extends Function {
-        __promisify__: TCustom;
-    }
-
     function callbackify(fn: () => Promise<void>): (callback: (err: NodeJS.ErrnoException) => void) => void;
     function callbackify<TResult>(fn: () => Promise<TResult>): (callback: (err: NodeJS.ErrnoException, result: TResult) => void) => void;
     function callbackify<T1>(fn: (arg1: T1) => Promise<void>): (arg1: T1, callback: (err: NodeJS.ErrnoException) => void) => void;
@@ -19657,6 +19426,16 @@ module.exports['util.d.ts'] = `declare module "util" {
         fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, arg6: T6) => Promise<TResult>
     ): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, arg6: T6, callback: (err: NodeJS.ErrnoException | null, result: TResult) => void) => void;
 
+    interface CustomPromisifyLegacy<TCustom extends Function> extends Function {
+        __promisify__: TCustom;
+    }
+
+    interface CustomPromisifySymbol<TCustom extends Function> extends Function {
+        [promisify.custom]: TCustom;
+    }
+
+    type CustomPromisify<TCustom extends Function> = CustomPromisifySymbol<TCustom> | CustomPromisifyLegacy<TCustom>;
+
     function promisify<TCustom extends Function>(fn: CustomPromisify<TCustom>): TCustom;
     function promisify<TResult>(fn: (callback: (err: any, result: TResult) => void) => void): () => Promise<TResult>;
     function promisify(fn: (callback: (err?: any) => void) => void): () => Promise<void>;
@@ -19679,12 +19458,18 @@ module.exports['util.d.ts'] = `declare module "util" {
         fn: (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5, callback: (err?: any) => void) => void,
     ): (arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5) => Promise<void>;
     function promisify(fn: Function): Function;
+    namespace promisify {
+        const custom: unique symbol;
+    }
 
     namespace types {
         function isAnyArrayBuffer(object: any): boolean;
         function isArgumentsObject(object: any): object is IArguments;
         function isArrayBuffer(object: any): object is ArrayBuffer;
+        function isArrayBufferView(object: any): object is ArrayBufferView;
         function isAsyncFunction(object: any): boolean;
+        function isBigInt64Array(value: any): value is BigInt64Array;
+        function isBigUint64Array(value: any): value is BigUint64Array;
         function isBooleanObject(object: any): object is Boolean;
         function isBoxedPrimitive(object: any): object is (Number | Boolean | String | Symbol /* | Object(BigInt) | Object(Symbol) */);
         function isDataView(object: any): object is DataView;
@@ -19764,7 +19549,7 @@ module.exports['v8.d.ts'] = `declare module "v8" {
         physical_space_size: number;
     }
 
-    // ** Signifies if the --zap_code_space option is enabled or not.  1 == enabled, 0 == disabled. */
+    \/\/ ** Signifies if the --zap_code_space option is enabled or not.  1 == enabled, 0 == disabled. */
     type DoesZapCodeSpaceFlag = 0 | 1;
 
     interface HeapInfo {
@@ -19819,9 +19604,6 @@ module.exports['v8.d.ts'] = `declare module "v8" {
 
     function getHeapCodeStatistics(): HeapCodeStatistics;
 
-    /**
-     * @experimental
-     */
     class Serializer {
         /**
          * Writes out a header, which includes the serialization format version.
@@ -19872,14 +19654,10 @@ module.exports['v8.d.ts'] = `declare module "v8" {
     /**
      * A subclass of \`Serializer\` that serializes \`TypedArray\` (in particular \`Buffer\`) and \`DataView\` objects as host objects,
      * and only stores the part of their underlying \`ArrayBuffers\` that they are referring to.
-     * @experimental
      */
     class DefaultSerializer extends Serializer {
     }
 
-    /**
-     * @experimental
-     */
     class Deserializer {
         constructor(data: NodeJS.TypedArray);
         /**
@@ -19933,28 +19711,23 @@ module.exports['v8.d.ts'] = `declare module "v8" {
     /**
      * A subclass of \`Serializer\` that serializes \`TypedArray\` (in particular \`Buffer\`) and \`DataView\` objects as host objects,
      * and only stores the part of their underlying \`ArrayBuffers\` that they are referring to.
-     * @experimental
      */
     class DefaultDeserializer extends Deserializer {
     }
 
     /**
      * Uses a \`DefaultSerializer\` to serialize value into a buffer.
-     * @experimental
      */
     function serialize(value: any): Buffer;
 
     /**
      * Uses a \`DefaultDeserializer\` with default options to read a JS value from a buffer.
-     * @experimental
      */
     function deserialize(data: NodeJS.TypedArray): any;
 }
 `;
 module.exports['vm.d.ts'] = `declare module "vm" {
-    interface Context {
-        [key: string]: any;
-    }
+    interface Context extends NodeJS.Dict<any> { }
     interface BaseOptions {
         /**
          * Specifies the filename used in stack traces produced by this script.
@@ -19996,6 +19769,10 @@ module.exports['vm.d.ts'] = `declare module "vm" {
          * Default: \`false\`.
          */
         breakOnSigint?: boolean;
+        /**
+         * If set to \`afterEvaluate\`, microtasks will be run immediately after the script has run.
+         */
+        microtaskMode?: 'afterEvaluate';
     }
     interface CompileFunctionOptions extends BaseOptions {
         /**
@@ -20047,6 +19824,23 @@ module.exports['vm.d.ts'] = `declare module "vm" {
         };
     }
 
+    type MeasureMemoryMode = 'summary' | 'detailed';
+
+    interface MeasureMemoryOptions {
+        /**
+         * @default 'summary'
+         */
+        mode?: MeasureMemoryMode;
+        context?: Context;
+    }
+
+    interface MemoryMeasurement {
+        total: {
+            jsMemoryEstimate: number;
+            jsMemoryRange: [number, number];
+        };
+    }
+
     class Script {
         constructor(code: string, options?: ScriptOptions);
         runInContext(contextifiedSandbox: Context, options?: RunningScriptOptions): any;
@@ -20059,16 +19853,123 @@ module.exports['vm.d.ts'] = `declare module "vm" {
     function runInContext(code: string, contextifiedSandbox: Context, options?: RunningScriptOptions | string): any;
     function runInNewContext(code: string, sandbox?: Context, options?: RunningScriptOptions | string): any;
     function runInThisContext(code: string, options?: RunningScriptOptions | string): any;
-    function compileFunction(code: string, params?: string[], options?: CompileFunctionOptions): Function;
+    function compileFunction(code: string, params?: ReadonlyArray<string>, options?: CompileFunctionOptions): Function;
+
+    /**
+     * Measure the memory known to V8 and used by the current execution context or a specified context.
+     *
+     * The format of the object that the returned Promise may resolve with is
+     * specific to the V8 engine and may change from one version of V8 to the next.
+     *
+     * The returned result is different from the statistics returned by
+     * \`v8.getHeapSpaceStatistics()\` in that \`vm.measureMemory()\` measures
+     * the memory reachable by V8 from a specific context, while
+     * \`v8.getHeapSpaceStatistics()\` measures the memory used by an instance
+     * of V8 engine, which can switch among multiple contexts that reference
+     * objects in the heap of one engine.
+     *
+     * @experimental
+     */
+    function measureMemory(options?: MeasureMemoryOptions): Promise<MemoryMeasurement>;
+}
+`;
+module.exports['wasi.d.ts'] = `declare module 'wasi' {
+    interface WASIOptions {
+        /**
+         * An array of strings that the WebAssembly application will
+         * see as command line arguments. The first argument is the virtual path to the
+         * WASI command itself.
+         */
+        args?: string[];
+
+        /**
+         * An object similar to \`process.env\` that the WebAssembly
+         * application will see as its environment.
+         */
+        env?: object;
+
+        /**
+         * This object represents the WebAssembly application's
+         * sandbox directory structure. The string keys of \`preopens\` are treated as
+         * directories within the sandbox. The corresponding values in \`preopens\` are
+         * the real paths to those directories on the host machine.
+         */
+        preopens?: NodeJS.Dict<string>;
+
+        /**
+         * By default, WASI applications terminate the Node.js
+         * process via the \`__wasi_proc_exit()\` function. Setting this option to \`true\`
+         * causes \`wasi.start()\` to return the exit code rather than terminate the
+         * process.
+         * @default false
+         */
+        returnOnExit?: boolean;
+
+        /**
+         * The file descriptor used as standard input in the WebAssembly application.
+         * @default 0
+         */
+        stdin?: number;
+
+        /**
+         * The file descriptor used as standard output in the WebAssembly application.
+         * @default 1
+         */
+        stdout?: number;
+
+        /**
+         * The file descriptor used as standard error in the WebAssembly application.
+         * @default 2
+         */
+        stderr?: number;
+    }
+
+    class WASI {
+        constructor(options?: WASIOptions);
+        /**
+         *
+         * Attempt to begin execution of \`instance\` by invoking its \`_start()\` export.
+         * If \`instance\` does not contain a \`_start()\` export, then \`start()\` attempts to
+         * invoke the \`__wasi_unstable_reactor_start()\` export. If neither of those exports
+         * is present on \`instance\`, then \`start()\` does nothing.
+         *
+         * \`start()\` requires that \`instance\` exports a [\`WebAssembly.Memory\`][] named
+         * \`memory\`. If \`instance\` does not have a \`memory\` export an exception is thrown.
+         *
+         * If \`start()\` is called more than once, an exception is thrown.
+         */
+        start(instance: object): void; \/\/ TODO: avoid DOM dependency until WASM moved to own lib.
+
+        /**
+         * Attempt to initialize \`instance\` as a WASI reactor by invoking its \`_initialize()\` export, if it is present.
+         * If \`instance\` contains a \`_start()\` export, then an exception is thrown.
+         *
+         * \`start()\` requires that \`instance\` exports a [\`WebAssembly.Memory\`][] named
+         * \`memory\`. If \`instance\` does not have a \`memory\` export an exception is thrown.
+         *
+         * If \`initialize()\` is called more than once, an exception is thrown.
+         */
+        initialize(instance: object): void; \/\/ TODO: avoid DOM dependency until WASM moved to own lib.
+
+        /**
+         * Is an object that implements the WASI system call API. This object
+         * should be passed as the \`wasi_snapshot_preview1\` import during the instantiation of a
+         * [\`WebAssembly.Instance\`][].
+         */
+        readonly wasiImport: NodeJS.Dict<any>; \/\/ TODO: Narrow to DOM types
+    }
 }
 `;
 module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {
     import { Context } from "vm";
     import { EventEmitter } from "events";
     import { Readable, Writable } from "stream";
+    import { URL } from "url";
+    import { FileHandle } from "fs/promises";
 
     const isMainThread: boolean;
     const parentPort: null | MessagePort;
+    const resourceLimits: ResourceLimits;
     const SHARE_ENV: unique symbol;
     const threadId: number;
     const workerData: any;
@@ -20078,54 +19979,97 @@ module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {
         readonly port2: MessagePort;
     }
 
+    type TransferListItem = ArrayBuffer | MessagePort | FileHandle;
+
     class MessagePort extends EventEmitter {
         close(): void;
-        postMessage(value: any, transferList?: Array<ArrayBuffer | MessagePort>): void;
+        postMessage(value: any, transferList?: ReadonlyArray<TransferListItem>): void;
         ref(): void;
         unref(): void;
         start(): void;
 
         addListener(event: "close", listener: () => void): this;
         addListener(event: "message", listener: (value: any) => void): this;
+        addListener(event: "messageerror", listener: (error: Error) => void): this;
         addListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
         emit(event: "close"): boolean;
         emit(event: "message", value: any): boolean;
+        emit(event: "messageerror", error: Error): boolean;
         emit(event: string | symbol, ...args: any[]): boolean;
 
         on(event: "close", listener: () => void): this;
         on(event: "message", listener: (value: any) => void): this;
+        on(event: "messageerror", listener: (error: Error) => void): this;
         on(event: string | symbol, listener: (...args: any[]) => void): this;
 
         once(event: "close", listener: () => void): this;
         once(event: "message", listener: (value: any) => void): this;
+        once(event: "messageerror", listener: (error: Error) => void): this;
         once(event: string | symbol, listener: (...args: any[]) => void): this;
 
         prependListener(event: "close", listener: () => void): this;
         prependListener(event: "message", listener: (value: any) => void): this;
+        prependListener(event: "messageerror", listener: (error: Error) => void): this;
         prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
         prependOnceListener(event: "close", listener: () => void): this;
         prependOnceListener(event: "message", listener: (value: any) => void): this;
+        prependOnceListener(event: "messageerror", listener: (error: Error) => void): this;
         prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
         removeListener(event: "close", listener: () => void): this;
         removeListener(event: "message", listener: (value: any) => void): this;
+        removeListener(event: "messageerror", listener: (error: Error) => void): this;
         removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
         off(event: "close", listener: () => void): this;
         off(event: "message", listener: (value: any) => void): this;
+        off(event: "messageerror", listener: (error: Error) => void): this;
         off(event: string | symbol, listener: (...args: any[]) => void): this;
     }
 
     interface WorkerOptions {
+        /**
+         * List of arguments which would be stringified and appended to
+         * \`process.argv\` in the worker. This is mostly similar to the \`workerData\`
+         * but the values will be available on the global \`process.argv\` as if they
+         * were passed as CLI options to the script.
+         */
+        argv?: any[];
+        env?: NodeJS.Dict<string> | typeof SHARE_ENV;
         eval?: boolean;
-        env?: NodeJS.ProcessEnv | typeof SHARE_ENV;
         workerData?: any;
         stdin?: boolean;
         stdout?: boolean;
         stderr?: boolean;
         execArgv?: string[];
+        resourceLimits?: ResourceLimits;
+        /**
+         * Additional data to send in the first worker message.
+         */
+        transferList?: TransferListItem[];
+        trackUnmanagedFds?: boolean;
+    }
+
+    interface ResourceLimits {
+        /**
+         * The maximum size of a heap space for recently created objects.
+         */
+        maxYoungGenerationSizeMb?: number;
+        /**
+         * The maximum size of the main heap in MB.
+         */
+        maxOldGenerationSizeMb?: number;
+        /**
+         * The size of a pre-allocated memory range used for generated code.
+         */
+        codeRangeSizeMb?: number;
+        /**
+         * The default maximum stack size for the thread. Small values may lead to unusable Worker instances.
+         * @default 4
+         */
+        stackSizeMb?: number;
     }
 
     class Worker extends EventEmitter {
@@ -20133,10 +20077,16 @@ module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {
         readonly stdout: Readable;
         readonly stderr: Readable;
         readonly threadId: number;
+        readonly resourceLimits?: ResourceLimits;
 
-        constructor(filename: string, options?: WorkerOptions);
+        /**
+         * @param filename  The path to the Worker’s main script or module.
+         *                  Must be either an absolute path or a relative path (i.e. relative to the current working directory) starting with ./ or ../,
+         *                  or a WHATWG URL object using file: protocol. If options.eval is true, this is a string containing JavaScript code rather than a path.
+         */
+        constructor(filename: string | URL, options?: WorkerOptions);
 
-        postMessage(value: any, transferList?: Array<ArrayBuffer | MessagePort>): void;
+        postMessage(value: any, transferList?: ReadonlyArray<TransferListItem>): void;
         ref(): void;
         unref(): void;
         /**
@@ -20144,78 +20094,109 @@ module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {
          * Returns a Promise for the exit code that is fulfilled when the \`exit\` event is emitted.
          */
         terminate(): Promise<number>;
-        /**
-         * Transfer a \`MessagePort\` to a different \`vm\` Context. The original \`port\`
-         * object will be rendered unusable, and the returned \`MessagePort\` instance will
-         * take its place.
-         *
-         * The returned \`MessagePort\` will be an object in the target context, and will
-         * inherit from its global \`Object\` class. Objects passed to the
-         * \`port.onmessage()\` listener will also be created in the target context
-         * and inherit from its global \`Object\` class.
-         *
-         * However, the created \`MessagePort\` will no longer inherit from
-         * \`EventEmitter\`, and only \`port.onmessage()\` can be used to receive
-         * events using it.
-         */
-        moveMessagePortToContext(port: MessagePort, context: Context): MessagePort;
 
         /**
-         * Receive a single message from a given \`MessagePort\`. If no message is available,
-         * \`undefined\` is returned, otherwise an object with a single \`message\` property
-         * that contains the message payload, corresponding to the oldest message in the
-         * \`MessagePort\`’s queue.
+         * Returns a readable stream for a V8 snapshot of the current state of the Worker.
+         * See [\`v8.getHeapSnapshot()\`][] for more details.
+         *
+         * If the Worker thread is no longer running, which may occur before the
+         * [\`'exit'\` event][] is emitted, the returned \`Promise\` will be rejected
+         * immediately with an [\`ERR_WORKER_NOT_RUNNING\`][] error
          */
-        receiveMessageOnPort(port: MessagePort): {} | undefined;
+        getHeapSnapshot(): Promise<Readable>;
 
         addListener(event: "error", listener: (err: Error) => void): this;
         addListener(event: "exit", listener: (exitCode: number) => void): this;
         addListener(event: "message", listener: (value: any) => void): this;
+        addListener(event: "messageerror", listener: (error: Error) => void): this;
         addListener(event: "online", listener: () => void): this;
         addListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
         emit(event: "error", err: Error): boolean;
         emit(event: "exit", exitCode: number): boolean;
         emit(event: "message", value: any): boolean;
+        emit(event: "messageerror", error: Error): boolean;
         emit(event: "online"): boolean;
         emit(event: string | symbol, ...args: any[]): boolean;
 
         on(event: "error", listener: (err: Error) => void): this;
         on(event: "exit", listener: (exitCode: number) => void): this;
         on(event: "message", listener: (value: any) => void): this;
+        on(event: "messageerror", listener: (error: Error) => void): this;
         on(event: "online", listener: () => void): this;
         on(event: string | symbol, listener: (...args: any[]) => void): this;
 
         once(event: "error", listener: (err: Error) => void): this;
         once(event: "exit", listener: (exitCode: number) => void): this;
         once(event: "message", listener: (value: any) => void): this;
+        once(event: "messageerror", listener: (error: Error) => void): this;
         once(event: "online", listener: () => void): this;
         once(event: string | symbol, listener: (...args: any[]) => void): this;
 
         prependListener(event: "error", listener: (err: Error) => void): this;
         prependListener(event: "exit", listener: (exitCode: number) => void): this;
         prependListener(event: "message", listener: (value: any) => void): this;
+        prependListener(event: "messageerror", listener: (error: Error) => void): this;
         prependListener(event: "online", listener: () => void): this;
         prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
         prependOnceListener(event: "error", listener: (err: Error) => void): this;
         prependOnceListener(event: "exit", listener: (exitCode: number) => void): this;
         prependOnceListener(event: "message", listener: (value: any) => void): this;
+        prependOnceListener(event: "messageerror", listener: (error: Error) => void): this;
         prependOnceListener(event: "online", listener: () => void): this;
         prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
         removeListener(event: "error", listener: (err: Error) => void): this;
         removeListener(event: "exit", listener: (exitCode: number) => void): this;
         removeListener(event: "message", listener: (value: any) => void): this;
+        removeListener(event: "messageerror", listener: (error: Error) => void): this;
         removeListener(event: "online", listener: () => void): this;
         removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
         off(event: "error", listener: (err: Error) => void): this;
         off(event: "exit", listener: (exitCode: number) => void): this;
         off(event: "message", listener: (value: any) => void): this;
+        off(event: "messageerror", listener: (error: Error) => void): this;
         off(event: "online", listener: () => void): this;
         off(event: string | symbol, listener: (...args: any[]) => void): this;
     }
+
+    /**
+     * Mark an object as not transferable.
+     * If \`object\` occurs in the transfer list of a \`port.postMessage()\` call, it will be ignored.
+     *
+     * In particular, this makes sense for objects that can be cloned, rather than transferred,
+     * and which are used by other objects on the sending side. For example, Node.js marks
+     * the \`ArrayBuffer\`s it uses for its Buffer pool with this.
+     *
+     * This operation cannot be undone.
+     */
+    function markAsUntransferable(object: object): void;
+
+    /**
+     * Transfer a \`MessagePort\` to a different \`vm\` Context. The original \`port\`
+     * object will be rendered unusable, and the returned \`MessagePort\` instance will
+     * take its place.
+     *
+     * The returned \`MessagePort\` will be an object in the target context, and will
+     * inherit from its global \`Object\` class. Objects passed to the
+     * \`port.onmessage()\` listener will also be created in the target context
+     * and inherit from its global \`Object\` class.
+     *
+     * However, the created \`MessagePort\` will no longer inherit from
+     * \`EventEmitter\`, and only \`port.onmessage()\` can be used to receive
+     * events using it.
+     */
+    function moveMessagePortToContext(port: MessagePort, context: Context): MessagePort;
+
+    /**
+     * Receive a single message from a given \`MessagePort\`. If no message is available,
+     * \`undefined\` is returned, otherwise an object with a single \`message\` property
+     * that contains the message payload, corresponding to the oldest message in the
+     * \`MessagePort\`’s queue.
+     */
+    function receiveMessageOnPort(port: MessagePort): { message: any } | undefined;
 }
 `;
 module.exports['zlib.d.ts'] = `declare module "zlib" {
@@ -20235,10 +20216,12 @@ module.exports['zlib.d.ts'] = `declare module "zlib" {
          */
         chunkSize?: number;
         windowBits?: number;
-        level?: number; // compression only
-        memLevel?: number; // compression only
-        strategy?: number; // compression only
-        dictionary?: NodeJS.ArrayBufferView | ArrayBuffer; // deflate/inflate only, empty dictionary by default
+        level?: number; \/\/ compression only
+        memLevel?: number; \/\/ compression only
+        strategy?: number; \/\/ compression only
+        dictionary?: NodeJS.ArrayBufferView | ArrayBuffer; \/\/ deflate/inflate only, empty dictionary by default
+        info?: boolean;
+        maxOutputLength?: number;
     }
 
     interface BrotliOptions {
@@ -20260,6 +20243,7 @@ module.exports['zlib.d.ts'] = `declare module "zlib" {
              */
             [key: number]: boolean | number;
         };
+        maxOutputLength?: number;
     }
 
     interface Zlib {
@@ -20268,7 +20252,8 @@ module.exports['zlib.d.ts'] = `declare module "zlib" {
         readonly bytesWritten: number;
         shell?: boolean | string;
         close(callback?: () => void): void;
-        flush(kind?: number | (() => void), callback?: () => void): void;
+        flush(kind?: number, callback?: () => void): void;
+        flush(callback?: () => void): void;
     }
 
     interface ZlibParams {
@@ -20305,30 +20290,74 @@ module.exports['zlib.d.ts'] = `declare module "zlib" {
 
     function brotliCompress(buf: InputType, options: BrotliOptions, callback: CompressCallback): void;
     function brotliCompress(buf: InputType, callback: CompressCallback): void;
+    namespace brotliCompress {
+        function __promisify__(buffer: InputType, options?: BrotliOptions): Promise<Buffer>;
+    }
+
     function brotliCompressSync(buf: InputType, options?: BrotliOptions): Buffer;
+
     function brotliDecompress(buf: InputType, options: BrotliOptions, callback: CompressCallback): void;
     function brotliDecompress(buf: InputType, callback: CompressCallback): void;
+    namespace brotliDecompress {
+        function __promisify__(buffer: InputType, options?: BrotliOptions): Promise<Buffer>;
+    }
+
     function brotliDecompressSync(buf: InputType, options?: BrotliOptions): Buffer;
+
     function deflate(buf: InputType, callback: CompressCallback): void;
     function deflate(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    namespace deflate {
+        function __promisify__(buffer: InputType, options?: ZlibOptions): Promise<Buffer>;
+    }
+
     function deflateSync(buf: InputType, options?: ZlibOptions): Buffer;
+
     function deflateRaw(buf: InputType, callback: CompressCallback): void;
     function deflateRaw(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    namespace deflateRaw {
+        function __promisify__(buffer: InputType, options?: ZlibOptions): Promise<Buffer>;
+    }
+
     function deflateRawSync(buf: InputType, options?: ZlibOptions): Buffer;
+
     function gzip(buf: InputType, callback: CompressCallback): void;
     function gzip(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    namespace gzip {
+        function __promisify__(buffer: InputType, options?: ZlibOptions): Promise<Buffer>;
+    }
+
     function gzipSync(buf: InputType, options?: ZlibOptions): Buffer;
+
     function gunzip(buf: InputType, callback: CompressCallback): void;
     function gunzip(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    namespace gunzip {
+        function __promisify__(buffer: InputType, options?: ZlibOptions): Promise<Buffer>;
+    }
+
     function gunzipSync(buf: InputType, options?: ZlibOptions): Buffer;
+
     function inflate(buf: InputType, callback: CompressCallback): void;
     function inflate(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    namespace inflate {
+        function __promisify__(buffer: InputType, options?: ZlibOptions): Promise<Buffer>;
+    }
+
     function inflateSync(buf: InputType, options?: ZlibOptions): Buffer;
+
     function inflateRaw(buf: InputType, callback: CompressCallback): void;
     function inflateRaw(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    namespace inflateRaw {
+        function __promisify__(buffer: InputType, options?: ZlibOptions): Promise<Buffer>;
+    }
+
     function inflateRawSync(buf: InputType, options?: ZlibOptions): Buffer;
+
     function unzip(buf: InputType, callback: CompressCallback): void;
     function unzip(buf: InputType, options: ZlibOptions, callback: CompressCallback): void;
+    namespace unzip {
+        function __promisify__(buffer: InputType, options?: ZlibOptions): Promise<Buffer>;
+    }
+
     function unzipSync(buf: InputType, options?: ZlibOptions): Buffer;
 
     namespace constants {
@@ -20408,166 +20437,127 @@ module.exports['zlib.d.ts'] = `declare module "zlib" {
         const INFLATERAW: number;
         const UNZIP: number;
 
-        const Z_BEST_COMPRESSION: number;
-        const Z_BEST_SPEED: number;
-        const Z_BLOCK: number;
-        const Z_BUF_ERROR: number;
-        const Z_DATA_ERROR: number;
-
-        const Z_DEFAULT_CHUNK: number;
-        const Z_DEFAULT_COMPRESSION: number;
-        const Z_DEFAULT_LEVEL: number;
-        const Z_DEFAULT_MEMLEVEL: number;
-        const Z_DEFAULT_STRATEGY: number;
-        const Z_DEFAULT_WINDOWBITS: number;
-
-        const Z_ERRNO: number;
-        const Z_FILTERED: number;
-        const Z_FINISH: number;
-        const Z_FIXED: number;
-        const Z_FULL_FLUSH: number;
-        const Z_HUFFMAN_ONLY: number;
-        const Z_MAX_CHUNK: number;
-        const Z_MAX_LEVEL: number;
-        const Z_MAX_MEMLEVEL: number;
-        const Z_MAX_WINDOWBITS: number;
-        const Z_MEM_ERROR: number;
-        const Z_MIN_CHUNK: number;
-        const Z_MIN_LEVEL: number;
-        const Z_MIN_MEMLEVEL: number;
-        const Z_MIN_WINDOWBITS: number;
-        const Z_NEED_DICT: number;
-        const Z_NO_COMPRESSION: number;
+        \/\/ Allowed flush values.
         const Z_NO_FLUSH: number;
-        const Z_OK: number;
         const Z_PARTIAL_FLUSH: number;
-        const Z_RLE: number;
-        const Z_STREAM_END: number;
-        const Z_STREAM_ERROR: number;
         const Z_SYNC_FLUSH: number;
+        const Z_FULL_FLUSH: number;
+        const Z_FINISH: number;
+        const Z_BLOCK: number;
+        const Z_TREES: number;
+
+        \/\/ Return codes for the compression/decompression functions.
+        \/\/ Negative values are errors, positive values are used for special but normal events.
+        const Z_OK: number;
+        const Z_STREAM_END: number;
+        const Z_NEED_DICT: number;
+        const Z_ERRNO: number;
+        const Z_STREAM_ERROR: number;
+        const Z_DATA_ERROR: number;
+        const Z_MEM_ERROR: number;
+        const Z_BUF_ERROR: number;
         const Z_VERSION_ERROR: number;
+
+        \/\/ Compression levels.
+        const Z_NO_COMPRESSION: number;
+        const Z_BEST_SPEED: number;
+        const Z_BEST_COMPRESSION: number;
+        const Z_DEFAULT_COMPRESSION: number;
+
+        \/\/ Compression strategy.
+        const Z_FILTERED: number;
+        const Z_HUFFMAN_ONLY: number;
+        const Z_RLE: number;
+        const Z_FIXED: number;
+        const Z_DEFAULT_STRATEGY: number;
+
+        const Z_DEFAULT_WINDOWBITS: number;
+        const Z_MIN_WINDOWBITS: number;
+        const Z_MAX_WINDOWBITS: number;
+
+        const Z_MIN_CHUNK: number;
+        const Z_MAX_CHUNK: number;
+        const Z_DEFAULT_CHUNK: number;
+
+        const Z_MIN_MEMLEVEL: number;
+        const Z_MAX_MEMLEVEL: number;
+        const Z_DEFAULT_MEMLEVEL: number;
+
+        const Z_MIN_LEVEL: number;
+        const Z_MAX_LEVEL: number;
+        const Z_DEFAULT_LEVEL: number;
+
         const ZLIB_VERNUM: number;
     }
 
-    /**
-     * @deprecated
-     */
+    \/\/ Allowed flush values.
+    /** @deprecated Use \`constants.Z_NO_FLUSH\` */
     const Z_NO_FLUSH: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_PARTIAL_FLUSH\` */
     const Z_PARTIAL_FLUSH: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_SYNC_FLUSH\` */
     const Z_SYNC_FLUSH: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_FULL_FLUSH\` */
     const Z_FULL_FLUSH: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_FINISH\` */
     const Z_FINISH: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_BLOCK\` */
     const Z_BLOCK: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_TREES\` */
     const Z_TREES: number;
-    /**
-     * @deprecated
-     */
+
+    \/\/ Return codes for the compression/decompression functions.
+    \/\/ Negative values are errors, positive values are used for special but normal events.
+    /** @deprecated Use \`constants.Z_OK\` */
     const Z_OK: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_STREAM_END\` */
     const Z_STREAM_END: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_NEED_DICT\` */
     const Z_NEED_DICT: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_ERRNO\` */
     const Z_ERRNO: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_STREAM_ERROR\` */
     const Z_STREAM_ERROR: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_DATA_ERROR\` */
     const Z_DATA_ERROR: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_MEM_ERROR\` */
     const Z_MEM_ERROR: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_BUF_ERROR\` */
     const Z_BUF_ERROR: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_VERSION_ERROR\` */
     const Z_VERSION_ERROR: number;
-    /**
-     * @deprecated
-     */
+
+    \/\/ Compression levels.
+    /** @deprecated Use \`constants.Z_NO_COMPRESSION\` */
     const Z_NO_COMPRESSION: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_BEST_SPEED\` */
     const Z_BEST_SPEED: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_BEST_COMPRESSION\` */
     const Z_BEST_COMPRESSION: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_DEFAULT_COMPRESSION\` */
     const Z_DEFAULT_COMPRESSION: number;
-    /**
-     * @deprecated
-     */
+
+    \/\/ Compression strategy.
+    /** @deprecated Use \`constants.Z_FILTERED\` */
     const Z_FILTERED: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_HUFFMAN_ONLY\` */
     const Z_HUFFMAN_ONLY: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_RLE\` */
     const Z_RLE: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_FIXED\` */
     const Z_FIXED: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated Use \`constants.Z_DEFAULT_STRATEGY\` */
     const Z_DEFAULT_STRATEGY: number;
-    /**
-     * @deprecated
-     */
+
+    /** @deprecated */
     const Z_BINARY: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated */
     const Z_TEXT: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated */
     const Z_ASCII: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated  */
     const Z_UNKNOWN: number;
-    /**
-     * @deprecated
-     */
+    /** @deprecated */
     const Z_DEFLATED: number;
 }
 `;
