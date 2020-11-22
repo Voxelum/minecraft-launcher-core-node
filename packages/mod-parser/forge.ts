@@ -1,6 +1,6 @@
 import { resolveFileSystem, FileSystem } from "@xmcl/system";
 import { parse as parseToml } from "@iarna/toml";
-import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from "java-asm";
+import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from "@xmcl/asm";
 
 class ModAnnotationVisitor extends AnnotationVisitor {
     constructor(readonly map: { [key: string]: any }) { super(Opcodes.ASM5); }
