@@ -1,8 +1,8 @@
 {
   "name": "@xmcl/server-info",
   "version": "2.0.3",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
   "description": "Read Minecraft servers.dat NBT file",
   "engines": {
     "node": ">=10.0"
@@ -11,11 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/nbt": "file:../nbt"
-  },
-  "scripts": {
-    "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile"
+    "@xmcl/nbt": "^2.0.3"
   },
   "repository": {
     "type": "git",

@@ -2,12 +2,9 @@
   "name": "base",
   "private": true,
   "version": "0.0.0",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
-  "browser": {
-    "./index.js": "./index.browser.js",
-    "./index.cjs.js": "./index.browser.cjs.js"
-  },
+  "main": "./index.ts",
+  "module": "./index.ts",
+  "browser": "./index.browser.ts",
   "sideEffects": false,
   "dependencies": {
     "form-data": "^3.0.0",

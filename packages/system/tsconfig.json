@@ -2,18 +2,15 @@
     "files": [
         "index.ts",
         "system.ts",
-        "index.browser.ts",
-        "test.ts"
+        "index.browser.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "CommonJS",
-        "outDir": "cjs",
-        "lib": [
-            "dom"
-        ],
+        "module": "esnext",
         "experimentalDecorators": true,
-        "declaration": true,"downlevelIteration": true,
+        "sourceMap": true,
+        "declaration": true,
+        "downlevelIteration": true,
         "strict": true,
         "moduleResolution": "node",
         "esModuleInterop": true,

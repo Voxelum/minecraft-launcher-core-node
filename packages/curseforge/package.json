@@ -1,8 +1,9 @@
 {
   "name": "@xmcl/curseforge",
   "version": "0.1.2",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
+  "browser": "./browser/index.js",
   "sideEffects": false,
   "description": "Provide the curseforge (twitch) API in https://twitchappapi.docs.apiary.io/",
   "engines": {
@@ -10,10 +11,6 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "scripts": {
-    "compile": "tsc --build ./http/tsconfig.json && tsc --build tsconfig.json",
-    "build": "npm run compile"
   },
   "repository": {
     "type": "git",

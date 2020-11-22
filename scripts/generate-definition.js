@@ -1,17 +1,24 @@
 const fs = require("fs");
+const { EOL } = require("os");
 
 function ecape(s) {
-    return s.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    return s.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(EOL, ' ').replace(/\/\//g, '\\/\\/');
 }
 
 {
     const definitions = [];
     function scanDefinitions(dir) {
         try {
-            for (const file of fs.readdirSync(dir)) {
+            if (dir.startsWith('packages') && dir.endsWith('node_modules')) {
+                return;
+            }
+            if (dir.startsWith('packages/asm')) {
+                return;
+            }
+            for (let file of fs.readdirSync(dir)) {
                 const f = `${dir}/${file}`;
                 if (file.endsWith(".d.ts")) {
-                    const fname = `@xmcl/${dir.replace('packages/', '')}/${file}`;
+                    const fname = `@xmcl/${f.replace('packages/', '').replace('dist/', '')}`;
                     definitions.push({ file: fname, content: fs.readFileSync(f).toString() })
                 } else if (fs.statSync(f).isDirectory()) {
                     scanDefinitions(f);
