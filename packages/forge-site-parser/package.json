@@ -1,8 +1,8 @@
 {
   "name": "@xmcl/forge-site-parser",
   "version": "2.0.5",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
   "description": "Forge web page parser",
   "engines": {
     "node": ">=10.0"
@@ -12,10 +12,6 @@
   },
   "dependencies": {
     "node-html-parser": "1.2.16"
-  },
-  "scripts": {
-    "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile"
   },
   "repository": {
     "type": "git",

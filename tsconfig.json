@@ -2,25 +2,41 @@
     "compilerOptions": {
         "allowSyntheticDefaultImports": true,
         "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
         "downlevelIteration": true,
         "esModuleInterop": true,
         "experimentalDecorators": true,
-        "lib": [
-            "dom"
-        ],
-        "outDir": "packages",
-        "module": "ES2015",
+        "target": "ESNext",
+        "module": "esnext",
         "moduleResolution": "node",
         "newLine": "LF",
         "strict": true,
-        "target": "es2018"
+        "skipLibCheck": true
     },
-    "exclude": [
-        "packages/**/*.d.ts"
-    ],
     "include": [
-        "packages/**/*.ts",
-        "global.d.ts"
+        "packages/asm/**/*.ts",
+        "packages/client/**/*.ts",
+        "packages/core/**/*.ts",
+        "packages/curseforge/**/*.ts",
+        "packages/forge-site-parser/**/*.ts",
+        "packages/gamesetting/**/*.ts",
+        "packages/installer/**/*.ts",
+        "packages/mod-parser/**/*.ts",
+        "packages/model/**/*.ts",
+        "packages/nbt/**/*.ts",
+        "packages/resourcepack/**/*.ts",
+        "packages/server-info/**/*.ts",
+        "packages/system/**/*.ts",
+        "packages/task/**/*.ts",
+        "packages/text-component/**/*.ts",
+        "packages/unzip/**/*.ts",
+        "packages/user/**/*.ts",
+        "packages/world/**/*.ts"
+    ],
+    "exclude": [
+        "packages/**/*.d.ts",
+        "node_modules/**/*"
     ],
     "typedocOptions": {
         "mode": "library",

@@ -1,5 +1,5 @@
 import { join } from "path";
-import { openFileSystem } from ".";
+import { openFileSystem } from "./index";
 import { assert } from "console";
 
 const mockRoot = join(__dirname, "..", "..", "mock");

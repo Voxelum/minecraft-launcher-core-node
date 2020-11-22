@@ -2,7 +2,7 @@
   "name": "@xmcl/installer",
   "version": "2.9.8",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.esm.js",
   "description": "Provides Minecraft/Forge/Fabric/Liteloader installers",
   "engines": {
     "node": ">=10.0"

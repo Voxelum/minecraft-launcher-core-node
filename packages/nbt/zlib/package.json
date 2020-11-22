@@ -4,10 +4,7 @@
   "version": "0.0.0",
   "main": "./index.cjs.js",
   "module": "./index.js",
-  "browser": {
-    "./index.js": "./index.browser.js",
-    "./index.cjs.js": "./index.browser.cjs.js"
-  },
+  "browser": "./index.browser.ts",
   "sideEffects": false,
   "dependencies": {
     "bytebuffer": "^5.0.1",

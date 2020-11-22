@@ -1,8 +1,8 @@
 {
   "name": "@xmcl/client",
   "version": "2.0.6",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
   "description": "Minecraft socket client pipeline, containing server status query by default",
   "engines": {
     "node": ">=10.0"
@@ -11,15 +11,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/nbt": "file:../nbt",
-    "@xmcl/text-component": "file:../text-component",
+    "@xmcl/nbt": "^2.0.3",
+    "@xmcl/text-component": "^2.1.1",
     "bytebuffer": "^5.0.1",
     "long": "~3",
     "uuid": "^7.0.2"
-  },
-  "scripts": {
-    "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile"
   },
   "repository": {
     "type": "git",

@@ -1,11 +1,14 @@
 {
     "files": [
         "index.ts",
+        "http/base.ts",
+        "http/index.ts",
+        "http/index.browser.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "CommonJS",
-        "outDir": "cjs",
+        "module": "esnext",
+        
         "lib": [
             "dom"
         ],

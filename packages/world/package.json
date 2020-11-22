@@ -1,8 +1,8 @@
 {
   "name": "@xmcl/world",
   "version": "1.1.3",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
   "description": "Minecraft world dat parsing",
   "engines": {
     "node": ">=10.0"
@@ -11,12 +11,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/nbt": "file:../nbt",
-    "@xmcl/system": "file:../system"
-  },
-  "scripts": {
-    "compile": "tsc --build tsconfig.json",
-    "build": "npm run compile"
+    "@xmcl/nbt": "^2.0.3",
+    "@xmcl/system": "^2.2.0"
   },
   "repository": {
     "type": "git",

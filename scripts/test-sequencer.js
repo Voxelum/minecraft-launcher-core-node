@@ -3,10 +3,9 @@ const { sep } = require('path');
 
 class CustomSequencer extends TestSequencer {
     sort(tests) {
-        const index = tests.findIndex(t => t.path.indexOf(sep + 'installer') !== -1);
-        const elem = tests.splice(index, 1)[0];
-        tests.unshift(elem);
-        return tests;
+        const installerTests = tests.filter(t => t.path.indexOf(sep + 'installer') !== -1);
+        const nonInstallerTests = tests.filter(t => t.path.indexOf(sep + 'installer') === -1);
+        return installerTests.concat(nonInstallerTests);
     }
 }
 

@@ -70,3 +70,5 @@ packages/**/*.js.map
 packages/**/package-lock.json
 
 /temp
+
+dist

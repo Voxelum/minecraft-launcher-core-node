@@ -10,8 +10,8 @@
     ],
     "compilerOptions": {
         "target": "es2018",
-        "module": "CommonJS",
-        "outDir": "cjs",
+        "module": "esnext",
+        
         "lib": [
             "dom"
         ],

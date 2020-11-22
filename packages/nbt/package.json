@@ -1,18 +1,15 @@
 {
   "name": "@xmcl/nbt",
   "version": "2.0.3",
-  "main": "./index.cjs.js",
-  "module": "./index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
+  "browser": "./dist/index.browser.js",
   "description": "NBT serialization and deserialization",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "scripts": {
-    "compile": "tsc --build ./zlib/tsconfig.json && tsc --build tsconfig.json",
-    "build": "npm run compile"
   },
   "repository": {
     "type": "git",

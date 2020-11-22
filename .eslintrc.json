@@ -10,7 +10,6 @@
     "@typescript-eslint"
   ],
   "rules": {
-    "@typescript-eslint/class-name-casing": "error",
     "@typescript-eslint/no-floating-promises": "error",
     "@typescript-eslint/no-unnecessary-type-assertion": "error",
     "@typescript-eslint/prefer-namespace-keyword": "error",
