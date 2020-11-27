@@ -1,5 +1,5 @@
 import { join, normalize } from "path";
-import { getSha1, validateSha1 } from "./util";
+import { checksum, validateSha1 } from "./utils";
 
 const root = normalize(join(__dirname, "..", "..", "mock"));
 
@@ -31,9 +31,9 @@ describe("util", () => {
                 .toEqual(false);
         });
     });
-    describe("#getSha1", () => {
+    describe("#checksum", () => {
         test("should get sha1", async () => {
-            await expect(getSha1(join(root, "options.txt")))
+            await expect(checksum(join(root, "options.txt"), "sha1"))
                 .resolves
                 .toEqual("e1719c99026ae3714ea24f13f50cdf6894844511");
         });

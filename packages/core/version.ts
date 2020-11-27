@@ -1,6 +1,6 @@
 import { MinecraftFolder, MinecraftLocation } from "./folder"
 import { Platform, getPlatform } from "./platform";
-import { readFile } from "./util";
+import { readFile } from "./utils";
 import { extname } from "path";
 
 interface PartialResolvedVersion extends Version {

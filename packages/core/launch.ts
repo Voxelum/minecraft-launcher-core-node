@@ -9,7 +9,7 @@ import { promisify } from "util";
 import { v4 } from "uuid";
 import { MinecraftFolder } from "./folder";
 import { getPlatform, Platform } from "./platform";
-import { getSha1, link, mkdir, readFile, validateSha1, writeFile } from "./util";
+import { checksum, link, mkdir, readFile, validateSha1, writeFile } from "./utils";
 import { ResolvedLibrary, ResolvedNative, ResolvedVersion, Version } from "./version";
 
 function format(template: string, args: any) {
@@ -334,7 +334,7 @@ export namespace LaunchPrecheck {
             await Promise.all(natives.map(extractJar));
             const entries = await Promise.all(extractedNatives.map(async (n) => ({
                 ...n,
-                sha1: await getSha1(join(native, n.file))
+                sha1: await checksum(join(native, n.file), "sha1")
             })));
             const fileContent = JSON.stringify({
                 entries,
