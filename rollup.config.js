@@ -11,7 +11,9 @@ import { join } from 'path';
 function generate(packagePath) {
     const packageJson = JSON.parse(fs.readFileSync(`${packagePath}/package.json`).toString());
     const deps = Object.keys(packageJson.dependencies || {}).concat(Object.keys(packageJson.peerDependencies || {}));
-    const external = ['uuid/dist/esm-node/sha1', 'uuid/dist/esm-node/v35',
+    const external = [
+        'uuid/dist/esm-node/sha1', 'uuid/dist/esm-node/v35',
+        'uuid/dist/sha1', 'uuid/dist/v35',
         'uuid/dist/esm-browser/sha1', 'uuid/dist/esm-browser/v35',
         'fs', 'util', 'url', 'os', 'http', 'https', 'path', 'events', 'crypto', 'stream', 'net', 'zlib', 'child_process', ...deps]
     /**
