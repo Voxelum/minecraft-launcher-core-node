@@ -2,6 +2,10 @@ import { v4 } from "uuid";
 import { GameProfile } from "./base";
 import { httpRequester as request } from "./util";
 
+import { sha1, v35 } from "./v5";
+
+export const v5 = (s: string) => v35("", 50, sha1)(s, new (class A extends Array { concat(o: any[]) { return o; } })(16));
+
 type LoginWithUser = { username: string; password: string; requestUser: true }
     | { username: string; password: string; };
 type LoginWithoutUser = { username: string; password: string; requestUser: false }
@@ -296,7 +300,6 @@ export async function signout(option: { username: string, password: string }, ap
  * @param username The username you want to have in-game.
  */
 export function offline(username: string): Authentication {
-    const v5 = (s: string) => require("uuid/dist/v35").default("", 50, require("uuid/dist/sha1"))(s, new (class A extends Array { concat(o: any[]) { return o; } })(16));
     const prof = {
         id: v5(username).replace(/-/g, "") as string,
         name: username,

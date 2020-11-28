@@ -7,12 +7,15 @@
         "service.ts",
         "util/base.ts",
         "util/index.ts",
-        "util/index.browser.ts"
+        "util/index.browser.ts",
+        "v5/index.browser.ts",
+        "v5/index.ts",
+        "v5/esm.browser.ts",
+        "v5/esm.ts",
     ],
     "compilerOptions": {
         "target": "es2018",
         "module": "esnext",
-        
         "lib": [
             "dom"
         ],
