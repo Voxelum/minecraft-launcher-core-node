@@ -1,0 +1,9 @@
+{
+    "name": "v5",
+    "private": true,
+    "main": "./index.ts",
+    "browser": {
+        "./index.ts": "./index.browser.ts"
+    },
+    "sideEffects": false
+}
