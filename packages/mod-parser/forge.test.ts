@@ -22,8 +22,8 @@ describe("Forge", () => {
                 description: "JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n",
                 url: "https://minecraft.curseforge.com/projects/jei",
                 usedForgePackage: true,
-                usedLegacyFMLPackage: true,
-                usedMinecraftClientPackage: true,
+                usedLegacyFMLPackage: false,
+                usedMinecraftClientPackage: false,
                 usedMinecraftPackage: true,
             }
         ])
@@ -77,8 +77,8 @@ describe("Forge", () => {
                 name: "MouseDelayFix",
                 version: "1.0",
                 usedForgePackage: true,
-                usedLegacyFMLPackage: true,
-                usedMinecraftClientPackage: true,
+                usedLegacyFMLPackage: false,
+                usedMinecraftClientPackage: false,
                 usedMinecraftPackage: true,
             }
         ])
@@ -91,7 +91,6 @@ describe("Forge", () => {
             .toBeTruthy();
     });
 
-
     test("should detect optifine from class in jar", async () => {
         const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
         expect(metadata.some((m) =>
@@ -102,6 +101,11 @@ describe("Forge", () => {
             m.mcversion === "1.12.1" &&
             m.url === "https://optifine.net",
         )).toBeTruthy();
+    });
+
+    it("should not read the fabric mod", async () => {
+        await expect(Forge.readModMetaData(path.join(root, "mods", "fabric-sample-2.jar"))).rejects
+            .toBeTruthy();
     });
 
     describe("Config", () => {

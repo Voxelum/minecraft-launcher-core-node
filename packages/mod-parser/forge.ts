@@ -55,16 +55,16 @@ class ModClassVisitor extends ClassVisitor {
     }
 
     private validateType(desc: string) {
-        if (desc.indexOf("net/minecraftforge") !== undefined) {
+        if (desc.indexOf("net/minecraftforge") !== -1) {
             this.baseInfo.usedForgePackage = true;
         }
-        if (desc.indexOf("net/minecraft") !== undefined) {
+        if (desc.indexOf("net/minecraft") !== -1) {
             this.baseInfo.usedMinecraftPackage = true;
         }
-        if (desc.indexOf("cpw/mods/fml") !== undefined) {
+        if (desc.indexOf("cpw/mods/fml") !== -1) {
             this.baseInfo.usedLegacyFMLPackage = true;
         }
-        if (desc.indexOf("net/minecraftforge/client") !== undefined) {
+        if (desc.indexOf("net/minecraft/client") !== -1) {
             this.baseInfo.usedMinecraftClientPackage = true;
         }
     }
@@ -248,7 +248,7 @@ async function asmMetaData(fs: FileSystem, modidTree: ModidTree, baseInfo: ModBa
             modMeta[propKey] = metaContainer[propKey];
         }
     });
-    if (guessing.modid && !modidTree[guessing.modid]) {
+    if ((baseInfo.usedForgePackage || baseInfo.usedLegacyFMLPackage) && guessing.modid && !modidTree[guessing.modid]) {
         modidTree[guessing.modid] = guessing;
     }
 }
@@ -280,19 +280,6 @@ async function jsonMetaData(fs: FileSystem, modidTree: ModidTree) {
             readJsonMetadata(json);
         } catch (e) { }
     }
-    // const entry = zip.entries["mcmod.info"];
-    // if (entry) {
-    //     try {
-    //         const json = JSON.parse(await zip.readEntry(entry).then((b) => b.toString("utf-8")));
-    //         readJsonMetadata(json);
-    //     } catch (e) { }
-    // } else {
-    //     try {
-    //         const jsons = await Promise.all(zip.filterEntries((e) => e.fileName.endsWith(".info"))
-    //             .map((e) => zip.readEntry(e).then((b) => b.toString()).then(JSON.parse)));
-    //         jsons.forEach(readJsonMetadata);
-    //     } catch (e) { }
-    // }
 }
 
 /**

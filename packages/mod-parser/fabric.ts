@@ -9,7 +9,7 @@ type Person = {
      *  Person's contact information. The same as upper level contact. See above. Optional.
      */
     contact?: string;
-}
+} | string;
 
 type Environment = "client" | "server" | "*";
 
@@ -73,7 +73,7 @@ export interface ModMetadata {
      * ]
      * ```
      */
-    jars?: string[];
+    jars?: { file: string }[];
     /**
      * A dictionary of adapters for used languages to their adapter classes full names. For example:
      * ```json
