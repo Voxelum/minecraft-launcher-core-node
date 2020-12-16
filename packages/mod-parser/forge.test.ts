@@ -1,16 +1,17 @@
 import * as path from "path";
-import * as Forge from "./forge";
+import { readForgeMod } from "./forge";
+import { ForgeConfig } from "./forgeConfig";
 
 describe("Forge", () => {
     const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
 
     test("should read exactly things in jar", async () => {
-        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
+        const metadata = await readForgeMod(`${root}/mods/sample-mod.jar`);
         expect(metadata.length).toEqual(3);
     });
 
     test("should read >1.13 forge mod jar", async () => {
-        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod-1.13.jar`);
+        const metadata = await readForgeMod(`${root}/mods/sample-mod-1.13.jar`);
         expect(metadata).toEqual([
             {
                 modid: "jei",
@@ -30,7 +31,7 @@ describe("Forge", () => {
     });
 
     test("should read mcmod.info in jar", async () => {
-        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
+        const metadata = await readForgeMod(`${root}/mods/sample-mod.jar`);
         expect(metadata.some((m) =>
             m.modid === "soundfilters" &&
             m.name === "Sound Filters" &&
@@ -42,17 +43,17 @@ describe("Forge", () => {
     });
 
     test("should read ccc mod plugin in jar", async () => {
-        const metadata = await Forge.readModMetaData(`${root}/mods/sample-ccc-mod.jar`);
+        const metadata = await readForgeMod(`${root}/mods/sample-ccc-mod.jar`);
         expect(metadata.length).toEqual(1);
     });
 
     test("should read nei mod plugin in jar", async () => {
-        const metadata = await Forge.readModMetaData(`${root}/mods/sample-nei-mod.jar`);
+        const metadata = await readForgeMod(`${root}/mods/sample-nei-mod.jar`);
         expect(metadata.length).toEqual(1);
     });
 
     test("should read tweak class in jar", async () => {
-        const metadata = await Forge.readModMetaData(`${root}/mods/tweak-class.jar`);
+        const metadata = await readForgeMod(`${root}/mods/tweak-class.jar`);
         expect(metadata).toEqual([
             {
                 modid: "betterfps",
@@ -70,7 +71,7 @@ describe("Forge", () => {
     });
 
     test("should read dummy mod in jar", async () => {
-        const metadata = await Forge.readModMetaData(`${root}/mods/dummy-mod.jar`);
+        const metadata = await readForgeMod(`${root}/mods/dummy-mod.jar`);
         expect(metadata).toEqual([
             {
                 modid: "mousedelayfix",
@@ -86,13 +87,13 @@ describe("Forge", () => {
 
 
     test("should read @Mod in jar", async () => {
-        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
+        const metadata = await readForgeMod(`${root}/mods/sample-mod.jar`);
         expect(metadata.some((m) => m.modid === "NuclearCraft" && m.version === "1.9e"))
             .toBeTruthy();
     });
 
     test("should detect optifine from class in jar", async () => {
-        const metadata = await Forge.readModMetaData(`${root}/mods/sample-mod.jar`);
+        const metadata = await readForgeMod(`${root}/mods/sample-mod.jar`);
         expect(metadata.some((m) =>
             m.modid === "OptiFine" &&
             m.name === "OptiFine" &&
@@ -104,7 +105,7 @@ describe("Forge", () => {
     });
 
     it("should not read the fabric mod", async () => {
-        await expect(Forge.readModMetaData(path.join(root, "mods", "fabric-sample-2.jar"))).rejects
+        await expect(readForgeMod(path.join(root, "mods", "fabric-sample-2.jar"))).rejects
             .toBeTruthy();
     });
 
@@ -135,9 +136,9 @@ describe("Forge", () => {
         D:someDouble=0.1
     }
     `;
-        let config: Forge.Config;
+        let config: ForgeConfig;
         test("forge config parsing", () => {
-            config = Forge.Config.parse(cfg1);
+            config = ForgeConfig.parse(cfg1);
         });
         test("forge config categories parsing", () => {
             expect(config.versioncheck).toBeTruthy();
@@ -159,7 +160,7 @@ describe("Forge", () => {
             expect(config.versioncheck.properties[2].type).toEqual("B");
         });
         test("should stringify the config", () => {
-            const string = Forge.Config.stringify(config);
+            const string = ForgeConfig.stringify(config);
             expect(string.split("\n").map((l) => l.trim()).filter((l) => l.length !== 0))
                 .toEqual(cfg1.split("\n").map((l) => l.trim()).filter((l) => l.length !== 0));
         })

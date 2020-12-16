@@ -19,7 +19,7 @@ type Environment = "client" | "server" | "*";
  * The `fabric.mod.json` file is a mod metadata file used by Fabric Loader to load mods.
  * In order to be loaded, a mod must have this file with the exact name placed in the root directory of the mod JAR.
  */
-export interface ModMetadata {
+export interface FabricModMetadata {
     /* Required */
 
     /**
@@ -190,7 +190,7 @@ export interface ModMetadata {
  * Read fabric mod metadata json from a jar file or a directory
  * @param file The jar file or directory path. I can also be the binary content of the jar if you have already read the jar.
  */
-export async function readModMetaData(file: FileSystem | string | Uint8Array): Promise<ModMetadata> {
+export async function readFabricMod(file: FileSystem | string | Uint8Array): Promise<FabricModMetadata> {
     const fs = await resolveFileSystem(file);
     const content = await fs.readFile("fabric.mod.json", "utf-8");
     return JSON.parse(content.replace(/^\uFEFF/, ""));

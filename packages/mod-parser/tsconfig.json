@@ -1,6 +1,7 @@
 {
     "files": [
         "forge.ts",
+        "forgeConfig.ts",
         "fabric.ts",
         "liteloader.ts",
         "index.ts"

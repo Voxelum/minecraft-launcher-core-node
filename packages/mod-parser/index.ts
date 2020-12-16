@@ -1,5 +1,4 @@
-import * as Forge from "./forge";
-import * as LiteLoader from "./liteloader";
-import * as Fabric from "./fabric";
-
-export { Forge, LiteLoader, Fabric };
+export * from "./forge";
+export * from "./forgeConfig";
+export * from "./liteloader";
+export * from "./fabric";

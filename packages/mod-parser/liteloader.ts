@@ -1,7 +1,6 @@
 import { FileSystem, resolveFileSystem } from "@xmcl/system";
 
-export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
-export interface MetaData {
+export interface LiteloaderModMetadata {
     readonly mcversion: string;
     readonly name: string;
     readonly revision: number;
@@ -17,18 +16,8 @@ export interface MetaData {
     readonly requiredAPIs?: string[];
     readonly classTransformerClasses?: string[];
 }
-export interface VersionMeta {
-    version: string;
-    url: string;
-    file: string;
-    mcversion: string;
-    type: "RELEASE" | "SNAPSHOT";
-    md5: string;
-    timestamp: string;
-    libraries: Array<{ name: string, url?: string }>;
-    tweakClass: string;
-}
-export async function readModMetaData(mod: string | Uint8Array | FileSystem) {
+
+export async function readLiteloaderMod(mod: string | Uint8Array | FileSystem) {
     const fs = await resolveFileSystem(mod);
     const text = await fs.readFile("litemod.json", "utf-8").then((s) => s.replace(/^\uFEFF/, "")).catch(() => undefined);
     if (!text) {
@@ -38,7 +27,7 @@ export async function readModMetaData(mod: string | Uint8Array | FileSystem) {
             mod,
         };
     }
-    const metadata = JSON.parse(text.trim(), (key, value) => key === "revision" ? Number.parseInt(value, 10) : value) as MetaData;
+    const metadata = JSON.parse(text.trim(), (key, value) => key === "revision" ? Number.parseInt(value, 10) : value) as LiteloaderModMetadata;
     if (!metadata.version) {
         (metadata as any).version = `${metadata.mcversion}:${metadata.revision || 0}`;
     }

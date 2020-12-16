@@ -1,6 +1,6 @@
 import { MinecraftFolder } from "@xmcl/core";
 import { join, normalize } from "path";
-import * as LiteLoader from "./liteloader";
+import { readLiteloaderMod } from "./liteloader";
 
 describe("Liteloader", () => {
     const root = normalize(join(__dirname, "..", "..", "temp"));
@@ -10,21 +10,21 @@ describe("Liteloader", () => {
 
     describe("#meta", () => {
         test("should not be able to read other file", async () => {
-            await expect(LiteLoader.readModMetaData(`${mock}/mods/sample-mod.jar`))
+            await expect(readLiteloaderMod(`${mock}/mods/sample-mod.jar`))
                 .rejects
                 .toHaveProperty("error", "IllegalInputType");
-            await expect(LiteLoader.readModMetaData(`${mock}/saves/sample-map.zip`))
+            await expect(readLiteloaderMod(`${mock}/saves/sample-map.zip`))
                 .rejects
                 .toHaveProperty("error", "IllegalInputType");
-            await expect(LiteLoader.readModMetaData(`${mock}/resourcepacks/sample-resourcepack.zip`))
+            await expect(readLiteloaderMod(`${mock}/resourcepacks/sample-resourcepack.zip`))
                 .rejects
                 .toHaveProperty("error", "IllegalInputType");
-            await expect(LiteLoader.readModMetaData(`${mock}/not-exist.zip`))
+            await expect(readLiteloaderMod(`${mock}/not-exist.zip`))
                 .rejects
                 .toBeTruthy();
         });
         test("should be able to parse liteloader info", async () => {
-            const metadata = await LiteLoader.readModMetaData(`${mock}/mods/sample-mod.litemod`);
+            const metadata = await readLiteloaderMod(`${mock}/mods/sample-mod.litemod`);
             if (!metadata) { throw new Error("Should not happen"); }
             expect(metadata.name).toEqual("ArmorsHUDRevived");
             expect(metadata.mcversion).toEqual("1.12.r2");

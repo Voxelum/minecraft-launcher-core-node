@@ -50,7 +50,7 @@ class ModClassVisitor extends ClassVisitor {
 
     public commonFields: any = {};
 
-    public constructor(readonly map: { [key: string]: any }, public guess: any, private baseInfo: ModBaseInfo, readonly corePlugin?: string) {
+    public constructor(readonly map: { [key: string]: any }, public guess: any, private baseInfo: Partial<ForgeModBaseInfo>, readonly corePlugin?: string) {
         super(Opcodes.ASM5);
     }
 
@@ -100,12 +100,17 @@ class ModClassVisitor extends ClassVisitor {
     }
 }
 
-interface ModidTree {
-    [modid: string]: any;
+export interface ForgeModRecord {
+    [modid: string]: ForgeModMetadata;
 }
 
 
-async function tweakMetadata(fs: FileSystem, modidTree: ModidTree) {
+/**
+ * Read the mod info from `META-INF/MANIFEST.MF`
+ * @returns The manifest directionary
+ */
+export async function readForgeModManifest(mod: ForgeModInput, output: ForgeModRecord = {}) {
+    const fs = await resolveFileSystem(mod);
     if (! await fs.existsFile("META-INF/MANIFEST.MF")) { return; }
     const data = await fs.readFile("META-INF/MANIFEST.MF");
     const manifest: Record<string, string> = data.toString().split("\n").map((l) => l.split(":").map((s) => s.trim()))
@@ -153,12 +158,16 @@ async function tweakMetadata(fs: FileSystem, modidTree: ModidTree) {
         }
     }
     if (metadata.modid) {
-        modidTree[metadata.modid] = metadata;
+        output[metadata.modid] = metadata;
     }
     return manifest;
 }
 
-async function tomlMetadata(fs: FileSystem, modidTree: ModidTree, manifest: any) {
+/**
+ * Read mod metadata from new toml metadata file.
+ */
+export async function readForgeModToml(mod: ForgeModInput, output: ForgeModRecord, manifest?: Record<string, string>) {
+    const fs = await resolveFileSystem(mod);
     const existed = await fs.existsFile("META-INF/mods.toml");
     if (existed) {
         const str = await fs.readFile("META-INF/mods.toml", "utf-8");
@@ -166,7 +175,7 @@ async function tomlMetadata(fs: FileSystem, modidTree: ModidTree, manifest: any)
         if (map.mods instanceof Array) {
             for (const mod of map.mods) {
                 const tomlMod = mod as any;
-                const modObject: Partial<ModMetadata> = {
+                const modObject: ForgeModMetadata = {
                     modid: tomlMod.modId,
                     authorList: typeof map.authors === "string" ? [map.authors] : [],
                     version: tomlMod.version === "${file.jarVersion}"
@@ -178,18 +187,27 @@ async function tomlMetadata(fs: FileSystem, modidTree: ModidTree, manifest: any)
                     url: typeof map.displayURL === "string" ? map.displayURL : undefined,
                 }
                 if (typeof modObject.modid === "string") {
-                    if (modObject.modid in modidTree) {
-                        Object.assign(modidTree[modObject.modid], modObject);
+                    if (modObject.modid in output) {
+                        Object.assign(output[modObject.modid], modObject);
                     } else {
-                        modidTree[modObject.modid] = modObject;
+                        output[modObject.modid] = modObject;
                     }
                 }
             }
         }
     }
+    return output;
 }
 
-async function asmMetaData(fs: FileSystem, modidTree: ModidTree, baseInfo: ModBaseInfo, manifest?: Record<string, string>) {
+/**
+ * Use asm to scan all the class files of the mod. This might take long time to read.
+ */
+export async function readForgeModAsm(mod: ForgeModInput, output: ForgeModRecord = {}, options: { baseInfoOutput?: ForgeModBaseInfo, manifest?: Record<string, string> } = {}) {
+    const fs = await resolveFileSystem(mod);
+    const { baseInfoOutput: baseInfo = {
+        usedForgePackage: false,
+        usedLegacyFMLPackage: false,
+    }, manifest } = options;
     let corePluginClass: string | undefined;
     if (manifest) {
         if (typeof manifest.FMLCorePlugin === "string") {
@@ -238,28 +256,34 @@ async function asmMetaData(fs: FileSystem, modidTree: ModidTree, baseInfo: ModBa
             }
         }
         const modid = metaContainer.modid;
-        let modMeta = modidTree[modid];
+        let modMeta = output[modid];
         if (modid && !modMeta) {
-            modMeta = {};
-            modidTree[modid] = modMeta;
+            modMeta = {} as any;
+            output[modid] = modMeta;
         }
 
         for (const propKey in metaContainer) {
-            modMeta[propKey] = metaContainer[propKey];
+            (modMeta as any)[propKey] = metaContainer[propKey];
         }
     });
-    if ((baseInfo.usedForgePackage || baseInfo.usedLegacyFMLPackage) && guessing.modid && !modidTree[guessing.modid]) {
-        modidTree[guessing.modid] = guessing;
+    if ((baseInfo.usedForgePackage || baseInfo.usedLegacyFMLPackage) && guessing.modid && !output[guessing.modid]) {
+        output[guessing.modid] = guessing;
     }
+    return output;
 }
-async function jsonMetaData(fs: FileSystem, modidTree: ModidTree) {
+/**
+ * Read `mcmod.info`, `cccmod.info`, and `neimod.info` json file
+ * @param mod The mod path or buffer or opened file system.
+ */
+export async function readForgeModJson(mod: ForgeModInput, output: ForgeModRecord = {}) {
+    const fs = await resolveFileSystem(mod);
     function readJsonMetadata(json: any) {
         if (json instanceof Array) {
-            for (const m of json) { modidTree[m.modid] = m; }
+            for (const m of json) { output[m.modid] = m; }
         } else if (json.modList instanceof Array) {
-            for (const m of json.modList) { modidTree[m.modid] = m; }
+            for (const m of json.modList) { output[m.modid] = m; }
         } else if (json.modid) {
-            modidTree[json.modid] = json;
+            output[json.modid] = json;
         }
     }
     if (await fs.existsFile("mcmod.info")) {
@@ -280,208 +304,29 @@ async function jsonMetaData(fs: FileSystem, modidTree: ModidTree) {
             readJsonMetadata(json);
         } catch (e) { }
     }
+    return output;
 }
 
-/**
- * Represent the forge config file
- */
-export interface Config {
-    [category: string]: {
-        comment?: string,
-        properties: Array<Config.Property<any>>,
-    };
-}
-
-export namespace Config {
-    export type Type = "I" | "D" | "S" | "B";
-    export interface Property<T = number | boolean | string | number[] | boolean[] | string[]> {
-        readonly type: Type;
-        readonly name: string;
-        readonly comment?: string;
-        value: T;
-    }
-
-    /**
-     * Convert a forge config to string
-     */
-    export function stringify(config: Config) {
-        let content = "# Configuration file\n\n\n";
-        const propIndent = "    ", arrIndent = "        ";
-        Object.keys(config).forEach((cat) => {
-            content += `${cat} {\n\n`;
-            config[cat].properties.forEach((prop) => {
-                if (prop.comment) {
-                    const lines = prop.comment.split("\n");
-                    for (const l of lines) {
-                        content += `${propIndent}# ${l}\n`;
-                    }
-                }
-                if (prop.value instanceof Array) {
-                    content += `${propIndent}${prop.type}:${prop.name} <\n`;
-                    prop.value.forEach((v) => content += `${arrIndent}${v}\n`);
-                    content += `${propIndent}>\n`;
-                } else {
-                    content += `${propIndent}${prop.type}:${prop.name}=${prop.value}\n`;
-                }
-                content += "\n";
-            });
-            content += "}\n\n";
-        });
-        return content;
-    }
-
-    /**
-     * Parse a forge config string into `Config` object
-     * @param body The forge config string
-     */
-    export function parse(body: string): Config {
-        const lines = body.split("\n").map((s) => s.trim())
-            .filter((s) => s.length !== 0);
-        let category: string | undefined;
-        let pendingCategory: string | undefined;
-
-        const parseVal = (type: Type, value: any) => {
-            const map: { [key: string]: (s: string) => any } = {
-                I: Number.parseInt,
-                D: Number.parseFloat,
-                S: (s: string) => s,
-                B: (s: string) => s === "true",
-            };
-            const handler = map[type];
-            return handler(value);
-        };
-        const config: Config = {};
-        let inlist = false;
-        let comment: string | undefined;
-        let last: any;
-
-        const readProp = (type: Type, line: string) => {
-            line = line.substring(line.indexOf(":") + 1, line.length);
-            const pair = line.split("=");
-            if (pair.length === 0 || pair.length === 1) {
-                let value;
-                let name;
-                if (line.endsWith(" <")) {
-                    value = [];
-                    name = line.substring(0, line.length - 2);
-                    inlist = true;
-                } else { }
-                if (!category) {
-                    throw {
-                        type: "CorruptedForgeConfig",
-                        reason: "MissingCategory",
-                        line,
-                    };
-                }
-                config[category].properties.push(last = { name, type, value, comment } as Property);
-            } else {
-                inlist = false;
-                if (!category) {
-                    throw {
-                        type: "CorruptedForgeConfig",
-                        reason: "MissingCategory",
-                        line,
-                    };
-                }
-                config[category].properties.push({ name: pair[0], value: parseVal(type, pair[1]), type, comment } as Property);
-            }
-            comment = undefined;
-        };
-        for (const line of lines) {
-            if (inlist) {
-                if (!last) {
-                    throw {
-                        type: "CorruptedForgeConfig",
-                        reason: "CorruptedList",
-                        line,
-                    };
-                }
-                if (line === ">") {
-                    inlist = false;
-                } else if (line.endsWith(" >")) {
-                    last.value.push(parseVal(last.type, line.substring(0, line.length - 2)));
-                    inlist = false;
-                } else {
-                    last.value.push(parseVal(last.type, line));
-                }
-                continue;
-            }
-            switch (line.charAt(0)) {
-                case "#":
-                    if (!comment) {
-                        comment = line.substring(1, line.length).trim();
-                    } else {
-                        comment = comment.concat("\n", line.substring(1, line.length).trim());
-                    }
-                    break;
-                case "I":
-                case "D":
-                case "S":
-                case "B":
-                    readProp(line.charAt(0) as Type, line);
-                    break;
-                case "<":
-                    break;
-                case "{":
-                    if (pendingCategory) {
-                        category = pendingCategory;
-                        config[category] = { comment, properties: [] };
-                        comment = undefined;
-                    } else {
-                        throw {
-                            type: "CorruptedForgeConfig",
-                            reason: "MissingCategory",
-                            line,
-                        };
-                    }
-                    break;
-                case "}":
-                    category = undefined;
-                    break;
-                default:
-                    if (!category) {
-                        if (line.endsWith("{")) {
-                            category = line.substring(0, line.length - 1).trim();
-                            config[category] = { comment, properties: [] };
-                            comment = undefined;
-                        } else {
-                            pendingCategory = line;
-                        }
-                    } else {
-                        throw {
-                            type: "CorruptedForgeConfig",
-                            reason: "Duplicated",
-                            line,
-                        };
-                    }
-            }
-        }
-        return config;
-    }
-}
-
-export type ModMetaData = ModMetadata;
-
-export interface ModBaseInfo {
+export interface ForgeModBaseInfo {
     /**
      * Does class files contain cpw package
      */
-    usedLegacyFMLPackage: boolean;
+    usedLegacyFMLPackage?: boolean;
     /**
      * Does class files contain forge package
      */
-    usedForgePackage: boolean;
+    usedForgePackage?: boolean;
     /**
      * Does class files contain minecraft package
      */
-    usedMinecraftPackage: boolean;
+    usedMinecraftPackage?: boolean;
     /**
      * Does class files contain minecraft.client package
      */
-    usedMinecraftClientPackage: boolean;
+    usedMinecraftClientPackage?: boolean;
 }
 
-export interface ModMetadata extends ModBaseInfo {
+export interface ForgeModMetadata extends ForgeModBaseInfo {
     readonly modid: string;
     readonly version: string;
     readonly name: string;
@@ -516,6 +361,8 @@ export interface ModMetadata extends ModBaseInfo {
     readonly displayName?: string;
 }
 
+type ForgeModInput = Uint8Array | string | FileSystem;
+
 /**
  * Read metadata of the input mod.
  *
@@ -528,22 +375,22 @@ export interface ModMetadata extends ModBaseInfo {
  * @param mod The mod path or data
  * @returns The mod metadata
  */
-export async function readModMetaData(mod: Uint8Array | string | FileSystem) {
+export async function readForgeMod(mod: ForgeModInput) {
     const fs = await resolveFileSystem(mod);
-    const modidTree: ModidTree = {};
-    const base: ModBaseInfo = {
+    const record: ForgeModRecord = {};
+    const base: ForgeModBaseInfo = {
         usedLegacyFMLPackage: false,
         usedForgePackage: false,
         usedMinecraftClientPackage: false,
         usedMinecraftPackage: false
     }
-    await jsonMetaData(fs, modidTree);
-    const manifest = await tweakMetadata(fs, modidTree);
-    await tomlMetadata(fs, modidTree, manifest);
-    await asmMetaData(fs, modidTree, base, manifest);
-    const modids = Object.keys(modidTree);
+    await readForgeModJson(fs, record);
+    const manifest = await readForgeModManifest(fs, record);
+    await readForgeModToml(fs, record, manifest);
+    await readForgeModAsm(fs, record, { baseInfoOutput: base, manifest });
+    const modids = Object.keys(record);
     if (modids.length === 0) { throw new ForgeModParseFailedError(mod, base); }
-    const mods = modids.map((k) => modidTree[k] as ModMetadata)
+    const mods = modids.map((k) => record[k])
         .filter((m) => m.modid !== undefined);
     for (const mod of mods) {
         Object.assign(mod, base);
@@ -552,7 +399,7 @@ export async function readModMetaData(mod: Uint8Array | string | FileSystem) {
 }
 
 export class ForgeModParseFailedError extends Error {
-    constructor(readonly mod: Uint8Array | string | FileSystem, readonly baseInfo: ModBaseInfo) {
+    constructor(readonly mod: ForgeModInput, readonly baseInfo: ForgeModBaseInfo) {
         super("Cannot find the mod metadata in the mod!");
     }
 }
