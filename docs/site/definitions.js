@@ -60,7 +60,7 @@ declare class PacketCoders {
 }
 export {};
 \/\/# sourceMappingURL=channel.d.ts.map`;
-module.exports['@xmcl/client/coders.d.ts'] = `\/\// <reference types="long" /> import * as ByteBuffer from "bytebuffer";
+module.exports['@xmcl/client/coders.d.ts'] = `\/\// <reference types="long" /> import ByteBuffer from "bytebuffer";
 export interface SlotData {
     blockId: number;
     itemCount?: number;
@@ -258,6 +258,136 @@ export declare function createClient(protocol: number, timeout?: number): {
 };
 export {};
 \/\/# sourceMappingURL=status.d.ts.map`;
+module.exports['@xmcl/core/diagnose.d.ts'] = `import { ResolvedLibrary, ResolvedVersion } from "./version"; import { MinecraftFolder, MinecraftLocation } from "./folder";
+export interface Issue {
+    /**
+     * The type of the issue.
+     */
+    type: "missing" | "corrupted";
+    /**
+     * The role of the file in Minecraft.
+     */
+    role: string;
+    /**
+     * The path of the problematic file.
+     */
+    file: string;
+    /**
+     * The useful hint to fix this issue. This should be a human readable string.
+     */
+    hint: string;
+    /**
+     * The expected checksum of the file. Can be an empty string if this file is missing or not check checksum at all!
+     */
+    expectedChecksum: string;
+    /**
+     * The actual checksum of the file. Can be an empty string if this file is missing or not check checksum at all!
+     */
+    receivedChecksum: string;
+}
+export declare type MinecraftIssues = LibraryIssue | MinecraftJarIssue | VersionJsonIssue | AssetIssue | AssetIndexIssue;
+/**
+ * The library issue represents a corrupted or missing lib.
+ * You can use \`Installer.installResolvedLibraries\` to fix this.
+ */
+export interface LibraryIssue extends Issue {
+    role: "library";
+    /**
+     * The problematic library
+     */
+    library: ResolvedLibrary;
+}
+/**
+ * The minecraft jar issue represents a corrupted or missing minecraft jar.
+ * You can use \`Installer.installVersion\` to fix this.
+ */
+export interface MinecraftJarIssue extends Issue {
+    role: "minecraftJar";
+    /**
+     * The minecraft version for that jar
+     */
+    version: string;
+}
+/**
+ * The minecraft jar issue represents a corrupted or missing version jar.
+ *
+ * This means your version is totally broken, and you should reinstall this version.
+ *
+ * - If this is just a Minecraft version, you will need to use \`Installer.install\` to re-install Minecraft.
+ * - If this is a Forge version, you will need to use \`ForgeInstaller.install\` to re-install.
+ * - Others are the same, just re-install
+ */
+export interface VersionJsonIssue extends Issue {
+    role: "versionJson";
+    /**
+     * The version of version json that has problem.
+     */
+    version: string;
+}
+/**
+ * The asset issue represents a corrupted or missing minecraft asset file.
+ * You can use \`Installer.installResolvedAssets\` to fix this.
+ */
+export interface AssetIssue extends Issue {
+    role: "asset";
+    /**
+     * The problematic asset
+     */
+    asset: {
+        name: string;
+        hash: string;
+        size: number;
+    };
+}
+/**
+ * The asset index issue represents a corrupted or missing minecraft asset index file.
+ * You can use \`Installer.installAssets\` to fix this.
+ */
+export interface AssetIndexIssue extends Issue {
+    role: "assetIndex";
+    /**
+     * The minecraft version of the asset index
+     */
+    version: string;
+}
+export interface MinecraftIssueReport {
+    minecraftLocation: MinecraftFolder;
+    version: string;
+    issues: MinecraftIssues[];
+}
+/**
+ * Diagnose a single file by a certain checksum algorithm. By default, this use sha1
+ */
+export declare function diagnoseFile<T extends string>({ file, expectedChecksum, role, hint, algorithm }: {
+    file: string;
+    expectedChecksum: string;
+    role: T;
+    hint: string;
+    algorithm?: string;
+}): Promise<{
+    readonly type: "missing" | "corrupted";
+    readonly role: T;
+    readonly file: string;
+    readonly expectedChecksum: string;
+    readonly receivedChecksum: string;
+    readonly hint: string;
+} | undefined>;
+/**
+ * Diagnose the version. It will check the version json/jar, libraries and assets.
+ *
+ * @param version The version id string
+ * @param minecraft The minecraft location
+ * @beta
+ */
+export declare function diagnose(version: string, minecraftLocation: MinecraftLocation): Promise<MinecraftIssueReport>;
+export declare function diagnoseAssets(assetObjects: Record<string, {
+    hash: string;
+    size: number;
+}>, minecraft: MinecraftFolder): Promise<Array<AssetIssue>>;
+export declare function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<Array<LibraryIssue>>;
+export declare function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<AssetIndexIssue | undefined>;
+export declare function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<MinecraftJarIssue | undefined>;
+\/\/# sourceMappingURL=diagnose.d.ts.map`;
 module.exports['@xmcl/core/folder.d.ts'] = `export interface MinecraftFolder {     readonly root: string;
 }
 /**
@@ -335,6 +465,8 @@ export * from "./launch";
 export * from "./version";
 export * from "./platform";
 export * from "./folder";
+export * from "./diagnose";
+export { access as _access, exists as _exists, mkdir as _mkdir, readFile as _readFile, writeFile as _writeFile, pipeline as _pipeline, checksum } from "./utils";
 \/\/# sourceMappingURL=index.d.ts.map`;
 module.exports['@xmcl/core/launch.d.ts'] = `\/\// <reference types="node" /> import { ChildProcess, SpawnOptions } from "child_process";
 import { EventEmitter } from "events";
@@ -699,10 +831,15 @@ export declare function getPlatform(): Platform;
  */
 export declare const currentPlatform: Platform;
 \/\/# sourceMappingURL=platform.d.ts.map`;
-module.exports['@xmcl/core/util.d.ts'] = `/**  * @ignore
+module.exports['@xmcl/core/utils.d.ts'] = `/**  * @ignore
  */
 \/\// <reference types="node" />
-import { readFile as freadFile, writeFile as fwriteFile, mkdir as fmkdir, link as flink } from "fs";
+import { readFile as freadFile, writeFile as fwriteFile, access as faccess, mkdir as fmkdir, link as flink } from "fs";
+import { pipeline as pip } from "stream";
+/** @ignore */
+export declare const pipeline: typeof pip.__promisify__;
+/** @ignore */
+export declare const access: typeof faccess.__promisify__;
 /** @ignore */
 export declare const link: typeof flink.__promisify__;
 /** @ignore */
@@ -711,6 +848,7 @@ export declare const readFile: typeof freadFile.__promisify__;
 export declare const writeFile: typeof fwriteFile.__promisify__;
 /** @ignore */
 export declare const mkdir: typeof fmkdir.__promisify__;
+export declare function exists(file: string): Promise<boolean>;
 /**
  * Validate the sha1 value of the file
  * @ignore
@@ -720,8 +858,12 @@ export declare function validateSha1(target: string, hash?: string, strict?: boo
  * Return the sha1 of a file
  * @ignore
  */
-export declare function getSha1(target: string): Promise<any>;
-\/\/# sourceMappingURL=util.d.ts.map`;
+export declare function checksum(target: string, algorithm: string): Promise<any>;
+/**
+ * @ignore
+ */
+export declare function isNotNull<T>(v: T | undefined): v is T;
+\/\/# sourceMappingURL=utils.d.ts.map`;
 module.exports['@xmcl/core/version.d.ts'] = `import { MinecraftLocation } from "./folder"; import { Platform } from "./platform";
 interface PartialResolvedVersion extends Version {
     libraries: ResolvedLibrary[];
@@ -1872,10 +2014,9 @@ export declare type GameSetting = ReturnType<typeof getDefaultFrame>;
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
 module.exports['@xmcl/installer/curseforge.d.ts'] = `\/\// <reference types="node" /> import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
-import { BaseTask } from "@xmcl/task";
+import { Task, TaskGroup } from "@xmcl/task";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadCommonOptions } from "./http";
-import { UnzipTask } from "./unzip";
 export interface CurseforgeOptions extends DownloadCommonOptions {
     /**
      * The function to query a curseforge project downloadable url.
@@ -1949,7 +2090,7 @@ export interface File {
  * Read the mainifest data from modpack
  * @throws {@link BadCurseforgeModpackError}
  */
-export declare function readManifestTask(input: InputType): import("@xmcl/task").TaskRoutine<Manifest>;
+export declare function readManifestTask(input: InputType): Task<Manifest>;
 /**
  * Read the mainifest data from modpack
  * @throws {@link BadCurseforgeModpackError}
@@ -1967,22 +2108,12 @@ export declare function createDefaultCurseforgeQuery(): CurseforgeURLQuery;
  * @param options The options for query curseforge
  */
 export declare function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLocation, options?: CurseforgeOptions): Promise<Manifest>;
-export declare class DownloadCurseforgeFilesTask extends BaseTask<void> {
+export declare class DownloadCurseforgeFilesTask extends TaskGroup<void> {
     readonly manifest: Manifest;
     readonly minecraft: MinecraftFolder;
     readonly options: CurseforgeOptions;
     constructor(manifest: Manifest, minecraft: MinecraftFolder, options: CurseforgeOptions);
-    private tasks;
     protected run(): Promise<void>;
-    protected onCancel(): void;
-    protected onPause(): void;
-    protected onResume(): void;
-}
-export declare class DeployTask extends UnzipTask {
-    private manifest;
-    name: string;
-    param: object;
-    constructor(zipFile: ZipFile, entries: Entry[], manifest: Manifest, minecraft: MinecraftFolder);
 }
 /**
  * Install curseforge modpack to a specific Minecraft location.
@@ -2006,35 +2137,8 @@ export declare function installCurseforgeFile(file: File, destination: string, o
 export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): import("@xmcl/task").TaskRoutine<void>;
 export {};
 \/\/# sourceMappingURL=curseforge.d.ts.map`;
-module.exports['@xmcl/installer/diagnose.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core"; import { InstallProfile } from "./minecraft";
+module.exports['@xmcl/installer/diagnose.d.ts'] = `import { Issue, LibraryIssue, MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { InstallProfile } from "./minecraft";
 declare type Processor = InstallProfile["processors"][number];
-export interface Issue {
-    /**
-     * The type of the issue.
-     */
-    type: "missing" | "corrupted";
-    /**
-     * The role of the file in Minecraft.
-     */
-    role: "minecraftJar" | "versionJson" | "library" | "asset" | "assetIndex" | "processor";
-    /**
-     * The path of the problematic file.
-     */
-    file: string;
-    /**
-     * The useful hint to fix this issue. This should be a human readable string.
-     */
-    hint: string;
-    /**
-     * The expected checksum of the file. Can be an empty string if this file is missing or not check checksum at all!
-     */
-    expectedChecksum: string;
-    /**
-     * The actual checksum of the file. Can be an empty string if this file is missing or not check checksum at all!
-     */
-    receivedChecksum: string;
-}
-export declare type MinecraftIssues = LibraryIssue | MinecraftJarIssue | VersionJsonIssue | AssetIssue | AssetIndexIssue;
 export declare type InstallIssues = ProcessorIssue | LibraryIssue;
 /**
  * The processor issue
@@ -2046,95 +2150,11 @@ export interface ProcessorIssue extends Issue {
      */
     processor: Processor;
 }
-/**
- * The library issue represents a corrupted or missing lib.
- * You can use \`Installer.installResolvedLibraries\` to fix this.
- */
-export interface LibraryIssue extends Issue {
-    role: "library";
-    /**
-     * The problematic library
-     */
-    library: ResolvedLibrary;
-}
-/**
- * The minecraft jar issue represents a corrupted or missing minecraft jar.
- * You can use \`Installer.installVersion\` to fix this.
- */
-export interface MinecraftJarIssue extends Issue {
-    role: "minecraftJar";
-    /**
-     * The minecraft version for that jar
-     */
-    version: string;
-}
-/**
- * The minecraft jar issue represents a corrupted or missing version jar.
- *
- * This means your version is totally broken, and you should reinstall this version.
- *
- * - If this is just a Minecraft version, you will need to use \`Installer.install\` to re-install Minecraft.
- * - If this is a Forge version, you will need to use \`ForgeInstaller.install\` to re-install.
- * - Others are the same, just re-install
- */
-export interface VersionJsonIssue extends Issue {
-    role: "versionJson";
-    /**
-     * The version of version json that has problem.
-     */
-    version: string;
-}
-/**
- * The asset issue represents a corrupted or missing minecraft asset file.
- * You can use \`Installer.installResolvedAssets\` to fix this.
- */
-export interface AssetIssue extends Issue {
-    role: "asset";
-    /**
-     * The problematic asset
-     */
-    asset: {
-        name: string;
-        hash: string;
-        size: number;
-    };
-}
-/**
- * The asset index issue represents a corrupted or missing minecraft asset index file.
- * You can use \`Installer.installAssets\` to fix this.
- */
-export interface AssetIndexIssue extends Issue {
-    role: "assetIndex";
-    /**
-     * The minecraft version of the asset index
-     */
-    version: string;
-}
-export interface MinecraftIssueReport {
-    minecraftLocation: MinecraftFolder;
-    version: string;
-    issues: MinecraftIssues[];
-}
 export interface InstallProfileIssueReport {
     minecraftLocation: MinecraftFolder;
     installProfile: InstallProfile;
     issues: InstallIssues[];
 }
-/**
- * Diagnose the version. It will check the version json/jar, libraries and assets.
- *
- * @param version The version id string
- * @param minecraft The minecraft location
- * @beta
- */
-export declare function diagnose(version: string, minecraftLocation: MinecraftLocation): Promise<MinecraftIssueReport>;
-export declare function diagnoseAssets(assetObjects: Record<string, {
-    hash: string;
-    size: number;
-}>, minecraft: MinecraftFolder): Promise<AssetIssue[]>;
-export declare function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<Array<LibraryIssue>>;
-export declare function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<AssetIndexIssue | undefined>;
-export declare function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<MinecraftJarIssue | undefined>;
 /**
  * Diagnose a install profile status. Check if it processor output correctly processed.
  *
@@ -2155,14 +2175,14 @@ export declare const LOADER_MAVEN_URL = "https:\/\/maven.fabricmc.net/net/fabric
  * Fabric Yarn version list
  * @see https:\/\/github.com/FabricMC/yarn
  */
-export interface YarnVersionList extends Timestamped {
+export interface FabricYarnVersionList extends Timestamped {
     versions: FabricArtifactVersion[];
 }
 /**
  * Fabric mod loader version list
  * @see https:\/\/fabricmc.net/
  */
-export interface LoaderVersionList extends Timestamped {
+export interface FabricLoaderVersionList extends Timestamped {
     versions: FabricArtifactVersion[];
 }
 export interface FabricArtifactVersion {
@@ -2177,7 +2197,7 @@ export interface FabricArtifacts {
     mappings: FabricArtifactVersion[];
     loader: FabricArtifactVersion[];
 }
-export interface LoaderArtifact {
+export interface FabricLoaderArtifact {
     loader: FabricArtifactVersion;
     intermediary: FabricArtifactVersion;
     launcherMeta: {
@@ -2208,7 +2228,7 @@ export declare const DEFAULT_FABRIC_API = "https:\/\/meta.fabricmc.net/v2";
  * @param remote The fabric API host
  * @beta
  */
-export declare function getArtifacts(remote?: string): Promise<FabricArtifacts>;
+export declare function getFabricArtifacts(remote?: string): Promise<FabricArtifacts>;
 /**
  * Get fabric-yarn artifact list
  * @param remote The fabric API host
@@ -2234,7 +2254,7 @@ export declare function getLoaderArtifactList(remote?: string): Promise<FabricAr
  * @param remote The fabric API host
  * @beta
  */
-export declare function getLoaderArtifactListFor(minecraft: string, remote?: string): Promise<LoaderArtifact[]>;
+export declare function getLoaderArtifactListFor(minecraft: string, remote?: string): Promise<FabricLoaderArtifact[]>;
 /**
  * Get fabric-loader artifact list by Minecraft version
  * @param minecraft The minecraft version
@@ -2242,41 +2262,41 @@ export declare function getLoaderArtifactListFor(minecraft: string, remote?: str
  * @param remote The fabric API host
  * @beta
  */
-export declare function getLoaderArtifact(minecraft: string, loader: string, remote?: string): Promise<LoaderArtifact>;
+export declare function getFabricLoaderArtifact(minecraft: string, loader: string, remote?: string): Promise<FabricLoaderArtifact>;
 /**
  * Get or refresh the yarn version list.
  * @beta
  */
-export declare function getYarnVersionList(option?: {
+export declare function getYarnVersionListFromXML(option?: {
     /**
      * If this presents, it will send request with the original list timestamp.
      *
      * If the server believes there is no modification after the original one,
      * it will directly return the orignal one.
      */
-    original?: YarnVersionList;
+    original?: FabricYarnVersionList;
     /**
      * remote maven xml url of this request
      */
     remote?: string;
-}): Promise<YarnVersionList>;
+}): Promise<FabricYarnVersionList>;
 /**
  * Get or refresh the fabric mod loader version list.
  * @beta
  */
-export declare function getLoaderVersionList(option: {
+export declare function getLoaderVersionListFromXML(option: {
     /**
      * If this presents, it will send request with the original list timestamp.
      *
      * If the server believes there is no modification after the original one,
      * it will directly return the orignal one.
      */
-    original?: LoaderVersionList;
+    original?: FabricLoaderVersionList;
     /**
      * remote maven xml url of this request
      */
     remote?: string;
-}): Promise<LoaderVersionList>;
+}): Promise<FabricLoaderVersionList>;
 /**
  * Install the fabric to the client. Notice that this will only install the json.
  * You need to call \`Installer.installDependencies\` to get a full client.
@@ -2299,7 +2319,7 @@ export interface FabricInstallOptions extends InstallOptions {
  * @param options The options
  * @beta
  */
-export declare function installFabric(loader: LoaderArtifact, minecraft: MinecraftLocation, options?: FabricInstallOptions): Promise<string>;
+export declare function installFabric(loader: FabricLoaderArtifact, minecraft: MinecraftLocation, options?: FabricInstallOptions): Promise<string>;
 \/\/# sourceMappingURL=fabric.d.ts.map`;
 module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
 import { Entry, ZipFile } from "yauzl";
@@ -2472,7 +2492,7 @@ export declare function getForgeVersionList(option?: {
 }): Promise<ForgeVersionList>;
 export {};
 \/\/# sourceMappingURL=forge.d.ts.map`;
-module.exports['@xmcl/installer/http.d.ts'] = `\/\// <reference types="node" /> import { LoopedTask } from "@xmcl/task";
+module.exports['@xmcl/installer/http.d.ts'] = `\/\// <reference types="node" /> import { TaskLooped } from "@xmcl/task";
 import { WriteStream } from "fs";
 import { Agent as HttpAgent, ClientRequest, IncomingMessage } from "http";
 import { Agent as HttpsAgent } from "https";
@@ -2493,6 +2513,7 @@ export declare class ChecksumNotMatchError extends Error {
     readonly file: string;
     constructor(algorithm: string, expect: string, actual: string, file: string);
 }
+export declare function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:";
 /**
  * Join two urls
  */
@@ -2595,7 +2616,7 @@ interface Connections {
     request: ClientRequest;
     response: IncomingMessage;
 }
-export declare class DownloadTask extends LoopedTask<Segment[]> {
+export declare class DownloadTask extends TaskLooped<Segment[]> {
     protected segments: Segment[];
     protected outputs: WriteStream[];
     protected connections: Connections[];
@@ -2654,7 +2675,7 @@ export declare class DownloadTask extends LoopedTask<Segment[]> {
     protected computeSegmenets(total: number, chunkSize: number, concurrency: number): Segment[];
     protected shouldProcess(): Promise<boolean>;
     protected process(): Promise<[boolean, Segment[]]>;
-    protected abort(): void;
+    protected abort(): Promise<void>;
     protected shouldTolerant(e: any): boolean;
     protected validate(): Promise<void>;
     protected reset(): Promise<void>;
@@ -2664,14 +2685,11 @@ export declare class DownloadFallbackTask extends DownloadTask {
     constructor(options: DownloadMultiUrlOptions);
     run(): Promise<Segment[]>;
 }
-export declare const DEFAULT_AGENTS: Agents;
-export declare function getDefaultAgents(): void;
-export declare function createDefaultAgents(): Agents;
 export declare function createAgents(options: DownloadCommonOptions): {
     http: HttpAgent;
     https: HttpsAgent;
 };
-export declare function ensureAgent<T extends DownloadCommonOptions, R>(options: T, scope: (options: T) => R): Promise<R>;
+export declare function withAgents<T extends DownloadCommonOptions, R>(options: T, scope: (options: T) => R): Promise<R>;
 export {};
 \/\/# sourceMappingURL=http.d.ts.map`;
 module.exports['@xmcl/installer/index.d.ts'] = `/**  * The installer module provides commonly used installation functions for Minecraft.
@@ -2685,8 +2703,8 @@ export * from "./curseforge";
 export * from "./optifine";
 export * from "./java";
 export * from "./diagnose";
-export * from "./utils";
-export * from "./http";
+export { MultipleError, InstallOptions } from "./utils";
+export { DownloadBaseOptions, DownloadCommonOptions, DownloadFallbackTask, DownloadFromPathOptions, DownloadMultiUrlOptions, DownloadSingleUrlOptions, DownloadTask, Segment, Agents, Timestamped, ChecksumNotMatchError, createAgents, withAgents, } from "./http";
 export * from "./unzip";
 \/\/# sourceMappingURL=index.d.ts.map`;
 module.exports['@xmcl/installer/java.d.ts'] = `import { Platform } from "@xmcl/core"; import { Task } from "@xmcl/task";
@@ -2882,26 +2900,26 @@ export declare function installLiteloader(versionMeta: LiteloaderVersion, locati
  */
 export declare function installLiteloaderTask(versionMeta: LiteloaderVersion, location: MinecraftLocation, options?: InstallOptions): Task<string>;
 \/\/# sourceMappingURL=liteloader.d.ts.map`;
-module.exports['@xmcl/installer/minecraft.d.ts'] = `import { LibraryInfo, MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core"; import { LoopedTask, TaskRoutine } from "@xmcl/task";
+module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core"; import { Task, TaskLooped } from "@xmcl/task";
 import { DownloadCommonOptions, DownloadFallbackTask, Timestamped } from "./http";
 /**
  * The function to swap library host.
  */
 export declare type LibraryHost = (library: ResolvedLibrary) => string | string[] | undefined;
-export interface VersionBaseInfo {
+export interface MinecraftVersionBaseInfo {
     /**
      * The version id, like 1.14.4
      */
     id: string;
     /**
-  * The version json download url
-  */
+     * The version json download url
+     */
     url: string;
 }
 /**
  * The version metadata containing the version information, like download url
  */
-export interface Version extends VersionBaseInfo {
+export interface MinecraftVersion extends MinecraftVersionBaseInfo {
     /**
      * The version id, like 1.14.4
      */
@@ -2922,7 +2940,7 @@ export interface AssetInfo {
 /**
  * Minecraft version metadata list
  */
-export interface VersionList extends Timestamped {
+export interface MinecraftVersionList extends Timestamped {
     latest: {
         /**
          * Snapshot version id of the Minecraft
@@ -2936,7 +2954,7 @@ export interface VersionList extends Timestamped {
     /**
      * All the vesrsion list
      */
-    versions: Version[];
+    versions: MinecraftVersion[];
 }
 export interface InstallProfile {
     spec?: number;
@@ -3019,12 +3037,12 @@ export declare function getVersionList(option?: {
      * If the server believes there is no modification after the original one,
      * it will directly return the orignal one.
      */
-    original?: VersionList;
+    original?: MinecraftVersionList;
     /**
      * remote url of this request
      */
     remote?: string;
-}): Promise<VersionList>;
+}): Promise<MinecraftVersionList>;
 /**
  * Change the library host url
  */
@@ -3074,7 +3092,7 @@ export interface JarOption extends DownloadCommonOptions {
     /**
      * The version json url replacement
      */
-    json?: string | string[] | ((version: VersionBaseInfo) => string | string[]);
+    json?: string | string[] | ((version: MinecraftVersionBaseInfo) => string | string[]);
     /**
      * The client jar url replacement
      */
@@ -3112,49 +3130,30 @@ export interface PostProcessBadJarError {
     causeBy: Error;
 }
 export declare type PostProcessError = PostProcessBadJarError | PostProcessFailedError | PostProcessNoMainClassError;
-export interface MinecraftInstallEvent {
-    eventTarget: "asset" | "library" | "jar";
-    chunkSize: number;
-    progress: number;
-    size: number;
-    from: string;
-    to: string;
-}
-export interface LibraryEvent extends LibraryInfo, MinecraftInstallEvent {
-    eventTarget: "library";
-}
-export interface AssetEvent extends AssetInfo, MinecraftInstallEvent {
-    eventTarget: "asset";
-}
-export interface JarEvent extends VersionBaseInfo, MinecraftInstallEvent {
-    eventTarget: "jar";
-}
 /**
  * Install the Minecraft game to a location by version metadata.
  *
  * This will install version json, version jar, and all dependencies (assets, libraries)
  *
- * @param type The type of game, client or server
  * @param versionMeta The version metadata
  * @param minecraft The Minecraft location
  * @param option
  */
-export declare function install(versionMeta: VersionBaseInfo, minecraft: MinecraftLocation, option?: Options): Promise<ResolvedVersion>;
+export declare function install(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, option?: Options): Promise<ResolvedVersion>;
 /**
  * Only install the json/jar. Do not install dependencies.
  *
- * @param type client or server
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
  */
-export declare function installVersion(versionMeta: VersionBaseInfo, minecraft: MinecraftLocation, options?: JarOption): Promise<ResolvedVersion>;
+export declare function installVersion(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options?: JarOption): Promise<ResolvedVersion>;
 /**
  * Install the completeness of the Minecraft game assets and libraries on a existed version.
  *
  * @param version The resolved version produced by Version.parse
  * @param minecraft The minecraft location
  */
-export declare function installDependencies(version: ResolvedVersion, option?: Options): Promise<ResolvedVersion>;
+export declare function installDependencies(version: ResolvedVersion, options?: Options): Promise<ResolvedVersion>;
 /**
  * Install or check the assets to resolved version
  *
@@ -3165,9 +3164,9 @@ export declare function installAssets(version: ResolvedVersion, options?: Assets
 /**
  * Install all the libraries of providing version
  * @param version The target version
- * @param option The library host swap option
+ * @param options The library host swap option
  */
-export declare function installLibraries(version: ResolvedVersion, option?: LibraryOptions): Promise<void>;
+export declare function installLibraries(version: ResolvedVersion, options?: LibraryOptions): Promise<void>;
 /**
  * Only install several resolved libraries
  * @param libraries The resolved libraries
@@ -3220,7 +3219,7 @@ export declare function installByProfile(installProfile: InstallProfile, minecra
  * @param minecraft The Minecraft location
  * @param options
  */
-export declare function installTask(versionMeta: VersionBaseInfo, minecraft: MinecraftLocation, options?: Options): TaskRoutine<ResolvedVersion>;
+export declare function installTask(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options?: Options): Task<ResolvedVersion>;
 /**
  * Only install the json/jar. Do not install dependencies.
  *
@@ -3228,41 +3227,41 @@ export declare function installTask(versionMeta: VersionBaseInfo, minecraft: Min
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
  */
-export declare function installVersionTask(versionMeta: VersionBaseInfo, minecraft: MinecraftLocation, options?: JarOption): TaskRoutine<ResolvedVersion>;
+export declare function installVersionTask(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options?: JarOption): Task<ResolvedVersion>;
 /**
  * Install the completeness of the Minecraft game assets and libraries on a existed version.
  *
  * @param version The resolved version produced by Version.parse
  * @param minecraft The minecraft location
  */
-export declare function installDependenciesTask(version: ResolvedVersion, options?: Options): TaskRoutine<ResolvedVersion>;
+export declare function installDependenciesTask(version: ResolvedVersion, options?: Options): Task<ResolvedVersion>;
 /**
  * Install or check the assets to resolved version
  *
  * @param version The target version
  * @param options The option to replace assets host url
  */
-export declare function installAssetsTask(version: ResolvedVersion, options?: AssetsOptions): TaskRoutine<ResolvedVersion>;
+export declare function installAssetsTask(version: ResolvedVersion, options?: AssetsOptions): Task<ResolvedVersion>;
 /**
  * Install all the libraries of providing version
  * @param version The target version
  * @param options The library host swap option
  */
-export declare function installLibrariesTask(version: InstallLibraryVersion, options?: LibraryOptions): TaskRoutine<void>;
+export declare function installLibrariesTask(version: InstallLibraryVersion, options?: LibraryOptions): Task<void>;
 /**
  * Only install several resolved libraries
  * @param libraries The resolved libraries
  * @param minecraft The minecraft location
  * @param option The install option
  */
-export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOptions): TaskRoutine<void>;
+export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOptions): Task<void>;
 /**
  * Only install several resolved assets.
  * @param assets The assets to install
  * @param folder The minecraft folder
  * @param options The asset option
  */
-export declare function installResolvedAssetsTask(assets: AssetInfo[], folder: MinecraftFolder, options?: AssetsOptions): TaskRoutine<void>;
+export declare function installResolvedAssetsTask(assets: AssetInfo[], folder: MinecraftFolder, options?: AssetsOptions): import("@xmcl/task").TaskRoutine<void>;
 /**
  * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
  *
@@ -3270,7 +3269,7 @@ export declare function installResolvedAssetsTask(assets: AssetInfo[], folder: M
  * @param minecraft The minecraft location
  * @param options The options to install
  */
-export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): TaskRoutine<void>;
+export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): import("@xmcl/task").TaskRoutine<void>;
 /**
  * Post process the post processors from \`InstallProfile\`.
  *
@@ -3279,7 +3278,7 @@ export declare function installByProfileTask(installProfile: InstallProfile, min
  * @param java The java executable path
  * @throws {@link PostProcessError}
  */
-export declare class PostProcessingTask extends LoopedTask<void> {
+export declare class PostProcessingTask extends TaskLooped<void> {
     private processors;
     private minecraft;
     private java;
@@ -3297,7 +3296,7 @@ export declare class PostProcessingTask extends LoopedTask<void> {
     protected reset(): void;
 }
 export declare class InstallJsonTask extends DownloadFallbackTask {
-    constructor(version: VersionBaseInfo, minecraft: MinecraftLocation, options: Options);
+    constructor(version: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options);
 }
 export declare class InstallJarTask extends DownloadFallbackTask {
     constructor(version: ResolvedVersion, minecraft: MinecraftLocation, options: Options);
@@ -3363,12 +3362,12 @@ export declare function installOptifine(installer: string, minecraft: MinecraftL
  */
 export declare function installOptifineTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): import("@xmcl/task").TaskRoutine<string>;
 \/\/# sourceMappingURL=optifine.d.ts.map`;
-module.exports['@xmcl/installer/unzip.d.ts'] = `import { LoopedTask } from "@xmcl/task"; import { Entry, ZipFile } from "yauzl";
+module.exports['@xmcl/installer/unzip.d.ts'] = `import { TaskLooped } from "@xmcl/task"; import { Entry, ZipFile } from "yauzl";
 export interface EntryResolver {
     (entry: Entry): Promise<string> | string;
 }
 export declare function getDefaultEntryResolver(): EntryResolver;
-export declare abstract class UnzipTask extends LoopedTask<void> {
+export declare class UnzipTask extends TaskLooped<void> {
     readonly zipFile: ZipFile;
     readonly entries: Entry[];
     readonly resolver: EntryResolver;
@@ -3378,24 +3377,35 @@ export declare abstract class UnzipTask extends LoopedTask<void> {
     protected process(): Promise<[boolean, void | undefined]>;
     protected validate(): Promise<void>;
     protected shouldTolerant(e: any): boolean;
-    protected abort(isCancelled: boolean): void;
+    protected abort(isCancelled: boolean): Promise<void>;
     protected reset(): void;
 }
 \/\/# sourceMappingURL=unzip.d.ts.map`;
-module.exports['@xmcl/installer/utils.d.ts'] = `\/\// <reference types="node" /> import { ExecOptions } from "child_process";
-import { access as faccess, close as fclose, copyFile as fcopyFile, ftruncate, mkdir as fmkdir, open as fopen, readFile as freadFile, stat as fstat, unlink as funlink, writeFile as fwriteFile } from "fs";
-import { pipeline as pip } from "stream";
-export declare const pipeline: typeof pip.__promisify__;
+module.exports['@xmcl/installer/utils.d.ts'] = `\/\// <reference types="node" /> import { _exists as exists, _mkdir as mkdir, _readFile as readFile, _writeFile as writeFile, _pipeline as pipeline } from "@xmcl/core";
+import { ExecOptions } from "child_process";
+import { close as fclose, copyFile as fcopyFile, ftruncate, open as fopen, stat as fstat, unlink as funlink } from "fs";
 export declare const unlink: typeof funlink.__promisify__;
 export declare const stat: typeof fstat.__promisify__;
-export declare const readFile: typeof freadFile.__promisify__;
-export declare const writeFile: typeof fwriteFile.__promisify__;
-export declare const mkdir: typeof fmkdir.__promisify__;
-export declare const access: typeof faccess.__promisify__;
 export declare const open: typeof fopen.__promisify__;
 export declare const close: typeof fclose.__promisify__;
 export declare const copyFile: typeof fcopyFile.__promisify__;
 export declare const truncate: typeof ftruncate.__promisify__;
+export { readFile, writeFile, mkdir, exists, pipeline };
+export { checksum } from "@xmcl/core";
+export declare function missing(target: string): Promise<boolean>;
+export declare function ensureDir(target: string): Promise<void>;
+export declare function ensureFile(target: string): Promise<void>;
+export declare function normalizeArray<T>(arr?: T | T[]): T[];
+/**
+ * The collection of errors happened during a parallel process
+ */
+export declare class MultipleError extends Error {
+    errors: unknown[];
+    constructor(errors: unknown[], message?: string);
+}
+export declare function errorFrom<T>(error: T, message?: string): T & Error;
+export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
+export declare function all(promises: Promise<any>[], throwErrorImmediately: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<any[]>;
 /**
  * Shared install options
  */
@@ -3414,24 +3424,6 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
-export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
-export declare function createErr<T>(error: T, message?: string): T & Error;
-export declare function exists(target: string): Promise<boolean>;
-export declare function missing(target: string): Promise<boolean>;
-export declare function ensureDir(target: string): Promise<void>;
-export declare function ensureFile(target: string): Promise<void>;
-export declare function checksum(path: string, algorithm?: string): Promise<string>;
-export declare function isNotNull<T>(v: T | undefined): v is T;
-export declare function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:";
-export declare function normalizeArray<T>(arr?: T | T[]): T[];
-/**
- * The collection of errors happened during a parallel process
- */
-export declare class MultipleError extends Error {
-    errors: unknown[];
-    constructor(errors: unknown[], message?: string);
-}
-export declare function all(promises: Promise<any>[], throwErrorImmediately?: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<any[]>;
 \/\/# sourceMappingURL=utils.d.ts.map`;
 module.exports['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system"; declare type Person = {
     /**
@@ -3442,7 +3434,7 @@ module.exports['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@x
      *  Person's contact information. The same as upper level contact. See above. Optional.
      */
     contact?: string;
-};
+} | string;
 declare type Environment = "client" | "server" | "*";
 /**
  * The \`ModMetadata\` is extract from \`fabric.mod.json\`.
@@ -3450,7 +3442,7 @@ declare type Environment = "client" | "server" | "*";
  * The \`fabric.mod.json\` file is a mod metadata file used by Fabric Loader to load mods.
  * In order to be loaded, a mod must have this file with the exact name placed in the root directory of the mod JAR.
  */
-export interface ModMetadata {
+export interface FabricModMetadata {
     /**
      * Needed for internal mechanisms. Must always be 1.
      */
@@ -3497,7 +3489,9 @@ export interface ModMetadata {
      * ]
      * \`\`\`
      */
-    jars?: string[];
+    jars?: {
+        file: string;
+    }[];
     /**
      * A dictionary of adapters for used languages to their adapter classes full names. For example:
      * \`\`\`json
@@ -3605,56 +3599,52 @@ export interface ModMetadata {
  * Read fabric mod metadata json from a jar file or a directory
  * @param file The jar file or directory path. I can also be the binary content of the jar if you have already read the jar.
  */
-export declare function readModMetaData(file: FileSystem | string | Uint8Array): Promise<ModMetadata>;
+export declare function readFabricMod(file: FileSystem | string | Uint8Array): Promise<FabricModMetadata>;
 export {};
 \/\/# sourceMappingURL=fabric.d.ts.map`;
-module.exports['@xmcl/mod-parser/forge.d.ts'] = `import { FileSystem } from "@xmcl/system"; /**
- * Represent the forge config file
+module.exports['@xmcl/mod-parser/forge.d.ts'] = `import { FileSystem } from "@xmcl/system"; export interface ForgeModRecord {
+    [modid: string]: ForgeModMetadata;
+}
+/**
+ * Read the mod info from \`META-INF/MANIFEST.MF\`
+ * @returns The manifest directionary
  */
-export interface Config {
-    [category: string]: {
-        comment?: string;
-        properties: Array<Config.Property<any>>;
-    };
-}
-export declare namespace Config {
-    type Type = "I" | "D" | "S" | "B";
-    interface Property<T = number | boolean | string | number[] | boolean[] | string[]> {
-        readonly type: Type;
-        readonly name: string;
-        readonly comment?: string;
-        value: T;
-    }
-    /**
-     * Convert a forge config to string
-     */
-    function stringify(config: Config): string;
-    /**
-     * Parse a forge config string into \`Config\` object
-     * @param body The forge config string
-     */
-    function parse(body: string): Config;
-}
-export declare type ModMetaData = ModMetadata;
-export interface ModBaseInfo {
+export declare function readForgeModManifest(mod: ForgeModInput, output?: ForgeModRecord): Promise<Record<string, string> | undefined>;
+/**
+ * Read mod metadata from new toml metadata file.
+ */
+export declare function readForgeModToml(mod: ForgeModInput, output: ForgeModRecord, manifest?: Record<string, string>): Promise<ForgeModRecord>;
+/**
+ * Use asm to scan all the class files of the mod. This might take long time to read.
+ */
+export declare function readForgeModAsm(mod: ForgeModInput, output?: ForgeModRecord, options?: {
+    baseInfoOutput?: ForgeModBaseInfo;
+    manifest?: Record<string, string>;
+}): Promise<ForgeModRecord>;
+/**
+ * Read \`mcmod.info\`, \`cccmod.info\`, and \`neimod.info\` json file
+ * @param mod The mod path or buffer or opened file system.
+ */
+export declare function readForgeModJson(mod: ForgeModInput, output?: ForgeModRecord): Promise<ForgeModRecord>;
+export interface ForgeModBaseInfo {
     /**
      * Does class files contain cpw package
      */
-    usedLegacyFMLPackage: boolean;
+    usedLegacyFMLPackage?: boolean;
     /**
      * Does class files contain forge package
      */
-    usedForgePackage: boolean;
+    usedForgePackage?: boolean;
     /**
      * Does class files contain minecraft package
      */
-    usedMinecraftPackage: boolean;
+    usedMinecraftPackage?: boolean;
     /**
      * Does class files contain minecraft.client package
      */
-    usedMinecraftClientPackage: boolean;
+    usedMinecraftClientPackage?: boolean;
 }
-export interface ModMetadata extends ModBaseInfo {
+export interface ForgeModMetadata extends ForgeModBaseInfo {
     readonly modid: string;
     readonly version: string;
     readonly name: string;
@@ -3688,6 +3678,7 @@ export interface ModMetadata extends ModBaseInfo {
     */
     readonly displayName?: string;
 }
+declare type ForgeModInput = Uint8Array | string | FileSystem;
 /**
  * Read metadata of the input mod.
  *
@@ -3700,19 +3691,46 @@ export interface ModMetadata extends ModBaseInfo {
  * @param mod The mod path or data
  * @returns The mod metadata
  */
-export declare function readModMetaData(mod: Uint8Array | string | FileSystem): Promise<ModMetadata[]>;
+export declare function readForgeMod(mod: ForgeModInput): Promise<ForgeModMetadata[]>;
 export declare class ForgeModParseFailedError extends Error {
-    readonly mod: Uint8Array | string | FileSystem;
-    readonly baseInfo: ModBaseInfo;
-    constructor(mod: Uint8Array | string | FileSystem, baseInfo: ModBaseInfo);
+    readonly mod: ForgeModInput;
+    readonly baseInfo: ForgeModBaseInfo;
+    constructor(mod: ForgeModInput, baseInfo: ForgeModBaseInfo);
 }
+export {};
 \/\/# sourceMappingURL=forge.d.ts.map`;
-module.exports['@xmcl/mod-parser/index.d.ts'] = `import * as Forge from "./forge"; import * as LiteLoader from "./liteloader";
-import * as Fabric from "./fabric";
-export { Forge, LiteLoader, Fabric };
+module.exports['@xmcl/mod-parser/forgeConfig.d.ts'] = `/**  * Represent the forge config file
+ */
+export interface ForgeConfig {
+    [category: string]: {
+        comment?: string;
+        properties: Array<ForgeConfig.Property<any>>;
+    };
+}
+export declare namespace ForgeConfig {
+    type Type = "I" | "D" | "S" | "B";
+    interface Property<T = number | boolean | string | number[] | boolean[] | string[]> {
+        readonly type: Type;
+        readonly name: string;
+        readonly comment?: string;
+        value: T;
+    }
+    /**
+     * Convert a forge config to string
+     */
+    function stringify(config: ForgeConfig): string;
+    /**
+     * Parse a forge config string into \`Config\` object
+     * @param body The forge config string
+     */
+    function parse(body: string): ForgeConfig;
+}
+\/\/# sourceMappingURL=forgeConfig.d.ts.map`;
+module.exports['@xmcl/mod-parser/index.d.ts'] = `export * from "./forge"; export * from "./forgeConfig";
+export * from "./liteloader";
+export * from "./fabric";
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/mod-parser/liteloader.d.ts'] = `import { FileSystem } from "@xmcl/system"; export declare const DEFAULT_VERSION_MANIFEST = "http:\/\/dl.liteloader.com/versions/versions.json";
-export interface MetaData {
+module.exports['@xmcl/mod-parser/liteloader.d.ts'] = `import { FileSystem } from "@xmcl/system"; export interface LiteloaderModMetadata {
     readonly mcversion: string;
     readonly name: string;
     readonly revision: number;
@@ -3726,21 +3744,7 @@ export interface MetaData {
     readonly requiredAPIs?: string[];
     readonly classTransformerClasses?: string[];
 }
-export interface VersionMeta {
-    version: string;
-    url: string;
-    file: string;
-    mcversion: string;
-    type: "RELEASE" | "SNAPSHOT";
-    md5: string;
-    timestamp: string;
-    libraries: Array<{
-        name: string;
-        url?: string;
-    }>;
-    tweakClass: string;
-}
-export declare function readModMetaData(mod: string | Uint8Array | FileSystem): Promise<MetaData>;
+export declare function readLiteloaderMod(mod: string | Uint8Array | FileSystem): Promise<LiteloaderModMetadata>;
 \/\/# sourceMappingURL=liteloader.d.ts.map`;
 module.exports['@xmcl/model/block.d.ts'] = `import { BlockModel, PackMeta } from "@xmcl/resourcepack"; import { Object3D } from "three/src/core/Object3D";
 import { Vector3 } from "three/src/math/Vector3";
@@ -4532,38 +4536,7 @@ module.exports['@xmcl/system/system.d.ts'] = `export declare abstract class File
 module.exports['@xmcl/task/index.d.ts'] = `export declare class CancelledError<T> extends Error {     readonly partialResult: T | undefined;
     constructor(partialResult: T | undefined);
 }
-export interface UpdateData {
-    /**
-    * The chunk size of this update event process
-    */
-    chunkSize: number;
-    /**
-     * The progress already processed by current task
-     */
-    progress: number;
-    /**
-     * The total number need to be done of this task
-     */
-    total: number;
-    /**
-     * Source path or url of the task
-     */
-    from?: string;
-    /**
-     * Destination path or url of the task
-     */
-    to?: string;
-}
-export interface Event extends UpdateData {
-    type: "update" | "start" | "success" | "fail" | "pause" | "cancel" | "resume";
-    paths: string[];
-    name: string;
-    param: object;
-}
-export interface TaskContext {
-    (event: Event): void;
-}
-export declare enum State {
+export declare enum TaskState {
     Idel = 0,
     Running = 1,
     Cancelled = 2,
@@ -4571,8 +4544,48 @@ export declare enum State {
     Successed = 4,
     Failed = 5
 }
-export declare abstract class BaseTask<T> implements Task<T> {
-    protected _state: State;
+export interface Task<T = any> {
+    readonly name: string;
+    readonly param: Record<string, any>;
+    readonly progress: number;
+    readonly total: number;
+    readonly from: string | undefined;
+    readonly to: string | undefined;
+    readonly path: string;
+    readonly id: number;
+    readonly isCancelled: boolean;
+    readonly isPaused: boolean;
+    readonly isDone: boolean;
+    readonly isRunning: boolean;
+    readonly state: TaskState;
+    readonly context: TaskContext | undefined;
+    readonly parent: Task<any> | undefined;
+    pause(): Promise<void>;
+    resume(): void;
+    cancel(): Promise<void>;
+    start(context?: TaskContext, parent?: Task<any>): void;
+    wait(): Promise<T>;
+    startAndWait(context?: TaskContext, parent?: Task<any>): Promise<T>;
+    onChildUpdate(chunkSize: number): void;
+    map<N>(transform: Transform<this, N>): Task<N>;
+    setName(name: string, param?: Record<string, any>): this;
+}
+export interface Transform<T, N> {
+    (this: T, value: T): N;
+}
+export interface TaskContext {
+    fork?(task: Task<any>): number;
+    onStart?(task: Task<any>): void;
+    onUpdate?(task: Task<any>, chunkSize: number): void;
+    onFailed?(task: Task<any>, error: any): void;
+    onSuccessed?(task: Task<any>, result: any): void;
+    onPaused?(task: Task<any>): void;
+    onResumed?(task: Task<any>): void;
+    onCancelled?(task: Task<any>): void;
+}
+export declare function createFork(): TaskContext["fork"];
+export declare abstract class TaskBase<T> implements Task<T> {
+    protected _state: TaskState;
     protected _promise: Promise<T>;
     protected resolve: (value: T) => void;
     protected reject: (err: any) => void;
@@ -4580,89 +4593,72 @@ export declare abstract class BaseTask<T> implements Task<T> {
     protected _to: string | undefined;
     protected _progress: number;
     protected _total: number;
-    protected context: TaskContext | undefined;
+    protected _path: string;
+    protected _id: number;
+    parent: Task<any> | undefined;
+    context: TaskContext;
     name: string;
     param: object;
     setName(name: string, param?: object): this;
+    get id(): number;
+    get path(): string;
     get progress(): number;
     get total(): number;
     get to(): string | undefined;
     get from(): string | undefined;
-    get state(): State;
+    get state(): TaskState;
     get isCancelled(): boolean;
     get isPaused(): boolean;
     get isDone(): boolean;
     get isRunning(): boolean;
-    pause(): void;
+    pause(): Promise<void>;
     resume(): void;
-    cancel(): void;
+    cancel(): Promise<void>;
     wait(): Promise<T>;
-    start(context?: TaskContext): void;
-    startAndWait(context?: TaskContext): Promise<T>;
-    private fire;
-    protected update(data: UpdateData): void;
+    start(context?: TaskContext, parent?: Task<any>): void;
+    startAndWait(context?: TaskContext, parent?: Task<any>): Promise<T>;
+    protected update(chunkSize: number): void;
+    onChildUpdate(chunkSize: number): void;
     protected abstract run(): Promise<T>;
-    protected abstract onCancel(): void;
-    protected abstract onPause(): void;
-    protected abstract onResume(): void;
+    protected abstract performCancel(): Promise<void>;
+    protected abstract performPause(): Promise<void>;
+    protected abstract performResume(): void;
     map<N>(transform: Transform<this, N>): Task<N>;
 }
-export interface Task<T> {
-    readonly progress: number;
-    readonly total: number;
-    readonly from: string | undefined;
-    readonly to: string | undefined;
-    readonly isCancelled: boolean;
-    readonly isPaused: boolean;
-    readonly isDone: boolean;
-    readonly isRunning: boolean;
-    pause(): void;
-    resume(): void;
-    cancel(): void;
-    start(): void;
-    wait(): Promise<T>;
-    startAndWait(context?: TaskContext): Promise<T>;
-    map<N>(transform: Transform<this, N>): Task<N>;
-}
-export interface Transform<T, N> {
-    (this: T, value: T): N;
-}
-export declare abstract class LoopedTask<T> extends BaseTask<T> {
+export declare abstract class TaskLooped<T> extends TaskBase<T> {
     protected _pausing: Promise<void>;
     protected _unpause: () => void;
     protected abstract process(): Promise<[boolean, T | undefined]>;
     protected abstract validate(): Promise<void>;
     protected abstract shouldTolerant(e: any): boolean;
-    protected abstract abort(isCancelled: boolean): void;
+    protected abstract abort(isCancelled: boolean): Promise<void>;
     protected abstract reset(): void;
-    protected onCancel(): void;
-    protected onPause(): void;
-    protected onResume(): void;
+    protected performCancel(): Promise<void>;
+    protected performPause(): Promise<void>;
+    protected performResume(): void;
     protected run(): Promise<NonNullable<T>>;
 }
-export interface TaskRuntime {
-    yield<T>(task: Task<T>): Promise<T>;
-    concat<T>(task: TaskRoutine<T>): Promise<T>;
-}
 export declare type TaskExecutor<T> = (this: TaskRoutine<any>) => Promise<T> | T;
-export declare class TaskRoutine<T> extends BaseTask<T> implements TaskRuntime {
+export declare abstract class TaskGroup<T> extends TaskBase<T> {
+    protected children: Task<any>[];
+    onChildUpdate(chunkSize: number): void;
+    protected performCancel(): Promise<void>;
+    protected performPause(): Promise<void>;
+    protected performResume(): void;
+}
+export declare class TaskRoutine<T> extends TaskGroup<T> {
     readonly name: string;
     readonly executor: TaskExecutor<T>;
     readonly param: object;
-    protected routines: Task<any>[];
     constructor(name: string, executor: TaskExecutor<T>, param?: object);
-    readonly context: TaskContext | undefined;
     concat<T>(task: TaskRoutine<T>): Promise<T>;
     /**
      * Yield a new child task to this routine
      */
     yield<T>(task: Task<T>): Promise<T>;
     protected run(): Promise<T>;
-    protected onCancel(): void;
-    protected onPause(): void;
-    protected onResume(): void;
 }
-export declare function task<E, T>(name: string, executor: TaskExecutor<T>, param?: object): TaskRoutine<T>;
+export declare function task<T>(name: string, executor: TaskExecutor<T>, param?: object): TaskRoutine<T>;
 \/\/# sourceMappingURL=index.d.ts.map`;
 module.exports['@xmcl/text-component/index.d.ts'] = `/**  * @see https:\/\/minecraft.gamepedia.com/Raw_JSON_text_format
  */
@@ -4883,7 +4879,8 @@ export declare function getEntriesRecord(entries: Entry[]): Record<string, Entry
  */
 export declare function readAllEntries(zipFile: ZipFile): Promise<Entry[]>;
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/user/auth.d.ts'] = `import { GameProfile } from "./base"; declare type LoginWithUser = {
+module.exports['@xmcl/user/auth.d.ts'] = `import { GameProfile } from "./base"; export declare const v5: (s: string) => any;
+declare type LoginWithUser = {
     username: string;
     password: string;
     requestUser: true;
@@ -5455,6 +5452,15 @@ export declare function decodeBase64(b: string): string;
 module.exports['@xmcl/user/util/index.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
 export declare function verify(data: string, signature: string, pemKey: string | Uint8Array): Promise<boolean>;
 export declare function decodeBase64(s: string): string;
+\/\/# sourceMappingURL=index.d.ts.map`;
+module.exports['@xmcl/user/v5/esm.browser.d.ts'] = `export { default as sha1 } from "uuid/dist/esm-browser/sha1"; export { default as v35 } from "uuid/dist/esm-browser/v35";
+\/\/# sourceMappingURL=esm.browser.d.ts.map`;
+module.exports['@xmcl/user/v5/esm.d.ts'] = `export { default as sha1 } from "uuid/dist/esm-node/sha1"; export { default as v35 } from "uuid/dist/esm-node/v35";
+\/\/# sourceMappingURL=esm.d.ts.map`;
+module.exports['@xmcl/user/v5/index.browser.d.ts'] = `export { default as sha1 } from "uuid/dist/sha1-browser"; export { default as v35 } from "uuid/dist/esm-browser/v35";
+\/\/# sourceMappingURL=index.browser.d.ts.map`;
+module.exports['@xmcl/user/v5/index.d.ts'] = `import sha1 from "uuid/dist/sha1"; import v35 from "uuid/dist/v35";
+export { v35, sha1 };
 \/\/# sourceMappingURL=index.d.ts.map`;
 module.exports['@xmcl/world/index.d.ts'] = `import { FileSystem } from "@xmcl/system"; import Long from "long";
 export declare class WorldReader {
