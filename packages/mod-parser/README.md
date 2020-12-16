@@ -11,12 +11,12 @@
 ### Parse Fabric Mod Metadata
 
 ```ts
-    import { Fabric } from "@xmcl/mods";
+    import { readFabricMod, FabricModMetadata } from "@xmcl/mods";
     const modJarBinary = fs.readFileSync("your-fabric.jar");
-    const metadata: Fabric.ModMetadata = await Fabric.readModMetaData(modJarBinary);
+    const metadata: FabricModMetadata = await readFabricMod(modJarBinary);
 
     // or directly read from path
-    const sameMetadata: Fabric.ModMetadata = await Fabric.readModMetaData("your-fabric.jar");
+    const sameMetadata: FabricModMetadata = await readFabricMod("your-fabric.jar");
 ```
 
 ### Parse Forge Mod/Config
@@ -24,19 +24,40 @@
 Read the forge mod metadata, including `@Mod` annotation, mcmods.info, and toml metadata.
 
 ```ts
-    import { Forge } from "@xmcl/mods";
+    import { readForgeMod, ForgeModMetadata } from "@xmcl/mods";
     const forgeModJarBuff: Buffer;
-    const metadata: Forge.MetaData[] = Forge.readModMetaData(forgeModJarBuff);
-
+    const metadata: ForgeModMetadata[] = await readForgeMod(forgeModJarBuff);
     const modid = metadata[0].modid; // get modid of first mods
 ```
+
+If you don't want to read that much (as it will transver all the file in jar), you can try to use them separately:
+
+```ts
+    import { resolveFileSystem } from "@xmcl/system";
+    import { readForgeModJson, readForgeModManifest, readForgeModToml, ForgeModMetadata, readForgeModAsm } from "@xmcl/mods";
+    const forgeModJarBuff: Buffer;
+    const fs = await resolveFileSystem(forgeModJarBuff);
+    // read json
+    // if this is new mod, this will be empty record {}
+    const metadata: Record<string, ForgeModMetadata> = await readForgeModJson(fs);
+    // or read `META-INF/MANIFEST.MF`
+    const manifest: Record<string, string> = await readForgeModManifest(fs, metadata /* this is optional, to fill the modmetadata if found */);
+    // read new toml
+    await readForgeModToml(fs, metadata /* it will fill mods into this param & return it */, manifest /* this is optional */);
+    // optional step, if the mod is really unstandard, not have mcmod.info and toml, you can use this
+    // this can identify optifine and in some case, might detect some coremod
+    // this will go over all file in your jar, it might hit your perf.
+    await readForgeModAsm(fs, metadata, { manifest });
+```
+
 
 Read the forge mod config file (.cfg)
 
 ```ts
+    import { ForgeConfig } from "@xmcl/mods";
     const modConfigString: string;
-    const config: Forge.Config = Forge.Config.parse(modConfigString);
-    const serializedBack: string = Forge.Config.stringify(config);
+    const config: ForgeConfig = ForgeConfig.parse(modConfigString);
+    const serializedBack: string = ForgeConfig.stringify(config);
 ```
 
 ### Parse Liteloader Mod
@@ -44,6 +65,6 @@ Read the forge mod config file (.cfg)
 Read .litemod metadata:
 
 ```ts
-    import { LiteLoader } from "@xmcl/mods";
-    const metadata: LiteLoader.MetaData = await LiteLoader.readModMetaData(`${mock}/mods/sample-mod.litemod`);
+    import { LiteloaderModMetadata, readLiteloaderMod } from "@xmcl/mods";
+    const metadata: LiteloaderModMetadata = await readLiteloaderMod(`${mock}/mods/sample-mod.litemod`);
 ```

@@ -14,45 +14,53 @@ This is a helper module for Minecraft Launcher. See the github home page for mor
 
 You can use `@xmcl/task` model to track the progress of a task. *In the launcher, they are majorly download task.*
 
-The module is designed with event based. Use event to track what's happening.
-
-The module won't mutate the task node, as many of us use the state management things required `Unidirectional Data Flow`.
-
-Therefore you can just treat the `TaskRuntime` object a stateless event emitter.
+This module implements a basic object model for task with progress. The task can be paused or cancelled.
 
 ```ts
-    import { Task, TaskRuntime, TaskHandle } from "@xmcl/task";
+    import { Task, TaskBase, task } from "@xmcl/task";
 
-    const runtime: TaskRuntime = Task.createRuntime();
-    const task: Task<YourResultType>; // your task
-    
-    runtime.on("update", ({ progress, total, message }, node) => {
-        // handle the progress, total update.
-        // message usually the current downloading url.
-    });
-    runtime.on("execute", (node, parent) => {
-        const name = child.name; // name is just the name to create the task
+    class ATask extends TaskBase {
+        // implement a task
+    }
 
-        const newChildPath = child.path; // path is the chaining all parents' name togather
-        // if parent name is 'install'
-        // and child name is 'json'
-        // the path will be 'install.json'
+    class BTask extends TaskBase {
+        // implement a task
+    }
 
-        const arguments = child.arguments; // argument is optional
-        // normally the arguments is some values that helps you to localized
-        // like 'library' task in during install library
-        // it will provide a 'lib' property which is the name of the library
+    // suppose you have such task
+    const myTask = task("hello", function() {
+        await this.yield(new ATask().setName("world"));
+        await this.yield(new BTask().setName("xmcl"));
     });
 
-    runtime.on("finish", (result, node) => {
-        // every node, parent or child will emit finish event when it finish
+    // start a task
+    const result = await task.startAndWait({
+        onStart(task: Task<any>) {
+            // the task path is the task name joined by dot (.)
+            const path = task.path;
+            console.log(`${path} started!`);
+        },
+        onUpdate(task: Task<any>, chunkSize: number) {
+            // a task update
+        },
+        onFailed(task: Task<any>, error: any) {
+            // on a task fail
+        },
+        onSuccessed(task: Task<any>, result: any) {
+            // on task success
+            const path = task.path;
+            console.log(`${path} ended!`);
+        },
+        // on task is paused/resumed/cancelled
+        onPaused(task: Task<any>) { },
+        onResumed(task: Task<any>) { },
+        onCancelled(task: Task<any>) { },
     });
-
-    runtime.on("node-error", (error, node) => {
-        // emit when a task node (parent or child) failed
-    });
-
-    const handle: TaskHandle<YourResultType> = runtime.submit(task);
-    await handle.wait();
-    // the error will still reject to the promise
+    // the result will print like
+    // hello started!
+    // hello.world started!
+    // hello.world ended!
+    // hello.xmcl started!
+    // hello.xmcl ended!
+    // hello ended!
 ```
