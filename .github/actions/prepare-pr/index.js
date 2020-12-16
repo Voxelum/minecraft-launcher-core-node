@@ -133,7 +133,7 @@ async function fillPackageBumpInfo(packages) {
         // bump version according to the release type 'major', 'minor' or 'patch'
         if (result.releaseType) {
             const newVersion = semver.inc(packageJSON.version, result.releaseType);
-            pkg.newVersion = newVersion ?? undefined;
+            pkg.newVersion = newVersion || undefined;
             pkg.releaseType = result.releaseType;
             pkg.reasons = result.reasons;
             pkg.level = result.level;
@@ -170,7 +170,7 @@ function bumpDependenciesPackage(reversedDependencies, packages) {
                 affected = true;
                 pkg.level = bumpLevel;
                 pkg.releaseType = bumpType;
-                pkg.newVersion = semver.inc(pkgJson.version, bumpType) ?? undefined;
+                pkg.newVersion = semver.inc(pkgJson.version, bumpType) || undefined;
             }
 
             if (!pkg.reasons) {
