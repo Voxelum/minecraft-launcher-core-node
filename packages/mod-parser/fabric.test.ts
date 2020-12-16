@@ -1,13 +1,13 @@
 import * as path from "path";
-import { readModMetaData } from "./fabric";
+import { readFabricMod } from "./fabric";
 
 describe("Fabric", () => {
     const root = path.join(__dirname, "..", "..", "temp");
     const mockRoot = path.join(__dirname, "..", "..", "mock");
 
-    describe("#readModMetadata", () => {
+    describe("#readFabricMod", () => {
         it("should read the simple fabric json", async () => {
-            const mod = await readModMetaData(path.join(mockRoot, "mods", "fabric-sample.jar"));
+            const mod = await readFabricMod(path.join(mockRoot, "mods", "fabric-sample.jar"));
             expect(mod).toBeTruthy();
             expect(mod).toEqual({
                 schemaVersion: 1,

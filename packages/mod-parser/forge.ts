@@ -2,8 +2,223 @@ import { resolveFileSystem, FileSystem } from "@xmcl/system";
 import { parse as parseToml } from "@iarna/toml";
 import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from "@xmcl/asm";
 
+/**
+ * The @Mod data from class file
+ */
+export interface ForgeModAnnotationData {
+    [key: string]: any;
+    value: string;
+    modid: string;
+    name: string;
+    version: string;
+    /**
+     * A dependency string for this mod, which specifies which mod(s) it depends on in order to run.
+     *
+     * A dependency string must start with a combination of these prefixes, separated by "-":
+     *     [before, after], [required], [client, server]
+     *     At least one "before", "after", or "required" must be specified.
+     * Then ":" and the mod id.
+     * Then a version range should be specified for the mod by adding "@" and the version range.
+     *     The version range format is described in the javadoc here:
+     *     {@link VersionRange#createFromVersionSpec(java.lang.String)}
+     * Then a ";".
+     *
+     * If a "required" mod is missing, or a mod exists with a version outside the specified range,
+     * the game will not start and an error screen will tell the player which versions are required.
+     *
+     * Example:
+     *     Our example mod:
+     *      * depends on Forge and uses new features that were introduced in Forge version 14.21.1.2395
+     *         "required:forge@[14.21.1.2395,);"
+     *
+     *          1.12.2 Note: for compatibility with Forge older than 14.23.0.2501 the syntax must follow this older format:
+     *          "required-after:forge@[14.21.1.2395,);"
+     *          For more explanation see https://github.com/MinecraftForge/MinecraftForge/issues/4918
+     *
+     *      * is a dedicated addon to mod1 and has to have its event handlers run after mod1's are run,
+     *         "required-after:mod1;"
+     *      * has optional integration with mod2 which depends on features introduced in mod2 version 4.7.0,
+     *         "after:mod2@[4.7.0,);"
+     *      * depends on a client-side-only rendering library called rendermod
+     *         "required-client:rendermod;"
+     *
+     *     The full dependencies string is all of those combined:
+     *         "required:forge@[14.21.1.2395,);required-after:mod1;after:mod2@[4.7.0,);required-client:rendermod;"
+     *
+     *     This will stop the game and display an error message if any of these is true:
+     *         The installed forge is too old,
+     *         mod1 is missing,
+     *         an old version of mod2 is present,
+     *         rendermod is missing on the client.
+     */
+    dependencies: string;
+    useMetadata: boolean;
+    acceptedMinecraftVersions: string;
+    acceptableRemoteVersions: string;
+    acceptableSaveVersions: string;
+    modLanguage: string;
+    modLanguageAdapter: string
+    clientSideOnly: boolean;
+    serverSideOnly: boolean;
+}
+
+/**
+ * Represent the forge `mcmod.info` format.
+ */
+export interface ForgeModMcmodInfo {
+    /**
+     * The modid this description is linked to. If the mod is not loaded, the description is ignored.
+     */
+    modid: string;
+    /**
+     * The user-friendly name of this mod.
+     */
+    name: string;
+    /**
+     * A description of this mod in 1-2 paragraphs.
+     */
+    description: string;
+    /**
+     * The version of the mod.
+     */
+    version: string;
+    /**
+     * The Minecraft version.
+     */
+    mcversion: string;
+    /**
+     * A link to the mod’s homepage.
+     */
+    url: string;
+    /**
+     * Defined but unused. Superseded by updateJSON.
+     */
+    updateUrl: string;
+    /**
+     * The URL to a version JSON.
+     */
+    updateJSON: string;
+    /**
+     * A list of authors to this mod.
+     */
+    authorList: string[];
+    /**
+     * A string that contains any acknowledgements you want to mention.
+     */
+    credits: string;
+    /**
+     * The path to the mod’s logo. It is resolved on top of the classpath, so you should put it in a location where the name will not conflict, maybe under your own assets folder.
+     */
+    logoFile: string;
+    /**
+     * A list of images to be shown on the info page. Currently unimplemented.
+     */
+    screenshots: string[];
+    /**
+     * The modid of a parent mod, if applicable. Using this allows modules of another mod to be listed under it in the info page, like BuildCraft.
+     */
+    parent: string;
+    /**
+     * If true and `Mod.useMetadata`, the below 3 lists of dependencies will be used. If not, they do nothing.
+     */
+    useDependencyInformation: boolean;
+    /**
+     * A list of modids. If one is missing, the game will crash. This does not affect the ordering of mod loading! To specify ordering as well as requirement, have a coupled entry in dependencies.
+     */
+    requiredMods: string[];
+    /**
+     * A list of modids. All of the listed mods will load before this one. If one is not present, nothing happens.
+     */
+    dependencies: string[];
+    /**
+     * A list of modids. All of the listed mods will load after this one. If one is not present, nothing happens.
+     */
+    dependants: string[];
+}
+
+/**
+ * This file defines the metadata of your mod. Its information may be viewed by users from the main screen of the game through the Mods button. A single info file can describe several mods.
+ *
+ * The mods.toml file is formatted as TOML, the example mods.toml file in the MDK provides comments explaining the contents of the file. It should be stored as src/main/resources/META-INF/mods.toml. A basic mods.toml, describing one mod, may look like this:
+ */
+export interface ForgeModTOMLData {
+    /**
+     * The modid this file is linked to
+     */
+    modid: string;
+    /**
+     * The version of the mod.It should be just numbers seperated by dots, ideally conforming to Semantic Versioning
+     */
+    version: string;
+    /**
+     * The user - friendly name of this mod
+     */
+    displayName: string;
+    /**
+     * The URL to a version JSON
+     */
+    updateJSONURL: string;
+    /**
+     * A link to the mod’s homepage
+     */
+    displayURL: string;
+    /**
+     * The filename of the mod’s logo.It must be placed in the root resource folder, not in a subfolder
+     */
+    logoFile: string;
+    /**
+     * A string that contains any acknowledgements you want to mention
+     */
+    credits: string;
+    /**
+     * The authors to this mod
+     */
+    authors: string;
+    /**
+     * A description of this mod
+     */
+    description: string;
+    /**
+     * A list of dependencies of this mod
+     */
+    dependencies: { modId: string; mandatory: boolean; versionRange: string; ordering: "NONE" | "BEFORE" | "AFTER"; side: "BOTH" | "CLIENT" | "SERVER" }[];
+}
+
+export interface ForgeModASMData {
+    /**
+     * Does class files contain cpw package
+     */
+    usedLegacyFMLPackage: boolean;
+    /**
+     * Does class files contain forge package
+     */
+    usedForgePackage: boolean;
+    /**
+     * Does class files contain minecraft package
+     */
+    usedMinecraftPackage: boolean;
+    /**
+     * Does class files contain minecraft.client package
+     */
+    usedMinecraftClientPackage: boolean;
+
+    modAnnotations: ForgeModAnnotationData[];
+}
+
+/**
+ * The metadata inferred from manifest
+ */
+export interface ManifestMetadata {
+    modid: string;
+    name: string;
+    authors: string[];
+    version: string;
+    description: string;
+    url: string;
+}
+
 class ModAnnotationVisitor extends AnnotationVisitor {
-    constructor(readonly map: { [key: string]: any }) { super(Opcodes.ASM5); }
+    constructor(readonly map: ForgeModAnnotationData) { super(Opcodes.ASM5); }
     public visit(s: string, o: any) {
         if (s === "value") {
             this.map.modid = o
@@ -43,29 +258,27 @@ class DummyModConstructorVisitor extends MethodVisitor {
 }
 
 class ModClassVisitor extends ClassVisitor {
-    public fields: { [name: string]: any } = {};
+    public fields: Record<string, any> = {};
     public className: string = "";
     public isDummyModContainer: boolean = false;
     public isPluginClass: boolean = false;
 
-    public commonFields: any = {};
-
-    public constructor(readonly map: { [key: string]: any }, public guess: any, private baseInfo: ModBaseInfo, readonly corePlugin?: string) {
+    public constructor(readonly result: ForgeModASMData, public guess: Partial<ForgeModAnnotationData>, readonly corePlugin?: string) {
         super(Opcodes.ASM5);
     }
 
     private validateType(desc: string) {
         if (desc.indexOf("net/minecraftforge") !== -1) {
-            this.baseInfo.usedForgePackage = true;
+            this.result.usedForgePackage = true;
         }
         if (desc.indexOf("net/minecraft") !== -1) {
-            this.baseInfo.usedMinecraftPackage = true;
+            this.result.usedMinecraftPackage = true;
         }
         if (desc.indexOf("cpw/mods/fml") !== -1) {
-            this.baseInfo.usedLegacyFMLPackage = true;
+            this.result.usedLegacyFMLPackage = true;
         }
         if (desc.indexOf("net/minecraft/client") !== -1) {
-            this.baseInfo.usedMinecraftClientPackage = true;
+            this.result.usedMinecraftClientPackage = true;
         }
     }
 
@@ -95,22 +308,88 @@ class ModClassVisitor extends ClassVisitor {
     }
 
     public visitAnnotation(desc: string, visible: boolean): AnnotationVisitor | null {
-        if (desc === "Lnet/minecraftforge/fml/common/Mod;" || desc === "Lcpw/mods/fml/common/Mod;") { return new ModAnnotationVisitor(this.map); }
+        if (desc === "Lnet/minecraftforge/fml/common/Mod;" || desc === "Lcpw/mods/fml/common/Mod;") {
+            const annotationData: ForgeModAnnotationData = {
+                modid: "",
+                name: "",
+                version: "",
+                dependencies: "",
+                useMetadata: true,
+                clientSideOnly: false,
+                serverSideOnly: false,
+                acceptedMinecraftVersions: "",
+                acceptableRemoteVersions: "",
+                acceptableSaveVersions: "",
+                modLanguage: "java",
+                modLanguageAdapter: "",
+                value: "",
+            }
+            this.result.modAnnotations.push(annotationData);
+            return new ModAnnotationVisitor(annotationData);
+        }
         return null;
+    }
+
+    visitEnd() {
+        if (this.className === "Config" && this.fields && this.fields.OF_NAME) {
+            this.result.modAnnotations.push({
+                modid: this.fields.OF_NAME,
+                name: this.fields.OF_NAME,
+                mcversion: this.fields.MC_VERSION,
+                version: `${this.fields.OF_EDITION}_${this.fields.OF_RELEASE}`,
+                description: "OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.",
+                authorList: ["sp614x"],
+                url: "https://optifine.net",
+                clientSideOnly: true,
+                serverSideOnly: false,
+                value: "",
+                dependencies: "",
+                useMetadata: false,
+                acceptableRemoteVersions: "",
+                acceptableSaveVersions: "",
+                acceptedMinecraftVersions: `[${this.fields.MC_VERSION}]`,
+                modLanguage: "java",
+                modLanguageAdapter: "",
+            })
+        }
+        for (const [k, v] of Object.entries(this.fields)) {
+            switch (k.toUpperCase()) {
+                case "MODID":
+                case "MOD_ID":
+                    this.guess.modid = this.guess.modid || v;
+                    break;
+                case "MODNAME":
+                case "MOD_NAME":
+                    this.guess.name = this.guess.name || v;
+                    break;
+                case "VERSION":
+                case "MOD_VERSION":
+                    this.guess.version = this.guess.version || v;
+                    break;
+                case "MCVERSION":
+                    this.guess.mcversion = this.guess.mcversion || v;
+                    break;
+            }
+        }
     }
 }
 
-interface ModidTree {
-    [modid: string]: any;
-}
 
-
-async function tweakMetadata(fs: FileSystem, modidTree: ModidTree) {
-    if (! await fs.existsFile("META-INF/MANIFEST.MF")) { return; }
+/**
+ * Read the mod info from `META-INF/MANIFEST.MF`
+ * @returns The manifest directionary
+ */
+export async function readForgeModManifest(mod: ForgeModInput, manifestStore: Record<string, any> = {}): Promise<ManifestMetadata | undefined> {
+    const fs = await resolveFileSystem(mod);
+    if (! await fs.existsFile("META-INF/MANIFEST.MF")) { return undefined; }
     const data = await fs.readFile("META-INF/MANIFEST.MF");
-    const manifest: Record<string, string> = data.toString().split("\n").map((l) => l.split(":").map((s) => s.trim()))
+    const manifest: Record<string, string> = data.toString().split("\n")
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0)
+        .map((l) => l.split(":").map((s) => s.trim()))
         .reduce((a, b) => ({ ...a, [b[0]]: b[1] }), {}) as any;
-    const metadata = {
+    Object.assign(manifestStore, manifest);
+    const metadata: ManifestMetadata = {
         modid: "",
         name: "",
         authors: new Array<string>(),
@@ -152,44 +431,51 @@ async function tweakMetadata(fs: FileSystem, modidTree: ModidTree) {
             }
         }
     }
-    if (metadata.modid) {
-        modidTree[metadata.modid] = metadata;
-    }
-    return manifest;
+    return metadata;
 }
 
-async function tomlMetadata(fs: FileSystem, modidTree: ModidTree, manifest: any) {
+/**
+ * Read mod metadata from new toml metadata file.
+ */
+export async function readForgeModToml(mod: ForgeModInput, manifest?: Record<string, string>) {
+    const fs = await resolveFileSystem(mod);
     const existed = await fs.existsFile("META-INF/mods.toml");
+    const all: ForgeModTOMLData[] = [];
     if (existed) {
         const str = await fs.readFile("META-INF/mods.toml", "utf-8");
         const map = parseToml(str);
         if (map.mods instanceof Array) {
             for (const mod of map.mods) {
                 const tomlMod = mod as any;
-                const modObject: Partial<ModMetadata> = {
-                    modid: tomlMod.modId,
-                    authorList: typeof map.authors === "string" ? [map.authors] : [],
+                const modObject: ForgeModTOMLData = {
+                    modid: tomlMod.modId ?? "",
+                    authors: tomlMod.authors ?? "",
                     version: tomlMod.version === "${file.jarVersion}"
                         ? manifest?.["Implementation-Version"] : tomlMod.version,
-                    name: typeof tomlMod.displayName === "string" ? tomlMod.displayName : "",
-                    displayName: tomlMod.displayName,
-                    description: tomlMod.description,
-                    loaderVersion: map.loaderVersion as string,
-                    url: typeof map.displayURL === "string" ? map.displayURL : undefined,
+                    displayName: tomlMod.displayName ?? "",
+                    description: tomlMod.description ?? "",
+                    displayURL: tomlMod.displayURL ?? "",
+                    updateJSONURL: tomlMod.updateJSONURL ?? "",
+                    dependencies: [],
+                    logoFile: tomlMod.logoFile ?? "",
+                    credits: tomlMod.credits ?? "",
                 }
-                if (typeof modObject.modid === "string") {
-                    if (modObject.modid in modidTree) {
-                        Object.assign(modidTree[modObject.modid], modObject);
-                    } else {
-                        modidTree[modObject.modid] = modObject;
-                    }
-                }
+                all.push(modObject);
             }
         }
+        for (const mod of all) {
+            const dep = (map.dependencies as Record<string, any>)[mod.modid];
+            if (dep) { mod.dependencies = dep; }
+        }
     }
+    return all;
 }
 
-async function asmMetaData(fs: FileSystem, modidTree: ModidTree, baseInfo: ModBaseInfo, manifest?: Record<string, string>) {
+/**
+ * Use asm to scan all the class files of the mod. This might take long time to read.
+ */
+export async function readForgeModAsm(mod: ForgeModInput, manifest: Record<string, string> = {}): Promise<ForgeModASMData> {
+    const fs = await resolveFileSystem(mod);
     let corePluginClass: string | undefined;
     if (manifest) {
         if (typeof manifest.FMLCorePlugin === "string") {
@@ -199,68 +485,96 @@ async function asmMetaData(fs: FileSystem, modidTree: ModidTree, baseInfo: ModBa
             }
         }
     }
-    const guessing: any = {};
+    const result: ForgeModASMData = {
+        usedForgePackage: false,
+        usedLegacyFMLPackage: false,
+        usedMinecraftClientPackage: false,
+        usedMinecraftPackage: false,
+        modAnnotations: []
+    };
+    const guessing: Partial<ForgeModAnnotationData> = {};
     await fs.walkFiles("/", async (f) => {
         if (!f.endsWith(".class")) { return; }
         const data = await fs.readFile(f);
-        const metaContainer: any = {};
-        const visitor = new ModClassVisitor(metaContainer, guessing, baseInfo, corePluginClass);
-        new ClassReader(data).accept(visitor);
-        if (Object.keys(metaContainer).length === 0) {
-            if (visitor.className === "Config" && visitor.fields && visitor.fields.OF_NAME) {
-                metaContainer.modid = visitor.fields.OF_NAME;
-                metaContainer.name = visitor.fields.OF_NAME;
-                metaContainer.mcversion = visitor.fields.MC_VERSION;
-                metaContainer.version = `${visitor.fields.OF_EDITION}_${visitor.fields.OF_RELEASE}`;
-                metaContainer.description = "OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.";
-                metaContainer.authorList = ["sp614x"];
-                metaContainer.url = "https://optifine.net";
-                metaContainer.isClientOnly = true;
-            }
-        }
-        for (const [k, v] of Object.entries(visitor.fields)) {
-            switch (k.toUpperCase()) {
-                case "MODID":
-                case "MOD_ID":
-                    guessing.modid = guessing.modid || v;
-                    break;
-                case "MODNAME":
-                case "MOD_NAME":
-                    guessing.name = guessing.name || v;
-                    break;
-                case "VERSION":
-                case "MOD_VERSION":
-                    guessing.version = guessing.version || v;
-                    break;
-                case "MCVERSION":
-                    guessing.mcversion = guessing.mcversion || v;
-                    break;
-            }
-        }
-        const modid = metaContainer.modid;
-        let modMeta = modidTree[modid];
-        if (modid && !modMeta) {
-            modMeta = {};
-            modidTree[modid] = modMeta;
-        }
+        const visitor = new ModClassVisitor(result, guessing, corePluginClass);
 
-        for (const propKey in metaContainer) {
-            modMeta[propKey] = metaContainer[propKey];
-        }
+        new ClassReader(data).accept(visitor);
     });
-    if ((baseInfo.usedForgePackage || baseInfo.usedLegacyFMLPackage) && guessing.modid && !modidTree[guessing.modid]) {
-        modidTree[guessing.modid] = guessing;
+    if (result.modAnnotations.length === 0 && guessing.modid && (result.usedForgePackage || result.usedLegacyFMLPackage)) {
+        result.modAnnotations.push({
+            modid: guessing.modid ?? "",
+            name: guessing.name ?? "",
+            version: guessing.version ?? "",
+            dependencies: guessing.dependencies ?? "",
+            useMetadata: guessing.useMetadata ?? false,
+            clientSideOnly: guessing.clientSideOnly ?? false,
+            serverSideOnly: guessing.serverSideOnly ?? false,
+            acceptedMinecraftVersions: guessing.acceptedMinecraftVersions ?? "",
+            acceptableRemoteVersions: guessing.acceptableRemoteVersions ?? "",
+            acceptableSaveVersions: guessing.acceptableSaveVersions ?? "",
+            modLanguage: guessing.modLanguage ?? "java",
+            modLanguageAdapter: guessing.modLanguageAdapter ?? "",
+            value: guessing.value ?? "",
+        });
     }
+    return result;
 }
-async function jsonMetaData(fs: FileSystem, modidTree: ModidTree) {
+/**
+ * Read `mcmod.info`, `cccmod.info`, and `neimod.info` json file
+ * @param mod The mod path or buffer or opened file system.
+ */
+export async function readForgeModJson(mod: ForgeModInput): Promise<ForgeModMcmodInfo[]> {
+    const fs = await resolveFileSystem(mod);
+    const all = [] as ForgeModMcmodInfo[];
+    function normalize(json: Partial<ForgeModMcmodInfo>) {
+        const metadata: ForgeModMcmodInfo = {
+            modid: "",
+            name: "",
+            description: "",
+            version: "",
+            mcversion: "",
+            url: "",
+            updateUrl: "",
+            updateJSON: "",
+            authorList: [],
+            credits: "",
+            logoFile: "",
+            screenshots: [],
+            parent: "",
+            useDependencyInformation: false,
+            requiredMods: [],
+            dependencies: [],
+            dependants: [],
+        };
+        metadata.modid = json.modid ?? metadata.modid;
+        metadata.name = json.name ?? metadata.name;
+        metadata.description = json.description ?? metadata.description;
+        metadata.version = json.version ?? metadata.version;
+        metadata.mcversion = json.mcversion ?? metadata.mcversion;
+        metadata.url = json.url ?? metadata.url;
+        metadata.updateUrl = json.updateUrl ?? metadata.updateUrl;
+        metadata.updateJSON = json.updateJSON ?? metadata.updateJSON;
+        metadata.authorList = json.authorList ?? metadata.authorList;
+        metadata.credits = json.credits ?? metadata.credits;
+        metadata.logoFile = json.logoFile ?? metadata.logoFile;
+        metadata.screenshots = json.screenshots ?? metadata.screenshots;
+        metadata.parent = json.parent ?? metadata.parent;
+        metadata.useDependencyInformation = json.useDependencyInformation ?? metadata.useDependencyInformation;
+        metadata.requiredMods = json.requiredMods ?? metadata.requiredMods;
+        metadata.dependencies = json.dependencies ?? metadata.dependencies;
+        metadata.dependants = json.dependants ?? metadata.dependants;
+        return metadata;
+    }
     function readJsonMetadata(json: any) {
+        const modList: Array<Partial<ForgeModMcmodInfo>> = [];
         if (json instanceof Array) {
-            for (const m of json) { modidTree[m.modid] = m; }
+            modList.push(...json);
         } else if (json.modList instanceof Array) {
-            for (const m of json.modList) { modidTree[m.modid] = m; }
+            modList.push(...json.modList);
         } else if (json.modid) {
-            modidTree[json.modid] = json;
+            modList.push(json);
         }
+        all.push(...modList.map(normalize));
     }
     if (await fs.existsFile("mcmod.info")) {
         try {
@@ -280,240 +594,31 @@ async function jsonMetaData(fs: FileSystem, modidTree: ModidTree) {
             readJsonMetadata(json);
         } catch (e) { }
     }
+    return all;
 }
+
+type ForgeModInput = Uint8Array | string | FileSystem;
 
 /**
- * Represent the forge config file
+ * Represnet a full scan of a mod file data.
  */
-export interface Config {
-    [category: string]: {
-        comment?: string,
-        properties: Array<Config.Property<any>>,
-    };
-}
-
-export namespace Config {
-    export type Type = "I" | "D" | "S" | "B";
-    export interface Property<T = number | boolean | string | number[] | boolean[] | string[]> {
-        readonly type: Type;
-        readonly name: string;
-        readonly comment?: string;
-        value: T;
-    }
-
+export interface ForgeModMetadata extends ForgeModASMData {
     /**
-     * Convert a forge config to string
+     * The mcmod.info file metadata. If no mcmod.info file, it will be an empty array
      */
-    export function stringify(config: Config) {
-        let content = "# Configuration file\n\n\n";
-        const propIndent = "    ", arrIndent = "        ";
-        Object.keys(config).forEach((cat) => {
-            content += `${cat} {\n\n`;
-            config[cat].properties.forEach((prop) => {
-                if (prop.comment) {
-                    const lines = prop.comment.split("\n");
-                    for (const l of lines) {
-                        content += `${propIndent}# ${l}\n`;
-                    }
-                }
-                if (prop.value instanceof Array) {
-                    content += `${propIndent}${prop.type}:${prop.name} <\n`;
-                    prop.value.forEach((v) => content += `${arrIndent}${v}\n`);
-                    content += `${propIndent}>\n`;
-                } else {
-                    content += `${propIndent}${prop.type}:${prop.name}=${prop.value}\n`;
-                }
-                content += "\n";
-            });
-            content += "}\n\n";
-        });
-        return content;
-    }
-
+    mcmodInfo: ForgeModMcmodInfo[];
     /**
-     * Parse a forge config string into `Config` object
-     * @param body The forge config string
+     * The java manifest file data. If no metadata, it will be an empty object
      */
-    export function parse(body: string): Config {
-        const lines = body.split("\n").map((s) => s.trim())
-            .filter((s) => s.length !== 0);
-        let category: string | undefined;
-        let pendingCategory: string | undefined;
-
-        const parseVal = (type: Type, value: any) => {
-            const map: { [key: string]: (s: string) => any } = {
-                I: Number.parseInt,
-                D: Number.parseFloat,
-                S: (s: string) => s,
-                B: (s: string) => s === "true",
-            };
-            const handler = map[type];
-            return handler(value);
-        };
-        const config: Config = {};
-        let inlist = false;
-        let comment: string | undefined;
-        let last: any;
-
-        const readProp = (type: Type, line: string) => {
-            line = line.substring(line.indexOf(":") + 1, line.length);
-            const pair = line.split("=");
-            if (pair.length === 0 || pair.length === 1) {
-                let value;
-                let name;
-                if (line.endsWith(" <")) {
-                    value = [];
-                    name = line.substring(0, line.length - 2);
-                    inlist = true;
-                } else { }
-                if (!category) {
-                    throw {
-                        type: "CorruptedForgeConfig",
-                        reason: "MissingCategory",
-                        line,
-                    };
-                }
-                config[category].properties.push(last = { name, type, value, comment } as Property);
-            } else {
-                inlist = false;
-                if (!category) {
-                    throw {
-                        type: "CorruptedForgeConfig",
-                        reason: "MissingCategory",
-                        line,
-                    };
-                }
-                config[category].properties.push({ name: pair[0], value: parseVal(type, pair[1]), type, comment } as Property);
-            }
-            comment = undefined;
-        };
-        for (const line of lines) {
-            if (inlist) {
-                if (!last) {
-                    throw {
-                        type: "CorruptedForgeConfig",
-                        reason: "CorruptedList",
-                        line,
-                    };
-                }
-                if (line === ">") {
-                    inlist = false;
-                } else if (line.endsWith(" >")) {
-                    last.value.push(parseVal(last.type, line.substring(0, line.length - 2)));
-                    inlist = false;
-                } else {
-                    last.value.push(parseVal(last.type, line));
-                }
-                continue;
-            }
-            switch (line.charAt(0)) {
-                case "#":
-                    if (!comment) {
-                        comment = line.substring(1, line.length).trim();
-                    } else {
-                        comment = comment.concat("\n", line.substring(1, line.length).trim());
-                    }
-                    break;
-                case "I":
-                case "D":
-                case "S":
-                case "B":
-                    readProp(line.charAt(0) as Type, line);
-                    break;
-                case "<":
-                    break;
-                case "{":
-                    if (pendingCategory) {
-                        category = pendingCategory;
-                        config[category] = { comment, properties: [] };
-                        comment = undefined;
-                    } else {
-                        throw {
-                            type: "CorruptedForgeConfig",
-                            reason: "MissingCategory",
-                            line,
-                        };
-                    }
-                    break;
-                case "}":
-                    category = undefined;
-                    break;
-                default:
-                    if (!category) {
-                        if (line.endsWith("{")) {
-                            category = line.substring(0, line.length - 1).trim();
-                            config[category] = { comment, properties: [] };
-                            comment = undefined;
-                        } else {
-                            pendingCategory = line;
-                        }
-                    } else {
-                        throw {
-                            type: "CorruptedForgeConfig",
-                            reason: "Duplicated",
-                            line,
-                        };
-                    }
-            }
-        }
-        return config;
-    }
-}
-
-export type ModMetaData = ModMetadata;
-
-export interface ModBaseInfo {
+    manifest: Record<string, any>;
     /**
-     * Does class files contain cpw package
+     * The mod info extract from manfiest. If no manifest, it will be undefined!
      */
-    usedLegacyFMLPackage: boolean;
+    manifestMetadata?: ManifestMetadata;
     /**
-     * Does class files contain forge package
+     * The toml mod metadata
      */
-    usedForgePackage: boolean;
-    /**
-     * Does class files contain minecraft package
-     */
-    usedMinecraftPackage: boolean;
-    /**
-     * Does class files contain minecraft.client package
-     */
-    usedMinecraftClientPackage: boolean;
-}
-
-export interface ModMetadata extends ModBaseInfo {
-    readonly modid: string;
-    readonly version: string;
-    readonly name: string;
-    readonly description?: string;
-    readonly mcversion?: string;
-    readonly acceptedMinecraftVersions?: string;
-    readonly updateJSON?: string;
-    readonly url?: string;
-    readonly logoFile?: string;
-    readonly authorList?: string[];
-    readonly credits?: string;
-    readonly parent?: string;
-    readonly screenShots?: string[];
-    readonly fingerprint?: string;
-    readonly dependencies?: string;
-    readonly accpetRemoteVersions?: string;
-    readonly acceptSaveVersions?: string;
-    readonly isClientOnly?: boolean;
-    readonly isServerOnly?: boolean;
-    /**
-    * Only present in mods.toml
-    */
-    readonly modLoader?: string;
-    /**
-     * Only present in mods.toml
-     * A version range to match for said mod loader - for regular FML @Mod it will be the minecraft version (without the 1.)
-     */
-    readonly loaderVersion?: string;
-    /**
-    * Only present in mods.toml
-    */
-    readonly displayName?: string;
+    modsToml: ForgeModTOMLData[];
 }
 
 /**
@@ -528,31 +633,30 @@ export interface ModMetadata extends ModBaseInfo {
  * @param mod The mod path or data
  * @returns The mod metadata
  */
-export async function readModMetaData(mod: Uint8Array | string | FileSystem) {
+export async function readForgeMod(mod: ForgeModInput): Promise<ForgeModMetadata> {
     const fs = await resolveFileSystem(mod);
-    const modidTree: ModidTree = {};
-    const base: ModBaseInfo = {
-        usedLegacyFMLPackage: false,
-        usedForgePackage: false,
-        usedMinecraftClientPackage: false,
-        usedMinecraftPackage: false
+    const jsons = await readForgeModJson(fs);
+    const manifest: Record<string, any> = {};
+    const manifestMetadata = await readForgeModManifest(fs, manifest);
+    const tomls = await readForgeModToml(fs, manifest);
+    const base = await readForgeModAsm(fs, manifest);
+
+    if (jsons.length === 0 && (!manifestMetadata || !manifestMetadata.modid) && tomls.length === 0 && base.modAnnotations.length === 0) {
+        throw new ForgeModParseFailedError(mod, base, manifest);
     }
-    await jsonMetaData(fs, modidTree);
-    const manifest = await tweakMetadata(fs, modidTree);
-    await tomlMetadata(fs, modidTree, manifest);
-    await asmMetaData(fs, modidTree, base, manifest);
-    const modids = Object.keys(modidTree);
-    if (modids.length === 0) { throw new ForgeModParseFailedError(mod, base); }
-    const mods = modids.map((k) => modidTree[k] as ModMetadata)
-        .filter((m) => m.modid !== undefined);
-    for (const mod of mods) {
-        Object.assign(mod, base);
-    }
-    return mods;
+
+    const result: ForgeModMetadata = {
+        mcmodInfo: jsons,
+        manifest: manifest,
+        manifestMetadata: manifestMetadata?.modid ? manifestMetadata : undefined,
+        modsToml: tomls,
+        ...base,
+    };
+    return result;
 }
 
 export class ForgeModParseFailedError extends Error {
-    constructor(readonly mod: Uint8Array | string | FileSystem, readonly baseInfo: ModBaseInfo) {
+    constructor(readonly mod: ForgeModInput, readonly asm: Omit<ForgeModASMData, "modAnnotations">, readonly manifest: Record<string, any>) {
         super("Cannot find the mod metadata in the mod!");
     }
 }
