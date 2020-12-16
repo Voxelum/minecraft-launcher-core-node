@@ -108,11 +108,11 @@ async function fillPackageBumpInfo(packages) {
             convBump({
                 path: `packages/${pkg}`,
                 whatBump(comments) {
-                    const reasons = comments.filter(c => c.type === 'feat' || c.type === 'fix' || c.header.startsWith('BREAKING CHANGE:'));
+                    const reasons = comments.filter(c => c.type === 'feat' || c.type === 'fix' || c.header.startsWith('BREAKING CHANGE'));
                     const feats = comments.filter(c => c.type === 'feat');
                     const fixes = comments.filter(c => c.type === 'fix');
-                    const breakings = comments.filter(c => c.header.startsWith('BREAKING CHANGE:'));
-                    if (comments.some(c => c.header.startsWith('BREAKING CHANGE:'))) {
+                    const breakings = comments.filter(c => c.header.startsWith('BREAKING CHANGE'));
+                    if (comments.some(c => c.header.startsWith('BREAKING CHANGE'))) {
                         return { level: 0, reasons, feats, fixes, breakings }; // major
                     } else if (comments.some(c => c.type === 'feat')) {
                         return { level: 1, reasons, feats, fixes, breakings }; // minor
@@ -133,7 +133,7 @@ async function fillPackageBumpInfo(packages) {
         // bump version according to the release type 'major', 'minor' or 'patch'
         if (result.releaseType) {
             const newVersion = semver.inc(packageJSON.version, result.releaseType);
-            pkg.newVersion = newVersion ?? undefined;
+            pkg.newVersion = newVersion || undefined;
             pkg.releaseType = result.releaseType;
             pkg.reasons = result.reasons;
             pkg.level = result.level;
@@ -166,11 +166,11 @@ function bumpDependenciesPackage(reversedDependencies, packages) {
             const bumpType = 'patch';
 
             // if current bumping priority is lower than affected bumped priority
-            if (!("level" in pkg) || (pkg.level && bumpLevel < pkg.level)) {
+            if (!("level" in pkg) || (typeof pkg.level === 'number' && bumpLevel < pkg.level)) {
                 affected = true;
                 pkg.level = bumpLevel;
                 pkg.releaseType = bumpType;
-                pkg.newVersion = semver.inc(pkgJson.version, bumpType) ?? undefined;
+                pkg.newVersion = semver.inc(pkgJson.version, bumpType) || undefined;
             }
 
             if (!pkg.reasons) {
@@ -351,12 +351,7 @@ async function main(output) {
     }
 }
 
-// main(core ? core.setOutput : (k, v) => {
-//     console.log(k)
-//     console.log(v)
-// });
-
-main((k, v) => {
+main(core ? core.setOutput : (k, v) => {
     console.log(k)
     console.log(v)
-})
+});

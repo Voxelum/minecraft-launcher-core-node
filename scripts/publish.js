@@ -7,6 +7,6 @@ console.log(`Publish to tag ${tag ?? 'latest'}`)
 
 for (const workspace of workspaces) {
     const cwd = join(__dirname, '..', workspace);
-    const result = execSync(`npm publish --tag ${tag} --dry-run`, { cwd }).toString('utf-8');
+    const result = execSync(`npm publish --tag ${tag}`, { cwd }).toString('utf-8');
     console.log(result);
 }

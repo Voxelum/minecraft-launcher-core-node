@@ -21,7 +21,7 @@ jobs:
     - name: Fetch All
       run: git fetch --prune --unshallow
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2-beta
+      uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
     - name: Use npm 7
