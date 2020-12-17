@@ -1,21 +1,11 @@
 const TypeDoc = require('typedoc');
 const { ConverterComponent } = require('typedoc/dist/lib/converter/components');
-const app = new TypeDoc.Application();
 const { Converter } = require('typedoc/dist/lib/converter/converter');
 const { ReflectionKind } = require('typedoc/dist/lib/models/reflections/abstract');
 const { DeclarationReflection } = require('typedoc/dist/lib/models/reflections/declaration');
 const { CommentPlugin } = require('typedoc/dist/lib/converter/plugins/CommentPlugin');
 const { Comment } = require('typedoc/dist/lib/models/comments/comment');
 const { extractReadmeUsages } = require('./readme');
-
-// If you want TypeDoc to load tsconfig.json / typedoc.json files
-app.options.addReader(new TypeDoc.TSConfigReader());
-app.options.addReader(new TypeDoc.TypeDocReader());
-
-const projectToUsage = {};
-extractReadmeUsages().forEach(({ content, project }) => {
-    projectToUsage[`@xmcl/${project}`] = content;
-});
 
 class GroupModuleComponent extends ConverterComponent {
     initialize() {
@@ -32,7 +22,8 @@ class GroupModuleComponent extends ConverterComponent {
     }
 
     onDeclaration(context, reflection, node) {
-        if (reflection.kindOf(ReflectionKind.ExternalModule) || reflection.kindOf(ReflectionKind.Module)) {
+        if (reflection.kindOf(ReflectionKind.Module)) {
+            if (!this.moduleRenames) throw new Error('IllegalState');
             let path = node.path;
             let match = /.+\/packages\/([a-z-]+)\/(.+)\.ts/.exec(path);
             if (match) {
@@ -48,6 +39,10 @@ class GroupModuleComponent extends ConverterComponent {
                         removeReflection(context, reflection);
                         return;
                     }
+                    if (match[2].startsWith("__mock__")) {
+                        removeReflection(context, reflection);
+                        return;
+                    }
                     if (match[2] === "index") {
                         this.moduleRenames.push({
                             renameTo: match[1],
@@ -58,6 +53,13 @@ class GroupModuleComponent extends ConverterComponent {
                     } else if (match[2].indexOf("/") === -1) {
                         this.moduleRenames.push({
                             renameTo: match[1] + "." + match[2],
+                            preferred: true,
+                            symbol: node.symbol,
+                            reflection: reflection,
+                        })
+                    } else if (match[2].startsWith("libs/")) {
+                        this.moduleRenames.push({
+                            renameTo: match[1],
                             preferred: true,
                             symbol: node.symbol,
                             reflection: reflection,
@@ -82,6 +84,7 @@ class GroupModuleComponent extends ConverterComponent {
             return m;
         }, []);
 
+        if (!this.moduleRenames) throw new Error('IllegalState');
         this.moduleRenames.forEach(item => {
             item.renameTo = `@xmcl/${item.renameTo}`;
         });
@@ -169,46 +172,6 @@ class GroupModuleComponent extends ConverterComponent {
         })
     }
 }
-let lll = "";
-
-function removeReflection(context, reflection) {
-    CommentPlugin.removeReflection(context.project, reflection);
-    delete context.project.reflections[reflection.id];
-}
-
-/**
- * When we delete reflections, update the symbol mapping in order to fix:
- * https://github.com/christopherthielen/typedoc-plugin-external-module-name/issues/313
- * https://github.com/christopherthielen/typedoc-plugin-external-module-name/issues/193
- */
-function updateSymbolMapping(context, symbol, reflection) {
-    const fqn = context.checker.getFullyQualifiedName(symbol);
-    (context.project).fqnToReflectionIdMap.set(fqn, reflection.id);
-}
-
-function isEmptyComment(comment) {
-    return !comment || (!comment.text && !comment.shortText && (!comment.tags || comment.tags.length === 0));
-}
-
-app.converter.addComponent("group-module", GroupModuleComponent);
-
-app.bootstrap({
-    mode: 'modules',
-    logger: 'none',
-    exclude: [
-        "**/*.test.ts",
-        "**/test.ts",
-    ],
-    hideGenerator: true,
-    readme: "./README.md",
-    name: "minecraft-launcher-core-node",
-    includeVersion: true,
-    includes: ".",
-    excludeNotExported: true,
-});
-
-const files = app.expandInputFiles(['./packages']);
-const project = app.convert(files);
 
 TypeDoc.Reflection.prototype.getAlias = function () {
     if (!this._alias) {
@@ -239,10 +202,53 @@ TypeDoc.Reflection.prototype.getAlias = function () {
     return this._alias;
 }
 
-if (project) { // Project may not have converted correctly
-    const outputDir = 'docs/build/docs';
-    // Rendered docs
-    app.generateDocs(project, outputDir);
+function removeReflection(context, reflection) {
+    CommentPlugin.removeReflection(context.project, reflection);
+    delete context.project.reflections[reflection.id];
 }
 
-console.log(lll)
+/**
+ * When we delete reflections, update the symbol mapping in order to fix:
+ * https://github.com/christopherthielen/typedoc-plugin-external-module-name/issues/313
+ * https://github.com/christopherthielen/typedoc-plugin-external-module-name/issues/193
+ */
+function updateSymbolMapping(context, symbol, reflection) {
+    const fqn = context.checker.getFullyQualifiedName(symbol);
+    (context.project).fqnToReflectionIdMap.set(fqn, reflection.id);
+}
+
+function isEmptyComment(comment) {
+    return !comment || (!comment.text && !comment.shortText && (!comment.tags || comment.tags.length === 0));
+}
+
+const projectToUsage = {};
+
+extractReadmeUsages().forEach(({ content, project }) => {
+    projectToUsage[`@xmcl/${project}`] = content;
+});
+
+const app = new TypeDoc.Application();
+// If you want TypeDoc to load tsconfig.json / typedoc.json files
+app.options.addReader(new TypeDoc.TSConfigReader());
+app.options.addReader(new TypeDoc.TypeDocReader());
+app.converter.addComponent("group-module", GroupModuleComponent);
+app.bootstrap({
+    mode: 'modules',
+    logger: 'none',
+    exclude: [
+        "**/*.test.ts",
+        "**/test.ts",
+    ],
+    hideGenerator: true,
+    readme: "./README.md",
+    name: "minecraft-launcher-core-node",
+    includeVersion: true,
+    includes: ".",
+    excludeNotExported: true,
+});
+const files = app.expandInputFiles(['./packages']).filter((f) => f.indexOf('v5') === -1);
+const project = app.convert(files);
+if (!project) throw new Error('Cannot convert project!');
+const outputDir = 'docs/build/docs';
+// Rendered docs
+app.generateDocs(project, outputDir);
