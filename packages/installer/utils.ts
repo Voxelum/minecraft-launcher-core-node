@@ -1,4 +1,4 @@
-import { _access as access, _exists as exists, _mkdir as mkdir, _readFile as readFile, _writeFile as writeFile, _pipeline as pipeline } from "@xmcl/core";
+import { _exists as exists, _mkdir as mkdir, _readFile as readFile, _writeFile as writeFile, _pipeline as pipeline } from "@xmcl/core";
 import { CancelledError } from "@xmcl/task";
 import { ExecOptions, spawn } from "child_process";
 import { close as fclose, copyFile as fcopyFile, ftruncate, open as fopen, stat as fstat, unlink as funlink } from "fs";
@@ -13,7 +13,7 @@ export const close = promisify(fclose);
 export const copyFile = promisify(fcopyFile);
 export const truncate = promisify(ftruncate);
 
-export { readFile, writeFile, access, mkdir, exists, pipeline };
+export { readFile, writeFile, mkdir, exists, pipeline };
 export { checksum } from "@xmcl/core";
 
 export function missing(target: string) {
@@ -43,9 +43,6 @@ export async function ensureDir(target: string) {
 }
 export function ensureFile(target: string) {
     return ensureDir(dirname(target));
-}
-export function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:" {
-    return protocol === "http:" || protocol === "https:";
 }
 export function normalizeArray<T>(arr: T | T[] = []): T[] {
     return arr instanceof Array ? arr : [arr];

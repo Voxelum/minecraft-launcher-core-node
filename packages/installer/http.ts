@@ -4,7 +4,7 @@ import { Agent as HttpAgent, ClientRequest, IncomingMessage, request, RequestOpt
 import { Agent as HttpsAgent, request as requests } from "https";
 import { cpus } from "os";
 import { fileURLToPath, format, parse } from "url";
-import { checksum, close, copyFile, ensureFile, isValidProtocol, missing, open, truncate, unlink } from "./utils";
+import { checksum, close, copyFile, ensureFile, missing, open, truncate, unlink } from "./utils";
 
 /**
  * The http(s) agents object for requesting
@@ -23,6 +23,9 @@ export class ChecksumNotMatchError extends Error {
     }
 }
 
+export function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:" {
+    return protocol === "http:" || protocol === "https:";
+}
 /**
  * Join two urls
  */

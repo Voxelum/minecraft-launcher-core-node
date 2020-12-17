@@ -1,7 +1,7 @@
-import { MinecraftFolder, MinecraftLocation, Version, diagnose } from "@xmcl/core";
+import { diagnose, MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import { existsSync } from "fs";
 import { join, normalize } from "path";
-import { getYarnVersionList, installFabricYarnAndLoader, YarnVersionList } from "./fabric";
+import { installFabricYarnAndLoader } from "./fabric";
 import { installForge } from "./forge";
 import { ForgeVersion, getVersionList, install, installDependencies, MinecraftVersion } from "./index";
 import { getLiteloaderVersionList, installLiteloader, LiteloaderVersion } from "./liteloader";
@@ -234,28 +234,5 @@ describe("FabricInstaller", () => {
         await installFabricYarnAndLoader("1.14.1+build.10", "0.4.7+build.147", root);
         expect(existsSync(MinecraftFolder.from(root).getVersionJson("1.14.1-fabric1.14.1+build.10-0.4.7+build.147")))
             .toBeTruthy();
-    });
-
-    describe("#updateVersionList", () => {
-        let freshList: YarnVersionList;
-        test("should be able to get fresh list", async () => {
-            freshList = await getYarnVersionList();
-            expect(freshList).toBeTruthy();
-            if (freshList) {
-                expect(typeof freshList.timestamp).toEqual("string");
-                expect(freshList.versions).toBeInstanceOf(Array);
-                expect(freshList.versions.every((s) => typeof s === "object")).toBeTruthy();
-            }
-        });
-        test("should be able to get 304", async () => {
-            const list = await getYarnVersionList({ original: freshList });
-            expect(list).toEqual(freshList);
-            expect(list).toBeTruthy();
-            if (list) {
-                expect(typeof list.timestamp).toEqual("string");
-                expect(list.versions).toBeInstanceOf(Array);
-                expect(list.versions.every((s) => typeof s === "object")).toBeTruthy();
-            }
-        });
     });
 });
