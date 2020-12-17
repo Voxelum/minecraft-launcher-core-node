@@ -11,6 +11,22 @@ export * from "./curseforge";
 export * from "./optifine";
 export * from "./java";
 export * from "./diagnose";
-export * from "./utils";
-export * from "./http";
+export {
+    InstallOptions
+} from "./utils";
+export {
+    DownloadBaseOptions,
+    DownloadCommonOptions,
+    DownloadFallbackTask,
+    DownloadFromPathOptions,
+    DownloadMultiUrlOptions,
+    DownloadSingleUrlOptions,
+    DownloadTask,
+    Segment,
+    Agents,
+    Timestamped,
+    ChecksumNotMatchError,
+    createAgents,
+    withAgents,
+} from "./http";
 export * from "./unzip";

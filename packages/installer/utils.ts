@@ -1,4 +1,4 @@
-import { _access as access, _exists as exists, _mkdir as mkdir, _readFile as readFile, _writeFile as writeFile, _pipeline as pipeline } from "@xmcl/core";
+import { _exists as exists, _mkdir as mkdir, _readFile as readFile, _writeFile as writeFile, _pipeline as pipeline } from "@xmcl/core";
 import { CancelledError } from "@xmcl/task";
 import { ExecOptions, spawn } from "child_process";
 import { close as fclose, copyFile as fcopyFile, ftruncate, open as fopen, stat as fstat, unlink as funlink } from "fs";
@@ -13,7 +13,7 @@ export const close = promisify(fclose);
 export const copyFile = promisify(fcopyFile);
 export const truncate = promisify(ftruncate);
 
-export { readFile, writeFile, access, mkdir, exists, pipeline };
+export { readFile, writeFile, mkdir, exists, pipeline };
 export { checksum } from "@xmcl/core";
 
 export function missing(target: string) {
@@ -44,22 +44,12 @@ export async function ensureDir(target: string) {
 export function ensureFile(target: string) {
     return ensureDir(dirname(target));
 }
-export function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:" {
-    return protocol === "http:" || protocol === "https:";
-}
 export function normalizeArray<T>(arr: T | T[] = []): T[] {
     return arr instanceof Array ? arr : [arr];
-}
-/**
- * The collection of errors happened during a parallel process
- */
-export class MultipleError extends Error {
-    constructor(public errors: unknown[], message?: string) { super(message); };
 }
 export function errorFrom<T>(error: T, message?: string): T & Error {
     return Object.assign(new Error(message), error);
 }
-
 export function spawnProcess(javaPath: string, args: string[], options?: ExecOptions) {
     return new Promise<void>((resolve, reject) => {
         let process = spawn(javaPath, args, options);
@@ -76,23 +66,6 @@ export function spawnProcess(javaPath: string, args: string[], options?: ExecOpt
         process.stderr.setEncoding("utf-8");
         process.stderr.on("data", (buf) => { errorMsg.push(buf.toString()) });
     });
-}
-export async function all(promises: Promise<any>[], throwErrorImmediately: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<any[]> {
-    const errors: unknown[] = [];
-    const result = await Promise.all(promises.map(async (promise) => {
-        try {
-            return promise;
-        } catch (error) {
-            if (throwErrorImmediately || error instanceof CancelledError) {
-                throw error;
-            }
-            errors.push(error);
-        }
-    }));
-    if (errors.length > 0) {
-        throw new MultipleError(errors, getErrorMessage?.(errors));
-    }
-    return result;
 }
 
 /**

@@ -4,7 +4,7 @@ import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
 import { delimiter, join } from "path";
 import { ZipFile } from "yauzl";
 import { DownloadCommonOptions, DownloadFallbackTask, getAndParseIfUpdate, joinUrl, Timestamped, withAgents } from "./http";
-import { all, checksum, ensureDir, errorFrom, normalizeArray, readFile, spawnProcess } from "./utils";
+import { checksum, ensureDir, errorFrom, normalizeArray, readFile, spawnProcess } from "./utils";
 
 /**
  * The function to swap library host.
@@ -466,7 +466,11 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
         const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
         const tasks = objectArray.map((o) => new InstallAssetTask(o, folder, options));
         // let sizes = objectArray.map((a) => a.size).map((a, b) => a + b, 0);
-        await withAgents(options, (options) => all(tasks.map((t) => this.yield(t)), options.throwErrorImmediately ?? false, () => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}`));
+        await withAgents(options, (options) => this.all(tasks, {
+            throwErrorImmediately: options.throwErrorImmediately ?? false,
+            getErrorMessage: () => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}`
+        }));
+
         return version;
     });
 }
@@ -479,7 +483,11 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
 export function installLibrariesTask(version: InstallLibraryVersion, options: LibraryOptions = {}): Task<void> {
     return task("libraries", async function () {
         const folder = MinecraftFolder.from(version.minecraftDirectory);
-        await withAgents(options, (options) => all(version.libraries.map((lib) => this.yield(new InstallLibraryTask(lib, folder, options))), options.throwErrorImmediately ?? false));
+        const tasks = version.libraries.map((lib) => new InstallLibraryTask(lib, folder, options));
+        await withAgents(options, (options) => this.all(tasks, {
+            throwErrorImmediately: options.throwErrorImmediately ?? false,
+            getErrorMessage: () => `Errors during install libraries at ${version.minecraftDirectory}`
+        }));
     });
 }
 
@@ -504,9 +512,12 @@ export function installResolvedAssetsTask(assets: AssetInfo[], folder: Minecraft
         await ensureDir(folder.getPath("assets", "objects"));
 
         const tasks = assets.map((o) => new InstallAssetTask(o, folder, options));
-        const sizes = assets.map((a) => a.size).map((a, b) => a + b, 0);
+        // const sizes = assets.map((a) => a.size).map((a, b) => a + b, 0);
 
-        await withAgents(options, (options) => all(tasks.map((t) => this.yield(t)), options.throwErrorImmediately ?? false, () => `Errors during install assets at ${folder.root}`));
+        await withAgents(options, (options) => this.all(tasks, {
+            throwErrorImmediately: options.throwErrorImmediately ?? false,
+            getErrorMessage: () => `Errors during install assets at ${folder.root}`,
+        }));
     });
 }
 

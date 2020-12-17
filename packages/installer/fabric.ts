@@ -9,7 +9,7 @@ export const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-
  * Fabric Yarn version list
  * @see https://github.com/FabricMC/yarn
  */
-export interface YarnVersionList extends Timestamped {
+export interface FabricYarnVersionList extends Timestamped {
     versions: FabricArtifactVersion[];
 }
 
@@ -17,7 +17,7 @@ export interface YarnVersionList extends Timestamped {
  * Fabric mod loader version list
  * @see https://fabricmc.net/
  */
-export interface LoaderVersionList extends Timestamped {
+export interface FabricLoaderVersionList extends Timestamped {
     versions: FabricArtifactVersion[];
 }
 
@@ -35,7 +35,7 @@ export interface FabricArtifacts {
     loader: FabricArtifactVersion[];
 }
 
-export interface LoaderArtifact {
+export interface FabricLoaderArtifact {
     loader: FabricArtifactVersion;
     intermediary: FabricArtifactVersion;
     launcherMeta: {
@@ -59,7 +59,7 @@ export const DEFAULT_FABRIC_API = "https://meta.fabricmc.net/v2";
  * @param remote The fabric API host
  * @beta
  */
-export function getArtifacts(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifacts> {
+export function getFabricArtifacts(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifacts> {
     return fetchJson(remote + "/versions");
 }
 /**
@@ -93,7 +93,7 @@ export function getLoaderArtifactList(remote: string = DEFAULT_FABRIC_API): Prom
  * @param remote The fabric API host
  * @beta
  */
-export function getLoaderArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<LoaderArtifact[]> {
+export function getLoaderArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<FabricLoaderArtifact[]> {
     return fetchJson(remote + "/versions/loader/" + minecraft);
 }
 /**
@@ -103,7 +103,7 @@ export function getLoaderArtifactListFor(minecraft: string, remote: string = DEF
  * @param remote The fabric API host
  * @beta
  */
-export function getLoaderArtifact(minecraft: string, loader: string, remote: string = DEFAULT_FABRIC_API): Promise<LoaderArtifact> {
+export function getFabricLoaderArtifact(minecraft: string, loader: string, remote: string = DEFAULT_FABRIC_API): Promise<FabricLoaderArtifact> {
     return fetchJson(remote + "/versions/loader/" + minecraft + "/" + loader);
 }
 
@@ -111,19 +111,19 @@ export function getLoaderArtifact(minecraft: string, loader: string, remote: str
  * Get or refresh the yarn version list.
  * @beta
  */
-export async function getYarnVersionList(option: {
+export async function getYarnVersionListFromXML(option: {
     /**
      * If this presents, it will send request with the original list timestamp.
      *
      * If the server believes there is no modification after the original one,
      * it will directly return the orignal one.
      */
-    original?: YarnVersionList,
+    original?: FabricYarnVersionList,
     /**
      * remote maven xml url of this request
      */
     remote?: string,
-} = {}): Promise<YarnVersionList> {
+} = {}): Promise<FabricYarnVersionList> {
     let [modified, timestamp] = await getLastModified(YARN_MAVEN_URL, option.original?.timestamp);
     if (modified || !option.original) {
         let versions = await getYarnArtifactList(option.remote);
@@ -139,19 +139,19 @@ export async function getYarnVersionList(option: {
  * Get or refresh the fabric mod loader version list.
  * @beta
  */
-export async function getLoaderVersionList(option: {
+export async function getLoaderVersionListFromXML(option: {
     /**
      * If this presents, it will send request with the original list timestamp.
      *
      * If the server believes there is no modification after the original one,
      * it will directly return the orignal one.
      */
-    original?: LoaderVersionList,
+    original?: FabricLoaderVersionList,
     /**
      * remote maven xml url of this request
      */
     remote?: string,
-}): Promise<LoaderVersionList> {
+}): Promise<FabricLoaderVersionList> {
     let [modified, timestamp] = await getLastModified(LOADER_MAVEN_URL, option.original?.timestamp);
     if (modified || !option.original) {
         let versions = await getLoaderArtifactList(option.remote);
@@ -203,7 +203,7 @@ export interface FabricInstallOptions extends InstallOptions {
  * @param options The options
  * @beta
  */
-export async function installFabric(loader: LoaderArtifact, minecraft: MinecraftLocation, options: FabricInstallOptions = {}) {
+export async function installFabric(loader: FabricLoaderArtifact, minecraft: MinecraftLocation, options: FabricInstallOptions = {}) {
     const folder = MinecraftFolder.from(minecraft);
 
     let yarn: string | undefined;
