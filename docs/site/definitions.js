@@ -2703,7 +2703,7 @@ export * from "./curseforge";
 export * from "./optifine";
 export * from "./java";
 export * from "./diagnose";
-export { MultipleError, InstallOptions } from "./utils";
+export { InstallOptions } from "./utils";
 export { DownloadBaseOptions, DownloadCommonOptions, DownloadFallbackTask, DownloadFromPathOptions, DownloadMultiUrlOptions, DownloadSingleUrlOptions, DownloadTask, Segment, Agents, Timestamped, ChecksumNotMatchError, createAgents, withAgents, } from "./http";
 export * from "./unzip";
 \/\/# sourceMappingURL=index.d.ts.map`;
@@ -3396,16 +3396,8 @@ export declare function missing(target: string): Promise<boolean>;
 export declare function ensureDir(target: string): Promise<void>;
 export declare function ensureFile(target: string): Promise<void>;
 export declare function normalizeArray<T>(arr?: T | T[]): T[];
-/**
- * The collection of errors happened during a parallel process
- */
-export declare class MultipleError extends Error {
-    errors: unknown[];
-    constructor(errors: unknown[], message?: string);
-}
 export declare function errorFrom<T>(error: T, message?: string): T & Error;
 export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
-export declare function all(promises: Promise<any>[], throwErrorImmediately: boolean, getErrorMessage?: (errors: unknown[]) => string): Promise<any[]>;
 /**
  * Shared install options
  */
@@ -3602,83 +3594,261 @@ export interface FabricModMetadata {
 export declare function readFabricMod(file: FileSystem | string | Uint8Array): Promise<FabricModMetadata>;
 export {};
 \/\/# sourceMappingURL=fabric.d.ts.map`;
-module.exports['@xmcl/mod-parser/forge.d.ts'] = `import { FileSystem } from "@xmcl/system"; export interface ForgeModRecord {
-    [modid: string]: ForgeModMetadata;
+module.exports['@xmcl/mod-parser/forge.d.ts'] = `import { FileSystem } from "@xmcl/system"; /**
+ * The @Mod data from class file
+ */
+export interface ForgeModAnnotationData {
+    [key: string]: any;
+    value: string;
+    modid: string;
+    name: string;
+    version: string;
+    /**
+     * A dependency string for this mod, which specifies which mod(s) it depends on in order to run.
+     *
+     * A dependency string must start with a combination of these prefixes, separated by "-":
+     *     [before, after], [required], [client, server]
+     *     At least one "before", "after", or "required" must be specified.
+     * Then ":" and the mod id.
+     * Then a version range should be specified for the mod by adding "@" and the version range.
+     *     The version range format is described in the javadoc here:
+     *     {@link VersionRange#createFromVersionSpec(java.lang.String)}
+     * Then a ";".
+     *
+     * If a "required" mod is missing, or a mod exists with a version outside the specified range,
+     * the game will not start and an error screen will tell the player which versions are required.
+     *
+     * Example:
+     *     Our example mod:
+     *      * depends on Forge and uses new features that were introduced in Forge version 14.21.1.2395
+     *         "required:forge@[14.21.1.2395,);"
+     *
+     *          1.12.2 Note: for compatibility with Forge older than 14.23.0.2501 the syntax must follow this older format:
+     *          "required-after:forge@[14.21.1.2395,);"
+     *          For more explanation see https:\/\/github.com/MinecraftForge/MinecraftForge/issues/4918
+     *
+     *      * is a dedicated addon to mod1 and has to have its event handlers run after mod1's are run,
+     *         "required-after:mod1;"
+     *      * has optional integration with mod2 which depends on features introduced in mod2 version 4.7.0,
+     *         "after:mod2@[4.7.0,);"
+     *      * depends on a client-side-only rendering library called rendermod
+     *         "required-client:rendermod;"
+     *
+     *     The full dependencies string is all of those combined:
+     *         "required:forge@[14.21.1.2395,);required-after:mod1;after:mod2@[4.7.0,);required-client:rendermod;"
+     *
+     *     This will stop the game and display an error message if any of these is true:
+     *         The installed forge is too old,
+     *         mod1 is missing,
+     *         an old version of mod2 is present,
+     *         rendermod is missing on the client.
+     */
+    dependencies: string;
+    useMetadata: boolean;
+    acceptedMinecraftVersions: string;
+    acceptableRemoteVersions: string;
+    acceptableSaveVersions: string;
+    modLanguage: string;
+    modLanguageAdapter: string;
+    clientSideOnly: boolean;
+    serverSideOnly: boolean;
+}
+/**
+ * Represent the forge \`mcmod.info\` format.
+ */
+export interface ForgeModMcmodInfo {
+    /**
+     * The modid this description is linked to. If the mod is not loaded, the description is ignored.
+     */
+    modid: string;
+    /**
+     * The user-friendly name of this mod.
+     */
+    name: string;
+    /**
+     * A description of this mod in 1-2 paragraphs.
+     */
+    description: string;
+    /**
+     * The version of the mod.
+     */
+    version: string;
+    /**
+     * The Minecraft version.
+     */
+    mcversion: string;
+    /**
+     * A link to the mod’s homepage.
+     */
+    url: string;
+    /**
+     * Defined but unused. Superseded by updateJSON.
+     */
+    updateUrl: string;
+    /**
+     * The URL to a version JSON.
+     */
+    updateJSON: string;
+    /**
+     * A list of authors to this mod.
+     */
+    authorList: string[];
+    /**
+     * A string that contains any acknowledgements you want to mention.
+     */
+    credits: string;
+    /**
+     * The path to the mod’s logo. It is resolved on top of the classpath, so you should put it in a location where the name will not conflict, maybe under your own assets folder.
+     */
+    logoFile: string;
+    /**
+     * A list of images to be shown on the info page. Currently unimplemented.
+     */
+    screenshots: string[];
+    /**
+     * The modid of a parent mod, if applicable. Using this allows modules of another mod to be listed under it in the info page, like BuildCraft.
+     */
+    parent: string;
+    /**
+     * If true and \`Mod.useMetadata\`, the below 3 lists of dependencies will be used. If not, they do nothing.
+     */
+    useDependencyInformation: boolean;
+    /**
+     * A list of modids. If one is missing, the game will crash. This does not affect the ordering of mod loading! To specify ordering as well as requirement, have a coupled entry in dependencies.
+     */
+    requiredMods: string[];
+    /**
+     * A list of modids. All of the listed mods will load before this one. If one is not present, nothing happens.
+     */
+    dependencies: string[];
+    /**
+     * A list of modids. All of the listed mods will load after this one. If one is not present, nothing happens.
+     */
+    dependants: string[];
+}
+/**
+ * This file defines the metadata of your mod. Its information may be viewed by users from the main screen of the game through the Mods button. A single info file can describe several mods.
+ *
+ * The mods.toml file is formatted as TOML, the example mods.toml file in the MDK provides comments explaining the contents of the file. It should be stored as src/main/resources/META-INF/mods.toml. A basic mods.toml, describing one mod, may look like this:
+ */
+export interface ForgeModTOMLData {
+    /**
+     * The modid this file is linked to
+     */
+    modid: string;
+    /**
+     * The version of the mod.It should be just numbers seperated by dots, ideally conforming to Semantic Versioning
+     */
+    version: string;
+    /**
+     * The user - friendly name of this mod
+     */
+    displayName: string;
+    /**
+     * The URL to a version JSON
+     */
+    updateJSONURL: string;
+    /**
+     * A link to the mod’s homepage
+     */
+    displayURL: string;
+    /**
+     * The filename of the mod’s logo.It must be placed in the root resource folder, not in a subfolder
+     */
+    logoFile: string;
+    /**
+     * A string that contains any acknowledgements you want to mention
+     */
+    credits: string;
+    /**
+     * The authors to this mod
+     */
+    authors: string;
+    /**
+     * A description of this mod
+     */
+    description: string;
+    /**
+     * A list of dependencies of this mod
+     */
+    dependencies: {
+        modId: string;
+        mandatory: boolean;
+        versionRange: string;
+        ordering: "NONE" | "BEFORE" | "AFTER";
+        side: "BOTH" | "CLIENT" | "SERVER";
+    }[];
+}
+export interface ForgeModASMData {
+    /**
+     * Does class files contain cpw package
+     */
+    usedLegacyFMLPackage: boolean;
+    /**
+     * Does class files contain forge package
+     */
+    usedForgePackage: boolean;
+    /**
+     * Does class files contain minecraft package
+     */
+    usedMinecraftPackage: boolean;
+    /**
+     * Does class files contain minecraft.client package
+     */
+    usedMinecraftClientPackage: boolean;
+    modAnnotations: ForgeModAnnotationData[];
+}
+/**
+ * The metadata inferred from manifest
+ */
+export interface ManifestMetadata {
+    modid: string;
+    name: string;
+    authors: string[];
+    version: string;
+    description: string;
+    url: string;
 }
 /**
  * Read the mod info from \`META-INF/MANIFEST.MF\`
  * @returns The manifest directionary
  */
-export declare function readForgeModManifest(mod: ForgeModInput, output?: ForgeModRecord): Promise<Record<string, string> | undefined>;
+export declare function readForgeModManifest(mod: ForgeModInput, manifestStore?: Record<string, any>): Promise<ManifestMetadata | undefined>;
 /**
  * Read mod metadata from new toml metadata file.
  */
-export declare function readForgeModToml(mod: ForgeModInput, output: ForgeModRecord, manifest?: Record<string, string>): Promise<ForgeModRecord>;
+export declare function readForgeModToml(mod: ForgeModInput, manifest?: Record<string, string>): Promise<ForgeModTOMLData[]>;
 /**
  * Use asm to scan all the class files of the mod. This might take long time to read.
  */
-export declare function readForgeModAsm(mod: ForgeModInput, output?: ForgeModRecord, options?: {
-    baseInfoOutput?: ForgeModBaseInfo;
-    manifest?: Record<string, string>;
-}): Promise<ForgeModRecord>;
+export declare function readForgeModAsm(mod: ForgeModInput, manifest?: Record<string, string>): Promise<ForgeModASMData>;
 /**
  * Read \`mcmod.info\`, \`cccmod.info\`, and \`neimod.info\` json file
  * @param mod The mod path or buffer or opened file system.
  */
-export declare function readForgeModJson(mod: ForgeModInput, output?: ForgeModRecord): Promise<ForgeModRecord>;
-export interface ForgeModBaseInfo {
-    /**
-     * Does class files contain cpw package
-     */
-    usedLegacyFMLPackage?: boolean;
-    /**
-     * Does class files contain forge package
-     */
-    usedForgePackage?: boolean;
-    /**
-     * Does class files contain minecraft package
-     */
-    usedMinecraftPackage?: boolean;
-    /**
-     * Does class files contain minecraft.client package
-     */
-    usedMinecraftClientPackage?: boolean;
-}
-export interface ForgeModMetadata extends ForgeModBaseInfo {
-    readonly modid: string;
-    readonly version: string;
-    readonly name: string;
-    readonly description?: string;
-    readonly mcversion?: string;
-    readonly acceptedMinecraftVersions?: string;
-    readonly updateJSON?: string;
-    readonly url?: string;
-    readonly logoFile?: string;
-    readonly authorList?: string[];
-    readonly credits?: string;
-    readonly parent?: string;
-    readonly screenShots?: string[];
-    readonly fingerprint?: string;
-    readonly dependencies?: string;
-    readonly accpetRemoteVersions?: string;
-    readonly acceptSaveVersions?: string;
-    readonly isClientOnly?: boolean;
-    readonly isServerOnly?: boolean;
-    /**
-    * Only present in mods.toml
-    */
-    readonly modLoader?: string;
-    /**
-     * Only present in mods.toml
-     * A version range to match for said mod loader - for regular FML @Mod it will be the minecraft version (without the 1.)
-     */
-    readonly loaderVersion?: string;
-    /**
-    * Only present in mods.toml
-    */
-    readonly displayName?: string;
-}
+export declare function readForgeModJson(mod: ForgeModInput): Promise<ForgeModMcmodInfo[]>;
 declare type ForgeModInput = Uint8Array | string | FileSystem;
+/**
+ * Represnet a full scan of a mod file data.
+ */
+export interface ForgeModMetadata extends ForgeModASMData {
+    /**
+     * The mcmod.info file metadata. If no mcmod.info file, it will be an empty array
+     */
+    mcmodInfo: ForgeModMcmodInfo[];
+    /**
+     * The java manifest file data. If no metadata, it will be an empty object
+     */
+    manifest: Record<string, any>;
+    /**
+     * The mod info extract from manfiest. If no manifest, it will be undefined!
+     */
+    manifestMetadata?: ManifestMetadata;
+    /**
+     * The toml mod metadata
+     */
+    modsToml: ForgeModTOMLData[];
+}
 /**
  * Read metadata of the input mod.
  *
@@ -3691,11 +3861,12 @@ declare type ForgeModInput = Uint8Array | string | FileSystem;
  * @param mod The mod path or data
  * @returns The mod metadata
  */
-export declare function readForgeMod(mod: ForgeModInput): Promise<ForgeModMetadata[]>;
+export declare function readForgeMod(mod: ForgeModInput): Promise<ForgeModMetadata>;
 export declare class ForgeModParseFailedError extends Error {
     readonly mod: ForgeModInput;
-    readonly baseInfo: ForgeModBaseInfo;
-    constructor(mod: ForgeModInput, baseInfo: ForgeModBaseInfo);
+    readonly asm: Omit<ForgeModASMData, "modAnnotations">;
+    readonly manifest: Record<string, any>;
+    constructor(mod: ForgeModInput, asm: Omit<ForgeModASMData, "modAnnotations">, manifest: Record<string, any>);
 }
 export {};
 \/\/# sourceMappingURL=forge.d.ts.map`;
@@ -4536,6 +4707,13 @@ module.exports['@xmcl/system/system.d.ts'] = `export declare abstract class File
 module.exports['@xmcl/task/index.d.ts'] = `export declare class CancelledError<T> extends Error {     readonly partialResult: T | undefined;
     constructor(partialResult: T | undefined);
 }
+/**
+ * The collection of errors happened during a parallel process
+ */
+export declare class MultipleError extends Error {
+    readonly errors: unknown[];
+    constructor(errors: unknown[], message?: string);
+}
 export declare enum TaskState {
     Idel = 0,
     Running = 1,
@@ -4599,7 +4777,9 @@ export declare abstract class TaskBase<T> implements Task<T> {
     context: TaskContext;
     name: string;
     param: object;
+    protected resultOrError: T | any;
     setName(name: string, param?: object): this;
+    get(): T | void;
     get id(): number;
     get path(): string;
     get progress(): number;
@@ -4645,6 +4825,10 @@ export declare abstract class TaskGroup<T> extends TaskBase<T> {
     protected performCancel(): Promise<void>;
     protected performPause(): Promise<void>;
     protected performResume(): void;
+    all<Z, T extends Task<Z>>(tasks: Iterable<T>, { throwErrorImmediately, getErrorMessage }?: {
+        throwErrorImmediately?: boolean;
+        getErrorMessage?: (errors: any[]) => string;
+    }): Promise<Z[]>;
 }
 export declare class TaskRoutine<T> extends TaskGroup<T> {
     readonly name: string;

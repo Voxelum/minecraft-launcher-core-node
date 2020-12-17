@@ -70,7 +70,7 @@
         "three": "^0.115.0",
         "three-orbitcontrols": "^2.110.1",
         "ts-jest": "^26.4.4",
-        "typedoc": "^0.17.3",
+        "typedoc": "^0.19.2",
         "typescript": "^3.9.7"
     },
     "browserslist": [
