@@ -206,9 +206,11 @@ function writeAllNewVersionsToPackageJson(packages, dependencies) {
                 version: pkg.newVersion,
             });
             const deps = dependencies[pkg.content.name];
-            for (const dep of deps) {
-                if (dep.newVersion) {
-                    newContent.dependencies[dep.content.name] = `^${dep.newVersion}`
+            if (deps) {
+                for (const dep of deps) {
+                    if (dep.newVersion) {
+                        newContent.dependencies[dep.content.name] = `^${dep.newVersion}`
+                    }
                 }
             }
             fs.writeFileSync(`packages/${pkg.name}/package.json`, JSON.stringify(newContent, null, 2) + '\n');
