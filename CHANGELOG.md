@@ -1,5 +1,52 @@
 # Changelog
 
+## 4.0.0
+### @xmcl/asm@0.1.0
+#### Features
+
+- feat(asm): add asm to the lib ([3b77a03ea297ab850e61b4d37ae12dcb8f9634be](https://github.com/voxelum/minecraft-launcher-core-node/commit/3b77a03ea297ab850e61b4d37ae12dcb8f9634be))
+### @xmcl/core@2.5.0
+#### Features
+
+- feat(core): add diagnose to the core module ([40f6ee3f0e87298013c17a27eae48aa4b27d460f](https://github.com/voxelum/minecraft-launcher-core-node/commit/40f6ee3f0e87298013c17a27eae48aa4b27d460f))
+#### Bug Fixes
+
+- fix: adapt to the new task and unzip module ([94ed7f360ab92d79a3c580a05fc6018ac93de88d](https://github.com/voxelum/minecraft-launcher-core-node/commit/94ed7f360ab92d79a3c580a05fc6018ac93de88d))
+### @xmcl/installer@3.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE(installer): rewrite to make it easy treeshaking ([650433f8a0aac42272017aaf34e0516d724ca9d7](https://github.com/voxelum/minecraft-launcher-core-node/commit/650433f8a0aac42272017aaf34e0516d724ca9d7))
+### @xmcl/mod-parser@3.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE(mod-parser): flat the module for treeshaking ([6f53e57e6384f90e1155ee4467a34716415ba7e4](https://github.com/voxelum/minecraft-launcher-core-node/commit/6f53e57e6384f90e1155ee4467a34716415ba7e4))
+#### Bug Fixes
+
+- fix(mod-parser): don't guess fabric mod as forge mod ([c99531c1799517930752706d4d2dd623c1d99342](https://github.com/voxelum/minecraft-launcher-core-node/commit/c99531c1799517930752706d4d2dd623c1d99342))
+- fix: adapt to new asm module location ([d29074865dfca28605e86acdeeea4d7140f5f297](https://github.com/voxelum/minecraft-launcher-core-node/commit/d29074865dfca28605e86acdeeea4d7140f5f297))
+### @xmcl/resourcepack@1.1.0
+#### Features
+
+- feat: add the model loader & resource manager ([210f381ed44dcc476d6c2c1ddd47257263650740](https://github.com/voxelum/minecraft-launcher-core-node/commit/210f381ed44dcc476d6c2c1ddd47257263650740))
+- feat: merge resource-manager to resourcepack ([7f0460738e31794cbf60f52852de90080286042f](https://github.com/voxelum/minecraft-launcher-core-node/commit/7f0460738e31794cbf60f52852de90080286042f))
+### @xmcl/system@2.2.1
+#### Bug Fixes
+
+- fix: adapt to the new task and unzip module ([94ed7f360ab92d79a3c580a05fc6018ac93de88d](https://github.com/voxelum/minecraft-launcher-core-node/commit/94ed7f360ab92d79a3c580a05fc6018ac93de88d))
+### @xmcl/task@3.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE(task): rewrite into class style ([53dee95e25ba5d64d31c563024e534e81bda0609](https://github.com/voxelum/minecraft-launcher-core-node/commit/53dee95e25ba5d64d31c563024e534e81bda0609))
+### @xmcl/unzip@2.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE(unzip): rewrite module into more lightweight form ([03a6e319f826a7de23bf0359d06dc928c67b993b](https://github.com/voxelum/minecraft-launcher-core-node/commit/03a6e319f826a7de23bf0359d06dc928c67b993b))
+### @xmcl/user@2.1.4
+#### Bug Fixes
+
+- fix(user): make the auth module build uuid correctly ([0859f0abf00dc8e5b936ff817b4fd8600a66b97b](https://github.com/voxelum/minecraft-launcher-core-node/commit/0859f0abf00dc8e5b936ff817b4fd8600a66b97b))
+
+
 ## 3.6.3
 ### @xmcl/mod-parser@2.0.11
 #### Bug Fixes

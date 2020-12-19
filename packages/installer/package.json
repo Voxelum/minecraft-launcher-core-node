@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/installer",
-  "version": "2.9.8",
+  "version": "3.0.0",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "description": "Provides Minecraft/Forge/Fabric/Liteloader installers",
