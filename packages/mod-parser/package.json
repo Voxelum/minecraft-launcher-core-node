@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/mod-parser",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "description": "Minecraft Mod parser. Provides the utilities to parse forge/liteloader/fabric mod metadata.",
@@ -13,7 +13,7 @@
   "dependencies": {
     "@iarna/toml": "2.2.3",
     "@xmcl/system": "^2.2.1",
-    "@xmcl/asm": "^0.1.0"
+    "@xmcl/asm": "^0.1.1"
   },
   "repository": {
     "type": "git",
