@@ -77,14 +77,16 @@ function scanPackages() {
     packages.forEach(pack => {
         const packageJSON = pack.content;
         if (packageJSON.dependencies) {
-            for (const dep of Object.values(packageJSON.dependencies)) {
-                const dependOn = dep.substring(dep.indexOf('/') + 1);
-                reversedDependencies[dependOn] = reversedDependencies[dependOn] || [];
-                reversedDependencies[dependOn].push(pack);
-
-                dependencies[pack.name] = dependencies[pack.name] || [];
-                if (nameToPack[dependOn]) {
-                    dependencies[pack.name].push(nameToPack[dependOn]);
+            for (const dep of Object.keys(packageJSON.dependencies)) {
+                if (dep.startsWith('@xmcl')) {
+                    const dependOn = dep.substring(dep.indexOf('/') + 1);
+                    reversedDependencies[dependOn] = reversedDependencies[dependOn] || [];
+                    reversedDependencies[dependOn].push(pack);
+                    
+                    dependencies[pack.name] = dependencies[pack.name] || [];
+                    if (nameToPack[dependOn]) {
+                        dependencies[pack.name].push(nameToPack[dependOn]);
+                    }
                 }
             }
         }
@@ -158,29 +160,30 @@ function bumpDependenciesPackage(reversedDependencies, packages) {
     function bump(pkg) {
         // only major & minor change affect the dependents packages update
         const allDependent = reversedDependencies[pkg.name] || [];
-        for (const pkg of allDependent) {
+        // console.log(pkg.name)
+        for (const dep of allDependent) {
             let affected = false;
 
-            const pkgJson = pkg.content;
+            const pkgJson = dep.content;
             const bumpLevel = 2;
             const bumpType = 'patch';
 
             // if current bumping priority is lower than affected bumped priority
-            if (!("level" in pkg) || (typeof pkg.level === 'number' && bumpLevel < pkg.level)) {
+            if (!("level" in dep) || (typeof dep.level === 'number' && dep.level > bumpLevel)) {
                 affected = true;
-                pkg.level = bumpLevel;
-                pkg.releaseType = bumpType;
-                pkg.newVersion = semver.inc(pkgJson.version, bumpType) || undefined;
+                dep.level = bumpLevel;
+                dep.releaseType = bumpType;
+                dep.newVersion = semver.inc(pkgJson.version, bumpType) || undefined;
             }
 
-            if (!pkg.reasons) {
-                pkg.reasons = [];
+            if (!dep.reasons) {
+                dep.reasons = [];
             }
-            pkg.passive = true;
-            pkg.reasons.push(`Dependency ${pkg.package.name} bump **${bumpType}**`);
+            dep.passive = true;
+            dep.reasons.push(`Dependency ${pkg.content.name} bump **${bumpType}**`);
             if (affected) {
                 // dfs bump package
-                bump(pkg);
+                bump(dep);
             }
         }
     }
@@ -205,7 +208,11 @@ function writeAllNewVersionsToPackageJson(packages, dependencies) {
             const newContent = Object.assign({}, pkg.content, {
                 version: pkg.newVersion,
             });
-            const deps = dependencies[pkg.content.name];
+            const deps = dependencies[pkg.name];
+            // console.log()
+            // console.log(Object.keys(dependencies))
+            // console.log(pkg.name)
+            // console.log(deps);
             if (deps) {
                 for (const dep of deps) {
                     if (dep.newVersion) {
@@ -215,6 +222,18 @@ function writeAllNewVersionsToPackageJson(packages, dependencies) {
             }
             fs.writeFileSync(`packages/${pkg.name}/package.json`, JSON.stringify(newContent, null, 2) + '\n');
         } else {
+            const newContent = Object.assign({}, pkg.content, {
+                version: pkg.newVersion,
+            });
+            const deps = dependencies[pkg.content.name];
+            if (deps) {
+                for (const dep of deps) {
+                    if (dep.newVersion) {
+                        newContent.dependencies[dep.content.name] = `^${dep.newVersion}`
+                    }
+                }
+                console.log(`Mock bump deps ${JSON.stringify(deps)}`)
+            }
             console.log(`Mock write file packages/${pkg.name}/package.json ${pkg.newVersion}`);
         }
     }
