@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.1.0
+### @xmcl/mod-parser@3.1.0
+#### Features
+
+- feat: read the toml root info & not crash on no-deps ([bb3a1c885f10c1ea3861d1b1a66c115d3dcb4391](https://github.com/voxelum/minecraft-launcher-core-node/commit/bb3a1c885f10c1ea3861d1b1a66c115d3dcb4391))
+
+
 ## 4.0.0
 ### @xmcl/asm@0.1.0
 #### Features
