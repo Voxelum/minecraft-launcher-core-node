@@ -1,16 +1,21 @@
 import * as path from "path";
-import { readForgeMod } from "./forge";
+import { readForgeMod, readForgeModToml } from "./forge";
 import { ForgeConfig } from "./forgeConfig";
 
 describe("Forge", () => {
     const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
 
     test("should identify the package usage", async () => {
-        const { usedForgePackage, usedLegacyFMLPackage, usedMinecraftClientPackage, usedMinecraftPackage  } = await readForgeMod(`${root}/mods/sample-mod.jar`);
+        const { usedForgePackage, usedLegacyFMLPackage, usedMinecraftClientPackage, usedMinecraftPackage } = await readForgeMod(`${root}/mods/sample-mod.jar`);
         expect(usedForgePackage).toBeFalsy();
         expect(usedLegacyFMLPackage).toBeTruthy();
         expect(usedMinecraftClientPackage).toBeFalsy();
         expect(usedMinecraftPackage).toBeTruthy();
+    });
+
+    test("should not crash if the toml does not have the dependencies", async () => {
+        const metadata = await readForgeModToml(`${root}/mods/sample-mod-1.13-no-deps.jar`);
+        expect(metadata).toEqual([{ "authors": "mezz", "credits": "", "dependencies": [], "description": "JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n", "displayName": "Just Enough Items", "displayURL": "https://minecraft.curseforge.com/projects/jei", "issueTrackerURL": "https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue", "loaderVersion": "[14,)", "logoFile": "", "modLoader": "javafml", "modid": "jei", "updateJSONURL": "", "version": "${file.jarVersion}" }]);
     });
 
     test("should read >1.13 forge mod jar", async () => {
@@ -46,15 +51,18 @@ describe("Forge", () => {
             ],
             "modsToml": [
                 {
-                    "authors": "",
+                    "authors": "mezz",
                     "credits": "",
                     "dependencies": [{ "mandatory": true, "modId": "forge", "ordering": "NONE", "side": "BOTH", "versionRange": "[28.1.0,)" }],
                     "description": "JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n",
                     "displayName": "Just Enough Items",
-                    "displayURL": "",
+                    "displayURL": "https://minecraft.curseforge.com/projects/jei",
                     "logoFile": "",
                     "modid": "jei",
                     "updateJSONURL": "",
+                    "issueTrackerURL": "https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue",
+                    "modLoader": "javafml",
+                    "loaderVersion": "[14,)",
                     "version": "6.0.0.26",
                 }
             ],

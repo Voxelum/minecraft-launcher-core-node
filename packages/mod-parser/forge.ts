@@ -182,6 +182,18 @@ export interface ForgeModTOMLData {
      * A list of dependencies of this mod
      */
     dependencies: { modId: string; mandatory: boolean; versionRange: string; ordering: "NONE" | "BEFORE" | "AFTER"; side: "BOTH" | "CLIENT" | "SERVER" }[];
+    /**
+     * The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
+     */
+    modLoader: string;
+    /**
+     * A version range to match for said mod loader - for regular FML @Mod it will be the forge version
+     */
+    loaderVersion: string;
+    /**
+     * A URL to refer people to when problems occur with this mod
+     */
+    issueTrackerURL: string;
 }
 
 export interface ForgeModASMData {
@@ -443,29 +455,34 @@ export async function readForgeModToml(mod: ForgeModInput, manifest?: Record<str
     const all: ForgeModTOMLData[] = [];
     if (existed) {
         const str = await fs.readFile("META-INF/mods.toml", "utf-8");
-        const map = parseToml(str);
-        if (map.mods instanceof Array) {
-            for (const mod of map.mods) {
+        const root = parseToml(str);
+        if (root.mods instanceof Array) {
+            for (const mod of root.mods) {
                 const tomlMod = mod as any;
                 const modObject: ForgeModTOMLData = {
                     modid: tomlMod.modId ?? "",
-                    authors: tomlMod.authors ?? "",
-                    version: tomlMod.version === "${file.jarVersion}"
+                    authors: tomlMod.authors ?? root.authors as string ?? "",
+                    version: tomlMod.version === "${file.jarVersion}" && typeof manifest?.["Implementation-Version"] === "string"
                         ? manifest?.["Implementation-Version"] : tomlMod.version,
                     displayName: tomlMod.displayName ?? "",
                     description: tomlMod.description ?? "",
-                    displayURL: tomlMod.displayURL ?? "",
-                    updateJSONURL: tomlMod.updateJSONURL ?? "",
+                    displayURL: tomlMod.displayURL ?? root.displayURL as string ?? "",
+                    updateJSONURL: tomlMod.updateJSONURL ?? root.updateJSONURL ?? "",
                     dependencies: [],
                     logoFile: tomlMod.logoFile ?? "",
                     credits: tomlMod.credits ?? "",
+                    loaderVersion: root.loaderVersion as string ?? "",
+                    modLoader: root.modLoader as string ?? "",
+                    issueTrackerURL: root.issueTrackerURL as string ?? "",
                 }
                 all.push(modObject);
             }
         }
-        for (const mod of all) {
-            const dep = (map.dependencies as Record<string, any>)[mod.modid];
-            if (dep) { mod.dependencies = dep; }
+        if (typeof root.dependencies === "object") {
+            for (const mod of all) {
+                const dep = (root.dependencies as Record<string, any>)[mod.modid];
+                if (dep) { mod.dependencies = dep; }
+            }
         }
     }
     return all;
