@@ -3778,6 +3778,18 @@ export interface ForgeModTOMLData {
         ordering: "NONE" | "BEFORE" | "AFTER";
         side: "BOTH" | "CLIENT" | "SERVER";
     }[];
+    /**
+     * The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
+     */
+    modLoader: string;
+    /**
+     * A version range to match for said mod loader - for regular FML @Mod it will be the forge version
+     */
+    loaderVersion: string;
+    /**
+     * A URL to refer people to when problems occur with this mod
+     */
+    issueTrackerURL: string;
 }
 export interface ForgeModASMData {
     /**
