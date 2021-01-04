@@ -89,17 +89,10 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
         }
 
         const launchWrapperVersionEntry = record["launchwrapper-of.txt"];
-        if (!launchWrapperVersionEntry) {
-            throw errorFrom({ error: "BadOptifineJar", entry: "launchwrapper-of.txt" });
-        }
-
-        const launchWrapperVersion = await readEntry(zip, launchWrapperVersionEntry).then((b) => b.toString());
+        const launchWrapperVersion = launchWrapperVersionEntry ? await readEntry(zip, launchWrapperVersionEntry).then((b) => b.toString())
+            : "2.1";
         // context.update(15, 100);
 
-        const launchWrapperEntry = record[`launchwrapper-of-${launchWrapperVersion}.jar`]
-        if (!launchWrapperEntry) {
-            throw errorFrom({ error: "BadOptifineJar", entry: `launchwrapper-of-${launchWrapperVersion}.jar` });
-        }
 
         const buf = await readEntry(zip, entry);
         const reader = new ClassReader(buf);
@@ -125,14 +118,17 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
         await this.yield(task("json", async () => {
             await ensureFile(versionJSONPath);
             await writeFile(versionJSONPath, JSON.stringify(versionJSON, null, 4));
-        }), /* 20 */);
+        }));
 
+        const launchWrapperEntry = record[`launchwrapper-of-${launchWrapperVersion}.jar`]
         // write launch wrapper
-        await this.yield(task("library", async () => {
-            const wrapperDest = mc.getLibraryByPath(`launchwrapper-of/${launchWrapperVersion}/launchwrapper-of-${launchWrapperVersion}.jar`)
-            await ensureFile(wrapperDest);
-            await writeFile(wrapperDest, await readEntry(zip, launchWrapperEntry));
-        }), /* 20 */);
+        if (launchWrapperEntry) {
+            await this.yield(task("library", async () => {
+                const wrapperDest = mc.getLibraryByPath(`launchwrapper-of/${launchWrapperVersion}/launchwrapper-of-${launchWrapperVersion}.jar`)
+                await ensureFile(wrapperDest);
+                await writeFile(wrapperDest, await readEntry(zip, launchWrapperEntry));
+            }));
+        }
 
         // write the optifine
         await this.yield(task("jar", async () => {
@@ -141,7 +137,7 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
 
             await ensureFile(dest);
             await spawnProcess(options.java ?? "java", ["-cp", installer, "optifine.Patcher", mcJar, installer, dest]);
-        }), /* 40 */);
+        }));
 
         return versionJSON.id;
     });
