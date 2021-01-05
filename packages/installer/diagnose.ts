@@ -1,7 +1,5 @@
 import { diagnoseFile, Issue, LibraryIssue, MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
-import { InstallProfile, resolveProcessors } from "./minecraft";
-
-type Processor = InstallProfile["processors"][number];
+import { InstallProfile, resolveProcessors, PostProcessor } from "./profile";
 
 export type InstallIssues = ProcessorIssue | LibraryIssue;
 
@@ -14,7 +12,7 @@ export interface ProcessorIssue extends Issue {
     /**
      * The processor
      */
-    processor: Processor;
+    processor: PostProcessor;
 }
 
 export interface InstallProfileIssueReport {
@@ -40,7 +38,7 @@ export async function diagnoseInstall(installProfile: InstallProfile, minecraftL
         issues: [],
     };
     const issues = report.issues;
-    const processors: Processor[] = resolveProcessors("client", installProfile, mc);
+    const processors: PostProcessor[] = resolveProcessors("client", installProfile, mc);
     await Promise.all(Version.resolveLibraries(installProfile.libraries).map(async (lib) => {
         const libPath = mc.getLibraryByPath(lib.download.path);
         const issue = await diagnoseFile({

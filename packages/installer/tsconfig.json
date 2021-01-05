@@ -11,7 +11,8 @@
         "http.ts",
         "unzip.ts",
         "java.ts",
-        "diagnose.ts"
+        "diagnose.ts",
+        "profile.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

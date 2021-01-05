@@ -613,6 +613,10 @@ export interface LaunchOption {
      */
     ignorePatchDiscrepancies?: boolean;
     /**
+     * Add extra classpaths
+     */
+    extraClassPaths?: string[];
+    /**
      * The platform of this launch will run. By default, it will fetch the current machine info if this is absent.
      */
     platform?: Platform;
@@ -2137,8 +2141,7 @@ export declare function installCurseforgeFile(file: File, destination: string, o
 export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): import("@xmcl/task").TaskRoutine<void>;
 export {};
 \/\/# sourceMappingURL=curseforge.d.ts.map`;
-module.exports['@xmcl/installer/diagnose.d.ts'] = `import { Issue, LibraryIssue, MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { InstallProfile } from "./minecraft";
-declare type Processor = InstallProfile["processors"][number];
+module.exports['@xmcl/installer/diagnose.d.ts'] = `import { Issue, LibraryIssue, MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { InstallProfile, PostProcessor } from "./profile";
 export declare type InstallIssues = ProcessorIssue | LibraryIssue;
 /**
  * The processor issue
@@ -2148,7 +2151,7 @@ export interface ProcessorIssue extends Issue {
     /**
      * The processor
      */
-    processor: Processor;
+    processor: PostProcessor;
 }
 export interface InstallProfileIssueReport {
     minecraftLocation: MinecraftFolder;
@@ -2165,7 +2168,6 @@ export interface InstallProfileIssueReport {
  * @param minecraftLocation The minecraft location
  */
 export declare function diagnoseInstall(installProfile: InstallProfile, minecraftLocation: MinecraftLocation): Promise<InstallProfileIssueReport>;
-export {};
 \/\/# sourceMappingURL=diagnose.d.ts.map`;
 module.exports['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Timestamped } from "./http";
 import { InstallOptions } from "./utils";
@@ -2324,7 +2326,8 @@ export declare function installFabric(loader: FabricLoaderArtifact, minecraft: M
 module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadFallbackTask, Timestamped } from "./http";
-import { InstallProfileOption, LibraryOptions } from "./minecraft";
+import { LibraryOptions } from "./minecraft";
+import { InstallProfileOption } from "./profile";
 import { InstallOptions as InstallOptionsBase } from "./utils";
 export interface BadForgeInstallerJarError {
     error: "BadForgeInstallerJar";
@@ -2699,6 +2702,7 @@ export * from "./fabric";
 export * from "./liteloader";
 export * from "./forge";
 export * from "./minecraft";
+export * from "./profile";
 export * from "./curseforge";
 export * from "./optifine";
 export * from "./java";
@@ -2900,7 +2904,7 @@ export declare function installLiteloader(versionMeta: LiteloaderVersion, locati
  */
 export declare function installLiteloaderTask(versionMeta: LiteloaderVersion, location: MinecraftLocation, options?: InstallOptions): Task<string>;
 \/\/# sourceMappingURL=liteloader.d.ts.map`;
-module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core"; import { Task, TaskLooped } from "@xmcl/task";
+module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core"; import { Task } from "@xmcl/task";
 import { DownloadCommonOptions, DownloadFallbackTask, Timestamped } from "./http";
 /**
  * The function to swap library host.
@@ -2955,65 +2959,6 @@ export interface MinecraftVersionList extends Timestamped {
      * All the vesrsion list
      */
     versions: MinecraftVersion[];
-}
-export interface InstallProfile {
-    spec?: number;
-    /**
-     * The type of this installation, like "forge"
-     */
-    profile: string;
-    /**
-     * The version of this installation
-     */
-    version: string;
-    /**
-     * The version json path
-     */
-    json: string;
-    /**
-     * The maven artifact name: <org>:<artifact-id>:<version>
-     */
-    path: string;
-    /**
-     * The minecraft version
-     */
-    minecraft: string;
-    /**
-     * The processor shared variables. The key is the name of variable to replace.
-     *
-     * The value of client/server is the value of the variable.
-     */
-    data: {
-        [key: string]: {
-            client: string;
-            server: string;
-        };
-    };
-    /**
-     * The post processor. Which require java to run.
-     */
-    processors: Array<{
-        /**
-         * The executable jar path
-         */
-        jar: string;
-        /**
-         * The classpath to run
-         */
-        classpath: string[];
-        args: string[];
-        outputs?: {
-            [key: string]: string;
-        };
-    }>;
-    /**
-     * The required install profile libraries
-     */
-    libraries: VersionJson.NormalLibrary[];
-    /**
-     * Legacy format
-     */
-    versionInfo?: VersionJson;
 }
 /**
  * Default minecraft version manifest url.
@@ -3108,12 +3053,6 @@ export interface InstallSideOption {
      */
     side?: "client" | "server";
 }
-export interface InstallProfileOption extends LibraryOptions, InstallSideOption {
-    /**
-     * New forge (>=1.13) require java to install. Can be a executor or java executable path.
-     */
-    java?: string;
-}
 export declare type Options = DownloadCommonOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
 export interface PostProcessFailedError {
     error: "PostProcessFailed";
@@ -3175,41 +3114,6 @@ export declare function installLibraries(version: ResolvedVersion, options?: Lib
  */
 export declare function installResolvedLibraries(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOptions): Promise<void>;
 /**
- * Resolve processors in install profile
- */
-export declare function resolveProcessors(side: "client" | "server", installProfile: InstallProfile, minecraft: MinecraftFolder): {
-    args: string[];
-    outputs: {
-        [x: string]: string;
-    } | undefined;
-    /**
-     * The executable jar path
-     */
-    jar: string;
-    /**
-     * The classpath to run
-     */
-    classpath: string[];
-}[];
-/**
- * Post process the post processors from \`InstallProfile\`.
- *
- * @param processors The processor info
- * @param minecraft The minecraft location
- * @param java The java executable path
- * @throws {@link PostProcessError}
- */
-export declare function postProcess(processors: InstallProfile["processors"], minecraft: MinecraftFolder, java: string): Promise<void>;
-/**
- * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
- *
- * @param installProfile The install profile
- * @param minecraft The minecraft location
- * @param options The options to install
- * @throws {@link PostProcessError}
- */
-export declare function installByProfile(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): Promise<void>;
-/**
  * Install the Minecraft game to a location by version metadata.
  *
  * This will install version json, version jar, and all dependencies (assets, libraries)
@@ -3262,39 +3166,6 @@ export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[
  * @param options The asset option
  */
 export declare function installResolvedAssetsTask(assets: AssetInfo[], folder: MinecraftFolder, options?: AssetsOptions): import("@xmcl/task").TaskRoutine<void>;
-/**
- * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
- *
- * @param installProfile The install profile
- * @param minecraft The minecraft location
- * @param options The options to install
- */
-export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): import("@xmcl/task").TaskRoutine<void>;
-/**
- * Post process the post processors from \`InstallProfile\`.
- *
- * @param processors The processor info
- * @param minecraft The minecraft location
- * @param java The java executable path
- * @throws {@link PostProcessError}
- */
-export declare class PostProcessingTask extends TaskLooped<void> {
-    private processors;
-    private minecraft;
-    private java;
-    readonly name: string;
-    readonly param: object;
-    private pointer;
-    constructor(processors: InstallProfile["processors"], minecraft: MinecraftFolder, java: string);
-    protected shouldProcess(proc: InstallProfile["processors"][number], shouldProcessDefault: boolean): Promise<boolean>;
-    protected findMainClass(lib: string): Promise<string>;
-    protected postProcess(mc: MinecraftFolder, proc: InstallProfile["processors"][number], java: string): Promise<void>;
-    protected process(): Promise<[boolean, void | undefined]>;
-    protected validate(): Promise<void>;
-    protected shouldTolerant(e: any): boolean;
-    protected abort(isCancelled: boolean): Promise<void>;
-    protected reset(): void;
-}
 export declare class InstallJsonTask extends DownloadFallbackTask {
     constructor(version: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options);
 }
@@ -3326,6 +3197,14 @@ export interface BadOptifineJarError {
      */
     entry: string;
 }
+export interface InstallOptifineOptions extends InstallOptions {
+    /**
+     * Use "optifine.OptiFineForgeTweaker" instead of "optifine.OptiFineTweaker" for tweakClass.
+     *
+     * If you want to install upon forge, you should use this.
+     */
+    useForgeTweaker?: boolean;
+}
 /**
  * Generate the optifine version json from provided info.
  * @param editionRelease The edition + release with _
@@ -3334,7 +3213,7 @@ export interface BadOptifineJarError {
  * @param options The install options
  * @beta Might be changed and don't break the major version
  */
-export declare function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion: string, options?: InstallOptions): Version;
+export declare function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion: string, options?: InstallOptifineOptions): Version;
 export interface InstallOptifineOptions extends InstallOptions {
     /**
      * The java exectable path. It will use \`java\` by default.
@@ -3362,6 +3241,142 @@ export declare function installOptifine(installer: string, minecraft: MinecraftL
  */
 export declare function installOptifineTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): import("@xmcl/task").TaskRoutine<string>;
 \/\/# sourceMappingURL=optifine.d.ts.map`;
+module.exports['@xmcl/installer/profile.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core"; import { TaskLooped } from "@xmcl/task";
+import { LibraryOptions, InstallSideOption } from "./minecraft";
+export interface PostProcessor {
+    /**
+     * The executable jar path
+     */
+    jar: string;
+    /**
+     * The classpath to run
+     */
+    classpath: string[];
+    args: string[];
+    outputs?: {
+        [key: string]: string;
+    };
+}
+export interface InstallProfile {
+    spec?: number;
+    /**
+     * The type of this installation, like "forge"
+     */
+    profile: string;
+    /**
+     * The version of this installation
+     */
+    version: string;
+    /**
+     * The version json path
+     */
+    json: string;
+    /**
+     * The maven artifact name: <org>:<artifact-id>:<version>
+     */
+    path: string;
+    /**
+     * The minecraft version
+     */
+    minecraft: string;
+    /**
+     * The processor shared variables. The key is the name of variable to replace.
+     *
+     * The value of client/server is the value of the variable.
+     */
+    data?: {
+        [key: string]: {
+            client: string;
+            server: string;
+        };
+    };
+    /**
+     * The post processor. Which require java to run.
+     */
+    processors?: Array<PostProcessor>;
+    /**
+     * The required install profile libraries
+     */
+    libraries: VersionJson.NormalLibrary[];
+    /**
+     * Legacy format
+     */
+    versionInfo?: VersionJson;
+}
+export interface InstallProfileOption extends LibraryOptions, InstallSideOption {
+    /**
+     * New forge (>=1.13) require java to install. Can be a executor or java executable path.
+     */
+    java?: string;
+}
+/**
+ * Resolve processors in install profile
+ */
+export declare function resolveProcessors(side: "client" | "server", installProfile: InstallProfile, minecraft: MinecraftFolder): {
+    args: string[];
+    outputs: {
+        [x: string]: string;
+    };
+    /**
+     * The executable jar path
+     */
+    jar: string;
+    /**
+     * The classpath to run
+     */
+    classpath: string[];
+}[];
+/**
+ * Post process the post processors from \`InstallProfile\`.
+ *
+ * @param processors The processor info
+ * @param minecraft The minecraft location
+ * @param java The java executable path
+ * @throws {@link PostProcessError}
+ */
+export declare function postProcess(processors: PostProcessor[], minecraft: MinecraftFolder, java: string): Promise<void>;
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ * @throws {@link PostProcessError}
+ */
+export declare function installByProfile(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): Promise<void>;
+/**
+ * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
+ *
+ * @param installProfile The install profile
+ * @param minecraft The minecraft location
+ * @param options The options to install
+ */
+export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): import("@xmcl/task").TaskRoutine<void>;
+/**
+ * Post process the post processors from \`InstallProfile\`.
+ *
+ * @param processors The processor info
+ * @param minecraft The minecraft location
+ * @param java The java executable path
+ * @throws {@link PostProcessError}
+ */
+export declare class PostProcessingTask extends TaskLooped<void> {
+    private processors;
+    private minecraft;
+    private java;
+    readonly name: string;
+    private pointer;
+    constructor(processors: PostProcessor[], minecraft: MinecraftFolder, java: string);
+    protected shouldProcess(proc: PostProcessor, shouldProcessDefault: boolean): Promise<boolean>;
+    protected findMainClass(lib: string): Promise<string>;
+    protected postProcess(mc: MinecraftFolder, proc: PostProcessor, java: string): Promise<void>;
+    protected process(): Promise<[boolean, void | undefined]>;
+    protected validate(): Promise<void>;
+    protected shouldTolerant(e: any): boolean;
+    protected abort(isCancelled: boolean): Promise<void>;
+    protected reset(): void;
+}
+\/\/# sourceMappingURL=profile.d.ts.map`;
 module.exports['@xmcl/installer/unzip.d.ts'] = `import { TaskLooped } from "@xmcl/task"; import { Entry, ZipFile } from "yauzl";
 export interface EntryResolver {
     (entry: Entry): Promise<string> | string;
@@ -6002,7 +6017,8 @@ export interface RegionDataFrame {
 }
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`assert.ok()\`. */
+module.exports['assert.d.ts'] = `declare module 'assert' {
+    /** An alias of \`assert.ok()\`. */
     function assert(value: any, message?: string | Error): asserts value;
     namespace assert {
         class AssertionError implements Error {
@@ -6126,7 +6142,8 @@ module.exports['assert.d.ts'] = `declare module 'assert' {     /** An alias of \
     export = assert;
 }
 `;
-module.exports['async_hooks.d.ts'] = `/**  * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
+module.exports['async_hooks.d.ts'] = `/**
+ * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
  */
 declare module "async_hooks" {
     /**
@@ -6352,7 +6369,8 @@ declare module "async_hooks" {
     }
 }
 `;
-module.exports['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7. 
+module.exports['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7.
+
 \/\/ NOTE: TypeScript version-specific augmentations can be found in the following paths:
 \/\/          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
 \/\/          - ~/index.d.ts        - Definitions specific to TypeScript 2.1
@@ -6371,7 +6389,8 @@ module.exports['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and T
 \/\/ TypeScript 3.7-specific augmentations:
 \/\// <reference path="assert.d.ts" />
 `;
-module.exports['buffer.d.ts'] = `declare module "buffer" {     export const INSPECT_MAX_BYTES: number;
+module.exports['buffer.d.ts'] = `declare module "buffer" {
+    export const INSPECT_MAX_BYTES: number;
     export const kMaxLength: number;
     export const kStringMaxLength: number;
     export const constants: {
@@ -6393,7 +6412,8 @@ module.exports['buffer.d.ts'] = `declare module "buffer" {     export const INSP
     export { BuffType as Buffer };
 }
 `;
-module.exports['child_process.d.ts'] = `declare module "child_process" {     import { BaseEncodingOptions } from 'fs';
+module.exports['child_process.d.ts'] = `declare module "child_process" {
+    import { BaseEncodingOptions } from 'fs';
     import * as events from "events";
     import * as net from "net";
     import { Writable, Readable, Stream, Pipe } from "stream";
@@ -6902,7 +6922,8 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {     imp
     function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptions): Buffer;
 }
 `;
-module.exports['cluster.d.ts'] = `declare module "cluster" {     import * as child from "child_process";
+module.exports['cluster.d.ts'] = `declare module "cluster" {
+    import * as child from "child_process";
     import * as events from "events";
     import * as net from "net";
 
@@ -7164,7 +7185,8 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {     import * as chi
     function eventNames(): string[];
 }
 `;
-module.exports['console.d.ts'] = `declare module "console" {     import { InspectOptions } from 'util';
+module.exports['console.d.ts'] = `declare module "console" {
+    import { InspectOptions } from 'util';
 
     global {
         \/\/ This needs to be global to avoid TS2403 in case lib.dom.d.ts is present in the same build
@@ -7297,7 +7319,8 @@ module.exports['console.d.ts'] = `declare module "console" {     import { Inspec
     export = console;
 }
 `;
-module.exports['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */ declare module "constants" {
+module.exports['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */
+declare module "constants" {
     import { constants as osConstants, SignalConstants } from 'os';
     import { constants as cryptoConstants } from 'crypto';
     import { constants as fsConstants } from 'fs';
@@ -7305,7 +7328,8 @@ module.exports['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants
     export = exp;
 }
 `;
-module.exports['crypto.d.ts'] = `declare module "crypto" {     import * as stream from "stream";
+module.exports['crypto.d.ts'] = `declare module "crypto" {
+    import * as stream from "stream";
 
     interface Certificate {
         exportChallenge(spkac: BinaryLike): Buffer;
@@ -8080,7 +8104,8 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {     import * as strea
     }): Buffer;
 }
 `;
-module.exports['dgram.d.ts'] = `declare module "dgram" {     import { AddressInfo } from "net";
+module.exports['dgram.d.ts'] = `declare module "dgram" {
+    import { AddressInfo } from "net";
     import * as dns from "dns";
     import * as events from "events";
 
@@ -8221,7 +8246,8 @@ module.exports['dgram.d.ts'] = `declare module "dgram" {     import { AddressInf
     }
 }
 `;
-module.exports['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddrinfo flags.
+module.exports['dns.d.ts'] = `declare module "dns" {
+    \/\/ Supported getaddrinfo flags.
     const ADDRCONFIG: number;
     const V4MAPPED: number;
     /**
@@ -8592,7 +8618,8 @@ module.exports['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddri
     }
 }
 `;
-module.exports['domain.d.ts'] = `declare module "domain" {     import { EventEmitter } from "events";
+module.exports['domain.d.ts'] = `declare module "domain" {
+    import { EventEmitter } from "events";
 
     global {
         namespace NodeJS {
@@ -8616,7 +8643,8 @@ module.exports['domain.d.ts'] = `declare module "domain" {     import { EventEmi
     function create(): Domain;
 }
 `;
-module.exports['events.d.ts'] = `declare module "events" {     interface EventEmitterOptions {
+module.exports['events.d.ts'] = `declare module "events" {
+    interface EventEmitterOptions {
         /**
          * Enables automatic capturing of promise rejection.
          */
@@ -8699,7 +8727,8 @@ module.exports['events.d.ts'] = `declare module "events" {     interface EventEm
     export = EventEmitter;
 }
 `;
-module.exports['fs.d.ts'] = `declare module "fs" {     import * as stream from "stream";
+module.exports['fs.d.ts'] = `declare module "fs" {
+    import * as stream from "stream";
     import * as events from "events";
     import { URL } from "url";
     import * as promises from 'fs/promises';
@@ -10938,7 +10967,8 @@ module.exports['fs.d.ts'] = `declare module "fs" {     import * as stream from "
     }
 }
 `;
-module.exports['globals.d.ts'] = `\/\/ Declare "static" methods in Error interface ErrorConstructor {
+module.exports['globals.d.ts'] = `\/\/ Declare "static" methods in Error
+interface ErrorConstructor {
     /** Create .stack property on a target object */
     captureStackTrace(targetObject: object, constructorOpt?: Function): void;
 
@@ -11556,8 +11586,10 @@ declare namespace NodeJS {
     }
 }
 `;
-module.exports['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis; `;
-module.exports['http.d.ts'] = `declare module "http" {     import * as stream from "stream";
+module.exports['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis;
+`;
+module.exports['http.d.ts'] = `declare module "http" {
+    import * as stream from "stream";
     import { URL } from "url";
     import { Socket, Server as NetServer } from "net";
 
@@ -11979,7 +12011,8 @@ module.exports['http.d.ts'] = `declare module "http" {     import * as stream fr
     const maxHeaderSize: number;
 }
 `;
-module.exports['http2.d.ts'] = `declare module "http2" {     import * as events from "events";
+module.exports['http2.d.ts'] = `declare module "http2" {
+    import * as events from "events";
     import * as fs from "fs";
     import * as net from "net";
     import * as stream from "stream";
@@ -12931,7 +12964,8 @@ module.exports['http2.d.ts'] = `declare module "http2" {     import * as events 
     ): ClientHttp2Session;
 }
 `;
-module.exports['https.d.ts'] = `declare module "https" {     import * as tls from "tls";
+module.exports['https.d.ts'] = `declare module "https" {
+    import * as tls from "tls";
     import * as events from "events";
     import * as http from "http";
     import { URL } from "url";
@@ -12968,7 +13002,8 @@ module.exports['https.d.ts'] = `declare module "https" {     import * as tls fro
     let globalAgent: Agent;
 }
 `;
-module.exports['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14 \/\/ Project: http:\/\/nodejs.org/
+module.exports['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14
+\/\/ Project: http:\/\/nodejs.org/
 \/\/ Definitions by: Microsoft TypeScript <https:\/\/github.com/Microsoft>
 \/\/                 DefinitelyTyped <https:\/\/github.com/DefinitelyTyped>
 \/\/                 Alberto Schiabel <https:\/\/github.com/jkomyno>
@@ -13029,7 +13064,8 @@ module.exports['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.j
 \/\/       within the respective ~/ts3.5 (or later) folder. However, this is disallowed for versions
 \/\/       prior to TypeScript 3.5, so the older definitions will be found here.
 `;
-module.exports['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header \/\/ Type definitions for inspector
+module.exports['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header
+\/\/ Type definitions for inspector
 
 \/\/ These definitions are auto-generated.
 \/\/ Please see https:\/\/github.com/DefinitelyTyped/DefinitelyTyped/pull/19330
@@ -16070,7 +16106,8 @@ declare module "inspector" {
     function waitForDebugger(): void;
 }
 `;
-module.exports['module.d.ts'] = `declare module "module" {     import { URL } from "url";
+module.exports['module.d.ts'] = `declare module "module" {
+    import { URL } from "url";
     namespace Module {
         /**
          * Updates all the live bindings for builtin ES Modules to match the properties of the CommonJS exports.
@@ -16122,7 +16159,8 @@ module.exports['module.d.ts'] = `declare module "module" {     import { URL } fr
     export = Module;
 }
 `;
-module.exports['net.d.ts'] = `declare module "net" {     import * as stream from "stream";
+module.exports['net.d.ts'] = `declare module "net" {
+    import * as stream from "stream";
     import * as events from "events";
     import * as dns from "dns";
 
@@ -16390,7 +16428,8 @@ module.exports['net.d.ts'] = `declare module "net" {     import * as stream from
     function isIPv6(input: string): boolean;
 }
 `;
-module.exports['os.d.ts'] = `declare module "os" {     interface CpuInfo {
+module.exports['os.d.ts'] = `declare module "os" {
+    interface CpuInfo {
         model: string;
         speed: number;
         times: {
@@ -16629,7 +16668,8 @@ module.exports['os.d.ts'] = `declare module "os" {     interface CpuInfo {
     function setPriority(pid: number, priority: number): void;
 }
 `;
-module.exports['path.d.ts'] = `declare module "path" {     namespace path {
+module.exports['path.d.ts'] = `declare module "path" {
+    namespace path {
         /**
          * A parsed path object generated by path.parse() or consumed by path.format().
          */
@@ -16782,7 +16822,8 @@ module.exports['path.d.ts'] = `declare module "path" {     namespace path {
     export = path;
 }
 `;
-module.exports['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { AsyncResource } from 'async_hooks';
+module.exports['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
+    import { AsyncResource } from 'async_hooks';
 
     type EntryType = 'node' | 'mark' | 'measure' | 'gc' | 'function' | 'http2' | 'http';
 
@@ -17053,7 +17094,8 @@ module.exports['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { 
     function monitorEventLoopDelay(options?: EventLoopMonitorOptions): EventLoopDelayMonitor;
 }
 `;
-module.exports['process.d.ts'] = `declare module "process" {     import * as tty from "tty";
+module.exports['process.d.ts'] = `declare module "process" {
+    import * as tty from "tty";
 
     global {
         var process: NodeJS.Process;
@@ -17461,7 +17503,8 @@ module.exports['process.d.ts'] = `declare module "process" {     import * as tty
     export = process;
 }
 `;
-module.exports['punycode.d.ts'] = `declare module "punycode" {     /**
+module.exports['punycode.d.ts'] = `declare module "punycode" {
+    /**
      * @deprecated since v7.0.0
      * The version of the punycode module bundled in Node.js is being deprecated.
      * In a future major version of Node.js this module will be removed.
@@ -17529,7 +17572,8 @@ module.exports['punycode.d.ts'] = `declare module "punycode" {     /**
     const version: string;
 }
 `;
-module.exports['querystring.d.ts'] = `declare module "querystring" {     interface StringifyOptions {
+module.exports['querystring.d.ts'] = `declare module "querystring" {
+    interface StringifyOptions {
         encodeURIComponent?: (str: string) => string;
     }
 
@@ -17557,7 +17601,8 @@ module.exports['querystring.d.ts'] = `declare module "querystring" {     interfa
     function unescape(str: string): string;
 }
 `;
-module.exports['readline.d.ts'] = `declare module "readline" {     import * as events from "events";
+module.exports['readline.d.ts'] = `declare module "readline" {
+    import * as events from "events";
     import * as stream from "stream";
 
     interface Key {
@@ -17728,7 +17773,8 @@ module.exports['readline.d.ts'] = `declare module "readline" {     import * as e
     function moveCursor(stream: NodeJS.WritableStream, dx: number, dy: number, callback?: () => void): boolean;
 }
 `;
-module.exports['repl.d.ts'] = `declare module "repl" {     import { Interface, Completer, AsyncCompleter } from "readline";
+module.exports['repl.d.ts'] = `declare module "repl" {
+    import { Interface, Completer, AsyncCompleter } from "readline";
     import { Context } from "vm";
     import { InspectOptions } from "util";
 
@@ -18123,7 +18169,8 @@ module.exports['repl.d.ts'] = `declare module "repl" {     import { Interface, C
     }
 }
 `;
-module.exports['stream.d.ts'] = `declare module "stream" {     import * as events from "events";
+module.exports['stream.d.ts'] = `declare module "stream" {
+    import * as events from "events";
 
     class internal extends events.EventEmitter {
         pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean; }): T;
@@ -18477,14 +18524,16 @@ module.exports['stream.d.ts'] = `declare module "stream" {     import * as event
     export = internal;
 }
 `;
-module.exports['string_decoder.d.ts'] = `declare module "string_decoder" {     class StringDecoder {
+module.exports['string_decoder.d.ts'] = `declare module "string_decoder" {
+    class StringDecoder {
         constructor(encoding?: BufferEncoding);
         write(buffer: Buffer): string;
         end(buffer?: Buffer): string;
     }
 }
 `;
-module.exports['timers.d.ts'] = `declare module "timers" {     function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+module.exports['timers.d.ts'] = `declare module "timers" {
+    function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
     namespace setTimeout {
         function __promisify__(ms: number): Promise<void>;
         function __promisify__<T>(ms: number, value: T): Promise<T>;
@@ -18500,7 +18549,8 @@ module.exports['timers.d.ts'] = `declare module "timers" {     function setTimeo
     function clearImmediate(immediateId: NodeJS.Immediate): void;
 }
 `;
-module.exports['tls.d.ts'] = `declare module "tls" {     import * as crypto from "crypto";
+module.exports['tls.d.ts'] = `declare module "tls" {
+    import * as crypto from "crypto";
     import * as dns from "dns";
     import * as net from "net";
     import * as stream from "stream";
@@ -19279,7 +19329,8 @@ module.exports['tls.d.ts'] = `declare module "tls" {     import * as crypto from
     const rootCertificates: ReadonlyArray<string>;
 }
 `;
-module.exports['trace_events.d.ts'] = `declare module "trace_events" {     /**
+module.exports['trace_events.d.ts'] = `declare module "trace_events" {
+    /**
      * The \`Tracing\` object is used to enable or disable tracing for sets of
      * categories. Instances are created using the
      * \`trace_events.createTracing()\` method.
@@ -19340,7 +19391,8 @@ module.exports['trace_events.d.ts'] = `declare module "trace_events" {     /**
     function getEnabledCategories(): string | undefined;
 }
 `;
-module.exports['tty.d.ts'] = `declare module "tty" {     import * as net from "net";
+module.exports['tty.d.ts'] = `declare module "tty" {
+    import * as net from "net";
 
     function isatty(fd: number): boolean;
     class ReadStream extends net.Socket {
@@ -19406,7 +19458,8 @@ module.exports['tty.d.ts'] = `declare module "tty" {     import * as net from "n
     }
 }
 `;
-module.exports['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
+module.exports['url.d.ts'] = `declare module "url" {
+    import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
 
     \/\/ Input to \`url.format\`
     interface UrlObject {
@@ -19516,7 +19569,8 @@ module.exports['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery
     }
 }
 `;
-module.exports['util.d.ts'] = `declare module "util" {     interface InspectOptions extends NodeJS.InspectOptions { }
+module.exports['util.d.ts'] = `declare module "util" {
+    interface InspectOptions extends NodeJS.InspectOptions { }
     type Style = 'special' | 'number' | 'bigint' | 'boolean' | 'undefined' | 'null' | 'string' | 'symbol' | 'date' | 'regexp' | 'module';
     type CustomInspectFunction = (depth: number, options: InspectOptionsStylized) => string;
     interface InspectOptionsStylized extends InspectOptions {
@@ -19723,7 +19777,8 @@ module.exports['util.d.ts'] = `declare module "util" {     interface InspectOpti
     }
 }
 `;
-module.exports['v8.d.ts'] = `declare module "v8" {     import { Readable } from "stream";
+module.exports['v8.d.ts'] = `declare module "v8" {
+    import { Readable } from "stream";
 
     interface HeapSpaceInfo {
         space_name: string;
@@ -19910,7 +19965,8 @@ module.exports['v8.d.ts'] = `declare module "v8" {     import { Readable } from 
     function deserialize(data: NodeJS.TypedArray): any;
 }
 `;
-module.exports['vm.d.ts'] = `declare module "vm" {     interface Context extends NodeJS.Dict<any> { }
+module.exports['vm.d.ts'] = `declare module "vm" {
+    interface Context extends NodeJS.Dict<any> { }
     interface BaseOptions {
         /**
          * Specifies the filename used in stack traces produced by this script.
@@ -20056,7 +20112,8 @@ module.exports['vm.d.ts'] = `declare module "vm" {     interface Context extends
     function measureMemory(options?: MeasureMemoryOptions): Promise<MemoryMeasurement>;
 }
 `;
-module.exports['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions {
+module.exports['wasi.d.ts'] = `declare module 'wasi' {
+    interface WASIOptions {
         /**
          * An array of strings that the WebAssembly application will
          * see as command line arguments. The first argument is the virtual path to the
@@ -20142,7 +20199,8 @@ module.exports['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions
     }
 }
 `;
-module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {     import { Context } from "vm";
+module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {
+    import { Context } from "vm";
     import { EventEmitter } from "events";
     import { Readable, Writable } from "stream";
     import { URL } from "url";
@@ -20380,7 +20438,8 @@ module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {     i
     function receiveMessageOnPort(port: MessagePort): { message: any } | undefined;
 }
 `;
-module.exports['zlib.d.ts'] = `declare module "zlib" {     import * as stream from "stream";
+module.exports['zlib.d.ts'] = `declare module "zlib" {
+    import * as stream from "stream";
 
     interface ZlibOptions {
         /**

@@ -6,7 +6,8 @@ import { createWriteStream } from "fs";
 import { join } from "path";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadFallbackTask, getAndParseIfUpdate, Timestamped, withAgents } from "./http";
-import { installByProfileTask, InstallProfile, InstallProfileOption, LibraryOptions, resolveLibraryDownloadUrls } from "./minecraft";
+import { LibraryOptions, resolveLibraryDownloadUrls } from "./minecraft";
+import { installByProfileTask, InstallProfile, InstallProfileOption } from "./profile";
 import { ensureFile, errorFrom, InstallOptions as InstallOptionsBase, normalizeArray, pipeline, writeFile } from "./utils";
 
 export interface BadForgeInstallerJarError {
@@ -224,6 +225,10 @@ async function installForgeFromZip(zip: ZipFile, entries: ForgeInstallerEntriesP
     const promises: Promise<void>[] = [];
     if (entries.forgeUniversalJar) {
         promises.push(extractEntryTo(zip, entries.forgeUniversalJar, getLibraryPathWithoutMaven(mc, entries.forgeUniversalJar.fileName)));
+    }
+
+    if (!profile.data) {
+        profile.data = {};
     }
 
     if (entries.serverLzma) {

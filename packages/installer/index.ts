@@ -7,6 +7,7 @@ export * from "./fabric";
 export * from "./liteloader";
 export * from "./forge";
 export * from "./minecraft";
+export * from "./profile";
 export * from "./curseforge";
 export * from "./optifine";
 export * from "./java";
