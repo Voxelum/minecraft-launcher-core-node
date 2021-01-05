@@ -1,5 +1,20 @@
 # Changelog
 
+## 4.2.0
+### @xmcl/core@2.6.0
+#### Features
+
+- feat(core): support extra classpath to launch client ([5c9c966356d0bd27e812dfd76dba211695102f97](https://github.com/voxelum/minecraft-launcher-core-node/commit/5c9c966356d0bd27e812dfd76dba211695102f97))
+### @xmcl/installer@3.1.0
+#### Features
+
+- feat(installer): add ops to install optifine upon forge ([291847313169f81c361e2ceab3ddedfd3d347f91](https://github.com/voxelum/minecraft-launcher-core-node/commit/291847313169f81c361e2ceab3ddedfd3d347f91))
+#### Bug Fixes
+
+- fix: don't fail if optifine dont have launchwrapper ([7699c397f12e49c649ac6bd0468832f7008113c4](https://github.com/voxelum/minecraft-launcher-core-node/commit/7699c397f12e49c649ac6bd0468832f7008113c4))
+- Dependency @xmcl/core bump **patch**
+
+
 ## 4.1.0
 ### @xmcl/mod-parser@3.1.0
 #### Features
