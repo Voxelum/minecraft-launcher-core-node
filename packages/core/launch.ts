@@ -160,6 +160,10 @@ export interface LaunchOption {
      */
     ignorePatchDiscrepancies?: boolean;
     /**
+     * Add extra classpaths
+     */
+    extraClassPaths?: string[];
+    /**
      * The platform of this launch will run. By default, it will fetch the current machine info if this is absent.
      */
     platform?: Platform;
@@ -632,10 +636,11 @@ export async function generateArguments(options: LaunchOption) {
         natives_directory: nativeRoot,
         launcher_name: launcherName,
         launcher_version: launcherBrand,
-        classpath: `${[
+        classpath: [
             ...version.libraries.filter((lib) => !(lib instanceof ResolvedNative)).map((lib) => mc.getLibraryByPath(lib.download.path)),
-            mc.getVersionJar(version.minecraftVersion)
-        ].join(delimiter)}`,
+            mc.getVersionJar(version.minecraftVersion),
+            ...(options.extraClassPaths || []),
+        ].join(delimiter),
         ...featureValues,
     };
 
