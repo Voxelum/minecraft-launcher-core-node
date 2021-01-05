@@ -12,6 +12,15 @@ export interface BadOptifineJarError {
     entry: string;
 }
 
+export interface InstallOptifineOptions extends InstallOptions {
+    /**
+     * Use "optifine.OptiFineForgeTweaker" instead of "optifine.OptiFineTweaker" for tweakClass.
+     *
+     * If you want to install upon forge, you should use this.
+     */
+    useForgeTweaker?: boolean;
+}
+
 /**
  * Generate the optifine version json from provided info.
  * @param editionRelease The edition + release with _
@@ -20,7 +29,7 @@ export interface BadOptifineJarError {
  * @param options The install options
  * @beta Might be changed and don't break the major version
  */
-export function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion: string, options: InstallOptions = {}): Version {
+export function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion: string, options: InstallOptifineOptions = {}): Version {
     let id = options.versionId ?? `${minecraftVersion}-Optifine_${editionRelease}`;
     let inheritsFrom = options.inheritsFrom ?? minecraftVersion;
     let mainClass = "net.minecraft.launchwrapper.Launch";
@@ -28,7 +37,7 @@ export function generateOptifineVersion(editionRelease: string, minecraftVersion
         id,
         inheritsFrom,
         arguments: {
-            game: ["--tweakClass", "optifine.OptiFineTweaker"],
+            game: ["--tweakClass", options.useForgeTweaker ? "optifine.OptiFineForgeTweaker" : "optifine.OptiFineTweaker"],
             jvm: [],
         },
         releaseTime: new Date().toJSON(),
