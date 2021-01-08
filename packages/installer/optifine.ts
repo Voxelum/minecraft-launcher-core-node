@@ -29,10 +29,16 @@ export interface InstallOptifineOptions extends InstallOptions {
  * @param options The install options
  * @beta Might be changed and don't break the major version
  */
-export function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion: string, options: InstallOptifineOptions = {}): Version {
+export function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion?: string, options: InstallOptifineOptions = {}): Version {
     let id = options.versionId ?? `${minecraftVersion}-Optifine_${editionRelease}`;
     let inheritsFrom = options.inheritsFrom ?? minecraftVersion;
     let mainClass = "net.minecraft.launchwrapper.Launch";
+    let libraries = [{ name: `optifine:Optifine:${minecraftVersion}_${editionRelease}` }];
+    if (launchWrapperVersion) {
+        libraries.unshift({ name: `optifine:launchwrapper-of:${launchWrapperVersion}` });
+    } else {
+        libraries.unshift({ name: "net.minecraft:launchwrapper:1.12" });
+    }
     return {
         id,
         inheritsFrom,
@@ -43,10 +49,7 @@ export function generateOptifineVersion(editionRelease: string, minecraftVersion
         releaseTime: new Date().toJSON(),
         time: new Date().toJSON(),
         type: "release",
-        libraries: [
-            { name: `optifine:launchwrapper-of:${launchWrapperVersion}` },
-            { name: `optifine:Optifine:${minecraftVersion}_${editionRelease}` }
-        ],
+        libraries,
         mainClass,
         minimumLauncherVersion: 21,
     };
@@ -99,7 +102,7 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
 
         const launchWrapperVersionEntry = record["launchwrapper-of.txt"];
         const launchWrapperVersion = launchWrapperVersionEntry ? await readEntry(zip, launchWrapperVersionEntry).then((b) => b.toString())
-            : "2.1";
+            : undefined;
         // context.update(15, 100);
 
 
@@ -133,7 +136,7 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
         // write launch wrapper
         if (launchWrapperEntry) {
             await this.yield(task("library", async () => {
-                const wrapperDest = mc.getLibraryByPath(`launchwrapper-of/${launchWrapperVersion}/launchwrapper-of-${launchWrapperVersion}.jar`)
+                const wrapperDest = mc.getLibraryByPath(`optifine/launchwrapper-of/${launchWrapperVersion}/launchwrapper-of-${launchWrapperVersion}.jar`)
                 await ensureFile(wrapperDest);
                 await writeFile(wrapperDest, await readEntry(zip, launchWrapperEntry));
             }));
