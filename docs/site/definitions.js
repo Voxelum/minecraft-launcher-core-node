@@ -3213,7 +3213,7 @@ export interface InstallOptifineOptions extends InstallOptions {
  * @param options The install options
  * @beta Might be changed and don't break the major version
  */
-export declare function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion: string, options?: InstallOptifineOptions): Version;
+export declare function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion?: string, options?: InstallOptifineOptions): Version;
 export interface InstallOptifineOptions extends InstallOptions {
     /**
      * The java exectable path. It will use \`java\` by default.

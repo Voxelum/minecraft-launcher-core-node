@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.2.1
+### @xmcl/installer@3.1.1
+#### Bug Fixes
+
+- fix(installer): correctly extract/assign launchwrapper ([eedd92615ad3e5e2b0fff0563e18590a8d6faf8b](https://github.com/voxelum/minecraft-launcher-core-node/commit/eedd92615ad3e5e2b0fff0563e18590a8d6faf8b))
+
+
 ## 4.2.0
 ### @xmcl/core@2.6.0
 #### Features
