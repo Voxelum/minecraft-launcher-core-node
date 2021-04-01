@@ -412,18 +412,16 @@ export namespace Version {
         let minecraftVersion: string = rootVersion.id;
         let location: string;
 
-        const replaceMode = Reflect.get(rootVersion, "replace");
-
         const chains: string[] = hierarchy.map((j) => folder.getVersionRoot(j.id));
         const inheritances = hierarchy.map((j) => j.id);
 
-        let json: ResolvedVersion;
+        let json: PartialResolvedVersion;
         do {
-            json = hierarchy.pop() as ResolvedVersion;
+            json = hierarchy.pop()!;
             minimumLauncherVersion = Math.max(json.minimumLauncherVersion || 0, minimumLauncherVersion);
             location = json.minecraftDirectory;
 
-            if (!replaceMode) {
+            if (!Reflect.get(json, "replace")) {
                 args.game.push(...json.arguments.game);
                 args.jvm.push(...json.arguments.jvm);
             } else {
