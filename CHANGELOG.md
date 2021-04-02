@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.2.2
+### @xmcl/core@2.6.1
+#### Bug Fixes
+
+- fix(core): be able to resolve mixed verion inherit ([47861a72bcc53bb32e08b32881f5d210b1d15217](https://github.com/voxelum/minecraft-launcher-core-node/commit/47861a72bcc53bb32e08b32881f5d210b1d15217))
+### @xmcl/forge-site-parser@2.0.6
+#### Bug Fixes
+
+- fix(forge-site-parser): parse new forge page ([0d64120b5501228cd8b533bd06cad9add9972ee0](https://github.com/voxelum/minecraft-launcher-core-node/commit/0d64120b5501228cd8b533bd06cad9add9972ee0))
+### @xmcl/installer@3.1.2
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/forge-site-parser bump **patch**
+
+
 ## 4.2.1
 ### @xmcl/installer@3.1.1
 #### Bug Fixes
