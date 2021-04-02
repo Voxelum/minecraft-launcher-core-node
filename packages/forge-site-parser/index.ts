@@ -9,6 +9,8 @@ interface Download {
     path: string;
 }
 
+function notnull<T>(v: T | undefined): v is T { return !!v }
+
 /**
  * Parse the html string of forge webpage
  */
@@ -37,9 +39,15 @@ export function parse(content: string): ForgeWebPage {
                          * </div>
                          */
                         const tooltipInfo = e.querySelector(".info-tooltip");
-                        const url = tooltipInfo.querySelector("a") || e.querySelector("a");
+                        const url = tooltipInfo.querySelector("a")?.attributes?.href
+                            || e.querySelector(".info-link")?.attributes?.href
+                            || e.querySelector("a")?.attributes?.href;
+
+                        if (!url) {
+                            return undefined
+                        }
                         // href is like /maven/net/minecraftforge/forge/1.14.4-28.1.70/forge-1.14.4-28.1.70-changelog.txt
-                        const href = url.attributes.href.trim();
+                        const href = url.trim();
                         const matched = /forge-.+-.+-(\w+)\.\w+/.exec(href);
                         let name = "", sha1 = "", md5 = "";
                         if (matched) { name = matched[1]; }
@@ -68,7 +76,8 @@ export function parse(content: string): ForgeWebPage {
                             sha1,
                             path: href,
                         };
-                    });
+                    })
+                    .filter(notnull);
                 const downloadVersionElem = e.querySelector(".download-version");
                 let version;
                 let type: Version["type"] = "common";
@@ -91,10 +100,9 @@ export function parse(content: string): ForgeWebPage {
                 const installerWin = links.find((l) => l.name === "installer-win");
                 const source = links.find((l) => l.name === "source");
                 const launcher = links.find((l) => l.name === "launcher");
-
                 const mdk = links.find((l) => l.name === "mdk");
 
-                if (installer === undefined || universal === undefined) {
+                if (installer === undefined && universal === undefined) {
                     throw new Error("Cannot parse forge web since it missing installer and universal jar info.");
                 }
                 const result = {

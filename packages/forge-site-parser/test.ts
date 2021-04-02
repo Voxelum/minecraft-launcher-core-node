@@ -1,20 +1,14 @@
 import * as path from "path";
 import { parse } from "./index";
 import { promises } from "fs";
-// jest.mock("@xmcl/net");
 
 describe("ForgeWebpage", () => {
-    // let mockNet: jest.Mocked<typeof import("@xmcl/net")>;
-    // jest.mock("@xmcl/net");
-    // beforeEach(() => {
-    //     mockNet = jest.requireMock("@xmcl/net");
-    // });
     describe("#parse", () => {
-        test("#parse", async () => {
+        test("should parse forge site", async () => {
             const content = await promises.readFile(path.join(__dirname, "..", "..", "mock", "sample-forge.html"));
             const page = parse(content.toString());
             expect(page).toBeTruthy();
-            expect(page.versions).toHaveLength(3);
+            expect(page.versions).toHaveLength(4);
             expect(page.mcversion).toEqual("1.14.4");
             for (const ver of page.versions) {
                 expect(ver.type).toBeTruthy();
@@ -24,11 +18,21 @@ describe("ForgeWebpage", () => {
                 expect(ver.installer.path).toBeTruthy();
                 expect(ver.installer.md5).toBeTruthy();
             }
-            const last = page.versions[page.versions.length - 1];
-            expect(last.installer.md5).toEqual("2d24a32cce228d4cf3c42caf2e3cfe37");
-            expect(last.installer.sha1).toEqual("80ffade96232940422cbaf218ce6d424fd9192f2");
-            expect(last.installer.path).toEqual("http://files.minecraftforge.net/maven/net/minecraftforge/forge/1.14.4-28.0.4/forge-1.14.4-28.0.4-installer.jar");
+            let ver = page.versions[page.versions.length - 2];
+            expect(ver.installer.md5).toEqual("2d24a32cce228d4cf3c42caf2e3cfe37");
+            expect(ver.version).toEqual("28.0.4");
+            expect(ver.installer.sha1).toEqual("80ffade96232940422cbaf218ce6d424fd9192f2");
+            expect(ver.installer.path).toEqual("http://files.minecraftforge.net/maven/net/minecraftforge/forge/1.14.4-28.0.4/forge-1.14.4-28.0.4-installer.jar");
+
+            ver = page.versions[page.versions.length - 1];
+            expect(ver.installer.md5).toEqual("325158d1f128d18e78decd624340f707");
+            expect(ver.installer.sha1).toEqual("5d52ef70aa57d00a1c75c36314cc4dff946f8320");
+            expect(ver.version).toEqual("36.1.3");
+            expect(ver.installer.path).toEqual("/maven/net/minecraftforge/forge/1.16.5-36.1.3/forge-1.16.5-36.1.3-installer.jar");
         });
+        test("should be able to parse real forge", async () => {
+
+        })
     });
 
     // describe("#getWebPage", () => {
