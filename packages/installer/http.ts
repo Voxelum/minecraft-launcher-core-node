@@ -189,6 +189,10 @@ export interface DownloadBaseOptions {
      * @default "checksumNotMatch"
      */
     overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
+    /**
+     * The amount of time to retry if failed
+     */
+    retry?: number
 }
 
 export interface DownloadSingleUrlOptions extends DownloadBaseOptions {
@@ -233,12 +237,16 @@ export interface DownloadCommonOptions extends DownloadBaseOptions {
      */
     maxSocket?: number;
     /**
-  * The suggested max concurrency of the download. This is not a strict criteria.
-  *
-  * This is used to generate the `agents` maxFreeSocket.
-  * If `agents` is assigned, this will be ignore.
-  */
+     * The suggested max concurrency of the download. This is not a strict criteria.
+     *
+     * This is used to generate the `agents` maxFreeSocket.
+     * If `agents` is assigned, this will be ignore.
+     */
     maxFreeSocket?: number;
+    /**
+     * Number of retry count if download failed
+     */
+    retry?: number
 }
 interface Connections {
     request: ClientRequest;
@@ -248,6 +256,7 @@ export class DownloadTask extends TaskLooped<Segment[]> {
     protected segments: Segment[] = [];
     protected outputs: WriteStream[] = [];
     protected connections: Connections[] = [];
+    protected retry: number;
 
     /**
      * The original request url
@@ -319,6 +328,7 @@ export class DownloadTask extends TaskLooped<Segment[]> {
         this._from = options.url;
         this._to = options.destination;
         this.overwriteWhen = options.overwriteWhen;
+        this.retry = options.retry ?? 3;
     }
 
     protected async updateMetadata() {
@@ -458,11 +468,19 @@ export class DownloadTask extends TaskLooped<Segment[]> {
         await promise;
     }
     protected shouldTolerant(e: any): boolean {
-        return e.code === "ECONNRESET"
+        const isCommonError = e.code === "ECONNRESET"
             || e.code === "ETIMEDOUT"
             || e.code === "EPROTO"
             || e.code === "ECANCELED"
             || e instanceof ChecksumNotMatchError;
+        if (!isCommonError) {
+            return false;
+        }
+        if (this.retry === 0) {
+            return false;
+        }
+        this.retry -= 1
+        return true;
     }
     protected async validate() {
         if (this.checksum) {
