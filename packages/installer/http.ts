@@ -440,12 +440,10 @@ export class DownloadTask extends TaskLooped<Segment[]> {
         try {
             await this.updateMetadata();
             const done = await this.download();
-            if (done) {
-                await close(this.fd).catch(() => { });
-            }
             return [done, this.segments];
         } catch (e) {
             await close(this.fd).catch(() => { });
+            this.fd = -1
             await unlink(this.destination).catch(() => { });
             throw e;
         }
@@ -473,6 +471,8 @@ export class DownloadTask extends TaskLooped<Segment[]> {
             if (actual !== expect) {
                 throw new ChecksumNotMatchError(this.checksum.algorithm, this.checksum.hash, actual, this.destination);
             }
+            await close(this.fd).catch(() => { });
+            this.fd = -1
         }
     }
     protected async reset() {
