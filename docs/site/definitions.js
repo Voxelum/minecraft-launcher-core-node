@@ -2559,6 +2559,10 @@ export interface DownloadBaseOptions {
      * @default "checksumNotMatch"
      */
     overwriteWhen?: "checksumNotMatchOrEmpty" | "checksumNotMatch" | "always";
+    /**
+     * The amount of time to retry if failed
+     */
+    retry?: number;
 }
 export interface DownloadSingleUrlOptions extends DownloadBaseOptions {
     destination: string;
@@ -2608,12 +2612,16 @@ export interface DownloadCommonOptions extends DownloadBaseOptions {
      */
     maxSocket?: number;
     /**
-  * The suggested max concurrency of the download. This is not a strict criteria.
-  *
-  * This is used to generate the \`agents\` maxFreeSocket.
-  * If \`agents\` is assigned, this will be ignore.
-  */
+     * The suggested max concurrency of the download. This is not a strict criteria.
+     *
+     * This is used to generate the \`agents\` maxFreeSocket.
+     * If \`agents\` is assigned, this will be ignore.
+     */
     maxFreeSocket?: number;
+    /**
+     * Number of retry count if download failed
+     */
+    retry?: number;
 }
 interface Connections {
     request: ClientRequest;
@@ -2623,6 +2631,7 @@ export declare class DownloadTask extends TaskLooped<Segment[]> {
     protected segments: Segment[];
     protected outputs: WriteStream[];
     protected connections: Connections[];
+    protected retry: number;
     /**
      * The original request url
      */
