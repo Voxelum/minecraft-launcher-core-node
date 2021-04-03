@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.3.0
+### @xmcl/installer@3.2.0
+#### Features
+
+- feat(installer): add retry option ([4663a44bb824fa01e9efea7f43bfafdef23e01c1](https://github.com/voxelum/minecraft-launcher-core-node/commit/4663a44bb824fa01e9efea7f43bfafdef23e01c1))
+
+
 ## 4.2.3
 ### @xmcl/forge-site-parser@2.0.7
 #### Bug Fixes
