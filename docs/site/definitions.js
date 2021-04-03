@@ -1713,9 +1713,9 @@ interface Version {
      * The changelog info
      */
     changelog?: Download;
-    installer: Download;
+    installer?: Download;
     mdk?: Download;
-    universal: Download;
+    universal?: Download;
     source?: Download;
     launcher?: Download;
     /**

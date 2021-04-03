@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.2.3
+### @xmcl/forge-site-parser@2.0.7
+#### Bug Fixes
+
+- fix(forge-site-parser): correct the type ([ad1fde8be46d5d625c7000416dc39b9e658b7e92](https://github.com/voxelum/minecraft-launcher-core-node/commit/ad1fde8be46d5d625c7000416dc39b9e658b7e92))
+### @xmcl/installer@3.1.3
+#### Bug Fixes
+
+- fix(installer): close & handle fd properly ([09f71df32c29aaab8a9a8a13b621a665ba6e7bf0](https://github.com/voxelum/minecraft-launcher-core-node/commit/09f71df32c29aaab8a9a8a13b621a665ba6e7bf0))
+- Dependency @xmcl/forge-site-parser bump **patch**
+
+
 ## 4.2.2
 ### @xmcl/core@2.6.1
 #### Bug Fixes
