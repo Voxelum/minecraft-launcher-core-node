@@ -6017,7 +6017,8 @@ export interface RegionDataFrame {
 }
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`assert.ok()\`. */
+module.exports['assert.d.ts'] = `declare module 'assert' {
+    /** An alias of \`assert.ok()\`. */
     function assert(value: any, message?: string | Error): asserts value;
     namespace assert {
         class AssertionError implements Error {
@@ -6141,7 +6142,8 @@ module.exports['assert.d.ts'] = `declare module 'assert' {     /** An alias of \
     export = assert;
 }
 `;
-module.exports['async_hooks.d.ts'] = `/**  * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
+module.exports['async_hooks.d.ts'] = `/**
+ * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
  */
 declare module "async_hooks" {
     /**
@@ -6367,7 +6369,8 @@ declare module "async_hooks" {
     }
 }
 `;
-module.exports['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7. 
+module.exports['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7.
+
 \/\/ NOTE: TypeScript version-specific augmentations can be found in the following paths:
 \/\/          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
 \/\/          - ~/index.d.ts        - Definitions specific to TypeScript 2.1
@@ -6386,7 +6389,8 @@ module.exports['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and T
 \/\/ TypeScript 3.7-specific augmentations:
 \/\// <reference path="assert.d.ts" />
 `;
-module.exports['buffer.d.ts'] = `declare module "buffer" {     export const INSPECT_MAX_BYTES: number;
+module.exports['buffer.d.ts'] = `declare module "buffer" {
+    export const INSPECT_MAX_BYTES: number;
     export const kMaxLength: number;
     export const kStringMaxLength: number;
     export const constants: {
@@ -6408,7 +6412,8 @@ module.exports['buffer.d.ts'] = `declare module "buffer" {     export const INSP
     export { BuffType as Buffer };
 }
 `;
-module.exports['child_process.d.ts'] = `declare module "child_process" {     import { BaseEncodingOptions } from 'fs';
+module.exports['child_process.d.ts'] = `declare module "child_process" {
+    import { BaseEncodingOptions } from 'fs';
     import * as events from "events";
     import * as net from "net";
     import { Writable, Readable, Stream, Pipe } from "stream";
@@ -6917,7 +6922,8 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {     imp
     function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptions): Buffer;
 }
 `;
-module.exports['cluster.d.ts'] = `declare module "cluster" {     import * as child from "child_process";
+module.exports['cluster.d.ts'] = `declare module "cluster" {
+    import * as child from "child_process";
     import * as events from "events";
     import * as net from "net";
 
@@ -7179,7 +7185,8 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {     import * as chi
     function eventNames(): string[];
 }
 `;
-module.exports['console.d.ts'] = `declare module "console" {     import { InspectOptions } from 'util';
+module.exports['console.d.ts'] = `declare module "console" {
+    import { InspectOptions } from 'util';
 
     global {
         \/\/ This needs to be global to avoid TS2403 in case lib.dom.d.ts is present in the same build
@@ -7312,7 +7319,8 @@ module.exports['console.d.ts'] = `declare module "console" {     import { Inspec
     export = console;
 }
 `;
-module.exports['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */ declare module "constants" {
+module.exports['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */
+declare module "constants" {
     import { constants as osConstants, SignalConstants } from 'os';
     import { constants as cryptoConstants } from 'crypto';
     import { constants as fsConstants } from 'fs';
@@ -7320,7 +7328,8 @@ module.exports['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants
     export = exp;
 }
 `;
-module.exports['crypto.d.ts'] = `declare module "crypto" {     import * as stream from "stream";
+module.exports['crypto.d.ts'] = `declare module "crypto" {
+    import * as stream from "stream";
 
     interface Certificate {
         exportChallenge(spkac: BinaryLike): Buffer;
@@ -8095,7 +8104,8 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {     import * as strea
     }): Buffer;
 }
 `;
-module.exports['dgram.d.ts'] = `declare module "dgram" {     import { AddressInfo } from "net";
+module.exports['dgram.d.ts'] = `declare module "dgram" {
+    import { AddressInfo } from "net";
     import * as dns from "dns";
     import * as events from "events";
 
@@ -8236,7 +8246,8 @@ module.exports['dgram.d.ts'] = `declare module "dgram" {     import { AddressInf
     }
 }
 `;
-module.exports['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddrinfo flags.
+module.exports['dns.d.ts'] = `declare module "dns" {
+    \/\/ Supported getaddrinfo flags.
     const ADDRCONFIG: number;
     const V4MAPPED: number;
     /**
@@ -8607,7 +8618,8 @@ module.exports['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddri
     }
 }
 `;
-module.exports['domain.d.ts'] = `declare module "domain" {     import { EventEmitter } from "events";
+module.exports['domain.d.ts'] = `declare module "domain" {
+    import { EventEmitter } from "events";
 
     global {
         namespace NodeJS {
@@ -8631,7 +8643,8 @@ module.exports['domain.d.ts'] = `declare module "domain" {     import { EventEmi
     function create(): Domain;
 }
 `;
-module.exports['events.d.ts'] = `declare module "events" {     interface EventEmitterOptions {
+module.exports['events.d.ts'] = `declare module "events" {
+    interface EventEmitterOptions {
         /**
          * Enables automatic capturing of promise rejection.
          */
@@ -8714,7 +8727,8 @@ module.exports['events.d.ts'] = `declare module "events" {     interface EventEm
     export = EventEmitter;
 }
 `;
-module.exports['fs.d.ts'] = `declare module "fs" {     import * as stream from "stream";
+module.exports['fs.d.ts'] = `declare module "fs" {
+    import * as stream from "stream";
     import * as events from "events";
     import { URL } from "url";
     import * as promises from 'fs/promises';
@@ -10953,7 +10967,8 @@ module.exports['fs.d.ts'] = `declare module "fs" {     import * as stream from "
     }
 }
 `;
-module.exports['globals.d.ts'] = `\/\/ Declare "static" methods in Error interface ErrorConstructor {
+module.exports['globals.d.ts'] = `\/\/ Declare "static" methods in Error
+interface ErrorConstructor {
     /** Create .stack property on a target object */
     captureStackTrace(targetObject: object, constructorOpt?: Function): void;
 
@@ -11509,18 +11524,7 @@ declare namespace NodeJS {
         [Symbol.toPrimitive](): number;
     }
 
-    type TypedArray =
-        | Uint8Array
-        | Uint8ClampedArray
-        | Uint16Array
-        | Uint32Array
-        | Int8Array
-        | Int16Array
-        | Int32Array
-        | BigUint64Array
-        | BigInt64Array
-        | Float32Array
-        | Float64Array;
+    type TypedArray = Uint8Array | Uint8ClampedArray | Uint16Array | Uint32Array | Int8Array | Int16Array | Int32Array | Float32Array | Float64Array;
     type ArrayBufferView = TypedArray | DataView;
 
     interface Require {
@@ -11571,8 +11575,10 @@ declare namespace NodeJS {
     }
 }
 `;
-module.exports['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis; `;
-module.exports['http.d.ts'] = `declare module "http" {     import * as stream from "stream";
+module.exports['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis;
+`;
+module.exports['http.d.ts'] = `declare module "http" {
+    import * as stream from "stream";
     import { URL } from "url";
     import { Socket, Server as NetServer } from "net";
 
@@ -11994,7 +12000,8 @@ module.exports['http.d.ts'] = `declare module "http" {     import * as stream fr
     const maxHeaderSize: number;
 }
 `;
-module.exports['http2.d.ts'] = `declare module "http2" {     import * as events from "events";
+module.exports['http2.d.ts'] = `declare module "http2" {
+    import * as events from "events";
     import * as fs from "fs";
     import * as net from "net";
     import * as stream from "stream";
@@ -12946,7 +12953,8 @@ module.exports['http2.d.ts'] = `declare module "http2" {     import * as events 
     ): ClientHttp2Session;
 }
 `;
-module.exports['https.d.ts'] = `declare module "https" {     import * as tls from "tls";
+module.exports['https.d.ts'] = `declare module "https" {
+    import * as tls from "tls";
     import * as events from "events";
     import * as http from "http";
     import { URL } from "url";
@@ -12983,7 +12991,8 @@ module.exports['https.d.ts'] = `declare module "https" {     import * as tls fro
     let globalAgent: Agent;
 }
 `;
-module.exports['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14 \/\/ Project: http:\/\/nodejs.org/
+module.exports['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14
+\/\/ Project: http:\/\/nodejs.org/
 \/\/ Definitions by: Microsoft TypeScript <https:\/\/github.com/Microsoft>
 \/\/                 DefinitelyTyped <https:\/\/github.com/DefinitelyTyped>
 \/\/                 Alberto Schiabel <https:\/\/github.com/jkomyno>
@@ -13044,7 +13053,8 @@ module.exports['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.j
 \/\/       within the respective ~/ts3.5 (or later) folder. However, this is disallowed for versions
 \/\/       prior to TypeScript 3.5, so the older definitions will be found here.
 `;
-module.exports['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header \/\/ Type definitions for inspector
+module.exports['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header
+\/\/ Type definitions for inspector
 
 \/\/ These definitions are auto-generated.
 \/\/ Please see https:\/\/github.com/DefinitelyTyped/DefinitelyTyped/pull/19330
@@ -16085,7 +16095,8 @@ declare module "inspector" {
     function waitForDebugger(): void;
 }
 `;
-module.exports['module.d.ts'] = `declare module "module" {     import { URL } from "url";
+module.exports['module.d.ts'] = `declare module "module" {
+    import { URL } from "url";
     namespace Module {
         /**
          * Updates all the live bindings for builtin ES Modules to match the properties of the CommonJS exports.
@@ -16137,7 +16148,8 @@ module.exports['module.d.ts'] = `declare module "module" {     import { URL } fr
     export = Module;
 }
 `;
-module.exports['net.d.ts'] = `declare module "net" {     import * as stream from "stream";
+module.exports['net.d.ts'] = `declare module "net" {
+    import * as stream from "stream";
     import * as events from "events";
     import * as dns from "dns";
 
@@ -16405,7 +16417,8 @@ module.exports['net.d.ts'] = `declare module "net" {     import * as stream from
     function isIPv6(input: string): boolean;
 }
 `;
-module.exports['os.d.ts'] = `declare module "os" {     interface CpuInfo {
+module.exports['os.d.ts'] = `declare module "os" {
+    interface CpuInfo {
         model: string;
         speed: number;
         times: {
@@ -16644,7 +16657,8 @@ module.exports['os.d.ts'] = `declare module "os" {     interface CpuInfo {
     function setPriority(pid: number, priority: number): void;
 }
 `;
-module.exports['path.d.ts'] = `declare module "path" {     namespace path {
+module.exports['path.d.ts'] = `declare module "path" {
+    namespace path {
         /**
          * A parsed path object generated by path.parse() or consumed by path.format().
          */
@@ -16797,7 +16811,8 @@ module.exports['path.d.ts'] = `declare module "path" {     namespace path {
     export = path;
 }
 `;
-module.exports['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { AsyncResource } from 'async_hooks';
+module.exports['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
+    import { AsyncResource } from 'async_hooks';
 
     type EntryType = 'node' | 'mark' | 'measure' | 'gc' | 'function' | 'http2' | 'http';
 
@@ -17068,7 +17083,8 @@ module.exports['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { 
     function monitorEventLoopDelay(options?: EventLoopMonitorOptions): EventLoopDelayMonitor;
 }
 `;
-module.exports['process.d.ts'] = `declare module "process" {     import * as tty from "tty";
+module.exports['process.d.ts'] = `declare module "process" {
+    import * as tty from "tty";
 
     global {
         var process: NodeJS.Process;
@@ -17476,7 +17492,8 @@ module.exports['process.d.ts'] = `declare module "process" {     import * as tty
     export = process;
 }
 `;
-module.exports['punycode.d.ts'] = `declare module "punycode" {     /**
+module.exports['punycode.d.ts'] = `declare module "punycode" {
+    /**
      * @deprecated since v7.0.0
      * The version of the punycode module bundled in Node.js is being deprecated.
      * In a future major version of Node.js this module will be removed.
@@ -17544,7 +17561,8 @@ module.exports['punycode.d.ts'] = `declare module "punycode" {     /**
     const version: string;
 }
 `;
-module.exports['querystring.d.ts'] = `declare module "querystring" {     interface StringifyOptions {
+module.exports['querystring.d.ts'] = `declare module "querystring" {
+    interface StringifyOptions {
         encodeURIComponent?: (str: string) => string;
     }
 
@@ -17572,7 +17590,8 @@ module.exports['querystring.d.ts'] = `declare module "querystring" {     interfa
     function unescape(str: string): string;
 }
 `;
-module.exports['readline.d.ts'] = `declare module "readline" {     import * as events from "events";
+module.exports['readline.d.ts'] = `declare module "readline" {
+    import * as events from "events";
     import * as stream from "stream";
 
     interface Key {
@@ -17743,7 +17762,8 @@ module.exports['readline.d.ts'] = `declare module "readline" {     import * as e
     function moveCursor(stream: NodeJS.WritableStream, dx: number, dy: number, callback?: () => void): boolean;
 }
 `;
-module.exports['repl.d.ts'] = `declare module "repl" {     import { Interface, Completer, AsyncCompleter } from "readline";
+module.exports['repl.d.ts'] = `declare module "repl" {
+    import { Interface, Completer, AsyncCompleter } from "readline";
     import { Context } from "vm";
     import { InspectOptions } from "util";
 
@@ -18138,7 +18158,8 @@ module.exports['repl.d.ts'] = `declare module "repl" {     import { Interface, C
     }
 }
 `;
-module.exports['stream.d.ts'] = `declare module "stream" {     import * as events from "events";
+module.exports['stream.d.ts'] = `declare module "stream" {
+    import * as events from "events";
 
     class internal extends events.EventEmitter {
         pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean; }): T;
@@ -18492,14 +18513,16 @@ module.exports['stream.d.ts'] = `declare module "stream" {     import * as event
     export = internal;
 }
 `;
-module.exports['string_decoder.d.ts'] = `declare module "string_decoder" {     class StringDecoder {
+module.exports['string_decoder.d.ts'] = `declare module "string_decoder" {
+    class StringDecoder {
         constructor(encoding?: BufferEncoding);
         write(buffer: Buffer): string;
         end(buffer?: Buffer): string;
     }
 }
 `;
-module.exports['timers.d.ts'] = `declare module "timers" {     function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+module.exports['timers.d.ts'] = `declare module "timers" {
+    function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
     namespace setTimeout {
         function __promisify__(ms: number): Promise<void>;
         function __promisify__<T>(ms: number, value: T): Promise<T>;
@@ -18515,7 +18538,8 @@ module.exports['timers.d.ts'] = `declare module "timers" {     function setTimeo
     function clearImmediate(immediateId: NodeJS.Immediate): void;
 }
 `;
-module.exports['tls.d.ts'] = `declare module "tls" {     import * as crypto from "crypto";
+module.exports['tls.d.ts'] = `declare module "tls" {
+    import * as crypto from "crypto";
     import * as dns from "dns";
     import * as net from "net";
     import * as stream from "stream";
@@ -19294,7 +19318,8 @@ module.exports['tls.d.ts'] = `declare module "tls" {     import * as crypto from
     const rootCertificates: ReadonlyArray<string>;
 }
 `;
-module.exports['trace_events.d.ts'] = `declare module "trace_events" {     /**
+module.exports['trace_events.d.ts'] = `declare module "trace_events" {
+    /**
      * The \`Tracing\` object is used to enable or disable tracing for sets of
      * categories. Instances are created using the
      * \`trace_events.createTracing()\` method.
@@ -19355,7 +19380,8 @@ module.exports['trace_events.d.ts'] = `declare module "trace_events" {     /**
     function getEnabledCategories(): string | undefined;
 }
 `;
-module.exports['tty.d.ts'] = `declare module "tty" {     import * as net from "net";
+module.exports['tty.d.ts'] = `declare module "tty" {
+    import * as net from "net";
 
     function isatty(fd: number): boolean;
     class ReadStream extends net.Socket {
@@ -19421,7 +19447,8 @@ module.exports['tty.d.ts'] = `declare module "tty" {     import * as net from "n
     }
 }
 `;
-module.exports['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
+module.exports['url.d.ts'] = `declare module "url" {
+    import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
 
     \/\/ Input to \`url.format\`
     interface UrlObject {
@@ -19531,7 +19558,8 @@ module.exports['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery
     }
 }
 `;
-module.exports['util.d.ts'] = `declare module "util" {     interface InspectOptions extends NodeJS.InspectOptions { }
+module.exports['util.d.ts'] = `declare module "util" {
+    interface InspectOptions extends NodeJS.InspectOptions { }
     type Style = 'special' | 'number' | 'bigint' | 'boolean' | 'undefined' | 'null' | 'string' | 'symbol' | 'date' | 'regexp' | 'module';
     type CustomInspectFunction = (depth: number, options: InspectOptionsStylized) => string;
     interface InspectOptionsStylized extends InspectOptions {
@@ -19652,57 +19680,46 @@ module.exports['util.d.ts'] = `declare module "util" {     interface InspectOpti
     }
 
     namespace types {
-        function isAnyArrayBuffer(object: any): object is ArrayBufferLike;
+        function isAnyArrayBuffer(object: any): boolean;
         function isArgumentsObject(object: any): object is IArguments;
         function isArrayBuffer(object: any): object is ArrayBuffer;
-        function isArrayBufferView(object: any): object is NodeJS.ArrayBufferView;
+        function isArrayBufferView(object: any): object is ArrayBufferView;
         function isAsyncFunction(object: any): boolean;
         function isBigInt64Array(value: any): value is BigInt64Array;
         function isBigUint64Array(value: any): value is BigUint64Array;
         function isBooleanObject(object: any): object is Boolean;
-        function isBoxedPrimitive(object: any): object is String | Number | BigInt | Boolean | Symbol;
+        function isBoxedPrimitive(object: any): object is (Number | Boolean | String | Symbol /* | Object(BigInt) | Object(Symbol) */);
         function isDataView(object: any): object is DataView;
         function isDate(object: any): object is Date;
         function isExternal(object: any): boolean;
         function isFloat32Array(object: any): object is Float32Array;
         function isFloat64Array(object: any): object is Float64Array;
-        function isGeneratorFunction(object: any): object is GeneratorFunction;
-        function isGeneratorObject(object: any): object is Generator;
+        function isGeneratorFunction(object: any): boolean;
+        function isGeneratorObject(object: any): boolean;
         function isInt8Array(object: any): object is Int8Array;
         function isInt16Array(object: any): object is Int16Array;
         function isInt32Array(object: any): object is Int32Array;
-        function isMap<T>(
-            object: T | {},
-        ): object is T extends ReadonlyMap<any, any>
-            ? unknown extends T
-                ? never
-                : ReadonlyMap<any, any>
-            : Map<any, any>;
+        function isMap(object: any): boolean;
         function isMapIterator(object: any): boolean;
         function isModuleNamespaceObject(value: any): boolean;
         function isNativeError(object: any): object is Error;
         function isNumberObject(object: any): object is Number;
-        function isPromise(object: any): object is Promise<any>;
+        function isPromise(object: any): boolean;
         function isProxy(object: any): boolean;
         function isRegExp(object: any): object is RegExp;
-        function isSet<T>(
-            object: T | {},
-        ): object is T extends ReadonlySet<any>
-            ? unknown extends T
-                ? never
-                : ReadonlySet<any>
-            : Set<any>;
+        function isSet(object: any): boolean;
         function isSetIterator(object: any): boolean;
-        function isSharedArrayBuffer(object: any): object is SharedArrayBuffer;
-        function isStringObject(object: any): object is String;
-        function isSymbolObject(object: any): object is Symbol;
+        function isSharedArrayBuffer(object: any): boolean;
+        function isStringObject(object: any): boolean;
+        function isSymbolObject(object: any): boolean;
         function isTypedArray(object: any): object is NodeJS.TypedArray;
         function isUint8Array(object: any): object is Uint8Array;
         function isUint8ClampedArray(object: any): object is Uint8ClampedArray;
         function isUint16Array(object: any): object is Uint16Array;
         function isUint32Array(object: any): object is Uint32Array;
-        function isWeakMap(object: any): object is WeakMap<any, any>;
-        function isWeakSet(object: any): object is WeakSet<any>;
+        function isWeakMap(object: any): boolean;
+        function isWeakSet(object: any): boolean;
+        function isWebAssemblyCompiledModule(object: any): boolean;
     }
 
     class TextDecoder {
@@ -19738,7 +19755,8 @@ module.exports['util.d.ts'] = `declare module "util" {     interface InspectOpti
     }
 }
 `;
-module.exports['v8.d.ts'] = `declare module "v8" {     import { Readable } from "stream";
+module.exports['v8.d.ts'] = `declare module "v8" {
+    import { Readable } from "stream";
 
     interface HeapSpaceInfo {
         space_name: string;
@@ -19925,7 +19943,8 @@ module.exports['v8.d.ts'] = `declare module "v8" {     import { Readable } from 
     function deserialize(data: NodeJS.TypedArray): any;
 }
 `;
-module.exports['vm.d.ts'] = `declare module "vm" {     interface Context extends NodeJS.Dict<any> { }
+module.exports['vm.d.ts'] = `declare module "vm" {
+    interface Context extends NodeJS.Dict<any> { }
     interface BaseOptions {
         /**
          * Specifies the filename used in stack traces produced by this script.
@@ -20071,7 +20090,8 @@ module.exports['vm.d.ts'] = `declare module "vm" {     interface Context extends
     function measureMemory(options?: MeasureMemoryOptions): Promise<MemoryMeasurement>;
 }
 `;
-module.exports['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions {
+module.exports['wasi.d.ts'] = `declare module 'wasi' {
+    interface WASIOptions {
         /**
          * An array of strings that the WebAssembly application will
          * see as command line arguments. The first argument is the virtual path to the
@@ -20157,7 +20177,8 @@ module.exports['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions
     }
 }
 `;
-module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {     import { Context } from "vm";
+module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {
+    import { Context } from "vm";
     import { EventEmitter } from "events";
     import { Readable, Writable } from "stream";
     import { URL } from "url";
@@ -20395,7 +20416,8 @@ module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {     i
     function receiveMessageOnPort(port: MessagePort): { message: any } | undefined;
 }
 `;
-module.exports['zlib.d.ts'] = `declare module "zlib" {     import * as stream from "stream";
+module.exports['zlib.d.ts'] = `declare module "zlib" {
+    import * as stream from "stream";
 
     interface ZlibOptions {
         /**

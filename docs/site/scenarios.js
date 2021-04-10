@@ -1,4 +1,5 @@
-module.exports['common'] = `import { launch } from '@xmcl/core'; import { login, Authentication, offline } from '@xmcl/user';
+module.exports['common'] = `import { launch } from '@xmcl/core';
+import { login, Authentication, offline } from '@xmcl/user';
 
 let authentication: Authentication = offline("offline-user-name");
 let gamePath: string = "your game path";
@@ -28,7 +29,8 @@ async function gameLaunch() {
 }
 
 `;
-module.exports['installer'] = `import { install, VersionList, getVersionList, Version, installTask } from '@xmcl/installer'; 
+module.exports['installer'] = `import { install, VersionList, getVersionList, Version, installTask } from '@xmcl/installer';
+
 let versionMetaList: VersionList;
 let minecraftLocation: string; "my/path/to/minecraft"
 
@@ -50,7 +52,8 @@ async function installButMonitorProgress(versionMeta: Version) {
     return result;
 }
 `;
-module.exports['lab'] = `\/\/ core packages 
+module.exports['lab'] = `\/\/ core packages
+
 import { install } from '@xmcl/installer';
 import { launch, Version } from '@xmcl/core';
 import { login } from '@xmcl/user';
@@ -63,7 +66,8 @@ import { parse } from '@xmcl/gamesetting';
 import { TextComponent } from '@xmcl/text-component';
 import { WorldReader } from '@xmcl/world';
 `;
-module.exports['skin'] = `\/\// suppose you are on electron MAIN process \/\// 
+module.exports['skin'] = `\/\// suppose you are on electron MAIN process \/\//
+
 import { login, Authentication, offline, getTextures, lookup, GameProfileWithProperties, GameProfile } from '@xmcl/user';
 
 let authentication: Authentication = offline("offline-user-name");
