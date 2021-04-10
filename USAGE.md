@@ -1,36 +1,39 @@
 ## Getting Started
 
 - [Getting Started](#getting-started)
-  - [Build THREE.js model for block and player (PREVIEW, not available yet)](#build-threejs-model-for-block-and-player-preview-not-available-yet)
+  - [Build THREE.js model for block and player](#build-threejs-model-for-block-and-player)
+  - [Diagnose](#diagnose)
+  - [Find Curseforge Mods by search keyword](#find-curseforge-mods-by-search-keyword)
   - [Install Fabric](#install-fabric)
   - [Install Forge](#install-forge)
-  - [Install Java 8 From Mojang Source](#install-java-8-from-mojang-source)
   - [Install Library/Assets with Customized Host](#install-libraryassets-with-customized-host)
   - [Install Minecraft](#install-minecraft)
-  - [Launch](#launch)
+  - [Launch Game](#launch-game)
   - [Load Minecraft Block Model](#load-minecraft-block-model)
   - [Load Minecraft Resource](#load-minecraft-resource)
   - [Mojang Security API](#mojang-security-api)
   - [Parse Fabric Mod Metadata](#parse-fabric-mod-metadata)
   - [Parse Forge Mod/Config](#parse-forge-modconfig)
+  - [Parse GameSetting (options.txt)](#parse-gamesetting-optionstxt)
   - [Parse Liteloader Mod](#parse-liteloader-mod)
   - [Parse ResourcePack Basic Info](#parse-resourcepack-basic-info)
   - [Parse Version JSON](#parse-version-json)
   - [Ping Minecraft Server](#ping-minecraft-server)
+  - [Ping Minecraft Server](#ping-minecraft-server-1)
   - [Progress Moniting](#progress-moniting)
+  - [Progress Moniting on Installation](#progress-moniting-on-installation)
   - [Read and Write NBT](#read-and-write-nbt)
   - [Read and Write Server Info](#read-and-write-server-info)
   - [Read ResourcePack Content](#read-resourcepack-content)
   - [Save/World Data Loading](#saveworld-data-loading)
-  - [Scan Local Java](#scan-local-java)
   - [TextComponent](#textcomponent)
   - [User Login (Official/Offline)](#user-login-officialoffline)
   - [User Skin Operation](#user-skin-operation)
 - [Caching Request](#caching-request)
 
-### Build THREE.js model for block and player (PREVIEW, not available yet)
+### Build THREE.js model for block and player
 
-*Please read how to use [resource-manager](https://github.com/voxelum/minecraft-launcher-core-node/packages/resource-manager/README.md) before this*
+*Please read how to use [resourcepacks](https://github.com/Voxelum/minecraft-launcher-core-node/tree/master/packages/resourcepack/README.md) before this*
 
 Create THREE.js block model:
 

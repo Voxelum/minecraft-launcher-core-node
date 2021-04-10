@@ -3,7 +3,6 @@
 [![npm](https://img.shields.io/npm/l/@xmcl/core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 [![Convensional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://www.conventionalcommits.org)
-[![lerna](https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg)](https://lerna.js.org/)
 
 Provide several useful functions to build a Minecraft Launcher.
 
