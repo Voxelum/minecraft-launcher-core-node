@@ -1,4 +1,5 @@
-import { Geometry } from "three";
+import { BufferAttribute, Texture, Vector2 } from "three";
+import { Geometry } from "three/examples/jsm/deprecated/Geometry";
 import { DoubleSide, NearestFilter } from "three/src/constants";
 import { Object3D } from "three/src/core/Object3D";
 import { BoxGeometry } from "three/src/geometries/BoxGeometry";
@@ -67,32 +68,37 @@ function convertLegacySkin(context: CanvasRenderingContext2D, width: number) {
 
 type TextureSource = string | HTMLImageElement | URL;
 
-function mapUV(mesh: Mesh, faceIdx: number, x1: number, y1: number, x2: number, y2: number) {
-    const geometry = mesh.geometry as Geometry;
+
+function mapCubeUV(mesh: Mesh, src: CubeUVMapping) {
     const material = mesh.material as MeshBasicMaterial;
     const texture = material.map!;
     const tileUvW = 1 / texture.image.width;
     const tileUvH = 1 / texture.image.height;
-    let uvs = geometry.faceVertexUvs[0][faceIdx * 2];
-    x1 *= tileUvW;
-    x2 *= tileUvW;
-    y1 = 1 - (y1 * tileUvH);
-    y2 = 1 - (y2 * tileUvH);
-    uvs[0].x = x1; uvs[0].y = y1;
-    uvs[1].x = x1; uvs[1].y = y2;
-    uvs[2].x = x2; uvs[2].y = y1;
-    uvs = geometry.faceVertexUvs[0][faceIdx * 2 + 1];
-    uvs[0].x = x1; uvs[0].y = y2;
-    uvs[1].x = x2; uvs[1].y = y2;
-    uvs[2].x = x2; uvs[2].y = y1;
-}
+    const uvs: Vector2[] = []
+    /**
+     * Set the box mesh UV to the Minecraft skin texture
+     */
+    function mapUV(x1: number, y1: number, x2: number, y2: number) {
+        x1 *= tileUvW;
+        x2 *= tileUvW;
+        y1 = 1 - (y1 * tileUvH);
+        y2 = 1 - (y2 * tileUvH);
 
-function mapCubeUV(mesh: Mesh, src: CubeUVMapping) {
-    const order = ["left", "right", "top", "bottom", "front", "back"] as const;
-    for (let i = 0; i < order.length; i++) {
-        const pos = src[order[i]];
-        mapUV(mesh, i, pos[0], pos[1], pos[2], pos[3]);
+        uvs.push(
+            new Vector2(x1, y1),
+            new Vector2(x2, y1),
+            new Vector2(x1, y2),
+            new Vector2(x2, y2),
+        )
     }
+
+    const faces = ["left", "right", "top", "bottom", "front", "back"] as const;
+    for (let i = 0; i < faces.length; i++) {
+        const uvs = src[faces[i]];
+        mapUV(uvs[0], uvs[1], uvs[2], uvs[3]);
+    }
+    const attr = new BufferAttribute(new Float32Array(uvs.length * 2), 2).copyVector2sArray(uvs)
+    mesh.geometry.setAttribute("uv", attr);
 }
 
 export class PlayerObject3D extends Object3D {
@@ -111,16 +117,16 @@ export class PlayerObject3D extends Object3D {
     set slim(s: boolean) {
         if (s !== this._slim) {
             const template = s ? format.alex : format.steve;
-            const leftArm = this.getObjectByName("leftArm") as Mesh;
-            const rightArm = this.getObjectByName("rightArm") as Mesh;
+            const leftArm = this.getObjectByName("leftArm")! as Mesh;
+            const rightArm = this.getObjectByName("rightArm")! as Mesh;
 
             leftArm.geometry = new BoxGeometry(template.leftArm.w, template.leftArm.h, template.leftArm.d);
             mapCubeUV(leftArm, template.leftArm);
             rightArm.geometry = new BoxGeometry(template.rightArm.w, template.rightArm.h, template.rightArm.d);
             mapCubeUV(rightArm, template.rightArm);
 
-            const leftArmLayer = this.getObjectByName("leftArmLayer") as Mesh;
-            const rightArmLayer = this.getObjectByName("rightArmLayer") as Mesh;
+            const leftArmLayer = this.getObjectByName("leftArmLayer")! as Mesh;
+            const rightArmLayer = this.getObjectByName("rightArmLayer")! as Mesh;
             if (leftArmLayer) {
                 leftArmLayer.geometry = new BoxGeometry(template.leftArm.layer.w, template.leftArm.layer.h, template.leftArm.layer.d);
                 mapCubeUV(leftArmLayer, template.leftArm.layer);

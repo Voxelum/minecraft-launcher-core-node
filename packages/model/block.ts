@@ -10,6 +10,7 @@ import { Group } from "three/src/objects/Group";
 import { BoxGeometry } from "three/src/geometries/BoxGeometry";
 import { Vector3 } from "three/src/math/Vector3";
 import { Vector2 } from "three/src/math/Vector2";
+import { BufferAttribute } from "three/src/core/BufferAttribute";
 
 interface Texture {
     url: string;
@@ -106,22 +107,21 @@ export class BlockModelObject extends Object3D {
             const mesh = pivot.children[0] as Mesh;
             const geo = mesh.geometry as BoxGeometry;
 
-            for (let j = 0; j < geo.vertices.length; j++) {
+            // for (let j = 0; j < geo.vertices.length; j++) {
+            //     // convert vertex coordinates to world coordinates
+            //     const vertex = geo.vertices[j].clone();
+            //     const abs = mesh.localToWorld(vertex);
 
-                // convert vertex coordinates to world coordinates
-                const vertex = geo.vertices[j].clone();
-                const abs = mesh.localToWorld(vertex);
+            //     // update bounding box
 
-                // update bounding box
+            //     if (abs.x < box.minx) { box.minx = abs.x; }
+            //     if (abs.y < box.miny) { box.miny = abs.y; }
+            //     if (abs.z < box.minz) { box.minz = abs.z; }
 
-                if (abs.x < box.minx) { box.minx = abs.x; }
-                if (abs.y < box.miny) { box.miny = abs.y; }
-                if (abs.z < box.minz) { box.minz = abs.z; }
-
-                if (abs.x > box.maxx) { box.maxx = abs.x; }
-                if (abs.y > box.maxy) { box.maxy = abs.y; }
-                if (abs.z > box.maxz) { box.maxz = abs.z; }
-            }
+            //     if (abs.x > box.maxx) { box.maxx = abs.x; }
+            //     if (abs.y > box.maxy) { box.maxy = abs.y; }
+            //     if (abs.z > box.maxz) { box.maxz = abs.z; }
+            // }
         }
 
         // return the center of the bounding box
@@ -198,7 +198,6 @@ export class BlockModelFactory {
         }
 
         for (const element of model.elements) {
-            // checkElement(element)
             // get dimensions and origin
             const width = element.to[0] - element.from[0];
             const height = element.to[1] - element.from[1];
@@ -214,24 +213,24 @@ export class BlockModelFactory {
             const blockGeometry = new BoxGeometry(width + fix, height + fix, length + fix);
             const blockMesh = new Mesh(blockGeometry, materials);
             blockMesh.name = "block-element";
-
-            blockGeometry.faceVertexUvs[0] = [];
+            blockGeometry.clearGroups()
 
             blockMesh.position.x = origin.x;
             blockMesh.position.y = origin.y;
             blockMesh.position.z = origin.z;
 
+            const uvAttr: Vector2[] = []
+
             const faces = ["east", "west", "up", "down", "south", "north"] as const;
             for (let i = 0; i < 6; i++) {
                 const face = element.faces[faces[i]];
+                let materialIndex = 0
+                let uv: number[]
                 if (face) {
                     // get material index
-                    const index = materialIndexes[face.texture.substring(1, face.texture.length)];  // references.indexOf(ref[0] == '#' ? ref.substring(1) : ref)
+                    materialIndex = materialIndexes[face.texture.substring(1, face.texture.length)];  // references.indexOf(ref[0] == '#' ? ref.substring(1) : ref)
 
-                    blockGeometry.faces[i * 2].materialIndex = index;
-                    blockGeometry.faces[i * 2 + 1].materialIndex = index;
-
-                    let uv: number[] = face.uv || [0, 0, 16, 16];
+                    uv = face.uv || [0, 0, 16, 16];
 
                     if (clipUVs) {
                         uv = uv.map((e) => {
@@ -247,51 +246,41 @@ export class BlockModelFactory {
 
                     uv = uv.map((e) => e / 16);
 
-                    // fix edges
-                    uv[0] += 0.0005;
-                    uv[1] += 0.0005;
-                    uv[2] -= 0.0005;
-                    uv[3] -= 0.0005;
-
-                    let map = [
-                        new Vector2(uv[0], 1 - uv[1]),
-                        new Vector2(uv[0], 1 - uv[3]),
-                        new Vector2(uv[2], 1 - uv[3]),
-                        new Vector2(uv[2], 1 - uv[1]),
-                    ];
-
-                    if (face.rotation) {
-                        const amount = face.rotation;
-                        // check property
-                        if (!([0, 90, 180, 270].indexOf(amount) >= 0)) {
-                            console.error("The \"rotation\" property for \"" + face + "\" face is invalid (got \"" + amount + "\").");
-                        }
-                        // rotate map
-                        for (let j = 0; j < amount / 90; j++) {
-                            map = [map[1], map[2], map[3], map[0]];
-                        }
-
-                    }
-
-                    blockGeometry.faceVertexUvs[0][i * 2] = [map[0], map[1], map[3]];
-                    blockGeometry.faceVertexUvs[0][i * 2 + 1] = [map[1], map[2], map[3]];
+                    // let map = [
+                    //     new Vector2(x1, 1 - y1),
+                    //     new Vector2(x2, 1 - y1),
+                    //     new Vector2(x1, 1 - y2),
+                    //     new Vector2(x2, 1 - y2),
+                    // ];
                 } else {
+                    uv = [0, 0, 1, 1]
                     // transparent material
-                    blockGeometry.faces[i * 2].materialIndex = 0;
-                    blockGeometry.faces[i * 2 + 1].materialIndex = 0;
-
-                    const map = [
-                        new Vector2(0, 0),
-                        new Vector2(1, 0),
-                        new Vector2(1, 1),
-                        new Vector2(0, 1),
-                    ];
-
-                    blockGeometry.faceVertexUvs[0][i * 2] = [map[0], map[1], map[3]];
-                    blockGeometry.faceVertexUvs[0][i * 2 + 1] = [map[1], map[2], map[3]];
                 }
-                blockGeometry.uvsNeedUpdate = true;
+                const [x1, y1, x2, y2] = uv
+                let map = [
+                    new Vector2(x1, y2),
+                    new Vector2(x2, y2),
+                    new Vector2(x1, y1),
+                    new Vector2(x2, y1),
+                ];
+                if (face && face.rotation) {
+                    const amount = face.rotation;
+                    // check property
+                    if (!([0, 90, 180, 270].indexOf(amount) >= 0)) {
+                        console.error("The \"rotation\" property for \"" + face + "\" face is invalid (got \"" + amount + "\").");
+                    }
+                    // rotate map
+                    for (let j = 0; j < amount / 90; j++) {
+                        map = [map[1], map[2], map[3], map[0]];
+                    }
+                }
+
+                uvAttr.push(...map)
+                blockGeometry.addGroup(i * 6, 6, materialIndex)
+                // blockGeometry.uvsNeedUpdate = true;
             }
+            blockGeometry.setAttribute("uv", new BufferAttribute(
+                new Float32Array(uvAttr.length * 2), 2).copyVector2sArray(uvAttr))
 
             /**
              * bake rotation start
