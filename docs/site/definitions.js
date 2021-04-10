@@ -1,4 +1,5 @@
-module.exports['@xmcl/client/channel.d.ts'] = `\/\// <reference types="node" /> import { EventEmitter } from "events";
+const definitions = {};
+definitions['@xmcl/client/channel.d.ts'] = `\/\// <reference types="node" /> import { EventEmitter } from "events";
 import { NetConnectOpts } from "net";
 import { Coder } from "./coders";
 import { PacketRegistryEntry, Side } from "./packet";
@@ -60,7 +61,7 @@ declare class PacketCoders {
 }
 export {};
 \/\/# sourceMappingURL=channel.d.ts.map`;
-module.exports['@xmcl/client/coders.d.ts'] = `\/\// <reference types="long" /> import ByteBuffer from "bytebuffer";
+definitions['@xmcl/client/coders.d.ts'] = `\/\// <reference types="long" /> import ByteBuffer from "bytebuffer";
 export interface SlotData {
     blockId: number;
     itemCount?: number;
@@ -91,7 +92,7 @@ export declare const Json: Coder<any>;
 export declare const Slot: Coder<SlotData>;
 export declare const ByteArray: Coder<Int8Array>;
 \/\/# sourceMappingURL=coders.d.ts.map`;
-module.exports['@xmcl/client/index.d.ts'] = `/**  * The client for Minecraft protocol. I can create the connection with Minecraft server and ping the server status.
+definitions['@xmcl/client/index.d.ts'] = `/**  * The client for Minecraft protocol. I can create the connection with Minecraft server and ping the server status.
  *
  * You can use {@link queryStatus} with {@link QueryOptions} to ping a {@link Status} of a server
  *
@@ -102,7 +103,7 @@ export * from "./packet";
 export * from "./channel";
 export * from "./status";
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/client/packet.d.ts'] = `import { State } from "./channel"; import { Coder } from "./coders";
+definitions['@xmcl/client/packet.d.ts'] = `import { State } from "./channel"; import { Coder } from "./coders";
 export declare type Side = "server" | "client";
 export interface PacketRegistryEntry {
     readonly id: number;
@@ -138,7 +139,7 @@ export declare function Field<T>(type: Coder<T>): (target: any, key: string) => 
  */
 export declare function Packet(side: Side, id: number, state: State, name?: string): (constructor: Function) => void;
 \/\/# sourceMappingURL=packet.d.ts.map`;
-module.exports['@xmcl/client/status.d.ts'] = `import { TextComponent } from "@xmcl/text-component"; import Long from "long";
+definitions['@xmcl/client/status.d.ts'] = `import { TextComponent } from "@xmcl/text-component"; import Long from "long";
 import { Channel } from "./channel";
 export declare class Handshake {
     protocolVersion: number;
@@ -258,7 +259,7 @@ export declare function createClient(protocol: number, timeout?: number): {
 };
 export {};
 \/\/# sourceMappingURL=status.d.ts.map`;
-module.exports['@xmcl/core/diagnose.d.ts'] = `import { ResolvedLibrary, ResolvedVersion } from "./version"; import { MinecraftFolder, MinecraftLocation } from "./folder";
+definitions['@xmcl/core/diagnose.d.ts'] = `import { ResolvedLibrary, ResolvedVersion } from "./version"; import { MinecraftFolder, MinecraftLocation } from "./folder";
 export interface Issue {
     /**
      * The type of the issue.
@@ -388,7 +389,7 @@ export declare function diagnoseLibraries(resolvedVersion: ResolvedVersion, mine
 export declare function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<AssetIndexIssue | undefined>;
 export declare function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<MinecraftJarIssue | undefined>;
 \/\/# sourceMappingURL=diagnose.d.ts.map`;
-module.exports['@xmcl/core/folder.d.ts'] = `export interface MinecraftFolder {     readonly root: string;
+definitions['@xmcl/core/folder.d.ts'] = `export interface MinecraftFolder {     readonly root: string;
 }
 /**
  * The Minecraft folder structure. All method will return the path related to a minecraft root like \`.minecraft\`.
@@ -455,7 +456,7 @@ export declare namespace MinecraftPath {
 }
 export declare type MinecraftLocation = MinecraftFolder | string;
 \/\/# sourceMappingURL=folder.d.ts.map`;
-module.exports['@xmcl/core/index.d.ts'] = `/**  * The core package for launching Minecraft.
+definitions['@xmcl/core/index.d.ts'] = `/**  * The core package for launching Minecraft.
  * It provides the {@link Version.parse} function to parse Minecraft version,
  * and the {@link launch} function to launch the game.
  *
@@ -468,7 +469,7 @@ export * from "./folder";
 export * from "./diagnose";
 export { access as _access, exists as _exists, mkdir as _mkdir, readFile as _readFile, writeFile as _writeFile, pipeline as _pipeline, checksum } from "./utils";
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/core/launch.d.ts'] = `\/\// <reference types="node" /> import { ChildProcess, SpawnOptions } from "child_process";
+definitions['@xmcl/core/launch.d.ts'] = `\/\// <reference types="node" /> import { ChildProcess, SpawnOptions } from "child_process";
 import { EventEmitter } from "events";
 import { MinecraftFolder } from "./folder";
 import { Platform } from "./platform";
@@ -809,7 +810,7 @@ export declare function generateArgumentsServer(options: MinecraftServerOptions 
  */
 export declare function generateArguments(options: LaunchOption): Promise<string[]>;
 \/\/# sourceMappingURL=launch.d.ts.map`;
-module.exports['@xmcl/core/platform.d.ts'] = `/**  * The platform information related to current operating system.
+definitions['@xmcl/core/platform.d.ts'] = `/**  * The platform information related to current operating system.
  */
 export interface Platform {
     /**
@@ -835,7 +836,7 @@ export declare function getPlatform(): Platform;
  */
 export declare const currentPlatform: Platform;
 \/\/# sourceMappingURL=platform.d.ts.map`;
-module.exports['@xmcl/core/utils.d.ts'] = `/**  * @ignore
+definitions['@xmcl/core/utils.d.ts'] = `/**  * @ignore
  */
 \/\// <reference types="node" />
 import { readFile as freadFile, writeFile as fwriteFile, access as faccess, mkdir as fmkdir, link as flink } from "fs";
@@ -868,7 +869,7 @@ export declare function checksum(target: string, algorithm: string): Promise<any
  */
 export declare function isNotNull<T>(v: T | undefined): v is T;
 \/\/# sourceMappingURL=utils.d.ts.map`;
-module.exports['@xmcl/core/version.d.ts'] = `import { MinecraftLocation } from "./folder"; import { Platform } from "./platform";
+definitions['@xmcl/core/version.d.ts'] = `import { MinecraftLocation } from "./folder"; import { Platform } from "./platform";
 interface PartialResolvedVersion extends Version {
     libraries: ResolvedLibrary[];
     arguments: {
@@ -1237,7 +1238,7 @@ export interface Version {
 }
 export {};
 \/\/# sourceMappingURL=version.d.ts.map`;
-module.exports['@xmcl/curseforge/http/base.d.ts'] = `\/\// <reference types="node" /> import { Agent } from "https";
+definitions['@xmcl/curseforge/http/base.d.ts'] = `\/\// <reference types="node" /> import { Agent } from "https";
 /**
  * Abstract layer for http requester.
  */
@@ -1261,11 +1262,11 @@ export declare type HttpRequester = (option: {
     statusCode: number;
 }>;
 \/\/# sourceMappingURL=base.d.ts.map`;
-module.exports['@xmcl/curseforge/http/index.browser.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
+definitions['@xmcl/curseforge/http/index.browser.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
 \/\/# sourceMappingURL=index.browser.d.ts.map`;
-module.exports['@xmcl/curseforge/http/index.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
+definitions['@xmcl/curseforge/http/index.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/curseforge/index.d.ts'] = `\/\// <reference types="node" /> import { Agent } from "https";
+definitions['@xmcl/curseforge/index.d.ts'] = `\/\// <reference types="node" /> import { Agent } from "https";
 export interface AddonInfo {
     /**
      * The addon id. You can use this in many functions required the \`addonID\`
@@ -1685,7 +1686,7 @@ export declare function getCategories(options?: QueryOption): Promise<Category[]
  */
 export declare function getCategoryTimestamp(options?: QueryOption): Promise<any>;
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/forge-site-parser/index.d.ts'] = `/**  * One forge version download info
+definitions['@xmcl/forge-site-parser/index.d.ts'] = `/**  * One forge version download info
  */
 interface Download {
     md5: string;
@@ -1718,6 +1719,7 @@ interface Version {
     universal?: Download;
     source?: Download;
     launcher?: Download;
+    ["installer-win"]: Download | undefined;
     /**
      * The type of the forge release. The \`common\` means the normal release.
      */
@@ -1732,7 +1734,7 @@ export interface ForgeWebPage {
 }
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/gamesetting/index.d.ts'] = `/**  * Provide function to {@link parse} the options.txt and also {@link stringify} it into the string.
+definitions['@xmcl/gamesetting/index.d.ts'] = `/**  * Provide function to {@link parse} the options.txt and also {@link stringify} it into the string.
  *
  * @packageDocumentation
  */
@@ -2017,7 +2019,7 @@ export declare function stringify(setting: GameSetting | Frame | any, original?:
 export declare type GameSetting = ReturnType<typeof getDefaultFrame>;
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/installer/curseforge.d.ts'] = `\/\// <reference types="node" /> import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
+definitions['@xmcl/installer/curseforge.d.ts'] = `\/\// <reference types="node" /> import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { Task, TaskGroup } from "@xmcl/task";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadCommonOptions } from "./http";
@@ -2141,7 +2143,7 @@ export declare function installCurseforgeFile(file: File, destination: string, o
 export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): import("@xmcl/task").TaskRoutine<void>;
 export {};
 \/\/# sourceMappingURL=curseforge.d.ts.map`;
-module.exports['@xmcl/installer/diagnose.d.ts'] = `import { Issue, LibraryIssue, MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { InstallProfile, PostProcessor } from "./profile";
+definitions['@xmcl/installer/diagnose.d.ts'] = `import { Issue, LibraryIssue, MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { InstallProfile, PostProcessor } from "./profile";
 export declare type InstallIssues = ProcessorIssue | LibraryIssue;
 /**
  * The processor issue
@@ -2169,7 +2171,7 @@ export interface InstallProfileIssueReport {
  */
 export declare function diagnoseInstall(installProfile: InstallProfile, minecraftLocation: MinecraftLocation): Promise<InstallProfileIssueReport>;
 \/\/# sourceMappingURL=diagnose.d.ts.map`;
-module.exports['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Timestamped } from "./http";
+definitions['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Timestamped } from "./http";
 import { InstallOptions } from "./utils";
 export declare const YARN_MAVEN_URL = "https:\/\/maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export declare const LOADER_MAVEN_URL = "https:\/\/maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
@@ -2323,7 +2325,7 @@ export interface FabricInstallOptions extends InstallOptions {
  */
 export declare function installFabric(loader: FabricLoaderArtifact, minecraft: MinecraftLocation, options?: FabricInstallOptions): Promise<string>;
 \/\/# sourceMappingURL=fabric.d.ts.map`;
-module.exports['@xmcl/installer/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
+definitions['@xmcl/installer/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadFallbackTask, Timestamped } from "./http";
 import { LibraryOptions } from "./minecraft";
@@ -2495,7 +2497,7 @@ export declare function getForgeVersionList(option?: {
 }): Promise<ForgeVersionList>;
 export {};
 \/\/# sourceMappingURL=forge.d.ts.map`;
-module.exports['@xmcl/installer/http.d.ts'] = `\/\// <reference types="node" /> import { TaskLooped } from "@xmcl/task";
+definitions['@xmcl/installer/http.d.ts'] = `\/\// <reference types="node" /> import { TaskLooped } from "@xmcl/task";
 import { WriteStream } from "fs";
 import { Agent as HttpAgent, ClientRequest, IncomingMessage } from "http";
 import { Agent as HttpsAgent } from "https";
@@ -2704,7 +2706,7 @@ export declare function createAgents(options: DownloadCommonOptions): {
 export declare function withAgents<T extends DownloadCommonOptions, R>(options: T, scope: (options: T) => R): Promise<R>;
 export {};
 \/\/# sourceMappingURL=http.d.ts.map`;
-module.exports['@xmcl/installer/index.d.ts'] = `/**  * The installer module provides commonly used installation functions for Minecraft.
+definitions['@xmcl/installer/index.d.ts'] = `/**  * The installer module provides commonly used installation functions for Minecraft.
  * @packageDocumentation
  */
 export * from "./fabric";
@@ -2720,7 +2722,7 @@ export { InstallOptions } from "./utils";
 export { DownloadBaseOptions, DownloadCommonOptions, DownloadFallbackTask, DownloadFromPathOptions, DownloadMultiUrlOptions, DownloadSingleUrlOptions, DownloadTask, Segment, Agents, Timestamped, ChecksumNotMatchError, createAgents, withAgents, } from "./http";
 export * from "./unzip";
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/installer/java.d.ts'] = `import { Platform } from "@xmcl/core"; import { Task } from "@xmcl/task";
+definitions['@xmcl/installer/java.d.ts'] = `import { Platform } from "@xmcl/core"; import { Task } from "@xmcl/task";
 import { DownloadCommonOptions, DownloadTask } from "./http";
 export interface JavaInfo {
     /**
@@ -2811,7 +2813,7 @@ export declare function getPotentialJavaLocations(): Promise<string[]>;
 export declare function scanLocalJava(locations: string[]): Promise<JavaInfo[]>;
 export {};
 \/\/# sourceMappingURL=java.d.ts.map`;
-module.exports['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
+definitions['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
 import { InstallOptions } from "./utils";
 import { Timestamped } from "./http";
 export declare const DEFAULT_VERSION_MANIFEST = "http:\/\/dl.liteloader.com/versions/versions.json";
@@ -2913,7 +2915,7 @@ export declare function installLiteloader(versionMeta: LiteloaderVersion, locati
  */
 export declare function installLiteloaderTask(versionMeta: LiteloaderVersion, location: MinecraftLocation, options?: InstallOptions): Task<string>;
 \/\/# sourceMappingURL=liteloader.d.ts.map`;
-module.exports['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core"; import { Task } from "@xmcl/task";
+definitions['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core"; import { Task } from "@xmcl/task";
 import { DownloadCommonOptions, DownloadFallbackTask, Timestamped } from "./http";
 /**
  * The function to swap library host.
@@ -3198,7 +3200,7 @@ export declare class InstallAssetTask extends DownloadFallbackTask {
  */
 export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOptions): string[];
 \/\/# sourceMappingURL=minecraft.d.ts.map`;
-module.exports['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core"; import { InstallOptions } from "./utils";
+definitions['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core"; import { InstallOptions } from "./utils";
 export interface BadOptifineJarError {
     error: "BadOptifineJar";
     /**
@@ -3250,7 +3252,7 @@ export declare function installOptifine(installer: string, minecraft: MinecraftL
  */
 export declare function installOptifineTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): import("@xmcl/task").TaskRoutine<string>;
 \/\/# sourceMappingURL=optifine.d.ts.map`;
-module.exports['@xmcl/installer/profile.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core"; import { TaskLooped } from "@xmcl/task";
+definitions['@xmcl/installer/profile.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core"; import { TaskLooped } from "@xmcl/task";
 import { LibraryOptions, InstallSideOption } from "./minecraft";
 export interface PostProcessor {
     /**
@@ -3386,7 +3388,7 @@ export declare class PostProcessingTask extends TaskLooped<void> {
     protected reset(): void;
 }
 \/\/# sourceMappingURL=profile.d.ts.map`;
-module.exports['@xmcl/installer/unzip.d.ts'] = `import { TaskLooped } from "@xmcl/task"; import { Entry, ZipFile } from "yauzl";
+definitions['@xmcl/installer/unzip.d.ts'] = `import { TaskLooped } from "@xmcl/task"; import { Entry, ZipFile } from "yauzl";
 export interface EntryResolver {
     (entry: Entry): Promise<string> | string;
 }
@@ -3405,7 +3407,7 @@ export declare class UnzipTask extends TaskLooped<void> {
     protected reset(): void;
 }
 \/\/# sourceMappingURL=unzip.d.ts.map`;
-module.exports['@xmcl/installer/utils.d.ts'] = `\/\// <reference types="node" /> import { _exists as exists, _mkdir as mkdir, _readFile as readFile, _writeFile as writeFile, _pipeline as pipeline } from "@xmcl/core";
+definitions['@xmcl/installer/utils.d.ts'] = `\/\// <reference types="node" /> import { _exists as exists, _mkdir as mkdir, _readFile as readFile, _writeFile as writeFile, _pipeline as pipeline } from "@xmcl/core";
 import { ExecOptions } from "child_process";
 import { close as fclose, copyFile as fcopyFile, ftruncate, open as fopen, stat as fstat, unlink as funlink } from "fs";
 export declare const unlink: typeof funlink.__promisify__;
@@ -3441,7 +3443,7 @@ export interface InstallOptions {
     versionId?: string;
 }
 \/\/# sourceMappingURL=utils.d.ts.map`;
-module.exports['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system"; declare type Person = {
+definitions['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system"; declare type Person = {
     /**
      * The real name, or username, of the person. Mandatory.
      */
@@ -3618,7 +3620,7 @@ export interface FabricModMetadata {
 export declare function readFabricMod(file: FileSystem | string | Uint8Array): Promise<FabricModMetadata>;
 export {};
 \/\/# sourceMappingURL=fabric.d.ts.map`;
-module.exports['@xmcl/mod-parser/forge.d.ts'] = `import { FileSystem } from "@xmcl/system"; /**
+definitions['@xmcl/mod-parser/forge.d.ts'] = `import { FileSystem } from "@xmcl/system"; /**
  * The @Mod data from class file
  */
 export interface ForgeModAnnotationData {
@@ -3906,7 +3908,7 @@ export declare class ForgeModParseFailedError extends Error {
 }
 export {};
 \/\/# sourceMappingURL=forge.d.ts.map`;
-module.exports['@xmcl/mod-parser/forgeConfig.d.ts'] = `/**  * Represent the forge config file
+definitions['@xmcl/mod-parser/forgeConfig.d.ts'] = `/**  * Represent the forge config file
  */
 export interface ForgeConfig {
     [category: string]: {
@@ -3933,11 +3935,11 @@ export declare namespace ForgeConfig {
     function parse(body: string): ForgeConfig;
 }
 \/\/# sourceMappingURL=forgeConfig.d.ts.map`;
-module.exports['@xmcl/mod-parser/index.d.ts'] = `export * from "./forge"; export * from "./forgeConfig";
+definitions['@xmcl/mod-parser/index.d.ts'] = `export * from "./forge"; export * from "./forgeConfig";
 export * from "./liteloader";
 export * from "./fabric";
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/mod-parser/liteloader.d.ts'] = `import { FileSystem } from "@xmcl/system"; export interface LiteloaderModMetadata {
+definitions['@xmcl/mod-parser/liteloader.d.ts'] = `import { FileSystem } from "@xmcl/system"; export interface LiteloaderModMetadata {
     readonly mcversion: string;
     readonly name: string;
     readonly revision: number;
@@ -3953,7 +3955,7 @@ module.exports['@xmcl/mod-parser/liteloader.d.ts'] = `import { FileSystem } from
 }
 export declare function readLiteloaderMod(mod: string | Uint8Array | FileSystem): Promise<LiteloaderModMetadata>;
 \/\/# sourceMappingURL=liteloader.d.ts.map`;
-module.exports['@xmcl/model/block.d.ts'] = `import { BlockModel, PackMeta } from "@xmcl/resourcepack"; import { Object3D } from "three/src/core/Object3D";
+definitions['@xmcl/model/block.d.ts'] = `import { BlockModel, PackMeta } from "@xmcl/resourcepack"; import { Object3D } from "three/src/core/Object3D";
 import { Vector3 } from "three/src/math/Vector3";
 interface Texture {
     url: string;
@@ -3993,9 +3995,9 @@ export declare class BlockModelFactory {
 }
 export {};
 \/\/# sourceMappingURL=block.d.ts.map`;
-module.exports['@xmcl/model/index.d.ts'] = `export * from "./block"; export * from "./player";
+definitions['@xmcl/model/index.d.ts'] = `export * from "./block"; export * from "./player";
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/model/player-model.d.ts'] = `export interface ModelTemplate {     head: Part;
+definitions['@xmcl/model/player-model.d.ts'] = `export interface ModelTemplate {     head: Part;
     rightLeg: Part;
     leftLeg: Part;
     torso: Part;
@@ -4032,9 +4034,9 @@ declare const _default: {
 };
 export default _default;
 \/\/# sourceMappingURL=player-model.d.ts.map`;
-module.exports['@xmcl/model/player.d.ts'] = `import { Object3D } from "three/src/core/Object3D"; import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
+definitions['@xmcl/model/player.d.ts'] = `import { Object3D } from "three/src/core/Object3D"; import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
 import { CanvasTexture } from "three/src/textures/CanvasTexture";
-declare type TextureSource = string | HTMLImageElement;
+declare type TextureSource = string | HTMLImageElement | URL;
 export declare class PlayerObject3D extends Object3D {
     private _slim;
     constructor(skin: MeshBasicMaterial, cape: MeshBasicMaterial, tranparent: MeshBasicMaterial, slim: boolean);
@@ -4050,12 +4052,16 @@ export declare class PlayerModel {
     readonly textureCape: CanvasTexture;
     readonly texturePlayer: CanvasTexture;
     constructor();
+    /**
+     * @param skin The skin texture source. Should be url string, URL object, or a Image HTML element
+     * @param isSlim Is this skin slim
+     */
     setSkin(skin: TextureSource, isSlim?: boolean): Promise<void>;
     setCape(cape: TextureSource | undefined): Promise<void>;
 }
 export default PlayerModel;
 \/\/# sourceMappingURL=player.d.ts.map`;
-module.exports['@xmcl/nbt/index.d.ts'] = `/**  * The nbt module provides nbt {@link serialize} and {@link deserialize} functions.
+definitions['@xmcl/nbt/index.d.ts'] = `/**  * The nbt module provides nbt {@link serialize} and {@link deserialize} functions.
  *
  * @packageDocumentation
  */
@@ -4173,10 +4179,10 @@ export declare class WriteContext {
 }
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/nbt/utils.d.ts'] = `\/\// <reference types="bytebuffer" /> export declare function writeUTF8(out: ByteBuffer, str: string): number;
+definitions['@xmcl/nbt/utils.d.ts'] = `\/\// <reference types="bytebuffer" /> export declare function writeUTF8(out: ByteBuffer, str: string): number;
 export declare function readUTF8(buff: ByteBuffer): string;
 \/\/# sourceMappingURL=utils.d.ts.map`;
-module.exports['@xmcl/nbt/zlib/index.browser.d.ts'] = `export declare function gzip(buffer: Uint8Array): Promise<Uint8Array>; export declare function gzipSync(buffer: Uint8Array): Uint8Array;
+definitions['@xmcl/nbt/zlib/index.browser.d.ts'] = `export declare function gzip(buffer: Uint8Array): Promise<Uint8Array>; export declare function gzipSync(buffer: Uint8Array): Uint8Array;
 export declare function ungzip(buffer: Uint8Array): Promise<Uint8Array>;
 export declare function gunzipSync(buffer: Uint8Array): Uint8Array;
 export declare function inflate(buffer: Uint8Array): Promise<Uint8Array>;
@@ -4184,13 +4190,13 @@ export declare function deflate(buffer: Uint8Array): Promise<Uint8Array>;
 export declare function inflateSync(buffer: Uint8Array): Uint8Array;
 export declare function deflateSync(buffer: Uint8Array): Uint8Array;
 \/\/# sourceMappingURL=index.browser.d.ts.map`;
-module.exports['@xmcl/nbt/zlib/index.d.ts'] = `import { deflateSync, gunzipSync, gzipSync, inflateSync } from "zlib"; export declare const gzip: (buf: Uint8Array) => Promise<Uint8Array>;
+definitions['@xmcl/nbt/zlib/index.d.ts'] = `import { deflateSync, gunzipSync, gzipSync, inflateSync } from "zlib"; export declare const gzip: (buf: Uint8Array) => Promise<Uint8Array>;
 export declare const ungzip: (buf: Uint8Array) => Promise<Uint8Array>;
 export declare const inflate: (buf: Uint8Array) => Promise<Uint8Array>;
 export declare const deflate: (buf: Uint8Array) => Promise<Uint8Array>;
 export { gzipSync, gunzipSync, inflateSync, deflateSync };
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/resourcepack/format.d.ts'] = `/**  * The pack meta json format
+definitions['@xmcl/resourcepack/format.d.ts'] = `/**  * The pack meta json format
  */
 export interface PackMeta {
     texture?: PackMeta.Texture;
@@ -4444,7 +4450,7 @@ export declare namespace BlockModel {
 }
 export {};
 \/\/# sourceMappingURL=format.d.ts.map`;
-module.exports['@xmcl/resourcepack/index.d.ts'] = `/**  * The resource pack module to read Minecraft resource pack just like Minecraft in-game.
+definitions['@xmcl/resourcepack/index.d.ts'] = `/**  * The resource pack module to read Minecraft resource pack just like Minecraft in-game.
  *
  * You can open the ResourcePack by {@link ResourcePack.open} and get resource by {@link ResourcePack.get}.
  *
@@ -4482,7 +4488,7 @@ export declare function readPackMetaAndIcon(resourcePack: string | Uint8Array | 
     icon: Uint8Array | undefined;
 }>;
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/resourcepack/modelLoader.d.ts'] = `import { Resource } from "./resourcePack"; import { ResourceLoader } from "./resourceManager";
+definitions['@xmcl/resourcepack/modelLoader.d.ts'] = `import { Resource } from "./resourcePack"; import { ResourceLoader } from "./resourceManager";
 import { BlockModel } from "./format";
 /**
  * The model loader load the resource
@@ -4508,7 +4514,7 @@ export declare class ModelLoader {
     loadModel(modelPath: string): Promise<BlockModel.Resolved>;
 }
 \/\/# sourceMappingURL=modelLoader.d.ts.map`;
-module.exports['@xmcl/resourcepack/resourceManager.d.ts'] = `import { PackMeta } from "./format"; import { ResourcePack, Resource, ResourceLocation } from "./resourcePack";
+definitions['@xmcl/resourcepack/resourceManager.d.ts'] = `import { PackMeta } from "./format"; import { ResourcePack, Resource, ResourceLocation } from "./resourcePack";
 export interface ResourcePackWrapper {
     source: ResourcePack;
     info: PackMeta.Pack;
@@ -4561,7 +4567,7 @@ export declare class ResourceManager implements ResourceLoader {
     get(location: ResourceLocation): Promise<Resource | undefined>;
 }
 \/\/# sourceMappingURL=resourceManager.d.ts.map`;
-module.exports['@xmcl/resourcepack/resourcePack.d.ts'] = `/**  * The resource pack module to read Minecraft resource pack just like Minecraft in-game.
+definitions['@xmcl/resourcepack/resourcePack.d.ts'] = `/**  * The resource pack module to read Minecraft resource pack just like Minecraft in-game.
  *
  * You can open the ResourcePack by {@link ResourcePack.open} and get resource by {@link ResourcePack.get}.
  *
@@ -4674,7 +4680,7 @@ export declare class ResourcePack {
     static open(resourcePack: string | Uint8Array | FileSystem): Promise<ResourcePack>;
 }
 \/\/# sourceMappingURL=resourcePack.d.ts.map`;
-module.exports['@xmcl/server-info/index.d.ts'] = `export declare class ServerInfo {     icon: string;
+definitions['@xmcl/server-info/index.d.ts'] = `export declare class ServerInfo {     icon: string;
     ip: string;
     name: string;
     acceptTextures: number;
@@ -4710,15 +4716,15 @@ export declare function readInfoSync(buff: Uint8Array): ServerInfo[];
  */
 export declare function writeInfoSync(infos: ServerInfo[]): Uint8Array;
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/system/index.browser.d.ts'] = `import { FileSystem } from "./system"; export declare function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
+definitions['@xmcl/system/index.browser.d.ts'] = `import { FileSystem } from "./system"; export declare function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
 export declare function resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem>;
 export * from "./system";
 \/\/# sourceMappingURL=index.browser.d.ts.map`;
-module.exports['@xmcl/system/index.d.ts'] = `import { FileSystem } from "./system"; export declare function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
+definitions['@xmcl/system/index.d.ts'] = `import { FileSystem } from "./system"; export declare function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem>;
 export declare function resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem>;
 export * from "./system";
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/system/system.d.ts'] = `export declare abstract class FileSystem {     abstract readonly root: string;
+definitions['@xmcl/system/system.d.ts'] = `export declare abstract class FileSystem {     abstract readonly root: string;
     abstract readonly sep: string;
     abstract readonly type: "zip" | "path";
     abstract readonly writeable: boolean;
@@ -4740,7 +4746,7 @@ module.exports['@xmcl/system/system.d.ts'] = `export declare abstract class File
     walkFiles(target: string, walker: (path: string) => void | Promise<void>): Promise<void>;
 }
 \/\/# sourceMappingURL=system.d.ts.map`;
-module.exports['@xmcl/task/index.d.ts'] = `export declare class CancelledError<T> extends Error {     readonly partialResult: T | undefined;
+definitions['@xmcl/task/index.d.ts'] = `export declare class CancelledError<T> extends Error {     readonly partialResult: T | undefined;
     constructor(partialResult: T | undefined);
 }
 /**
@@ -4880,7 +4886,7 @@ export declare class TaskRoutine<T> extends TaskGroup<T> {
 }
 export declare function task<T>(name: string, executor: TaskExecutor<T>, param?: object): TaskRoutine<T>;
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/text-component/index.d.ts'] = `/**  * @see https:\/\/minecraft.gamepedia.com/Raw_JSON_text_format
+definitions['@xmcl/text-component/index.d.ts'] = `/**  * @see https:\/\/minecraft.gamepedia.com/Raw_JSON_text_format
  */
 export interface TextComponent {
     /**
@@ -5052,7 +5058,7 @@ export declare function toFormattedString(comp: TextComponent): string;
  */
 export declare function fromFormattedString(formatted: string): TextComponent;
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/unzip/index.d.ts'] = `\/\// <reference types="node" /> import { Readable } from "stream";
+definitions['@xmcl/unzip/index.d.ts'] = `\/\// <reference types="node" /> import { Readable } from "stream";
 import { Entry, ZipFile, ZipFileOptions, Options } from "yauzl";
 export declare type OpenTarget = string | Buffer | number;
 /**
@@ -5099,7 +5105,7 @@ export declare function getEntriesRecord(entries: Entry[]): Record<string, Entry
  */
 export declare function readAllEntries(zipFile: ZipFile): Promise<Entry[]>;
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/user/auth.d.ts'] = `import { GameProfile } from "./base"; export declare const v5: (s: string) => any;
+definitions['@xmcl/user/auth.d.ts'] = `import { GameProfile } from "./base"; export declare const v5: (s: string) => any;
 declare type LoginWithUser = {
     username: string;
     password: string;
@@ -5313,7 +5319,7 @@ export declare function signout(option: {
 export declare function offline(username: string): Authentication;
 export {};
 \/\/# sourceMappingURL=auth.d.ts.map`;
-module.exports['@xmcl/user/base.d.ts'] = `/**  * The game profile of the user.
+definitions['@xmcl/user/base.d.ts'] = `/**  * The game profile of the user.
  *
  * In auth response, it will usually carry the \`userId\`, \`createdAt\` properties.
  *
@@ -5413,11 +5419,11 @@ export interface FormItems {
     [name: string]: ItemBlob | string;
 }
 \/\/# sourceMappingURL=base.d.ts.map`;
-module.exports['@xmcl/user/index.d.ts'] = `export * from "./auth"; export { GameProfile, GameProfileWithProperties } from "./base";
+definitions['@xmcl/user/index.d.ts'] = `export * from "./auth"; export { GameProfile, GameProfileWithProperties } from "./base";
 export * from "./mojang";
 export * from "./service";
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/user/mojang.d.ts'] = `/**  * Users defined question when they register this account
+definitions['@xmcl/user/mojang.d.ts'] = `/**  * Users defined question when they register this account
  *
  * The question id, content mapping is:
  *
@@ -5503,7 +5509,7 @@ export declare function getChallenges(accessToken: string): Promise<MojangChalle
  */
 export declare function responseChallenges(accessToken: string, responses: MojangChallengeResponse[]): Promise<boolean>;
 \/\/# sourceMappingURL=mojang.d.ts.map`;
-module.exports['@xmcl/user/service.d.ts'] = `import { GameProfile, GameProfileWithProperties } from "./base"; export interface ProfileLookupException {
+definitions['@xmcl/user/service.d.ts'] = `import { GameProfile, GameProfileWithProperties } from "./base"; export interface ProfileLookupException {
     /**
      * - statusCode=204 -> error="NoPlayerFound"
      * - statusCode=400 -> error="IllegalArgumentException" (parsed from body)
@@ -5633,7 +5639,7 @@ export declare class ProfileLookuper {
     lookup(uuid: string): Promise<GameProfileWithProperties>;
 }
 \/\/# sourceMappingURL=service.d.ts.map`;
-module.exports['@xmcl/user/util/base.d.ts'] = `/**  * Abstract layer for http requester.
+definitions['@xmcl/user/util/base.d.ts'] = `/**  * Abstract layer for http requester.
  */
 export declare type HttpRequester = (option: {
     url: string;
@@ -5665,24 +5671,24 @@ export interface FormItems {
     [name: string]: ItemBlob | string;
 }
 \/\/# sourceMappingURL=base.d.ts.map`;
-module.exports['@xmcl/user/util/index.browser.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
+definitions['@xmcl/user/util/index.browser.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
 export declare function verify(data: string, signature: string, pemKey: string | Uint8Array): Promise<boolean>;
 export declare function decodeBase64(b: string): string;
 \/\/# sourceMappingURL=index.browser.d.ts.map`;
-module.exports['@xmcl/user/util/index.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
+definitions['@xmcl/user/util/index.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
 export declare function verify(data: string, signature: string, pemKey: string | Uint8Array): Promise<boolean>;
 export declare function decodeBase64(s: string): string;
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/user/v5/esm.browser.d.ts'] = `export { default as sha1 } from "uuid/dist/esm-browser/sha1"; export { default as v35 } from "uuid/dist/esm-browser/v35";
+definitions['@xmcl/user/v5/esm.browser.d.ts'] = `export { default as sha1 } from "uuid/dist/esm-browser/sha1"; export { default as v35 } from "uuid/dist/esm-browser/v35";
 \/\/# sourceMappingURL=esm.browser.d.ts.map`;
-module.exports['@xmcl/user/v5/esm.d.ts'] = `export { default as sha1 } from "uuid/dist/esm-node/sha1"; export { default as v35 } from "uuid/dist/esm-node/v35";
+definitions['@xmcl/user/v5/esm.d.ts'] = `export { default as sha1 } from "uuid/dist/esm-node/sha1"; export { default as v35 } from "uuid/dist/esm-node/v35";
 \/\/# sourceMappingURL=esm.d.ts.map`;
-module.exports['@xmcl/user/v5/index.browser.d.ts'] = `export { default as sha1 } from "uuid/dist/sha1-browser"; export { default as v35 } from "uuid/dist/esm-browser/v35";
+definitions['@xmcl/user/v5/index.browser.d.ts'] = `export { default as sha1 } from "uuid/dist/sha1-browser"; export { default as v35 } from "uuid/dist/esm-browser/v35";
 \/\/# sourceMappingURL=index.browser.d.ts.map`;
-module.exports['@xmcl/user/v5/index.d.ts'] = `import sha1 from "uuid/dist/sha1"; import v35 from "uuid/dist/v35";
+definitions['@xmcl/user/v5/index.d.ts'] = `import sha1 from "uuid/dist/sha1"; import v35 from "uuid/dist/v35";
 export { v35, sha1 };
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['@xmcl/world/index.d.ts'] = `import { FileSystem } from "@xmcl/system"; import Long from "long";
+definitions['@xmcl/world/index.d.ts'] = `import { FileSystem } from "@xmcl/system"; import Long from "long";
 export declare class WorldReader {
     private fs;
     static create(path: string | Uint8Array): Promise<WorldReader>;
@@ -6026,7 +6032,7 @@ export interface RegionDataFrame {
 }
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
-module.exports['assert.d.ts'] = `declare module 'assert' {
+definitions['assert.d.ts'] = `declare module 'assert' {
     /** An alias of \`assert.ok()\`. */
     function assert(value: any, message?: string | Error): asserts value;
     namespace assert {
@@ -6151,7 +6157,7 @@ module.exports['assert.d.ts'] = `declare module 'assert' {
     export = assert;
 }
 `;
-module.exports['async_hooks.d.ts'] = `/**
+definitions['async_hooks.d.ts'] = `/**
  * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
  */
 declare module "async_hooks" {
@@ -6378,7 +6384,7 @@ declare module "async_hooks" {
     }
 }
 `;
-module.exports['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7.
+definitions['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7.
 
 \/\/ NOTE: TypeScript version-specific augmentations can be found in the following paths:
 \/\/          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
@@ -6398,7 +6404,7 @@ module.exports['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and T
 \/\/ TypeScript 3.7-specific augmentations:
 \/\// <reference path="assert.d.ts" />
 `;
-module.exports['buffer.d.ts'] = `declare module "buffer" {
+definitions['buffer.d.ts'] = `declare module "buffer" {
     export const INSPECT_MAX_BYTES: number;
     export const kMaxLength: number;
     export const kStringMaxLength: number;
@@ -6421,7 +6427,7 @@ module.exports['buffer.d.ts'] = `declare module "buffer" {
     export { BuffType as Buffer };
 }
 `;
-module.exports['child_process.d.ts'] = `declare module "child_process" {
+definitions['child_process.d.ts'] = `declare module "child_process" {
     import { BaseEncodingOptions } from 'fs';
     import * as events from "events";
     import * as net from "net";
@@ -6931,7 +6937,7 @@ module.exports['child_process.d.ts'] = `declare module "child_process" {
     function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptions): Buffer;
 }
 `;
-module.exports['cluster.d.ts'] = `declare module "cluster" {
+definitions['cluster.d.ts'] = `declare module "cluster" {
     import * as child from "child_process";
     import * as events from "events";
     import * as net from "net";
@@ -7194,7 +7200,7 @@ module.exports['cluster.d.ts'] = `declare module "cluster" {
     function eventNames(): string[];
 }
 `;
-module.exports['console.d.ts'] = `declare module "console" {
+definitions['console.d.ts'] = `declare module "console" {
     import { InspectOptions } from 'util';
 
     global {
@@ -7328,7 +7334,7 @@ module.exports['console.d.ts'] = `declare module "console" {
     export = console;
 }
 `;
-module.exports['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */
+definitions['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */
 declare module "constants" {
     import { constants as osConstants, SignalConstants } from 'os';
     import { constants as cryptoConstants } from 'crypto';
@@ -7337,7 +7343,7 @@ declare module "constants" {
     export = exp;
 }
 `;
-module.exports['crypto.d.ts'] = `declare module "crypto" {
+definitions['crypto.d.ts'] = `declare module "crypto" {
     import * as stream from "stream";
 
     interface Certificate {
@@ -8113,7 +8119,7 @@ module.exports['crypto.d.ts'] = `declare module "crypto" {
     }): Buffer;
 }
 `;
-module.exports['dgram.d.ts'] = `declare module "dgram" {
+definitions['dgram.d.ts'] = `declare module "dgram" {
     import { AddressInfo } from "net";
     import * as dns from "dns";
     import * as events from "events";
@@ -8255,7 +8261,7 @@ module.exports['dgram.d.ts'] = `declare module "dgram" {
     }
 }
 `;
-module.exports['dns.d.ts'] = `declare module "dns" {
+definitions['dns.d.ts'] = `declare module "dns" {
     \/\/ Supported getaddrinfo flags.
     const ADDRCONFIG: number;
     const V4MAPPED: number;
@@ -8627,7 +8633,7 @@ module.exports['dns.d.ts'] = `declare module "dns" {
     }
 }
 `;
-module.exports['domain.d.ts'] = `declare module "domain" {
+definitions['domain.d.ts'] = `declare module "domain" {
     import { EventEmitter } from "events";
 
     global {
@@ -8652,7 +8658,7 @@ module.exports['domain.d.ts'] = `declare module "domain" {
     function create(): Domain;
 }
 `;
-module.exports['events.d.ts'] = `declare module "events" {
+definitions['events.d.ts'] = `declare module "events" {
     interface EventEmitterOptions {
         /**
          * Enables automatic capturing of promise rejection.
@@ -8736,7 +8742,7 @@ module.exports['events.d.ts'] = `declare module "events" {
     export = EventEmitter;
 }
 `;
-module.exports['fs.d.ts'] = `declare module "fs" {
+definitions['fs.d.ts'] = `declare module "fs" {
     import * as stream from "stream";
     import * as events from "events";
     import { URL } from "url";
@@ -10976,7 +10982,7 @@ module.exports['fs.d.ts'] = `declare module "fs" {
     }
 }
 `;
-module.exports['globals.d.ts'] = `\/\/ Declare "static" methods in Error
+definitions['globals.d.ts'] = `\/\/ Declare "static" methods in Error
 interface ErrorConstructor {
     /** Create .stack property on a target object */
     captureStackTrace(targetObject: object, constructorOpt?: Function): void;
@@ -11584,9 +11590,9 @@ declare namespace NodeJS {
     }
 }
 `;
-module.exports['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis;
+definitions['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis;
 `;
-module.exports['http.d.ts'] = `declare module "http" {
+definitions['http.d.ts'] = `declare module "http" {
     import * as stream from "stream";
     import { URL } from "url";
     import { Socket, Server as NetServer } from "net";
@@ -12009,7 +12015,7 @@ module.exports['http.d.ts'] = `declare module "http" {
     const maxHeaderSize: number;
 }
 `;
-module.exports['http2.d.ts'] = `declare module "http2" {
+definitions['http2.d.ts'] = `declare module "http2" {
     import * as events from "events";
     import * as fs from "fs";
     import * as net from "net";
@@ -12962,7 +12968,7 @@ module.exports['http2.d.ts'] = `declare module "http2" {
     ): ClientHttp2Session;
 }
 `;
-module.exports['https.d.ts'] = `declare module "https" {
+definitions['https.d.ts'] = `declare module "https" {
     import * as tls from "tls";
     import * as events from "events";
     import * as http from "http";
@@ -13000,7 +13006,7 @@ module.exports['https.d.ts'] = `declare module "https" {
     let globalAgent: Agent;
 }
 `;
-module.exports['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14
+definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14
 \/\/ Project: http:\/\/nodejs.org/
 \/\/ Definitions by: Microsoft TypeScript <https:\/\/github.com/Microsoft>
 \/\/                 DefinitelyTyped <https:\/\/github.com/DefinitelyTyped>
@@ -13062,7 +13068,7 @@ module.exports['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.j
 \/\/       within the respective ~/ts3.5 (or later) folder. However, this is disallowed for versions
 \/\/       prior to TypeScript 3.5, so the older definitions will be found here.
 `;
-module.exports['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header
+definitions['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header
 \/\/ Type definitions for inspector
 
 \/\/ These definitions are auto-generated.
@@ -16104,7 +16110,7 @@ declare module "inspector" {
     function waitForDebugger(): void;
 }
 `;
-module.exports['module.d.ts'] = `declare module "module" {
+definitions['module.d.ts'] = `declare module "module" {
     import { URL } from "url";
     namespace Module {
         /**
@@ -16157,7 +16163,7 @@ module.exports['module.d.ts'] = `declare module "module" {
     export = Module;
 }
 `;
-module.exports['net.d.ts'] = `declare module "net" {
+definitions['net.d.ts'] = `declare module "net" {
     import * as stream from "stream";
     import * as events from "events";
     import * as dns from "dns";
@@ -16426,7 +16432,7 @@ module.exports['net.d.ts'] = `declare module "net" {
     function isIPv6(input: string): boolean;
 }
 `;
-module.exports['os.d.ts'] = `declare module "os" {
+definitions['os.d.ts'] = `declare module "os" {
     interface CpuInfo {
         model: string;
         speed: number;
@@ -16666,7 +16672,7 @@ module.exports['os.d.ts'] = `declare module "os" {
     function setPriority(pid: number, priority: number): void;
 }
 `;
-module.exports['path.d.ts'] = `declare module "path" {
+definitions['path.d.ts'] = `declare module "path" {
     namespace path {
         /**
          * A parsed path object generated by path.parse() or consumed by path.format().
@@ -16820,7 +16826,7 @@ module.exports['path.d.ts'] = `declare module "path" {
     export = path;
 }
 `;
-module.exports['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
+definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
     import { AsyncResource } from 'async_hooks';
 
     type EntryType = 'node' | 'mark' | 'measure' | 'gc' | 'function' | 'http2' | 'http';
@@ -17092,7 +17098,7 @@ module.exports['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
     function monitorEventLoopDelay(options?: EventLoopMonitorOptions): EventLoopDelayMonitor;
 }
 `;
-module.exports['process.d.ts'] = `declare module "process" {
+definitions['process.d.ts'] = `declare module "process" {
     import * as tty from "tty";
 
     global {
@@ -17501,7 +17507,7 @@ module.exports['process.d.ts'] = `declare module "process" {
     export = process;
 }
 `;
-module.exports['punycode.d.ts'] = `declare module "punycode" {
+definitions['punycode.d.ts'] = `declare module "punycode" {
     /**
      * @deprecated since v7.0.0
      * The version of the punycode module bundled in Node.js is being deprecated.
@@ -17570,7 +17576,7 @@ module.exports['punycode.d.ts'] = `declare module "punycode" {
     const version: string;
 }
 `;
-module.exports['querystring.d.ts'] = `declare module "querystring" {
+definitions['querystring.d.ts'] = `declare module "querystring" {
     interface StringifyOptions {
         encodeURIComponent?: (str: string) => string;
     }
@@ -17599,7 +17605,7 @@ module.exports['querystring.d.ts'] = `declare module "querystring" {
     function unescape(str: string): string;
 }
 `;
-module.exports['readline.d.ts'] = `declare module "readline" {
+definitions['readline.d.ts'] = `declare module "readline" {
     import * as events from "events";
     import * as stream from "stream";
 
@@ -17771,7 +17777,7 @@ module.exports['readline.d.ts'] = `declare module "readline" {
     function moveCursor(stream: NodeJS.WritableStream, dx: number, dy: number, callback?: () => void): boolean;
 }
 `;
-module.exports['repl.d.ts'] = `declare module "repl" {
+definitions['repl.d.ts'] = `declare module "repl" {
     import { Interface, Completer, AsyncCompleter } from "readline";
     import { Context } from "vm";
     import { InspectOptions } from "util";
@@ -18167,7 +18173,7 @@ module.exports['repl.d.ts'] = `declare module "repl" {
     }
 }
 `;
-module.exports['stream.d.ts'] = `declare module "stream" {
+definitions['stream.d.ts'] = `declare module "stream" {
     import * as events from "events";
 
     class internal extends events.EventEmitter {
@@ -18522,7 +18528,7 @@ module.exports['stream.d.ts'] = `declare module "stream" {
     export = internal;
 }
 `;
-module.exports['string_decoder.d.ts'] = `declare module "string_decoder" {
+definitions['string_decoder.d.ts'] = `declare module "string_decoder" {
     class StringDecoder {
         constructor(encoding?: BufferEncoding);
         write(buffer: Buffer): string;
@@ -18530,7 +18536,7 @@ module.exports['string_decoder.d.ts'] = `declare module "string_decoder" {
     }
 }
 `;
-module.exports['timers.d.ts'] = `declare module "timers" {
+definitions['timers.d.ts'] = `declare module "timers" {
     function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
     namespace setTimeout {
         function __promisify__(ms: number): Promise<void>;
@@ -18547,7 +18553,7 @@ module.exports['timers.d.ts'] = `declare module "timers" {
     function clearImmediate(immediateId: NodeJS.Immediate): void;
 }
 `;
-module.exports['tls.d.ts'] = `declare module "tls" {
+definitions['tls.d.ts'] = `declare module "tls" {
     import * as crypto from "crypto";
     import * as dns from "dns";
     import * as net from "net";
@@ -19327,7 +19333,7 @@ module.exports['tls.d.ts'] = `declare module "tls" {
     const rootCertificates: ReadonlyArray<string>;
 }
 `;
-module.exports['trace_events.d.ts'] = `declare module "trace_events" {
+definitions['trace_events.d.ts'] = `declare module "trace_events" {
     /**
      * The \`Tracing\` object is used to enable or disable tracing for sets of
      * categories. Instances are created using the
@@ -19389,7 +19395,7 @@ module.exports['trace_events.d.ts'] = `declare module "trace_events" {
     function getEnabledCategories(): string | undefined;
 }
 `;
-module.exports['tty.d.ts'] = `declare module "tty" {
+definitions['tty.d.ts'] = `declare module "tty" {
     import * as net from "net";
 
     function isatty(fd: number): boolean;
@@ -19456,7 +19462,7 @@ module.exports['tty.d.ts'] = `declare module "tty" {
     }
 }
 `;
-module.exports['url.d.ts'] = `declare module "url" {
+definitions['url.d.ts'] = `declare module "url" {
     import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
 
     \/\/ Input to \`url.format\`
@@ -19567,7 +19573,7 @@ module.exports['url.d.ts'] = `declare module "url" {
     }
 }
 `;
-module.exports['util.d.ts'] = `declare module "util" {
+definitions['util.d.ts'] = `declare module "util" {
     interface InspectOptions extends NodeJS.InspectOptions { }
     type Style = 'special' | 'number' | 'bigint' | 'boolean' | 'undefined' | 'null' | 'string' | 'symbol' | 'date' | 'regexp' | 'module';
     type CustomInspectFunction = (depth: number, options: InspectOptionsStylized) => string;
@@ -19764,7 +19770,7 @@ module.exports['util.d.ts'] = `declare module "util" {
     }
 }
 `;
-module.exports['v8.d.ts'] = `declare module "v8" {
+definitions['v8.d.ts'] = `declare module "v8" {
     import { Readable } from "stream";
 
     interface HeapSpaceInfo {
@@ -19952,7 +19958,7 @@ module.exports['v8.d.ts'] = `declare module "v8" {
     function deserialize(data: NodeJS.TypedArray): any;
 }
 `;
-module.exports['vm.d.ts'] = `declare module "vm" {
+definitions['vm.d.ts'] = `declare module "vm" {
     interface Context extends NodeJS.Dict<any> { }
     interface BaseOptions {
         /**
@@ -20099,7 +20105,7 @@ module.exports['vm.d.ts'] = `declare module "vm" {
     function measureMemory(options?: MeasureMemoryOptions): Promise<MemoryMeasurement>;
 }
 `;
-module.exports['wasi.d.ts'] = `declare module 'wasi' {
+definitions['wasi.d.ts'] = `declare module 'wasi' {
     interface WASIOptions {
         /**
          * An array of strings that the WebAssembly application will
@@ -20186,7 +20192,7 @@ module.exports['wasi.d.ts'] = `declare module 'wasi' {
     }
 }
 `;
-module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {
+definitions['worker_threads.d.ts'] = `declare module "worker_threads" {
     import { Context } from "vm";
     import { EventEmitter } from "events";
     import { Readable, Writable } from "stream";
@@ -20425,7 +20431,7 @@ module.exports['worker_threads.d.ts'] = `declare module "worker_threads" {
     function receiveMessageOnPort(port: MessagePort): { message: any } | undefined;
 }
 `;
-module.exports['zlib.d.ts'] = `declare module "zlib" {
+definitions['zlib.d.ts'] = `declare module "zlib" {
     import * as stream from "stream";
 
     interface ZlibOptions {
@@ -20786,4 +20792,4 @@ module.exports['zlib.d.ts'] = `declare module "zlib" {
     /** @deprecated */
     const Z_DEFLATED: number;
 }
-`;
+`;export default definitions;

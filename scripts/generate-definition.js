@@ -43,9 +43,10 @@ function ecape(s) {
     }
     scanDefinitions("packages");
     scanNodeDefinitions();
-    fs.writeFileSync('docs/site/definitions.js', definitions.map(f => {
-        return `module.exports['${f.file}'] = \`${ecape(f.content)}\`;`
-    }).join('\n'));
+    const def = 'const definitions = {};\n' 
+        + definitions.map(f => `definitions['${f.file}'] = \`${ecape(f.content)}\`;`).join('\n')
+        + 'export default definitions;'
+    fs.writeFileSync('docs/site/definitions.js', def);
 }
 
 {
@@ -58,7 +59,8 @@ function ecape(s) {
     } catch (e) {
         console.error(e)
     }
-    fs.writeFileSync('docs/site/scenarios.js', scenarios.map(f => {
-        return `module.exports['${f.file.replace(".ts", "")}'] = \`${ecape(f.content)}\`;`
-    }).join('\n'));
+    const def = 'const scenarios = {};\n' 
+        + scenarios.map(f => `scenarios['${f.file.replace(".ts", "")}'] = \`${ecape(f.content)}\`;`).join('\n')
+        + 'export default scenarios;'
+    fs.writeFileSync('docs/site/scenarios.js', def);
 }
