@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/model",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "description": "Create Three.js model for player and block",
@@ -14,7 +14,6 @@
     "three": "^0.127.0",
     "@xmcl/resourcepack": "^1.0.16"
   },
-  
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"

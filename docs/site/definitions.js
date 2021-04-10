@@ -6032,8 +6032,7 @@ export interface RegionDataFrame {
 }
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
-definitions['assert.d.ts'] = `declare module 'assert' {
-    /** An alias of \`assert.ok()\`. */
+definitions['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`assert.ok()\`. */
     function assert(value: any, message?: string | Error): asserts value;
     namespace assert {
         class AssertionError implements Error {
@@ -6157,8 +6156,7 @@ definitions['assert.d.ts'] = `declare module 'assert' {
     export = assert;
 }
 `;
-definitions['async_hooks.d.ts'] = `/**
- * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
+definitions['async_hooks.d.ts'] = `/**  * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
  */
 declare module "async_hooks" {
     /**
@@ -6384,8 +6382,7 @@ declare module "async_hooks" {
     }
 }
 `;
-definitions['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7.
-
+definitions['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7. 
 \/\/ NOTE: TypeScript version-specific augmentations can be found in the following paths:
 \/\/          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
 \/\/          - ~/index.d.ts        - Definitions specific to TypeScript 2.1
@@ -6404,8 +6401,7 @@ definitions['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and Type
 \/\/ TypeScript 3.7-specific augmentations:
 \/\// <reference path="assert.d.ts" />
 `;
-definitions['buffer.d.ts'] = `declare module "buffer" {
-    export const INSPECT_MAX_BYTES: number;
+definitions['buffer.d.ts'] = `declare module "buffer" {     export const INSPECT_MAX_BYTES: number;
     export const kMaxLength: number;
     export const kStringMaxLength: number;
     export const constants: {
@@ -6427,8 +6423,7 @@ definitions['buffer.d.ts'] = `declare module "buffer" {
     export { BuffType as Buffer };
 }
 `;
-definitions['child_process.d.ts'] = `declare module "child_process" {
-    import { BaseEncodingOptions } from 'fs';
+definitions['child_process.d.ts'] = `declare module "child_process" {     import { BaseEncodingOptions } from 'fs';
     import * as events from "events";
     import * as net from "net";
     import { Writable, Readable, Stream, Pipe } from "stream";
@@ -6937,8 +6932,7 @@ definitions['child_process.d.ts'] = `declare module "child_process" {
     function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptions): Buffer;
 }
 `;
-definitions['cluster.d.ts'] = `declare module "cluster" {
-    import * as child from "child_process";
+definitions['cluster.d.ts'] = `declare module "cluster" {     import * as child from "child_process";
     import * as events from "events";
     import * as net from "net";
 
@@ -7200,8 +7194,7 @@ definitions['cluster.d.ts'] = `declare module "cluster" {
     function eventNames(): string[];
 }
 `;
-definitions['console.d.ts'] = `declare module "console" {
-    import { InspectOptions } from 'util';
+definitions['console.d.ts'] = `declare module "console" {     import { InspectOptions } from 'util';
 
     global {
         \/\/ This needs to be global to avoid TS2403 in case lib.dom.d.ts is present in the same build
@@ -7334,8 +7327,7 @@ definitions['console.d.ts'] = `declare module "console" {
     export = console;
 }
 `;
-definitions['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */
-declare module "constants" {
+definitions['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */ declare module "constants" {
     import { constants as osConstants, SignalConstants } from 'os';
     import { constants as cryptoConstants } from 'crypto';
     import { constants as fsConstants } from 'fs';
@@ -7343,8 +7335,7 @@ declare module "constants" {
     export = exp;
 }
 `;
-definitions['crypto.d.ts'] = `declare module "crypto" {
-    import * as stream from "stream";
+definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream from "stream";
 
     interface Certificate {
         exportChallenge(spkac: BinaryLike): Buffer;
@@ -8119,8 +8110,7 @@ definitions['crypto.d.ts'] = `declare module "crypto" {
     }): Buffer;
 }
 `;
-definitions['dgram.d.ts'] = `declare module "dgram" {
-    import { AddressInfo } from "net";
+definitions['dgram.d.ts'] = `declare module "dgram" {     import { AddressInfo } from "net";
     import * as dns from "dns";
     import * as events from "events";
 
@@ -8261,8 +8251,7 @@ definitions['dgram.d.ts'] = `declare module "dgram" {
     }
 }
 `;
-definitions['dns.d.ts'] = `declare module "dns" {
-    \/\/ Supported getaddrinfo flags.
+definitions['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddrinfo flags.
     const ADDRCONFIG: number;
     const V4MAPPED: number;
     /**
@@ -8633,8 +8622,7 @@ definitions['dns.d.ts'] = `declare module "dns" {
     }
 }
 `;
-definitions['domain.d.ts'] = `declare module "domain" {
-    import { EventEmitter } from "events";
+definitions['domain.d.ts'] = `declare module "domain" {     import { EventEmitter } from "events";
 
     global {
         namespace NodeJS {
@@ -8658,8 +8646,7 @@ definitions['domain.d.ts'] = `declare module "domain" {
     function create(): Domain;
 }
 `;
-definitions['events.d.ts'] = `declare module "events" {
-    interface EventEmitterOptions {
+definitions['events.d.ts'] = `declare module "events" {     interface EventEmitterOptions {
         /**
          * Enables automatic capturing of promise rejection.
          */
@@ -8742,8 +8729,7 @@ definitions['events.d.ts'] = `declare module "events" {
     export = EventEmitter;
 }
 `;
-definitions['fs.d.ts'] = `declare module "fs" {
-    import * as stream from "stream";
+definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "stream";
     import * as events from "events";
     import { URL } from "url";
     import * as promises from 'fs/promises';
@@ -10982,8 +10968,7 @@ definitions['fs.d.ts'] = `declare module "fs" {
     }
 }
 `;
-definitions['globals.d.ts'] = `\/\/ Declare "static" methods in Error
-interface ErrorConstructor {
+definitions['globals.d.ts'] = `\/\/ Declare "static" methods in Error interface ErrorConstructor {
     /** Create .stack property on a target object */
     captureStackTrace(targetObject: object, constructorOpt?: Function): void;
 
@@ -11539,7 +11524,18 @@ declare namespace NodeJS {
         [Symbol.toPrimitive](): number;
     }
 
-    type TypedArray = Uint8Array | Uint8ClampedArray | Uint16Array | Uint32Array | Int8Array | Int16Array | Int32Array | Float32Array | Float64Array;
+    type TypedArray =
+        | Uint8Array
+        | Uint8ClampedArray
+        | Uint16Array
+        | Uint32Array
+        | Int8Array
+        | Int16Array
+        | Int32Array
+        | BigUint64Array
+        | BigInt64Array
+        | Float32Array
+        | Float64Array;
     type ArrayBufferView = TypedArray | DataView;
 
     interface Require {
@@ -11590,10 +11586,8 @@ declare namespace NodeJS {
     }
 }
 `;
-definitions['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis;
-`;
-definitions['http.d.ts'] = `declare module "http" {
-    import * as stream from "stream";
+definitions['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis; `;
+definitions['http.d.ts'] = `declare module "http" {     import * as stream from "stream";
     import { URL } from "url";
     import { Socket, Server as NetServer } from "net";
 
@@ -12015,8 +12009,7 @@ definitions['http.d.ts'] = `declare module "http" {
     const maxHeaderSize: number;
 }
 `;
-definitions['http2.d.ts'] = `declare module "http2" {
-    import * as events from "events";
+definitions['http2.d.ts'] = `declare module "http2" {     import * as events from "events";
     import * as fs from "fs";
     import * as net from "net";
     import * as stream from "stream";
@@ -12968,8 +12961,7 @@ definitions['http2.d.ts'] = `declare module "http2" {
     ): ClientHttp2Session;
 }
 `;
-definitions['https.d.ts'] = `declare module "https" {
-    import * as tls from "tls";
+definitions['https.d.ts'] = `declare module "https" {     import * as tls from "tls";
     import * as events from "events";
     import * as http from "http";
     import { URL } from "url";
@@ -13006,8 +12998,7 @@ definitions['https.d.ts'] = `declare module "https" {
     let globalAgent: Agent;
 }
 `;
-definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14
-\/\/ Project: http:\/\/nodejs.org/
+definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14 \/\/ Project: http:\/\/nodejs.org/
 \/\/ Definitions by: Microsoft TypeScript <https:\/\/github.com/Microsoft>
 \/\/                 DefinitelyTyped <https:\/\/github.com/DefinitelyTyped>
 \/\/                 Alberto Schiabel <https:\/\/github.com/jkomyno>
@@ -13068,8 +13059,7 @@ definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 1
 \/\/       within the respective ~/ts3.5 (or later) folder. However, this is disallowed for versions
 \/\/       prior to TypeScript 3.5, so the older definitions will be found here.
 `;
-definitions['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header
-\/\/ Type definitions for inspector
+definitions['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header \/\/ Type definitions for inspector
 
 \/\/ These definitions are auto-generated.
 \/\/ Please see https:\/\/github.com/DefinitelyTyped/DefinitelyTyped/pull/19330
@@ -16110,8 +16100,7 @@ declare module "inspector" {
     function waitForDebugger(): void;
 }
 `;
-definitions['module.d.ts'] = `declare module "module" {
-    import { URL } from "url";
+definitions['module.d.ts'] = `declare module "module" {     import { URL } from "url";
     namespace Module {
         /**
          * Updates all the live bindings for builtin ES Modules to match the properties of the CommonJS exports.
@@ -16163,8 +16152,7 @@ definitions['module.d.ts'] = `declare module "module" {
     export = Module;
 }
 `;
-definitions['net.d.ts'] = `declare module "net" {
-    import * as stream from "stream";
+definitions['net.d.ts'] = `declare module "net" {     import * as stream from "stream";
     import * as events from "events";
     import * as dns from "dns";
 
@@ -16432,8 +16420,7 @@ definitions['net.d.ts'] = `declare module "net" {
     function isIPv6(input: string): boolean;
 }
 `;
-definitions['os.d.ts'] = `declare module "os" {
-    interface CpuInfo {
+definitions['os.d.ts'] = `declare module "os" {     interface CpuInfo {
         model: string;
         speed: number;
         times: {
@@ -16672,8 +16659,7 @@ definitions['os.d.ts'] = `declare module "os" {
     function setPriority(pid: number, priority: number): void;
 }
 `;
-definitions['path.d.ts'] = `declare module "path" {
-    namespace path {
+definitions['path.d.ts'] = `declare module "path" {     namespace path {
         /**
          * A parsed path object generated by path.parse() or consumed by path.format().
          */
@@ -16826,8 +16812,7 @@ definitions['path.d.ts'] = `declare module "path" {
     export = path;
 }
 `;
-definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
-    import { AsyncResource } from 'async_hooks';
+definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { AsyncResource } from 'async_hooks';
 
     type EntryType = 'node' | 'mark' | 'measure' | 'gc' | 'function' | 'http2' | 'http';
 
@@ -17098,8 +17083,7 @@ definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
     function monitorEventLoopDelay(options?: EventLoopMonitorOptions): EventLoopDelayMonitor;
 }
 `;
-definitions['process.d.ts'] = `declare module "process" {
-    import * as tty from "tty";
+definitions['process.d.ts'] = `declare module "process" {     import * as tty from "tty";
 
     global {
         var process: NodeJS.Process;
@@ -17507,8 +17491,7 @@ definitions['process.d.ts'] = `declare module "process" {
     export = process;
 }
 `;
-definitions['punycode.d.ts'] = `declare module "punycode" {
-    /**
+definitions['punycode.d.ts'] = `declare module "punycode" {     /**
      * @deprecated since v7.0.0
      * The version of the punycode module bundled in Node.js is being deprecated.
      * In a future major version of Node.js this module will be removed.
@@ -17576,8 +17559,7 @@ definitions['punycode.d.ts'] = `declare module "punycode" {
     const version: string;
 }
 `;
-definitions['querystring.d.ts'] = `declare module "querystring" {
-    interface StringifyOptions {
+definitions['querystring.d.ts'] = `declare module "querystring" {     interface StringifyOptions {
         encodeURIComponent?: (str: string) => string;
     }
 
@@ -17605,8 +17587,7 @@ definitions['querystring.d.ts'] = `declare module "querystring" {
     function unescape(str: string): string;
 }
 `;
-definitions['readline.d.ts'] = `declare module "readline" {
-    import * as events from "events";
+definitions['readline.d.ts'] = `declare module "readline" {     import * as events from "events";
     import * as stream from "stream";
 
     interface Key {
@@ -17777,8 +17758,7 @@ definitions['readline.d.ts'] = `declare module "readline" {
     function moveCursor(stream: NodeJS.WritableStream, dx: number, dy: number, callback?: () => void): boolean;
 }
 `;
-definitions['repl.d.ts'] = `declare module "repl" {
-    import { Interface, Completer, AsyncCompleter } from "readline";
+definitions['repl.d.ts'] = `declare module "repl" {     import { Interface, Completer, AsyncCompleter } from "readline";
     import { Context } from "vm";
     import { InspectOptions } from "util";
 
@@ -18173,8 +18153,7 @@ definitions['repl.d.ts'] = `declare module "repl" {
     }
 }
 `;
-definitions['stream.d.ts'] = `declare module "stream" {
-    import * as events from "events";
+definitions['stream.d.ts'] = `declare module "stream" {     import * as events from "events";
 
     class internal extends events.EventEmitter {
         pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean; }): T;
@@ -18528,16 +18507,14 @@ definitions['stream.d.ts'] = `declare module "stream" {
     export = internal;
 }
 `;
-definitions['string_decoder.d.ts'] = `declare module "string_decoder" {
-    class StringDecoder {
+definitions['string_decoder.d.ts'] = `declare module "string_decoder" {     class StringDecoder {
         constructor(encoding?: BufferEncoding);
         write(buffer: Buffer): string;
         end(buffer?: Buffer): string;
     }
 }
 `;
-definitions['timers.d.ts'] = `declare module "timers" {
-    function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+definitions['timers.d.ts'] = `declare module "timers" {     function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
     namespace setTimeout {
         function __promisify__(ms: number): Promise<void>;
         function __promisify__<T>(ms: number, value: T): Promise<T>;
@@ -18553,8 +18530,7 @@ definitions['timers.d.ts'] = `declare module "timers" {
     function clearImmediate(immediateId: NodeJS.Immediate): void;
 }
 `;
-definitions['tls.d.ts'] = `declare module "tls" {
-    import * as crypto from "crypto";
+definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "crypto";
     import * as dns from "dns";
     import * as net from "net";
     import * as stream from "stream";
@@ -19333,8 +19309,7 @@ definitions['tls.d.ts'] = `declare module "tls" {
     const rootCertificates: ReadonlyArray<string>;
 }
 `;
-definitions['trace_events.d.ts'] = `declare module "trace_events" {
-    /**
+definitions['trace_events.d.ts'] = `declare module "trace_events" {     /**
      * The \`Tracing\` object is used to enable or disable tracing for sets of
      * categories. Instances are created using the
      * \`trace_events.createTracing()\` method.
@@ -19395,8 +19370,7 @@ definitions['trace_events.d.ts'] = `declare module "trace_events" {
     function getEnabledCategories(): string | undefined;
 }
 `;
-definitions['tty.d.ts'] = `declare module "tty" {
-    import * as net from "net";
+definitions['tty.d.ts'] = `declare module "tty" {     import * as net from "net";
 
     function isatty(fd: number): boolean;
     class ReadStream extends net.Socket {
@@ -19462,8 +19436,7 @@ definitions['tty.d.ts'] = `declare module "tty" {
     }
 }
 `;
-definitions['url.d.ts'] = `declare module "url" {
-    import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
+definitions['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
 
     \/\/ Input to \`url.format\`
     interface UrlObject {
@@ -19573,8 +19546,7 @@ definitions['url.d.ts'] = `declare module "url" {
     }
 }
 `;
-definitions['util.d.ts'] = `declare module "util" {
-    interface InspectOptions extends NodeJS.InspectOptions { }
+definitions['util.d.ts'] = `declare module "util" {     interface InspectOptions extends NodeJS.InspectOptions { }
     type Style = 'special' | 'number' | 'bigint' | 'boolean' | 'undefined' | 'null' | 'string' | 'symbol' | 'date' | 'regexp' | 'module';
     type CustomInspectFunction = (depth: number, options: InspectOptionsStylized) => string;
     interface InspectOptionsStylized extends InspectOptions {
@@ -19695,46 +19667,57 @@ definitions['util.d.ts'] = `declare module "util" {
     }
 
     namespace types {
-        function isAnyArrayBuffer(object: any): boolean;
+        function isAnyArrayBuffer(object: any): object is ArrayBufferLike;
         function isArgumentsObject(object: any): object is IArguments;
         function isArrayBuffer(object: any): object is ArrayBuffer;
-        function isArrayBufferView(object: any): object is ArrayBufferView;
+        function isArrayBufferView(object: any): object is NodeJS.ArrayBufferView;
         function isAsyncFunction(object: any): boolean;
         function isBigInt64Array(value: any): value is BigInt64Array;
         function isBigUint64Array(value: any): value is BigUint64Array;
         function isBooleanObject(object: any): object is Boolean;
-        function isBoxedPrimitive(object: any): object is (Number | Boolean | String | Symbol /* | Object(BigInt) | Object(Symbol) */);
+        function isBoxedPrimitive(object: any): object is String | Number | BigInt | Boolean | Symbol;
         function isDataView(object: any): object is DataView;
         function isDate(object: any): object is Date;
         function isExternal(object: any): boolean;
         function isFloat32Array(object: any): object is Float32Array;
         function isFloat64Array(object: any): object is Float64Array;
-        function isGeneratorFunction(object: any): boolean;
-        function isGeneratorObject(object: any): boolean;
+        function isGeneratorFunction(object: any): object is GeneratorFunction;
+        function isGeneratorObject(object: any): object is Generator;
         function isInt8Array(object: any): object is Int8Array;
         function isInt16Array(object: any): object is Int16Array;
         function isInt32Array(object: any): object is Int32Array;
-        function isMap(object: any): boolean;
+        function isMap<T>(
+            object: T | {},
+        ): object is T extends ReadonlyMap<any, any>
+            ? unknown extends T
+                ? never
+                : ReadonlyMap<any, any>
+            : Map<any, any>;
         function isMapIterator(object: any): boolean;
         function isModuleNamespaceObject(value: any): boolean;
         function isNativeError(object: any): object is Error;
         function isNumberObject(object: any): object is Number;
-        function isPromise(object: any): boolean;
+        function isPromise(object: any): object is Promise<any>;
         function isProxy(object: any): boolean;
         function isRegExp(object: any): object is RegExp;
-        function isSet(object: any): boolean;
+        function isSet<T>(
+            object: T | {},
+        ): object is T extends ReadonlySet<any>
+            ? unknown extends T
+                ? never
+                : ReadonlySet<any>
+            : Set<any>;
         function isSetIterator(object: any): boolean;
-        function isSharedArrayBuffer(object: any): boolean;
-        function isStringObject(object: any): boolean;
-        function isSymbolObject(object: any): boolean;
+        function isSharedArrayBuffer(object: any): object is SharedArrayBuffer;
+        function isStringObject(object: any): object is String;
+        function isSymbolObject(object: any): object is Symbol;
         function isTypedArray(object: any): object is NodeJS.TypedArray;
         function isUint8Array(object: any): object is Uint8Array;
         function isUint8ClampedArray(object: any): object is Uint8ClampedArray;
         function isUint16Array(object: any): object is Uint16Array;
         function isUint32Array(object: any): object is Uint32Array;
-        function isWeakMap(object: any): boolean;
-        function isWeakSet(object: any): boolean;
-        function isWebAssemblyCompiledModule(object: any): boolean;
+        function isWeakMap(object: any): object is WeakMap<any, any>;
+        function isWeakSet(object: any): object is WeakSet<any>;
     }
 
     class TextDecoder {
@@ -19770,8 +19753,7 @@ definitions['util.d.ts'] = `declare module "util" {
     }
 }
 `;
-definitions['v8.d.ts'] = `declare module "v8" {
-    import { Readable } from "stream";
+definitions['v8.d.ts'] = `declare module "v8" {     import { Readable } from "stream";
 
     interface HeapSpaceInfo {
         space_name: string;
@@ -19958,8 +19940,7 @@ definitions['v8.d.ts'] = `declare module "v8" {
     function deserialize(data: NodeJS.TypedArray): any;
 }
 `;
-definitions['vm.d.ts'] = `declare module "vm" {
-    interface Context extends NodeJS.Dict<any> { }
+definitions['vm.d.ts'] = `declare module "vm" {     interface Context extends NodeJS.Dict<any> { }
     interface BaseOptions {
         /**
          * Specifies the filename used in stack traces produced by this script.
@@ -20105,8 +20086,7 @@ definitions['vm.d.ts'] = `declare module "vm" {
     function measureMemory(options?: MeasureMemoryOptions): Promise<MemoryMeasurement>;
 }
 `;
-definitions['wasi.d.ts'] = `declare module 'wasi' {
-    interface WASIOptions {
+definitions['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions {
         /**
          * An array of strings that the WebAssembly application will
          * see as command line arguments. The first argument is the virtual path to the
@@ -20192,8 +20172,7 @@ definitions['wasi.d.ts'] = `declare module 'wasi' {
     }
 }
 `;
-definitions['worker_threads.d.ts'] = `declare module "worker_threads" {
-    import { Context } from "vm";
+definitions['worker_threads.d.ts'] = `declare module "worker_threads" {     import { Context } from "vm";
     import { EventEmitter } from "events";
     import { Readable, Writable } from "stream";
     import { URL } from "url";
@@ -20431,8 +20410,7 @@ definitions['worker_threads.d.ts'] = `declare module "worker_threads" {
     function receiveMessageOnPort(port: MessagePort): { message: any } | undefined;
 }
 `;
-definitions['zlib.d.ts'] = `declare module "zlib" {
-    import * as stream from "stream";
+definitions['zlib.d.ts'] = `declare module "zlib" {     import * as stream from "stream";
 
     interface ZlibOptions {
         /**

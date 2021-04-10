@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.3.1
+### @xmcl/forge-site-parser@2.0.8
+#### Bug Fixes
+
+- fix(forge-site-parser): wrong type on Version object ([dfcb76139e3c228fcecf41975d07fc3e76cd0136](https://github.com/voxelum/minecraft-launcher-core-node/commit/dfcb76139e3c228fcecf41975d07fc3e76cd0136))
+### @xmcl/model@1.0.17
+#### Bug Fixes
+
+- fix: new threejs model format ([7f3c3a4facbd6ca35dc9db3a701b303129e3e3b3](https://github.com/voxelum/minecraft-launcher-core-node/commit/7f3c3a4facbd6ca35dc9db3a701b303129e3e3b3))
+- fix(model): correct the setSkin input url useage ([327f7c4b29bb98e2e8a95e5ffdc83c44d11abe88](https://github.com/voxelum/minecraft-launcher-core-node/commit/327f7c4b29bb98e2e8a95e5ffdc83c44d11abe88))
+### @xmcl/installer@3.2.1
+- Dependency @xmcl/forge-site-parser bump **patch**
+
+
 ## 4.3.0
 ### @xmcl/installer@3.2.0
 #### Features
