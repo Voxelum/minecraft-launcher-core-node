@@ -11,7 +11,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "three": "^0.115.0",
+    "three": "^0.127.0",
     "@xmcl/resourcepack": "^1.0.16"
   },
   

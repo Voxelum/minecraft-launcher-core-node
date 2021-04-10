@@ -65,7 +65,7 @@ function convertLegacySkin(context: CanvasRenderingContext2D, width: number) {
     copySkin(context, 52, 20, 4, 12, 44, 52, true); // Back Arm
 }
 
-type TextureSource = string | HTMLImageElement;
+type TextureSource = string | HTMLImageElement | URL;
 
 function mapUV(mesh: Mesh, faceIdx: number, x1: number, y1: number, x2: number, y2: number) {
     const geometry = mesh.geometry as Geometry;
@@ -184,19 +184,11 @@ function ensureImage(textureSource: TextureSource) {
     return new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
         img.onload = () => { resolve(img); };
-        try {
-            const url = new URL(textureSource);
-            switch (url.protocol) {
-                case "data:":
-                case "https:":
-                case "http:":
-                    img.src = textureSource;
-                    break;
-                default:
-                    reject(new Error(`Unsupported protocol ${url.protocol}!`));
-            }
-        } catch (e) {
-            img.src = `data:image/png;base64, ${textureSource}`;
+        img.onerror = (e, source, lineno, colno, error) => { reject(error) }
+        if (textureSource instanceof URL) {
+            img.src = textureSource.toString()
+        } else {
+            img.src = textureSource
         }
     });
 }
@@ -246,6 +238,10 @@ export class PlayerModel {
         this.playerObject3d = new PlayerObject3D(this.materialPlayer, this.materialCape, this.materialTransparent, false);
     }
 
+    /**
+     * @param skin The skin texture source. Should be url string, URL object, or a Image HTML element
+     * @param isSlim Is this skin slim
+     */
     async setSkin(skin: TextureSource, isSlim: boolean = false) {
         this.playerObject3d.slim = isSlim;
         const texture = this.texturePlayer;
