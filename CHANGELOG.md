@@ -1,5 +1,38 @@
 # Changelog
 
+## 4.3.0
+### @xmcl/installer@3.2.0
+#### Features
+
+- feat(installer): add retry option ([4663a44bb824fa01e9efea7f43bfafdef23e01c1](https://github.com/voxelum/minecraft-launcher-core-node/commit/4663a44bb824fa01e9efea7f43bfafdef23e01c1))
+
+
+## 4.2.3
+### @xmcl/forge-site-parser@2.0.7
+#### Bug Fixes
+
+- fix(forge-site-parser): correct the type ([ad1fde8be46d5d625c7000416dc39b9e658b7e92](https://github.com/voxelum/minecraft-launcher-core-node/commit/ad1fde8be46d5d625c7000416dc39b9e658b7e92))
+### @xmcl/installer@3.1.3
+#### Bug Fixes
+
+- fix(installer): close & handle fd properly ([09f71df32c29aaab8a9a8a13b621a665ba6e7bf0](https://github.com/voxelum/minecraft-launcher-core-node/commit/09f71df32c29aaab8a9a8a13b621a665ba6e7bf0))
+- Dependency @xmcl/forge-site-parser bump **patch**
+
+
+## 4.2.2
+### @xmcl/core@2.6.1
+#### Bug Fixes
+
+- fix(core): be able to resolve mixed verion inherit ([47861a72bcc53bb32e08b32881f5d210b1d15217](https://github.com/voxelum/minecraft-launcher-core-node/commit/47861a72bcc53bb32e08b32881f5d210b1d15217))
+### @xmcl/forge-site-parser@2.0.6
+#### Bug Fixes
+
+- fix(forge-site-parser): parse new forge page ([0d64120b5501228cd8b533bd06cad9add9972ee0](https://github.com/voxelum/minecraft-launcher-core-node/commit/0d64120b5501228cd8b533bd06cad9add9972ee0))
+### @xmcl/installer@3.1.2
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/forge-site-parser bump **patch**
+
+
 ## 4.2.1
 ### @xmcl/installer@3.1.1
 #### Bug Fixes

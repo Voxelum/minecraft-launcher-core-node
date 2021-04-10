@@ -169,6 +169,7 @@ export class DownloadForgeInstallerTask extends DownloadFallbackTask {
             agents: options.agents,
             headers: options.headers,
             segmentThreshold: options.segmentThreshold,
+            retry: options.retry,
         })
 
         this.installJarPath = installJarPath;

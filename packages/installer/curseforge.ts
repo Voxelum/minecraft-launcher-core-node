@@ -4,7 +4,7 @@ import { open, readAllEntries, readEntry } from "@xmcl/unzip";
 import { Agent as HttpsAgent } from "https";
 import { basename, join } from "path";
 import { Entry, ZipFile } from "yauzl";
-import { DownloadCommonOptions, DownloadTask, fetchText } from "./http";
+import { DownloadCommonOptions, DownloadTask, fetchText, withAgents } from "./http";
 import { UnzipTask } from "./unzip";
 import { errorFrom } from "./utils";
 
@@ -136,20 +136,25 @@ export class DownloadCurseforgeFilesTask extends TaskGroup<void> {
         const requestor = this.options?.queryFileUrl || createDefaultCurseforgeQuery();
         const resolver = this.options?.filePathResolver || ((p, f, m, u) => m.getMod(basename(u)));
         const minecraft = this.minecraft;
-        const tasks = await Promise.all(this.manifest.files.map(async (f) => {
-            const from = await requestor(f.projectID, f.fileID);
-            const to = await resolver(f.projectID, f.fileID, minecraft, from);
+        return withAgents(this.options, async (options) => {
+            const tasks = await Promise.all(this.manifest.files.map(async (f) => {
+                const from = await requestor(f.projectID, f.fileID);
+                const to = await resolver(f.projectID, f.fileID, minecraft, from);
 
-            return new DownloadTask({
-                destination: to,
-                url: from,
+                return new DownloadTask({
+                    destination: to,
+                    url: from,
+                    retry: options.retry,
+                    headers: options.headers,
+                    segmentThreshold: options.segmentThreshold,
+                });
+            }));
+            this.children.push(...tasks);
+            await this.all(tasks, {
+                throwErrorImmediately: this.options.throwErrorImmediately ?? false,
+                getErrorMessage: (errs) => `Fail to install curseforge modpack to ${minecraft.root}: ${errs.map((x: any) => x.message).join("\n")}`
             });
-        }));
-        this.children.push(...tasks);
-        await this.all(tasks, {
-            throwErrorImmediately: this.options.throwErrorImmediately ?? false,
-            getErrorMessage: (errs) => `Fail to install curseforge modpack to ${minecraft.root}: ${errs.map((x: any) => x.message).join("\n")}`
-        });
+        })
     }
 }
 

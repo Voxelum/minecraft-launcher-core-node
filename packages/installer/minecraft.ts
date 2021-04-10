@@ -408,6 +408,7 @@ export class InstallJsonTask extends DownloadFallbackTask {
             urls,
             checksum: expectSha1 ? { algorithm: "sha1", hash: expectSha1 } : undefined,
             destination,
+            retry: options.retry,
         });
 
         this.name = "json";
@@ -433,6 +434,7 @@ export class InstallJarTask extends DownloadFallbackTask {
             urls,
             checksum: { algorithm: "sha1", hash: expectSha1 },
             destination,
+            retry: options.retry,
         });
 
         this.name = "jar";
@@ -456,6 +458,7 @@ export class InstallAssetIndexTask extends DownloadFallbackTask {
             agents: options.agents,
             headers: options.headers,
             segmentThreshold: options.segmentThreshold,
+            retry: options.retry,
         });
 
         this.name = "assetIndex";
@@ -481,6 +484,7 @@ export class InstallLibraryTask extends DownloadFallbackTask {
             agents: options.agents,
             headers: options.headers,
             segmentThreshold: options.segmentThreshold,
+            retry: options.retry,
         });
 
         this.name = "library";
@@ -507,6 +511,7 @@ export class InstallAssetTask extends DownloadFallbackTask {
             agents: options.agents,
             headers: options.headers,
             segmentThreshold: options.segmentThreshold,
+            retry: options.retry,
             urls,
             checksum: {
                 hash,

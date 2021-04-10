@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/forge-site-parser",
-  "version": "2.0.5",
+  "version": "2.0.7",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "description": "Forge web page parser",
