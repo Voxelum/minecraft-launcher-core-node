@@ -1,10 +1,9 @@
-import "three-orbitcontrols";
-import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { WebGLRenderer } from "three/src/renderers/WebGLRenderer";
 import { Scene } from "three/src/scenes/Scene";
 import { PerspectiveCamera } from "three/src/cameras/PerspectiveCamera";
 import { Vector3 } from "three/src/math/Vector3";
-import { Geometry } from "three/src/core/Geometry";
+import { BufferGeometry } from "three/src/core/BufferGeometry";
 import { AmbientLight } from "three/src/lights/AmbientLight";
 import { LineBasicMaterial } from "three/src/materials/LineBasicMaterial";
 import { LineSegments } from "three/src/objects/LineSegments";
@@ -47,7 +46,7 @@ export function setupPlayer() {
     const player = new PlayerModel();
     const rect = canvas.getBoundingClientRect();
 
-    const camera = new PerspectiveCamera(45, 1, 0.5, 5);
+    const camera = new PerspectiveCamera(45, 1, 0.5, 100);
 
     camera.position.z = 3;
     camera.lookAt(new Vector3(0, 0, 0));
@@ -57,7 +56,7 @@ export function setupPlayer() {
     player.setSkin(steve, false);
     scene.add(o3d);
     {
-        const controls = new THREE.OrbitControls(camera, canvas);
+        const controls = new OrbitControls(camera, canvas);
         controls.target = new Vector3(0, 0, 0);
         controls.enablePan = false;
         controls.enableKeys = false;
@@ -89,6 +88,7 @@ export function setupPlayer() {
 }
 
 export function setupBlock() {
+    
     const block = {
         "display": {
             "gui": {
@@ -183,35 +183,35 @@ export function setupBlock() {
     const o = factory.getObject(grassBlock);
     scene.add(o);
 
-    const control = new THREE.OrbitControls(camera, renderer.domElement);
+    const control = new OrbitControls(camera, renderer.domElement);
     control.enableDamping = true;
     control.dampingFactor = 0.2
     control.zoomSpeed = 1.4
     control.rotateSpeed = 0.6
     control.enableKeys = false
 
-    {
-        const grid = new Geometry();
-        const gMat = new LineBasicMaterial({ color: 0xafafaf });
-        for (let i = -8; i < 8; ++i) {
-            grid.vertices.push(new Vector3(-8, -8, i));
-            grid.vertices.push(new Vector3(8, -8, i));
-            grid.vertices.push(new Vector3(i, -8, -8));
-            grid.vertices.push(new Vector3(i, -8, 8));
-        }
-        grid.vertices.push(new Vector3(-1, -8, 9));
-        grid.vertices.push(new Vector3(1, -8, 9));
+    // {
+    //     const grid = new BufferGeometry();
+    //     const gMat = new LineBasicMaterial({ color: 0xafafaf });
+    //     for (let i = -8; i < 8; ++i) {
+    //         grid.vertices.push(new Vector3(-8, -8, i));
+    //         grid.vertices.push(new Vector3(8, -8, i));
+    //         grid.vertices.push(new Vector3(i, -8, -8));
+    //         grid.vertices.push(new Vector3(i, -8, 8));
+    //     }
+    //     grid.vertices.push(new Vector3(-1, -8, 9));
+    //     grid.vertices.push(new Vector3(1, -8, 9));
 
-        grid.vertices.push(new Vector3(1, -8, 9));
-        grid.vertices.push(new Vector3(0, -8, 10));
+    //     grid.vertices.push(new Vector3(1, -8, 9));
+    //     grid.vertices.push(new Vector3(0, -8, 10));
 
-        grid.vertices.push(new Vector3(0, -8, 10));
-        grid.vertices.push(new Vector3(-1, -8, 9));
+    //     grid.vertices.push(new Vector3(0, -8, 10));
+    //     grid.vertices.push(new Vector3(-1, -8, 9));
 
-        const g = new LineSegments(grid, gMat);
-        g.visable = true;
-        scene.add(g);
-    }
+    //     const g = new LineSegments(grid, gMat);
+    //     g.visable = true;
+    //     scene.add(g);
+    // }
 
     let lastDimension = window.innerWidth;
     updateSize(canvas, renderer, 0);

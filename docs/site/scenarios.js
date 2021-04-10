@@ -1,4 +1,5 @@
-module.exports['common'] = `import { launch } from '@xmcl/core';
+const scenarios = {};
+scenarios['common'] = `import { launch } from '@xmcl/core';
 import { login, Authentication, offline } from '@xmcl/user';
 
 let authentication: Authentication = offline("offline-user-name");
@@ -29,30 +30,30 @@ async function gameLaunch() {
 }
 
 `;
-module.exports['installer'] = `import { install, VersionList, getVersionList, Version, installTask } from '@xmcl/installer';
+scenarios['installer'] = `import { install, MinecraftVersionList, getVersionList, MinecraftVersion, installTask } from '@xmcl/installer';
 
-let versionMetaList: VersionList;
+let versionMetaList: MinecraftVersionList;
 let minecraftLocation: string; "my/path/to/minecraft"
 
 async function updateVersionList() {
     versionMetaList = await getVersionList({ original: versionMetaList });
 }
 
-async function installVersion(versionMeta: Version) {
+async function installVersion(versionMeta: MinecraftVersion) {
     await install(versionMeta, minecraftLocation);
 }
 
-async function installButMonitorProgress(versionMeta: Version) {
+async function installButMonitorProgress(versionMeta: MinecraftVersion) {
     const task = installTask(versionMeta, minecraftLocation);
-    const result = await task.startAndWait((event) => {
-        if (event.type === "update") {
-            console.log(\`Downloaded url: \${event.from} to file \${event.to}. Progress: \${event.progress / event.total}. Transferr: \${event.chunkSize} bytes.\`);
+    const result = await task.startAndWait({
+        onUpdate(event, chunkSize) {
+            console.log(\`Downloaded url: \${event.from} to file \${event.to}. Progress: \${event.progress / event.total}. Transferr: \${chunkSize} bytes.\`);
         }
     });
     return result;
 }
 `;
-module.exports['lab'] = `\/\/ core packages
+scenarios['lab'] = `\/\/ core packages
 
 import { install } from '@xmcl/installer';
 import { launch, Version } from '@xmcl/core';
@@ -60,13 +61,13 @@ import { login } from '@xmcl/user';
 
 \/\/ additional packages
 
-import { Forge } from '@xmcl/mod-parser';
+import { readForgeMod } from '@xmcl/mod-parser';
 import { ResourcePack, ResourceManager } from '@xmcl/resourcepack';
 import { parse } from '@xmcl/gamesetting';
 import { TextComponent } from '@xmcl/text-component';
 import { WorldReader } from '@xmcl/world';
 `;
-module.exports['skin'] = `\/\// suppose you are on electron MAIN process \/\//
+scenarios['skin'] = `\/\// suppose you are on electron MAIN process \/\//
 
 import { login, Authentication, offline, getTextures, lookup, GameProfileWithProperties, GameProfile } from '@xmcl/user';
 
@@ -100,4 +101,4 @@ let object3D = model.playerObject3d; \/\/ THREEjs object 3d
 function onPlayerSkinUrlRecieve(url: string, isSlim: boolean) {
     model.setSkin(url, isSlim);
 }
-`;
+`;export default scenarios;
