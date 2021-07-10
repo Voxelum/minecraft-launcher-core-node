@@ -379,14 +379,14 @@ describe("Version", () => {
             expect(version.inheritances).toEqual(["1.7.10-Forge10.13.3.1400-1.7.10", "1.7.10"]);
         });
         it("should be able to parse extends version for forge & liteloader", async function () {
-            const version = await Version.parse(tempRoot, "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT");
+            const version = await Version.parse(tempRoot, "1.12.2-forge-14.23.5.2852-Liteloader1.12.2-1.12.2-SNAPSHOT");
             expect(version).toBeTruthy();
             expect(version.pathChain).toBeInstanceOf(Array);
             expect(version.pathChain).toHaveLength(3);
             expect(version.minecraftVersion).toEqual("1.12.2");
             expect(version.inheritances).toEqual([
-                "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT",
-                "1.12.2-forge1.12.2-14.23.5.2823",
+                "1.12.2-forge-14.23.5.2852-Liteloader1.12.2-1.12.2-SNAPSHOT",
+                "1.12.2-forge-14.23.5.2852",
                 "1.12.2",
             ]);
         });
@@ -432,7 +432,7 @@ describe("Version", () => {
 
     // it("should be able to extends the version", async function () {
     //     const ver = await Version.parse(this.gameDirectory, "1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT");
-    //     const ver2 = await Version.parse(this.gameDirectory, "1.12.2-forge1.12.2-14.23.5.2823");
+    //     const ver2 = await Version.parse(this.gameDirectory, "1.12.2-forge-14.23.5.2852");
 
     //     const out = Version.extendsVersion("test", ver, ver2);
     //     assert(out);

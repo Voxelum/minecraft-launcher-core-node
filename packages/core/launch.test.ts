@@ -119,6 +119,7 @@ describe("Launcher", () => {
         test("should generate correct command for 1.7.10 with forge", async () => {
             const jPath = "/test/java";
             const version = "1.7.10-Forge10.13.3.1400-1.7.10";
+            const root = path.normalize(path.join(__dirname, "..", "..", "mock"));
             const gamePath = root;
             const args = await generateArguments({
                 version,
