@@ -590,7 +590,7 @@ export async function generateArguments(options: LaunchOption) {
     let gameIcon = options.gameIcon;
     if (!gameIcon) {
         const index = mc.getAssetsIndex(version.assetIndex.id);
-        const indexContent = await readFile(index, { encoding: "utf-8" }).then((b) => JSON.parse(b.toString()));
+        const indexContent = await readFile(index, { encoding: "utf-8" }).then((b) => JSON.parse(b.toString()), () => ({}));
         if ("icons/minecraft.icns" in indexContent) {
             gameIcon = mc.getAsset(indexContent["icons/minecraft.icns"].hash);
         } else if ("minecraft/icons/minecraft.icns" in indexContent) {
