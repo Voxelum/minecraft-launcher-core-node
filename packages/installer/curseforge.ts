@@ -6,7 +6,7 @@ import { basename, join } from "path";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadCommonOptions, DownloadTask, fetchText, withAgents } from "./http";
 import { UnzipTask } from "./unzip";
-import { errorFrom } from "./utils";
+import { errorFrom, errorToString } from "./utils";
 
 export interface CurseforgeOptions extends DownloadCommonOptions {
     /**
@@ -152,7 +152,7 @@ export class DownloadCurseforgeFilesTask extends TaskGroup<void> {
             this.children.push(...tasks);
             await this.all(tasks, {
                 throwErrorImmediately: this.options.throwErrorImmediately ?? false,
-                getErrorMessage: (errs) => `Fail to install curseforge modpack to ${minecraft.root}: ${errs.map((x: any) => x.message).join("\n")}`
+                getErrorMessage: (errs) => `Fail to install curseforge modpack to ${minecraft.root}: ${errs.map(errorToString).join("\n")}`
             });
         })
     }

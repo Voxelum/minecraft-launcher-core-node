@@ -2,7 +2,7 @@ import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, V
 import { task, Task } from "@xmcl/task";
 import { join } from "path";
 import { DownloadCommonOptions, DownloadFallbackTask, getAndParseIfUpdate, joinUrl, Timestamped, withAgents } from "./http";
-import { ensureDir, normalizeArray, readFile } from "./utils";
+import { ensureDir, normalizeArray, readFile, errorToString } from "./utils";
 
 /**
  * The function to swap library host.
@@ -340,7 +340,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
         // let sizes = objectArray.map((a) => a.size).map((a, b) => a + b, 0);
         await withAgents(options, (options) => this.all(tasks, {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
-            getErrorMessage: () => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}`
+            getErrorMessage: (errs) => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}: ${errs.map(errorToString).join("\n")}`
         }));
 
         return version;
@@ -358,7 +358,7 @@ export function installLibrariesTask(version: InstallLibraryVersion, options: Li
         const tasks = version.libraries.map((lib) => new InstallLibraryTask(lib, folder, options));
         await withAgents(options, (options) => this.all(tasks, {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
-            getErrorMessage: () => `Errors during install libraries at ${version.minecraftDirectory}`
+            getErrorMessage: (errs) => `Errors during install libraries at ${version.minecraftDirectory}: ${errs.map(errorToString).join("\n")}`
         }));
     });
 }
@@ -388,7 +388,7 @@ export function installResolvedAssetsTask(assets: AssetInfo[], folder: Minecraft
 
         await withAgents(options, (options) => this.all(tasks, {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
-            getErrorMessage: () => `Errors during install assets at ${folder.root}`,
+            getErrorMessage: (errs) => `Errors during install assets at ${folder.root}: ${errs.map(errorToString).join("\n")}`,
         }));
     });
 }
