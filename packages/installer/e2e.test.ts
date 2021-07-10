@@ -115,24 +115,24 @@ describe("ForgeInstaller", () => {
 
     test("should install forge on 1.7.10", async () => {
         const meta: ForgeVersion = {
-            version: "10.13.3.1400",
+            version: "10.13.4.1614",
             installer: {
-                md5: "fb37fa073dce193f798ecf8987c25dba",
-                sha1: "925d171aa9db651ae430967775a48038c180858a",
-                path: "/maven/net/minecraftforge/forge/1.7.10-10.13.3.1400-1.7.10/forge-1.7.10-10.13.3.1400-1.7.10-installer.jar",
+                md5: "8e16eecbe08db1d421532cda746338b3",
+                sha1: "6228fdea0661f957415a3dfad2c91b2ae294ace8",
+                path: "maven/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/forge-1.7.10-10.13.4.1614-1.7.10-installer.jar",
             },
             universal: {
-                md5: "3cc321afc2c8a641b4f070f7905c2d6e",
-                sha1: "d96b5933bee1d07fd3e9e4f51e8fd0a1b3f9fd68",
-                path: "/maven/net/minecraftforge/forge/1.7.10-10.13.3.1400-1.7.10/forge-1.7.10-10.13.3.1400-1.7.10-universal.jar",
+                md5: "add0fba161c4652a96efb4264ec2d9ec",
+                sha1: "25fd97f72beca728112256938e03e8105b1b78cc",
+                path: "/maven/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/forge-1.7.10-10.13.4.1614-1.7.10-universal.jar",
             },
             mcversion: "1.7.10",
             type: "common",
         };
         const result = await installForge(meta, root);
 
-        expect(result).toEqual("1.7.10-Forge10.13.3.1400-1.7.10");
-        await expect(exists(join(root, "versions", "1.7.10-Forge10.13.3.1400-1.7.10", "1.7.10-Forge10.13.3.1400-1.7.10.json")))
+        expect(result).toEqual("1.7.10-Forge10.13.4.1614-1.7.10");
+        await expect(exists(join(root, "versions", "1.7.10-Forge10.13.4.1614-1.7.10", "1.7.10-Forge10.13.4.1614-1.7.10.json")))
             .resolves
             .toBeTruthy();
         await installDependencies(await Version.parse(root, result));
@@ -140,22 +140,22 @@ describe("ForgeInstaller", () => {
     test("should install forge on 1.12.2", async () => {
         const meta: ForgeVersion = {
             mcversion: "1.12.2",
-            version: "14.23.5.2823",
+            version: "14.23.5.2855",
             universal: {
-                md5: "61e0e4606c3443eb834d9ddcbc6457a3",
-                sha1: "cec39eddde28eb6f7ac921c8d82d6a5b7916e81b",
-                path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-universal.jar",
+                md5: "02fcc447bb8938e5214292e4d36ec949",
+                sha1: "52cecb6a3fbd765599b976dca445b21f33ab5634",
+                path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2855/forge-1.12.2-14.23.5.2855-universal.jar",
             },
             installer: {
-                md5: "181ccfb55847f31368503746a1ae7e40",
-                sha1: "3dd9ecd967edbdb0993c9c7e6b8c55cca294f447",
-                path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2823/forge-1.12.2-14.23.5.2823-installer.jar",
+                md5: "b37aedc28e441fec469f910ce913e9c3",
+                sha1: "f691a3e4d8f46eebb42d6129f5e192bf4e1121d0",
+                path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2855/forge-1.12.2-14.23.5.2855-installer.jar",
             },
             type: "common",
         };
         const result = await installForge(meta, MinecraftFolder.from(root));
-        expect(result).toEqual("1.12.2-forge1.12.2-14.23.5.2823");
-        await expect(exists(join(root, "versions", "1.12.2-forge1.12.2-14.23.5.2823", "1.12.2-forge1.12.2-14.23.5.2823.json")))
+        expect(result).toEqual("1.12.2-forge1.12.2-14.23.5.2855");
+        await expect(exists(join(root, "versions", "1.12.2-forge1.12.2-14.23.5.2855", "1.12.2-forge1.12.2-14.23.5.2855.json")))
             .resolves
             .toBeTruthy();
         await installDependencies(await Version.parse(root, result));
@@ -222,7 +222,7 @@ describe("LiteloaderInstaller", () => {
         });
         test("should be able to install liteloader to forge", async () => {
             const meta: LiteloaderVersion = { url: "http://repo.mumfrey.com/content/repositories/snapshots/", type: "SNAPSHOT", file: "liteloader-1.12.2-SNAPSHOT.jar", version: "1.12.2-SNAPSHOT", md5: "1420785ecbfed5aff4a586c5c9dd97eb", timestamp: "1511880271", mcversion: "1.12.2", tweakClass: "com.mumfrey.liteloader.launch.LiteLoaderTweaker", libraries: [{ name: "net.minecraft:launchwrapper:1.12" }, { name: "org.ow2.asm:asm-all:5.2" }] };
-            const result = await installLiteloader(meta, MinecraftFolder.from(root), { inheritsFrom: "1.12.2-forge1.12.2-14.23.5.2823" });
+            const result = await installLiteloader(meta, MinecraftFolder.from(root), { inheritsFrom: "1.12.2-forge1.12.2-14.23.5.2855" });
             await installDependencies(await Version.parse(root, result));
         });
     });
