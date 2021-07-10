@@ -2054,13 +2054,6 @@ declare type InputType = string | Buffer | {
     zip: ZipFile;
     entries: Entry[];
 };
-export interface BadCurseforgeModpackError {
-    error: "BadCurseforgeModpack";
-    /**
-     * What required entry is missing in modpack.
-     */
-    entry: string;
-}
 export interface Manifest {
     manifestType: string;
     manifestVersion: number;
@@ -2091,6 +2084,19 @@ export interface Manifest {
 export interface File {
     projectID: number;
     fileID: number;
+}
+export declare class BadCurseforgeModpackError extends Error {
+    modpack: InputType;
+    /**
+     * What required entry is missing in modpack.
+     */
+    entry: string;
+    error: string;
+    constructor(modpack: InputType, 
+    /**
+     * What required entry is missing in modpack.
+     */
+    entry: string);
 }
 /**
  * Read the mainifest data from modpack
@@ -2331,21 +2337,6 @@ import { DownloadFallbackTask, Timestamped } from "./http";
 import { LibraryOptions } from "./minecraft";
 import { InstallProfileOption } from "./profile";
 import { InstallOptions as InstallOptionsBase } from "./utils";
-export interface BadForgeInstallerJarError {
-    error: "BadForgeInstallerJar";
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-}
-export interface BadForgeUniversalJarError {
-    error: "BadForgeUniversalJar";
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-}
-export declare type ForgeError = BadForgeInstallerJarError | BadForgeUniversalJarError;
 export interface ForgeVersionList extends Timestamped {
     mcversion: string;
     versions: ForgeVersion[];
@@ -2458,12 +2449,25 @@ export declare function isForgeInstallerEntries(entries: ForgeInstallerEntries):
  * @param forgeVersion Forge version to install
  */
 export declare function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: string): Promise<ForgeInstallerEntries>;
+export declare class BadForgeInstallerJarError extends Error {
+    jarPath: string;
+    /**
+     * What entry in jar is missing
+     */
+    entry?: string | undefined;
+    error: string;
+    constructor(jarPath: string, 
+    /**
+     * What entry in jar is missing
+     */
+    entry?: string | undefined);
+}
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The installed version name.
- * @throws {@link ForgeError}
+ * @throws {@link BadForgeInstallerJarError}
  */
 export declare function installForge(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions): Promise<string>;
 /**
@@ -2471,7 +2475,7 @@ export declare function installForge(version: RequiredVersion, minecraft: Minecr
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
- * @throws {@link ForgeError}
+ * @throws {@link BadForgeInstallerJarError}
  */
 export declare function installForgeTask(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions): Task<string>;
 /**
@@ -2516,7 +2520,8 @@ export declare class ChecksumNotMatchError extends Error {
     readonly expect: string;
     readonly actual: string;
     readonly file: string;
-    constructor(algorithm: string, expect: string, actual: string, file: string);
+    readonly source?: string | undefined;
+    constructor(algorithm: string, expect: string, actual: string, file: string, source?: string | undefined);
 }
 export declare function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:";
 /**
@@ -2814,8 +2819,8 @@ export declare function scanLocalJava(locations: string[]): Promise<JavaInfo[]>;
 export {};
 \/\/# sourceMappingURL=java.d.ts.map`;
 definitions['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
-import { InstallOptions } from "./utils";
 import { Timestamped } from "./http";
+import { InstallOptions } from "./utils";
 export declare const DEFAULT_VERSION_MANIFEST = "http:\/\/dl.liteloader.com/versions/versions.json";
 /**
  * The liteloader version list. Containing the minecraft version -> liteloader version info mapping.
@@ -2861,13 +2866,18 @@ export interface LiteloaderVersion {
 /**
  * This error is only thrown from liteloader install currently.
  */
-export interface MissingVersionJsonError {
-    error: "MissingVersionJson";
+export declare class MissingVersionJsonError extends Error {
     version: string;
     /**
      * The path of version json
      */
     path: string;
+    constructor(version: string, 
+    /**
+     * The path of version json
+     */
+    path: string);
+    error: "MissingVersionJson";
 }
 /**
  * Get or update the LiteLoader version list.
@@ -3065,21 +3075,6 @@ export interface InstallSideOption {
     side?: "client" | "server";
 }
 export declare type Options = DownloadCommonOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
-export interface PostProcessFailedError {
-    error: "PostProcessFailed";
-    jar: string;
-    commands: string[];
-}
-export interface PostProcessNoMainClassError {
-    error: "PostProcessNoMainClass";
-    jarPath: string;
-}
-export interface PostProcessBadJarError {
-    error: "PostProcessBadJar";
-    jarPath: string;
-    causeBy: Error;
-}
-export declare type PostProcessError = PostProcessBadJarError | PostProcessFailedError | PostProcessNoMainClassError;
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -3201,13 +3196,6 @@ export declare class InstallAssetTask extends DownloadFallbackTask {
 export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOptions): string[];
 \/\/# sourceMappingURL=minecraft.d.ts.map`;
 definitions['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core"; import { InstallOptions } from "./utils";
-export interface BadOptifineJarError {
-    error: "BadOptifineJar";
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-}
 export interface InstallOptifineOptions extends InstallOptions {
     /**
      * Use "optifine.OptiFineForgeTweaker" instead of "optifine.OptiFineTweaker" for tweakClass.
@@ -3241,6 +3229,19 @@ export interface InstallOptifineOptions extends InstallOptions {
  * @throws {@link BadOptifineJarError}
  */
 export declare function installOptifine(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Promise<string>;
+export declare class BadOptifineJarError extends Error {
+    optifine: string;
+    /**
+     * What entry in jar is missing
+     */
+    entry: string;
+    constructor(optifine: string, 
+    /**
+     * What entry in jar is missing
+     */
+    entry: string);
+    error: string;
+}
 /**
  * Install optifine by optifine installer task
  *
@@ -3253,7 +3254,7 @@ export declare function installOptifine(installer: string, minecraft: MinecraftL
 export declare function installOptifineTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): import("@xmcl/task").TaskRoutine<string>;
 \/\/# sourceMappingURL=optifine.d.ts.map`;
 definitions['@xmcl/installer/profile.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core"; import { TaskLooped } from "@xmcl/task";
-import { LibraryOptions, InstallSideOption } from "./minecraft";
+import { InstallSideOption, LibraryOptions } from "./minecraft";
 export interface PostProcessor {
     /**
      * The executable jar path
@@ -3363,6 +3364,23 @@ export declare function installByProfile(installProfile: InstallProfile, minecra
  * @param options The options to install
  */
 export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): import("@xmcl/task").TaskRoutine<void>;
+export declare class PostProcessBadJarError extends Error {
+    jarPath: string;
+    causeBy: Error;
+    constructor(jarPath: string, causeBy: Error);
+    error: string;
+}
+export declare class PostProcessNoMainClassError extends Error {
+    jarPath: string;
+    constructor(jarPath: string);
+    error: string;
+}
+export declare class PostProcessFailedError extends Error {
+    jarPath: string;
+    commands: string[];
+    constructor(jarPath: string, commands: string[], message: string);
+    error: string;
+}
 /**
  * Post process the post processors from \`InstallProfile\`.
  *
@@ -3422,7 +3440,6 @@ export declare function missing(target: string): Promise<boolean>;
 export declare function ensureDir(target: string): Promise<void>;
 export declare function ensureFile(target: string): Promise<void>;
 export declare function normalizeArray<T>(arr?: T | T[]): T[];
-export declare function errorFrom<T>(error: T, message?: string): T & Error;
 export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
 /**
  * Shared install options
@@ -3442,6 +3459,7 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
+export declare function errorToString(e: any): any;
 \/\/# sourceMappingURL=utils.d.ts.map`;
 definitions['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system"; declare type Person = {
     /**

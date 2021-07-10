@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/installer",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "description": "Provides Minecraft/Forge/Fabric/Liteloader installers",
@@ -11,7 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/core": "^2.6.1",
+    "@xmcl/core": "^2.6.2",
     "@xmcl/forge-site-parser": "^2.0.8",
     "@xmcl/task": "^3.0.0",
     "@xmcl/unzip": "^2.0.0",
