@@ -37,7 +37,6 @@ export async function readInfo(buff: Uint8Array): Promise<ServerInfo[]> {
 export function writeInfo(infos: ServerInfo[]): Promise<Uint8Array> {
     const tag = new ServersData();
     tag.servers = infos;
-    // infos.forEach(info => Object.setPrototypeOf(info, ServerInfo.prototype));
     return serialize(tag);
 }
 
@@ -59,6 +58,5 @@ export function readInfoSync(buff: Uint8Array): ServerInfo[] {
 export function writeInfoSync(infos: ServerInfo[]): Uint8Array {
     const tag = new ServersData();
     tag.servers = infos;
-    // infos.forEach(info => Object.setPrototypeOf(info, ServerInfo.prototype));
     return serializeSync(tag);
 }
