@@ -18,8 +18,8 @@ export interface Timestamped {
 }
 
 export class ChecksumNotMatchError extends Error {
-    constructor(readonly algorithm: string, readonly expect: string, readonly actual: string, readonly file: string) {
-        super(`File ${file} ${algorithm} checksum not match. Expect: ${expect}. Actual: ${actual}`);
+    constructor(readonly algorithm: string, readonly expect: string, readonly actual: string, readonly file: string, readonly source?: string) {
+        super(source ? `File ${file}(${source}) ${algorithm} checksum not match. Expect: ${expect}. Actual: ${actual}.` : `File ${file} ${algorithm} checksum not match. Expect: ${expect}. Actual: ${actual}.`);
     }
 }
 
@@ -487,7 +487,7 @@ export class DownloadTask extends TaskLooped<Segment[]> {
             const actual = await checksum(this.destination, this.checksum.algorithm)
             const expect = this.checksum.hash;
             if (actual !== expect) {
-                throw new ChecksumNotMatchError(this.checksum.algorithm, this.checksum.hash, actual, this.destination);
+                throw new ChecksumNotMatchError(this.checksum.algorithm, this.checksum.hash, actual, this.destination, this.url);
             }
             await close(this.fd).catch(() => { });
             this.fd = -1

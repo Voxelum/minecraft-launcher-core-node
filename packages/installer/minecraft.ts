@@ -388,7 +388,7 @@ export function installResolvedAssetsTask(assets: AssetInfo[], folder: Minecraft
 
         await withAgents(options, (options) => this.all(tasks, {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
-            getErrorMessage: (errs) => `Errors during install assets at ${folder.root}: ${errs.map(errorToString).join("\n")}`,
+            getErrorMessage: (errs) => `Errors during install assets at ${folder.root}:\n${errs.map(errorToString).join("\n")}`,
         }));
     });
 }
