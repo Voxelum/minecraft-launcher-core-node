@@ -253,7 +253,7 @@ export function installLibraries(version: ResolvedVersion, options: LibraryOptio
  * @param option The install option
  */
 export async function installResolvedLibraries(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOptions): Promise<void> {
-    await installLibrariesTask({ libraries, minecraftDirectory: typeof minecraft === "string" ? minecraft : minecraft.root }, option)
+    await installLibrariesTask({ libraries, minecraftDirectory: typeof minecraft === "string" ? minecraft : minecraft.root }, option).startAndWait();
 }
 
 /**
