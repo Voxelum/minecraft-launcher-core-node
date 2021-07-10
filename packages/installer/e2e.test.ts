@@ -119,7 +119,7 @@ describe("ForgeInstaller", () => {
             installer: {
                 md5: "8e16eecbe08db1d421532cda746338b3",
                 sha1: "6228fdea0661f957415a3dfad2c91b2ae294ace8",
-                path: "maven/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/forge-1.7.10-10.13.4.1614-1.7.10-installer.jar",
+                path: "/maven/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/forge-1.7.10-10.13.4.1614-1.7.10-installer.jar",
             },
             universal: {
                 md5: "add0fba161c4652a96efb4264ec2d9ec",
@@ -135,30 +135,11 @@ describe("ForgeInstaller", () => {
         await expect(exists(join(root, "versions", "1.7.10-Forge10.13.4.1614-1.7.10", "1.7.10-Forge10.13.4.1614-1.7.10.json")))
             .resolves
             .toBeTruthy();
-        await installDependencies(await Version.parse(root, result));
-    });
-    test("should install forge on 1.12.2", async () => {
-        const meta: ForgeVersion = {
-            mcversion: "1.12.2",
-            version: "14.23.5.2855",
-            universal: {
-                md5: "02fcc447bb8938e5214292e4d36ec949",
-                sha1: "52cecb6a3fbd765599b976dca445b21f33ab5634",
-                path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2855/forge-1.12.2-14.23.5.2855-universal.jar",
-            },
-            installer: {
-                md5: "b37aedc28e441fec469f910ce913e9c3",
-                sha1: "f691a3e4d8f46eebb42d6129f5e192bf4e1121d0",
-                path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2855/forge-1.12.2-14.23.5.2855-installer.jar",
-            },
-            type: "common",
-        };
-        const result = await installForge(meta, MinecraftFolder.from(root));
-        expect(result).toEqual("1.12.2-forge1.12.2-14.23.5.2855");
-        await expect(exists(join(root, "versions", "1.12.2-forge1.12.2-14.23.5.2855", "1.12.2-forge1.12.2-14.23.5.2855.json")))
-            .resolves
-            .toBeTruthy();
-        await installDependencies(await Version.parse(root, result));
+        const resolvedVersion = await Version.parse(root, result);
+        // https://github.com/Voxelum/minecraft-launcher-core-node/issues/210
+        resolvedVersion.libraries.filter((lib) => lib.groupId === "org.scala-lang.plugins")
+            .forEach((lib) => { (lib.download as any).sha1 = "" });
+        await installDependencies(resolvedVersion);
     });
     test("should install forge 1.12.2-14.23.5.2852", async () => {
         const meta = {
@@ -223,7 +204,11 @@ describe("LiteloaderInstaller", () => {
         test("should be able to install liteloader to forge", async () => {
             const meta: LiteloaderVersion = { url: "http://repo.mumfrey.com/content/repositories/snapshots/", type: "SNAPSHOT", file: "liteloader-1.12.2-SNAPSHOT.jar", version: "1.12.2-SNAPSHOT", md5: "1420785ecbfed5aff4a586c5c9dd97eb", timestamp: "1511880271", mcversion: "1.12.2", tweakClass: "com.mumfrey.liteloader.launch.LiteLoaderTweaker", libraries: [{ name: "net.minecraft:launchwrapper:1.12" }, { name: "org.ow2.asm:asm-all:5.2" }] };
             const result = await installLiteloader(meta, MinecraftFolder.from(root), { inheritsFrom: "1.12.2-forge1.12.2-14.23.5.2855" });
-            await installDependencies(await Version.parse(root, result));
+            const resolvedVersion = await Version.parse(root, result);
+            // https://github.com/Voxelum/minecraft-launcher-core-node/issues/210
+            resolvedVersion.libraries.filter((lib) => lib.groupId === "org.scala-lang.plugins")
+                .forEach((lib) => { (lib.download as any).sha1 = "" });
+            await installDependencies(resolvedVersion);
         });
     });
 });
