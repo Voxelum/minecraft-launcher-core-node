@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/server-info",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "description": "Read Minecraft servers.dat NBT file",

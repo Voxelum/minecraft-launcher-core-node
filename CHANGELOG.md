@@ -1,5 +1,24 @@
 # Changelog
 
+## 4.3.2
+### @xmcl/core@2.6.2
+#### Bug Fixes
+
+- fix(core): should not fail gen cmd if there is no assets ([b7515545778db58dd7c6f58b0efb85e48ce7eb08](https://github.com/voxelum/minecraft-launcher-core-node/commit/b7515545778db58dd7c6f58b0efb85e48ce7eb08))
+### @xmcl/server-info@2.0.4
+#### Bug Fixes
+
+- fix: force refresh server info esm package ([0a990a5984dc3aa44a11ebab859866e84e81e0da](https://github.com/voxelum/minecraft-launcher-core-node/commit/0a990a5984dc3aa44a11ebab859866e84e81e0da))
+### @xmcl/installer@3.2.2
+#### Bug Fixes
+
+- fix(forge): correct error stack for installer ([60deba32f324da901c11b2f851a88895b013ccba](https://github.com/voxelum/minecraft-launcher-core-node/commit/60deba32f324da901c11b2f851a88895b013ccba))
+- fix(installer): installResolvedLibraries not return promise ([09cef121eb50f1bfe483f9590f2c7b9ef9b3f6ae](https://github.com/voxelum/minecraft-launcher-core-node/commit/09cef121eb50f1bfe483f9590f2c7b9ef9b3f6ae))
+- fix(installer): enrich checksum not match error ([af31290f21c571302ed11e7653ca82caa99d3a78](https://github.com/voxelum/minecraft-launcher-core-node/commit/af31290f21c571302ed11e7653ca82caa99d3a78))
+- fix(installer): emit the error message on multi-error ([15adbabda4fc3f2d6a44f0f0a3c62cd41b21b511](https://github.com/voxelum/minecraft-launcher-core-node/commit/15adbabda4fc3f2d6a44f0f0a3c62cd41b21b511))
+- Dependency @xmcl/core bump **patch**
+
+
 ## 4.3.1
 ### @xmcl/forge-site-parser@2.0.8
 #### Bug Fixes
