@@ -3,8 +3,8 @@ import { CancelledError, task, TaskLooped } from "@xmcl/task";
 import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
 import { delimiter } from "path";
 import { ZipFile } from "yauzl";
-import { checksum, errorFrom, readFile, spawnProcess } from "./utils";
-import { installResolvedLibrariesTask, LibraryOptions, InstallSideOption } from "./minecraft";
+import { installResolvedLibrariesTask, InstallSideOption, LibraryOptions } from "./minecraft";
+import { checksum, readFile, spawnProcess } from "./utils";
 
 export interface PostProcessor {
     /**
@@ -159,6 +159,29 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
     });
 }
 
+export class PostProcessBadJarError extends Error {
+    constructor(public jarPath: string, public causeBy: Error) {
+        super(`Fail to post process bad jar: ${jarPath}`)
+    }
+
+    error = "PostProcessBadJar"
+}
+
+export class PostProcessNoMainClassError extends Error {
+    constructor(public jarPath: string) {
+        super(`Fail to post process bad jar without main class: ${jarPath}`)
+    }
+
+    error = "PostProcessNoMainClass"
+}
+
+export class PostProcessFailedError extends Error {
+    constructor(public jarPath: string, public commands: string[], message: string) {
+        super(message)
+    }
+
+    error = "PostProcessFailed"
+}
 /**
  * Post process the post processors from `InstallProfile`.
  *
@@ -210,12 +233,12 @@ export class PostProcessingTask extends TaskLooped<void> {
                 }
             }
         } catch (e) {
-            throw errorFrom({ error: "PostProcessBadJar", jarPath: lib, causeBy: e });
+            throw new PostProcessBadJarError(lib, e);
         } finally {
             zip?.close();
         }
         if (!mainClass) {
-            throw errorFrom({ error: "PostProcessNoMainClass", jarPath: lib })
+            throw new PostProcessNoMainClassError(lib);
         }
         return mainClass;
     }
@@ -229,7 +252,7 @@ export class PostProcessingTask extends TaskLooped<void> {
             await spawnProcess(java, cmd);
         } catch (e) {
             if (typeof e === "string") {
-                throw errorFrom({ error: "PostProcessFailed", jar: proc.jar, commands: [java, ...cmd] }, e);
+                throw new PostProcessFailedError(proc.jar, [java, ...cmd], e);
             }
             throw e;
         }

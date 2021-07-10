@@ -6,7 +6,7 @@ import { basename, join } from "path";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadCommonOptions, DownloadTask, fetchText, withAgents } from "./http";
 import { UnzipTask } from "./unzip";
-import { errorFrom, errorToString } from "./utils";
+import { errorToString } from "./utils";
 
 export interface CurseforgeOptions extends DownloadCommonOptions {
     /**
@@ -38,14 +38,6 @@ export interface InstallFileOptions extends DownloadCommonOptions {
 }
 
 type InputType = string | Buffer | { zip: ZipFile; entries: Entry[] };
-
-export interface BadCurseforgeModpackError {
-    error: "BadCurseforgeModpack";
-    /**
-     * What required entry is missing in modpack.
-     */
-    entry: string;
-}
 
 export interface Manifest {
     manifestType: string;
@@ -80,6 +72,18 @@ export interface File {
     fileID: number;
 }
 
+export class BadCurseforgeModpackError extends Error {
+    error = "BadCurseforgeModpack"
+
+    constructor(public modpack: InputType,
+        /**
+         * What required entry is missing in modpack.
+         */
+        public entry: string) {
+        super(`Missing entry ${entry} in curseforge modpack: ${modpack}`);
+    }
+}
+
 /**
  * Read the mainifest data from modpack
  * @throws {@link BadCurseforgeModpackError}
@@ -89,7 +93,7 @@ export function readManifestTask(input: InputType): Task<Manifest> {
         const zip = await normalizeInput(input);
         const mainfiestEntry = zip.entries.find((e) => e.fileName === "manifest.json");
         if (!mainfiestEntry) {
-            throw errorFrom({ error: "BadCurseforgeModpack", entry: "manifest.json" });
+            throw new BadCurseforgeModpackError(input, "manifest.json");
         }
         const buffer = await readEntry(zip.zip, mainfiestEntry)
         const content: Manifest = JSON.parse(buffer.toString());

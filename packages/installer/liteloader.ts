@@ -1,8 +1,8 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { join } from "path";
-import { errorFrom, ensureDir, InstallOptions, missing, readFile, writeFile } from "./utils";
 import { getAndParseIfUpdate, Timestamped } from "./http";
+import { ensureDir, InstallOptions, missing, readFile, writeFile } from "./utils";
 
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
 /**
@@ -93,13 +93,16 @@ const releaseRoot = "http://repo.mumfrey.com/content/repositories/liteloader/";
 /**
  * This error is only thrown from liteloader install currently.
  */
-export interface MissingVersionJsonError {
-    error: "MissingVersionJson";
-    version: string;
-    /**
-     * The path of version json
-     */
-    path: string;
+export class MissingVersionJsonError extends Error {
+    constructor(public version: string,
+        /**
+         * The path of version json
+         */
+        public path: string) {
+        super()
+    }
+    error: "MissingVersionJson" = "MissingVersionJson"
+
 }
 /**
  * Get or update the LiteLoader version list.
@@ -170,6 +173,7 @@ function buildVersionInfo(versionMeta: LiteloaderVersion, mountedJSON: any) {
     return info;
 }
 
+
 /**
  * Install the liteloader to specific minecraft location.
  *
@@ -191,7 +195,7 @@ export function installLiteloaderTask(versionMeta: LiteloaderVersion, location: 
 
         const mountedJSON: any = await this.yield(task("resolveVersionJson", async function resolveVersionJson() {
             if (await missing(mc.getVersionJson(mountVersion))) {
-                throw errorFrom({ error: "MissingVersionJson", version: mountVersion, path: mc.getVersionJson(mountVersion) });
+                throw new MissingVersionJsonError(mountVersion, mc.getVersionJson(mountVersion));
             }
             return readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse);
         }));

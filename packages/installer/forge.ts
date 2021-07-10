@@ -8,24 +8,7 @@ import { Entry, ZipFile } from "yauzl";
 import { DownloadFallbackTask, getAndParseIfUpdate, Timestamped, withAgents } from "./http";
 import { LibraryOptions, resolveLibraryDownloadUrls } from "./minecraft";
 import { installByProfileTask, InstallProfile, InstallProfileOption } from "./profile";
-import { ensureFile, errorFrom, InstallOptions as InstallOptionsBase, normalizeArray, pipeline, writeFile } from "./utils";
-
-export interface BadForgeInstallerJarError {
-    error: "BadForgeInstallerJar";
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-}
-export interface BadForgeUniversalJarError {
-    error: "BadForgeUniversalJar";
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-}
-
-export type ForgeError = BadForgeInstallerJarError | BadForgeUniversalJarError;
+import { ensureFile, InstallOptions as InstallOptionsBase, normalizeArray, pipeline, writeFile } from "./utils";
 
 export interface ForgeVersionList extends Timestamped {
     mcversion: string;
@@ -299,6 +282,19 @@ export async function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: stri
     };
 }
 
+export class BadForgeInstallerJarError extends Error {
+    error = "BadForgeInstallerJar"
+
+    constructor(
+        public jarPath: string,
+        /**
+         * What entry in jar is missing
+         */
+        public entry?: string) {
+        super(entry ? `Missing entry ${entry} in forge installer jar: ${jarPath}`: `Bad forge installer: ${jarPath}`);
+    }
+}
+
 function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLocation, options: InstallForgeOptions) {
     return task("installForge", async function () {
         function getForgeArtifactVersion() {
@@ -320,7 +316,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
             const entries = await walkForgeInstallerEntries(zip, forgeVersion);
 
             if (!entries.installProfileJson) {
-                throw errorFrom({ error: "BadForgeInstallerJar", entry: "install_profile.json" }, "Missing install profile");
+                throw new BadForgeInstallerJarError(jarPath, "install_profile.json");
             }
             const profile: InstallProfile = await readEntry(zip, entries.installProfileJson).then((b) => b.toString()).then(JSON.parse);
             if (isForgeInstallerEntries(entries)) {
@@ -333,7 +329,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
                 return installLegacyForgeFromZip(zip, entries, profile, mc, options);
             } else {
                 // bad forge
-                throw errorFrom({ error: "BadForgeInstallerJar" });
+                throw new BadForgeInstallerJarError(jarPath);
             }
         });
     });
@@ -344,7 +340,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The installed version name.
- * @throws {@link ForgeError}
+ * @throws {@link BadForgeInstallerJarError}
  */
 export function installForge(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions) {
     return installForgeTask(version, minecraft, options).startAndWait();
@@ -355,7 +351,7 @@ export function installForge(version: RequiredVersion, minecraft: MinecraftLocat
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
- * @throws {@link ForgeError}
+ * @throws {@link BadForgeInstallerJarError}
  */
 export function installForgeTask(version: RequiredVersion, minecraft: MinecraftLocation, options: InstallForgeOptions = {}): Task<string> {
     return installByInstallerTask(version, minecraft, options);

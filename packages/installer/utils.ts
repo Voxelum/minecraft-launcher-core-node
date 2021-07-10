@@ -47,9 +47,6 @@ export function ensureFile(target: string) {
 export function normalizeArray<T>(arr: T | T[] = []): T[] {
     return arr instanceof Array ? arr : [arr];
 }
-export function errorFrom<T>(error: T, message?: string): T & Error {
-    return Object.assign(new Error(message), error);
-}
 export function spawnProcess(javaPath: string, args: string[], options?: ExecOptions) {
     return new Promise<void>((resolve, reject) => {
         let process = spawn(javaPath, args, options);

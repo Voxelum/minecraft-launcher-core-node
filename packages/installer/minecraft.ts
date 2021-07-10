@@ -177,22 +177,22 @@ export interface InstallSideOption {
 
 export type Options = DownloadCommonOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
 
-export interface PostProcessFailedError {
-    error: "PostProcessFailed";
-    jar: string;
-    commands: string[];
-}
-export interface PostProcessNoMainClassError {
-    error: "PostProcessNoMainClass";
-    jarPath: string;
-}
-export interface PostProcessBadJarError {
-    error: "PostProcessBadJar";
-    jarPath: string;
-    causeBy: Error;
-}
+// export interface PostProcessFailedError {
+//     error: "PostProcessFailed";
+//     jar: string;
+//     commands: string[];
+// }
+// export interface PostProcessNoMainClassError {
+//     error: "PostProcessNoMainClass";
+//     jarPath: string;
+// }
+// export interface PostProcessBadJarError {
+//     error: "PostProcessBadJar";
+//     jarPath: string;
+//     causeBy: Error;
+// }
 
-export type PostProcessError = PostProcessBadJarError | PostProcessFailedError | PostProcessNoMainClassError;
+// export type PostProcessError = PostProcessBadJarError | PostProcessFailedError | PostProcessNoMainClassError;
 
 /**
  * Install the Minecraft game to a location by version metadata.

@@ -1,16 +1,8 @@
+import { ClassReader, ClassVisitor, Opcodes } from "@xmcl/asm";
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import { task } from "@xmcl/task";
 import { getEntriesRecord, open, readAllEntries, readEntry } from "@xmcl/unzip";
-import { ClassReader, ClassVisitor, Opcodes } from "@xmcl/asm";
-import { errorFrom, ensureFile, InstallOptions, spawnProcess, writeFile } from "./utils";
-
-export interface BadOptifineJarError {
-    error: "BadOptifineJar";
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-}
+import { ensureFile, InstallOptions, spawnProcess, writeFile } from "./utils";
 
 export interface InstallOptifineOptions extends InstallOptions {
     /**
@@ -75,6 +67,20 @@ export function installOptifine(installer: string, minecraft: MinecraftLocation,
     return installOptifineTask(installer, minecraft, options).startAndWait();
 }
 
+export class BadOptifineJarError extends Error {
+    constructor(
+        public optifine: string,
+        /**
+         * What entry in jar is missing
+         */
+        public entry: string
+    ) {
+        super(`Missing entry ${entry} in optifine installer: ${optifine}`)
+    }
+
+    error = "BadOptifineJar"
+}
+
 /**
  * Install optifine by optifine installer task
  *
@@ -97,7 +103,7 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
 
         const entry = record["net/optifine/Config.class"] ?? record["Config.class"];
         if (!entry) {
-            throw errorFrom({ error: "BadOptifineJar", entry: "net/optifine/Config.class" });
+            throw new BadOptifineJarError(installer, "net/optifine/Config.class");
         }
 
         const launchWrapperVersionEntry = record["launchwrapper-of.txt"];
