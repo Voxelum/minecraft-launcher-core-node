@@ -17,11 +17,9 @@ export {
 } from "./utils";
 export {
     DownloadBaseOptions,
-    DownloadCommonOptions,
     DownloadFallbackTask,
-    DownloadFromPathOptions,
-    DownloadMultiUrlOptions,
-    DownloadSingleUrlOptions,
+    DownloadFallbackOptions as DownloadMultiUrlOptions,
+    DownloadUrlOptions as DownloadSingleUrlOptions,
     DownloadTask,
     Segment,
     Agents,

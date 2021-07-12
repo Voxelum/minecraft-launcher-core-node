@@ -4,11 +4,11 @@ import { open, readAllEntries, readEntry } from "@xmcl/unzip";
 import { Agent as HttpsAgent } from "https";
 import { basename, join } from "path";
 import { Entry, ZipFile } from "yauzl";
-import { DownloadCommonOptions, DownloadTask, fetchText, withAgents } from "./http";
+import { CreateAgentsOptions, DownloadBaseOptions, DownloadTask, fetchText, ParallelTaskOptions, withAgents, resolveBaseOptions } from "./http";
 import { UnzipTask } from "./unzip";
 import { errorToString } from "./utils";
 
-export interface CurseforgeOptions extends DownloadCommonOptions {
+export interface CurseforgeOptions extends DownloadBaseOptions, CreateAgentsOptions, ParallelTaskOptions {
     /**
      * The function to query a curseforge project downloadable url.
      */
@@ -30,7 +30,7 @@ export interface CurseforgeOptions extends DownloadCommonOptions {
     filePathResolver?: FilePathResolver;
 }
 
-export interface InstallFileOptions extends DownloadCommonOptions {
+export interface InstallFileOptions extends DownloadBaseOptions {
     /**
      * The function to query a curseforge project downloadable url.
      */
@@ -148,9 +148,7 @@ export class DownloadCurseforgeFilesTask extends TaskGroup<void> {
                 return new DownloadTask({
                     destination: to,
                     url: from,
-                    retry: options.retry,
-                    headers: options.headers,
-                    segmentThreshold: options.segmentThreshold,
+                    ...resolveBaseOptions(options),
                 });
             }));
             this.children.push(...tasks);
@@ -214,7 +212,8 @@ export function installCurseforgeFileTask(file: File, destination: string, optio
         const url = await requestor(file.projectID, file.fileID);
         await new DownloadTask({
             url,
-            destination: join(destination, basename(url))
+            destination: join(destination, basename(url)),
+            ...resolveBaseOptions(options),
         }).startAndWait(this.context, this.parent);
     });
 }
