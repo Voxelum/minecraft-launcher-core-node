@@ -1,8 +1,8 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
 import { task, Task } from "@xmcl/task";
 import { join } from "path";
-import { DownloadCommonOptions, DownloadFallbackTask, getAndParseIfUpdate, joinUrl, Timestamped, withAgents } from "./http";
-import { ensureDir, normalizeArray, readFile, errorToString } from "./utils";
+import { CreateAgentsOptions, DownloadBaseOptions, DownloadFallbackTask, getAndParseIfUpdate, joinUrl, ParallelTaskOptions, resolveBaseOptions, Timestamped, withAgents } from "./http";
+import { ensureDir, errorToString, normalizeArray, readFile } from "./utils";
 
 /**
  * The function to swap library host.
@@ -98,7 +98,7 @@ export function getVersionList(option: {
 /**
  * Change the library host url
  */
-export interface LibraryOptions extends DownloadCommonOptions {
+export interface LibraryOptions extends DownloadBaseOptions, ParallelTaskOptions, CreateAgentsOptions {
     /**
      * A more flexiable way to control library download url.
      * @see mavenHost
@@ -119,7 +119,7 @@ export interface LibraryOptions extends DownloadCommonOptions {
 /**
  * Change the host url of assets download
  */
-export interface AssetsOptions extends DownloadCommonOptions {
+export interface AssetsOptions extends DownloadBaseOptions, ParallelTaskOptions, CreateAgentsOptions {
     /**
      * The alternative assets host to download asset. It will try to use these host from the `[0]` to the `[assetsHost.length - 1]`
      */
@@ -152,7 +152,7 @@ function resolveDownloadUrls<T>(original: string, version: T, option?: string | 
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloadCommonOptions {
+export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions, CreateAgentsOptions {
     /**
      * The version json url replacement
      */
@@ -175,24 +175,7 @@ export interface InstallSideOption {
 }
 
 
-export type Options = DownloadCommonOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
-
-// export interface PostProcessFailedError {
-//     error: "PostProcessFailed";
-//     jar: string;
-//     commands: string[];
-// }
-// export interface PostProcessNoMainClassError {
-//     error: "PostProcessNoMainClass";
-//     jarPath: string;
-// }
-// export interface PostProcessBadJarError {
-//     error: "PostProcessBadJar";
-//     jarPath: string;
-//     causeBy: Error;
-// }
-
-// export type PostProcessError = PostProcessBadJarError | PostProcessFailedError | PostProcessNoMainClassError;
+export type Options = DownloadBaseOptions & ParallelTaskOptions & CreateAgentsOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
 
 /**
  * Install the Minecraft game to a location by version metadata.
@@ -336,9 +319,8 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
 
         const { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
         const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
-        const tasks = objectArray.map((o) => new InstallAssetTask(o, folder, options));
         // let sizes = objectArray.map((a) => a.size).map((a, b) => a + b, 0);
-        await withAgents(options, (options) => this.all(tasks, {
+        await withAgents(options, (options) => this.all(objectArray.map((o) => new InstallAssetTask(o, folder, options)), {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
             getErrorMessage: (errs) => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}: ${errs.map(errorToString).join("\n")}`
         }));
@@ -355,8 +337,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
 export function installLibrariesTask(version: InstallLibraryVersion, options: LibraryOptions = {}): Task<void> {
     return task("libraries", async function () {
         const folder = MinecraftFolder.from(version.minecraftDirectory);
-        const tasks = version.libraries.map((lib) => new InstallLibraryTask(lib, folder, options));
-        await withAgents(options, (options) => this.all(tasks, {
+        await withAgents(options, (options) => this.all(version.libraries.map((lib) => new InstallLibraryTask(lib, folder, options)), {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
             getErrorMessage: (errs) => `Errors during install libraries at ${version.minecraftDirectory}: ${errs.map(errorToString).join("\n")}`
         }));
@@ -383,10 +364,9 @@ export function installResolvedAssetsTask(assets: AssetInfo[], folder: Minecraft
     return task("assets", async function () {
         await ensureDir(folder.getPath("assets", "objects"));
 
-        const tasks = assets.map((o) => new InstallAssetTask(o, folder, options));
         // const sizes = assets.map((a) => a.size).map((a, b) => a + b, 0);
 
-        await withAgents(options, (options) => this.all(tasks, {
+        await withAgents(options, (options) => this.all(assets.map((o) => new InstallAssetTask(o, folder, options)), {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
             getErrorMessage: (errs) => `Errors during install assets at ${folder.root}:\n${errs.map(errorToString).join("\n")}`,
         }));
@@ -401,14 +381,10 @@ export class InstallJsonTask extends DownloadFallbackTask {
         const urls = resolveDownloadUrls(version.url, version, options.json);
 
         super({
-            overwriteWhen: options.overwriteWhen,
-            agents: options.agents,
-            headers: options.headers,
-            segmentThreshold: options.segmentThreshold,
+            ...resolveBaseOptions(options),
             urls,
             checksum: expectSha1 ? { algorithm: "sha1", hash: expectSha1 } : undefined,
             destination,
-            retry: options.retry,
         });
 
         this.name = "json";
@@ -427,14 +403,10 @@ export class InstallJarTask extends DownloadFallbackTask {
         const expectSha1 = version.downloads[type].sha1;
 
         super({
-            overwriteWhen: options.overwriteWhen,
-            agents: options.agents,
-            headers: options.headers,
-            segmentThreshold: options.segmentThreshold,
+            ...resolveBaseOptions(options),
             urls,
             checksum: { algorithm: "sha1", hash: expectSha1 },
             destination,
-            retry: options.retry,
         });
 
         this.name = "jar";
@@ -454,11 +426,7 @@ export class InstallAssetIndexTask extends DownloadFallbackTask {
                 algorithm: "sha1",
                 hash: version.assetIndex.sha1,
             },
-            overwriteWhen: options.overwriteWhen,
-            agents: options.agents,
-            headers: options.headers,
-            segmentThreshold: options.segmentThreshold,
-            retry: options.retry,
+            ...resolveBaseOptions(options),
         });
 
         this.name = "assetIndex";
@@ -480,11 +448,7 @@ export class InstallLibraryTask extends DownloadFallbackTask {
             urls,
             checksum,
             destination,
-            overwriteWhen: options.overwriteWhen,
-            agents: options.agents,
-            headers: options.headers,
-            segmentThreshold: options.segmentThreshold,
-            retry: options.retry,
+            ...resolveBaseOptions(options),
         });
 
         this.name = "library";
@@ -507,11 +471,7 @@ export class InstallAssetTask extends DownloadFallbackTask {
         const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`);
 
         super({
-            overwriteWhen: options.overwriteWhen,
-            agents: options.agents,
-            headers: options.headers,
-            segmentThreshold: options.segmentThreshold,
-            retry: options.retry,
+            ...resolveBaseOptions(options),
             urls,
             checksum: {
                 hash,

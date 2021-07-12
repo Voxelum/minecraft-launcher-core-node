@@ -3,7 +3,7 @@ import { Task, task } from "@xmcl/task";
 import { exec } from "child_process";
 import { EOL, platform, tmpdir } from "os";
 import { basename, join, resolve } from "path";
-import { DownloadCommonOptions, DownloadTask, fetchJson } from "./http";
+import { DownloadBaseOptions, DownloadTask, fetchJson, resolveBaseOptions } from "./http";
 import { ensureDir, missing, unlink } from "./utils";
 
 export interface JavaInfo {
@@ -21,7 +21,7 @@ export interface JavaInfo {
     majorVersion: number;
 }
 
-export interface InstallJavaOptions extends DownloadCommonOptions {
+export interface InstallJavaOptions extends DownloadBaseOptions {
     /**
      * The destination of this installation
      */
@@ -35,7 +35,7 @@ export interface InstallJavaOptions extends DownloadCommonOptions {
      * The platform to install. It will be auto-resolved by default.
      * @default currentPlatform
      */
-    platform?: Platform;
+    platform?: Platform
     /**
      * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
      */
@@ -59,10 +59,7 @@ export class DownloadJRETask extends DownloadTask {
                 algorithm: "sha1",
                 hash: sha1,
             },
-            overwriteWhen: options.overwriteWhen,
-            agents: options.agents,
-            headers: options.headers,
-            segmentThreshold: options.segmentThreshold,
+            ...resolveBaseOptions(options),
         })
 
         this.name = "downloadJre";

@@ -163,6 +163,18 @@ export interface Segment {
     start: number;
     end?: number;
 }
+
+export function resolveBaseOptions(options: DownloadBaseOptions): DownloadBaseOptions {
+    return {
+        headers: options.headers,
+        agents: options.agents,
+        segmentThreshold: options.segmentThreshold,
+        overwriteWhen: options.overwriteWhen,
+        retry: options.retry,
+    }
+}
+
+
 export interface DownloadBaseOptions {
     /**
      * The header of the request
@@ -195,40 +207,33 @@ export interface DownloadBaseOptions {
     retry?: number
 }
 
-export interface DownloadSingleUrlOptions extends DownloadBaseOptions {
-    destination: string;
-    url: string;
-    /**
-    * The checksum info of the file
-    */
-    checksum?: { algorithm: string; hash: string; };
-}
 
-export interface DownloadMultiUrlOptions extends DownloadBaseOptions {
-    destination: string;
-    urls: string[];
+interface DownloadToFileOptions extends DownloadBaseOptions {
     /**
-    * The checksum info of the file
-    */
-    checksum?: { algorithm: string; hash: string; };
-}
-
-export interface DownloadFromPathOptions extends DownloadBaseOptions {
-    destination: string;
-    path: string;
-    /**
-    * The checksum info of the file
-    */
-    checksum?: { algorithm: string; hash: string; };
-}
-
-/**
- */
-export interface DownloadCommonOptions extends DownloadBaseOptions {
-    /**
-     * Should throw the donwload process immediately after ANY resource download failed.
+     * The destination file of this download
      */
-    throwErrorImmediately?: boolean;
+    destination: string;
+    /**
+    * The checksum info of the file
+    */
+    checksum?: { algorithm: string; hash: string; };
+}
+
+export interface DownloadOptions extends DownloadToFileOptions {
+    /**
+     * The url to download
+     */
+    url: string;
+}
+
+export interface DownloadFallbackOptions extends DownloadToFileOptions {
+    /**
+     * It will use the url from list to download. If the first url failed, it will use the next one.
+     */
+    urls: string[];
+}
+
+export interface CreateAgentsOptions {
     /**
      * The suggested max concurrency of the download. This is not a strict criteria.
      *
@@ -243,15 +248,20 @@ export interface DownloadCommonOptions extends DownloadBaseOptions {
      * If `agents` is assigned, this will be ignore.
      */
     maxFreeSocket?: number;
-    /**
-     * Number of retry count if download failed
-     */
-    retry?: number
 }
+
+export interface ParallelTaskOptions {
+    /**
+     * Should throw the donwload process immediately after ANY resource download failed.
+     */
+    throwErrorImmediately?: boolean;
+}
+
 interface Connections {
     request: ClientRequest;
     response: IncomingMessage;
 }
+
 export class DownloadTask extends TaskLooped<Segment[]> {
     protected segments: Segment[] = [];
     protected outputs: WriteStream[] = [];
@@ -318,7 +328,7 @@ export class DownloadTask extends TaskLooped<Segment[]> {
      */
     protected fd: number = -1;
 
-    constructor(options: DownloadSingleUrlOptions) {
+    constructor(options: DownloadOptions) {
         super();
         this.agents = options.agents ?? createAgents(options);
         this.headers = options.headers ?? {};
@@ -510,7 +520,7 @@ export class DownloadTask extends TaskLooped<Segment[]> {
 export class DownloadFallbackTask extends DownloadTask {
     protected urls: string[]
 
-    constructor(options: DownloadMultiUrlOptions) {
+    constructor(options: DownloadFallbackOptions) {
         super({
             ...options,
             url: options.urls[0],
@@ -545,7 +555,7 @@ export class DownloadFallbackTask extends DownloadTask {
     }
 }
 
-export function createAgents(options: DownloadCommonOptions) {
+export function createAgents(options: CreateAgentsOptions) {
     return {
         http: new HttpAgent({
             maxSockets: options.maxSocket ?? cpus().length * 4,
@@ -560,7 +570,7 @@ export function createAgents(options: DownloadCommonOptions) {
     };
 }
 
-export async function withAgents<T extends DownloadCommonOptions, R>(options: T, scope: (options: T) => R) {
+export async function withAgents<T extends DownloadBaseOptions & CreateAgentsOptions, R>(options: T, scope: (options: T) => R) {
     if (!options.agents) {
         const agents = createAgents(options);
         try {

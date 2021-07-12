@@ -5,7 +5,7 @@ import { filterEntries, open, openEntryReadStream, readEntry } from "@xmcl/unzip
 import { createWriteStream } from "fs";
 import { join } from "path";
 import { Entry, ZipFile } from "yauzl";
-import { DownloadFallbackTask, getAndParseIfUpdate, Timestamped, withAgents } from "./http";
+import { DownloadFallbackTask, getAndParseIfUpdate, Timestamped, withAgents, resolveBaseOptions } from "./http";
 import { LibraryOptions, resolveLibraryDownloadUrls } from "./minecraft";
 import { installByProfileTask, InstallProfile, InstallProfileOption } from "./profile";
 import { ensureFile, InstallOptions as InstallOptionsBase, normalizeArray, pipeline, writeFile } from "./utils";
@@ -148,11 +148,7 @@ export class DownloadForgeInstallerTask extends DownloadFallbackTask {
                 hash: installer.sha1,
                 algorithm: "sha1",
             } : undefined,
-            overwriteWhen: options.overwriteWhen,
-            agents: options.agents,
-            headers: options.headers,
-            segmentThreshold: options.segmentThreshold,
-            retry: options.retry,
+            ...resolveBaseOptions(options),
         })
 
         this.installJarPath = installJarPath;
