@@ -1,13 +1,14 @@
 {
   "name": "@xmcl/server-info",
   "version": "2.0.4",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./index.ts",
   "description": "Read Minecraft servers.dat NBT file",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js",
     "access": "public"
   },
   "dependencies": {

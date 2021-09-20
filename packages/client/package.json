@@ -1,14 +1,15 @@
 {
   "name": "@xmcl/client",
   "version": "2.0.6",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./index.ts",
   "description": "Minecraft socket client pipeline, containing server status query by default",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js"
   },
   "dependencies": {
     "@xmcl/nbt": "^2.0.3",

@@ -1,16 +1,16 @@
 {
   "name": "@xmcl/text-component",
   "version": "2.1.1",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./index.ts",
   "description": "Minecraft text component parsing and rendering.",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js"
   },
-  
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"

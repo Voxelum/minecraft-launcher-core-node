@@ -1,14 +1,15 @@
 {
   "name": "@xmcl/gamesetting",
   "version": "2.0.2",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./index.ts",
   "description": "Minecraft gamesetting (options.txt) parsing.",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js"
   },
   "repository": {
     "type": "git",

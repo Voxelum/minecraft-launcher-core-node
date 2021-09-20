@@ -1,14 +1,15 @@
 {
   "name": "@xmcl/user",
   "version": "2.1.5",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./index.ts",
   "browser": "./dist/index.browser.js",
   "description": "Minecraft user related functions, including Yggdrasil authenticator, player skin fetcher, and Mojang security API",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js",
     "access": "public"
   },
   "dependencies": {

@@ -1,16 +1,20 @@
 {
   "name": "@xmcl/unzip",
   "version": "2.0.0",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./index.ts",
   "description": "A (hopefully) easy unzip interface based on yauzl",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js",
     "access": "public"
   },
   "peerDependencies": {
+    "yauzl": "^2.10.0"
+  },
+  "devDependencies": {
     "yauzl": "^2.10.0"
   },
   "repository": {

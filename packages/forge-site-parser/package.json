@@ -1,14 +1,15 @@
 {
   "name": "@xmcl/forge-site-parser",
   "version": "2.0.8",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./index.ts",
   "description": "Forge web page parser",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js"
   },
   "dependencies": {
     "node-html-parser": "1.2.16"
