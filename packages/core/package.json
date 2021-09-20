@@ -1,14 +1,15 @@
 {
   "name": "@xmcl/core",
   "version": "2.6.2",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./index.ts",
   "description": "Minecraft version parsing and game launching.",
   "engines": {
     "node": ">=10.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js"
   },
   "dependencies": {
     "@xmcl/unzip": "^2.0.0",

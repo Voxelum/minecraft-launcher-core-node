@@ -1,12 +1,13 @@
 {
   "name": "@xmcl/task",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./index.ts",
   "author": {
     "name": "cijhn@hotmail.com"
   },
   "description": "A tree structure task definition",
   "publishConfig": {
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js",
     "access": "public"
   },
   "license": "MIT",
