@@ -1,4 +1,4 @@
-import { DownloadTask, DownloadSingleUrlOptions } from "./http";
+import { DownloadTask, DownloadSingleUrlOptions } from "../http";
 import { normalize, join } from "path";
 
 const root = normalize(join(__dirname, "..", "..", "temp"));

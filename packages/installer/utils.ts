@@ -1,5 +1,5 @@
 import { _exists as exists, _mkdir as mkdir, _pipeline as pipeline, _readFile as readFile, _writeFile as writeFile } from "@xmcl/core";
-import { ExecOptions, spawn } from "child_process";
+import { ChildProcess, ChildProcessWithoutNullStreams, ExecOptions, spawn } from "child_process";
 import { close as fclose, copyFile as fcopyFile, ftruncate, open as fopen, stat as fstat, unlink as funlink, link as fslink } from "fs";
 import { dirname } from "path";
 import { promisify } from "util";
@@ -49,8 +49,12 @@ export function normalizeArray<T>(arr: T | T[] = []): T[] {
     return arr instanceof Array ? arr : [arr];
 }
 export function spawnProcess(javaPath: string, args: string[], options?: ExecOptions) {
+    let process = spawn(javaPath, args, options);
+    return waitProcess(process);
+}
+
+export function waitProcess(process: ChildProcessWithoutNullStreams) {
     return new Promise<void>((resolve, reject) => {
-        let process = spawn(javaPath, args, options);
         let errorMsg: string[] = [];
         process.on("error", reject);
         process.on("close", (code) => {
@@ -66,6 +70,10 @@ export function spawnProcess(javaPath: string, args: string[], options?: ExecOpt
     });
 }
 
+
+export interface ParallelTaskOptions {
+    throwErrorImmediately?: boolean
+}
 /**
  * Shared install options
  */

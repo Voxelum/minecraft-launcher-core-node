@@ -8,11 +8,20 @@
         "optifine.ts",
         "fabric.ts",
         "utils.ts",
-        "http.ts",
         "unzip.ts",
         "java.ts",
         "diagnose.ts",
-        "profile.ts"
+        "profile.ts",
+        "http/abort.ts",
+        "http/agents.ts",
+        "http/download.ts",
+        "http/fetch.ts",
+        "http/metadata.ts",
+        "http/retry.ts",
+        "http/segment.ts",
+        "http/status.ts",
+        "http/utils.ts",
+        "http/validator.ts"
     ],
     "compilerOptions": {
         "target": "es2018",

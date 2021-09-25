@@ -4,11 +4,14 @@ import { open, readAllEntries, readEntry } from "@xmcl/unzip";
 import { Agent as HttpsAgent } from "https";
 import { basename, join } from "path";
 import { Entry, ZipFile } from "yauzl";
-import { CreateAgentsOptions, DownloadBaseOptions, DownloadTask, fetchText, ParallelTaskOptions, withAgents, resolveBaseOptions } from "./http";
+import { DownloadTask } from './downloadTask';
+import { withAgents } from './http/agents';
+import { DownloadBaseOptions } from './http/download';
+import { fetchText } from './http/fetch';
 import { UnzipTask } from "./unzip";
-import { errorToString } from "./utils";
+import { errorToString, ParallelTaskOptions } from "./utils";
 
-export interface CurseforgeOptions extends DownloadBaseOptions, CreateAgentsOptions, ParallelTaskOptions {
+export interface CurseforgeOptions extends DownloadBaseOptions, ParallelTaskOptions {
     /**
      * The function to query a curseforge project downloadable url.
      */
@@ -136,7 +139,7 @@ export class DownloadCurseforgeFilesTask extends TaskGroup<void> {
         this.param = manifest;
     }
 
-    protected async run(): Promise<void> {
+    protected async runTask(): Promise<void> {
         const requestor = this.options?.queryFileUrl || createDefaultCurseforgeQuery();
         const resolver = this.options?.filePathResolver || ((p, f, m, u) => m.getMod(basename(u)));
         const minecraft = this.minecraft;
@@ -146,9 +149,11 @@ export class DownloadCurseforgeFilesTask extends TaskGroup<void> {
                 const to = await resolver(f.projectID, f.fileID, minecraft, from);
 
                 return new DownloadTask({
-                    destination: to,
                     url: from,
-                    ...resolveBaseOptions(options),
+                    destination: to,
+                    agents: options.agents,
+                    segmentPolicy: options.segmentPolicy,
+                    retryHandler: options.retryHandler,
                 });
             }));
             this.children.push(...tasks);
@@ -213,7 +218,9 @@ export function installCurseforgeFileTask(file: File, destination: string, optio
         await new DownloadTask({
             url,
             destination: join(destination, basename(url)),
-            ...resolveBaseOptions(options),
+            agents: options.agents,
+            segmentPolicy: options.segmentPolicy,
+            retryHandler: options.retryHandler,
         }).startAndWait(this.context, this.parent);
     });
 }
