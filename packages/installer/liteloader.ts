@@ -1,7 +1,7 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { join } from "path";
-import { getAndParseIfUpdate, Timestamped } from "./http";
+import { getAndParseIfUpdate, Timestamped } from './http/fetch';
 import { ensureDir, InstallOptions, missing, readFile, writeFile } from "./utils";
 
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";

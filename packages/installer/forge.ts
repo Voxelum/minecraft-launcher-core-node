@@ -5,7 +5,11 @@ import { filterEntries, open, openEntryReadStream, readEntry } from "@xmcl/unzip
 import { createWriteStream } from "fs";
 import { join } from "path";
 import { Entry, ZipFile } from "yauzl";
-import { DownloadFallbackTask, getAndParseIfUpdate, Timestamped, withAgents, resolveBaseOptions } from "./http";
+import { DownloadTask } from './downloadTask';
+import { withAgents } from './http/agents';
+import { getAndParseIfUpdate, Timestamped } from "./http/fetch";
+import { joinUrl } from "./http/utils";
+import { ZipValidator } from './http/validator';
 import { LibraryOptions, resolveLibraryDownloadUrls } from "./minecraft";
 import { installByProfileTask, InstallProfile, InstallProfileOption } from "./profile";
 import { ensureFile, InstallOptions as InstallOptionsBase, normalizeArray, pipeline, writeFile } from "./utils";
@@ -119,7 +123,7 @@ export const DEFAULT_FORGE_MAVEN = "http://files.minecraftforge.net/maven";
 export interface InstallForgeOptions extends LibraryOptions, InstallOptionsBase, InstallProfileOption {
 }
 
-export class DownloadForgeInstallerTask extends DownloadFallbackTask {
+export class DownloadForgeInstallerTask extends DownloadTask {
     readonly installJarPath: string
 
     constructor(forgeVersion: string, installer: RequiredVersion["installer"], minecraft: MinecraftFolder, options: InstallForgeOptions) {
@@ -130,7 +134,7 @@ export class DownloadForgeInstallerTask extends DownloadFallbackTask {
             name: `net.minecraftforge:forge:${forgeVersion}:installer`,
             downloads: {
                 artifact: {
-                    url: `${DEFAULT_FORGE_MAVEN}${forgeMavenPath}`,
+                    url: joinUrl(DEFAULT_FORGE_MAVEN, forgeMavenPath),
                     path: `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`,
                     size: -1,
                     sha1: installer?.sha1 || "",
@@ -141,15 +145,18 @@ export class DownloadForgeInstallerTask extends DownloadFallbackTask {
         const urls = resolveLibraryDownloadUrls(library, { ...options, mavenHost });
 
         const installJarPath = minecraft.getLibraryByPath(library.path);
+
         super({
-            urls,
+            url: urls,
             destination: installJarPath,
-            checksum: installer?.sha1 ? {
+            validator: installer?.sha1 ? {
                 hash: installer.sha1,
                 algorithm: "sha1",
-            } : undefined,
-            ...resolveBaseOptions(options),
-        })
+            } : new ZipValidator(),
+            agents: options.agents,
+            segmentPolicy: options.segmentPolicy,
+            retryHandler: options.retryHandler,
+        });
 
         this.installJarPath = installJarPath;
         this.name = "downloadInstaller";
@@ -287,7 +294,7 @@ export class BadForgeInstallerJarError extends Error {
          * What entry in jar is missing
          */
         public entry?: string) {
-        super(entry ? `Missing entry ${entry} in forge installer jar: ${jarPath}`: `Bad forge installer: ${jarPath}`);
+        super(entry ? `Missing entry ${entry} in forge installer jar: ${jarPath}` : `Bad forge installer: ${jarPath}`);
     }
 }
 

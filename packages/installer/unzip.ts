@@ -1,4 +1,4 @@
-import { CancelledError, TaskLooped, TaskState } from "@xmcl/task";
+import { BaseTask, CancelledError, TaskState } from "@xmcl/task";
 import { openEntryReadStream } from "@xmcl/unzip";
 import { createWriteStream } from "fs";
 import { join } from "path";
@@ -14,8 +14,9 @@ export function getDefaultEntryResolver(): EntryResolver {
     return (e) => e.fileName;
 }
 
-export class UnzipTask extends TaskLooped<void> {
+export class UnzipTask extends BaseTask<void> {
     private streams: [Readable, Writable][] = [];
+    private _onCancelled = () => { };
 
     constructor(readonly zipFile: ZipFile, readonly entries: Entry[], destination: string, readonly resolver: EntryResolver = getDefaultEntryResolver()) {
         super();
@@ -25,18 +26,17 @@ export class UnzipTask extends TaskLooped<void> {
     protected async handleEntry(entry: Entry, relativePath: string) {
         const file = join(this.to!, relativePath);
         if (this._state === TaskState.Cancelled) {
-            throw new CancelledError(undefined);
+            throw new CancelledError();
         }
-        if (this.isPaused) {
-            await this._pausing;
-        }
+
         const readStream = await openEntryReadStream(this.zipFile, entry);
         if (this.isCancelled) {
-            throw new CancelledError(undefined);
+            throw new CancelledError();
         }
-        if (this.isPaused) {
-            await this._pausing;
+        if (this._state === TaskState.Paused) {
+            readStream.pause();
         }
+
         await ensureFile(file);
         const writeStream = createWriteStream(file);
         readStream.on("data", (buf: Buffer) => {
@@ -46,43 +46,56 @@ export class UnzipTask extends TaskLooped<void> {
         await pipeline(readStream, writeStream);
     }
 
-    protected async process(): Promise<[boolean, void | undefined]> {
+    protected async runTask(): Promise<void> {
         const promises: Promise<void>[] = [];
 
         for (const e of this.entries) {
             const path = await this.resolver(e);
+            if (this.isCancelled) {
+                throw new CancelledError();
+            }
             this._total += e.uncompressedSize;
             promises.push(this.handleEntry(e, path));
         }
 
         this.update(0);
 
-        await Promise.all(promises);
-
-        return [true, undefined];
-    }
-    protected validate(): Promise<void> {
-        return Promise.resolve();
-    }
-    protected shouldTolerant(e: any): boolean {
-        return false;
-    }
-    protected async abort(isCancelled: boolean): Promise<void> {
-        if (isCancelled) {
-            for (const [read, write] of this.streams) {
-                read.unpipe();
-                read.destroy(new CancelledError(undefined));
-                this.zipFile.close();
-                write.destroy(new CancelledError(undefined));
+        try {
+            await Promise.all(promises);
+        } catch (e) {
+            if (e instanceof CancelledError) {
+                this._onCancelled();
             }
-        } else {
-            const promise = Promise.all(this.streams.map(([read]) => new Promise((resolve) =>
-                read.once("pause", resolve))))
-            for (const [read] of this.streams) {
-                read.pause();
-            }
-            await promise;
+            throw e;
         }
     }
-    protected reset(): void { }
+
+    protected cancelTask(): Promise<void> {
+        for (const [read, write] of this.streams) {
+            read.unpipe();
+            read.destroy(new CancelledError());
+            this.zipFile.close();
+            write.destroy(new CancelledError());
+        }
+        return new Promise((resolve) => {
+            this._onCancelled = resolve;
+        })
+    }
+    protected async pauseTask(): Promise<void> {
+        const promise = Promise.all(this.streams.map(([read]) => new Promise((resolve) =>
+            read.once("pause", resolve))))
+        for (const [read] of this.streams) {
+            read.pause();
+        }
+        await promise;
+    }
+
+    protected async resumeTask(): Promise<void> {
+        const promise = Promise.all(this.streams.map(([read]) => new Promise((resolve) =>
+            read.once("readable", resolve))));
+        for (const [read] of this.streams) {
+            read.resume();
+        }
+        await promise;
+    }
 }

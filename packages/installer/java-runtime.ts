@@ -2,8 +2,11 @@ import { getPlatform, Platform } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { join } from "path";
 import { URL } from "url";
-import { Agents, CreateAgentsOptions, DownloadBaseOptions, DownloadFallbackTask, fetchJson, ParallelTaskOptions, resolveBaseOptions, withAgents } from "./http";
-import { ensureDir, link } from "./utils";
+import { DownloadTask } from './downloadTask';
+import { Agents, withAgents } from './http/agents';
+import { DownloadBaseOptions, DownloadOptions } from './http/download';
+import { fetchJson } from './http/fetch';
+import { ensureDir, link, ParallelTaskOptions } from "./utils";
 /**
  * Contain all java runtimes basic info
  */
@@ -134,13 +137,13 @@ function normalizeUrls(url: string, fileHost?: string | string[]): string[] {
     if (typeof fileHost === "string") {
         const u = new URL(url);
         u.hostname = fileHost;
-        return [u.toString()];
+        return [u.toString(), url];
     }
     return fileHost.map((host) => {
         const u = new URL(url);
         u.hostname = host;
         return u.toString();
-    })
+    }).concat(url);
 }
 
 export interface FetchJavaRuntimeManifestOptions {
@@ -216,7 +219,7 @@ export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifest
         const result: JavaRuntimeManifest = {
             files: manifest.files,
             target: runtimeTarget,
-            version: manifest.version,
+            version: target.version,
         };
         return result;
     } else {
@@ -225,7 +228,7 @@ export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifest
 }
 
 
-export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, CreateAgentsOptions, ParallelTaskOptions {
+export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, ParallelTaskOptions {
     /**
      * The alternative download host for the file
      */
@@ -238,6 +241,12 @@ export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, CreateAg
      * The actual manfiest to install.
      */
     manifest: JavaRuntimeManifest;
+    /**
+     * Download lzma compressed version instead of raw version.
+     * - If `true`, it will just download lzma file version, you need to decompress by youself!
+     * - If `Function`, it will use that function to decompress the file!
+     */
+    lzma?: boolean | ((compressedFilePath: string, targetPath: string) => Promise<void>)
 }
 
 /**
@@ -248,21 +257,44 @@ export function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Tas
     return task("installJavaRuntime", async function () {
         const destination = options.destination;
         const manifest = options.manifest;
+        const decompressFunction = typeof options.lzma === 'function' ? options.lzma : undefined
+        const downloadLzma = !!options.lzma
+        class DownloadAndDecompressTask extends DownloadTask {
+            constructor(options: DownloadOptions) {
+                super(options)
+            }
+
+            async runTask() {
+                const result = await super.runTask()
+                if (this._total === this._progress) {
+                    const dest = this.download.destination.substring(0, this.download.destination.length - 5)
+                    await decompressFunction!(this.download.destination, dest)
+                }
+                return result
+            }
+        }
         await withAgents(options, (options) => this.all(Object.entries(manifest.files)
             .filter(([file, entry]) => entry.type === "file")
             .map(([file, entry]) => {
                 const fEntry = entry as FileEntry;
-                const dest = join(destination, file);
-                const urls = normalizeUrls(fEntry.downloads.raw.url, options.apiHost);
-                return new DownloadFallbackTask({
-                    ...resolveBaseOptions(options),
-                    urls,
-                    checksum: {
+                const downloadInfo = (downloadLzma && fEntry.downloads.lzma) ? fEntry.downloads.lzma : fEntry.downloads.raw
+                const isLzma = downloadInfo == fEntry.downloads.lzma
+                const dest = isLzma ? (join(destination, file) + ".lzma") : join(destination, file);
+                const urls = normalizeUrls(downloadInfo.url, options.apiHost);
+                const downloadOptions: DownloadOptions = {
+                    url: urls,
+                    validator: {
                         algorithm: "sha1",
-                        hash: fEntry.downloads.raw.sha1,
+                        hash: downloadInfo.sha1,
                     },
                     destination: dest,
-                });
+                    segmentPolicy: options.segmentPolicy,
+                    retryHandler: options.retryHandler,
+                    agents: options.agents,
+                }
+                return isLzma && decompressFunction
+                    ? new DownloadAndDecompressTask(downloadOptions).setName('download')
+                    : new DownloadTask(downloadOptions).setName('download');
             }), {
             throwErrorImmediately: options.throwErrorImmediately,
             getErrorMessage: (e) => `Fail to install java runtime ${manifest.version.name} on ${manifest.target}`,

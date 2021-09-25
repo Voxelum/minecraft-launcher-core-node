@@ -3,7 +3,9 @@ import { Task, task } from "@xmcl/task";
 import { exec } from "child_process";
 import { EOL, platform, tmpdir } from "os";
 import { basename, join, resolve } from "path";
-import { DownloadBaseOptions, DownloadTask, fetchJson, resolveBaseOptions } from "./http";
+import { DownloadTask } from './downloadTask';
+import { DownloadBaseOptions } from './http/download';
+import { fetchJson } from './http/fetch';
 import { ensureDir, missing, unlink } from "./utils";
 
 export interface JavaInfo {
@@ -55,11 +57,13 @@ export class DownloadJRETask extends DownloadTask {
         super({
             url,
             destination: downloadDestination,
-            checksum: {
+            validator: {
                 algorithm: "sha1",
                 hash: sha1,
             },
-            ...resolveBaseOptions(options),
+            segmentPolicy: options.segmentPolicy,
+            retryHandler: options.retryHandler,
+            agents: options.agents,
         })
 
         this.name = "downloadJre";

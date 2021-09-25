@@ -1,10 +1,11 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
-import { CancelledError, task, TaskLooped } from "@xmcl/task";
+import { CancelledError, task, AbortableTask } from "@xmcl/task";
 import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
+import { ChildProcess, spawn } from 'child_process';
 import { delimiter } from "path";
 import { ZipFile } from "yauzl";
 import { installResolvedLibrariesTask, InstallSideOption, LibraryOptions } from "./minecraft";
-import { checksum, readFile, spawnProcess } from "./utils";
+import { checksum, readFile, spawnProcess, waitProcess } from "./utils";
 
 export interface PostProcessor {
     /**
@@ -190,32 +191,17 @@ export class PostProcessFailedError extends Error {
  * @param java The java executable path
  * @throws {@link PostProcessError}
  */
-export class PostProcessingTask extends TaskLooped<void> {
+export class PostProcessingTask extends AbortableTask<void> {
     readonly name: string = "postProcessing";
 
     private pointer: number = 0;
+
+    private activeProcess: ChildProcess | undefined
 
     constructor(private processors: PostProcessor[], private minecraft: MinecraftFolder, private java: string) {
         super();
         this.param = processors
         this._total = processors.length;
-    }
-
-    protected async shouldProcess(proc: PostProcessor, shouldProcessDefault: boolean) {
-        let shouldProcess = false;
-        if (proc.outputs) {
-            for (const file in proc.outputs) {
-                let sha1 = await checksum(file, "sha1").catch((e) => "");
-                let expected = proc.outputs[file].replace(/'/g, "");
-                if (expected !== sha1) {
-                    shouldProcess = true;
-                    break;
-                }
-            }
-        } else {
-            shouldProcess = shouldProcessDefault;
-        }
-        return shouldProcess;
     }
 
     protected async findMainClass(lib: string) {
@@ -233,7 +219,7 @@ export class PostProcessingTask extends TaskLooped<void> {
                 }
             }
         } catch (e) {
-            throw new PostProcessBadJarError(lib, e);
+            throw new PostProcessBadJarError(lib, e as any);
         } finally {
             zip?.close();
         }
@@ -243,51 +229,64 @@ export class PostProcessingTask extends TaskLooped<void> {
         return mainClass;
     }
 
+    protected async isInvalid(outputs: Required<PostProcessor>['outputs']) {
+        for (const [file, expect] of Object.entries(outputs)) {
+            let sha1 = await checksum(file, "sha1").catch((e) => "");
+            let expected = expect.replace(/'/g, "");
+            if (expected !== sha1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected async postProcess(mc: MinecraftFolder, proc: PostProcessor, java: string) {
         let jarRealPath = mc.getLibraryByPath(LibraryInfo.resolve(proc.jar).path);
         let mainClass = await this.findMainClass(jarRealPath);
         let cp = [...proc.classpath, proc.jar].map(LibraryInfo.resolve).map((p) => mc.getLibraryByPath(p.path)).join(delimiter);
         let cmd = ["-cp", cp, mainClass, ...proc.args];
         try {
-            await spawnProcess(java, cmd);
+            const process = spawn(java, cmd);
+            await waitProcess(process);
         } catch (e) {
             if (typeof e === "string") {
                 throw new PostProcessFailedError(proc.jar, [java, ...cmd], e);
             }
             throw e;
         }
+        if (proc.outputs && await this.isInvalid(proc.outputs)) {
+            throw new PostProcessFailedError(proc.jar, [java, ...cmd], `Validate the output of process failed!`);
+        }
     }
 
-    protected async process(): Promise<[boolean, void | undefined]> {
-        for (this.pointer = 0; this.pointer < this.processors.length; this.pointer++) {
+    protected async process(): Promise<void> {
+        for (; this.pointer < this.processors.length; this.pointer++) {
             const proc = this.processors[this.pointer];
-            if (this.shouldProcess(proc, true)) {
+            if (this.isCancelled) {
+                throw new CancelledError();
+            }
+            if (this.isPaused) {
+                throw "PAUSED";
+            }
+            if (!proc.outputs || await this.isInvalid(proc.outputs)) {
                 await this.postProcess(this.minecraft, proc, this.java);
             }
             if (this.isCancelled) {
-                throw new CancelledError(undefined);
+                throw new CancelledError();
             }
             if (this.isPaused) {
-                return [false, undefined];
+                throw "PAUSED";
             }
             this._progress = this.pointer;
             this.update(1);
         }
-        return [true, undefined];
     }
-    protected async validate(): Promise<void> {
-        const result = await Promise.all(this.processors.map((p) => this.shouldProcess(p, false)));
-        if (result.some((r) => r)) {
-            throw new Error("Invalid");
-        }
-        return Promise.resolve();
-    }
-    protected shouldTolerant(e: any): boolean {
-        return e.message === "Invalid";
-    }
+
     protected async abort(isCancelled: boolean): Promise<void> {
+        // this.activeProcess?.kill()
     }
-    protected reset(): void {
-        this.pointer = 0;
+
+    protected isAbortedError(e: any): boolean {
+        return e === "PAUSED"
     }
 }

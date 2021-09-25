@@ -1,8 +1,13 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
 import { task, Task } from "@xmcl/task";
 import { join } from "path";
-import { CreateAgentsOptions, DownloadBaseOptions, DownloadFallbackTask, getAndParseIfUpdate, joinUrl, ParallelTaskOptions, resolveBaseOptions, Timestamped, withAgents } from "./http";
-import { ensureDir, errorToString, normalizeArray, readFile } from "./utils";
+import { withAgents } from './http/agents';
+import { DownloadTask } from "./downloadTask";
+import { DownloadBaseOptions } from './http/download';
+import { getAndParseIfUpdate, Timestamped } from './http/fetch';
+import { joinUrl } from './http/utils';
+import { ensureDir, errorToString, normalizeArray, ParallelTaskOptions, readFile } from "./utils";
+import { JsonValidator, ZipValidator } from './http/validator';
 
 /**
  * The function to swap library host.
@@ -98,7 +103,7 @@ export function getVersionList(option: {
 /**
  * Change the library host url
  */
-export interface LibraryOptions extends DownloadBaseOptions, ParallelTaskOptions, CreateAgentsOptions {
+export interface LibraryOptions extends DownloadBaseOptions, ParallelTaskOptions {
     /**
      * A more flexiable way to control library download url.
      * @see mavenHost
@@ -119,7 +124,7 @@ export interface LibraryOptions extends DownloadBaseOptions, ParallelTaskOptions
 /**
  * Change the host url of assets download
  */
-export interface AssetsOptions extends DownloadBaseOptions, ParallelTaskOptions, CreateAgentsOptions {
+export interface AssetsOptions extends DownloadBaseOptions, ParallelTaskOptions {
     /**
      * The alternative assets host to download asset. It will try to use these host from the `[0]` to the `[assetsHost.length - 1]`
      */
@@ -152,7 +157,7 @@ function resolveDownloadUrls<T>(original: string, version: T, option?: string | 
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions, CreateAgentsOptions {
+export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions {
     /**
      * The version json url replacement
      */
@@ -175,7 +180,7 @@ export interface InstallSideOption {
 }
 
 
-export type Options = DownloadBaseOptions & ParallelTaskOptions & CreateAgentsOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
+export type Options = DownloadBaseOptions & ParallelTaskOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
 
 /**
  * Install the Minecraft game to a location by version metadata.
@@ -367,13 +372,13 @@ export function installResolvedAssetsTask(assets: AssetInfo[], folder: Minecraft
         // const sizes = assets.map((a) => a.size).map((a, b) => a + b, 0);
 
         await withAgents(options, (options) => this.all(assets.map((o) => new InstallAssetTask(o, folder, options)), {
-            throwErrorImmediately: options.throwErrorImmediately ?? false,
+            throwErrorImmediately: false,
             getErrorMessage: (errs) => `Errors during install assets at ${folder.root}:\n${errs.map(errorToString).join("\n")}`,
         }));
     });
 }
 
-export class InstallJsonTask extends DownloadFallbackTask {
+export class InstallJsonTask extends DownloadTask {
     constructor(version: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options) {
         const folder = MinecraftFolder.from(minecraft);
         const destination = folder.getVersionJson(version.id);
@@ -381,9 +386,11 @@ export class InstallJsonTask extends DownloadFallbackTask {
         const urls = resolveDownloadUrls(version.url, version, options.json);
 
         super({
-            ...resolveBaseOptions(options),
-            urls,
-            checksum: expectSha1 ? { algorithm: "sha1", hash: expectSha1 } : undefined,
+            url: urls,
+            agents: options.agents,
+            segmentPolicy: options.segmentPolicy,
+            retryHandler: options.retryHandler,
+            validator: expectSha1 ? { algorithm: "sha1", hash: expectSha1 } : new JsonValidator(),
             destination,
         });
 
@@ -392,8 +399,7 @@ export class InstallJsonTask extends DownloadFallbackTask {
     }
 }
 
-export class InstallJarTask extends DownloadFallbackTask {
-
+export class InstallJarTask extends DownloadTask {
     constructor(version: ResolvedVersion, minecraft: MinecraftLocation, options: Options) {
         const folder = MinecraftFolder.from(minecraft);
         const type = options.side ?? "client";
@@ -403,10 +409,12 @@ export class InstallJarTask extends DownloadFallbackTask {
         const expectSha1 = version.downloads[type].sha1;
 
         super({
-            ...resolveBaseOptions(options),
-            urls,
-            checksum: { algorithm: "sha1", hash: expectSha1 },
+            url: urls,
+            validator: { algorithm: "sha1", hash: expectSha1 },
             destination,
+            agents: options.agents,
+            segmentPolicy: options.segmentPolicy,
+            retryHandler: options.retryHandler,
         });
 
         this.name = "jar";
@@ -414,19 +422,21 @@ export class InstallJarTask extends DownloadFallbackTask {
     }
 }
 
-export class InstallAssetIndexTask extends DownloadFallbackTask {
+export class InstallAssetIndexTask extends DownloadTask {
     constructor(version: ResolvedVersion, options: AssetsOptions = {}) {
         const folder = MinecraftFolder.from(version.minecraftDirectory);
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
         super({
-            urls: resolveDownloadUrls(version.assetIndex.url, version, options.assetsIndexUrl),
+            url: resolveDownloadUrls(version.assetIndex.url, version, options.assetsIndexUrl),
             destination: jsonPath,
-            checksum: {
+            validator: {
                 algorithm: "sha1",
                 hash: version.assetIndex.sha1,
             },
-            ...resolveBaseOptions(options),
+            agents: options.agents,
+            segmentPolicy: options.segmentPolicy,
+            retryHandler: options.retryHandler,
         });
 
         this.name = "assetIndex";
@@ -434,21 +444,22 @@ export class InstallAssetIndexTask extends DownloadFallbackTask {
     }
 }
 
-export class InstallLibraryTask extends DownloadFallbackTask {
+export class InstallLibraryTask extends DownloadTask {
     constructor(lib: ResolvedLibrary, folder: MinecraftFolder, options: LibraryOptions) {
         const libraryPath = lib.download.path;
         const destination = join(folder.libraries, libraryPath);
         const urls: string[] = resolveLibraryDownloadUrls(lib, options);
-        const checksum = lib.download.sha1 === "" ? undefined : {
-            algorithm: "sha1",
-            hash: lib.download.sha1,
-        }
 
         super({
-            urls,
-            checksum,
+            url: urls,
+            validator: lib.download.sha1 === "" ? new ZipValidator() : {
+                algorithm: "sha1",
+                hash: lib.download.sha1,
+            },
             destination,
-            ...resolveBaseOptions(options),
+            agents: options.agents,
+            segmentPolicy: options.segmentPolicy,
+            retryHandler: options.retryHandler,
         });
 
         this.name = "library";
@@ -456,7 +467,7 @@ export class InstallLibraryTask extends DownloadFallbackTask {
     }
 }
 
-export class InstallAssetTask extends DownloadFallbackTask {
+export class InstallAssetTask extends DownloadTask {
     constructor(asset: AssetInfo, folder: MinecraftFolder, options: AssetsOptions) {
         const assetsHosts = [
             ...normalizeArray(options.assetsHost),
@@ -471,13 +482,12 @@ export class InstallAssetTask extends DownloadFallbackTask {
         const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`);
 
         super({
-            ...resolveBaseOptions(options),
-            urls,
-            checksum: {
-                hash,
-                algorithm: "sha1",
-            },
+            url: urls,
             destination: file,
+            validator: { hash, algorithm: "sha1", },
+            agents: options.agents,
+            segmentPolicy: options.segmentPolicy,
+            retryHandler: options.retryHandler,
         })
 
         this._total = size;
