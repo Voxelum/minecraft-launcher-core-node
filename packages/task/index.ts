@@ -1,5 +1,5 @@
-export class CancelledError<T> extends Error {
-    constructor(readonly partialResult: T | undefined) {
+export class CancelledError extends Error {
+    constructor() {
         super("Cancelled");
     }
 }
@@ -30,7 +30,6 @@ export interface Task<T = any> {
     readonly to: string | undefined;
 
     readonly path: string;
-    readonly id: number;
     readonly isCancelled: boolean;
     readonly isPaused: boolean;
     readonly isDone: boolean;
@@ -41,7 +40,7 @@ export interface Task<T = any> {
     readonly parent: Task<any> | undefined;
 
     pause(): Promise<void>;
-    resume(): void;
+    resume(): Promise<void>;
     cancel(): Promise<void>;
     start(context?: TaskContext, parent?: Task<any>): void;
     wait(): Promise<T>;
@@ -74,7 +73,7 @@ export function createFork(): TaskContext["fork"] {
     return () => id++;
 }
 
-export abstract class TaskBase<T> implements Task<T> {
+export abstract class BaseTask<T> implements Task<T> {
     protected _state: TaskState = TaskState.Idel;
     protected _promise: Promise<T> = new Promise((resolve, reject) => {
         this.resolve = resolve;
@@ -129,39 +128,44 @@ export abstract class TaskBase<T> implements Task<T> {
     async pause() {
         if (this._state !== TaskState.Running) { return; }
         this._state = TaskState.Paused;
-        await this.performPause();
-        this.context.onPaused?.(this);
+        await this.pauseTask().then(() => {
+            this.context.onPaused?.(this)
+        });
     }
-    resume() {
+    async resume() {
         if (this._state !== TaskState.Paused) { return; }
         this._state = TaskState.Running;
-        this.performResume();
-        this.context.onResumed?.(this);
+        await this.resumeTask().then(() => {
+            this.context.onResumed?.(this)
+        });
     }
     async cancel() {
         if (this.state !== TaskState.Running && this.state !== TaskState.Idel) { return; }
         this._state = TaskState.Cancelled;
-        await this.performCancel();
-        this.context.onCancelled?.(this);
+        await this.cancelTask().then(() => {
+            this.context.onCancelled?.(this);
+        });
     }
     wait() {
         return this._promise;
     }
     start(context?: TaskContext, parent?: Task<any>) {
         if (this._state === TaskState.Cancelled) {
-            throw new CancelledError(undefined);
+            throw new CancelledError();
         }
         if (this._state !== TaskState.Idel) {
             return;
         }
-        Object.assign(this.context, context);
+        if (context) {
+            Object.assign(this.context, context);
+        }
         if (!this.context.fork) { this.context.fork = createFork(); }
         this.parent = parent;
         this._state = TaskState.Running;
         this._id = this.context.fork!(this);
         this._path = parent ? `${parent.path}.${this.name}` : this.name;
         this.context.onStart?.(this);
-        this.run().then((value) => {
+        this.runTask().then((value) => {
             this.resolve(value);
             this._state = TaskState.Successed;
             this.resultOrError = value;
@@ -188,10 +192,10 @@ export abstract class TaskBase<T> implements Task<T> {
 
     onChildUpdate(chunkSize: number) { }
 
-    protected abstract run(): Promise<T>;
-    protected abstract performCancel(): Promise<void>;
-    protected abstract performPause(): Promise<void>;
-    protected abstract performResume(): void;
+    protected abstract runTask(): Promise<T>;
+    protected abstract cancelTask(): Promise<void>;
+    protected abstract pauseTask(): Promise<void>;
+    protected abstract resumeTask(): Promise<void>;
 
     map<N>(transform: Transform<this, N>): Task<N> {
         const copy = Object.create(this);
@@ -210,59 +214,67 @@ export abstract class TaskBase<T> implements Task<T> {
 }
 
 
-export abstract class TaskLooped<T> extends TaskBase<T> {
+export abstract class AbortableTask<T> extends BaseTask<T> {
     protected _pausing: Promise<void> = Promise.resolve();
     protected _unpause = () => { };
+    protected _onAborted = () => { };
+    protected _onResume = () => { };
 
-    protected abstract process(): Promise<[boolean, T | undefined]>;
-    protected abstract validate(): Promise<void>;
-    protected abstract shouldTolerant(e: any): boolean;
-    protected abstract abort(isCancelled: boolean): Promise<void>;
-    protected abstract reset(): void;
+    protected abstract process(): Promise<T>;
+    protected abstract abort(isCancelled: boolean): void;
+    protected abstract isAbortedError(e: any): boolean
 
-    protected performCancel(): Promise<void> {
-        return this.abort(true);
+    protected cancelTask(): Promise<void> {
+        this.abort(true);
+        return new Promise((resolve) => {
+            this._onAborted = resolve;
+        });
     }
-    protected performPause(): Promise<void> {
+    protected pauseTask(): Promise<void> {
         this._pausing = new Promise((resolve) => {
             this._unpause = resolve;
         })
-        return this.abort(false);
+        this.abort(false);
+        return new Promise((resolve) => {
+            this._onAborted = resolve;
+        });
     }
-    protected performResume(): void {
+    protected resumeTask(): Promise<void> {
         this._unpause();
+        return new Promise((resolve) => {
+            this._onResume = resolve;
+        });
     }
 
-    protected async run() {
-        let result: T | undefined;
-        let isDone = false;
-        while (!isDone) {
+    protected async runTask() {
+        while (true) {
             try {
-                [isDone, result] = await this.process();
                 if (this.state === TaskState.Cancelled) {
-                    throw new CancelledError<T>(result);
+                    throw new CancelledError();
                 }
                 await this._pausing;
-                if (!isDone) {
+                // notify resume task method
+                this._onResume();
+                const result = await this.process();
+                return result;
+            } catch (e) {
+                if (this._state === TaskState.Paused && this.isAbortedError(e)) {
+                    // notify pauseTask method
+                    this._onAborted();
                     continue;
                 }
-                await this.validate();
-            } catch (e) {
-                if (!this.shouldTolerant(e)) {
-                    throw e;
+                if (this._state === TaskState.Cancelled) {
+                    // notify cancelTask method
+                    this._onAborted();
                 }
-                // if not throw, reset the state and retry
-                isDone = false;
-                this.reset();
+                throw e;
             }
         }
-        return result!;
     }
 }
 
-export type TaskExecutor<T> = (this: TaskRoutine<any>) => Promise<T> | T;
 
-export abstract class TaskGroup<T> extends TaskBase<T> {
+export abstract class TaskGroup<T> extends BaseTask<T> {
     protected children: Task<any>[] = [];
 
     onChildUpdate(chunkSize: number) {
@@ -277,14 +289,16 @@ export abstract class TaskGroup<T> extends TaskBase<T> {
         this.update(chunkSize);
     };
 
-    protected async performCancel(): Promise<void> {
+    protected async cancelTask(): Promise<void> {
         await Promise.all(this.children.map((task) => task.cancel()));
     }
-    protected async performPause(): Promise<void> {
+
+    protected async pauseTask(): Promise<void> {
         await Promise.all(this.children.map((task) => task.pause()));
     }
-    protected performResume(): void {
-        this.children.forEach((task) => task.resume());
+
+    protected async resumeTask(): Promise<void> {
+        await Promise.all(this.children.map((task) => task.resume()));
     }
 
     async all<Z, T extends Task<Z>>(tasks: Iterable<T>, { throwErrorImmediately, getErrorMessage }: { throwErrorImmediately?: boolean; getErrorMessage?: (errors: any[]) => string } = { throwErrorImmediately: true, getErrorMessage: (errors: any[]) => "" }): Promise<Z[]> {
@@ -292,13 +306,12 @@ export abstract class TaskGroup<T> extends TaskBase<T> {
         const promises: Promise<Z | void>[] = [];
         for (const task of tasks) {
             this.children.push(task);
-            const promise = task.startAndWait(this.context, this)
-                .catch((error) => {
-                    if (throwErrorImmediately || error instanceof CancelledError) {
-                        throw error;
-                    }
-                    errors.push(error);
-                });
+            const promise = task.startAndWait(this.context, this).catch((error) => {
+                if (throwErrorImmediately || error instanceof CancelledError) {
+                    throw error;
+                }
+                errors.push(error);
+            });
             promises.push(promise);
         }
         try {
@@ -325,9 +338,11 @@ export abstract class TaskGroup<T> extends TaskBase<T> {
     }
 }
 
+export type TaskExecutor<T> = (this: TaskRoutine<any>) => Promise<T> | T;
 export class TaskRoutine<T> extends TaskGroup<T> {
-    constructor(readonly name: string, readonly executor: TaskExecutor<T>, readonly param: object = {}) {
+    constructor(name: string, readonly executor: TaskExecutor<T>, param: object = {}) {
         super();
+        this.setName(name, param)
     }
 
     concat<T>(task: TaskRoutine<T>): Promise<T> {
@@ -353,7 +368,7 @@ export class TaskRoutine<T> extends TaskGroup<T> {
         return task.startAndWait(this.context, this);
     }
 
-    protected run(): Promise<T> {
+    protected runTask(): Promise<T> {
         try {
             const result = this.executor.bind(this)();
             if (result instanceof Promise) {
