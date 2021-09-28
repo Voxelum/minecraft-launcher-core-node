@@ -12,6 +12,7 @@
         "java.ts",
         "diagnose.ts",
         "profile.ts",
+        "downloadTask.ts",
         "http/abort.ts",
         "http/agents.ts",
         "http/download.ts",
@@ -21,7 +22,8 @@
         "http/segment.ts",
         "http/status.ts",
         "http/utils.ts",
-        "http/validator.ts"
+        "http/validator.ts",
+        "http/download.test.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
