@@ -151,7 +151,8 @@ export async function diagnose(version: string, minecraftLocation: MinecraftLoca
     let resolvedVersion: ResolvedVersion;
     try {
         resolvedVersion = await Version.parse(minecraft, version);
-    } catch (e) {
+    } catch (err) {
+        const e: any = err;
         if (e.error === "CorruptedVersionJson") {
             issues.push({ type: "corrupted", role: "versionJson", file: minecraft.getVersionJson(e.version), expectedChecksum: "", receivedChecksum: "", hint: "Re-install the minecraft!" });
         } else {
