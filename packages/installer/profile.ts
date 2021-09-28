@@ -2,7 +2,7 @@ import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson
 import { CancelledError, task, AbortableTask } from "@xmcl/task";
 import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
 import { ChildProcess, spawn } from 'child_process';
-import { delimiter } from "path";
+import { delimiter, dirname } from "path";
 import { ZipFile } from "yauzl";
 import { installResolvedLibrariesTask, InstallSideOption, LibraryOptions } from "./minecraft";
 import { checksum, readFile, spawnProcess, waitProcess } from "./utils";
@@ -89,6 +89,10 @@ export function resolveProcessors(side: "client" | "server", installProfile: Ins
     }
     // store the mapping of {VARIABLE_NAME} -> real path in disk
     const variables: Record<string, { client: string; server: string }> = {
+        SIDE: {
+            client: "client",
+            server: "server",
+        },
         MINECRAFT_JAR: {
             client: minecraft.getVersionJar(installProfile.minecraft),
             server: minecraft.getVersionJar(installProfile.minecraft, "server"),
@@ -103,12 +107,18 @@ export function resolveProcessors(side: "client" | "server", installProfile: Ins
             };
         }
     }
+    if (variables.INSTALLER) {
+        variables.ROOT = {
+            client: dirname(variables.INSTALLER.client),
+            server: dirname(variables.INSTALLER.server),
+        }
+    }
     const processors = (installProfile.processors || []).map((proc) => ({
         ...proc,
         args: proc.args.map(normalizePath).map(normalizeVariable),
         outputs: proc.outputs
             ? Object.entries(proc.outputs).map(([k, v]) => ({ [normalizeVariable(k)]: normalizeVariable(v) })).reduce((a, b) => Object.assign(a, b), {})
-            : {},
+            : undefined,
     }));
     return processors;
 }

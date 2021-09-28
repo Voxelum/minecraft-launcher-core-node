@@ -3,7 +3,7 @@ import { parse as parseForge } from "@xmcl/forge-site-parser";
 import { Task, task } from "@xmcl/task";
 import { filterEntries, open, openEntryReadStream, readEntry } from "@xmcl/unzip";
 import { createWriteStream } from "fs";
-import { join } from "path";
+import { dirname, join, posix, sep } from "path";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadTask } from './downloadTask';
 import { withAgents } from './http/agents';
@@ -86,9 +86,29 @@ export interface ForgeInstallerEntries {
      * forge-${forgeVersion}-universal.jar
      */
     legacyUniversalJar?: Entry
+    /**
+     * data/run.sh
+     */
+    runSh?: Entry
+    /**
+     * data/run.bat
+     */
+    runBat?: Entry
+    /**
+     * data/unix_args.txt
+     */
+    unixArgs?: Entry
+    /**
+     * data/user_jvm_args.txt
+     */
+    userJvmArgs?: Entry
+    /**
+     * data/win_args.txt
+     */
+    winArgs?: Entry
 }
 
-export type ForgeInstallerEntriesPattern = ForgeInstallerEntries & Required<Pick<ForgeInstallerEntries, "forgeJar" | "versionJson" | "installProfileJson">>;
+export type ForgeInstallerEntriesPattern = ForgeInstallerEntries & Required<Pick<ForgeInstallerEntries, "versionJson" | "installProfileJson">>;
 export type ForgeLegacyInstallerEntriesPattern = Required<Pick<ForgeInstallerEntries, "installProfileJson" | "legacyUniversalJar">>;
 
 
@@ -194,7 +214,16 @@ async function installLegacyForgeFromZip(zip: ZipFile, entries: ForgeLegacyInsta
     return versionJson.id;
 }
 
-async function installForgeFromZip(zip: ZipFile, entries: ForgeInstallerEntriesPattern, forgeVersion: string, profile: InstallProfile, mc: MinecraftFolder, options: InstallForgeOptions) {
+/**
+ * Unpack forge installer jar file content to the version library artifact directory.
+ * @param zip The forge jar file
+ * @param entries The entries
+ * @param forgeVersion The expected version of forge
+ * @param profile The forge install profile
+ * @param mc The minecraft location
+ * @returns The installed version id
+ */
+async function unpackForgeInstaller(zip: ZipFile, entries: ForgeInstallerEntriesPattern, forgeVersion: string, profile: InstallProfile, mc: MinecraftFolder, jarPath: string, options: InstallForgeOptions) {
     const versionJson: VersionJson = await readEntry(zip, entries.versionJson).then((b) => b.toString()).then(JSON.parse);
 
     // apply override for inheritsFrom
@@ -207,6 +236,12 @@ async function installForgeFromZip(zip: ZipFile, entries: ForgeInstallerEntriesP
     const versionJsonPath = join(rootPath, `${versionJson.id}.json`);
     const installJsonPath = join(rootPath, "install_profile.json");
 
+    const dataRoot = dirname(jarPath);
+
+    const unpackData = (entry: Entry) => {
+        promises.push(extractEntryTo(zip, entry, join(dataRoot, entry.fileName.substring("data/".length))));
+    }
+
     await ensureFile(versionJsonPath);
 
     const promises: Promise<void>[] = [];
@@ -216,6 +251,12 @@ async function installForgeFromZip(zip: ZipFile, entries: ForgeInstallerEntriesP
 
     if (!profile.data) {
         profile.data = {};
+    }
+
+    const installerMaven = `net.minecraftforge:forge:${forgeVersion}:installer`
+    profile.data.INSTALLER = {
+        client: `[${installerMaven}]`,
+        server: `[${installerMaven}]`,
     }
 
     if (entries.serverLzma) {
@@ -240,10 +281,18 @@ async function installForgeFromZip(zip: ZipFile, entries: ForgeInstallerEntriesP
         promises.push(extractEntryTo(zip, entries.clientLzma, clientBinPath));
     }
 
+    if (entries.forgeJar) {
+        promises.push(extractEntryTo(zip, entries.forgeJar, getLibraryPathWithoutMaven(mc, entries.forgeJar.fileName)));
+    }
+    if (entries.runBat) { unpackData(entries.runBat) }
+    if (entries.runSh) { unpackData(entries.runSh) }
+    if (entries.winArgs) { unpackData(entries.winArgs) }
+    if (entries.unixArgs) { unpackData(entries.unixArgs) }
+    if (entries.userJvmArgs) { unpackData(entries.userJvmArgs) }
+
     promises.push(
         writeFile(installJsonPath, JSON.stringify(profile)),
         writeFile(versionJsonPath, JSON.stringify(versionJson)),
-        extractEntryTo(zip, entries.forgeJar, getLibraryPathWithoutMaven(mc, entries.forgeJar.fileName)),
     );
 
     await Promise.all(promises);
@@ -256,7 +305,7 @@ export function isLegacyForgeInstallerEntries(entries: ForgeInstallerEntries): e
 }
 
 export function isForgeInstallerEntries(entries: ForgeInstallerEntries): entries is ForgeInstallerEntriesPattern {
-    return !!entries.forgeJar && !!entries.installProfileJson && !!entries.versionJson;
+    return !!entries.installProfileJson && !!entries.versionJson;
 }
 
 /**
@@ -265,7 +314,7 @@ export function isForgeInstallerEntries(entries: ForgeInstallerEntries): entries
  * @param forgeVersion Forge version to install
  */
 export async function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: string): Promise<ForgeInstallerEntries> {
-    const [forgeJar, forgeUniversalJar, clientLzma, serverLzma, installProfileJson, versionJson, legacyUniversalJar] = await filterEntries(zip, [
+    const [forgeJar, forgeUniversalJar, clientLzma, serverLzma, installProfileJson, versionJson, legacyUniversalJar, runSh, runBat, unixArgs, userJvmArgs, winArgs] = await filterEntries(zip, [
         `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`,
         `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`,
         "data/client.lzma",
@@ -273,6 +322,11 @@ export async function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: stri
         "install_profile.json",
         "version.json",
         `forge-${forgeVersion}-universal.jar`, // legacy installer format
+        "data/run.sh",
+        "data/run.bat",
+        "data/unix_args.txt",
+        "data/user_jvm_args.txt",
+        "data/win_args.txt",
     ]);
     return {
         forgeJar,
@@ -281,7 +335,8 @@ export async function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: stri
         serverLzma,
         installProfileJson,
         versionJson,
-        legacyUniversalJar
+        legacyUniversalJar,
+        runSh, runBat, unixArgs, userJvmArgs, winArgs,
     };
 }
 
@@ -324,7 +379,7 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
             const profile: InstallProfile = await readEntry(zip, entries.installProfileJson).then((b) => b.toString()).then(JSON.parse);
             if (isForgeInstallerEntries(entries)) {
                 // new forge
-                const versionId = await installForgeFromZip(zip, entries, forgeVersion, profile, mc, options);
+                const versionId = await unpackForgeInstaller(zip, entries, forgeVersion, profile, mc, jarPath, options);
                 await this.concat(installByProfileTask(profile, minecraft, options));
                 return versionId;
             } else if (isLegacyForgeInstallerEntries(entries)) {
