@@ -1,6 +1,7 @@
 import { AbortableTask } from '@xmcl/task';
 import { AbortSignal } from './http/abort';
-import { createDownload, Download, DownloadError, DownloadOptions } from './http/download';
+import { createDownload, Download, DownloadOptions } from './http/download';
+import { DownloadError } from './http/error';
 import { StatusController } from './http/status';
 
 export class DownloadTask extends AbortableTask<void> implements StatusController {
@@ -30,9 +31,13 @@ export class DownloadTask extends AbortableTask<void> implements StatusControlle
       get aborted() { return aborted() },
       addEventListener(event, listener) {
         if (event !== "abort") {
-          throw new Error();
+          return this;
         }
         listeners.push(listener);
+        return this;
+      },
+      removeEventListener(event, listener) {
+        // noop as this will be auto gc
         return this;
       }
     }
@@ -43,7 +48,7 @@ export class DownloadTask extends AbortableTask<void> implements StatusControlle
   }
 
   protected isAbortedError(e: any): boolean {
-    if (e instanceof DownloadError && e.reason === 'abort') {
+    if (e instanceof DownloadError && e.error === 'DownloadAborted') {
       return true;
     }
     return false;

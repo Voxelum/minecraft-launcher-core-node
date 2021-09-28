@@ -1,6 +1,6 @@
 import { _exists as exists, _mkdir as mkdir, _pipeline as pipeline, _readFile as readFile, _writeFile as writeFile } from "@xmcl/core";
-import { ChildProcess, ChildProcessWithoutNullStreams, ExecOptions, spawn } from "child_process";
-import { close as fclose, copyFile as fcopyFile, ftruncate, open as fopen, stat as fstat, unlink as funlink, link as fslink } from "fs";
+import { ChildProcessWithoutNullStreams, ExecOptions, spawn } from "child_process";
+import { close as fclose, copyFile as fcopyFile, ftruncate, link as fslink, open as fopen, stat as fstat, unlink as funlink } from "fs";
 import { dirname } from "path";
 import { promisify } from "util";
 
@@ -23,8 +23,9 @@ export function missing(target: string) {
 export async function ensureDir(target: string) {
     try {
         await mkdir(target);
-    } catch (e) {
-        if (await stat(target).then((s) => s.isDirectory()).catch((e) => false)) { return; }
+    } catch (err) {
+        const e: any = err;
+        if (await stat(target).then((s) => s.isDirectory()).catch(() => false)) { return; }
         if (e.code === "EEXIST") { return; }
         if (e.code === "ENOENT") {
             if (dirname(target) === target) {
