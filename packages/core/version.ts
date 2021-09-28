@@ -593,7 +593,8 @@ export namespace Version {
             let contentString: string;
             try {
                 contentString = await readFile(jsonPath, "utf-8");
-            } catch (e) {
+            } catch (err) {
+                const e: any = err;
                 throw Object.assign(new Error(e.message), {
                     error: "MissingVersionJson",
                     version: versionName,
