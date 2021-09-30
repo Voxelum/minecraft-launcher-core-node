@@ -15,11 +15,11 @@ Provide functions to install Minecraft client, libraries, and assets.
 Fully install vanilla minecraft client including assets and libs.
 
 ```ts
-    import { getMinecraftVersionList, MinecraftVersionList, MinecraftVersion, install } from "@xmcl/installer";
-    import { ResolvedVersion, MinecraftLocation } from "@xmcl/core";
+    import { getVersionList, MinecraftVersion, install } from "@xmcl/installer";
+    import { MinecraftLocation } from "@xmcl/core";
 
     const minecraft: MinecraftLocation;
-    const list: MinecraftVersionList = await getMinecraftVersionList();
+    const list: MinecraftVersion[] = (await getVersionList()).versions;
     const aVersion: MinecraftVersion = list[0]; // i just pick the first version in list here
     await install(aVersion, minecraft);
 ```
