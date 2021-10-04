@@ -232,9 +232,9 @@ export async function installFabric(loader: FabricLoaderArtifact, minecraft: Min
     }
     let libraries = [
         { name: loader.loader.maven, url: "https://maven.fabricmc.net/" },
-        options.yarnVersion
-            ? { name: `net.fabricmc:yarn:${yarn}`, url: "https://maven.fabricmc.net/" }
-            : { name: loader.intermediary.maven, url: "https://maven.fabricmc.net/" },
+        { name: loader.intermediary.maven, url: "https://maven.fabricmc.net/" },
+        ...(options.yarnVersion
+            ? [{ name: `net.fabricmc:yarn:${yarn}`, url: "https://maven.fabricmc.net/" }] : []),
         ...loader.launcherMeta.libraries.common,
         ...loader.launcherMeta.libraries[side],
     ];
