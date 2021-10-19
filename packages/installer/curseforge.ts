@@ -4,10 +4,10 @@ import { open, readAllEntries, readEntry } from "@xmcl/unzip";
 import { Agent as HttpsAgent } from "https";
 import { basename, join } from "path";
 import { Entry, ZipFile } from "yauzl";
-import { DownloadTask } from './downloadTask';
-import { withAgents } from './http/agents';
-import { DownloadBaseOptions } from './http/download';
-import { fetchText } from './http/fetch';
+import { DownloadTask } from "./downloadTask";
+import { withAgents } from "./http/agents";
+import { DownloadBaseOptions } from "./http/download";
+import { fetchText } from "./http/fetch";
 import { UnzipTask } from "./unzip";
 import { errorToString, ParallelTaskOptions } from "./utils";
 

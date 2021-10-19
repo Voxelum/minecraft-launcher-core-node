@@ -1,7 +1,7 @@
 import { deserializeSync, serializeSync } from "@xmcl/nbt";
 import ByteBuffer from "bytebuffer";
 import long from "long";
-import type { PacketRegistry } from './channel';
+import type { PacketRegistry } from "./channel";
 
 export interface SlotData {
     blockId: number;

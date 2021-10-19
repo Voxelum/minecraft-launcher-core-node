@@ -1,18 +1,18 @@
-import { O_CREAT, O_RDWR } from 'constants';
+import { O_CREAT, O_RDWR } from "constants";
 import { createWriteStream, fdatasync, fstat } from "fs";
 import { RequestOptions } from "http";
 import { fileURLToPath, URL } from "url";
-import { promisify } from 'util';
+import { promisify } from "util";
 import { close, copyFile, ensureFile, exists, open, pipeline, truncate, unlink } from "../utils";
 import { AbortSignal, resolveAbortSignal } from "./abort";
-import { Agents, CreateAgentsOptions, resolveAgents } from './agents';
-import { DownloadError, resolveNetworkErrorType } from './error';
-import { getMetadata, ResourceMetadata } from './metadata';
-import { DefaultRetryHandlerOptions, resolveRetryHandler, RetryHandler } from './retry';
-import { DefaultSegmentPolicyOptions, resolveSegmentPolicy, Segment, SegmentPolicy } from './segment';
-import { resolveStatusController, StatusController } from './status';
+import { Agents, CreateAgentsOptions, resolveAgents } from "./agents";
+import { DownloadError, resolveNetworkErrorType } from "./error";
+import { getMetadata, ResourceMetadata } from "./metadata";
+import { DefaultRetryHandlerOptions, resolveRetryHandler, RetryHandler } from "./retry";
+import { DefaultSegmentPolicyOptions, resolveSegmentPolicy, Segment, SegmentPolicy } from "./segment";
+import { resolveStatusController, StatusController } from "./status";
 import { fetch, urlToRequestOptions } from "./utils";
-import { ChecksumValidatorOptions, resolveValidator, ValidationError, Validator } from './validator';
+import { ChecksumValidatorOptions, resolveValidator, ValidationError, Validator } from "./validator";
 
 // @ts-ignore
 const pfstat = promisify(fstat)
@@ -189,9 +189,9 @@ export class Download {
                 }
                 abortHandlers.push(abortHandler)
                 // add abort handler to abort signal
-                abortSignal.addEventListener('abort', abortHandler);
+                abortSignal.addEventListener("abort", abortHandler);
                 await pipeline(response, fileStream);
-                abortSignal.removeEventListener('abort', abortHandler);
+                abortSignal.removeEventListener("abort", abortHandler);
             } catch (e) {
                 if (e instanceof AbortError) {
                     // user abort the operation, or abort by other sibling error
@@ -208,7 +208,7 @@ export class Download {
         // use local aborted flag instead of signal.aborted
         // as local aborted flag means the request is TRUELY aborted
         if (flag) {
-            throw new DownloadError(flag === 1 ? 'DownloadAborted' : resolveNetworkErrorType(errors[0]) ?? 'GeneralDownloadException',
+            throw new DownloadError(flag === 1 ? "DownloadAborted" : resolveNetworkErrorType(errors[0]) ?? "GeneralDownloadException",
                 this.metadata,
                 this.headers,
                 this.destination,
@@ -276,7 +276,7 @@ export class Download {
             // prevalidate the file
             const size = (await pfstat(this.fd)).size
             if (size !== 0) {
-                const error = await this.validator.validate(this.fd, this.destination, this.urls[0]).catch(e => e);
+                const error = await this.validator.validate(this.fd, this.destination, this.urls[0]).catch((e) => e);
                 // if the file size is not 0 and checksum matched, we just don't process the file
                 if (!error) {
                     return;

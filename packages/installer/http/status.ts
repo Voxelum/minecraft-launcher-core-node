@@ -9,18 +9,18 @@ export interface StatusController {
 }
 
 export function createStatusController() {
-  let total = 0
-  let progress = 0
-  const controller: StatusController = {
-    get total() { return total },
-    get progress() { return progress },
-    reset(_progress, _total) { progress = _progress; total = _total },
-    onProgress(_, _progress) { progress = _progress }
-  }
-  return controller;
+    let total = 0
+    let progress = 0
+    const controller: StatusController = {
+        get total() { return total },
+        get progress() { return progress },
+        reset(_progress, _total) { progress = _progress; total = _total },
+        onProgress(_, _progress) { progress = _progress }
+    }
+    return controller;
 }
 
 export function resolveStatusController(controller?: StatusController) {
-  if (!controller) { return createStatusController() }
-  return controller
+    if (!controller) { return createStatusController() }
+    return controller
 }

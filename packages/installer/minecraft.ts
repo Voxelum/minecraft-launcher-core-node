@@ -1,13 +1,13 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
 import { task, Task } from "@xmcl/task";
 import { join } from "path";
-import { withAgents } from './http/agents';
+import { withAgents } from "./http/agents";
 import { DownloadTask } from "./downloadTask";
-import { DownloadBaseOptions } from './http/download';
-import { getAndParseIfUpdate, Timestamped } from './http/fetch';
-import { joinUrl } from './http/utils';
+import { DownloadBaseOptions } from "./http/download";
+import { getAndParseIfUpdate, Timestamped } from "./http/fetch";
+import { joinUrl } from "./http/utils";
 import { ensureDir, errorToString, normalizeArray, ParallelTaskOptions, readFile } from "./utils";
-import { JsonValidator, ZipValidator } from './http/validator';
+import { JsonValidator, ZipValidator } from "./http/validator";
 
 /**
  * The function to swap library host.

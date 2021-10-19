@@ -641,7 +641,7 @@ export async function generateArguments(options: LaunchOption) {
             mc.getVersionJar(version.minecraftVersion),
             ...(options.extraClassPaths || []),
         ].join(delimiter),
-        library_directory: mc.getPath('libraries'),
+        library_directory: mc.getPath("libraries"),
         classpath_separator: delimiter,
         version_name: version.minecraftVersion,
         ...featureValues,

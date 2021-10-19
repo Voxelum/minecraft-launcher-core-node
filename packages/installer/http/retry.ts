@@ -1,16 +1,15 @@
-import { DownloadError } from './error';
-import { ValidationError } from './validator';
-import { isCommonNetworkError } from './error';
+import { DownloadError, isCommonNetworkError } from "./error";
+import { ValidationError } from "./validator";
 
 /**
- * The handler that decide whether 
+ * The handler that decide whether
  */
 export interface RetryHandler {
   retry(url: string, attempt: number, error: ValidationError): boolean | Promise<boolean>;
   retry(url: string, attempt: number, error: DownloadError): boolean | Promise<boolean>;
   /**
    * You should decide whether we should retry the download again?
-   * 
+   *
    * @param url The current downloading url
    * @param attempt How many time it try to retry download? The first retry will be `1`.
    * @param error The error object thrown during this download. It can be {@link DownloadError} or ${@link ValidationError}.
@@ -31,14 +30,14 @@ export interface DefaultRetryHandlerOptions {
 }
 
 export function isRetryHandler(options?: DefaultRetryHandlerOptions | RetryHandler): options is RetryHandler {
-  if (!options) return false;
-  return "retry" in options && typeof options.retry === "function";
+    if (!options) { return false; }
+    return "retry" in options && typeof options.retry === "function";
 }
 
 
 export function resolveRetryHandler(options?: DefaultRetryHandlerOptions | RetryHandler): RetryHandler {
-  if (isRetryHandler(options)) return options;
-  return createRetryHandler(options?.maxRetryCount ?? 3, options?.shouldRetry ?? isCommonNetworkError)
+    if (isRetryHandler(options)) { return options; }
+    return createRetryHandler(options?.maxRetryCount ?? 3, options?.shouldRetry ?? isCommonNetworkError)
 }
 
 /**
@@ -47,10 +46,10 @@ export function resolveRetryHandler(options?: DefaultRetryHandlerOptions | Retry
  * @param shouldRetry Should the error be retry
  */
 export function createRetryHandler(maxRetryCount: number, shouldRetry: (e: any) => boolean) {
-  const handler: RetryHandler = {
-    retry(url, attempt, error) {
-      return shouldRetry(error) && attempt < maxRetryCount
+    const handler: RetryHandler = {
+        retry(url, attempt, error) {
+            return shouldRetry(error) && attempt < maxRetryCount
+        }
     }
-  }
-  return handler;
+    return handler;
 }

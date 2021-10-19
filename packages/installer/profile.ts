@@ -1,7 +1,7 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
 import { CancelledError, task, AbortableTask } from "@xmcl/task";
 import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess, spawn } from "child_process";
 import { delimiter, dirname } from "path";
 import { ZipFile } from "yauzl";
 import { installResolvedLibrariesTask, InstallSideOption, LibraryOptions } from "./minecraft";
@@ -239,7 +239,7 @@ export class PostProcessingTask extends AbortableTask<void> {
         return mainClass;
     }
 
-    protected async isInvalid(outputs: Required<PostProcessor>['outputs']) {
+    protected async isInvalid(outputs: Required<PostProcessor>["outputs"]) {
         for (const [file, expect] of Object.entries(outputs)) {
             let sha1 = await checksum(file, "sha1").catch((e) => "");
             let expected = expect.replace(/'/g, "");
@@ -265,7 +265,7 @@ export class PostProcessingTask extends AbortableTask<void> {
             throw e;
         }
         if (proc.outputs && await this.isInvalid(proc.outputs)) {
-            throw new PostProcessFailedError(proc.jar, [java, ...cmd], `Validate the output of process failed!`);
+            throw new PostProcessFailedError(proc.jar, [java, ...cmd], "Validate the output of process failed!");
         }
     }
 

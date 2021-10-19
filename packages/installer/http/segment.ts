@@ -8,7 +8,7 @@ export interface SegmentPolicy {
 }
 
 export function isSegmentPolicy(segmentOptions?: SegmentPolicy | DefaultSegmentPolicyOptions): segmentOptions is SegmentPolicy {
-    if (!segmentOptions) return false;
+    if (!segmentOptions) { return false; }
     return "computeSegments" in segmentOptions && typeof segmentOptions.computeSegments === "function"
 }
 
@@ -44,7 +44,7 @@ export class DefaultSegmentPolicy implements SegmentPolicy {
                 if (!last) {
                     segments.push({ start: 0, end: remain - 1 });
                 } else {
-                    last.end = last.end! + remain;
+                    last.end = last.end + remain;
                 }
                 cur = total;
             }
