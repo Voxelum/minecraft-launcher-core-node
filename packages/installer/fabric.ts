@@ -1,5 +1,5 @@
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
-import { fetchJson, getLastModified, Timestamped } from './http/fetch';
+import { fetchJson, getLastModified, Timestamped } from "./http/fetch";
 import { ensureFile, InstallOptions, writeFile } from "./utils";
 
 export const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";

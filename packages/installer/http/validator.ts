@@ -1,6 +1,6 @@
-import { checksum } from '@xmcl/core';
-import { open } from '@xmcl/unzip';
-import { createReadStream } from 'fs';
+import { checksum } from "@xmcl/core";
+import { open } from "@xmcl/unzip";
+import { createReadStream } from "fs";
 
 export interface Validator {
     /**
@@ -28,12 +28,12 @@ export class ChecksumValidator implements Validator {
 }
 
 export function isValidator(options?: Validator | ChecksumValidatorOptions): options is Validator {
-    if (!options) return false;
+    if (!options) { return false; }
     return "validate" in options && typeof options.validate === "function"
 }
 
 export function resolveValidator(options?: ChecksumValidatorOptions | Validator): Validator {
-    if (isValidator(options)) return options;
+    if (isValidator(options)) { return options; }
     if (options) {
         return new ChecksumValidator({ hash: options.hash, algorithm: options.algorithm })
     }

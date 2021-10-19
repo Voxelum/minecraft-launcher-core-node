@@ -21,13 +21,12 @@ export class MinecraftLanDiscover extends EventEmitter {
         sock.on("listening", () => {
             const address = sock.address()
             sock.addMembership(LAN_MULTICAST_ADDR, address.address)
-            sock.setMulticastTTL(128); 
+            sock.setMulticastTTL(128);
             sock.setBroadcast(true)
         })
 
 
         sock.on("message", (buf, remote) => {
-            console.log(`message ${buf.toString()}`)
             const content = buf.toString("utf-8")
 
             const motdRegx = /\[MOTD\](.+)\[\/MOTD\]/g

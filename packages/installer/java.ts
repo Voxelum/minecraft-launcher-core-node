@@ -3,9 +3,9 @@ import { Task, task } from "@xmcl/task";
 import { exec } from "child_process";
 import { EOL, platform, tmpdir } from "os";
 import { basename, join, resolve } from "path";
-import { DownloadTask } from './downloadTask';
-import { DownloadBaseOptions } from './http/download';
-import { fetchJson } from './http/fetch';
+import { DownloadTask } from "./downloadTask";
+import { DownloadBaseOptions } from "./http/download";
+import { fetchJson } from "./http/fetch";
 import { ensureDir, missing, unlink } from "./utils";
 
 export interface JavaInfo {

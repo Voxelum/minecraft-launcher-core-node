@@ -5,11 +5,11 @@ import { filterEntries, open, openEntryReadStream, readEntry } from "@xmcl/unzip
 import { createWriteStream } from "fs";
 import { dirname, join, posix, sep } from "path";
 import { Entry, ZipFile } from "yauzl";
-import { DownloadTask } from './downloadTask';
-import { withAgents } from './http/agents';
+import { DownloadTask } from "./downloadTask";
+import { withAgents } from "./http/agents";
 import { getAndParseIfUpdate, Timestamped } from "./http/fetch";
 import { joinUrl } from "./http/utils";
-import { ZipValidator } from './http/validator';
+import { ZipValidator } from "./http/validator";
 import { LibraryOptions, resolveLibraryDownloadUrls } from "./minecraft";
 import { installByProfileTask, InstallProfile, InstallProfileOption } from "./profile";
 import { ensureFile, InstallOptions as InstallOptionsBase, normalizeArray, pipeline, writeFile } from "./utils";

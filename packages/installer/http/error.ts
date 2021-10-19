@@ -1,10 +1,10 @@
-import { ResourceMetadata } from './metadata';
-import { Segment } from './segment';
+import { ResourceMetadata } from "./metadata";
+import { Segment } from "./segment";
 
-export type DownloadFailedReason = 'DownloadAborted' | 'DownloadValidationFailed' | 'GeneralDownloadException' | NetworkErrorType
+export type DownloadFailedReason = "DownloadAborted" | "DownloadValidationFailed" | "GeneralDownloadException" | NetworkErrorType
 
 /**
- * Download 
+ * Download
  */
 export class DownloadError extends Error {
     constructor(
@@ -22,10 +22,10 @@ export class DownloadError extends Error {
 export type NetworkErrorType = "ConnectionReset" | "ConnectionTimeout" | "OperationCancelled" | "ProtocolError"
 
 export function resolveNetworkErrorType(e: any): NetworkErrorType | undefined {
-    if (e.code === "ECONNRESET") return "ConnectionReset";
-    if (e.code === "ETIMEDOUT") return "ConnectionTimeout";
-    if (e.code === "EPROTO") return "ProtocolError";
-    if (e.code === "ECANCELED") return "OperationCancelled";
+    if (e.code === "ECONNRESET") { return "ConnectionReset"; }
+    if (e.code === "ETIMEDOUT") { return "ConnectionTimeout"; }
+    if (e.code === "EPROTO") { return "ProtocolError"; }
+    if (e.code === "ECANCELED") { return "OperationCancelled"; }
 }
 
 /**

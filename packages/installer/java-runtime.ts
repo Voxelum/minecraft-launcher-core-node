@@ -2,10 +2,10 @@ import { getPlatform, Platform } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { join } from "path";
 import { URL } from "url";
-import { DownloadTask } from './downloadTask';
-import { Agents, withAgents } from './http/agents';
-import { DownloadBaseOptions, DownloadOptions } from './http/download';
-import { fetchJson } from './http/fetch';
+import { DownloadTask } from "./downloadTask";
+import { Agents, withAgents } from "./http/agents";
+import { DownloadBaseOptions, DownloadOptions } from "./http/download";
+import { fetchJson } from "./http/fetch";
 import { ensureDir, link, ParallelTaskOptions } from "./utils";
 /**
  * Contain all java runtimes basic info
@@ -249,7 +249,7 @@ export function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Tas
     return task("installJavaRuntime", async function () {
         const destination = options.destination;
         const manifest = options.manifest;
-        const decompressFunction = typeof options.lzma === 'function' ? options.lzma : undefined
+        const decompressFunction = typeof options.lzma === "function" ? options.lzma : undefined
         const downloadLzma = !!options.lzma
         class DownloadAndDecompressTask extends DownloadTask {
             constructor(options: DownloadOptions) {
@@ -285,8 +285,8 @@ export function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Tas
                     agents: options.agents,
                 }
                 return isLzma && decompressFunction
-                    ? new DownloadAndDecompressTask(downloadOptions).setName('download')
-                    : new DownloadTask(downloadOptions).setName('download');
+                    ? new DownloadAndDecompressTask(downloadOptions).setName("download")
+                    : new DownloadTask(downloadOptions).setName("download");
             }), {
             throwErrorImmediately: options.throwErrorImmediately,
             getErrorMessage: (e) => `Fail to install java runtime ${manifest.version.name} on ${manifest.target}`,
