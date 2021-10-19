@@ -1,6 +1,7 @@
 import { deserializeSync, serializeSync } from "@xmcl/nbt";
 import ByteBuffer from "bytebuffer";
 import long from "long";
+import type { PacketRegistry } from './channel';
 
 export interface SlotData {
     blockId: number;
@@ -13,8 +14,8 @@ export interface SlotData {
  * The packet encode/decode algorithm
  */
 export interface Coder<T> {
-    readonly encode: (buffer: ByteBuffer, data: T, context?: any) => void;
-    readonly decode: (buffer: ByteBuffer, context?: any) => T;
+    readonly encode: (buffer: ByteBuffer, data: T, context?: PacketRegistry) => void;
+    readonly decode: (buffer: ByteBuffer, context?: PacketRegistry) => T;
 }
 
 export const VarInt: Coder<number> = {
