@@ -1,11 +1,6 @@
 jest.mock("yauzl");
 
-import { createReadStream, existsSync } from "fs";
-import { join } from "path";
 import { open } from "./index";
-
-const mockRoot = join(__dirname, "..", "..", "mock");
-const tempRoot = join(__dirname, "..", "..", "temp");
 
 describe("Unzip", () => {
     describe("#open", () => {

@@ -2,14 +2,15 @@ import { join, normalize } from "path";
 import { getPlatform } from "./platform";
 import { LibraryInfo, ResolvedNative, Version } from "./version";
 
-const root = normalize(join(__dirname, "..", "..", "mock"));
-const tempRoot = normalize(join(__dirname, "..", "..", "temp"));
+declare const tempDir: string
+declare const mockDir: string
+
 
 describe("Version", () => {
     describe("#resolveFromPath", () => {
         test("should be able to infer from path", () => {
-            let path = "org/lwjgl/lwjgl-stb/3.2.1/lwjgl-stb-3.2.1.jar";
-            let info = LibraryInfo.resolveFromPath(path)
+            const path = "org/lwjgl/lwjgl-stb/3.2.1/lwjgl-stb-3.2.1.jar";
+            const info = LibraryInfo.resolveFromPath(path)
             expect(info.path).toEqual(path);
             expect(info.groupId).toEqual("org.lwjgl");
             expect(info.artifactId).toEqual("lwjgl-stb");
@@ -19,8 +20,8 @@ describe("Version", () => {
             expect(info.type).toEqual("jar");
         });
         test("should be able to infer from path with classifier", () => {
-            let path = "org/lwjgl/lwjgl-stb/3.2.1/lwjgl-stb-3.2.1-javadoc.jar";
-            let info = LibraryInfo.resolveFromPath(path)
+            const path = "org/lwjgl/lwjgl-stb/3.2.1/lwjgl-stb-3.2.1-javadoc.jar";
+            const info = LibraryInfo.resolveFromPath(path)
             expect(info.path).toEqual(path);
             expect(info.groupId).toEqual("org.lwjgl");
             expect(info.artifactId).toEqual("lwjgl-stb");
@@ -30,8 +31,8 @@ describe("Version", () => {
             expect(info.type).toEqual("jar");
         });
         test("should be able to infer from path with other file type", () => {
-            let path = "org/lwjgl/lwjgl-stb/3.2.1/lwjgl-stb-3.2.1-javadoc.zip";
-            let info = LibraryInfo.resolveFromPath(path)
+            const path = "org/lwjgl/lwjgl-stb/3.2.1/lwjgl-stb-3.2.1-javadoc.zip";
+            const info = LibraryInfo.resolveFromPath(path)
             expect(info.path).toEqual(path);
             expect(info.groupId).toEqual("org.lwjgl");
             expect(info.artifactId).toEqual("lwjgl-stb");
@@ -41,8 +42,8 @@ describe("Version", () => {
             expect(info.type).toEqual("zip");
         });
         test("should be able to infer from path with other file type and snapshot", () => {
-            let path = "org/lwjgl/lwjgl-stb/3.2.1/3.2.1-javadoc.zip";
-            let info = LibraryInfo.resolveFromPath(path)
+            const path = "org/lwjgl/lwjgl-stb/3.2.1/3.2.1-javadoc.zip";
+            const info = LibraryInfo.resolveFromPath(path)
             expect(info.path).toEqual(path);
             expect(info.groupId).toEqual("org.lwjgl");
             expect(info.artifactId).toEqual("lwjgl-stb");
@@ -319,7 +320,7 @@ describe("Version", () => {
 
     describe("#parse", () => {
         test("should throw if no main class", async () => {
-            await expect(Version.parse(root, "no-main-class"))
+            await expect(Version.parse(mockDir, "no-main-class"))
                 .rejects
                 .toEqual(Object.assign(new Error(), {
                     error: "BadVersionJson",
@@ -328,7 +329,7 @@ describe("Version", () => {
                 }));
         });
         test("should throw if no asset json", async () => {
-            await expect(Version.parse(root, "no-assets-json"))
+            await expect(Version.parse(mockDir, "no-assets-json"))
                 .rejects
                 .toEqual(Object.assign(new Error(), {
                     error: "BadVersionJson",
@@ -337,7 +338,7 @@ describe("Version", () => {
                 }));
         });
         test("should throw if no downloads", async () => {
-            await expect(Version.parse(root, "no-downloads"))
+            await expect(Version.parse(mockDir, "no-downloads"))
                 .rejects
                 .toEqual(Object.assign(new Error(), {
                     error: "BadVersionJson",
@@ -346,40 +347,40 @@ describe("Version", () => {
                 }));
         });
         test("should be able to parse 1.17.10 version", async () => {
-            const version = await Version.parse(root, "1.7.10");
+            const version = await Version.parse(mockDir, "1.7.10");
             expect(version.id).toEqual("1.7.10");
             expect(version.mainClass).toBeTruthy();
             expect(version.libraries).toBeInstanceOf(Array);
             expect(version.arguments).toBeTruthy();
             expect(version.arguments.game).toBeInstanceOf(Array);
             expect(version.arguments.jvm).toBeInstanceOf(Array);
-            expect(version.minecraftDirectory).toEqual(root);
+            expect(version.minecraftDirectory).toEqual(mockDir);
             expect(version.minecraftVersion).toEqual("1.7.10");
             expect(version.inheritances).toEqual(["1.7.10"]);
         });
         test("should be able to throw if version not existed", async () => {
-            await expect(Version.parse(root, "1.12"))
+            await expect(Version.parse(mockDir, "1.12"))
                 .rejects
                 .toMatchObject({
                     error: "MissingVersionJson",
                     version: "1.12",
-                    path: join(root, "versions", "1.12", "1.12.json")
+                    path: join(mockDir, "versions", "1.12", "1.12.json")
                 });
         });
         test("should be able to parse extended profile for forge", async () => {
-            const version = await Version.parse(root, "1.7.10-Forge10.13.3.1400-1.7.10");
+            const version = await Version.parse(mockDir, "1.7.10-Forge10.13.3.1400-1.7.10");
             expect(version.id).toEqual("1.7.10-Forge10.13.3.1400-1.7.10");
             expect(version.mainClass).toEqual("net.minecraft.launchwrapper.Launch");
             expect(version.libraries).toBeInstanceOf(Array);
             expect(version.arguments).toBeTruthy();
             expect(version.arguments.game).toBeInstanceOf(Array);
             expect(version.arguments.jvm).toBeInstanceOf(Array);
-            expect(version.minecraftDirectory).toEqual(root);
+            expect(version.minecraftDirectory).toEqual(mockDir);
             expect(version.minecraftVersion).toEqual("1.7.10");
             expect(version.inheritances).toEqual(["1.7.10-Forge10.13.3.1400-1.7.10", "1.7.10"]);
         });
-        it("should be able to parse extends version for forge & liteloader", async function () {
-            const version = await Version.parse(tempRoot, "1.12.2-forge-14.23.5.2852-Liteloader1.12.2-1.12.2-SNAPSHOT");
+        it.skip("should be able to parse extends version for forge & liteloader", async function () {
+            const version = await Version.parse(tempDir, "1.12.2-forge-14.23.5.2852-Liteloader1.12.2-1.12.2-SNAPSHOT");
             expect(version).toBeTruthy();
             expect(version.pathChain).toBeInstanceOf(Array);
             expect(version.pathChain).toHaveLength(3);
