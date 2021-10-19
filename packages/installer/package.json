@@ -12,11 +12,11 @@
     "module": "./dist/index.esm.js"
   },
   "dependencies": {
+    "@xmcl/asm": "^0.1.0",
     "@xmcl/core": "^2.6.2",
     "@xmcl/forge-site-parser": "^2.0.8",
     "@xmcl/task": "^3.0.0",
     "@xmcl/unzip": "^2.0.0",
-    "@xmcl/asm": "^0.1.0",
     "yauzl": "^2.10.0"
   },
   "repository": {
@@ -36,5 +36,9 @@
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
-  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
+  "devDependencies": {
+    "nock": "^12.0.3",
+    "@types/yauzl": "^2.9.2"
+  }
 }

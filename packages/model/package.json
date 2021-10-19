@@ -12,6 +12,7 @@
     "module": "./dist/index.esm.js"
   },
   "peerDependencies": {
+    "@types/three": "^0.127.0",
     "three": "^0.127.0",
     "@xmcl/resourcepack": "^1.0.16"
   },

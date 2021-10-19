@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "form-data": "^3.0.0",
-    "uuid": "^7.0.2"
+    "uuid": "^8.3.2"
   },
   "sideEffects": false,
   "repository": {
@@ -35,5 +35,9 @@
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
-  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
+  "devDependencies": {
+    "nock": "^12.0.3",
+    "@types/uuid": "^8.3.1"
+  }
 }
