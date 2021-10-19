@@ -46,10 +46,10 @@ export class Channel extends EventEmitter {
         super();
         const self = this;
 
-        this.outbound = new PacketEncoder(this);
-        this.outbound.pipe(new PacketOutbound()).pipe(this.connection);
+        this.outbound = new MinecraftPacketEncoder(this);
+        this.outbound.pipe(new MinecraftPacketOutbound()).pipe(this.connection);
 
-        this.inbound = new PacketInBound();
+        this.inbound = new MinecraftPacketInBound();
         this.inbound
             .pipe(new PacketDecompress({
                 get enableCompression() {
@@ -59,7 +59,7 @@ export class Channel extends EventEmitter {
                     return self.compressionThreshold;
                 },
             }))
-            .pipe(new PacketDecode(this))
+            .pipe(new MinecraftPacketDecoder(this))
             .pipe(new PacketEmitter(this));
 
         this.connection.pipe(this.inbound);
@@ -166,19 +166,20 @@ export interface Channel extends EventEmitter {
     once<T>(channel: string, listener: (event: T) => void): this;
 }
 
-class PacketInBound extends Transform {
+
+export abstract class PacketInBound extends Transform {
     private buffer: ByteBuffer = ByteBuffer.allocate(1024);
 
+    protected abstract readPacketLength(bb: ByteBuffer): number
+
     _transform(chunk: Buffer, encoding: string, callback: TransformCallback) {
-        // console.log("INBOUND");
-        // console.log(chunk);
         this.buffer.ensureCapacity(chunk.length + this.buffer.offset);
         this.buffer.append(chunk);
         this.buffer.flip();
 
         let unresolvedBytes;
         do {
-            const packetLength = this.buffer.readVarint32();
+            const packetLength = this.readPacketLength(this.buffer);
             unresolvedBytes = this.buffer.remaining();
 
             if (packetLength <= unresolvedBytes) {
@@ -198,6 +199,12 @@ class PacketInBound extends Transform {
             }
         } while (unresolvedBytes > 0);
         callback();
+    }
+}
+
+class MinecraftPacketInBound extends PacketInBound {
+    protected readPacketLength(bb: ByteBuffer): number {
+        return bb.readVarint32();
     }
 }
 
@@ -231,14 +238,21 @@ class PacketDecompress extends Transform {
     }
 }
 
-class PacketDecode extends Transform {
-    constructor(private client: Channel) {
+export interface PacketRegistry {
+    findCoderById(packetId: number, side: "client" | "server"): Coder<any>
+    getPacketId(message: any, side: "client" | "server"): number
+}
+
+export abstract class PacketDecoder extends Transform {
+    constructor(private client: PacketRegistry) {
         super({ writableObjectMode: true, readableObjectMode: true });
     }
 
+    abstract readPacketId(message: ByteBuffer): number
+
     _transform(chunk: Buffer, encoding: string, callback: TransformCallback) {
         const message = ByteBuffer.wrap(chunk);
-        const packetId = message.readVarint32();
+        const packetId = this.readPacketId(message);
         const packetContent = message.slice();
         const coder = this.client.findCoderById(packetId, "server");
         if (coder) {
@@ -250,7 +264,13 @@ class PacketDecode extends Transform {
     }
 }
 
-class PacketEmitter extends Writable {
+class MinecraftPacketDecoder extends PacketDecoder {
+    readPacketId(message: ByteBuffer): number {
+        return message.readVarint32();
+    }
+}
+
+export class PacketEmitter extends Writable {
     constructor(private eventBus: EventEmitter) {
         super({ objectMode: true });
     }
@@ -261,18 +281,20 @@ class PacketEmitter extends Writable {
     }
 }
 
-class PacketEncoder extends Transform {
-    constructor(private client: Channel) {
+export abstract class PacketEncoder extends Transform {
+    constructor(private client: PacketRegistry) {
         super({ writableObjectMode: true, readableObjectMode: true });
     }
+
+    protected abstract writePacketId(bb: ByteBuffer, id: number): void
 
     _transform(message: any, encoding: string, callback: TransformCallback) {
         const id = this.client.getPacketId(message, "client");
         const coder = this.client.findCoderById(id, "client");
         if (coder && coder.encode) {
             const buf = new ByteBuffer();
-            buf.writeByte(id);
-            coder.encode(buf, message);
+            this.writePacketId(buf, id);
+            coder.encode(buf, message, this.client);
             buf.flip();
             this.push(buf.buffer.slice(0, buf.limit));
             callback();
@@ -282,19 +304,32 @@ class PacketEncoder extends Transform {
     }
 }
 
-class PacketOutbound extends Transform {
+
+class MinecraftPacketEncoder extends PacketEncoder {
+    protected writePacketId(bb: ByteBuffer, id: number): void {
+        bb.writeByte(id);
+    }
+}
+
+
+export abstract class PacketOutbound extends Transform {
+    protected abstract writePacketLength(bb: ByteBuffer, len: number): void
+
     _transform(packet: Buffer, encoding: string, callback: TransformCallback) {
         const buffer = new ByteBuffer();
 
-        buffer.writeVarint32(packet.length);
+        this.writePacketLength(buffer, packet.length);
         buffer.append(packet);
         buffer.flip();
 
-        // console.log("OUTBOUND");
-        // console.log(buffer.buffer.slice(0, buffer.limit));
-
         this.push(buffer.buffer.slice(0, buffer.limit));
         callback();
+    }
+}
+
+class MinecraftPacketOutbound extends PacketOutbound {
+    protected writePacketLength(bb: ByteBuffer, len: number): void {
+        bb.writeVarint32(len);
     }
 }
 
