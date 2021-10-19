@@ -32,5 +32,8 @@
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
-  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
+  "devDependencies": {
+    "nock": "^12.0.3"
+  }
 }

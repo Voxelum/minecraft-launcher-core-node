@@ -28,11 +28,15 @@
   "dependencies": {
     "bytebuffer": "^5.0.1",
     "file-type": "^12.4.2",
-    "long": "~3",
-    "pako": "^1.0.10"
+    "long": "~3"
   },
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
-  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
+  "devDependencies": {
+    "@types/bytebuffer": "^5.0.42",
+    "@types/pako": "^1.0.1",
+    "pako": "^1.0.10"
+  }
 }

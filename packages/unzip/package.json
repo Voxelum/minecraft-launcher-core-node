@@ -12,9 +12,11 @@
     "access": "public"
   },
   "peerDependencies": {
-    "yauzl": "^2.10.0"
+    "yauzl": "^2.10.0",
+    "@types/yauzl": "^2.9.2"
   },
   "devDependencies": {
+    "@types/uuid": "^8.3.1",
     "yauzl": "^2.10.0"
   },
   "repository": {
@@ -35,5 +37,7 @@
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
-  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
+  "dependencies": {
+  }
 }

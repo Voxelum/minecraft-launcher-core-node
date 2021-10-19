@@ -20,11 +20,11 @@ jobs:
       uses: actions/setup-node@v2-beta
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Use npm 7
-      run: npm install -g npm@7
+    - name: Use pnpm
+      run: curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
     - name: Install
       run: |
-        npm ci
+        pnpm install
       env:
         CI: true
     - name: Build Github Pages
