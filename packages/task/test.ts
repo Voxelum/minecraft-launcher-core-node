@@ -1,4 +1,4 @@
-import { TaskBase, TaskState, Task, task, TaskContext, TaskLooped, CancelledError } from "./index";
+import { BaseTask, TaskState, Task, task, TaskContext, CancelledError } from "./index";
 
 function wait(time: number) {
     return new Promise<void>((resolve, reject) => {
@@ -8,62 +8,56 @@ function wait(time: number) {
     });
 }
 
-class TimeoutTask extends TaskLooped<void> {
+class TimeoutTask extends BaseTask<void> {
     private remaining: number;
     private handle!: NodeJS.Timeout;
 
-    constructor(_total: number) {
-        super();
-        this._total = _total;
-        this.remaining = _total;
-    }
-    protected async process(): Promise<[boolean, void]> {
+    protected async runTask(): Promise<void> {
         if (this.remaining > 0) {
             return new Promise((resolve, reject) => {
                 this.handle = setInterval(() => {
                     if (this.isCancelled) {
                         clearInterval(this.handle);
-                        reject(new CancelledError(undefined));
+                        reject(new CancelledError());
                     } else if (this.isPaused) {
                         clearInterval(this.handle);
-                        resolve([false, undefined]);
+                        reject();
                     } else if (this.remaining > 0) {
                         this.remaining -= 1;
                         this._progress += 1;
                         this.update(1);
                     } else {
                         clearInterval(this.handle);
-                        resolve([true, undefined]);
+                        resolve();
                     }
                 }, 1000);
             });
-        } else {
-            return [true, undefined];
         }
     }
-    protected validate(): Promise<void> {
-        return Promise.resolve();
-    }
-    protected shouldTolerant(e: any): boolean {
-        return false;
-    }
-    protected async abort(isCancelled: boolean): Promise<void> {
+    protected async cancelTask(): Promise<void> {
         clearInterval(this.handle);
     }
-    protected reset(): void {
-        this.remaining = this.total;
+    protected async pauseTask(): Promise<void> {
+        clearInterval(this.handle);
+    }
+    protected async resumeTask(): Promise<void> {
     }
 
+    constructor(_total: number) {
+        super();
+        this._total = _total;
+        this.remaining = _total;
+    }
 }
 
-class MockTask extends TaskBase<void> {
+class MockTask extends BaseTask<void> {
     public context!: TaskContext
     public _promise!: Promise<void>
     constructor(
-        public run: () => Promise<void> = jest.fn().mockReturnValue(Promise.resolve()),
-        public performCancel: () => Promise<void> = jest.fn().mockReturnValue(Promise.resolve()),
-        public performPause: () => Promise<void> = jest.fn().mockReturnValue(Promise.resolve()),
-        public performResume: () => void = jest.fn(),
+        public runTask: () => Promise<void> = jest.fn().mockReturnValue(Promise.resolve()),
+        public cancelTask: () => Promise<void> = jest.fn().mockReturnValue(Promise.resolve()),
+        public pauseTask: () => Promise<void> = jest.fn().mockReturnValue(Promise.resolve()),
+        public resumeTask: () => Promise<void> = jest.fn().mockReturnValue(Promise.resolve()),
     ) {
         super();
     }
@@ -104,13 +98,13 @@ describe("Task", () => {
             it("should call the run", () => {
                 const task = new MockTask();
                 task.start();
-                expect(task.run).toBeCalledTimes(1);
+                expect(task.runTask).toBeCalledTimes(1);
             });
             it("should not call the run twice", () => {
                 const task = new MockTask();
                 task.start();
                 task.start();
-                expect(task.run).toBeCalledTimes(1);
+                expect(task.runTask).toBeCalledTimes(1);
             });
             it("should set context", () => {
                 const task = new MockTask();
@@ -125,7 +119,7 @@ describe("Task", () => {
             });
         });
         describe("#pause", () => {
-            it("should call performPause and set task to pause state", async () => {
+            it("should call pauseTask and set task to pause state", async () => {
                 const task = new MockTask(() => wait(100));
                 const fn = jest.fn();
                 task.start({
@@ -134,7 +128,7 @@ describe("Task", () => {
                     },
                 });
                 await task.pause();
-                expect(task.performPause).toBeCalledTimes(1);
+                expect(task.pauseTask).toBeCalledTimes(1);
                 expect(task.state).toEqual(TaskState.Paused);
                 expect(task.isPaused).toBe(true);
                 expect(fn).toBeCalledWith(TaskState.Paused);
@@ -142,23 +136,23 @@ describe("Task", () => {
             it("should not pause if the task is not started", async () => {
                 const task = new MockTask();
                 await task.pause();
-                expect(task.performPause).toBeCalledTimes(0);
+                expect(task.pauseTask).toBeCalledTimes(0);
                 expect(task.state).toEqual(TaskState.Idel);
                 expect(task.isPaused).toBe(false);
             });
-            it("should not call performPause twice if task is paused to pause the task", async () => {
+            it("should not call pauseTask twice if task is paused to pause the task", async () => {
                 const task = new MockTask();
                 task.start();
                 await task.pause();
                 await task.pause();
-                expect(task.performPause).toBeCalledTimes(1);
+                expect(task.pauseTask).toBeCalledTimes(1);
             });
         });
         describe("#resume", () => {
             it("should not work if the state is not running", async () => {
                 const task = new MockTask(() => wait(100));
-                task.resume();
-                expect(task.performResume).toBeCalledTimes(0);
+                await task.resume();
+                expect(task.resumeTask).toBeCalledTimes(0);
                 expect(task.state).toBe(TaskState.Idel);
             });
             it("should resume task and set state to running", async () => {
@@ -172,8 +166,8 @@ describe("Task", () => {
                 await task.pause();
                 expect(task.state).toEqual(TaskState.Paused);
                 expect(task.isPaused).toBe(true);
-                task.resume();
-                expect(task.performResume).toBeCalled();
+                await task.resume();
+                expect(task.resumeTask).toBeCalled();
                 expect(task.state).toEqual(TaskState.Running);
                 expect(task.isPaused).toBe(false);
                 expect(task.isRunning).toBe(true);
@@ -186,7 +180,7 @@ describe("Task", () => {
                 await task.cancel();
                 expect(task.isCancelled).toBe(true);
                 expect(task.state).toBe(TaskState.Cancelled);
-                expect(task.performCancel).toBeCalledTimes(1);
+                expect(task.cancelTask).toBeCalledTimes(1);
             });
             it("should call onCancel and set state to cancelled", async () => {
                 const task = new MockTask(() => wait(100));
@@ -199,7 +193,7 @@ describe("Task", () => {
                 await task.cancel();
                 expect(task.isCancelled).toBe(true);
                 expect(task.state).toBe(TaskState.Cancelled);
-                expect(task.performCancel).toBeCalledTimes(1);
+                expect(task.cancelTask).toBeCalledTimes(1);
                 expect(fn).toBeCalledWith(TaskState.Cancelled);
             });
         })
