@@ -146,15 +146,7 @@ function normalizeUrls(url: string, fileHost?: string | string[]): string[] {
     }).concat(url);
 }
 
-export interface FetchJavaRuntimeManifestOptions {
-    /**
-     * The header of the request
-     */
-    headers?: Record<string, any>;
-    /**
-     * The agent of the request
-     */
-    agents?: Agents;
+export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
     /**
      * The alternative download host for the file
      */

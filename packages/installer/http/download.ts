@@ -31,6 +31,10 @@ export interface DownloadBaseOptions {
      * The retry handler
      */
     retryHandler?: RetryHandler | DefaultRetryHandlerOptions;
+    /**
+     * The header of the request
+     */
+    headers?: Record<string, any>;
 }
 
 export interface DownloadOptions extends DownloadBaseOptions {
@@ -99,15 +103,15 @@ export class Download {
         /**
          * The original request url with fallback
          */
-        protected urls: string[],
+        readonly urls: string[],
         /**
          * The headers of the request
          */
-        protected headers: Record<string, any>,
+        readonly headers: Record<string, any>,
         /**
          * The agent of the request
          */
-        protected agents: Agents,
+        readonly agents: Agents,
         /**
          * Where the file download to
          */
