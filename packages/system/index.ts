@@ -36,7 +36,7 @@ export async function openFileSystem(basePath: string | Uint8Array): Promise<Fil
     }
 }
 export function resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem> {
-    if (typeof base === "string" || base instanceof Uint8Array) {
+    if (typeof base === "string" || base instanceof Uint8Array || base instanceof Buffer) {
         return openFileSystem(base);
     } else {
         return Promise.resolve(base);
