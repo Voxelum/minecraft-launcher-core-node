@@ -54,6 +54,9 @@ jobs:
       uses: ./.github/actions/prepare-pr
       env:
         CI: true
+    - name: Update lock file
+      run: |
+        pnpm install --frozen-lockfile=false
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
