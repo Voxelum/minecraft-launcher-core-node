@@ -830,11 +830,6 @@ export interface Platform {
  * Get Minecraft style platform info. (Majorly used to enable/disable native dependencies)
  */
 export declare function getPlatform(): Platform;
-/**
- * The current platform
- * @deprecated Will be removed in next patch
- */
-export declare const currentPlatform: Platform;
 \/\/# sourceMappingURL=platform.d.ts.map`;
 definitions['@xmcl/core/utils.d.ts'] = `/**  * @ignore
  */
@@ -2054,6 +2049,13 @@ declare type InputType = string | Buffer | {
     zip: ZipFile;
     entries: Entry[];
 };
+export interface BadCurseforgeModpackError {
+    error: "BadCurseforgeModpack";
+    /**
+     * What required entry is missing in modpack.
+     */
+    entry: string;
+}
 export interface Manifest {
     manifestType: string;
     manifestVersion: number;
@@ -2084,19 +2086,6 @@ export interface Manifest {
 export interface File {
     projectID: number;
     fileID: number;
-}
-export declare class BadCurseforgeModpackError extends Error {
-    modpack: InputType;
-    /**
-     * What required entry is missing in modpack.
-     */
-    entry: string;
-    error: string;
-    constructor(modpack: InputType, 
-    /**
-     * What required entry is missing in modpack.
-     */
-    entry: string);
 }
 /**
  * Read the mainifest data from modpack
@@ -2337,6 +2326,21 @@ import { DownloadFallbackTask, Timestamped } from "./http";
 import { LibraryOptions } from "./minecraft";
 import { InstallProfileOption } from "./profile";
 import { InstallOptions as InstallOptionsBase } from "./utils";
+export interface BadForgeInstallerJarError {
+    error: "BadForgeInstallerJar";
+    /**
+     * What entry in jar is missing
+     */
+    entry: string;
+}
+export interface BadForgeUniversalJarError {
+    error: "BadForgeUniversalJar";
+    /**
+     * What entry in jar is missing
+     */
+    entry: string;
+}
+export declare type ForgeError = BadForgeInstallerJarError | BadForgeUniversalJarError;
 export interface ForgeVersionList extends Timestamped {
     mcversion: string;
     versions: ForgeVersion[];
@@ -2449,25 +2453,12 @@ export declare function isForgeInstallerEntries(entries: ForgeInstallerEntries):
  * @param forgeVersion Forge version to install
  */
 export declare function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: string): Promise<ForgeInstallerEntries>;
-export declare class BadForgeInstallerJarError extends Error {
-    jarPath: string;
-    /**
-     * What entry in jar is missing
-     */
-    entry?: string | undefined;
-    error: string;
-    constructor(jarPath: string, 
-    /**
-     * What entry in jar is missing
-     */
-    entry?: string | undefined);
-}
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The installed version name.
- * @throws {@link BadForgeInstallerJarError}
+ * @throws {@link ForgeError}
  */
 export declare function installForge(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions): Promise<string>;
 /**
@@ -2475,7 +2466,7 @@ export declare function installForge(version: RequiredVersion, minecraft: Minecr
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
- * @throws {@link BadForgeInstallerJarError}
+ * @throws {@link ForgeError}
  */
 export declare function installForgeTask(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions): Task<string>;
 /**
@@ -2520,8 +2511,7 @@ export declare class ChecksumNotMatchError extends Error {
     readonly expect: string;
     readonly actual: string;
     readonly file: string;
-    readonly source?: string | undefined;
-    constructor(algorithm: string, expect: string, actual: string, file: string, source?: string | undefined);
+    constructor(algorithm: string, expect: string, actual: string, file: string);
 }
 export declare function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:";
 /**
@@ -2819,8 +2809,8 @@ export declare function scanLocalJava(locations: string[]): Promise<JavaInfo[]>;
 export {};
 \/\/# sourceMappingURL=java.d.ts.map`;
 definitions['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
-import { Timestamped } from "./http";
 import { InstallOptions } from "./utils";
+import { Timestamped } from "./http";
 export declare const DEFAULT_VERSION_MANIFEST = "http:\/\/dl.liteloader.com/versions/versions.json";
 /**
  * The liteloader version list. Containing the minecraft version -> liteloader version info mapping.
@@ -2866,18 +2856,13 @@ export interface LiteloaderVersion {
 /**
  * This error is only thrown from liteloader install currently.
  */
-export declare class MissingVersionJsonError extends Error {
+export interface MissingVersionJsonError {
+    error: "MissingVersionJson";
     version: string;
     /**
      * The path of version json
      */
     path: string;
-    constructor(version: string, 
-    /**
-     * The path of version json
-     */
-    path: string);
-    error: "MissingVersionJson";
 }
 /**
  * Get or update the LiteLoader version list.
@@ -3075,6 +3060,21 @@ export interface InstallSideOption {
     side?: "client" | "server";
 }
 export declare type Options = DownloadCommonOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
+export interface PostProcessFailedError {
+    error: "PostProcessFailed";
+    jar: string;
+    commands: string[];
+}
+export interface PostProcessNoMainClassError {
+    error: "PostProcessNoMainClass";
+    jarPath: string;
+}
+export interface PostProcessBadJarError {
+    error: "PostProcessBadJar";
+    jarPath: string;
+    causeBy: Error;
+}
+export declare type PostProcessError = PostProcessBadJarError | PostProcessFailedError | PostProcessNoMainClassError;
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -3196,6 +3196,13 @@ export declare class InstallAssetTask extends DownloadFallbackTask {
 export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOptions): string[];
 \/\/# sourceMappingURL=minecraft.d.ts.map`;
 definitions['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core"; import { InstallOptions } from "./utils";
+export interface BadOptifineJarError {
+    error: "BadOptifineJar";
+    /**
+     * What entry in jar is missing
+     */
+    entry: string;
+}
 export interface InstallOptifineOptions extends InstallOptions {
     /**
      * Use "optifine.OptiFineForgeTweaker" instead of "optifine.OptiFineTweaker" for tweakClass.
@@ -3229,19 +3236,6 @@ export interface InstallOptifineOptions extends InstallOptions {
  * @throws {@link BadOptifineJarError}
  */
 export declare function installOptifine(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Promise<string>;
-export declare class BadOptifineJarError extends Error {
-    optifine: string;
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-    constructor(optifine: string, 
-    /**
-     * What entry in jar is missing
-     */
-    entry: string);
-    error: string;
-}
 /**
  * Install optifine by optifine installer task
  *
@@ -3254,7 +3248,7 @@ export declare class BadOptifineJarError extends Error {
 export declare function installOptifineTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): import("@xmcl/task").TaskRoutine<string>;
 \/\/# sourceMappingURL=optifine.d.ts.map`;
 definitions['@xmcl/installer/profile.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core"; import { TaskLooped } from "@xmcl/task";
-import { InstallSideOption, LibraryOptions } from "./minecraft";
+import { LibraryOptions, InstallSideOption } from "./minecraft";
 export interface PostProcessor {
     /**
      * The executable jar path
@@ -3364,23 +3358,6 @@ export declare function installByProfile(installProfile: InstallProfile, minecra
  * @param options The options to install
  */
 export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): import("@xmcl/task").TaskRoutine<void>;
-export declare class PostProcessBadJarError extends Error {
-    jarPath: string;
-    causeBy: Error;
-    constructor(jarPath: string, causeBy: Error);
-    error: string;
-}
-export declare class PostProcessNoMainClassError extends Error {
-    jarPath: string;
-    constructor(jarPath: string);
-    error: string;
-}
-export declare class PostProcessFailedError extends Error {
-    jarPath: string;
-    commands: string[];
-    constructor(jarPath: string, commands: string[], message: string);
-    error: string;
-}
 /**
  * Post process the post processors from \`InstallProfile\`.
  *
@@ -3440,6 +3417,7 @@ export declare function missing(target: string): Promise<boolean>;
 export declare function ensureDir(target: string): Promise<void>;
 export declare function ensureFile(target: string): Promise<void>;
 export declare function normalizeArray<T>(arr?: T | T[]): T[];
+export declare function errorFrom<T>(error: T, message?: string): T & Error;
 export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
 /**
  * Shared install options
@@ -3459,7 +3437,6 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
-export declare function errorToString(e: any): any;
 \/\/# sourceMappingURL=utils.d.ts.map`;
 definitions['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system"; declare type Person = {
     /**
@@ -6050,12 +6027,11 @@ export interface RegionDataFrame {
 }
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
-definitions['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`assert.ok()\`. */
+definitions['assert.d.ts'] = `declare module 'assert' {
+    /** An alias of \`assert.ok()\`. */
     function assert(value: any, message?: string | Error): asserts value;
     namespace assert {
-        class AssertionError implements Error {
-            name: string;
-            message: string;
+        class AssertionError extends Error {
             actual: any;
             expected: any;
             operator: string;
@@ -6064,15 +6040,16 @@ definitions['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`as
 
             constructor(options?: {
                 /** If provided, the error message is set to this value. */
-                message?: string;
+                message?: string | undefined;
                 /** The \`actual\` property on the error instance. */
                 actual?: any;
                 /** The \`expected\` property on the error instance. */
                 expected?: any;
                 /** The \`operator\` property on the error instance. */
-                operator?: string;
+                operator?: string | undefined;
                 /** If provided, the generated stack trace omits frames before this function. */
-                stackStartFn?: Function;
+                \/\/ tslint:disable-next-line:ban-types
+                stackStartFn?: Function | undefined;
             });
         }
 
@@ -6103,6 +6080,7 @@ definitions['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`as
             expected: any,
             message?: string | Error,
             operator?: string,
+            \/\/ tslint:disable-next-line:ban-types
             stackStartFn?: Function,
         ): never;
         function ok(value: any, message?: string | Error): asserts value;
@@ -6122,7 +6100,7 @@ definitions['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`as
         function throws(block: () => any, message?: string | Error): void;
         function throws(block: () => any, error: AssertPredicate, message?: string | Error): void;
         function doesNotThrow(block: () => any, message?: string | Error): void;
-        function doesNotThrow(block: () => any, error: RegExp | Function, message?: string | Error): void;
+        function doesNotThrow(block: () => any, error: AssertPredicate, message?: string | Error): void;
 
         function ifError(value: any): asserts value is null | undefined;
 
@@ -6135,7 +6113,7 @@ definitions['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`as
         function doesNotReject(block: (() => Promise<any>) | Promise<any>, message?: string | Error): Promise<void>;
         function doesNotReject(
             block: (() => Promise<any>) | Promise<any>,
-            error: RegExp | Function,
+            error: AssertPredicate,
             message?: string | Error,
         ): Promise<void>;
 
@@ -6174,9 +6152,10 @@ definitions['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`as
     export = assert;
 }
 `;
-definitions['async_hooks.d.ts'] = `/**  * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
+definitions['async_hooks.d.ts'] = `/**
+ * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
  */
-declare module "async_hooks" {
+declare module 'async_hooks' {
     /**
      * Returns the asyncId of the current execution context.
      */
@@ -6260,18 +6239,18 @@ declare module "async_hooks" {
     interface AsyncResourceOptions {
       /**
        * The ID of the execution context that created this async event.
-       * Default: \`executionAsyncId()\`
+       * @default executionAsyncId()
        */
-      triggerAsyncId?: number;
+      triggerAsyncId?: number | undefined;
 
       /**
        * Disables automatic \`emitDestroy\` when the object is garbage collected.
        * This usually does not need to be set (even if \`emitDestroy\` is called
        * manually), unless the resource's \`asyncId\` is retrieved and the
        * sensitive API's \`emitDestroy\` is called with it.
-       * Default: \`false\`
+       * @default false
        */
-      requireManualDestroy?: boolean;
+      requireManualDestroy?: boolean | undefined;
     }
 
     /**
@@ -6319,7 +6298,7 @@ declare module "async_hooks" {
         /**
          * Call AsyncHooks destroy callbacks.
          */
-        emitDestroy(): void;
+        emitDestroy(): this;
 
         /**
          * @return the unique ID assigned to this AsyncResource instance.
@@ -6400,26 +6379,8 @@ declare module "async_hooks" {
     }
 }
 `;
-definitions['base.d.ts'] = `\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7. 
-\/\/ NOTE: TypeScript version-specific augmentations can be found in the following paths:
-\/\/          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
-\/\/          - ~/index.d.ts        - Definitions specific to TypeScript 2.1
-\/\/          - ~/ts3.7/base.d.ts   - Definitions specific to TypeScript 3.7
-\/\/          - ~/ts3.7/index.d.ts  - Definitions specific to TypeScript 3.7 with assert pulled in
-
-\/\/ Reference required types from the default lib:
-\/\// <reference lib="es2018" />
-\/\// <reference lib="esnext.asynciterable" />
-\/\// <reference lib="esnext.intl" />
-\/\// <reference lib="esnext.bigint" />
-
-\/\/ Base definitions for all NodeJS modules that are not specific to any version of TypeScript:
-\/\// <reference path="ts3.6/base.d.ts" />
-
-\/\/ TypeScript 3.7-specific augmentations:
-\/\// <reference path="assert.d.ts" />
-`;
-definitions['buffer.d.ts'] = `declare module "buffer" {     export const INSPECT_MAX_BYTES: number;
+definitions['buffer.d.ts'] = `declare module 'buffer' {
+    export const INSPECT_MAX_BYTES: number;
     export const kMaxLength: number;
     export const kStringMaxLength: number;
     export const constants: {
@@ -6441,10 +6402,11 @@ definitions['buffer.d.ts'] = `declare module "buffer" {     export const INSPECT
     export { BuffType as Buffer };
 }
 `;
-definitions['child_process.d.ts'] = `declare module "child_process" {     import { BaseEncodingOptions } from 'fs';
-    import * as events from "events";
-    import * as net from "net";
-    import { Writable, Readable, Stream, Pipe } from "stream";
+definitions['child_process.d.ts'] = `declare module 'child_process' {
+    import { BaseEncodingOptions } from 'fs';
+    import * as events from 'events';
+    import * as net from 'net';
+    import { Writable, Readable, Stream, Pipe } from 'stream';
 
     type Serializable = string | object | number | boolean;
     type SendHandle = net.Socket | net.Server;
@@ -6453,7 +6415,7 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
         stdin: Writable | null;
         stdout: Readable | null;
         stderr: Readable | null;
-        readonly channel?: Pipe | null;
+        readonly channel?: Pipe | null | undefined;
         readonly stdio: [
             Writable | null, \/\/ stdin
             Readable | null, \/\/ stdout
@@ -6486,42 +6448,42 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
          */
 
         addListener(event: string, listener: (...args: any[]) => void): this;
-        addListener(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        addListener(event: "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
         addListener(event: "disconnect", listener: () => void): this;
         addListener(event: "error", listener: (err: Error) => void): this;
         addListener(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
         addListener(event: "message", listener: (message: Serializable, sendHandle: SendHandle) => void): this;
 
         emit(event: string | symbol, ...args: any[]): boolean;
-        emit(event: "close", code: number, signal: NodeJS.Signals): boolean;
+        emit(event: "close", code: number | null, signal: NodeJS.Signals | null): boolean;
         emit(event: "disconnect"): boolean;
         emit(event: "error", err: Error): boolean;
         emit(event: "exit", code: number | null, signal: NodeJS.Signals | null): boolean;
         emit(event: "message", message: Serializable, sendHandle: SendHandle): boolean;
 
         on(event: string, listener: (...args: any[]) => void): this;
-        on(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        on(event: "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
         on(event: "disconnect", listener: () => void): this;
         on(event: "error", listener: (err: Error) => void): this;
         on(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
         on(event: "message", listener: (message: Serializable, sendHandle: SendHandle) => void): this;
 
         once(event: string, listener: (...args: any[]) => void): this;
-        once(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        once(event: "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
         once(event: "disconnect", listener: () => void): this;
         once(event: "error", listener: (err: Error) => void): this;
         once(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
         once(event: "message", listener: (message: Serializable, sendHandle: SendHandle) => void): this;
 
         prependListener(event: string, listener: (...args: any[]) => void): this;
-        prependListener(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        prependListener(event: "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
         prependListener(event: "disconnect", listener: () => void): this;
         prependListener(event: "error", listener: (err: Error) => void): this;
         prependListener(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
         prependListener(event: "message", listener: (message: Serializable, sendHandle: SendHandle) => void): this;
 
         prependOnceListener(event: string, listener: (...args: any[]) => void): this;
-        prependOnceListener(event: "close", listener: (code: number, signal: NodeJS.Signals) => void): this;
+        prependOnceListener(event: "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
         prependOnceListener(event: "disconnect", listener: () => void): this;
         prependOnceListener(event: "error", listener: (err: Error) => void): this;
         prependOnceListener(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
@@ -6561,7 +6523,7 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
     }
 
     interface MessageOptions {
-        keepOpen?: boolean;
+        keepOpen?: boolean | undefined;
     }
 
     type StdioOptions = "pipe" | "ignore" | "inherit" | Array<("pipe" | "ipc" | "ignore" | "inherit" | Stream | number | null | undefined)>;
@@ -6573,40 +6535,40 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
          * Specify the kind of serialization used for sending messages between processes.
          * @default 'json'
          */
-        serialization?: SerializationType;
+        serialization?: SerializationType | undefined;
     }
 
     interface ProcessEnvOptions {
-        uid?: number;
-        gid?: number;
-        cwd?: string;
-        env?: NodeJS.ProcessEnv;
+        uid?: number | undefined;
+        gid?: number | undefined;
+        cwd?: string | undefined;
+        env?: NodeJS.ProcessEnv | undefined;
     }
 
     interface CommonOptions extends ProcessEnvOptions {
         /**
          * @default true
          */
-        windowsHide?: boolean;
+        windowsHide?: boolean | undefined;
         /**
          * @default 0
          */
-        timeout?: number;
+        timeout?: number | undefined;
     }
 
     interface CommonSpawnOptions extends CommonOptions, MessagingOptions {
-        argv0?: string;
-        stdio?: StdioOptions;
-        shell?: boolean | string;
-        windowsVerbatimArguments?: boolean;
+        argv0?: string | undefined;
+        stdio?: StdioOptions | undefined;
+        shell?: boolean | string | undefined;
+        windowsVerbatimArguments?: boolean | undefined;
     }
 
     interface SpawnOptions extends CommonSpawnOptions {
-        detached?: boolean;
+        detached?: boolean | undefined;
     }
 
     interface SpawnOptionsWithoutStdio extends SpawnOptions {
-        stdio?: 'pipe' | Array<null | undefined | 'pipe'>;
+        stdio?: 'pipe' | Array<null | undefined | 'pipe'> | undefined;
     }
 
     type StdioNull = 'inherit' | 'ignore' | Stream;
@@ -6705,9 +6667,9 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
     function spawn(command: string, args: ReadonlyArray<string>, options: SpawnOptions): ChildProcess;
 
     interface ExecOptions extends CommonOptions {
-        shell?: string;
-        maxBuffer?: number;
-        killSignal?: NodeJS.Signals | number;
+        shell?: string | undefined;
+        maxBuffer?: number | undefined;
+        killSignal?: NodeJS.Signals | number | undefined;
     }
 
     interface ExecOptionsWithStringEncoding extends ExecOptions {
@@ -6719,10 +6681,10 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
     }
 
     interface ExecException extends Error {
-        cmd?: string;
-        killed?: boolean;
-        code?: number;
-        signal?: NodeJS.Signals;
+        cmd?: string | undefined;
+        killed?: boolean | undefined;
+        code?: number | undefined;
+        signal?: NodeJS.Signals | undefined;
     }
 
     \/\/ no \`options\` definitely means stdout/stderr are \`string\`.
@@ -6766,10 +6728,10 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
     }
 
     interface ExecFileOptions extends CommonOptions {
-        maxBuffer?: number;
-        killSignal?: NodeJS.Signals | number;
-        windowsVerbatimArguments?: boolean;
-        shell?: boolean | string;
+        maxBuffer?: number | undefined;
+        killSignal?: NodeJS.Signals | number | undefined;
+        windowsVerbatimArguments?: boolean | undefined;
+        shell?: boolean | string | undefined;
     }
     interface ExecFileOptionsWithStringEncoding extends ExecFileOptions {
         encoding: BufferEncoding;
@@ -6780,6 +6742,7 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
     interface ExecFileOptionsWithOtherEncoding extends ExecFileOptions {
         encoding: BufferEncoding;
     }
+    type ExecFileException = ExecException & NodeJS.ErrnoException;
 
     function execFile(file: string): ChildProcess;
     function execFile(file: string, options: (BaseEncodingOptions & ExecFileOptions) | undefined | null): ChildProcess;
@@ -6787,25 +6750,25 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
     function execFile(file: string, args: ReadonlyArray<string> | undefined | null, options: (BaseEncodingOptions & ExecFileOptions) | undefined | null): ChildProcess;
 
     \/\/ no \`options\` definitely means stdout/stderr are \`string\`.
-    function execFile(file: string, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
-    function execFile(file: string, args: ReadonlyArray<string> | undefined | null, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+    function execFile(file: string, callback: (error: ExecFileException | null, stdout: string, stderr: string) => void): ChildProcess;
+    function execFile(file: string, args: ReadonlyArray<string> | undefined | null, callback: (error: ExecFileException | null, stdout: string, stderr: string) => void): ChildProcess;
 
     \/\/ \`options\` with \`"buffer"\` or \`null\` for \`encoding\` means stdout/stderr are definitely \`Buffer\`.
-    function execFile(file: string, options: ExecFileOptionsWithBufferEncoding, callback: (error: ExecException | null, stdout: Buffer, stderr: Buffer) => void): ChildProcess;
+    function execFile(file: string, options: ExecFileOptionsWithBufferEncoding, callback: (error: ExecFileException | null, stdout: Buffer, stderr: Buffer) => void): ChildProcess;
     function execFile(
         file: string,
         args: ReadonlyArray<string> | undefined | null,
         options: ExecFileOptionsWithBufferEncoding,
-        callback: (error: ExecException | null, stdout: Buffer, stderr: Buffer) => void,
+        callback: (error: ExecFileException | null, stdout: Buffer, stderr: Buffer) => void,
     ): ChildProcess;
 
     \/\/ \`options\` with well known \`encoding\` means stdout/stderr are definitely \`string\`.
-    function execFile(file: string, options: ExecFileOptionsWithStringEncoding, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+    function execFile(file: string, options: ExecFileOptionsWithStringEncoding, callback: (error: ExecFileException | null, stdout: string, stderr: string) => void): ChildProcess;
     function execFile(
         file: string,
         args: ReadonlyArray<string> | undefined | null,
         options: ExecFileOptionsWithStringEncoding,
-        callback: (error: ExecException | null, stdout: string, stderr: string) => void,
+        callback: (error: ExecFileException | null, stdout: string, stderr: string) => void,
     ): ChildProcess;
 
     \/\/ \`options\` with an \`encoding\` whose type is \`string\` means stdout/stderr could either be \`Buffer\` or \`string\`.
@@ -6813,35 +6776,35 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
     function execFile(
         file: string,
         options: ExecFileOptionsWithOtherEncoding,
-        callback: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
+        callback: (error: ExecFileException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
     ): ChildProcess;
     function execFile(
         file: string,
         args: ReadonlyArray<string> | undefined | null,
         options: ExecFileOptionsWithOtherEncoding,
-        callback: (error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
+        callback: (error: ExecFileException | null, stdout: string | Buffer, stderr: string | Buffer) => void,
     ): ChildProcess;
 
     \/\/ \`options\` without an \`encoding\` means stdout/stderr are definitely \`string\`.
-    function execFile(file: string, options: ExecFileOptions, callback: (error: ExecException | null, stdout: string, stderr: string) => void): ChildProcess;
+    function execFile(file: string, options: ExecFileOptions, callback: (error: ExecFileException | null, stdout: string, stderr: string) => void): ChildProcess;
     function execFile(
         file: string,
         args: ReadonlyArray<string> | undefined | null,
         options: ExecFileOptions,
-        callback: (error: ExecException | null, stdout: string, stderr: string) => void
+        callback: (error: ExecFileException | null, stdout: string, stderr: string) => void
     ): ChildProcess;
 
     \/\/ fallback if nothing else matches. Worst case is always \`string | Buffer\`.
     function execFile(
         file: string,
         options: (BaseEncodingOptions & ExecFileOptions) | undefined | null,
-        callback: ((error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void) | undefined | null,
+        callback: ((error: ExecFileException | null, stdout: string | Buffer, stderr: string | Buffer) => void) | undefined | null,
     ): ChildProcess;
     function execFile(
         file: string,
         args: ReadonlyArray<string> | undefined | null,
         options: (BaseEncodingOptions & ExecFileOptions) | undefined | null,
-        callback: ((error: ExecException | null, stdout: string | Buffer, stderr: string | Buffer) => void) | undefined | null,
+        callback: ((error: ExecFileException | null, stdout: string | Buffer, stderr: string | Buffer) => void) | undefined | null,
     ): ChildProcess;
 
     \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
@@ -6869,71 +6832,71 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
     }
 
     interface ForkOptions extends ProcessEnvOptions, MessagingOptions {
-        execPath?: string;
-        execArgv?: string[];
-        silent?: boolean;
-        stdio?: StdioOptions;
-        detached?: boolean;
-        windowsVerbatimArguments?: boolean;
+        execPath?: string | undefined;
+        execArgv?: string[] | undefined;
+        silent?: boolean | undefined;
+        stdio?: StdioOptions | undefined;
+        detached?: boolean | undefined;
+        windowsVerbatimArguments?: boolean | undefined;
     }
     function fork(modulePath: string, options?: ForkOptions): ChildProcess;
     function fork(modulePath: string, args?: ReadonlyArray<string>, options?: ForkOptions): ChildProcess;
 
     interface SpawnSyncOptions extends CommonSpawnOptions {
-        input?: string | NodeJS.ArrayBufferView;
-        killSignal?: NodeJS.Signals | number;
-        maxBuffer?: number;
-        encoding?: BufferEncoding | 'buffer' | null;
+        input?: string | NodeJS.ArrayBufferView | undefined;
+        killSignal?: NodeJS.Signals | number | undefined;
+        maxBuffer?: number | undefined;
+        encoding?: BufferEncoding | 'buffer' | null | undefined;
     }
     interface SpawnSyncOptionsWithStringEncoding extends SpawnSyncOptions {
         encoding: BufferEncoding;
     }
     interface SpawnSyncOptionsWithBufferEncoding extends SpawnSyncOptions {
-        encoding?: 'buffer' | null;
+        encoding?: 'buffer' | null | undefined;
     }
     interface SpawnSyncReturns<T> {
         pid: number;
-        output: string[];
+        output: Array<T | null>;
         stdout: T;
         stderr: T;
         status: number | null;
         signal: NodeJS.Signals | null;
-        error?: Error;
+        error?: Error | undefined;
     }
     function spawnSync(command: string): SpawnSyncReturns<Buffer>;
     function spawnSync(command: string, options?: SpawnSyncOptionsWithStringEncoding): SpawnSyncReturns<string>;
     function spawnSync(command: string, options?: SpawnSyncOptionsWithBufferEncoding): SpawnSyncReturns<Buffer>;
-    function spawnSync(command: string, options?: SpawnSyncOptions): SpawnSyncReturns<Buffer>;
+    function spawnSync(command: string, options?: SpawnSyncOptions): SpawnSyncReturns<string | Buffer>;
     function spawnSync(command: string, args?: ReadonlyArray<string>, options?: SpawnSyncOptionsWithStringEncoding): SpawnSyncReturns<string>;
     function spawnSync(command: string, args?: ReadonlyArray<string>, options?: SpawnSyncOptionsWithBufferEncoding): SpawnSyncReturns<Buffer>;
-    function spawnSync(command: string, args?: ReadonlyArray<string>, options?: SpawnSyncOptions): SpawnSyncReturns<Buffer>;
+    function spawnSync(command: string, args?: ReadonlyArray<string>, options?: SpawnSyncOptions): SpawnSyncReturns<string | Buffer>;
 
     interface ExecSyncOptions extends CommonOptions {
-        input?: string | Uint8Array;
-        stdio?: StdioOptions;
-        shell?: string;
-        killSignal?: NodeJS.Signals | number;
-        maxBuffer?: number;
-        encoding?: BufferEncoding | 'buffer' | null;
+        input?: string | Uint8Array | undefined;
+        stdio?: StdioOptions | undefined;
+        shell?: string | undefined;
+        killSignal?: NodeJS.Signals | number | undefined;
+        maxBuffer?: number | undefined;
+        encoding?: BufferEncoding | 'buffer' | null | undefined;
     }
     interface ExecSyncOptionsWithStringEncoding extends ExecSyncOptions {
         encoding: BufferEncoding;
     }
     interface ExecSyncOptionsWithBufferEncoding extends ExecSyncOptions {
-        encoding?: 'buffer' | null;
+        encoding?: 'buffer' | null | undefined;
     }
     function execSync(command: string): Buffer;
-    function execSync(command: string, options?: ExecSyncOptionsWithStringEncoding): string;
-    function execSync(command: string, options?: ExecSyncOptionsWithBufferEncoding): Buffer;
-    function execSync(command: string, options?: ExecSyncOptions): Buffer;
+    function execSync(command: string, options: ExecSyncOptionsWithStringEncoding): string;
+    function execSync(command: string, options: ExecSyncOptionsWithBufferEncoding): Buffer;
+    function execSync(command: string, options?: ExecSyncOptions): string | Buffer;
 
     interface ExecFileSyncOptions extends CommonOptions {
-        input?: string | NodeJS.ArrayBufferView;
-        stdio?: StdioOptions;
-        killSignal?: NodeJS.Signals | number;
-        maxBuffer?: number;
-        encoding?: BufferEncoding;
-        shell?: boolean | string;
+        input?: string | NodeJS.ArrayBufferView | undefined;
+        stdio?: StdioOptions | undefined;
+        killSignal?: NodeJS.Signals | number | undefined;
+        maxBuffer?: number | undefined;
+        encoding?: BufferEncoding | undefined;
+        shell?: boolean | string | undefined;
     }
     interface ExecFileSyncOptionsWithStringEncoding extends ExecFileSyncOptions {
         encoding: BufferEncoding;
@@ -6942,28 +6905,30 @@ definitions['child_process.d.ts'] = `declare module "child_process" {     import
         encoding: BufferEncoding; \/\/ specify \`null\`.
     }
     function execFileSync(command: string): Buffer;
-    function execFileSync(command: string, options?: ExecFileSyncOptionsWithStringEncoding): string;
-    function execFileSync(command: string, options?: ExecFileSyncOptionsWithBufferEncoding): Buffer;
-    function execFileSync(command: string, options?: ExecFileSyncOptions): Buffer;
-    function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptionsWithStringEncoding): string;
-    function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptionsWithBufferEncoding): Buffer;
-    function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptions): Buffer;
+    function execFileSync(command: string, options: ExecFileSyncOptionsWithStringEncoding): string;
+    function execFileSync(command: string, options: ExecFileSyncOptionsWithBufferEncoding): Buffer;
+    function execFileSync(command: string, options?: ExecFileSyncOptions): string | Buffer;
+    function execFileSync(command: string, args: ReadonlyArray<string>): Buffer;
+    function execFileSync(command: string, args: ReadonlyArray<string>, options: ExecFileSyncOptionsWithStringEncoding): string;
+    function execFileSync(command: string, args: ReadonlyArray<string>, options: ExecFileSyncOptionsWithBufferEncoding): Buffer;
+    function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptions): string | Buffer;
 }
 `;
-definitions['cluster.d.ts'] = `declare module "cluster" {     import * as child from "child_process";
-    import * as events from "events";
-    import * as net from "net";
+definitions['cluster.d.ts'] = `declare module 'cluster' {
+    import * as child from 'child_process';
+    import EventEmitter = require('events');
+    import * as net from 'net';
 
     \/\/ interfaces
     interface ClusterSettings {
-        execArgv?: string[]; \/\/ default: process.execArgv
-        exec?: string;
-        args?: string[];
-        silent?: boolean;
-        stdio?: any[];
-        uid?: number;
-        gid?: number;
-        inspectPort?: number | (() => number);
+        execArgv?: string[] | undefined; \/\/ default: process.execArgv
+        exec?: string | undefined;
+        args?: string[] | undefined;
+        silent?: boolean | undefined;
+        stdio?: any[] | undefined;
+        uid?: number | undefined;
+        gid?: number | undefined;
+        inspectPort?: number | (() => number) | undefined;
     }
 
     interface Address {
@@ -6972,7 +6937,7 @@ definitions['cluster.d.ts'] = `declare module "cluster" {     import * as child 
         addressType: number | "udp4" | "udp6";  \/\/ 4, 6, -1, "udp4", "udp6"
     }
 
-    class Worker extends events.EventEmitter {
+    class Worker extends EventEmitter {
         id: number;
         process: child.ChildProcess;
         send(message: child.Serializable, sendHandle?: child.SendHandle, callback?: (error: Error | null) => void): boolean;
@@ -7041,7 +7006,7 @@ definitions['cluster.d.ts'] = `declare module "cluster" {     import * as child 
         prependOnceListener(event: "online", listener: () => void): this;
     }
 
-    interface Cluster extends events.EventEmitter {
+    interface Cluster extends EventEmitter {
         Worker: Worker;
         disconnect(callback?: () => void): void;
         fork(env?: any): Worker;
@@ -7050,8 +7015,8 @@ definitions['cluster.d.ts'] = `declare module "cluster" {     import * as child 
         schedulingPolicy: number;
         settings: ClusterSettings;
         setupMaster(settings?: ClusterSettings): void;
-        worker?: Worker;
-        workers?: NodeJS.Dict<Worker>;
+        worker?: Worker | undefined;
+        workers?: NodeJS.Dict<Worker> | undefined;
 
         readonly SCHED_NONE: number;
         readonly SCHED_RR: number;
@@ -7212,7 +7177,8 @@ definitions['cluster.d.ts'] = `declare module "cluster" {     import * as child 
     function eventNames(): string[];
 }
 `;
-definitions['console.d.ts'] = `declare module "console" {     import { InspectOptions } from 'util';
+definitions['console.d.ts'] = `declare module 'console' {
+    import { InspectOptions } from 'util';
 
     global {
         \/\/ This needs to be global to avoid TS2403 in case lib.dom.d.ts is present in the same build
@@ -7238,16 +7204,16 @@ definitions['console.d.ts'] = `declare module "console" {     import { InspectOp
              */
             countReset(label?: string): void;
             /**
-             * The \`console.debug()\` function is an alias for {@link console.log()}.
+             * The \`console.debug()\` function is an alias for {@link console.log}.
              */
             debug(message?: any, ...optionalParams: any[]): void;
             /**
-             * Uses {@link util.inspect()} on \`obj\` and prints the resulting string to \`stdout\`.
+             * Uses {@link util.inspect} on \`obj\` and prints the resulting string to \`stdout\`.
              * This function bypasses any custom \`inspect()\` function defined on \`obj\`.
              */
             dir(obj: any, options?: InspectOptions): void;
             /**
-             * This method calls {@link console.log()} passing it the arguments received. Please note that this method does not produce any XML formatting
+             * This method calls {@link console.log} passing it the arguments received. Please note that this method does not produce any XML formatting
              */
             dirxml(...data: any[]): void;
             /**
@@ -7260,7 +7226,7 @@ definitions['console.d.ts'] = `declare module "console" {     import { InspectOp
              */
             group(...label: any[]): void;
             /**
-             * The \`console.groupCollapsed()\` function is an alias for {@link console.group()}.
+             * The \`console.groupCollapsed()\` function is an alias for {@link console.group}.
              */
             groupCollapsed(...label: any[]): void;
             /**
@@ -7268,7 +7234,7 @@ definitions['console.d.ts'] = `declare module "console" {     import { InspectOp
              */
             groupEnd(): void;
             /**
-             * The {@link console.info()} function is an alias for {@link console.log()}.
+             * The {@link console.info} function is an alias for {@link console.log}.
              */
             info(message?: any, ...optionalParams: any[]): void;
             /**
@@ -7285,19 +7251,19 @@ definitions['console.d.ts'] = `declare module "console" {     import { InspectOp
              */
             time(label?: string): void;
             /**
-             * Stops a timer that was previously started by calling {@link console.time()} and prints the result to \`stdout\`.
+             * Stops a timer that was previously started by calling {@link console.time} and prints the result to \`stdout\`.
              */
             timeEnd(label?: string): void;
             /**
-             * For a timer that was previously started by calling {@link console.time()}, prints the elapsed time and other \`data\` arguments to \`stdout\`.
+             * For a timer that was previously started by calling {@link console.time}, prints the elapsed time and other \`data\` arguments to \`stdout\`.
              */
             timeLog(label?: string, ...data: any[]): void;
             /**
-             * Prints to \`stderr\` the string 'Trace :', followed by the {@link util.format()} formatted message and stack trace to the current position in the code.
+             * Prints to \`stderr\` the string 'Trace :', followed by the {@link util.format} formatted message and stack trace to the current position in the code.
              */
             trace(message?: any, ...optionalParams: any[]): void;
             /**
-             * The {@link console.warn()} function is an alias for {@link console.error()}.
+             * The {@link console.warn} function is an alias for {@link console.error}.
              */
             warn(message?: any, ...optionalParams: any[]): void;
 
@@ -7324,10 +7290,15 @@ definitions['console.d.ts'] = `declare module "console" {     import { InspectOp
         namespace NodeJS {
             interface ConsoleConstructorOptions {
                 stdout: WritableStream;
-                stderr?: WritableStream;
-                ignoreErrors?: boolean;
-                colorMode?: boolean | 'auto';
-                inspectOptions?: InspectOptions;
+                stderr?: WritableStream | undefined;
+                ignoreErrors?: boolean | undefined;
+                colorMode?: boolean | 'auto' | undefined;
+                inspectOptions?: InspectOptions | undefined;
+                /**
+                 * Set group indentation
+                 * @default 2
+                 */
+                 groupIndentation?: number | undefined;
             }
 
             interface ConsoleConstructor {
@@ -7345,27 +7316,53 @@ definitions['console.d.ts'] = `declare module "console" {     import { InspectOp
     export = console;
 }
 `;
-definitions['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */ declare module "constants" {
+definitions['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */
+declare module 'constants' {
     import { constants as osConstants, SignalConstants } from 'os';
     import { constants as cryptoConstants } from 'crypto';
     import { constants as fsConstants } from 'fs';
-    const exp: typeof osConstants.errno & typeof osConstants.priority & SignalConstants & typeof cryptoConstants & typeof fsConstants;
+
+    const exp: typeof osConstants.errno &
+        typeof osConstants.priority &
+        SignalConstants &
+        typeof cryptoConstants &
+        typeof fsConstants;
     export = exp;
 }
 `;
-definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream from "stream";
+definitions['crypto.d.ts'] = `declare module 'crypto' {
+    import * as stream from 'stream';
 
     interface Certificate {
+        /**
+         * @param spkac
+         * @returns The challenge component of the \`spkac\` data structure,
+         * which includes a public key and a challenge.
+         */
         exportChallenge(spkac: BinaryLike): Buffer;
-        exportPublicKey(spkac: BinaryLike): Buffer;
+        /**
+         * @param spkac
+         * @param encoding The encoding of the spkac string.
+         * @returns The public key component of the \`spkac\` data structure,
+         * which includes a public key and a challenge.
+         */
+        exportPublicKey(spkac: BinaryLike, encoding?: string): Buffer;
+        /**
+         * @param spkac
+         * @returns \`true\` if the given \`spkac\` data structure is valid,
+         * \`false\` otherwise.
+         */
         verifySpkac(spkac: NodeJS.ArrayBufferView): boolean;
     }
-    const Certificate: {
-        new(): Certificate;
+    const Certificate: Certificate & {
+        /** @deprecated since v14.9.0 - Use static methods of \`crypto.Certificate\` instead. */
+        new (): Certificate;
+        /** @deprecated since v14.9.0 - Use static methods of \`crypto.Certificate\` instead. */
         (): Certificate;
     };
 
-    namespace constants { \/\/ https:\/\/nodejs.org/dist/latest-v10.x/docs/api/crypto.html#crypto_crypto_constants
+    namespace constants {
+        \/\/ https:\/\/nodejs.org/dist/latest-v10.x/docs/api/crypto.html#crypto_crypto_constants
         const OPENSSL_VERSION_NUMBER: number;
 
         /** Applies multiple bug workarounds within OpenSSL. See https:\/\/www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_set_options.html for detail. */
@@ -7465,7 +7462,7 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
          * For XOF hash functions such as \`shake256\`, the
          * outputLength option can be used to specify the desired output length in bytes.
          */
-        outputLength?: number;
+        outputLength?: number | undefined;
     }
 
     /** @deprecated since v10.0.0 */
@@ -7474,26 +7471,29 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
     function createHash(algorithm: string, options?: HashOptions): Hash;
     function createHmac(algorithm: string, key: BinaryLike | KeyObject, options?: stream.TransformOptions): Hmac;
 
-    type Utf8AsciiLatin1Encoding = "utf8" | "ascii" | "latin1";
-    type HexBase64Latin1Encoding = "latin1" | "hex" | "base64";
-    type Utf8AsciiBinaryEncoding = "utf8" | "ascii" | "binary";
-    type HexBase64BinaryEncoding = "binary" | "base64" | "hex";
-    type ECDHKeyFormat = "compressed" | "uncompressed" | "hybrid";
+    \/\/ https:\/\/nodejs.org/api/buffer.html#buffer_buffers_and_character_encodings
+    type BinaryToTextEncoding = 'base64' | 'base64url' | 'hex';
+    type CharacterEncoding = 'utf8' | 'utf-8' | 'utf16le' | 'latin1';
+    type LegacyCharacterEncoding = 'ascii' | 'binary' | 'ucs2' | 'ucs-2';
+
+    type Encoding = BinaryToTextEncoding | CharacterEncoding | LegacyCharacterEncoding;
+
+    type ECDHKeyFormat = 'compressed' | 'uncompressed' | 'hybrid';
 
     class Hash extends stream.Transform {
         private constructor();
         copy(): Hash;
         update(data: BinaryLike): Hash;
-        update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Hash;
+        update(data: string, input_encoding: Encoding): Hash;
         digest(): Buffer;
-        digest(encoding: HexBase64Latin1Encoding): string;
+        digest(encoding: BinaryToTextEncoding): string;
     }
     class Hmac extends stream.Transform {
         private constructor();
         update(data: BinaryLike): Hmac;
-        update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Hmac;
+        update(data: string, input_encoding: Encoding): Hmac;
         digest(): Buffer;
-        digest(encoding: HexBase64Latin1Encoding): string;
+        digest(encoding: BinaryToTextEncoding): string;
     }
 
     type KeyObjectType = 'secret' | 'public' | 'private';
@@ -7501,21 +7501,21 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
     interface KeyExportOptions<T extends KeyFormat> {
         type: 'pkcs1' | 'spki' | 'pkcs8' | 'sec1';
         format: T;
-        cipher?: string;
-        passphrase?: string | Buffer;
+        cipher?: string | undefined;
+        passphrase?: string | Buffer | undefined;
     }
 
     class KeyObject {
         private constructor();
-        asymmetricKeyType?: KeyType;
+        asymmetricKeyType?: KeyType | undefined;
         /**
          * For asymmetric keys, this property represents the size of the embedded key in
          * bytes. This property is \`undefined\` for symmetric keys.
          */
-        asymmetricKeySize?: number;
+        asymmetricKeySize?: number | undefined;
         export(options: KeyExportOptions<'pem'>): string | Buffer;
         export(options?: KeyExportOptions<'der'>): Buffer;
-        symmetricKeySize?: number;
+        symmetricKeySize?: number | undefined;
         type: KeyObjectType;
     }
 
@@ -7530,7 +7530,7 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         authTagLength: number;
     }
     interface CipherGCMOptions extends stream.TransformOptions {
-        authTagLength?: number;
+        authTagLength?: number | undefined;
     }
     /** @deprecated since v10.0.0 use \`createCipheriv()\` */
     function createCipher(algorithm: CipherCCMTypes, password: BinaryLike, options: CipherCCMOptions): CipherCCM;
@@ -7543,24 +7543,27 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         algorithm: CipherCCMTypes,
         key: CipherKey,
         iv: BinaryLike | null,
-        options: CipherCCMOptions
+        options: CipherCCMOptions,
     ): CipherCCM;
     function createCipheriv(
         algorithm: CipherGCMTypes,
         key: CipherKey,
         iv: BinaryLike | null,
-        options?: CipherGCMOptions
+        options?: CipherGCMOptions,
     ): CipherGCM;
     function createCipheriv(
-        algorithm: string, key: CipherKey, iv: BinaryLike | null, options?: stream.TransformOptions
+        algorithm: string,
+        key: CipherKey,
+        iv: BinaryLike | null,
+        options?: stream.TransformOptions,
     ): Cipher;
 
     class Cipher extends stream.Transform {
         private constructor();
         update(data: BinaryLike): Buffer;
-        update(data: string, input_encoding: Utf8AsciiBinaryEncoding): Buffer;
-        update(data: NodeJS.ArrayBufferView, input_encoding: undefined, output_encoding: HexBase64BinaryEncoding): string;
-        update(data: string, input_encoding: Utf8AsciiBinaryEncoding | undefined, output_encoding: HexBase64BinaryEncoding): string;
+        update(data: string, input_encoding: Encoding): Buffer;
+        update(data: NodeJS.ArrayBufferView, input_encoding: undefined, output_encoding: Encoding): string;
+        update(data: string, input_encoding: Encoding | undefined, output_encoding: Encoding): string;
         final(): Buffer;
         final(output_encoding: BufferEncoding): string;
         setAutoPadding(auto_padding?: boolean): this;
@@ -7594,14 +7597,19 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         iv: BinaryLike | null,
         options?: CipherGCMOptions,
     ): DecipherGCM;
-    function createDecipheriv(algorithm: string, key: CipherKey, iv: BinaryLike | null, options?: stream.TransformOptions): Decipher;
+    function createDecipheriv(
+        algorithm: string,
+        key: CipherKey,
+        iv: BinaryLike | null,
+        options?: stream.TransformOptions,
+    ): Decipher;
 
     class Decipher extends stream.Transform {
         private constructor();
         update(data: NodeJS.ArrayBufferView): Buffer;
-        update(data: string, input_encoding: HexBase64BinaryEncoding): Buffer;
-        update(data: NodeJS.ArrayBufferView, input_encoding: HexBase64BinaryEncoding | undefined, output_encoding: Utf8AsciiBinaryEncoding): string;
-        update(data: string, input_encoding: HexBase64BinaryEncoding | undefined, output_encoding: Utf8AsciiBinaryEncoding): string;
+        update(data: string, input_encoding: Encoding): Buffer;
+        update(data: NodeJS.ArrayBufferView, input_encoding: undefined, output_encoding: Encoding): string;
+        update(data: string, input_encoding: Encoding | undefined, output_encoding: Encoding): string;
         final(): Buffer;
         final(output_encoding: BufferEncoding): string;
         setAutoPadding(auto_padding?: boolean): this;
@@ -7619,15 +7627,15 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
 
     interface PrivateKeyInput {
         key: string | Buffer;
-        format?: KeyFormat;
-        type?: 'pkcs1' | 'pkcs8' | 'sec1';
-        passphrase?: string | Buffer;
+        format?: KeyFormat | undefined;
+        type?: 'pkcs1' | 'pkcs8' | 'sec1' | undefined;
+        passphrase?: string | Buffer | undefined;
     }
 
     interface PublicKeyInput {
         key: string | Buffer;
-        format?: KeyFormat;
-        type?: 'pkcs1' | 'spki';
+        format?: KeyFormat | undefined;
+        type?: 'pkcs1' | 'spki' | undefined;
     }
 
     function createPrivateKey(key: PrivateKeyInput | string | Buffer): KeyObject;
@@ -7642,18 +7650,16 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         /**
          * @See crypto.constants.RSA_PKCS1_PADDING
          */
-        padding?: number;
-        saltLength?: number;
-        dsaEncoding?: DSAEncoding;
+        padding?: number | undefined;
+        saltLength?: number | undefined;
+        dsaEncoding?: DSAEncoding | undefined;
     }
 
-    interface SignPrivateKeyInput extends PrivateKeyInput, SigningOptions {
-    }
+    interface SignPrivateKeyInput extends PrivateKeyInput, SigningOptions {}
     interface SignKeyObjectInput extends SigningOptions {
         key: KeyObject;
     }
-    interface VerifyPublicKeyInput extends PublicKeyInput, SigningOptions {
-    }
+    interface VerifyPublicKeyInput extends PublicKeyInput, SigningOptions {}
     interface VerifyKeyObjectInput extends SigningOptions {
         key: KeyObject;
     }
@@ -7664,9 +7670,12 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         private constructor();
 
         update(data: BinaryLike): Signer;
-        update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Signer;
+        update(data: string, input_encoding: Encoding): Signer;
         sign(private_key: KeyLike | SignKeyObjectInput | SignPrivateKeyInput): Buffer;
-        sign(private_key: KeyLike | SignKeyObjectInput | SignPrivateKeyInput, output_format: HexBase64Latin1Encoding): string;
+        sign(
+            private_key: KeyLike | SignKeyObjectInput | SignPrivateKeyInput,
+            output_format: BinaryToTextEncoding,
+        ): string;
     }
 
     function createVerify(algorithm: string, options?: stream.WritableOptions): Verify;
@@ -7674,33 +7683,53 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         private constructor();
 
         update(data: BinaryLike): Verify;
-        update(data: string, input_encoding: Utf8AsciiLatin1Encoding): Verify;
-        verify(object: KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput, signature: NodeJS.ArrayBufferView): boolean;
-        verify(object: KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput, signature: string, signature_format?: HexBase64Latin1Encoding): boolean;
+        update(data: string, input_encoding: Encoding): Verify;
+        verify(
+            object: KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput,
+            signature: NodeJS.ArrayBufferView,
+        ): boolean;
+        verify(
+            object: KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput,
+            signature: string,
+            signature_format?: BinaryToTextEncoding,
+        ): boolean;
         \/\/ https:\/\/nodejs.org/api/crypto.html#crypto_verifier_verify_object_signature_signature_format
         \/\/ The signature field accepts a TypedArray type, but it is only available starting ES2017
     }
     function createDiffieHellman(prime_length: number, generator?: number | NodeJS.ArrayBufferView): DiffieHellman;
     function createDiffieHellman(prime: NodeJS.ArrayBufferView): DiffieHellman;
-    function createDiffieHellman(prime: string, prime_encoding: HexBase64Latin1Encoding): DiffieHellman;
-    function createDiffieHellman(prime: string, prime_encoding: HexBase64Latin1Encoding, generator: number | NodeJS.ArrayBufferView): DiffieHellman;
-    function createDiffieHellman(prime: string, prime_encoding: HexBase64Latin1Encoding, generator: string, generator_encoding: HexBase64Latin1Encoding): DiffieHellman;
+    function createDiffieHellman(prime: string, prime_encoding: BinaryToTextEncoding): DiffieHellman;
+    function createDiffieHellman(
+        prime: string,
+        prime_encoding: BinaryToTextEncoding,
+        generator: number | NodeJS.ArrayBufferView,
+    ): DiffieHellman;
+    function createDiffieHellman(
+        prime: string,
+        prime_encoding: BinaryToTextEncoding,
+        generator: string,
+        generator_encoding: BinaryToTextEncoding,
+    ): DiffieHellman;
     class DiffieHellman {
         private constructor();
         generateKeys(): Buffer;
-        generateKeys(encoding: HexBase64Latin1Encoding): string;
+        generateKeys(encoding: BinaryToTextEncoding): string;
         computeSecret(other_public_key: NodeJS.ArrayBufferView): Buffer;
-        computeSecret(other_public_key: string, input_encoding: HexBase64Latin1Encoding): Buffer;
-        computeSecret(other_public_key: NodeJS.ArrayBufferView, output_encoding: HexBase64Latin1Encoding): string;
-        computeSecret(other_public_key: string, input_encoding: HexBase64Latin1Encoding, output_encoding: HexBase64Latin1Encoding): string;
+        computeSecret(other_public_key: string, input_encoding: BinaryToTextEncoding): Buffer;
+        computeSecret(other_public_key: NodeJS.ArrayBufferView, output_encoding: BinaryToTextEncoding): string;
+        computeSecret(
+            other_public_key: string,
+            input_encoding: BinaryToTextEncoding,
+            output_encoding: BinaryToTextEncoding,
+        ): string;
         getPrime(): Buffer;
-        getPrime(encoding: HexBase64Latin1Encoding): string;
+        getPrime(encoding: BinaryToTextEncoding): string;
         getGenerator(): Buffer;
-        getGenerator(encoding: HexBase64Latin1Encoding): string;
+        getGenerator(encoding: BinaryToTextEncoding): string;
         getPublicKey(): Buffer;
-        getPublicKey(encoding: HexBase64Latin1Encoding): string;
+        getPublicKey(encoding: BinaryToTextEncoding): string;
         getPrivateKey(): Buffer;
-        getPrivateKey(encoding: HexBase64Latin1Encoding): string;
+        getPrivateKey(encoding: BinaryToTextEncoding): string;
         setPublicKey(public_key: NodeJS.ArrayBufferView): void;
         setPublicKey(public_key: string, encoding: BufferEncoding): void;
         setPrivateKey(private_key: NodeJS.ArrayBufferView): void;
@@ -7716,7 +7745,13 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         digest: string,
         callback: (err: Error | null, derivedKey: Buffer) => any,
     ): void;
-    function pbkdf2Sync(password: BinaryLike, salt: BinaryLike, iterations: number, keylen: number, digest: string): Buffer;
+    function pbkdf2Sync(
+        password: BinaryLike,
+        salt: BinaryLike,
+        iterations: number,
+        keylen: number,
+        digest: string,
+    ): Buffer;
 
     function randomBytes(size: number): Buffer;
     function randomBytes(size: number, callback: (err: Error | null, buf: Buffer) => void): void;
@@ -7729,20 +7764,50 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
     function randomInt(min: number, max: number, callback: (err: Error | null, value: number) => void): void;
 
     function randomFillSync<T extends NodeJS.ArrayBufferView>(buffer: T, offset?: number, size?: number): T;
-    function randomFill<T extends NodeJS.ArrayBufferView>(buffer: T, callback: (err: Error | null, buf: T) => void): void;
-    function randomFill<T extends NodeJS.ArrayBufferView>(buffer: T, offset: number, callback: (err: Error | null, buf: T) => void): void;
-    function randomFill<T extends NodeJS.ArrayBufferView>(buffer: T, offset: number, size: number, callback: (err: Error | null, buf: T) => void): void;
+    function randomFill<T extends NodeJS.ArrayBufferView>(
+        buffer: T,
+        callback: (err: Error | null, buf: T) => void,
+    ): void;
+    function randomFill<T extends NodeJS.ArrayBufferView>(
+        buffer: T,
+        offset: number,
+        callback: (err: Error | null, buf: T) => void,
+    ): void;
+    function randomFill<T extends NodeJS.ArrayBufferView>(
+        buffer: T,
+        offset: number,
+        size: number,
+        callback: (err: Error | null, buf: T) => void,
+    ): void;
+
+    interface RandomUUIDOptions {
+        /**
+         * By default, to improve performance,
+         * Node.js will pre-emptively generate and persistently cache enough
+         * random data to generate up to 128 random UUIDs. To generate a UUID
+         * without using the cache, set \`disableEntropyCache\` to \`true\`.
+         *
+         * @default \`false\`
+         */
+        disableEntropyCache?: boolean | undefined;
+    }
+
+    function randomUUID(options?: RandomUUIDOptions): string;
 
     interface ScryptOptions {
-        N?: number;
-        r?: number;
-        p?: number;
-        maxmem?: number;
+        cost?: number | undefined;
+        blockSize?: number | undefined;
+        parallelization?: number | undefined;
+        N?: number | undefined;
+        r?: number | undefined;
+        p?: number | undefined;
+        maxmem?: number | undefined;
     }
     function scrypt(
         password: BinaryLike,
         salt: BinaryLike,
-        keylen: number, callback: (err: Error | null, derivedKey: Buffer) => void,
+        keylen: number,
+        callback: (err: Error | null, derivedKey: Buffer) => void,
     ): void;
     function scrypt(
         password: BinaryLike,
@@ -7755,17 +7820,17 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
 
     interface RsaPublicKey {
         key: KeyLike;
-        padding?: number;
+        padding?: number | undefined;
     }
     interface RsaPrivateKey {
         key: KeyLike;
-        passphrase?: string;
+        passphrase?: string | undefined;
         /**
          * @default 'sha1'
          */
-        oaepHash?: string;
-        oaepLabel?: NodeJS.TypedArray;
-        padding?: number;
+        oaepHash?: string | undefined;
+        oaepLabel?: NodeJS.TypedArray | undefined;
+        padding?: number | undefined;
     }
     function publicEncrypt(key: RsaPublicKey | RsaPrivateKey | KeyLike, buffer: NodeJS.ArrayBufferView): Buffer;
     function publicDecrypt(key: RsaPublicKey | RsaPrivateKey | KeyLike, buffer: NodeJS.ArrayBufferView): Buffer;
@@ -7780,22 +7845,26 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         static convertKey(
             key: BinaryLike,
             curve: string,
-            inputEncoding?: HexBase64Latin1Encoding,
-            outputEncoding?: "latin1" | "hex" | "base64",
-            format?: "uncompressed" | "compressed" | "hybrid",
+            inputEncoding?: BinaryToTextEncoding,
+            outputEncoding?: 'latin1' | 'hex' | 'base64' | 'base64url',
+            format?: 'uncompressed' | 'compressed' | 'hybrid',
         ): Buffer | string;
         generateKeys(): Buffer;
-        generateKeys(encoding: HexBase64Latin1Encoding, format?: ECDHKeyFormat): string;
+        generateKeys(encoding: BinaryToTextEncoding, format?: ECDHKeyFormat): string;
         computeSecret(other_public_key: NodeJS.ArrayBufferView): Buffer;
-        computeSecret(other_public_key: string, input_encoding: HexBase64Latin1Encoding): Buffer;
-        computeSecret(other_public_key: NodeJS.ArrayBufferView, output_encoding: HexBase64Latin1Encoding): string;
-        computeSecret(other_public_key: string, input_encoding: HexBase64Latin1Encoding, output_encoding: HexBase64Latin1Encoding): string;
+        computeSecret(other_public_key: string, input_encoding: BinaryToTextEncoding): Buffer;
+        computeSecret(other_public_key: NodeJS.ArrayBufferView, output_encoding: BinaryToTextEncoding): string;
+        computeSecret(
+            other_public_key: string,
+            input_encoding: BinaryToTextEncoding,
+            output_encoding: BinaryToTextEncoding,
+        ): string;
         getPrivateKey(): Buffer;
-        getPrivateKey(encoding: HexBase64Latin1Encoding): string;
+        getPrivateKey(encoding: BinaryToTextEncoding): string;
         getPublicKey(): Buffer;
-        getPublicKey(encoding: HexBase64Latin1Encoding, format?: ECDHKeyFormat): string;
+        getPublicKey(encoding: BinaryToTextEncoding, format?: ECDHKeyFormat): string;
         setPrivateKey(private_key: NodeJS.ArrayBufferView): void;
-        setPrivateKey(private_key: string, encoding: HexBase64Latin1Encoding): void;
+        setPrivateKey(private_key: string, encoding: BinaryToTextEncoding): void;
     }
     function createECDH(curve_name: string): ECDH;
     function timingSafeEqual(a: NodeJS.ArrayBufferView, b: NodeJS.ArrayBufferView): boolean;
@@ -7807,8 +7876,8 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
 
     interface BasePrivateKeyEncodingOptions<T extends KeyFormat> {
         format: T;
-        cipher?: string;
-        passphrase?: string;
+        cipher?: string | undefined;
+        passphrase?: string | undefined;
     }
 
     interface KeyPairKeyObjectResult {
@@ -7829,15 +7898,15 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
     }
 
     interface X25519KeyPairKeyObjectOptions {
-       /**
-        * No options.
-        */
+        /**
+         * No options.
+         */
     }
 
     interface X448KeyPairKeyObjectOptions {
-       /**
-        * No options.
-        */
+        /**
+         * No options.
+         */
     }
 
     interface ECKeyPairKeyObjectOptions {
@@ -7856,7 +7925,7 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         /**
          * @default 0x10001
          */
-        publicExponent?: number;
+        publicExponent?: number | undefined;
     }
 
     interface DSAKeyPairKeyObjectOptions {
@@ -7879,7 +7948,7 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         /**
          * @default 0x10001
          */
-        publicExponent?: number;
+        publicExponent?: number | undefined;
 
         publicKeyEncoding: {
             type: 'pkcs1' | 'spki';
@@ -7969,132 +8038,446 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
         privateKey: T2;
     }
 
-    function generateKeyPairSync(type: 'rsa', options: RSAKeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
-    function generateKeyPairSync(type: 'rsa', options: RSAKeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
-    function generateKeyPairSync(type: 'rsa', options: RSAKeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
-    function generateKeyPairSync(type: 'rsa', options: RSAKeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(
+        type: 'rsa',
+        options: RSAKeyPairOptions<'pem', 'pem'>,
+    ): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(
+        type: 'rsa',
+        options: RSAKeyPairOptions<'pem', 'der'>,
+    ): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(
+        type: 'rsa',
+        options: RSAKeyPairOptions<'der', 'pem'>,
+    ): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(
+        type: 'rsa',
+        options: RSAKeyPairOptions<'der', 'der'>,
+    ): KeyPairSyncResult<Buffer, Buffer>;
     function generateKeyPairSync(type: 'rsa', options: RSAKeyPairKeyObjectOptions): KeyPairKeyObjectResult;
 
-    function generateKeyPairSync(type: 'dsa', options: DSAKeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
-    function generateKeyPairSync(type: 'dsa', options: DSAKeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
-    function generateKeyPairSync(type: 'dsa', options: DSAKeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
-    function generateKeyPairSync(type: 'dsa', options: DSAKeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(
+        type: 'dsa',
+        options: DSAKeyPairOptions<'pem', 'pem'>,
+    ): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(
+        type: 'dsa',
+        options: DSAKeyPairOptions<'pem', 'der'>,
+    ): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(
+        type: 'dsa',
+        options: DSAKeyPairOptions<'der', 'pem'>,
+    ): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(
+        type: 'dsa',
+        options: DSAKeyPairOptions<'der', 'der'>,
+    ): KeyPairSyncResult<Buffer, Buffer>;
     function generateKeyPairSync(type: 'dsa', options: DSAKeyPairKeyObjectOptions): KeyPairKeyObjectResult;
 
-    function generateKeyPairSync(type: 'ec', options: ECKeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
-    function generateKeyPairSync(type: 'ec', options: ECKeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
-    function generateKeyPairSync(type: 'ec', options: ECKeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
-    function generateKeyPairSync(type: 'ec', options: ECKeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(
+        type: 'ec',
+        options: ECKeyPairOptions<'pem', 'pem'>,
+    ): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(
+        type: 'ec',
+        options: ECKeyPairOptions<'pem', 'der'>,
+    ): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(
+        type: 'ec',
+        options: ECKeyPairOptions<'der', 'pem'>,
+    ): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(
+        type: 'ec',
+        options: ECKeyPairOptions<'der', 'der'>,
+    ): KeyPairSyncResult<Buffer, Buffer>;
     function generateKeyPairSync(type: 'ec', options: ECKeyPairKeyObjectOptions): KeyPairKeyObjectResult;
 
-    function generateKeyPairSync(type: 'ed25519', options: ED25519KeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
-    function generateKeyPairSync(type: 'ed25519', options: ED25519KeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
-    function generateKeyPairSync(type: 'ed25519', options: ED25519KeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
-    function generateKeyPairSync(type: 'ed25519', options: ED25519KeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(
+        type: 'ed25519',
+        options: ED25519KeyPairOptions<'pem', 'pem'>,
+    ): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(
+        type: 'ed25519',
+        options: ED25519KeyPairOptions<'pem', 'der'>,
+    ): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(
+        type: 'ed25519',
+        options: ED25519KeyPairOptions<'der', 'pem'>,
+    ): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(
+        type: 'ed25519',
+        options: ED25519KeyPairOptions<'der', 'der'>,
+    ): KeyPairSyncResult<Buffer, Buffer>;
     function generateKeyPairSync(type: 'ed25519', options?: ED25519KeyPairKeyObjectOptions): KeyPairKeyObjectResult;
 
-    function generateKeyPairSync(type: 'ed448', options: ED448KeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
-    function generateKeyPairSync(type: 'ed448', options: ED448KeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
-    function generateKeyPairSync(type: 'ed448', options: ED448KeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
-    function generateKeyPairSync(type: 'ed448', options: ED448KeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(
+        type: 'ed448',
+        options: ED448KeyPairOptions<'pem', 'pem'>,
+    ): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(
+        type: 'ed448',
+        options: ED448KeyPairOptions<'pem', 'der'>,
+    ): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(
+        type: 'ed448',
+        options: ED448KeyPairOptions<'der', 'pem'>,
+    ): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(
+        type: 'ed448',
+        options: ED448KeyPairOptions<'der', 'der'>,
+    ): KeyPairSyncResult<Buffer, Buffer>;
     function generateKeyPairSync(type: 'ed448', options?: ED448KeyPairKeyObjectOptions): KeyPairKeyObjectResult;
 
-    function generateKeyPairSync(type: 'x25519', options: X25519KeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
-    function generateKeyPairSync(type: 'x25519', options: X25519KeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
-    function generateKeyPairSync(type: 'x25519', options: X25519KeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
-    function generateKeyPairSync(type: 'x25519', options: X25519KeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(
+        type: 'x25519',
+        options: X25519KeyPairOptions<'pem', 'pem'>,
+    ): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(
+        type: 'x25519',
+        options: X25519KeyPairOptions<'pem', 'der'>,
+    ): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(
+        type: 'x25519',
+        options: X25519KeyPairOptions<'der', 'pem'>,
+    ): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(
+        type: 'x25519',
+        options: X25519KeyPairOptions<'der', 'der'>,
+    ): KeyPairSyncResult<Buffer, Buffer>;
     function generateKeyPairSync(type: 'x25519', options?: X25519KeyPairKeyObjectOptions): KeyPairKeyObjectResult;
 
-    function generateKeyPairSync(type: 'x448', options: X448KeyPairOptions<'pem', 'pem'>): KeyPairSyncResult<string, string>;
-    function generateKeyPairSync(type: 'x448', options: X448KeyPairOptions<'pem', 'der'>): KeyPairSyncResult<string, Buffer>;
-    function generateKeyPairSync(type: 'x448', options: X448KeyPairOptions<'der', 'pem'>): KeyPairSyncResult<Buffer, string>;
-    function generateKeyPairSync(type: 'x448', options: X448KeyPairOptions<'der', 'der'>): KeyPairSyncResult<Buffer, Buffer>;
+    function generateKeyPairSync(
+        type: 'x448',
+        options: X448KeyPairOptions<'pem', 'pem'>,
+    ): KeyPairSyncResult<string, string>;
+    function generateKeyPairSync(
+        type: 'x448',
+        options: X448KeyPairOptions<'pem', 'der'>,
+    ): KeyPairSyncResult<string, Buffer>;
+    function generateKeyPairSync(
+        type: 'x448',
+        options: X448KeyPairOptions<'der', 'pem'>,
+    ): KeyPairSyncResult<Buffer, string>;
+    function generateKeyPairSync(
+        type: 'x448',
+        options: X448KeyPairOptions<'der', 'der'>,
+    ): KeyPairSyncResult<Buffer, Buffer>;
     function generateKeyPairSync(type: 'x448', options?: X448KeyPairKeyObjectOptions): KeyPairKeyObjectResult;
 
-    function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
-    function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
-    function generateKeyPair(type: 'rsa', options: RSAKeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'rsa', options: RSAKeyPairKeyObjectOptions, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+    function generateKeyPair(
+        type: 'rsa',
+        options: RSAKeyPairOptions<'pem', 'pem'>,
+        callback: (err: Error | null, publicKey: string, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'rsa',
+        options: RSAKeyPairOptions<'pem', 'der'>,
+        callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'rsa',
+        options: RSAKeyPairOptions<'der', 'pem'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'rsa',
+        options: RSAKeyPairOptions<'der', 'der'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'rsa',
+        options: RSAKeyPairKeyObjectOptions,
+        callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void,
+    ): void;
 
-    function generateKeyPair(type: 'dsa', options: DSAKeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
-    function generateKeyPair(type: 'dsa', options: DSAKeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'dsa', options: DSAKeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
-    function generateKeyPair(type: 'dsa', options: DSAKeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'dsa', options: DSAKeyPairKeyObjectOptions, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+    function generateKeyPair(
+        type: 'dsa',
+        options: DSAKeyPairOptions<'pem', 'pem'>,
+        callback: (err: Error | null, publicKey: string, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'dsa',
+        options: DSAKeyPairOptions<'pem', 'der'>,
+        callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'dsa',
+        options: DSAKeyPairOptions<'der', 'pem'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'dsa',
+        options: DSAKeyPairOptions<'der', 'der'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'dsa',
+        options: DSAKeyPairKeyObjectOptions,
+        callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void,
+    ): void;
 
-    function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
-    function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
-    function generateKeyPair(type: 'ec', options: ECKeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'ec', options: ECKeyPairKeyObjectOptions, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+    function generateKeyPair(
+        type: 'ec',
+        options: ECKeyPairOptions<'pem', 'pem'>,
+        callback: (err: Error | null, publicKey: string, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ec',
+        options: ECKeyPairOptions<'pem', 'der'>,
+        callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ec',
+        options: ECKeyPairOptions<'der', 'pem'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ec',
+        options: ECKeyPairOptions<'der', 'der'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ec',
+        options: ECKeyPairKeyObjectOptions,
+        callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void,
+    ): void;
 
-    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
-    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
-    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'ed25519', options: ED25519KeyPairKeyObjectOptions | undefined, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+    function generateKeyPair(
+        type: 'ed25519',
+        options: ED25519KeyPairOptions<'pem', 'pem'>,
+        callback: (err: Error | null, publicKey: string, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ed25519',
+        options: ED25519KeyPairOptions<'pem', 'der'>,
+        callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ed25519',
+        options: ED25519KeyPairOptions<'der', 'pem'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ed25519',
+        options: ED25519KeyPairOptions<'der', 'der'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ed25519',
+        options: ED25519KeyPairKeyObjectOptions | undefined,
+        callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void,
+    ): void;
 
-    function generateKeyPair(type: 'ed448', options: ED448KeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
-    function generateKeyPair(type: 'ed448', options: ED448KeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'ed448', options: ED448KeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
-    function generateKeyPair(type: 'ed448', options: ED448KeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'ed448', options: ED448KeyPairKeyObjectOptions | undefined, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+    function generateKeyPair(
+        type: 'ed448',
+        options: ED448KeyPairOptions<'pem', 'pem'>,
+        callback: (err: Error | null, publicKey: string, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ed448',
+        options: ED448KeyPairOptions<'pem', 'der'>,
+        callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ed448',
+        options: ED448KeyPairOptions<'der', 'pem'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ed448',
+        options: ED448KeyPairOptions<'der', 'der'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'ed448',
+        options: ED448KeyPairKeyObjectOptions | undefined,
+        callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void,
+    ): void;
 
-    function generateKeyPair(type: 'x25519', options: X25519KeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
-    function generateKeyPair(type: 'x25519', options: X25519KeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'x25519', options: X25519KeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
-    function generateKeyPair(type: 'x25519', options: X25519KeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'x25519', options: X25519KeyPairKeyObjectOptions | undefined, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+    function generateKeyPair(
+        type: 'x25519',
+        options: X25519KeyPairOptions<'pem', 'pem'>,
+        callback: (err: Error | null, publicKey: string, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'x25519',
+        options: X25519KeyPairOptions<'pem', 'der'>,
+        callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'x25519',
+        options: X25519KeyPairOptions<'der', 'pem'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'x25519',
+        options: X25519KeyPairOptions<'der', 'der'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'x25519',
+        options: X25519KeyPairKeyObjectOptions | undefined,
+        callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void,
+    ): void;
 
-    function generateKeyPair(type: 'x448', options: X448KeyPairOptions<'pem', 'pem'>, callback: (err: Error | null, publicKey: string, privateKey: string) => void): void;
-    function generateKeyPair(type: 'x448', options: X448KeyPairOptions<'pem', 'der'>, callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'x448', options: X448KeyPairOptions<'der', 'pem'>, callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void): void;
-    function generateKeyPair(type: 'x448', options: X448KeyPairOptions<'der', 'der'>, callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void): void;
-    function generateKeyPair(type: 'x448', options: X448KeyPairKeyObjectOptions | undefined, callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void): void;
+    function generateKeyPair(
+        type: 'x448',
+        options: X448KeyPairOptions<'pem', 'pem'>,
+        callback: (err: Error | null, publicKey: string, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'x448',
+        options: X448KeyPairOptions<'pem', 'der'>,
+        callback: (err: Error | null, publicKey: string, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'x448',
+        options: X448KeyPairOptions<'der', 'pem'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: string) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'x448',
+        options: X448KeyPairOptions<'der', 'der'>,
+        callback: (err: Error | null, publicKey: Buffer, privateKey: Buffer) => void,
+    ): void;
+    function generateKeyPair(
+        type: 'x448',
+        options: X448KeyPairKeyObjectOptions | undefined,
+        callback: (err: Error | null, publicKey: KeyObject, privateKey: KeyObject) => void,
+    ): void;
 
     namespace generateKeyPair {
-        function __promisify__(type: "rsa", options: RSAKeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
-        function __promisify__(type: "rsa", options: RSAKeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
-        function __promisify__(type: "rsa", options: RSAKeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
-        function __promisify__(type: "rsa", options: RSAKeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
-        function __promisify__(type: "rsa", options: RSAKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+        function __promisify__(
+            type: 'rsa',
+            options: RSAKeyPairOptions<'pem', 'pem'>,
+        ): Promise<{ publicKey: string; privateKey: string }>;
+        function __promisify__(
+            type: 'rsa',
+            options: RSAKeyPairOptions<'pem', 'der'>,
+        ): Promise<{ publicKey: string; privateKey: Buffer }>;
+        function __promisify__(
+            type: 'rsa',
+            options: RSAKeyPairOptions<'der', 'pem'>,
+        ): Promise<{ publicKey: Buffer; privateKey: string }>;
+        function __promisify__(
+            type: 'rsa',
+            options: RSAKeyPairOptions<'der', 'der'>,
+        ): Promise<{ publicKey: Buffer; privateKey: Buffer }>;
+        function __promisify__(type: 'rsa', options: RSAKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
 
-        function __promisify__(type: "dsa", options: DSAKeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
-        function __promisify__(type: "dsa", options: DSAKeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
-        function __promisify__(type: "dsa", options: DSAKeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
-        function __promisify__(type: "dsa", options: DSAKeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
-        function __promisify__(type: "dsa", options: DSAKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+        function __promisify__(
+            type: 'dsa',
+            options: DSAKeyPairOptions<'pem', 'pem'>,
+        ): Promise<{ publicKey: string; privateKey: string }>;
+        function __promisify__(
+            type: 'dsa',
+            options: DSAKeyPairOptions<'pem', 'der'>,
+        ): Promise<{ publicKey: string; privateKey: Buffer }>;
+        function __promisify__(
+            type: 'dsa',
+            options: DSAKeyPairOptions<'der', 'pem'>,
+        ): Promise<{ publicKey: Buffer; privateKey: string }>;
+        function __promisify__(
+            type: 'dsa',
+            options: DSAKeyPairOptions<'der', 'der'>,
+        ): Promise<{ publicKey: Buffer; privateKey: Buffer }>;
+        function __promisify__(type: 'dsa', options: DSAKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
 
-        function __promisify__(type: "ec", options: ECKeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
-        function __promisify__(type: "ec", options: ECKeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
-        function __promisify__(type: "ec", options: ECKeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
-        function __promisify__(type: "ec", options: ECKeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
-        function __promisify__(type: "ec", options: ECKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+        function __promisify__(
+            type: 'ec',
+            options: ECKeyPairOptions<'pem', 'pem'>,
+        ): Promise<{ publicKey: string; privateKey: string }>;
+        function __promisify__(
+            type: 'ec',
+            options: ECKeyPairOptions<'pem', 'der'>,
+        ): Promise<{ publicKey: string; privateKey: Buffer }>;
+        function __promisify__(
+            type: 'ec',
+            options: ECKeyPairOptions<'der', 'pem'>,
+        ): Promise<{ publicKey: Buffer; privateKey: string }>;
+        function __promisify__(
+            type: 'ec',
+            options: ECKeyPairOptions<'der', 'der'>,
+        ): Promise<{ publicKey: Buffer; privateKey: Buffer }>;
+        function __promisify__(type: 'ec', options: ECKeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
 
-        function __promisify__(type: "ed25519", options: ED25519KeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
-        function __promisify__(type: "ed25519", options: ED25519KeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
-        function __promisify__(type: "ed25519", options: ED25519KeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
-        function __promisify__(type: "ed25519", options: ED25519KeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
-        function __promisify__(type: "ed25519", options?: ED25519KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+        function __promisify__(
+            type: 'ed25519',
+            options: ED25519KeyPairOptions<'pem', 'pem'>,
+        ): Promise<{ publicKey: string; privateKey: string }>;
+        function __promisify__(
+            type: 'ed25519',
+            options: ED25519KeyPairOptions<'pem', 'der'>,
+        ): Promise<{ publicKey: string; privateKey: Buffer }>;
+        function __promisify__(
+            type: 'ed25519',
+            options: ED25519KeyPairOptions<'der', 'pem'>,
+        ): Promise<{ publicKey: Buffer; privateKey: string }>;
+        function __promisify__(
+            type: 'ed25519',
+            options: ED25519KeyPairOptions<'der', 'der'>,
+        ): Promise<{ publicKey: Buffer; privateKey: Buffer }>;
+        function __promisify__(
+            type: 'ed25519',
+            options?: ED25519KeyPairKeyObjectOptions,
+        ): Promise<KeyPairKeyObjectResult>;
 
-        function __promisify__(type: "ed448", options: ED448KeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
-        function __promisify__(type: "ed448", options: ED448KeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
-        function __promisify__(type: "ed448", options: ED448KeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
-        function __promisify__(type: "ed448", options: ED448KeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
-        function __promisify__(type: "ed448", options?: ED448KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+        function __promisify__(
+            type: 'ed448',
+            options: ED448KeyPairOptions<'pem', 'pem'>,
+        ): Promise<{ publicKey: string; privateKey: string }>;
+        function __promisify__(
+            type: 'ed448',
+            options: ED448KeyPairOptions<'pem', 'der'>,
+        ): Promise<{ publicKey: string; privateKey: Buffer }>;
+        function __promisify__(
+            type: 'ed448',
+            options: ED448KeyPairOptions<'der', 'pem'>,
+        ): Promise<{ publicKey: Buffer; privateKey: string }>;
+        function __promisify__(
+            type: 'ed448',
+            options: ED448KeyPairOptions<'der', 'der'>,
+        ): Promise<{ publicKey: Buffer; privateKey: Buffer }>;
+        function __promisify__(type: 'ed448', options?: ED448KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
 
-        function __promisify__(type: "x25519", options: X25519KeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
-        function __promisify__(type: "x25519", options: X25519KeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
-        function __promisify__(type: "x25519", options: X25519KeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
-        function __promisify__(type: "x25519", options: X25519KeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
-        function __promisify__(type: "x25519", options?: X25519KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+        function __promisify__(
+            type: 'x25519',
+            options: X25519KeyPairOptions<'pem', 'pem'>,
+        ): Promise<{ publicKey: string; privateKey: string }>;
+        function __promisify__(
+            type: 'x25519',
+            options: X25519KeyPairOptions<'pem', 'der'>,
+        ): Promise<{ publicKey: string; privateKey: Buffer }>;
+        function __promisify__(
+            type: 'x25519',
+            options: X25519KeyPairOptions<'der', 'pem'>,
+        ): Promise<{ publicKey: Buffer; privateKey: string }>;
+        function __promisify__(
+            type: 'x25519',
+            options: X25519KeyPairOptions<'der', 'der'>,
+        ): Promise<{ publicKey: Buffer; privateKey: Buffer }>;
+        function __promisify__(
+            type: 'x25519',
+            options?: X25519KeyPairKeyObjectOptions,
+        ): Promise<KeyPairKeyObjectResult>;
 
-        function __promisify__(type: "x448", options: X448KeyPairOptions<'pem', 'pem'>): Promise<{ publicKey: string, privateKey: string }>;
-        function __promisify__(type: "x448", options: X448KeyPairOptions<'pem', 'der'>): Promise<{ publicKey: string, privateKey: Buffer }>;
-        function __promisify__(type: "x448", options: X448KeyPairOptions<'der', 'pem'>): Promise<{ publicKey: Buffer, privateKey: string }>;
-        function __promisify__(type: "x448", options: X448KeyPairOptions<'der', 'der'>): Promise<{ publicKey: Buffer, privateKey: Buffer }>;
-        function __promisify__(type: "x448", options?: X448KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
+        function __promisify__(
+            type: 'x448',
+            options: X448KeyPairOptions<'pem', 'pem'>,
+        ): Promise<{ publicKey: string; privateKey: string }>;
+        function __promisify__(
+            type: 'x448',
+            options: X448KeyPairOptions<'pem', 'der'>,
+        ): Promise<{ publicKey: string; privateKey: Buffer }>;
+        function __promisify__(
+            type: 'x448',
+            options: X448KeyPairOptions<'der', 'pem'>,
+        ): Promise<{ publicKey: Buffer; privateKey: string }>;
+        function __promisify__(
+            type: 'x448',
+            options: X448KeyPairOptions<'der', 'der'>,
+        ): Promise<{ publicKey: Buffer; privateKey: Buffer }>;
+        function __promisify__(type: 'x448', options?: X448KeyPairKeyObjectOptions): Promise<KeyPairKeyObjectResult>;
     }
 
     /**
@@ -8105,7 +8488,11 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
      * If \`key\` is not a [\`KeyObject\`][], this function behaves as if \`key\` had been
      * passed to [\`crypto.createPrivateKey()\`][].
      */
-    function sign(algorithm: string | null | undefined, data: NodeJS.ArrayBufferView, key: KeyLike | SignKeyObjectInput | SignPrivateKeyInput): Buffer;
+    function sign(
+        algorithm: string | null | undefined,
+        data: NodeJS.ArrayBufferView,
+        key: KeyLike | SignKeyObjectInput | SignPrivateKeyInput,
+    ): Buffer;
 
     /**
      * Calculates and returns the signature for \`data\` using the given private key and
@@ -8115,22 +8502,25 @@ definitions['crypto.d.ts'] = `declare module "crypto" {     import * as stream f
      * If \`key\` is not a [\`KeyObject\`][], this function behaves as if \`key\` had been
      * passed to [\`crypto.createPublicKey()\`][].
      */
-    function verify(algorithm: string | null | undefined, data: NodeJS.ArrayBufferView, key: KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput, signature: NodeJS.ArrayBufferView): boolean;
+    function verify(
+        algorithm: string | null | undefined,
+        data: NodeJS.ArrayBufferView,
+        key: KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput,
+        signature: NodeJS.ArrayBufferView,
+    ): boolean;
 
     /**
      * Computes the Diffie-Hellman secret based on a privateKey and a publicKey.
      * Both keys must have the same asymmetricKeyType, which must be one of
      * 'dh' (for Diffie-Hellman), 'ec' (for ECDH), 'x448', or 'x25519' (for ECDH-ES).
      */
-    function diffieHellman(options: {
-        privateKey: KeyObject;
-        publicKey: KeyObject
-    }): Buffer;
+    function diffieHellman(options: { privateKey: KeyObject; publicKey: KeyObject }): Buffer;
 }
 `;
-definitions['dgram.d.ts'] = `declare module "dgram" {     import { AddressInfo } from "net";
-    import * as dns from "dns";
-    import * as events from "events";
+definitions['dgram.d.ts'] = `declare module 'dgram' {
+    import { AddressInfo } from 'net';
+    import * as dns from 'dns';
+    import EventEmitter = require('events');
 
     interface RemoteInfo {
         address: string;
@@ -8140,30 +8530,30 @@ definitions['dgram.d.ts'] = `declare module "dgram" {     import { AddressInfo }
     }
 
     interface BindOptions {
-        port?: number;
-        address?: string;
-        exclusive?: boolean;
-        fd?: number;
+        port?: number | undefined;
+        address?: string | undefined;
+        exclusive?: boolean | undefined;
+        fd?: number | undefined;
     }
 
     type SocketType = "udp4" | "udp6";
 
     interface SocketOptions {
         type: SocketType;
-        reuseAddr?: boolean;
+        reuseAddr?: boolean | undefined;
         /**
          * @default false
          */
-        ipv6Only?: boolean;
-        recvBufferSize?: number;
-        sendBufferSize?: number;
-        lookup?: (hostname: string, options: dns.LookupOneOptions, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void) => void;
+        ipv6Only?: boolean | undefined;
+        recvBufferSize?: number | undefined;
+        sendBufferSize?: number | undefined;
+        lookup?: ((hostname: string, options: dns.LookupOneOptions, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void) => void) | undefined;
     }
 
     function createSocket(type: SocketType, callback?: (msg: Buffer, rinfo: RemoteInfo) => void): Socket;
     function createSocket(options: SocketOptions, callback?: (msg: Buffer, rinfo: RemoteInfo) => void): Socket;
 
-    class Socket extends events.EventEmitter {
+    class Socket extends EventEmitter {
         addMembership(multicastAddress: string, multicastInterface?: string): void;
         address(): AddressInfo;
         bind(port?: number, address?: string, callback?: () => void): void;
@@ -8269,7 +8659,8 @@ definitions['dgram.d.ts'] = `declare module "dgram" {     import { AddressInfo }
     }
 }
 `;
-definitions['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddrinfo flags.
+definitions['dns.d.ts'] = `declare module 'dns' {
+    \/\/ Supported getaddrinfo flags.
     const ADDRCONFIG: number;
     const V4MAPPED: number;
     /**
@@ -8279,14 +8670,14 @@ definitions['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddrinfo
     const ALL: number;
 
     interface LookupOptions {
-        family?: number;
-        hints?: number;
-        all?: boolean;
-        verbatim?: boolean;
+        family?: number | undefined;
+        hints?: number | undefined;
+        all?: boolean | undefined;
+        verbatim?: boolean | undefined;
     }
 
     interface LookupOneOptions extends LookupOptions {
-        all?: false;
+        all?: false | undefined;
     }
 
     interface LookupAllOptions extends LookupOptions {
@@ -8546,9 +8937,14 @@ definitions['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddrinfo
     const ADDRGETNETWORKPARAMS: string;
     const CANCELLED: string;
 
+    interface ResolverOptions {
+        timeout?: number | undefined;
+    }
+
     class Resolver {
+        constructor(options?: ResolverOptions);
+        cancel(): void;
         getServers: typeof getServers;
-        setServers: typeof setServers;
         resolve: typeof resolve;
         resolve4: typeof resolve4;
         resolve6: typeof resolve6;
@@ -8562,7 +8958,8 @@ definitions['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddrinfo
         resolveSrv: typeof resolveSrv;
         resolveTxt: typeof resolveTxt;
         reverse: typeof reverse;
-        cancel(): void;
+        setLocalAddress(ipv4?: string, ipv6?: string): void;
+        setServers: typeof setServers;
     }
 
     namespace promises {
@@ -8621,6 +9018,8 @@ definitions['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddrinfo
         function setServers(servers: ReadonlyArray<string>): void;
 
         class Resolver {
+            constructor(options?: ResolverOptions);
+            cancel(): void;
             getServers: typeof getServers;
             resolve: typeof resolve;
             resolve4: typeof resolve4;
@@ -8635,12 +9034,14 @@ definitions['dns.d.ts'] = `declare module "dns" {     \/\/ Supported getaddrinfo
             resolveSrv: typeof resolveSrv;
             resolveTxt: typeof resolveTxt;
             reverse: typeof reverse;
+            setLocalAddress(ipv4?: string, ipv6?: string): void;
             setServers: typeof setServers;
         }
     }
 }
 `;
-definitions['domain.d.ts'] = `declare module "domain" {     import { EventEmitter } from "events";
+definitions['domain.d.ts'] = `declare module 'domain' {
+    import EventEmitter = require('events');
 
     global {
         namespace NodeJS {
@@ -8664,11 +9065,12 @@ definitions['domain.d.ts'] = `declare module "domain" {     import { EventEmitte
     function create(): Domain;
 }
 `;
-definitions['events.d.ts'] = `declare module "events" {     interface EventEmitterOptions {
+definitions['events.d.ts'] = `declare module 'events' {
+    interface EventEmitterOptions {
         /**
          * Enables automatic capturing of promise rejection.
          */
-        captureRejections?: boolean;
+        captureRejections?: boolean | undefined;
     }
 
     interface NodeEventTarget {
@@ -8679,11 +9081,16 @@ definitions['events.d.ts'] = `declare module "events" {     interface EventEmitt
         addEventListener(event: string, listener: (...args: any[]) => void, opts?: { once: boolean }): any;
     }
 
-    namespace EventEmitter {
-        function once(emitter: NodeEventTarget, event: string | symbol): Promise<any[]>;
-        function once(emitter: DOMEventTarget, event: string): Promise<any[]>;
-        function on(emitter: EventEmitter, event: string): AsyncIterableIterator<any>;
-        const captureRejectionSymbol: unique symbol;
+    interface EventEmitter extends NodeJS.EventEmitter {}
+    class EventEmitter {
+        constructor(options?: EventEmitterOptions);
+
+        static once(emitter: NodeEventTarget, event: string | symbol): Promise<any[]>;
+        static once(emitter: DOMEventTarget, event: string): Promise<any[]>;
+        static on(emitter: NodeJS.EventEmitter, event: string): AsyncIterableIterator<any>;
+
+        /** @deprecated since v4.0.0 */
+        static listenerCount(emitter: NodeJS.EventEmitter, event: string | symbol): number;
 
         /**
          * This symbol shall be used to install a listener for only monitoring \`'error'\`
@@ -8694,31 +9101,21 @@ definitions['events.d.ts'] = `declare module "events" {     interface EventEmitt
          * \`'error'\` event is emitted, therefore the process will still crash if no
          * regular \`'error'\` listener is installed.
          */
-        const errorMonitor: unique symbol;
+        static readonly errorMonitor: unique symbol;
+        static readonly captureRejectionSymbol: unique symbol;
+
         /**
          * Sets or gets the default captureRejection value for all emitters.
          */
-        let captureRejections: boolean;
+        \/\/ TODO: These should be described using static getter/setter pairs:
+        static captureRejections: boolean;
+        static defaultMaxListeners: number;
+    }
 
-        interface EventEmitter extends NodeJS.EventEmitter {
-        }
-
-        class EventEmitter {
-            constructor(options?: EventEmitterOptions);
-            /** @deprecated since v4.0.0 */
-            static listenerCount(emitter: EventEmitter, event: string | symbol): number;
-            static defaultMaxListeners: number;
-            /**
-             * This symbol shall be used to install a listener for only monitoring \`'error'\`
-             * events. Listeners installed using this symbol are called before the regular
-             * \`'error'\` listeners are called.
-             *
-             * Installing a listener using this symbol does not change the behavior once an
-             * \`'error'\` event is emitted, therefore the process will still crash if no
-             * regular \`'error'\` listener is installed.
-             */
-            static readonly errorMonitor: unique symbol;
-        }
+    import internal = require('events');
+    namespace EventEmitter {
+        \/\/ Should just be \`export { EventEmitter }\`, but that doesn't work in TypeScript 3.4
+        export { internal as EventEmitter };
     }
 
     global {
@@ -8747,9 +9144,10 @@ definitions['events.d.ts'] = `declare module "events" {     interface EventEmitt
     export = EventEmitter;
 }
 `;
-definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "stream";
-    import * as events from "events";
-    import { URL } from "url";
+definitions['fs.d.ts'] = `declare module 'fs' {
+    import * as stream from 'stream';
+    import EventEmitter = require('events');
+    import { URL } from 'url';
     import * as promises from 'fs/promises';
 
     export { promises };
@@ -8763,7 +9161,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
     export type BufferEncodingOption = 'buffer' | { encoding: 'buffer' };
 
     export interface BaseEncodingOptions {
-        encoding?: BufferEncoding | null;
+        encoding?: BufferEncoding | null | undefined;
     }
 
     export type OpenMode = number | string;
@@ -8853,10 +9251,10 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * If there are no more directory entries to read, null will be returned.
          * Directory entries returned by this function are in no particular order as provided by the operating system's underlying directory mechanisms.
          */
-        readSync(): Dirent;
+        readSync(): Dirent | null;
     }
 
-    export interface FSWatcher extends events.EventEmitter {
+    export interface FSWatcher extends EventEmitter {
         close(): void;
 
         /**
@@ -9284,9 +9682,10 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * Asynchronous stat(2) - Get file status.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    export function stat(path: PathLike, options: BigIntOptions, callback: (err: NodeJS.ErrnoException | null, stats: BigIntStats) => void): void;
-    export function stat(path: PathLike, options: StatOptions, callback: (err: NodeJS.ErrnoException | null, stats: Stats | BigIntStats) => void): void;
     export function stat(path: PathLike, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+    export function stat(path: PathLike, options: StatOptions & { bigint?: false | undefined } | undefined, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+    export function stat(path: PathLike, options: StatOptions & { bigint: true }, callback: (err: NodeJS.ErrnoException | null, stats: BigIntStats) => void): void;
+    export function stat(path: PathLike, options: StatOptions | undefined, callback: (err: NodeJS.ErrnoException | null, stats: Stats | BigIntStats) => void): void;
 
     \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
     export namespace stat {
@@ -9294,24 +9693,27 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * Asynchronous stat(2) - Get file status.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          */
-        function __promisify__(path: PathLike, options: BigIntOptions): Promise<BigIntStats>;
-        function __promisify__(path: PathLike, options: StatOptions): Promise<Stats | BigIntStats>;
-        function __promisify__(path: PathLike): Promise<Stats>;
+        function __promisify__(path: PathLike, options?: StatOptions & { bigint?: false | undefined }): Promise<Stats>;
+        function __promisify__(path: PathLike, options: StatOptions & { bigint: true }): Promise<BigIntStats>;
+        function __promisify__(path: PathLike, options?: StatOptions): Promise<Stats | BigIntStats>;
     }
 
     /**
      * Synchronous stat(2) - Get file status.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    export function statSync(path: PathLike, options: BigIntOptions): BigIntStats;
-    export function statSync(path: PathLike, options: StatOptions): Stats | BigIntStats;
-    export function statSync(path: PathLike): Stats;
+    export function statSync(path: PathLike, options?: StatOptions & { bigint?: false | undefined }): Stats;
+    export function statSync(path: PathLike, options: StatOptions & { bigint: true }): BigIntStats;
+    export function statSync(path: PathLike, options?: StatOptions): Stats | BigIntStats;
 
     /**
      * Asynchronous fstat(2) - Get file status.
      * @param fd A file descriptor.
      */
     export function fstat(fd: number, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+    export function fstat(fd: number, options: StatOptions & { bigint?: false | undefined } | undefined, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+    export function fstat(fd: number, options: StatOptions & { bigint: true }, callback: (err: NodeJS.ErrnoException | null, stats: BigIntStats) => void): void;
+    export function fstat(fd: number, options: StatOptions | undefined, callback: (err: NodeJS.ErrnoException | null, stats: Stats | BigIntStats) => void): void;
 
     \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
     export namespace fstat {
@@ -9319,20 +9721,27 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * Asynchronous fstat(2) - Get file status.
          * @param fd A file descriptor.
          */
-        function __promisify__(fd: number): Promise<Stats>;
+        function __promisify__(fd: number, options?: StatOptions & { bigint?: false | undefined }): Promise<Stats>;
+        function __promisify__(fd: number, options: StatOptions & { bigint: true }): Promise<BigIntStats>;
+        function __promisify__(fd: number, options?: StatOptions): Promise<Stats | BigIntStats>;
     }
 
     /**
      * Synchronous fstat(2) - Get file status.
      * @param fd A file descriptor.
      */
-    export function fstatSync(fd: number): Stats;
+    export function fstatSync(fd: number, options?: StatOptions & { bigint?: false | undefined }): Stats;
+    export function fstatSync(fd: number, options: StatOptions & { bigint: true }): BigIntStats;
+    export function fstatSync(fd: number, options?: StatOptions): Stats | BigIntStats;
 
     /**
      * Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
     export function lstat(path: PathLike, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+    export function lstat(path: PathLike, options: StatOptions & { bigint?: false | undefined } | undefined, callback: (err: NodeJS.ErrnoException | null, stats: Stats) => void): void;
+    export function lstat(path: PathLike, options: StatOptions & { bigint: true }, callback: (err: NodeJS.ErrnoException | null, stats: BigIntStats) => void): void;
+    export function lstat(path: PathLike, options: StatOptions | undefined, callback: (err: NodeJS.ErrnoException | null, stats: Stats | BigIntStats) => void): void;
 
     \/\/ NOTE: This namespace provides design-time support for util.promisify. Exported members do not exist at runtime.
     export namespace lstat {
@@ -9340,14 +9749,18 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * Asynchronous lstat(2) - Get file status. Does not dereference symbolic links.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          */
-        function __promisify__(path: PathLike): Promise<Stats>;
+        function __promisify__(path: PathLike, options?: StatOptions & { bigint?: false | undefined }): Promise<Stats>;
+        function __promisify__(path: PathLike, options: StatOptions & { bigint: true }): Promise<BigIntStats>;
+        function __promisify__(path: PathLike, options?: StatOptions): Promise<Stats | BigIntStats>;
     }
 
     /**
      * Synchronous lstat(2) - Get file status. Does not dereference symbolic links.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      */
-    export function lstatSync(path: PathLike): Stats;
+    export function lstatSync(path: PathLike, options?: StatOptions & { bigint?: false | undefined }): Stats;
+    export function lstatSync(path: PathLike, options: StatOptions & { bigint: true }): BigIntStats;
+    export function lstatSync(path: PathLike, options?: StatOptions): Stats | BigIntStats;
 
     /**
      * Asynchronous link(2) - Create a new link (also known as a hard link) to an existing file.
@@ -9609,7 +10022,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * \`true\`.
          * @default 0
          */
-        maxRetries?: number;
+        maxRetries?: number | undefined;
         /**
          * @deprecated since v14.14.0 In future versions of Node.js,
          * \`fs.rmdir(path, { recursive: true })\` will throw on nonexistent
@@ -9621,13 +10034,13 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * operations are retried on failure.
          * @default false
          */
-        recursive?: boolean;
+        recursive?: boolean | undefined;
         /**
          * The amount of time in milliseconds to wait between retries.
          * This option is ignored if the \`recursive\` option is not \`true\`.
          * @default 100
          */
-        retryDelay?: number;
+        retryDelay?: number | undefined;
     }
 
     /**
@@ -9657,7 +10070,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * When \`true\`, exceptions will be ignored if \`path\` does not exist.
          * @default false
          */
-        force?: boolean;
+        force?: boolean | undefined;
         /**
          * If an \`EBUSY\`, \`EMFILE\`, \`ENFILE\`, \`ENOTEMPTY\`, or
          * \`EPERM\` error is encountered, Node.js will retry the operation with a linear
@@ -9666,20 +10079,20 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * \`true\`.
          * @default 0
          */
-        maxRetries?: number;
+        maxRetries?: number | undefined;
         /**
          * If \`true\`, perform a recursive directory removal. In
          * recursive mode, errors are not reported if \`path\` does not exist, and
          * operations are retried on failure.
          * @default false
          */
-        recursive?: boolean;
+        recursive?: boolean | undefined;
         /**
          * The amount of time in milliseconds to wait between retries.
          * This option is ignored if the \`recursive\` option is not \`true\`.
          * @default 100
          */
-        retryDelay?: number;
+        retryDelay?: number | undefined;
     }
 
     /**
@@ -9707,12 +10120,12 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * If a folder was created, the path to the first created folder will be returned.
          * @default false
          */
-        recursive?: boolean;
+        recursive?: boolean | undefined;
         /**
          * A file mode. If a string is passed, it is parsed as an octal integer. If not specified
          * @default 0o777
          */
-        mode?: Mode;
+        mode?: Mode | undefined;
     }
 
     /**
@@ -9721,7 +10134,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
      * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
      */
-    export function mkdir(path: PathLike, options: MakeDirectoryOptions & { recursive: true }, callback: (err: NodeJS.ErrnoException | null, path: string) => void): void;
+    export function mkdir(path: PathLike, options: MakeDirectoryOptions & { recursive: true }, callback: (err: NodeJS.ErrnoException | null, path?: string) => void): void;
 
     /**
      * Asynchronous mkdir(2) - create a directory.
@@ -9729,7 +10142,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
      * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
      */
-    export function mkdir(path: PathLike, options: Mode | (MakeDirectoryOptions & { recursive?: false; }) | null | undefined, callback: NoParamCallback): void;
+    export function mkdir(path: PathLike, options: Mode | (MakeDirectoryOptions & { recursive?: false | undefined; }) | null | undefined, callback: NoParamCallback): void;
 
     /**
      * Asynchronous mkdir(2) - create a directory.
@@ -9737,7 +10150,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
      * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
      */
-    export function mkdir(path: PathLike, options: Mode | MakeDirectoryOptions | null | undefined, callback: (err: NodeJS.ErrnoException | null, path: string | undefined) => void): void;
+    export function mkdir(path: PathLike, options: Mode | MakeDirectoryOptions | null | undefined, callback: (err: NodeJS.ErrnoException | null, path?: string) => void): void;
 
     /**
      * Asynchronous mkdir(2) - create a directory with a mode of \`0o777\`.
@@ -9753,7 +10166,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
          * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
          */
-        function __promisify__(path: PathLike, options: MakeDirectoryOptions & { recursive: true; }): Promise<string>;
+        function __promisify__(path: PathLike, options: MakeDirectoryOptions & { recursive: true; }): Promise<string | undefined>;
 
         /**
          * Asynchronous mkdir(2) - create a directory.
@@ -9761,7 +10174,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
          * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
          */
-        function __promisify__(path: PathLike, options?: Mode | (MakeDirectoryOptions & { recursive?: false; }) | null): Promise<void>;
+        function __promisify__(path: PathLike, options?: Mode | (MakeDirectoryOptions & { recursive?: false | undefined; }) | null): Promise<void>;
 
         /**
          * Asynchronous mkdir(2) - create a directory.
@@ -9778,7 +10191,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
      * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
      */
-    export function mkdirSync(path: PathLike, options: MakeDirectoryOptions & { recursive: true; }): string;
+    export function mkdirSync(path: PathLike, options: MakeDirectoryOptions & { recursive: true; }): string | undefined;
 
     /**
      * Synchronous mkdir(2) - create a directory.
@@ -9786,7 +10199,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param options Either the file mode, or an object optionally specifying the file mode and whether parent folders
      * should be created. If a string is passed, it is parsed as an octal integer. If not specified, defaults to \`0o777\`.
      */
-    export function mkdirSync(path: PathLike, options?: Mode | (MakeDirectoryOptions & { recursive?: false; }) | null): void;
+    export function mkdirSync(path: PathLike, options?: Mode | (MakeDirectoryOptions & { recursive?: false | undefined; }) | null): void;
 
     /**
      * Synchronous mkdir(2) - create a directory.
@@ -9875,7 +10288,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      */
     export function readdir(
         path: PathLike,
-        options: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | undefined | null,
+        options: { encoding: BufferEncoding | null; withFileTypes?: false | undefined } | BufferEncoding | undefined | null,
         callback: (err: NodeJS.ErrnoException | null, files: string[]) => void,
     ): void;
 
@@ -9884,7 +10297,11 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    export function readdir(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer", callback: (err: NodeJS.ErrnoException | null, files: Buffer[]) => void): void;
+    export function readdir(
+        path: PathLike,
+        options: { encoding: "buffer"; withFileTypes?: false | undefined } | "buffer",
+        callback: (err: NodeJS.ErrnoException | null, files: Buffer[]) => void
+    ): void;
 
     /**
      * Asynchronous readdir(3) - read a directory.
@@ -9893,7 +10310,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      */
     export function readdir(
         path: PathLike,
-        options: BaseEncodingOptions & { withFileTypes?: false } | BufferEncoding | undefined | null,
+        options: BaseEncodingOptions & { withFileTypes?: false | undefined } | BufferEncoding | undefined | null,
         callback: (err: NodeJS.ErrnoException | null, files: string[] | Buffer[]) => void,
     ): void;
 
@@ -9917,21 +10334,21 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(path: PathLike, options?: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null): Promise<string[]>;
+        function __promisify__(path: PathLike, options?: { encoding: BufferEncoding | null; withFileTypes?: false | undefined } | BufferEncoding | null): Promise<string[]>;
 
         /**
          * Asynchronous readdir(3) - read a directory.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(path: PathLike, options: "buffer" | { encoding: "buffer"; withFileTypes?: false }): Promise<Buffer[]>;
+        function __promisify__(path: PathLike, options: "buffer" | { encoding: "buffer"; withFileTypes?: false | undefined }): Promise<Buffer[]>;
 
         /**
          * Asynchronous readdir(3) - read a directory.
          * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
          * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
          */
-        function __promisify__(path: PathLike, options?: BaseEncodingOptions & { withFileTypes?: false } | BufferEncoding | null): Promise<string[] | Buffer[]>;
+        function __promisify__(path: PathLike, options?: BaseEncodingOptions & { withFileTypes?: false | undefined } | BufferEncoding | null): Promise<string[] | Buffer[]>;
 
         /**
          * Asynchronous readdir(3) - read a directory.
@@ -9946,21 +10363,21 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    export function readdirSync(path: PathLike, options?: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null): string[];
+    export function readdirSync(path: PathLike, options?: { encoding: BufferEncoding | null; withFileTypes?: false | undefined } | BufferEncoding | null): string[];
 
     /**
      * Synchronous readdir(3) - read a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    export function readdirSync(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false } | "buffer"): Buffer[];
+    export function readdirSync(path: PathLike, options: { encoding: "buffer"; withFileTypes?: false | undefined } | "buffer"): Buffer[];
 
     /**
      * Synchronous readdir(3) - read a directory.
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * @param options The encoding (or an object specifying the encoding), used as the encoding of the result. If not provided, \`'utf8'\` is used.
      */
-    export function readdirSync(path: PathLike, options?: BaseEncodingOptions & { withFileTypes?: false } | BufferEncoding | null): string[] | Buffer[];
+    export function readdirSync(path: PathLike, options?: BaseEncodingOptions & { withFileTypes?: false | undefined } | BufferEncoding | null): string[] | Buffer[];
 
     /**
      * Synchronous readdir(3) - read a directory.
@@ -10257,15 +10674,15 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
         /**
          * @default 0
          */
-        offset?: number;
+        offset?: number | undefined;
         /**
          * @default \`length of buffer\`
          */
-        length?: number;
+        length?: number | undefined;
         /**
          * @default null
          */
-        position?: number | null;
+        position?: number | null | undefined;
     }
 
     /**
@@ -10291,17 +10708,11 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param options An object that may contain an optional flag.
      * If a flag is not provided, it defaults to \`'r'\`.
      */
-    export function readFile(path: PathLike | number, options: { encoding?: null; flag?: string; } | undefined | null, callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void): void;
-
-    /**
-     * Asynchronously reads the entire contents of a file.
-     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
-     * URL support is _experimental_.
-     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
-     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
-     * If a flag is not provided, it defaults to \`'r'\`.
-     */
-    export function readFile(path: PathLike | number, options: { encoding: BufferEncoding; flag?: string; } | string, callback: (err: NodeJS.ErrnoException | null, data: string) => void): void;
+    export function readFile(
+        path: PathLike | number,
+        options: { encoding?: null | undefined; flag?: string | undefined; } | undefined | null,
+        callback: (err: NodeJS.ErrnoException | null, data: Buffer) => void
+    ): void;
 
     /**
      * Asynchronously reads the entire contents of a file.
@@ -10313,7 +10724,21 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      */
     export function readFile(
         path: PathLike | number,
-        options: BaseEncodingOptions & { flag?: string; } | string | undefined | null,
+        options: { encoding: BufferEncoding; flag?: string | undefined; } | BufferEncoding,
+        callback: (err: NodeJS.ErrnoException | null, data: string) => void
+    ): void;
+
+    /**
+     * Asynchronously reads the entire contents of a file.
+     * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
+     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
+     * If a flag is not provided, it defaults to \`'r'\`.
+     */
+    export function readFile(
+        path: PathLike | number,
+        options: BaseEncodingOptions & { flag?: string | undefined; } | BufferEncoding | undefined | null,
         callback: (err: NodeJS.ErrnoException | null, data: string | Buffer) => void,
     ): void;
 
@@ -10333,7 +10758,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * @param options An object that may contain an optional flag.
          * If a flag is not provided, it defaults to \`'r'\`.
          */
-        function __promisify__(path: PathLike | number, options?: { encoding?: null; flag?: string; } | null): Promise<Buffer>;
+        function __promisify__(path: PathLike | number, options?: { encoding?: null | undefined; flag?: string | undefined; } | null): Promise<Buffer>;
 
         /**
          * Asynchronously reads the entire contents of a file.
@@ -10343,7 +10768,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
          * If a flag is not provided, it defaults to \`'r'\`.
          */
-        function __promisify__(path: PathLike | number, options: { encoding: BufferEncoding; flag?: string; } | string): Promise<string>;
+        function __promisify__(path: PathLike | number, options: { encoding: BufferEncoding; flag?: string | undefined; } | BufferEncoding): Promise<string>;
 
         /**
          * Asynchronously reads the entire contents of a file.
@@ -10353,7 +10778,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
          * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
          * If a flag is not provided, it defaults to \`'r'\`.
          */
-        function __promisify__(path: PathLike | number, options?: BaseEncodingOptions & { flag?: string; } | string | null): Promise<string | Buffer>;
+        function __promisify__(path: PathLike | number, options?: BaseEncodingOptions & { flag?: string | undefined; } | BufferEncoding | null): Promise<string | Buffer>;
     }
 
     /**
@@ -10363,7 +10788,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
      * @param options An object that may contain an optional flag. If a flag is not provided, it defaults to \`'r'\`.
      */
-    export function readFileSync(path: PathLike | number, options?: { encoding?: null; flag?: string; } | null): Buffer;
+    export function readFileSync(path: PathLike | number, options?: { encoding?: null | undefined; flag?: string | undefined; } | null): Buffer;
 
     /**
      * Synchronously reads the entire contents of a file.
@@ -10373,7 +10798,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
      * If a flag is not provided, it defaults to \`'r'\`.
      */
-    export function readFileSync(path: PathLike | number, options: { encoding: BufferEncoding; flag?: string; } | BufferEncoding): string;
+    export function readFileSync(path: PathLike | number, options: { encoding: BufferEncoding; flag?: string | undefined; } | BufferEncoding): string;
 
     /**
      * Synchronously reads the entire contents of a file.
@@ -10383,9 +10808,9 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
      * If a flag is not provided, it defaults to \`'r'\`.
      */
-    export function readFileSync(path: PathLike | number, options?: BaseEncodingOptions & { flag?: string; } | BufferEncoding | null): string | Buffer;
+    export function readFileSync(path: PathLike | number, options?: BaseEncodingOptions & { flag?: string | undefined; } | BufferEncoding | null): string | Buffer;
 
-    export type WriteFileOptions = BaseEncodingOptions & { mode?: Mode; flag?: string; } | string | null;
+    export type WriteFileOptions = BaseEncodingOptions & { mode?: Mode | undefined; flag?: string | undefined; } | BufferEncoding | null;
 
     /**
      * Asynchronously writes data to a file, replacing the file if it already exists.
@@ -10498,7 +10923,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
     /**
      * Watch for changes on \`filename\`. The callback \`listener\` will be called each time the file is accessed.
      */
-    export function watchFile(filename: PathLike, options: { persistent?: boolean; interval?: number; } | undefined, listener: (curr: Stats, prev: Stats) => void): void;
+    export function watchFile(filename: PathLike, options: { persistent?: boolean | undefined; interval?: number | undefined; } | undefined, listener: (curr: Stats, prev: Stats) => void): void;
 
     /**
      * Watch for changes on \`filename\`. The callback \`listener\` will be called each time the file is accessed.
@@ -10525,20 +10950,9 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      */
     export function watch(
         filename: PathLike,
-        options: { encoding?: BufferEncoding | null, persistent?: boolean, recursive?: boolean } | BufferEncoding | undefined | null,
-        listener?: (event: string, filename: string) => void,
+        options: { encoding?: BufferEncoding | null | undefined, persistent?: boolean | undefined, recursive?: boolean | undefined } | BufferEncoding | undefined | null,
+        listener?: (event: "rename" | "change", filename: string) => void,
     ): FSWatcher;
-
-    /**
-     * Watch for changes on \`filename\`, where \`filename\` is either a file or a directory, returning an \`FSWatcher\`.
-     * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
-     * URL support is _experimental_.
-     * @param options Either the encoding for the filename provided to the listener, or an object optionally specifying encoding, persistent, and recursive options.
-     * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
-     * If \`persistent\` is not supplied, the default of \`true\` is used.
-     * If \`recursive\` is not supplied, the default of \`false\` is used.
-     */
-    export function watch(filename: PathLike, options: { encoding: "buffer", persistent?: boolean, recursive?: boolean } | "buffer", listener?: (event: string, filename: Buffer) => void): FSWatcher;
 
     /**
      * Watch for changes on \`filename\`, where \`filename\` is either a file or a directory, returning an \`FSWatcher\`.
@@ -10551,8 +10965,23 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      */
     export function watch(
         filename: PathLike,
-        options: { encoding?: BufferEncoding | null, persistent?: boolean, recursive?: boolean } | string | null,
-        listener?: (event: string, filename: string | Buffer) => void,
+        options: { encoding: "buffer", persistent?: boolean | undefined, recursive?: boolean | undefined; } | "buffer",
+        listener?: (event: "rename" | "change", filename: Buffer) => void
+    ): FSWatcher;
+
+    /**
+     * Watch for changes on \`filename\`, where \`filename\` is either a file or a directory, returning an \`FSWatcher\`.
+     * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
+     * URL support is _experimental_.
+     * @param options Either the encoding for the filename provided to the listener, or an object optionally specifying encoding, persistent, and recursive options.
+     * If \`encoding\` is not supplied, the default of \`'utf8'\` is used.
+     * If \`persistent\` is not supplied, the default of \`true\` is used.
+     * If \`recursive\` is not supplied, the default of \`false\` is used.
+     */
+    export function watch(
+        filename: PathLike,
+        options: { encoding?: BufferEncoding | null | undefined, persistent?: boolean | undefined, recursive?: boolean | undefined } | string | null,
+        listener?: (event: "rename" | "change", filename: string | Buffer) => void,
     ): FSWatcher;
 
     /**
@@ -10560,7 +10989,7 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param filename A path to a file or directory. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    export function watch(filename: PathLike, listener?: (event: string, filename: string) => any): FSWatcher;
+    export function watch(filename: PathLike, listener?: (event: "rename" | "change", filename: string) => any): FSWatcher;
 
     /**
      * Asynchronously tests whether or not the given path exists by checking with the file system.
@@ -10785,19 +11214,19 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    export function createReadStream(path: PathLike, options?: string | {
-        flags?: string;
-        encoding?: BufferEncoding;
-        fd?: number;
-        mode?: number;
-        autoClose?: boolean;
+    export function createReadStream(path: PathLike, options?: BufferEncoding | {
+        flags?: string | undefined;
+        encoding?: BufferEncoding | undefined;
+        fd?: number | undefined;
+        mode?: number | undefined;
+        autoClose?: boolean | undefined;
         /**
          * @default false
          */
-        emitClose?: boolean;
-        start?: number;
-        end?: number;
-        highWaterMark?: number;
+        emitClose?: boolean | undefined;
+        start?: number | undefined;
+        end?: number | undefined;
+        highWaterMark?: number | undefined;
     }): ReadStream;
 
     /**
@@ -10805,15 +11234,15 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
      * @param path A path to a file. If a URL is provided, it must use the \`file:\` protocol.
      * URL support is _experimental_.
      */
-    export function createWriteStream(path: PathLike, options?: string | {
-        flags?: string;
-        encoding?: BufferEncoding;
-        fd?: number;
-        mode?: number;
-        autoClose?: boolean;
-        emitClose?: boolean;
-        start?: number;
-        highWaterMark?: number;
+    export function createWriteStream(path: PathLike, options?: BufferEncoding | {
+        flags?: string | undefined;
+        encoding?: BufferEncoding | undefined;
+        fd?: number | undefined;
+        mode?: number | undefined;
+        autoClose?: boolean | undefined;
+        emitClose?: boolean | undefined;
+        start?: number | undefined;
+        highWaterMark?: number | undefined;
     }): WriteStream;
 
     /**
@@ -10948,14 +11377,14 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
     export function readvSync(fd: number, buffers: ReadonlyArray<NodeJS.ArrayBufferView>, position?: number): number;
 
     export interface OpenDirOptions {
-        encoding?: BufferEncoding;
+        encoding?: BufferEncoding | undefined;
         /**
          * Number of directory entries that are buffered
          * internally when reading from the directory. Higher values lead to better
          * performance but higher memory usage.
          * @default 32
          */
-        bufferSize?: number;
+        bufferSize?: number | undefined;
     }
 
     export function opendirSync(path: string, options?: OpenDirOptions): Dir;
@@ -10982,20 +11411,21 @@ definitions['fs.d.ts'] = `declare module "fs" {     import * as stream from "str
     }
 
     export interface StatOptions {
-        bigint: boolean;
+        bigint?: boolean | undefined;
     }
 }
 `;
-definitions['globals.d.ts'] = `\/\/ Declare "static" methods in Error interface ErrorConstructor {
+definitions['globals.d.ts'] = `\/\/ Declare "static" methods in Error
+interface ErrorConstructor {
     /** Create .stack property on a target object */
     captureStackTrace(targetObject: object, constructorOpt?: Function): void;
 
     /**
      * Optional override for formatting stack traces
      *
-     * @see https:\/\/github.com/v8/v8/wiki/Stack%20Trace%20API#customizing-stack-traces
+     * @see https:\/\/v8.dev/docs/stack-trace-api#customizing-stack-traces
      */
-    prepareStackTrace?: (err: Error, stackTraces: NodeJS.CallSite[]) => any;
+    prepareStackTrace?: ((err: Error, stackTraces: NodeJS.CallSite[]) => any) | undefined;
 
     stackTraceLimit: number;
 }
@@ -11034,13 +11464,13 @@ declare var console: Console;
 declare var __filename: string;
 declare var __dirname: string;
 
-declare function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+declare function setTimeout(callback: (...args: any[]) => void, ms?: number, ...args: any[]): NodeJS.Timeout;
 declare namespace setTimeout {
     function __promisify__(ms: number): Promise<void>;
     function __promisify__<T>(ms: number, value: T): Promise<T>;
 }
 declare function clearTimeout(timeoutId: NodeJS.Timeout): void;
-declare function setInterval(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+declare function setInterval(callback: (...args: any[]) => void, ms?: number, ...args: any[]): NodeJS.Timeout;
 declare function clearInterval(intervalId: NodeJS.Timeout): void;
 declare function setImmediate(callback: (...args: any[]) => void, ...args: any[]): NodeJS.Immediate;
 declare namespace setImmediate {
@@ -11058,12 +11488,14 @@ declare var module: NodeModule;
 declare var exports: any;
 
 \/\/ Buffer class
-type BufferEncoding = "ascii" | "utf8" | "utf-8" | "utf16le" | "ucs2" | "ucs-2" | "base64" | "latin1" | "binary" | "hex";
+type BufferEncoding = "ascii" | "utf8" | "utf-8" | "utf16le" | "ucs2" | "ucs-2" | "base64" | "base64url" | "latin1" | "binary" | "hex";
+
+type WithImplicitCoercion<T> = T | { valueOf(): T };
 
 /**
  * Raw data is stored in instances of the Buffer class.
  * A Buffer is similar to an array of integers but corresponds to a raw memory allocation outside the V8 heap.  A Buffer cannot be resized.
- * Valid string encodings: 'ascii'|'utf8'|'utf16le'|'ucs2'(alias of 'utf16le')|'base64'|'binary'(deprecated)|'hex'
+ * Valid string encodings: 'ascii'|'utf8'|'utf16le'|'ucs2'(alias of 'utf16le')|'base64'|'base64url'|'binary'(deprecated)|'hex'
  */
 declare class Buffer extends Uint8Array {
     /**
@@ -11119,25 +11551,19 @@ declare class Buffer extends Uint8Array {
      *
      * @param arrayBuffer The .buffer property of any TypedArray or a new ArrayBuffer()
      */
-    static from(arrayBuffer: ArrayBuffer | SharedArrayBuffer, byteOffset?: number, length?: number): Buffer;
+    static from(arrayBuffer: WithImplicitCoercion<ArrayBuffer | SharedArrayBuffer>, byteOffset?: number, length?: number): Buffer;
     /**
      * Creates a new Buffer using the passed {data}
      * @param data data to create a new Buffer
      */
-    static from(data: ReadonlyArray<number>): Buffer;
-    static from(data: Uint8Array): Buffer;
-    /**
-     * Creates a new buffer containing the coerced value of an object
-     * A \`TypeError\` will be thrown if {obj} has not mentioned methods or is not of other type appropriate for \`Buffer.from()\` variants.
-     * @param obj An object supporting \`Symbol.toPrimitive\` or \`valueOf()\`.
-     */
-    static from(obj: { valueOf(): string | object } | { [Symbol.toPrimitive](hint: 'string'): string }, byteOffset?: number, length?: number): Buffer;
+    static from(data: Uint8Array | ReadonlyArray<number>): Buffer;
+    static from(data: WithImplicitCoercion<Uint8Array | ReadonlyArray<number> | string>): Buffer;
     /**
      * Creates a new Buffer containing the given JavaScript string {str}.
      * If provided, the {encoding} parameter identifies the character encoding.
      * If not provided, {encoding} defaults to 'utf8'.
      */
-    static from(str: string, encoding?: BufferEncoding): Buffer;
+    static from(str: WithImplicitCoercion<string> | { [Symbol.toPrimitive](hint: 'string'): string }, encoding?: BufferEncoding): Buffer;
     /**
      * Creates a new Buffer using the passed {data}
      * @param values to create a new Buffer
@@ -11151,7 +11577,7 @@ declare class Buffer extends Uint8Array {
     static isBuffer(obj: any): obj is Buffer;
     /**
      * Returns true if {encoding} is a valid encoding argument.
-     * Valid string encodings in Node 0.12: 'ascii'|'utf8'|'utf16le'|'ucs2'(alias of 'utf16le')|'base64'|'binary'(deprecated)|'hex'
+     * Valid string encodings in Node 0.12: 'ascii'|'utf8'|'utf16le'|'ucs2'(alias of 'utf16le')|'base64'|'base64url'|'binary'(deprecated)|'hex'
      *
      * @param encoding string to test.
      */
@@ -11317,24 +11743,24 @@ declare namespace NodeJS {
          * the getter function.
          * @default \`false\`
          */
-        getters?: 'get' | 'set' | boolean;
-        showHidden?: boolean;
+        getters?: 'get' | 'set' | boolean | undefined;
+        showHidden?: boolean | undefined;
         /**
          * @default 2
          */
-        depth?: number | null;
-        colors?: boolean;
-        customInspect?: boolean;
-        showProxy?: boolean;
-        maxArrayLength?: number | null;
+        depth?: number | null | undefined;
+        colors?: boolean | undefined;
+        customInspect?: boolean | undefined;
+        showProxy?: boolean | undefined;
+        maxArrayLength?: number | null | undefined;
         /**
          * Specifies the maximum number of characters to
          * include when formatting. Set to \`null\` or \`Infinity\` to show all elements.
          * Set to \`0\` or negative to show no characters.
          * @default Infinity
          */
-        maxStringLength?: number | null;
-        breakLength?: number;
+        maxStringLength?: number | null | undefined;
+        breakLength?: number | undefined;
         /**
          * Setting this to \`false\` causes each object key
          * to be displayed on a new line. It will also add new lines to text that is
@@ -11345,8 +11771,8 @@ declare namespace NodeJS {
          * For more information, see the example below.
          * @default \`true\`
          */
-        compact?: boolean | number;
-        sorted?: boolean | ((a: string, b: string) => number);
+        compact?: boolean | number | undefined;
+        sorted?: boolean | ((a: string, b: string) => number) | undefined;
     }
 
     interface CallSite {
@@ -11424,11 +11850,10 @@ declare namespace NodeJS {
     }
 
     interface ErrnoException extends Error {
-        errno?: number;
-        code?: string;
-        path?: string;
-        syscall?: string;
-        stack?: string;
+        errno?: number | undefined;
+        code?: string | undefined;
+        path?: string | undefined;
+        syscall?: string | undefined;
     }
 
     interface ReadableStream extends EventEmitter {
@@ -11438,7 +11863,7 @@ declare namespace NodeJS {
         pause(): this;
         resume(): this;
         isPaused(): boolean;
-        pipe<T extends WritableStream>(destination: T, options?: { end?: boolean; }): T;
+        pipe<T extends WritableStream>(destination: T, options?: { end?: boolean | undefined; }): T;
         unpipe(destination?: WritableStream): this;
         unshift(chunk: string | Uint8Array, encoding?: BufferEncoding): void;
         wrap(oldStream: ReadableStream): this;
@@ -11510,8 +11935,8 @@ declare namespace NodeJS {
         parseFloat: typeof parseFloat;
         parseInt: typeof parseInt;
         setImmediate: (callback: (...args: any[]) => void, ...args: any[]) => Immediate;
-        setInterval: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => Timeout;
-        setTimeout: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => Timeout;
+        setInterval: (callback: (...args: any[]) => void, ms?: number, ...args: any[]) => Timeout;
+        setTimeout: (callback: (...args: any[]) => void, ms?: number, ...args: any[]) => Timeout;
         queueMicrotask: typeof queueMicrotask;
         undefined: typeof undefined;
         unescape: (str: string) => string;
@@ -11568,7 +11993,7 @@ declare namespace NodeJS {
     }
 
     interface RequireResolve {
-        (id: string, options?: { paths?: string[]; }): string;
+        (id: string, options?: { paths?: string[] | undefined; }): string;
         paths(request: string): string[] | null;
     }
 
@@ -11604,75 +12029,78 @@ declare namespace NodeJS {
     }
 }
 `;
-definitions['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis; `;
-definitions['http.d.ts'] = `declare module "http" {     import * as stream from "stream";
-    import { URL } from "url";
-    import { Socket, Server as NetServer } from "net";
+definitions['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis;
+`;
+definitions['http.d.ts'] = `declare module 'http' {
+    import * as stream from 'stream';
+    import { URL } from 'url';
+    import { Socket, Server as NetServer } from 'net';
 
     \/\/ incoming headers will never contain number
     interface IncomingHttpHeaders extends NodeJS.Dict<string | string[]> {
-        'accept'?: string;
-        'accept-language'?: string;
-        'accept-patch'?: string;
-        'accept-ranges'?: string;
-        'access-control-allow-credentials'?: string;
-        'access-control-allow-headers'?: string;
-        'access-control-allow-methods'?: string;
-        'access-control-allow-origin'?: string;
-        'access-control-expose-headers'?: string;
-        'access-control-max-age'?: string;
-        'access-control-request-headers'?: string;
-        'access-control-request-method'?: string;
-        'age'?: string;
-        'allow'?: string;
-        'alt-svc'?: string;
-        'authorization'?: string;
-        'cache-control'?: string;
-        'connection'?: string;
-        'content-disposition'?: string;
-        'content-encoding'?: string;
-        'content-language'?: string;
-        'content-length'?: string;
-        'content-location'?: string;
-        'content-range'?: string;
-        'content-type'?: string;
-        'cookie'?: string;
-        'date'?: string;
-        'expect'?: string;
-        'expires'?: string;
-        'forwarded'?: string;
-        'from'?: string;
-        'host'?: string;
-        'if-match'?: string;
-        'if-modified-since'?: string;
-        'if-none-match'?: string;
-        'if-unmodified-since'?: string;
-        'last-modified'?: string;
-        'location'?: string;
-        'origin'?: string;
-        'pragma'?: string;
-        'proxy-authenticate'?: string;
-        'proxy-authorization'?: string;
-        'public-key-pins'?: string;
-        'range'?: string;
-        'referer'?: string;
-        'retry-after'?: string;
-        'sec-websocket-accept'?: string;
-        'sec-websocket-extensions'?: string;
-        'sec-websocket-key'?: string;
-        'sec-websocket-protocol'?: string;
-        'sec-websocket-version'?: string;
-        'set-cookie'?: string[];
-        'strict-transport-security'?: string;
-        'tk'?: string;
-        'trailer'?: string;
-        'transfer-encoding'?: string;
-        'upgrade'?: string;
-        'user-agent'?: string;
-        'vary'?: string;
-        'via'?: string;
-        'warning'?: string;
-        'www-authenticate'?: string;
+        'accept'?: string | undefined;
+        'accept-language'?: string | undefined;
+        'accept-patch'?: string | undefined;
+        'accept-ranges'?: string | undefined;
+        'access-control-allow-credentials'?: string | undefined;
+        'access-control-allow-headers'?: string | undefined;
+        'access-control-allow-methods'?: string | undefined;
+        'access-control-allow-origin'?: string | undefined;
+        'access-control-expose-headers'?: string | undefined;
+        'access-control-max-age'?: string | undefined;
+        'access-control-request-headers'?: string | undefined;
+        'access-control-request-method'?: string | undefined;
+        'age'?: string | undefined;
+        'allow'?: string | undefined;
+        'alt-svc'?: string | undefined;
+        'authorization'?: string | undefined;
+        'cache-control'?: string | undefined;
+        'connection'?: string | undefined;
+        'content-disposition'?: string | undefined;
+        'content-encoding'?: string | undefined;
+        'content-language'?: string | undefined;
+        'content-length'?: string | undefined;
+        'content-location'?: string | undefined;
+        'content-range'?: string | undefined;
+        'content-type'?: string | undefined;
+        'cookie'?: string | undefined;
+        'date'?: string | undefined;
+        'etag'?: string | undefined;
+        'expect'?: string | undefined;
+        'expires'?: string | undefined;
+        'forwarded'?: string | undefined;
+        'from'?: string | undefined;
+        'host'?: string | undefined;
+        'if-match'?: string | undefined;
+        'if-modified-since'?: string | undefined;
+        'if-none-match'?: string | undefined;
+        'if-unmodified-since'?: string | undefined;
+        'last-modified'?: string | undefined;
+        'location'?: string | undefined;
+        'origin'?: string | undefined;
+        'pragma'?: string | undefined;
+        'proxy-authenticate'?: string | undefined;
+        'proxy-authorization'?: string | undefined;
+        'public-key-pins'?: string | undefined;
+        'range'?: string | undefined;
+        'referer'?: string | undefined;
+        'retry-after'?: string | undefined;
+        'sec-websocket-accept'?: string | undefined;
+        'sec-websocket-extensions'?: string | undefined;
+        'sec-websocket-key'?: string | undefined;
+        'sec-websocket-protocol'?: string | undefined;
+        'sec-websocket-version'?: string | undefined;
+        'set-cookie'?: string[] | undefined;
+        'strict-transport-security'?: string | undefined;
+        'tk'?: string | undefined;
+        'trailer'?: string | undefined;
+        'transfer-encoding'?: string | undefined;
+        'upgrade'?: string | undefined;
+        'user-agent'?: string | undefined;
+        'vary'?: string | undefined;
+        'via'?: string | undefined;
+        'warning'?: string | undefined;
+        'www-authenticate'?: string | undefined;
     }
 
     \/\/ outgoing headers allows numbers (as they are converted internally to strings)
@@ -11682,52 +12110,54 @@ definitions['http.d.ts'] = `declare module "http" {     import * as stream from 
     }
 
     interface ClientRequestArgs {
-        protocol?: string | null;
-        host?: string | null;
-        hostname?: string | null;
-        family?: number;
-        port?: number | string | null;
-        defaultPort?: number | string;
-        localAddress?: string;
-        socketPath?: string;
+        protocol?: string | null | undefined;
+        host?: string | null | undefined;
+        hostname?: string | null | undefined;
+        family?: number | undefined;
+        port?: number | string | null | undefined;
+        defaultPort?: number | string | undefined;
+        localAddress?: string | undefined;
+        socketPath?: string | undefined;
         /**
          * @default 8192
          */
-        maxHeaderSize?: number;
-        method?: string;
-        path?: string | null;
-        headers?: OutgoingHttpHeaders;
-        auth?: string | null;
-        agent?: Agent | boolean;
-        _defaultAgent?: Agent;
-        timeout?: number;
-        setHost?: boolean;
+        maxHeaderSize?: number | undefined;
+        method?: string | undefined;
+        path?: string | null | undefined;
+        headers?: OutgoingHttpHeaders | undefined;
+        auth?: string | null | undefined;
+        agent?: Agent | boolean | undefined;
+        _defaultAgent?: Agent | undefined;
+        timeout?: number | undefined;
+        setHost?: boolean | undefined;
         \/\/ https:\/\/github.com/nodejs/node/blob/master/lib/_http_client.js#L278
-        createConnection?: (options: ClientRequestArgs, oncreate: (err: Error, socket: Socket) => void) => Socket;
+        createConnection?: ((options: ClientRequestArgs, oncreate: (err: Error, socket: Socket) => void) => Socket) | undefined;
     }
 
     interface ServerOptions {
-        IncomingMessage?: typeof IncomingMessage;
-        ServerResponse?: typeof ServerResponse;
+        IncomingMessage?: typeof IncomingMessage | undefined;
+        ServerResponse?: typeof ServerResponse | undefined;
         /**
          * Optionally overrides the value of
          * [\`--max-http-header-size\`][] for requests received by this server, i.e.
          * the maximum length of request headers in bytes.
          * @default 8192
          */
-        maxHeaderSize?: number;
+        maxHeaderSize?: number | undefined;
         /**
          * Use an insecure HTTP parser that accepts invalid HTTP headers when true.
          * Using the insecure parser should be avoided.
          * See --insecure-http-parser for more information.
          * @default false
          */
-        insecureHTTPParser?: boolean;
+        insecureHTTPParser?: boolean | undefined;
     }
 
     type RequestListener = (req: IncomingMessage, res: ServerResponse) => void;
 
-    interface HttpBase {
+    class Server extends NetServer {
+        constructor(requestListener?: RequestListener);
+        constructor(options: ServerOptions, requestListener?: RequestListener);
         setTimeout(msecs?: number, callback?: () => void): this;
         setTimeout(callback: () => void): this;
         /**
@@ -11750,12 +12180,72 @@ definitions['http.d.ts'] = `declare module "http" {     import * as stream from 
          * {@link https:\/\/nodejs.org/api/http.html#http_server_requesttimeout}
          */
         requestTimeout: number;
-    }
-
-    interface Server extends HttpBase {}
-    class Server extends NetServer {
-        constructor(requestListener?: RequestListener);
-        constructor(options: ServerOptions, requestListener?: RequestListener);
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: 'close', listener: () => void): this;
+        addListener(event: 'connection', listener: (socket: Socket) => void): this;
+        addListener(event: 'error', listener: (err: Error) => void): this;
+        addListener(event: 'listening', listener: () => void): this;
+        addListener(event: 'checkContinue', listener: RequestListener): this;
+        addListener(event: 'checkExpectation', listener: RequestListener): this;
+        addListener(event: 'clientError', listener: (err: Error, socket: stream.Duplex) => void): this;
+        addListener(event: 'connect', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
+        addListener(event: 'request', listener: RequestListener): this;
+        addListener(event: 'upgrade', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
+        emit(event: string, ...args: any[]): boolean;
+        emit(event: 'close'): boolean;
+        emit(event: 'connection', socket: Socket): boolean;
+        emit(event: 'error', err: Error): boolean;
+        emit(event: 'listening'): boolean;
+        emit(event: 'checkContinue', req: IncomingMessage, res: ServerResponse): boolean;
+        emit(event: 'checkExpectation', req: IncomingMessage, res: ServerResponse): boolean;
+        emit(event: 'clientError', err: Error, socket: stream.Duplex): boolean;
+        emit(event: 'connect', req: IncomingMessage, socket: stream.Duplex, head: Buffer): boolean;
+        emit(event: 'request', req: IncomingMessage, res: ServerResponse): boolean;
+        emit(event: 'upgrade', req: IncomingMessage, socket: stream.Duplex, head: Buffer): boolean;
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: 'close', listener: () => void): this;
+        on(event: 'connection', listener: (socket: Socket) => void): this;
+        on(event: 'error', listener: (err: Error) => void): this;
+        on(event: 'listening', listener: () => void): this;
+        on(event: 'checkContinue', listener: RequestListener): this;
+        on(event: 'checkExpectation', listener: RequestListener): this;
+        on(event: 'clientError', listener: (err: Error, socket: stream.Duplex) => void): this;
+        on(event: 'connect', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
+        on(event: 'request', listener: RequestListener): this;
+        on(event: 'upgrade', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: 'close', listener: () => void): this;
+        once(event: 'connection', listener: (socket: Socket) => void): this;
+        once(event: 'error', listener: (err: Error) => void): this;
+        once(event: 'listening', listener: () => void): this;
+        once(event: 'checkContinue', listener: RequestListener): this;
+        once(event: 'checkExpectation', listener: RequestListener): this;
+        once(event: 'clientError', listener: (err: Error, socket: stream.Duplex) => void): this;
+        once(event: 'connect', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
+        once(event: 'request', listener: RequestListener): this;
+        once(event: 'upgrade', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: 'close', listener: () => void): this;
+        prependListener(event: 'connection', listener: (socket: Socket) => void): this;
+        prependListener(event: 'error', listener: (err: Error) => void): this;
+        prependListener(event: 'listening', listener: () => void): this;
+        prependListener(event: 'checkContinue', listener: RequestListener): this;
+        prependListener(event: 'checkExpectation', listener: RequestListener): this;
+        prependListener(event: 'clientError', listener: (err: Error, socket: stream.Duplex) => void): this;
+        prependListener(event: 'connect', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
+        prependListener(event: 'request', listener: RequestListener): this;
+        prependListener(event: 'upgrade', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: 'close', listener: () => void): this;
+        prependOnceListener(event: 'connection', listener: (socket: Socket) => void): this;
+        prependOnceListener(event: 'error', listener: (err: Error) => void): this;
+        prependOnceListener(event: 'listening', listener: () => void): this;
+        prependOnceListener(event: 'checkContinue', listener: RequestListener): this;
+        prependOnceListener(event: 'checkExpectation', listener: RequestListener): this;
+        prependOnceListener(event: 'clientError', listener: (err: Error, socket: stream.Duplex) => void): this;
+        prependOnceListener(event: 'connect', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
+        prependOnceListener(event: 'request', listener: RequestListener): this;
+        prependOnceListener(event: 'upgrade', listener: (req: IncomingMessage, socket: stream.Duplex, head: Buffer) => void): this;
     }
 
     \/\/ https:\/\/github.com/nodejs/node/blob/master/lib/_http_outgoing.js
@@ -11771,7 +12261,7 @@ definitions['http.d.ts'] = `declare module "http" {     import * as stream from 
         finished: boolean;
         headersSent: boolean;
         /**
-         * @deprecate Use \`socket\` instead.
+         * @deprecated Use \`socket\` instead.
          */
         connection: Socket | null;
         socket: Socket | null;
@@ -11801,7 +12291,7 @@ definitions['http.d.ts'] = `declare module "http" {     import * as stream from 
         \/\/ https:\/\/github.com/nodejs/node/blob/master/test/parallel/test-http-write-callbacks.js#L53
         \/\/ no args in writeContinue callback
         writeContinue(callback?: () => void): void;
-        writeHead(statusCode: number, reasonPhrase?: string, headers?: OutgoingHttpHeaders | OutgoingHttpHeader[]): this;
+        writeHead(statusCode: number, statusMessage?: string, headers?: OutgoingHttpHeaders | OutgoingHttpHeader[]): this;
         writeHead(statusCode: number, headers?: OutgoingHttpHeaders | OutgoingHttpHeader[]): this;
         writeProcessing(): void;
     }
@@ -11826,6 +12316,7 @@ definitions['http.d.ts'] = `declare module "http" {     import * as stream from 
 
         method: string;
         path: string;
+        /** @deprecated since v14.1.0 Use \`request.destroy()\` instead. */
         abort(): void;
         onSocket(socket: Socket): void;
         setTimeout(timeout: number, callback?: () => void): this;
@@ -11922,7 +12413,7 @@ definitions['http.d.ts'] = `declare module "http" {     import * as stream from 
         httpVersionMinor: number;
         complete: boolean;
         /**
-         * @deprecate Use \`socket\` instead.
+         * @deprecated since v13.0.0 - Use \`socket\` instead.
          */
         connection: Socket;
         socket: Socket;
@@ -11934,19 +12425,19 @@ definitions['http.d.ts'] = `declare module "http" {     import * as stream from 
         /**
          * Only valid for request obtained from http.Server.
          */
-        method?: string;
+        method?: string | undefined;
         /**
          * Only valid for request obtained from http.Server.
          */
-        url?: string;
+        url?: string | undefined;
         /**
          * Only valid for response obtained from http.ClientRequest.
          */
-        statusCode?: number;
+        statusCode?: number | undefined;
         /**
          * Only valid for response obtained from http.ClientRequest.
          */
-        statusMessage?: string;
+        statusMessage?: string | undefined;
         destroy(error?: Error): void;
     }
 
@@ -11954,32 +12445,32 @@ definitions['http.d.ts'] = `declare module "http" {     import * as stream from 
         /**
          * Keep sockets around in a pool to be used by other requests in the future. Default = false
          */
-        keepAlive?: boolean;
+        keepAlive?: boolean | undefined;
         /**
          * When using HTTP KeepAlive, how often to send TCP KeepAlive packets over sockets being kept alive. Default = 1000.
          * Only relevant if keepAlive is set to true.
          */
-        keepAliveMsecs?: number;
+        keepAliveMsecs?: number | undefined;
         /**
          * Maximum number of sockets to allow per host. Default for Node 0.10 is 5, default for Node 0.12 is Infinity
          */
-        maxSockets?: number;
+        maxSockets?: number | undefined;
         /**
          * Maximum number of sockets allowed for all hosts in total. Each request will use a new socket until the maximum is reached. Default: Infinity.
          */
-        maxTotalSockets?: number;
+        maxTotalSockets?: number | undefined;
         /**
          * Maximum number of sockets to leave open in a free state. Only relevant if keepAlive is set to true. Default = 256.
          */
-        maxFreeSockets?: number;
+        maxFreeSockets?: number | undefined;
         /**
          * Socket timeout in milliseconds. This will set the timeout after the socket is connected.
          */
-        timeout?: number;
+        timeout?: number | undefined;
         /**
          * Scheduling strategy to apply when picking the next free socket to use. Default: 'fifo'.
          */
-        scheduling?: 'fifo' | 'lifo';
+        scheduling?: 'fifo' | 'lifo' | undefined;
     }
 
     class Agent {
@@ -12027,48 +12518,54 @@ definitions['http.d.ts'] = `declare module "http" {     import * as stream from 
     const maxHeaderSize: number;
 }
 `;
-definitions['http2.d.ts'] = `declare module "http2" {     import * as events from "events";
-    import * as fs from "fs";
-    import * as net from "net";
-    import * as stream from "stream";
-    import * as tls from "tls";
-    import * as url from "url";
+definitions['http2.d.ts'] = `declare module 'http2' {
+    import EventEmitter = require('events');
+    import * as fs from 'fs';
+    import * as net from 'net';
+    import * as stream from 'stream';
+    import * as tls from 'tls';
+    import * as url from 'url';
 
-    import { IncomingHttpHeaders as Http1IncomingHttpHeaders, OutgoingHttpHeaders, IncomingMessage, ServerResponse } from "http";
-    export { OutgoingHttpHeaders } from "http";
+    import {
+        IncomingHttpHeaders as Http1IncomingHttpHeaders,
+        OutgoingHttpHeaders,
+        IncomingMessage,
+        ServerResponse,
+    } from 'http';
+    export { OutgoingHttpHeaders } from 'http';
 
     export interface IncomingHttpStatusHeader {
-        ":status"?: number;
+        ":status"?: number | undefined;
     }
 
     export interface IncomingHttpHeaders extends Http1IncomingHttpHeaders {
-        ":path"?: string;
-        ":method"?: string;
-        ":authority"?: string;
-        ":scheme"?: string;
+        ":path"?: string | undefined;
+        ":method"?: string | undefined;
+        ":authority"?: string | undefined;
+        ":scheme"?: string | undefined;
     }
 
     \/\/ Http2Stream
 
     export interface StreamPriorityOptions {
-        exclusive?: boolean;
-        parent?: number;
-        weight?: number;
-        silent?: boolean;
+        exclusive?: boolean | undefined;
+        parent?: number | undefined;
+        weight?: number | undefined;
+        silent?: boolean | undefined;
     }
 
     export interface StreamState {
-        localWindowSize?: number;
-        state?: number;
-        localClose?: number;
-        remoteClose?: number;
-        sumDependencyWeight?: number;
-        weight?: number;
+        localWindowSize?: number | undefined;
+        state?: number | undefined;
+        localClose?: number | undefined;
+        remoteClose?: number | undefined;
+        sumDependencyWeight?: number | undefined;
+        weight?: number | undefined;
     }
 
     export interface ServerStreamResponseOptions {
-        endStream?: boolean;
-        waitForTrailers?: boolean;
+        endStream?: boolean | undefined;
+        waitForTrailers?: boolean | undefined;
     }
 
     export interface StatOptions {
@@ -12078,9 +12575,9 @@ definitions['http2.d.ts'] = `declare module "http2" {     import * as events fro
 
     export interface ServerStreamFileResponseOptions {
         statCheck?(stats: fs.Stats, headers: OutgoingHttpHeaders, statOptions: StatOptions): void | boolean;
-        waitForTrailers?: boolean;
-        offset?: number;
-        length?: number;
+        waitForTrailers?: boolean | undefined;
+        offset?: number | undefined;
+        length?: number | undefined;
     }
 
     export interface ServerStreamFileResponseOptionsWithError extends ServerStreamFileResponseOptions {
@@ -12097,12 +12594,12 @@ definitions['http2.d.ts'] = `declare module "http2" {     import * as events fro
          * indicating that no additional data should be received and the readable side of the Http2Stream will be closed.
          */
         readonly endAfterHeaders: boolean;
-        readonly id?: number;
+        readonly id?: number | undefined;
         readonly pending: boolean;
         readonly rstCode: number;
         readonly sentHeaders: OutgoingHttpHeaders;
-        readonly sentInfoHeaders?: OutgoingHttpHeaders[];
-        readonly sentTrailers?: OutgoingHttpHeaders;
+        readonly sentInfoHeaders?: OutgoingHttpHeaders[] | undefined;
+        readonly sentTrailers?: OutgoingHttpHeaders | undefined;
         readonly session: Http2Session;
         readonly state: StreamState;
 
@@ -12260,43 +12757,43 @@ definitions['http2.d.ts'] = `declare module "http2" {     import * as events fro
     \/\/ Http2Session
 
     export interface Settings {
-        headerTableSize?: number;
-        enablePush?: boolean;
-        initialWindowSize?: number;
-        maxFrameSize?: number;
-        maxConcurrentStreams?: number;
-        maxHeaderListSize?: number;
-        enableConnectProtocol?: boolean;
+        headerTableSize?: number | undefined;
+        enablePush?: boolean | undefined;
+        initialWindowSize?: number | undefined;
+        maxFrameSize?: number | undefined;
+        maxConcurrentStreams?: number | undefined;
+        maxHeaderListSize?: number | undefined;
+        enableConnectProtocol?: boolean | undefined;
     }
 
     export interface ClientSessionRequestOptions {
-        endStream?: boolean;
-        exclusive?: boolean;
-        parent?: number;
-        weight?: number;
-        waitForTrailers?: boolean;
+        endStream?: boolean | undefined;
+        exclusive?: boolean | undefined;
+        parent?: number | undefined;
+        weight?: number | undefined;
+        waitForTrailers?: boolean | undefined;
     }
 
     export interface SessionState {
-        effectiveLocalWindowSize?: number;
-        effectiveRecvDataLength?: number;
-        nextStreamID?: number;
-        localWindowSize?: number;
-        lastProcStreamID?: number;
-        remoteWindowSize?: number;
-        outboundQueueSize?: number;
-        deflateDynamicTableSize?: number;
-        inflateDynamicTableSize?: number;
+        effectiveLocalWindowSize?: number | undefined;
+        effectiveRecvDataLength?: number | undefined;
+        nextStreamID?: number | undefined;
+        localWindowSize?: number | undefined;
+        lastProcStreamID?: number | undefined;
+        remoteWindowSize?: number | undefined;
+        outboundQueueSize?: number | undefined;
+        deflateDynamicTableSize?: number | undefined;
+        inflateDynamicTableSize?: number | undefined;
     }
 
-    export interface Http2Session extends events.EventEmitter {
-        readonly alpnProtocol?: string;
+    export interface Http2Session extends EventEmitter {
+        readonly alpnProtocol?: string | undefined;
         readonly closed: boolean;
         readonly connecting: boolean;
         readonly destroyed: boolean;
-        readonly encrypted?: boolean;
+        readonly encrypted?: boolean | undefined;
         readonly localSettings: Settings;
-        readonly originSet?: string[];
+        readonly originSet?: string[] | undefined;
         readonly pendingSettingsAck: boolean;
         readonly remoteSettings: Settings;
         readonly socket: net.Socket | tls.TLSSocket;
@@ -12309,6 +12806,7 @@ definitions['http2.d.ts'] = `declare module "http2" {     import * as events fro
         ping(callback: (err: Error | null, duration: number, payload: Buffer) => void): boolean;
         ping(payload: NodeJS.ArrayBufferView, callback: (err: Error | null, duration: number, payload: Buffer) => void): boolean;
         ref(): void;
+        setLocalWindowSize(windowSize: number): void;
         setTimeout(msecs: number, callback?: () => void): void;
         settings(settings: Settings): void;
         unref(): void;
@@ -12452,30 +12950,30 @@ definitions['http2.d.ts'] = `declare module "http2" {     import * as events fro
     \/\/ Http2Server
 
     export interface SessionOptions {
-        maxDeflateDynamicTableSize?: number;
-        maxSessionMemory?: number;
-        maxHeaderListPairs?: number;
-        maxOutstandingPings?: number;
-        maxSendHeaderBlockLength?: number;
-        paddingStrategy?: number;
-        peerMaxConcurrentStreams?: number;
-        settings?: Settings;
+        maxDeflateDynamicTableSize?: number | undefined;
+        maxSessionMemory?: number | undefined;
+        maxHeaderListPairs?: number | undefined;
+        maxOutstandingPings?: number | undefined;
+        maxSendHeaderBlockLength?: number | undefined;
+        paddingStrategy?: number | undefined;
+        peerMaxConcurrentStreams?: number | undefined;
+        settings?: Settings | undefined;
 
         selectPadding?(frameLen: number, maxFrameLen: number): number;
         createConnection?(authority: url.URL, option: SessionOptions): stream.Duplex;
     }
 
     export interface ClientSessionOptions extends SessionOptions {
-        maxReservedRemoteStreams?: number;
-        createConnection?: (authority: url.URL, option: SessionOptions) => stream.Duplex;
-        protocol?: 'http:' | 'https:';
+        maxReservedRemoteStreams?: number | undefined;
+        createConnection?: ((authority: url.URL, option: SessionOptions) => stream.Duplex) | undefined;
+        protocol?: 'http:' | 'https:' | undefined;
     }
 
     export interface ServerSessionOptions extends SessionOptions {
-        Http1IncomingMessage?: typeof IncomingMessage;
-        Http1ServerResponse?: typeof ServerResponse;
-        Http2ServerRequest?: typeof Http2ServerRequest;
-        Http2ServerResponse?: typeof Http2ServerResponse;
+        Http1IncomingMessage?: typeof IncomingMessage | undefined;
+        Http1ServerResponse?: typeof ServerResponse | undefined;
+        Http2ServerRequest?: typeof Http2ServerRequest | undefined;
+        Http2ServerResponse?: typeof Http2ServerResponse | undefined;
     }
 
     export interface SecureClientSessionOptions extends ClientSessionOptions, tls.ConnectionOptions { }
@@ -12484,8 +12982,8 @@ definitions['http2.d.ts'] = `declare module "http2" {     import * as events fro
     export interface ServerOptions extends ServerSessionOptions { }
 
     export interface SecureServerOptions extends SecureServerSessionOptions {
-        allowHTTP1?: boolean;
-        origins?: string[];
+        allowHTTP1?: boolean | undefined;
+        origins?: string[] | undefined;
     }
 
     export interface Http2Server extends net.Server {
@@ -12670,7 +13168,7 @@ definitions['http2.d.ts'] = `declare module "http2" {     import * as events fro
         prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
     }
 
-    export class Http2ServerResponse extends stream.Stream {
+    export class Http2ServerResponse extends stream.Writable {
         constructor(stream: ServerHttp2Stream);
 
         readonly connection: net.Socket | tls.TLSSocket;
@@ -12979,21 +13477,22 @@ definitions['http2.d.ts'] = `declare module "http2" {     import * as events fro
     ): ClientHttp2Session;
 }
 `;
-definitions['https.d.ts'] = `declare module "https" {     import * as tls from "tls";
-    import * as events from "events";
-    import * as http from "http";
-    import { URL } from "url";
+definitions['https.d.ts'] = `declare module 'https' {
+    import { Duplex } from 'stream';
+    import * as tls from 'tls';
+    import * as http from 'http';
+    import { URL } from 'url';
 
     type ServerOptions = tls.SecureContextOptions & tls.TlsOptions & http.ServerOptions;
 
     type RequestOptions = http.RequestOptions & tls.SecureContextOptions & {
-        rejectUnauthorized?: boolean; \/\/ Defaults to true
-        servername?: string; \/\/ SNI TLS Extension
+        rejectUnauthorized?: boolean | undefined; \/\/ Defaults to true
+        servername?: string | undefined; \/\/ SNI TLS Extension
     };
 
     interface AgentOptions extends http.AgentOptions, tls.ConnectionOptions {
-        rejectUnauthorized?: boolean;
-        maxCachedSessions?: number;
+        rejectUnauthorized?: boolean | undefined;
+        maxCachedSessions?: number | undefined;
     }
 
     class Agent extends http.Agent {
@@ -13001,10 +13500,112 @@ definitions['https.d.ts'] = `declare module "https" {     import * as tls from "
         options: AgentOptions;
     }
 
-    interface Server extends http.HttpBase {}
+    interface Server extends http.Server {}
     class Server extends tls.Server {
         constructor(requestListener?: http.RequestListener);
         constructor(options: ServerOptions, requestListener?: http.RequestListener);
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: 'keylog', listener: (line: Buffer, tlsSocket: tls.TLSSocket) => void): this;
+        addListener(event: 'newSession', listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        addListener(event: 'OCSPRequest', listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        addListener(event: 'resumeSession', listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        addListener(event: 'secureConnection', listener: (tlsSocket: tls.TLSSocket) => void): this;
+        addListener(event: 'tlsClientError', listener: (err: Error, tlsSocket: tls.TLSSocket) => void): this;
+        addListener(event: 'close', listener: () => void): this;
+        addListener(event: 'connection', listener: (socket: Duplex) => void): this;
+        addListener(event: 'error', listener: (err: Error) => void): this;
+        addListener(event: 'listening', listener: () => void): this;
+        addListener(event: 'checkContinue', listener: http.RequestListener): this;
+        addListener(event: 'checkExpectation', listener: http.RequestListener): this;
+        addListener(event: 'clientError', listener: (err: Error, socket: Duplex) => void): this;
+        addListener(event: 'connect', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
+        addListener(event: 'request', listener: http.RequestListener): this;
+        addListener(event: 'upgrade', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
+        emit(event: string, ...args: any[]): boolean;
+        emit(event: 'keylog', line: Buffer, tlsSocket: tls.TLSSocket): boolean;
+        emit(event: 'newSession', sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void): boolean;
+        emit(event: 'OCSPRequest', certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void): boolean;
+        emit(event: 'resumeSession', sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void): boolean;
+        emit(event: 'secureConnection', tlsSocket: tls.TLSSocket): boolean;
+        emit(event: 'tlsClientError', err: Error, tlsSocket: tls.TLSSocket): boolean;
+        emit(event: 'close'): boolean;
+        emit(event: 'connection', socket: Duplex): boolean;
+        emit(event: 'error', err: Error): boolean;
+        emit(event: 'listening'): boolean;
+        emit(event: 'checkContinue', req: http.IncomingMessage, res: http.ServerResponse): boolean;
+        emit(event: 'checkExpectation', req: http.IncomingMessage, res: http.ServerResponse): boolean;
+        emit(event: 'clientError', err: Error, socket: Duplex): boolean;
+        emit(event: 'connect', req: http.IncomingMessage, socket: Duplex, head: Buffer): boolean;
+        emit(event: 'request', req: http.IncomingMessage, res: http.ServerResponse): boolean;
+        emit(event: 'upgrade', req: http.IncomingMessage, socket: Duplex, head: Buffer): boolean;
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: 'keylog', listener: (line: Buffer, tlsSocket: tls.TLSSocket) => void): this;
+        on(event: 'newSession', listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        on(event: 'OCSPRequest', listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        on(event: 'resumeSession', listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        on(event: 'secureConnection', listener: (tlsSocket: tls.TLSSocket) => void): this;
+        on(event: 'tlsClientError', listener: (err: Error, tlsSocket: tls.TLSSocket) => void): this;
+        on(event: 'close', listener: () => void): this;
+        on(event: 'connection', listener: (socket: Duplex) => void): this;
+        on(event: 'error', listener: (err: Error) => void): this;
+        on(event: 'listening', listener: () => void): this;
+        on(event: 'checkContinue', listener: http.RequestListener): this;
+        on(event: 'checkExpectation', listener: http.RequestListener): this;
+        on(event: 'clientError', listener: (err: Error, socket: Duplex) => void): this;
+        on(event: 'connect', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
+        on(event: 'request', listener: http.RequestListener): this;
+        on(event: 'upgrade', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: 'keylog', listener: (line: Buffer, tlsSocket: tls.TLSSocket) => void): this;
+        once(event: 'newSession', listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        once(event: 'OCSPRequest', listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        once(event: 'resumeSession', listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        once(event: 'secureConnection', listener: (tlsSocket: tls.TLSSocket) => void): this;
+        once(event: 'tlsClientError', listener: (err: Error, tlsSocket: tls.TLSSocket) => void): this;
+        once(event: 'close', listener: () => void): this;
+        once(event: 'connection', listener: (socket: Duplex) => void): this;
+        once(event: 'error', listener: (err: Error) => void): this;
+        once(event: 'listening', listener: () => void): this;
+        once(event: 'checkContinue', listener: http.RequestListener): this;
+        once(event: 'checkExpectation', listener: http.RequestListener): this;
+        once(event: 'clientError', listener: (err: Error, socket: Duplex) => void): this;
+        once(event: 'connect', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
+        once(event: 'request', listener: http.RequestListener): this;
+        once(event: 'upgrade', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: 'keylog', listener: (line: Buffer, tlsSocket: tls.TLSSocket) => void): this;
+        prependListener(event: 'newSession', listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        prependListener(event: 'OCSPRequest', listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        prependListener(event: 'resumeSession', listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        prependListener(event: 'secureConnection', listener: (tlsSocket: tls.TLSSocket) => void): this;
+        prependListener(event: 'tlsClientError', listener: (err: Error, tlsSocket: tls.TLSSocket) => void): this;
+        prependListener(event: 'close', listener: () => void): this;
+        prependListener(event: 'connection', listener: (socket: Duplex) => void): this;
+        prependListener(event: 'error', listener: (err: Error) => void): this;
+        prependListener(event: 'listening', listener: () => void): this;
+        prependListener(event: 'checkContinue', listener: http.RequestListener): this;
+        prependListener(event: 'checkExpectation', listener: http.RequestListener): this;
+        prependListener(event: 'clientError', listener: (err: Error, socket: Duplex) => void): this;
+        prependListener(event: 'connect', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
+        prependListener(event: 'request', listener: http.RequestListener): this;
+        prependListener(event: 'upgrade', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: 'keylog', listener: (line: Buffer, tlsSocket: tls.TLSSocket) => void): this;
+        prependOnceListener(event: 'newSession', listener: (sessionId: Buffer, sessionData: Buffer, callback: (err: Error, resp: Buffer) => void) => void): this;
+        prependOnceListener(event: 'OCSPRequest', listener: (certificate: Buffer, issuer: Buffer, callback: (err: Error | null, resp: Buffer) => void) => void): this;
+        prependOnceListener(event: 'resumeSession', listener: (sessionId: Buffer, callback: (err: Error, sessionData: Buffer) => void) => void): this;
+        prependOnceListener(event: 'secureConnection', listener: (tlsSocket: tls.TLSSocket) => void): this;
+        prependOnceListener(event: 'tlsClientError', listener: (err: Error, tlsSocket: tls.TLSSocket) => void): this;
+        prependOnceListener(event: 'close', listener: () => void): this;
+        prependOnceListener(event: 'connection', listener: (socket: Duplex) => void): this;
+        prependOnceListener(event: 'error', listener: (err: Error) => void): this;
+        prependOnceListener(event: 'listening', listener: () => void): this;
+        prependOnceListener(event: 'checkContinue', listener: http.RequestListener): this;
+        prependOnceListener(event: 'checkExpectation', listener: http.RequestListener): this;
+        prependOnceListener(event: 'clientError', listener: (err: Error, socket: Duplex) => void): this;
+        prependOnceListener(event: 'connect', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
+        prependOnceListener(event: 'request', listener: http.RequestListener): this;
+        prependOnceListener(event: 'upgrade', listener: (req: http.IncomingMessage, socket: Duplex, head: Buffer) => void): this;
     }
 
     function createServer(requestListener?: http.RequestListener): Server;
@@ -13016,20 +13617,18 @@ definitions['https.d.ts'] = `declare module "https" {     import * as tls from "
     let globalAgent: Agent;
 }
 `;
-definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.14 \/\/ Project: http:\/\/nodejs.org/
+definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.17
+\/\/ Project: https:\/\/nodejs.org/
 \/\/ Definitions by: Microsoft TypeScript <https:\/\/github.com/Microsoft>
 \/\/                 DefinitelyTyped <https:\/\/github.com/DefinitelyTyped>
 \/\/                 Alberto Schiabel <https:\/\/github.com/jkomyno>
-\/\/                 Alexander T. <https:\/\/github.com/a-tarasyuk>
 \/\/                 Alvis HT Tang <https:\/\/github.com/alvis>
 \/\/                 Andrew Makarov <https:\/\/github.com/r3nya>
 \/\/                 Benjamin Toueg <https:\/\/github.com/btoueg>
-\/\/                 Bruno Scheufler <https:\/\/github.com/brunoscheufler>
 \/\/                 Chigozirim C. <https:\/\/github.com/smac89>
 \/\/                 David Junger <https:\/\/github.com/touffy>
 \/\/                 Deividas Bakanas <https:\/\/github.com/DeividasBakanas>
 \/\/                 Eugene Y. Q. Shen <https:\/\/github.com/eyqs>
-\/\/                 Flarna <https:\/\/github.com/Flarna>
 \/\/                 Hannes Magnusson <https:\/\/github.com/Hannes-Magnusson-CK>
 \/\/                 Hoàng Văn Khải <https:\/\/github.com/KSXGitHub>
 \/\/                 Huw <https:\/\/github.com/hoo29>
@@ -13048,7 +13647,6 @@ definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 1
 \/\/                 wwwy3y3 <https:\/\/github.com/wwwy3y3>
 \/\/                 Samuel Ainsworth <https:\/\/github.com/samuela>
 \/\/                 Kyle Uehlein <https:\/\/github.com/kuehlein>
-\/\/                 Jordi Oliveras Rovira <https:\/\/github.com/j-oliveras>
 \/\/                 Thanik Bhongbhibhat <https:\/\/github.com/bhongy>
 \/\/                 Marcin Kopacz <https:\/\/github.com/chyzwar>
 \/\/                 Trivikram Kamat <https:\/\/github.com/trivikr>
@@ -13059,25 +13657,67 @@ definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 1
 \/\/                 Surasak Chaisurin <https:\/\/github.com/Ryan-Willpower>
 \/\/                 Piotr Błażejewicz <https:\/\/github.com/peterblazejewicz>
 \/\/                 Anna Henningsen <https:\/\/github.com/addaleax>
-\/\/                 Jason Kwok <https:\/\/github.com/JasonHK>
 \/\/                 Victor Perin <https:\/\/github.com/victorperin>
+\/\/                 Yongsheng Zhang <https:\/\/github.com/ZYSzys>
+\/\/                 Bond <https:\/\/github.com/bondz>
 \/\/ Definitions: https:\/\/github.com/DefinitelyTyped/DefinitelyTyped
 
-\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7.
-\/\/ Typically type modifications should be made in base.d.ts instead of here
+\/\/ NOTE: These definitions support NodeJS and TypeScript 3.7+
 
-\/\// <reference path="base.d.ts" />
+\/\/ Reference required types from the default lib:
+\/\// <reference lib="es2018" />
+\/\// <reference lib="esnext.asynciterable" />
+\/\// <reference lib="esnext.intl" />
+\/\// <reference lib="esnext.bigint" />
 
-\/\/ NOTE: TypeScript version-specific augmentations can be found in the following paths:
-\/\/          - ~/base.d.ts         - Shared definitions common to all TypeScript versions
-\/\/          - ~/index.d.ts        - Definitions specific to TypeScript 2.8
-\/\/          - ~/ts3.5/index.d.ts  - Definitions specific to TypeScript 3.5
+\/\/ Base definitions for all NodeJS modules that are not specific to any version of TypeScript:
+\/\// <reference path="assert.d.ts" />
+\/\// <reference path="globals.d.ts" />
+\/\// <reference path="async_hooks.d.ts" />
+\/\// <reference path="buffer.d.ts" />
+\/\// <reference path="child_process.d.ts" />
+\/\// <reference path="cluster.d.ts" />
+\/\// <reference path="console.d.ts" />
+\/\// <reference path="constants.d.ts" />
+\/\// <reference path="crypto.d.ts" />
+\/\// <reference path="dgram.d.ts" />
+\/\// <reference path="dns.d.ts" />
+\/\// <reference path="domain.d.ts" />
+\/\// <reference path="events.d.ts" />
+\/\// <reference path="fs.d.ts" />
+\/\// <reference path="fs/promises.d.ts" />
+\/\// <reference path="http.d.ts" />
+\/\// <reference path="http2.d.ts" />
+\/\// <reference path="https.d.ts" />
+\/\// <reference path="inspector.d.ts" />
+\/\// <reference path="module.d.ts" />
+\/\// <reference path="net.d.ts" />
+\/\// <reference path="os.d.ts" />
+\/\// <reference path="path.d.ts" />
+\/\// <reference path="perf_hooks.d.ts" />
+\/\// <reference path="process.d.ts" />
+\/\// <reference path="punycode.d.ts" />
+\/\// <reference path="querystring.d.ts" />
+\/\// <reference path="readline.d.ts" />
+\/\// <reference path="repl.d.ts" />
+\/\// <reference path="stream.d.ts" />
+\/\// <reference path="string_decoder.d.ts" />
+\/\// <reference path="timers.d.ts" />
+\/\// <reference path="tls.d.ts" />
+\/\// <reference path="trace_events.d.ts" />
+\/\// <reference path="tty.d.ts" />
+\/\// <reference path="url.d.ts" />
+\/\// <reference path="util.d.ts" />
+\/\// <reference path="v8.d.ts" />
+\/\// <reference path="vm.d.ts" />
+\/\// <reference path="wasi.d.ts" />
+\/\// <reference path="worker_threads.d.ts" />
+\/\// <reference path="zlib.d.ts" />
 
-\/\/ NOTE: Augmentations for TypeScript 3.5 and later should use individual files for overrides
-\/\/       within the respective ~/ts3.5 (or later) folder. However, this is disallowed for versions
-\/\/       prior to TypeScript 3.5, so the older definitions will be found here.
+\/\// <reference path="globals.global.d.ts" />
 `;
-definitions['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header \/\/ Type definitions for inspector
+definitions['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header
+\/\/ Type definitions for inspector
 
 \/\/ These definitions are auto-generated.
 \/\/ Please see https:\/\/github.com/DefinitelyTyped/DefinitelyTyped/pull/19330
@@ -13088,8 +13728,8 @@ definitions['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header \/\/ Ty
 /**
  * The inspector module provides an API for interacting with the V8 inspector.
  */
-declare module "inspector" {
-    import { EventEmitter } from 'events';
+declare module 'inspector' {
+    import EventEmitter = require('events');
 
     interface InspectorNotification<T> {
         method: string;
@@ -13146,11 +13786,11 @@ declare module "inspector" {
             /**
              * Object subtype hint. Specified for <code>object</code> type values only.
              */
-            subtype?: string;
+            subtype?: string | undefined;
             /**
              * Object class (constructor) name. Specified for <code>object</code> type values only.
              */
-            className?: string;
+            className?: string | undefined;
             /**
              * Remote object value in case of primitive values or JSON values (if it was requested).
              */
@@ -13158,24 +13798,24 @@ declare module "inspector" {
             /**
              * Primitive value which can not be JSON-stringified does not have <code>value</code>, but gets this property.
              */
-            unserializableValue?: UnserializableValue;
+            unserializableValue?: UnserializableValue | undefined;
             /**
              * String representation of the object.
              */
-            description?: string;
+            description?: string | undefined;
             /**
              * Unique object identifier (for non-primitive values).
              */
-            objectId?: RemoteObjectId;
+            objectId?: RemoteObjectId | undefined;
             /**
              * Preview containing abbreviated property values. Specified for <code>object</code> type values only.
              * @experimental
              */
-            preview?: ObjectPreview;
+            preview?: ObjectPreview | undefined;
             /**
              * @experimental
              */
-            customPreview?: CustomPreview;
+            customPreview?: CustomPreview | undefined;
         }
 
         /**
@@ -13186,7 +13826,7 @@ declare module "inspector" {
             hasBody: boolean;
             formatterObjectId: RemoteObjectId;
             bindRemoteObjectFunctionId: RemoteObjectId;
-            configObjectId?: RemoteObjectId;
+            configObjectId?: RemoteObjectId | undefined;
         }
 
         /**
@@ -13201,11 +13841,11 @@ declare module "inspector" {
             /**
              * Object subtype hint. Specified for <code>object</code> type values only.
              */
-            subtype?: string;
+            subtype?: string | undefined;
             /**
              * String representation of the object.
              */
-            description?: string;
+            description?: string | undefined;
             /**
              * True iff some of the properties or entries of the original object did not fit.
              */
@@ -13217,7 +13857,7 @@ declare module "inspector" {
             /**
              * List of the entries. Specified for <code>map</code> and <code>set</code> subtype values only.
              */
-            entries?: EntryPreview[];
+            entries?: EntryPreview[] | undefined;
         }
 
         /**
@@ -13235,15 +13875,15 @@ declare module "inspector" {
             /**
              * User-friendly property value string.
              */
-            value?: string;
+            value?: string | undefined;
             /**
              * Nested value preview.
              */
-            valuePreview?: ObjectPreview;
+            valuePreview?: ObjectPreview | undefined;
             /**
              * Object subtype hint. Specified for <code>object</code> type values only.
              */
-            subtype?: string;
+            subtype?: string | undefined;
         }
 
         /**
@@ -13253,7 +13893,7 @@ declare module "inspector" {
             /**
              * Preview of the key. Specified for map-like collection entries.
              */
-            key?: ObjectPreview;
+            key?: ObjectPreview | undefined;
             /**
              * Preview of the value.
              */
@@ -13271,19 +13911,19 @@ declare module "inspector" {
             /**
              * The value associated with the property.
              */
-            value?: RemoteObject;
+            value?: RemoteObject | undefined;
             /**
              * True if the value associated with the property may be changed (data descriptors only).
              */
-            writable?: boolean;
+            writable?: boolean | undefined;
             /**
              * A function which serves as a getter for the property, or <code>undefined</code> if there is no getter (accessor descriptors only).
              */
-            get?: RemoteObject;
+            get?: RemoteObject | undefined;
             /**
              * A function which serves as a setter for the property, or <code>undefined</code> if there is no setter (accessor descriptors only).
              */
-            set?: RemoteObject;
+            set?: RemoteObject | undefined;
             /**
              * True if the type of this property descriptor may be changed and if the property may be deleted from the corresponding object.
              */
@@ -13295,15 +13935,15 @@ declare module "inspector" {
             /**
              * True if the result was thrown during the evaluation.
              */
-            wasThrown?: boolean;
+            wasThrown?: boolean | undefined;
             /**
              * True if the property is owned for the object.
              */
-            isOwn?: boolean;
+            isOwn?: boolean | undefined;
             /**
              * Property symbol object, if the property is of the <code>symbol</code> type.
              */
-            symbol?: RemoteObject;
+            symbol?: RemoteObject | undefined;
         }
 
         /**
@@ -13317,7 +13957,7 @@ declare module "inspector" {
             /**
              * The value associated with the property.
              */
-            value?: RemoteObject;
+            value?: RemoteObject | undefined;
         }
 
         /**
@@ -13331,11 +13971,11 @@ declare module "inspector" {
             /**
              * Primitive value which can not be JSON-stringified.
              */
-            unserializableValue?: UnserializableValue;
+            unserializableValue?: UnserializableValue | undefined;
             /**
              * Remote object handle.
              */
-            objectId?: RemoteObjectId;
+            objectId?: RemoteObjectId | undefined;
         }
 
         /**
@@ -13362,7 +14002,7 @@ declare module "inspector" {
             /**
              * Embedder-specific auxiliary data.
              */
-            auxData?: {};
+            auxData?: {} | undefined;
         }
 
         /**
@@ -13388,23 +14028,23 @@ declare module "inspector" {
             /**
              * Script ID of the exception location.
              */
-            scriptId?: ScriptId;
+            scriptId?: ScriptId | undefined;
             /**
              * URL of the exception location, to be used when the script was not reported.
              */
-            url?: string;
+            url?: string | undefined;
             /**
              * JavaScript stack trace if available.
              */
-            stackTrace?: StackTrace;
+            stackTrace?: StackTrace | undefined;
             /**
              * Exception object if available.
              */
-            exception?: RemoteObject;
+            exception?: RemoteObject | undefined;
             /**
              * Identifier of the context where exception happened.
              */
-            executionContextId?: ExecutionContextId;
+            executionContextId?: ExecutionContextId | undefined;
         }
 
         /**
@@ -13445,7 +14085,7 @@ declare module "inspector" {
             /**
              * String label of this stack trace. For async traces this may be a name of the function that initiated the async call.
              */
-            description?: string;
+            description?: string | undefined;
             /**
              * JavaScript function name.
              */
@@ -13453,12 +14093,12 @@ declare module "inspector" {
             /**
              * Asynchronous JavaScript stack trace that preceded this stack, if available.
              */
-            parent?: StackTrace;
+            parent?: StackTrace | undefined;
             /**
              * Asynchronous JavaScript stack trace that preceded this stack, if available.
              * @experimental
              */
-            parentId?: StackTraceId;
+            parentId?: StackTraceId | undefined;
         }
 
         /**
@@ -13473,7 +14113,7 @@ declare module "inspector" {
          */
         interface StackTraceId {
             id: string;
-            debuggerId?: UniqueDebuggerId;
+            debuggerId?: UniqueDebuggerId | undefined;
         }
 
         interface EvaluateParameterType {
@@ -13484,36 +14124,36 @@ declare module "inspector" {
             /**
              * Symbolic group name that can be used to release multiple objects.
              */
-            objectGroup?: string;
+            objectGroup?: string | undefined;
             /**
              * Determines whether Command Line API should be available during the evaluation.
              */
-            includeCommandLineAPI?: boolean;
+            includeCommandLineAPI?: boolean | undefined;
             /**
              * In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides <code>setPauseOnException</code> state.
              */
-            silent?: boolean;
+            silent?: boolean | undefined;
             /**
              * Specifies in which execution context to perform evaluation. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
              */
-            contextId?: ExecutionContextId;
+            contextId?: ExecutionContextId | undefined;
             /**
              * Whether the result is expected to be a JSON object that should be sent by value.
              */
-            returnByValue?: boolean;
+            returnByValue?: boolean | undefined;
             /**
              * Whether preview should be generated for the result.
              * @experimental
              */
-            generatePreview?: boolean;
+            generatePreview?: boolean | undefined;
             /**
              * Whether execution should be treated as initiated by user in the UI.
              */
-            userGesture?: boolean;
+            userGesture?: boolean | undefined;
             /**
              * Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved.
              */
-            awaitPromise?: boolean;
+            awaitPromise?: boolean | undefined;
         }
 
         interface AwaitPromiseParameterType {
@@ -13524,11 +14164,11 @@ declare module "inspector" {
             /**
              * Whether the result is expected to be a JSON object that should be sent by value.
              */
-            returnByValue?: boolean;
+            returnByValue?: boolean | undefined;
             /**
              * Whether preview should be generated for the result.
              */
-            generatePreview?: boolean;
+            generatePreview?: boolean | undefined;
         }
 
         interface CallFunctionOnParameterType {
@@ -13539,40 +14179,40 @@ declare module "inspector" {
             /**
              * Identifier of the object to call function on. Either objectId or executionContextId should be specified.
              */
-            objectId?: RemoteObjectId;
+            objectId?: RemoteObjectId | undefined;
             /**
              * Call arguments. All call arguments must belong to the same JavaScript world as the target object.
              */
-            arguments?: CallArgument[];
+            arguments?: CallArgument[] | undefined;
             /**
              * In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides <code>setPauseOnException</code> state.
              */
-            silent?: boolean;
+            silent?: boolean | undefined;
             /**
              * Whether the result is expected to be a JSON object which should be sent by value.
              */
-            returnByValue?: boolean;
+            returnByValue?: boolean | undefined;
             /**
              * Whether preview should be generated for the result.
              * @experimental
              */
-            generatePreview?: boolean;
+            generatePreview?: boolean | undefined;
             /**
              * Whether execution should be treated as initiated by user in the UI.
              */
-            userGesture?: boolean;
+            userGesture?: boolean | undefined;
             /**
              * Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved.
              */
-            awaitPromise?: boolean;
+            awaitPromise?: boolean | undefined;
             /**
              * Specifies execution context which global object will be used to call function on. Either executionContextId or objectId should be specified.
              */
-            executionContextId?: ExecutionContextId;
+            executionContextId?: ExecutionContextId | undefined;
             /**
              * Symbolic group name that can be used to release multiple objects. If objectGroup is not specified and objectId is, objectGroup will be inherited from object.
              */
-            objectGroup?: string;
+            objectGroup?: string | undefined;
         }
 
         interface GetPropertiesParameterType {
@@ -13583,17 +14223,17 @@ declare module "inspector" {
             /**
              * If true, returns properties belonging only to the element itself, not to its prototype chain.
              */
-            ownProperties?: boolean;
+            ownProperties?: boolean | undefined;
             /**
              * If true, returns accessor properties (with getter/setter) only; internal properties are not returned either.
              * @experimental
              */
-            accessorPropertiesOnly?: boolean;
+            accessorPropertiesOnly?: boolean | undefined;
             /**
              * Whether preview should be generated for the results.
              * @experimental
              */
-            generatePreview?: boolean;
+            generatePreview?: boolean | undefined;
         }
 
         interface ReleaseObjectParameterType {
@@ -13630,7 +14270,7 @@ declare module "inspector" {
             /**
              * Specifies in which execution context to perform script run. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
              */
-            executionContextId?: ExecutionContextId;
+            executionContextId?: ExecutionContextId | undefined;
         }
 
         interface RunScriptParameterType {
@@ -13641,31 +14281,31 @@ declare module "inspector" {
             /**
              * Specifies in which execution context to perform script run. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
              */
-            executionContextId?: ExecutionContextId;
+            executionContextId?: ExecutionContextId | undefined;
             /**
              * Symbolic group name that can be used to release multiple objects.
              */
-            objectGroup?: string;
+            objectGroup?: string | undefined;
             /**
              * In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides <code>setPauseOnException</code> state.
              */
-            silent?: boolean;
+            silent?: boolean | undefined;
             /**
              * Determines whether Command Line API should be available during the evaluation.
              */
-            includeCommandLineAPI?: boolean;
+            includeCommandLineAPI?: boolean | undefined;
             /**
              * Whether the result is expected to be a JSON object which should be sent by value.
              */
-            returnByValue?: boolean;
+            returnByValue?: boolean | undefined;
             /**
              * Whether preview should be generated for the result.
              */
-            generatePreview?: boolean;
+            generatePreview?: boolean | undefined;
             /**
              * Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved.
              */
-            awaitPromise?: boolean;
+            awaitPromise?: boolean | undefined;
         }
 
         interface QueryObjectsParameterType {
@@ -13679,7 +14319,7 @@ declare module "inspector" {
             /**
              * Specifies in which execution context to lookup global scope variables.
              */
-            executionContextId?: ExecutionContextId;
+            executionContextId?: ExecutionContextId | undefined;
         }
 
         interface EvaluateReturnType {
@@ -13690,7 +14330,7 @@ declare module "inspector" {
             /**
              * Exception details.
              */
-            exceptionDetails?: ExceptionDetails;
+            exceptionDetails?: ExceptionDetails | undefined;
         }
 
         interface AwaitPromiseReturnType {
@@ -13701,7 +14341,7 @@ declare module "inspector" {
             /**
              * Exception details if stack strace is available.
              */
-            exceptionDetails?: ExceptionDetails;
+            exceptionDetails?: ExceptionDetails | undefined;
         }
 
         interface CallFunctionOnReturnType {
@@ -13712,7 +14352,7 @@ declare module "inspector" {
             /**
              * Exception details.
              */
-            exceptionDetails?: ExceptionDetails;
+            exceptionDetails?: ExceptionDetails | undefined;
         }
 
         interface GetPropertiesReturnType {
@@ -13723,22 +14363,22 @@ declare module "inspector" {
             /**
              * Internal object properties (only of the element itself).
              */
-            internalProperties?: InternalPropertyDescriptor[];
+            internalProperties?: InternalPropertyDescriptor[] | undefined;
             /**
              * Exception details.
              */
-            exceptionDetails?: ExceptionDetails;
+            exceptionDetails?: ExceptionDetails | undefined;
         }
 
         interface CompileScriptReturnType {
             /**
              * Id of the script.
              */
-            scriptId?: ScriptId;
+            scriptId?: ScriptId | undefined;
             /**
              * Exception details.
              */
-            exceptionDetails?: ExceptionDetails;
+            exceptionDetails?: ExceptionDetails | undefined;
         }
 
         interface RunScriptReturnType {
@@ -13749,7 +14389,7 @@ declare module "inspector" {
             /**
              * Exception details.
              */
-            exceptionDetails?: ExceptionDetails;
+            exceptionDetails?: ExceptionDetails | undefined;
         }
 
         interface QueryObjectsReturnType {
@@ -13816,12 +14456,12 @@ declare module "inspector" {
             /**
              * Stack trace captured when the call was made.
              */
-            stackTrace?: StackTrace;
+            stackTrace?: StackTrace | undefined;
             /**
              * Console context descriptor for calls on non-default console context (not console.*): 'anonymous#unique-logger-id' for call on unnamed context, 'name#unique-logger-id' for call on named context.
              * @experimental
              */
-            context?: string;
+            context?: string | undefined;
         }
 
         interface InspectRequestedEventDataType {
@@ -13856,7 +14496,7 @@ declare module "inspector" {
             /**
              * Column number in the script (0-based).
              */
-            columnNumber?: number;
+            columnNumber?: number | undefined;
         }
 
         /**
@@ -13883,7 +14523,7 @@ declare module "inspector" {
             /**
              * Location in the source code.
              */
-            functionLocation?: Location;
+            functionLocation?: Location | undefined;
             /**
              * Location in the source code.
              */
@@ -13903,7 +14543,7 @@ declare module "inspector" {
             /**
              * The value being returned, if the function is at return point.
              */
-            returnValue?: Runtime.RemoteObject;
+            returnValue?: Runtime.RemoteObject | undefined;
         }
 
         /**
@@ -13918,15 +14558,15 @@ declare module "inspector" {
              * Object representing the scope. For <code>global</code> and <code>with</code> scopes it represents the actual object; for the rest of the scopes, it is artificial transient object enumerating scope variables as its properties.
              */
             object: Runtime.RemoteObject;
-            name?: string;
+            name?: string | undefined;
             /**
              * Location in the source code where scope starts
              */
-            startLocation?: Location;
+            startLocation?: Location | undefined;
             /**
              * Location in the source code where scope ends
              */
-            endLocation?: Location;
+            endLocation?: Location | undefined;
         }
 
         /**
@@ -13955,8 +14595,8 @@ declare module "inspector" {
             /**
              * Column number in the script (0-based).
              */
-            columnNumber?: number;
-            type?: string;
+            columnNumber?: number | undefined;
+            type?: string | undefined;
         }
 
         interface SetBreakpointsActiveParameterType {
@@ -13981,23 +14621,23 @@ declare module "inspector" {
             /**
              * URL of the resources to set breakpoint on.
              */
-            url?: string;
+            url?: string | undefined;
             /**
              * Regex pattern for the URLs of the resources to set breakpoints on. Either <code>url</code> or <code>urlRegex</code> must be specified.
              */
-            urlRegex?: string;
+            urlRegex?: string | undefined;
             /**
              * Script hash of the resources to set breakpoint on.
              */
-            scriptHash?: string;
+            scriptHash?: string | undefined;
             /**
              * Offset in the line to set breakpoint at.
              */
-            columnNumber?: number;
+            columnNumber?: number | undefined;
             /**
              * Expression to use as a breakpoint condition. When specified, debugger will only stop on the breakpoint if this expression evaluates to true.
              */
-            condition?: string;
+            condition?: string | undefined;
         }
 
         interface SetBreakpointParameterType {
@@ -14008,7 +14648,7 @@ declare module "inspector" {
             /**
              * Expression to use as a breakpoint condition. When specified, debugger will only stop on the breakpoint if this expression evaluates to true.
              */
-            condition?: string;
+            condition?: string | undefined;
         }
 
         interface RemoveBreakpointParameterType {
@@ -14023,11 +14663,11 @@ declare module "inspector" {
             /**
              * End of range to search possible breakpoint locations in (excluding). When not specified, end of scripts is used as end of range.
              */
-            end?: Location;
+            end?: Location | undefined;
             /**
              * Only consider locations which are in the same (non-nested) function as start.
              */
-            restrictToFunction?: boolean;
+            restrictToFunction?: boolean | undefined;
         }
 
         interface ContinueToLocationParameterType {
@@ -14035,7 +14675,7 @@ declare module "inspector" {
              * Location to continue to.
              */
             location: Location;
-            targetCallFrames?: string;
+            targetCallFrames?: string | undefined;
         }
 
         interface PauseOnAsyncCallParameterType {
@@ -14050,7 +14690,7 @@ declare module "inspector" {
              * Debugger will issue additional Debugger.paused notification if any async task is scheduled before next pause.
              * @experimental
              */
-            breakOnAsyncCall?: boolean;
+            breakOnAsyncCall?: boolean | undefined;
         }
 
         interface GetStackTraceParameterType {
@@ -14069,11 +14709,11 @@ declare module "inspector" {
             /**
              * If true, search is case sensitive.
              */
-            caseSensitive?: boolean;
+            caseSensitive?: boolean | undefined;
             /**
              * If true, treats string parameter as regex.
              */
-            isRegex?: boolean;
+            isRegex?: boolean | undefined;
         }
 
         interface SetScriptSourceParameterType {
@@ -14088,7 +14728,7 @@ declare module "inspector" {
             /**
              *  If true the change will not actually be applied. Dry run may be used to get result description without actually modifying the code.
              */
-            dryRun?: boolean;
+            dryRun?: boolean | undefined;
         }
 
         interface RestartFrameParameterType {
@@ -14124,28 +14764,28 @@ declare module "inspector" {
             /**
              * String object group name to put result into (allows rapid releasing resulting object handles using <code>releaseObjectGroup</code>).
              */
-            objectGroup?: string;
+            objectGroup?: string | undefined;
             /**
              * Specifies whether command line API should be available to the evaluated expression, defaults to false.
              */
-            includeCommandLineAPI?: boolean;
+            includeCommandLineAPI?: boolean | undefined;
             /**
              * In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides <code>setPauseOnException</code> state.
              */
-            silent?: boolean;
+            silent?: boolean | undefined;
             /**
              * Whether the result is expected to be a JSON object that should be sent by value.
              */
-            returnByValue?: boolean;
+            returnByValue?: boolean | undefined;
             /**
              * Whether preview should be generated for the result.
              * @experimental
              */
-            generatePreview?: boolean;
+            generatePreview?: boolean | undefined;
             /**
              * Whether to throw an exception if side effect cannot be ruled out during evaluation.
              */
-            throwOnSideEffect?: boolean;
+            throwOnSideEffect?: boolean | undefined;
         }
 
         interface SetVariableValueParameterType {
@@ -14248,24 +14888,24 @@ declare module "inspector" {
             /**
              * New stack trace in case editing has happened while VM was stopped.
              */
-            callFrames?: CallFrame[];
+            callFrames?: CallFrame[] | undefined;
             /**
              * Whether current call stack  was modified after applying the changes.
              */
-            stackChanged?: boolean;
+            stackChanged?: boolean | undefined;
             /**
              * Async stack trace, if any.
              */
-            asyncStackTrace?: Runtime.StackTrace;
+            asyncStackTrace?: Runtime.StackTrace | undefined;
             /**
              * Async stack trace, if any.
              * @experimental
              */
-            asyncStackTraceId?: Runtime.StackTraceId;
+            asyncStackTraceId?: Runtime.StackTraceId | undefined;
             /**
              * Exception details if any.
              */
-            exceptionDetails?: Runtime.ExceptionDetails;
+            exceptionDetails?: Runtime.ExceptionDetails | undefined;
         }
 
         interface RestartFrameReturnType {
@@ -14276,12 +14916,12 @@ declare module "inspector" {
             /**
              * Async stack trace, if any.
              */
-            asyncStackTrace?: Runtime.StackTrace;
+            asyncStackTrace?: Runtime.StackTrace | undefined;
             /**
              * Async stack trace, if any.
              * @experimental
              */
-            asyncStackTraceId?: Runtime.StackTraceId;
+            asyncStackTraceId?: Runtime.StackTraceId | undefined;
         }
 
         interface GetScriptSourceReturnType {
@@ -14299,7 +14939,7 @@ declare module "inspector" {
             /**
              * Exception details.
              */
-            exceptionDetails?: Runtime.ExceptionDetails;
+            exceptionDetails?: Runtime.ExceptionDetails | undefined;
         }
 
         interface ScriptParsedEventDataType {
@@ -14338,33 +14978,33 @@ declare module "inspector" {
             /**
              * Embedder-specific auxiliary data.
              */
-            executionContextAuxData?: {};
+            executionContextAuxData?: {} | undefined;
             /**
              * True, if this script is generated as a result of the live edit operation.
              * @experimental
              */
-            isLiveEdit?: boolean;
+            isLiveEdit?: boolean | undefined;
             /**
              * URL of source map associated with script (if any).
              */
-            sourceMapURL?: string;
+            sourceMapURL?: string | undefined;
             /**
              * True, if this script has sourceURL.
              */
-            hasSourceURL?: boolean;
+            hasSourceURL?: boolean | undefined;
             /**
              * True, if this script is ES6 module.
              */
-            isModule?: boolean;
+            isModule?: boolean | undefined;
             /**
              * This script length.
              */
-            length?: number;
+            length?: number | undefined;
             /**
              * JavaScript top stack frame of where the script parsed event was triggered if available.
              * @experimental
              */
-            stackTrace?: Runtime.StackTrace;
+            stackTrace?: Runtime.StackTrace | undefined;
         }
 
         interface ScriptFailedToParseEventDataType {
@@ -14403,28 +15043,28 @@ declare module "inspector" {
             /**
              * Embedder-specific auxiliary data.
              */
-            executionContextAuxData?: {};
+            executionContextAuxData?: {} | undefined;
             /**
              * URL of source map associated with script (if any).
              */
-            sourceMapURL?: string;
+            sourceMapURL?: string | undefined;
             /**
              * True, if this script has sourceURL.
              */
-            hasSourceURL?: boolean;
+            hasSourceURL?: boolean | undefined;
             /**
              * True, if this script is ES6 module.
              */
-            isModule?: boolean;
+            isModule?: boolean | undefined;
             /**
              * This script length.
              */
-            length?: number;
+            length?: number | undefined;
             /**
              * JavaScript top stack frame of where the script parsed event was triggered if available.
              * @experimental
              */
-            stackTrace?: Runtime.StackTrace;
+            stackTrace?: Runtime.StackTrace | undefined;
         }
 
         interface BreakpointResolvedEventDataType {
@@ -14450,25 +15090,25 @@ declare module "inspector" {
             /**
              * Object containing break-specific auxiliary properties.
              */
-            data?: {};
+            data?: {} | undefined;
             /**
              * Hit breakpoints IDs
              */
-            hitBreakpoints?: string[];
+            hitBreakpoints?: string[] | undefined;
             /**
              * Async stack trace, if any.
              */
-            asyncStackTrace?: Runtime.StackTrace;
+            asyncStackTrace?: Runtime.StackTrace | undefined;
             /**
              * Async stack trace, if any.
              * @experimental
              */
-            asyncStackTraceId?: Runtime.StackTraceId;
+            asyncStackTraceId?: Runtime.StackTraceId | undefined;
             /**
              * Just scheduled async call will have this stack trace as parent stack during async execution. This field is available only after <code>Debugger.stepInto</code> call with <code>breakOnAsynCall</code> flag.
              * @experimental
              */
-            asyncCallStackTraceId?: Runtime.StackTraceId;
+            asyncCallStackTraceId?: Runtime.StackTraceId | undefined;
         }
     }
 
@@ -14492,15 +15132,15 @@ declare module "inspector" {
             /**
              * URL of the message origin.
              */
-            url?: string;
+            url?: string | undefined;
             /**
              * Line number in the resource that generated this message (1-based).
              */
-            line?: number;
+            line?: number | undefined;
             /**
              * Column number in the resource that generated this message (1-based).
              */
-            column?: number;
+            column?: number | undefined;
         }
 
         interface MessageAddedEventDataType {
@@ -14527,19 +15167,19 @@ declare module "inspector" {
             /**
              * Number of samples where this node was on top of the call stack.
              */
-            hitCount?: number;
+            hitCount?: number | undefined;
             /**
              * Child node ids.
              */
-            children?: number[];
+            children?: number[] | undefined;
             /**
              * The reason of being not optimized. The function may be deoptimized or marked as don't optimize.
              */
-            deoptReason?: string;
+            deoptReason?: string | undefined;
             /**
              * An array of source position ticks.
              */
-            positionTicks?: PositionTickInfo[];
+            positionTicks?: PositionTickInfo[] | undefined;
         }
 
         /**
@@ -14561,11 +15201,11 @@ declare module "inspector" {
             /**
              * Ids of samples top nodes.
              */
-            samples?: number[];
+            samples?: number[] | undefined;
             /**
              * Time intervals between adjacent samples in microseconds. The first delta is relative to the profile startTime.
              */
-            timeDeltas?: number[];
+            timeDeltas?: number[] | undefined;
         }
 
         /**
@@ -14692,11 +15332,11 @@ declare module "inspector" {
             /**
              * Collect accurate call counts beyond simple 'covered' or 'not covered'.
              */
-            callCount?: boolean;
+            callCount?: boolean | undefined;
             /**
              * Collect block-based coverage.
              */
-            detailed?: boolean;
+            detailed?: boolean | undefined;
         }
 
         interface StopReturnType {
@@ -14736,7 +15376,7 @@ declare module "inspector" {
             /**
              * Profile title passed as an argument to console.profile().
              */
-            title?: string;
+            title?: string | undefined;
         }
 
         interface ConsoleProfileFinishedEventDataType {
@@ -14749,7 +15389,7 @@ declare module "inspector" {
             /**
              * Profile title passed as an argument to console.profile().
              */
-            title?: string;
+            title?: string | undefined;
         }
     }
 
@@ -14785,21 +15425,21 @@ declare module "inspector" {
         }
 
         interface StartTrackingHeapObjectsParameterType {
-            trackAllocations?: boolean;
+            trackAllocations?: boolean | undefined;
         }
 
         interface StopTrackingHeapObjectsParameterType {
             /**
              * If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken when the tracking is stopped.
              */
-            reportProgress?: boolean;
+            reportProgress?: boolean | undefined;
         }
 
         interface TakeHeapSnapshotParameterType {
             /**
              * If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken.
              */
-            reportProgress?: boolean;
+            reportProgress?: boolean | undefined;
         }
 
         interface GetObjectByHeapObjectIdParameterType {
@@ -14807,7 +15447,7 @@ declare module "inspector" {
             /**
              * Symbolic group name that can be used to release multiple objects.
              */
-            objectGroup?: string;
+            objectGroup?: string | undefined;
         }
 
         interface AddInspectedHeapObjectParameterType {
@@ -14828,7 +15468,7 @@ declare module "inspector" {
             /**
              * Average sample interval in bytes. Poisson distribution is used for the intervals. The default value is 32768 bytes.
              */
-            samplingInterval?: number;
+            samplingInterval?: number | undefined;
         }
 
         interface GetObjectByHeapObjectIdReturnType {
@@ -14866,7 +15506,7 @@ declare module "inspector" {
         interface ReportHeapSnapshotProgressEventDataType {
             done: number;
             total: number;
-            finished?: boolean;
+            finished?: boolean | undefined;
         }
 
         interface LastSeenObjectIdEventDataType {
@@ -14887,7 +15527,7 @@ declare module "inspector" {
             /**
              * Controls how the trace buffer stores data.
              */
-            recordMode?: string;
+            recordMode?: string | undefined;
             /**
              * Included category filters.
              */
@@ -14988,10 +15628,16 @@ declare module "inspector" {
 
         /**
          * Connects a session to the inspector back-end.
-         * An exception will be thrown if there is already a connected session established either
-         * through the API or by a front-end connected to the Inspector WebSocket port.
          */
         connect(): void;
+
+        /**
+         * Connects a session to the main thread inspector back-end.
+         * An exception will be thrown if this API was not called on a Worker
+         * thread.
+         * @since 12.11.0
+         */
+        connectToMainThread(): void;
 
         /**
          * Immediately close the session. All pending message callbacks will be called with an error.
@@ -16118,7 +16764,8 @@ declare module "inspector" {
     function waitForDebugger(): void;
 }
 `;
-definitions['module.d.ts'] = `declare module "module" {     import { URL } from "url";
+definitions['module.d.ts'] = `declare module 'module' {
+    import { URL } from 'url';
     namespace Module {
         /**
          * Updates all the live bindings for builtin ES Modules to match the properties of the CommonJS exports.
@@ -16170,11 +16817,16 @@ definitions['module.d.ts'] = `declare module "module" {     import { URL } from 
     export = Module;
 }
 `;
-definitions['net.d.ts'] = `declare module "net" {     import * as stream from "stream";
-    import * as events from "events";
-    import * as dns from "dns";
+definitions['net.d.ts'] = `declare module 'net' {
+    import * as stream from 'stream';
+    import EventEmitter = require('events');
+    import * as dns from 'dns';
 
-    type LookupFunction = (hostname: string, options: dns.LookupOneOptions, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void) => void;
+    type LookupFunction = (
+        hostname: string,
+        options: dns.LookupOneOptions,
+        callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void,
+    ) => void;
 
     interface AddressInfo {
         address: string;
@@ -16183,10 +16835,10 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
     }
 
     interface SocketConstructorOpts {
-        fd?: number;
-        allowHalfOpen?: boolean;
-        readable?: boolean;
-        writable?: boolean;
+        fd?: number | undefined;
+        allowHalfOpen?: boolean | undefined;
+        readable?: boolean | undefined;
+        writable?: boolean | undefined;
     }
 
     interface OnReadOpts {
@@ -16205,17 +16857,17 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
          * Note: this will cause the streaming functionality to not provide any data, however events like 'error', 'end', and 'close' will
          * still be emitted as normal and methods like pause() and resume() will also behave as expected.
          */
-        onread?: OnReadOpts;
+        onread?: OnReadOpts | undefined;
     }
 
     interface TcpSocketConnectOpts extends ConnectOpts {
         port: number;
-        host?: string;
-        localAddress?: string;
-        localPort?: number;
-        hints?: number;
-        family?: number;
-        lookup?: LookupFunction;
+        host?: string | undefined;
+        localAddress?: string | undefined;
+        localPort?: number | undefined;
+        hints?: number | undefined;
+        family?: number | undefined;
+        lookup?: LookupFunction | undefined;
     }
 
     interface IpcSocketConnectOpts extends ConnectOpts {
@@ -16246,6 +16898,7 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
         unref(): this;
         ref(): this;
 
+        /** @deprecated since v14.6.0 - Use \`writableLength\` instead. */
         readonly bufferSize: number;
         readonly bytesRead: number;
         readonly bytesWritten: number;
@@ -16253,9 +16906,9 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
         readonly destroyed: boolean;
         readonly localAddress: string;
         readonly localPort: number;
-        readonly remoteAddress?: string;
-        readonly remoteFamily?: string;
-        readonly remotePort?: number;
+        readonly remoteAddress?: string | undefined;
+        readonly remoteFamily?: string | undefined;
+        readonly remotePort?: number | undefined;
 
         \/\/ Extended base methods
         end(cb?: () => void): void;
@@ -16281,6 +16934,7 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
         addListener(event: "end", listener: () => void): this;
         addListener(event: "error", listener: (err: Error) => void): this;
         addListener(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        addListener(event: "ready", listener: () => void): this;
         addListener(event: "timeout", listener: () => void): this;
 
         emit(event: string | symbol, ...args: any[]): boolean;
@@ -16291,6 +16945,7 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
         emit(event: "end"): boolean;
         emit(event: "error", err: Error): boolean;
         emit(event: "lookup", err: Error, address: string, family: string | number, host: string): boolean;
+        emit(event: "ready"): boolean;
         emit(event: "timeout"): boolean;
 
         on(event: string, listener: (...args: any[]) => void): this;
@@ -16301,6 +16956,7 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
         on(event: "end", listener: () => void): this;
         on(event: "error", listener: (err: Error) => void): this;
         on(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        on(event: "ready", listener: () => void): this;
         on(event: "timeout", listener: () => void): this;
 
         once(event: string, listener: (...args: any[]) => void): this;
@@ -16311,6 +16967,7 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
         once(event: "end", listener: () => void): this;
         once(event: "error", listener: (err: Error) => void): this;
         once(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        once(event: "ready", listener: () => void): this;
         once(event: "timeout", listener: () => void): this;
 
         prependListener(event: string, listener: (...args: any[]) => void): this;
@@ -16321,6 +16978,7 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
         prependListener(event: "end", listener: () => void): this;
         prependListener(event: "error", listener: (err: Error) => void): this;
         prependListener(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        prependListener(event: "ready", listener: () => void): this;
         prependListener(event: "timeout", listener: () => void): this;
 
         prependOnceListener(event: string, listener: (...args: any[]) => void): this;
@@ -16331,27 +16989,42 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
         prependOnceListener(event: "end", listener: () => void): this;
         prependOnceListener(event: "error", listener: (err: Error) => void): this;
         prependOnceListener(event: "lookup", listener: (err: Error, address: string, family: string | number, host: string) => void): this;
+        prependOnceListener(event: "ready", listener: () => void): this;
         prependOnceListener(event: "timeout", listener: () => void): this;
     }
 
     interface ListenOptions {
-        port?: number;
-        host?: string;
-        backlog?: number;
-        path?: string;
-        exclusive?: boolean;
-        readableAll?: boolean;
-        writableAll?: boolean;
+        port?: number | undefined;
+        host?: string | undefined;
+        backlog?: number | undefined;
+        path?: string | undefined;
+        exclusive?: boolean | undefined;
+        readableAll?: boolean | undefined;
+        writableAll?: boolean | undefined;
         /**
          * @default false
          */
-        ipv6Only?: boolean;
+        ipv6Only?: boolean | undefined;
+    }
+
+    interface ServerOpts {
+        /**
+         * Indicates whether half-opened TCP connections are allowed.
+         * @default false
+         */
+        allowHalfOpen?: boolean | undefined;
+
+        /**
+         * Indicates whether the socket should be paused on incoming connections.
+         * @default false
+         */
+        pauseOnConnect?: boolean | undefined;
     }
 
     \/\/ https:\/\/github.com/nodejs/node/blob/master/lib/net.js
-    class Server extends events.EventEmitter {
+    class Server extends EventEmitter {
         constructor(connectionListener?: (socket: Socket) => void);
-        constructor(options?: { allowHalfOpen?: boolean, pauseOnConnect?: boolean }, connectionListener?: (socket: Socket) => void);
+        constructor(options?: ServerOpts, connectionListener?: (socket: Socket) => void);
 
         listen(port?: number, hostname?: string, backlog?: number, listeningListener?: () => void): this;
         listen(port?: number, hostname?: string, listeningListener?: () => void): this;
@@ -16416,17 +17089,17 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
     }
 
     interface TcpNetConnectOpts extends TcpSocketConnectOpts, SocketConstructorOpts {
-        timeout?: number;
+        timeout?: number | undefined;
     }
 
     interface IpcNetConnectOpts extends IpcSocketConnectOpts, SocketConstructorOpts {
-        timeout?: number;
+        timeout?: number | undefined;
     }
 
     type NetConnectOpts = TcpNetConnectOpts | IpcNetConnectOpts;
 
     function createServer(connectionListener?: (socket: Socket) => void): Server;
-    function createServer(options?: { allowHalfOpen?: boolean, pauseOnConnect?: boolean }, connectionListener?: (socket: Socket) => void): Server;
+    function createServer(options?: ServerOpts, connectionListener?: (socket: Socket) => void): Server;
     function connect(options: NetConnectOpts, connectionListener?: () => void): Socket;
     function connect(port: number, host?: string, connectionListener?: () => void): Socket;
     function connect(path: string, connectionListener?: () => void): Socket;
@@ -16438,7 +17111,8 @@ definitions['net.d.ts'] = `declare module "net" {     import * as stream from "s
     function isIPv6(input: string): boolean;
 }
 `;
-definitions['os.d.ts'] = `declare module "os" {     interface CpuInfo {
+definitions['os.d.ts'] = `declare module 'os' {
+    interface CpuInfo {
         model: string;
         speed: number;
         times: {
@@ -16677,7 +17351,8 @@ definitions['os.d.ts'] = `declare module "os" {     interface CpuInfo {
     function setPriority(pid: number, priority: number): void;
 }
 `;
-definitions['path.d.ts'] = `declare module "path" {     namespace path {
+definitions['path.d.ts'] = `declare module 'path' {
+    namespace path {
         /**
          * A parsed path object generated by path.parse() or consumed by path.format().
          */
@@ -16708,23 +17383,23 @@ definitions['path.d.ts'] = `declare module "path" {     namespace path {
             /**
              * The root of the path such as '/' or 'c:\'
              */
-            root?: string;
+            root?: string | undefined;
             /**
              * The full directory path such as '/home/user/dir' or 'c:\path\dir'
              */
-            dir?: string;
+            dir?: string | undefined;
             /**
              * The file name including extension (if any) such as 'index.html'
              */
-            base?: string;
+            base?: string | undefined;
             /**
              * The file extension (if any) such as '.html'
              */
-            ext?: string;
+            ext?: string | undefined;
             /**
              * The file name without extension (if any) such as 'index'
              */
-            name?: string;
+            name?: string | undefined;
         }
 
         interface PlatformPath {
@@ -16830,7 +17505,8 @@ definitions['path.d.ts'] = `declare module "path" {     namespace path {
     export = path;
 }
 `;
-definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { AsyncResource } from 'async_hooks';
+definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
+    import { AsyncResource } from 'async_hooks';
 
     type EntryType = 'node' | 'mark' | 'measure' | 'gc' | 'function' | 'http2' | 'http';
 
@@ -16862,14 +17538,14 @@ definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { Asy
          * the type of garbage collection operation that occurred.
          * See perf_hooks.constants for valid values.
          */
-        readonly kind?: number;
+        readonly kind?: number | undefined;
 
         /**
          * When \`performanceEntry.entryType\` is equal to 'gc', the \`performance.flags\`
          * property contains additional information about garbage collection operation.
          * See perf_hooks.constants for valid values.
          */
-        readonly flags?: number;
+        readonly flags?: number | undefined;
     }
 
     interface PerformanceNodeTiming extends PerformanceEntry {
@@ -16947,7 +17623,7 @@ definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { Asy
          * @param startMark
          * @param endMark
          */
-        measure(name: string, startMark: string, endMark: string): void;
+        measure(name: string, startMark?: string, endMark?: string): void;
 
         /**
          * An instance of the PerformanceNodeTiming class that provides performance metrics for specific Node.js operational milestones.
@@ -17017,7 +17693,7 @@ definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { Asy
          * Property buffered defaults to false.
          * @param options
          */
-        observe(options: { entryTypes: ReadonlyArray<EntryType>; buffered?: boolean }): void;
+        observe(options: { entryTypes: ReadonlyArray<EntryType>; buffered?: boolean | undefined }): void;
     }
 
     namespace constants {
@@ -17043,7 +17719,7 @@ definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { Asy
          * Must be greater than zero.
          * @default 10
          */
-        resolution?: number;
+        resolution?: number | undefined;
     }
 
     interface EventLoopDelayMonitor {
@@ -17101,7 +17777,8 @@ definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { Asy
     function monitorEventLoopDelay(options?: EventLoopMonitorOptions): EventLoopDelayMonitor;
 }
 `;
-definitions['process.d.ts'] = `declare module "process" {     import * as tty from "tty";
+definitions['process.d.ts'] = `declare module 'process' {
+    import * as tty from 'tty';
 
     global {
         var process: NodeJS.Process;
@@ -17128,10 +17805,10 @@ definitions['process.d.ts'] = `declare module "process" {     import * as tty fr
 
             interface ProcessRelease {
                 name: string;
-                sourceUrl?: string;
-                headersUrl?: string;
-                libUrl?: string;
-                lts?: string;
+                sourceUrl?: string | undefined;
+                headersUrl?: string | undefined;
+                libUrl?: string | undefined;
+                lts?: string | undefined;
             }
 
             interface ProcessVersions extends Dict<string> {
@@ -17162,13 +17839,14 @@ definitions['process.d.ts'] = `declare module "process" {     import * as tty fr
                 "SIGSTOP" | "SIGSYS" | "SIGTERM" | "SIGTRAP" | "SIGTSTP" | "SIGTTIN" | "SIGTTOU" | "SIGUNUSED" | "SIGURG" |
                 "SIGUSR1" | "SIGUSR2" | "SIGVTALRM" | "SIGWINCH" | "SIGXCPU" | "SIGXFSZ" | "SIGBREAK" | "SIGLOST" | "SIGINFO";
 
+            type UncaughtExceptionOrigin = 'uncaughtException' | 'unhandledRejection';
             type MultipleResolveType = 'resolve' | 'reject';
 
             type BeforeExitListener = (code: number) => void;
             type DisconnectListener = () => void;
             type ExitListener = (code: number) => void;
             type RejectionHandledListener = (promise: Promise<any>) => void;
-            type UncaughtExceptionListener = (error: Error) => void;
+            type UncaughtExceptionListener = (error: Error, origin: UncaughtExceptionOrigin) => void;
             type UnhandledRejectionListener = (reason: {} | null | undefined, promise: Promise<any>) => void;
             type WarningListener = (warning: Error) => void;
             type MessageListener = (message: any, sendHandle: any) => void;
@@ -17178,7 +17856,7 @@ definitions['process.d.ts'] = `declare module "process" {     import * as tty fr
             type MultipleResolveListener = (type: MultipleResolveType, promise: Promise<any>, value: any) => void;
 
             interface Socket extends ReadWriteStream {
-                isTTY?: true;
+                isTTY?: true | undefined;
             }
 
             \/\/ Alias for compatibility
@@ -17301,7 +17979,7 @@ definitions['process.d.ts'] = `declare module "process" {     import * as tty fr
                 emitWarning(warning: string | Error, name?: string, ctor?: Function): void;
                 env: ProcessEnv;
                 exit(code?: number): never;
-                exitCode?: number;
+                exitCode?: number | undefined;
                 getgid(): number;
                 setgid(id: number | string): void;
                 getuid(): number;
@@ -17349,7 +18027,7 @@ definitions['process.d.ts'] = `declare module "process" {     import * as tty fr
                 arch: string;
                 platform: Platform;
                 /** @deprecated since v14.0.0 - use \`require.main\` instead. */
-                mainModule?: Module;
+                mainModule?: Module | undefined;
                 memoryUsage(): MemoryUsage;
                 cpuUsage(previousValue?: CpuUsage): CpuUsage;
                 nextTick(callback: Function, ...args: any[]): void;
@@ -17379,7 +18057,7 @@ definitions['process.d.ts'] = `declare module "process" {     import * as tty fr
                 domain: Domain;
 
                 \/\/ Worker
-                send?(message: any, sendHandle?: any, options?: { swallowErrors?: boolean}, callback?: (error: Error | null) => void): boolean;
+                send?(message: any, sendHandle?: any, options?: { swallowErrors?: boolean | undefined}, callback?: (error: Error | null) => void): boolean;
                 disconnect(): void;
                 connected: boolean;
 
@@ -17393,7 +18071,7 @@ definitions['process.d.ts'] = `declare module "process" {     import * as tty fr
                 /**
                  * Only available with \`--experimental-report\`
                  */
-                report?: ProcessReport;
+                report?: ProcessReport | undefined;
 
                 resourceUsage(): ResourceUsage;
 
@@ -17509,7 +18187,15 @@ definitions['process.d.ts'] = `declare module "process" {     import * as tty fr
     export = process;
 }
 `;
-definitions['punycode.d.ts'] = `declare module "punycode" {     /**
+definitions['punycode.d.ts'] = `/**
+ * @deprecated since v7.0.0
+ * The version of the punycode module bundled in Node.js is being deprecated.
+ * In a future major version of Node.js this module will be removed.
+ * Users currently depending on the punycode module should switch to using
+ * the userland-provided Punycode.js module instead.
+ */
+declare module 'punycode' {
+    /**
      * @deprecated since v7.0.0
      * The version of the punycode module bundled in Node.js is being deprecated.
      * In a future major version of Node.js this module will be removed.
@@ -17577,13 +18263,14 @@ definitions['punycode.d.ts'] = `declare module "punycode" {     /**
     const version: string;
 }
 `;
-definitions['querystring.d.ts'] = `declare module "querystring" {     interface StringifyOptions {
-        encodeURIComponent?: (str: string) => string;
+definitions['querystring.d.ts'] = `declare module 'querystring' {
+    interface StringifyOptions {
+        encodeURIComponent?: ((str: string) => string) | undefined;
     }
 
     interface ParseOptions {
-        maxKeys?: number;
-        decodeURIComponent?: (str: string) => string;
+        maxKeys?: number | undefined;
+        decodeURIComponent?: ((str: string) => string) | undefined;
     }
 
     interface ParsedUrlQuery extends NodeJS.Dict<string | string[]> { }
@@ -17605,18 +18292,18 @@ definitions['querystring.d.ts'] = `declare module "querystring" {     interface 
     function unescape(str: string): string;
 }
 `;
-definitions['readline.d.ts'] = `declare module "readline" {     import * as events from "events";
-    import * as stream from "stream";
+definitions['readline.d.ts'] = `declare module 'readline' {
+    import EventEmitter = require('events');
 
     interface Key {
-        sequence?: string;
-        name?: string;
-        ctrl?: boolean;
-        meta?: boolean;
-        shift?: boolean;
+        sequence?: string | undefined;
+        name?: string | undefined;
+        ctrl?: boolean | undefined;
+        meta?: boolean | undefined;
+        shift?: boolean | undefined;
     }
 
-    class Interface extends events.EventEmitter {
+    class Interface extends EventEmitter {
         readonly terminal: boolean;
 
         \/\/ Need direct access to line/cursor data, for use in external processes
@@ -17727,7 +18414,7 @@ definitions['readline.d.ts'] = `declare module "readline" {     import * as even
         [Symbol.asyncIterator](): AsyncIterableIterator<string>;
     }
 
-    type ReadLine = Interface; \/\/ type forwarded for backwards compatiblity
+    type ReadLine = Interface; \/\/ type forwarded for backwards compatibility
 
     type Completer = (line: string) => CompleterResult;
     type AsyncCompleter = (line: string, callback: (err?: null | Error, result?: CompleterResult) => void) => any;
@@ -17736,15 +18423,15 @@ definitions['readline.d.ts'] = `declare module "readline" {     import * as even
 
     interface ReadLineOptions {
         input: NodeJS.ReadableStream;
-        output?: NodeJS.WritableStream;
-        completer?: Completer | AsyncCompleter;
-        terminal?: boolean;
-        historySize?: number;
-        prompt?: string;
-        crlfDelay?: number;
-        removeHistoryDuplicates?: boolean;
-        escapeCodeTimeout?: number;
-        tabSize?: number;
+        output?: NodeJS.WritableStream | undefined;
+        completer?: Completer | AsyncCompleter | undefined;
+        terminal?: boolean | undefined;
+        historySize?: number | undefined;
+        prompt?: string | undefined;
+        crlfDelay?: number | undefined;
+        removeHistoryDuplicates?: boolean | undefined;
+        escapeCodeTimeout?: number | undefined;
+        tabSize?: number | undefined;
     }
 
     function createInterface(input: NodeJS.ReadableStream, output?: NodeJS.WritableStream, completer?: Completer | AsyncCompleter, terminal?: boolean): Interface;
@@ -17776,33 +18463,34 @@ definitions['readline.d.ts'] = `declare module "readline" {     import * as even
     function moveCursor(stream: NodeJS.WritableStream, dx: number, dy: number, callback?: () => void): boolean;
 }
 `;
-definitions['repl.d.ts'] = `declare module "repl" {     import { Interface, Completer, AsyncCompleter } from "readline";
-    import { Context } from "vm";
-    import { InspectOptions } from "util";
+definitions['repl.d.ts'] = `declare module 'repl' {
+    import { Interface, Completer, AsyncCompleter } from 'readline';
+    import { Context } from 'vm';
+    import { InspectOptions } from 'util';
 
     interface ReplOptions {
         /**
          * The input prompt to display.
-         * Default: \`"> "\`
+         * @default "> "
          */
-        prompt?: string;
+        prompt?: string | undefined;
         /**
          * The \`Readable\` stream from which REPL input will be read.
-         * Default: \`process.stdin\`
+         * @default process.stdin
          */
-        input?: NodeJS.ReadableStream;
+        input?: NodeJS.ReadableStream | undefined;
         /**
          * The \`Writable\` stream to which REPL output will be written.
-         * Default: \`process.stdout\`
+         * @default process.stdout
          */
-        output?: NodeJS.WritableStream;
+        output?: NodeJS.WritableStream | undefined;
         /**
          * If \`true\`, specifies that the output should be treated as a TTY terminal, and have
          * ANSI/VT100 escape codes written to it.
          * Default: checking the value of the \`isTTY\` property on the output stream upon
          * instantiation.
          */
-        terminal?: boolean;
+        terminal?: boolean | undefined;
         /**
          * The function to be used when evaluating each given line of input.
          * Default: an async wrapper for the JavaScript \`eval()\` function. An \`eval\` function can
@@ -17812,45 +18500,45 @@ definitions['repl.d.ts'] = `declare module "repl" {     import { Interface, Comp
          * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_default_evaluation
          * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_custom_evaluation_functions
          */
-        eval?: REPLEval;
+        eval?: REPLEval | undefined;
         /**
          * Defines if the repl prints output previews or not.
          * @default \`true\` Always \`false\` in case \`terminal\` is falsy.
          */
-        preview?: boolean;
+        preview?: boolean | undefined;
         /**
          * If \`true\`, specifies that the default \`writer\` function should include ANSI color
          * styling to REPL output. If a custom \`writer\` function is provided then this has no
          * effect.
          * Default: the REPL instance's \`terminal\` value.
          */
-        useColors?: boolean;
+        useColors?: boolean | undefined;
         /**
          * If \`true\`, specifies that the default evaluation function will use the JavaScript
          * \`global\` as the context as opposed to creating a new separate context for the REPL
          * instance. The node CLI REPL sets this value to \`true\`.
          * Default: \`false\`.
          */
-        useGlobal?: boolean;
+        useGlobal?: boolean | undefined;
         /**
          * If \`true\`, specifies that the default writer will not output the return value of a
          * command if it evaluates to \`undefined\`.
          * Default: \`false\`.
          */
-        ignoreUndefined?: boolean;
+        ignoreUndefined?: boolean | undefined;
         /**
          * The function to invoke to format the output of each command before writing to \`output\`.
          * Default: a wrapper for \`util.inspect\`.
          *
          * @see https:\/\/nodejs.org/dist/latest-v10.x/docs/api/repl.html#repl_customizing_repl_output
          */
-        writer?: REPLWriter;
+        writer?: REPLWriter | undefined;
         /**
          * An optional function used for custom Tab auto completion.
          *
          * @see https:\/\/nodejs.org/dist/latest-v11.x/docs/api/readline.html#readline_use_of_the_completer_function
          */
-        completer?: Completer | AsyncCompleter;
+        completer?: Completer | AsyncCompleter | undefined;
         /**
          * A flag that specifies whether the default evaluator executes all JavaScript commands in
          * strict mode or default (sloppy) mode.
@@ -17859,13 +18547,13 @@ definitions['repl.d.ts'] = `declare module "repl" {     import { Interface, Comp
          * - \`repl.REPL_MODE_STRICT\` - evaluates expressions in strict mode. This is equivalent to
          *   prefacing every repl statement with \`'use strict'\`.
          */
-        replMode?: typeof REPL_MODE_SLOPPY | typeof REPL_MODE_STRICT;
+        replMode?: typeof REPL_MODE_SLOPPY | typeof REPL_MODE_STRICT | undefined;
         /**
          * Stop evaluating the current piece of code when \`SIGINT\` is received, i.e. \`Ctrl+C\` is
          * pressed. This cannot be used together with a custom \`eval\` function.
          * Default: \`false\`.
          */
-        breakEvalOnSigint?: boolean;
+        breakEvalOnSigint?: boolean | undefined;
     }
 
     type REPLEval = (this: REPLServer, evalCmd: string, context: Context, file: string, cb: (err: Error | null, result: any) => void) => void;
@@ -17883,7 +18571,7 @@ definitions['repl.d.ts'] = `declare module "repl" {     import { Interface, Comp
         /**
          * Help text to be displayed when \`.help\` is entered.
          */
-        help?: string;
+        help?: string | undefined;
         /**
          * The function to execute, optionally accepting a single string argument.
          */
@@ -18171,10 +18859,11 @@ definitions['repl.d.ts'] = `declare module "repl" {     import { Interface, Comp
     }
 }
 `;
-definitions['stream.d.ts'] = `declare module "stream" {     import * as events from "events";
+definitions['stream.d.ts'] = `declare module 'stream' {
+    import EventEmitter = require('events');
 
-    class internal extends events.EventEmitter {
-        pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean; }): T;
+    class internal extends EventEmitter {
+        pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean | undefined; }): T;
     }
 
     namespace internal {
@@ -18183,12 +18872,12 @@ definitions['stream.d.ts'] = `declare module "stream" {     import * as events f
         }
 
         interface ReadableOptions {
-            highWaterMark?: number;
-            encoding?: BufferEncoding;
-            objectMode?: boolean;
+            highWaterMark?: number | undefined;
+            encoding?: BufferEncoding | undefined;
+            objectMode?: boolean | undefined;
             read?(this: Readable, size: number): void;
             destroy?(this: Readable, error: Error | null, callback: (error: Error | null) => void): void;
-            autoDestroy?: boolean;
+            autoDestroy?: boolean | undefined;
         }
 
         class Readable extends Stream implements NodeJS.ReadableStream {
@@ -18297,16 +18986,16 @@ definitions['stream.d.ts'] = `declare module "stream" {     import * as events f
         }
 
         interface WritableOptions {
-            highWaterMark?: number;
-            decodeStrings?: boolean;
-            defaultEncoding?: BufferEncoding;
-            objectMode?: boolean;
-            emitClose?: boolean;
+            highWaterMark?: number | undefined;
+            decodeStrings?: boolean | undefined;
+            defaultEncoding?: BufferEncoding | undefined;
+            objectMode?: boolean | undefined;
+            emitClose?: boolean | undefined;
             write?(this: Writable, chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void;
             writev?(this: Writable, chunks: Array<{ chunk: any, encoding: BufferEncoding }>, callback: (error?: Error | null) => void): void;
             destroy?(this: Writable, error: Error | null, callback: (error: Error | null) => void): void;
             final?(this: Writable, callback: (error?: Error | null) => void): void;
-            autoDestroy?: boolean;
+            autoDestroy?: boolean | undefined;
         }
 
         class Writable extends Stream implements NodeJS.WritableStream {
@@ -18401,12 +19090,12 @@ definitions['stream.d.ts'] = `declare module "stream" {     import * as events f
         }
 
         interface DuplexOptions extends ReadableOptions, WritableOptions {
-            allowHalfOpen?: boolean;
-            readableObjectMode?: boolean;
-            writableObjectMode?: boolean;
-            readableHighWaterMark?: number;
-            writableHighWaterMark?: number;
-            writableCorked?: number;
+            allowHalfOpen?: boolean | undefined;
+            readableObjectMode?: boolean | undefined;
+            writableObjectMode?: boolean | undefined;
+            readableHighWaterMark?: number | undefined;
+            writableHighWaterMark?: number | undefined;
+            writableCorked?: number | undefined;
             read?(this: Duplex, size: number): void;
             write?(this: Duplex, chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void;
             writev?(this: Duplex, chunks: Array<{ chunk: any, encoding: BufferEncoding }>, callback: (error?: Error | null) => void): void;
@@ -18423,6 +19112,7 @@ definitions['stream.d.ts'] = `declare module "stream" {     import * as events f
             readonly writableLength: number;
             readonly writableObjectMode: boolean;
             readonly writableCorked: number;
+            allowHalfOpen: boolean;
             constructor(opts?: DuplexOptions);
             _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void;
             _writev?(chunks: Array<{ chunk: any, encoding: BufferEncoding }>, callback: (error?: Error | null) => void): void;
@@ -18459,9 +19149,9 @@ definitions['stream.d.ts'] = `declare module "stream" {     import * as events f
         class PassThrough extends Transform { }
 
         interface FinishedOptions {
-            error?: boolean;
-            readable?: boolean;
-            writable?: boolean;
+            error?: boolean | undefined;
+            readable?: boolean | undefined;
+            writable?: boolean | undefined;
         }
         function finished(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream, options: FinishedOptions, callback: (err?: NodeJS.ErrnoException | null) => void): () => void;
         function finished(stream: NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream, callback: (err?: NodeJS.ErrnoException | null) => void): () => void;
@@ -18525,20 +19215,22 @@ definitions['stream.d.ts'] = `declare module "stream" {     import * as events f
     export = internal;
 }
 `;
-definitions['string_decoder.d.ts'] = `declare module "string_decoder" {     class StringDecoder {
+definitions['string_decoder.d.ts'] = `declare module 'string_decoder' {
+    class StringDecoder {
         constructor(encoding?: BufferEncoding);
         write(buffer: Buffer): string;
         end(buffer?: Buffer): string;
     }
 }
 `;
-definitions['timers.d.ts'] = `declare module "timers" {     function setTimeout(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+definitions['timers.d.ts'] = `declare module 'timers' {
+    function setTimeout(callback: (...args: any[]) => void, ms?: number, ...args: any[]): NodeJS.Timeout;
     namespace setTimeout {
         function __promisify__(ms: number): Promise<void>;
         function __promisify__<T>(ms: number, value: T): Promise<T>;
     }
     function clearTimeout(timeoutId: NodeJS.Timeout): void;
-    function setInterval(callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timeout;
+    function setInterval(callback: (...args: any[]) => void, ms?: number, ...args: any[]): NodeJS.Timeout;
     function clearInterval(intervalId: NodeJS.Timeout): void;
     function setImmediate(callback: (...args: any[]) => void, ...args: any[]): NodeJS.Immediate;
     namespace setImmediate {
@@ -18548,10 +19240,8 @@ definitions['timers.d.ts'] = `declare module "timers" {     function setTimeout(
     function clearImmediate(immediateId: NodeJS.Immediate): void;
 }
 `;
-definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "crypto";
-    import * as dns from "dns";
-    import * as net from "net";
-    import * as stream from "stream";
+definitions['tls.d.ts'] = `declare module 'tls' {
+    import * as net from 'net';
 
     const CLIENT_RENEG_LIMIT: number;
     const CLIENT_RENEG_WINDOW: number;
@@ -18627,7 +19317,7 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
         /**
          * The name property is available only when type is 'ECDH'.
          */
-        name?: string;
+        name?: string | undefined;
         /**
          * The size of parameter of an ephemeral key exchange.
          */
@@ -18642,7 +19332,7 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
         /**
          * Optional passphrase.
          */
-        passphrase?: string;
+        passphrase?: string | undefined;
     }
 
     interface PxfObject {
@@ -18653,7 +19343,7 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
         /**
          * Optional passphrase.
          */
-        passphrase?: string;
+        passphrase?: string | undefined;
     }
 
     interface TLSSocketOptions extends SecureContextOptions, CommonConnectionOptions {
@@ -18661,22 +19351,22 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * If true the TLS socket will be instantiated in server-mode.
          * Defaults to false.
          */
-        isServer?: boolean;
+        isServer?: boolean | undefined;
         /**
          * An optional net.Server instance.
          */
-        server?: net.Server;
+        server?: net.Server | undefined;
 
         /**
          * An optional Buffer instance containing a TLS session.
          */
-        session?: Buffer;
+        session?: Buffer | undefined;
         /**
          * If true, specifies that the OCSP status request extension will be
          * added to the client hello and an 'OCSPResponse' event will be
          * emitted on the socket before establishing a secure communication
          */
-        requestOCSP?: boolean;
+        requestOCSP?: boolean | undefined;
     }
 
     class TLSSocket extends net.Socket {
@@ -18702,9 +19392,10 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
 
         /**
          * String containing the selected ALPN protocol.
-         * When ALPN has no selected protocol, tlsSocket.alpnProtocol equals false.
+         * Before a handshake has completed, this value is always null.
+         * When a handshake is completed but not ALPN protocol was selected, tlsSocket.alpnProtocol equals false.
          */
-        alpnProtocol?: string;
+        alpnProtocol: string | false | null;
 
         /**
          * Returns an object representing the local certificate. The returned
@@ -18816,7 +19507,7 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * is successfully completed.
          * @return \`undefined\` when socket is destroy, \`false\` if negotiaion can't be initiated.
          */
-        renegotiate(options: { rejectUnauthorized?: boolean, requestCert?: boolean }, callback: (err: Error | null) => void): undefined | boolean;
+        renegotiate(options: { rejectUnauthorized?: boolean | undefined, requestCert?: boolean | undefined }, callback: (err: Error | null) => void): undefined | boolean;
         /**
          * Set maximum TLS fragment size (default and maximum value is: 16384, minimum is: 512).
          * Smaller fragment size decreases buffering latency on the client: large fragments are buffered by
@@ -18896,25 +19587,25 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
         /**
          * An optional TLS context object from tls.createSecureContext()
          */
-        secureContext?: SecureContext;
+        secureContext?: SecureContext | undefined;
 
         /**
          * When enabled, TLS packet trace information is written to \`stderr\`. This can be
          * used to debug TLS connection problems.
          * @default false
          */
-        enableTrace?: boolean;
+        enableTrace?: boolean | undefined;
         /**
          * If true the server will request a certificate from clients that
          * connect and attempt to verify that certificate. Defaults to
          * false.
          */
-        requestCert?: boolean;
+        requestCert?: boolean | undefined;
         /**
          * An array of strings or a Buffer naming possible ALPN protocols.
          * (Protocols should be ordered by their priority.)
          */
-        ALPNProtocols?: string[] | Uint8Array[] | Uint8Array;
+        ALPNProtocols?: string[] | Uint8Array[] | Uint8Array | undefined;
         /**
          * SNICallback(servername, cb) <Function> A function that will be
          * called if the client supports SNI TLS extension. Two arguments
@@ -18924,34 +19615,34 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * SecureContext.) If SNICallback wasn't provided the default callback
          * with high-level API will be used (see below).
          */
-        SNICallback?: (servername: string, cb: (err: Error | null, ctx: SecureContext) => void) => void;
+        SNICallback?: ((servername: string, cb: (err: Error | null, ctx: SecureContext) => void) => void) | undefined;
         /**
          * If true the server will reject any connection which is not
          * authorized with the list of supplied CAs. This option only has an
          * effect if requestCert is true.
          * @default true
          */
-        rejectUnauthorized?: boolean;
+        rejectUnauthorized?: boolean | undefined;
     }
 
-    interface TlsOptions extends SecureContextOptions, CommonConnectionOptions {
+    interface TlsOptions extends SecureContextOptions, CommonConnectionOptions, net.ServerOpts {
         /**
          * Abort the connection if the SSL/TLS handshake does not finish in the
          * specified number of milliseconds. A 'tlsClientError' is emitted on
          * the tls.Server object whenever a handshake times out. Default:
          * 120000 (120 seconds).
          */
-        handshakeTimeout?: number;
+        handshakeTimeout?: number | undefined;
         /**
          * The number of seconds after which a TLS session created by the
          * server will no longer be resumable. See Session Resumption for more
          * information. Default: 300.
          */
-        sessionTimeout?: number;
+        sessionTimeout?: number | undefined;
         /**
          * 48-bytes of cryptographically strong pseudo-random data.
          */
-        ticketKeys?: Buffer;
+        ticketKeys?: Buffer | undefined;
 
         /**
          *
@@ -18980,25 +19671,25 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * in TLS 1.3. Upon failing to set pskIdentityHint \`tlsClientError\` will be
          * emitted with \`ERR_TLS_PSK_SET_IDENTIY_HINT_FAILED\` code.
          */
-        pskIdentityHint?: string;
+        pskIdentityHint?: string | undefined;
     }
 
     interface PSKCallbackNegotation {
         psk: DataView | NodeJS.TypedArray;
-        identitty: string;
+        identity: string;
     }
 
     interface ConnectionOptions extends SecureContextOptions, CommonConnectionOptions {
-        host?: string;
-        port?: number;
-        path?: string; \/\/ Creates unix socket connection to path. If this option is specified, \`host\` and \`port\` are ignored.
-        socket?: net.Socket; \/\/ Establish secure connection on a given socket rather than creating a new socket
-        checkServerIdentity?: typeof checkServerIdentity;
-        servername?: string; \/\/ SNI TLS Extension
-        session?: Buffer;
-        minDHSize?: number;
-        lookup?: net.LookupFunction;
-        timeout?: number;
+        host?: string | undefined;
+        port?: number | undefined;
+        path?: string | undefined; \/\/ Creates unix socket connection to path. If this option is specified, \`host\` and \`port\` are ignored.
+        socket?: net.Socket | undefined; \/\/ Establish secure connection on a given socket rather than creating a new socket
+        checkServerIdentity?: typeof checkServerIdentity | undefined;
+        servername?: string | undefined; \/\/ SNI TLS Extension
+        session?: Buffer | undefined;
+        minDHSize?: number | undefined;
+        lookup?: net.LookupFunction | undefined;
+        timeout?: number | undefined;
         /**
          * When negotiating TLS-PSK (pre-shared keys), this function is called
          * with optional identity \`hint\` provided by the server or \`null\`
@@ -19020,6 +19711,9 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
     }
 
     class Server extends net.Server {
+        constructor(secureConnectionListener?: (socket: TLSSocket) => void);
+        constructor(options: TlsOptions, secureConnectionListener?: (socket: TLSSocket) => void);
+
         /**
          * The server.addContext() method adds a secure context that will be
          * used if the client request's SNI name matches the supplied hostname
@@ -19115,7 +19809,7 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * the well-known CAs curated by Mozilla. Mozilla's CAs are completely
          * replaced when CAs are explicitly specified using this option.
          */
-        ca?: string | Buffer | Array<string | Buffer>;
+        ca?: string | Buffer | Array<string | Buffer> | undefined;
         /**
          *  Cert chains in PEM format. One cert chain should be provided per
          *  private key. Each cert chain should consist of the PEM formatted
@@ -19127,29 +19821,29 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          *  intermediate certificates are not provided, the peer will not be
          *  able to validate the certificate, and the handshake will fail.
          */
-        cert?: string | Buffer | Array<string | Buffer>;
+        cert?: string | Buffer | Array<string | Buffer> | undefined;
         /**
          *  Colon-separated list of supported signature algorithms. The list
          *  can contain digest algorithms (SHA256, MD5 etc.), public key
          *  algorithms (RSA-PSS, ECDSA etc.), combination of both (e.g
          *  'RSA+SHA384') or TLS v1.3 scheme names (e.g. rsa_pss_pss_sha512).
          */
-        sigalgs?: string;
+        sigalgs?: string | undefined;
         /**
          * Cipher suite specification, replacing the default. For more
          * information, see modifying the default cipher suite. Permitted
          * ciphers can be obtained via tls.getCiphers(). Cipher names must be
          * uppercased in order for OpenSSL to accept them.
          */
-        ciphers?: string;
+        ciphers?: string | undefined;
         /**
          * Name of an OpenSSL engine which can provide the client certificate.
          */
-        clientCertEngine?: string;
+        clientCertEngine?: string | undefined;
         /**
          * PEM formatted CRLs (Certificate Revocation Lists).
          */
-        crl?: string | Buffer | Array<string | Buffer>;
+        crl?: string | Buffer | Array<string | Buffer> | undefined;
         /**
          * Diffie Hellman parameters, required for Perfect Forward Secrecy. Use
          * openssl dhparam to create the parameters. The key length must be
@@ -19158,7 +19852,7 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * stronger security. If omitted or invalid, the parameters are
          * silently discarded and DHE ciphers will not be available.
          */
-        dhparam?: string | Buffer;
+        dhparam?: string | Buffer | undefined;
         /**
          * A string describing a named curve or a colon separated list of curve
          * NIDs or names, for example P-521:P-384:P-256, to use for ECDH key
@@ -19168,13 +19862,13 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * name and description of each available elliptic curve. Default:
          * tls.DEFAULT_ECDH_CURVE.
          */
-        ecdhCurve?: string;
+        ecdhCurve?: string | undefined;
         /**
          * Attempt to use the server's cipher suite preferences instead of the
          * client's. When true, causes SSL_OP_CIPHER_SERVER_PREFERENCE to be
          * set in secureOptions
          */
-        honorCipherOrder?: boolean;
+        honorCipherOrder?: boolean | undefined;
         /**
          * Private keys in PEM format. PEM allows the option of private keys
          * being encrypted. Encrypted keys will be decrypted with
@@ -19185,18 +19879,18 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * object.passphrase is optional. Encrypted keys will be decrypted with
          * object.passphrase if provided, or options.passphrase if it is not.
          */
-        key?: string | Buffer | Array<Buffer | KeyObject>;
+        key?: string | Buffer | Array<Buffer | KeyObject> | undefined;
         /**
          * Name of an OpenSSL engine to get private key from. Should be used
          * together with privateKeyIdentifier.
          */
-        privateKeyEngine?: string;
+        privateKeyEngine?: string | undefined;
         /**
          * Identifier of a private key managed by an OpenSSL engine. Should be
          * used together with privateKeyEngine. Should not be set together with
          * key, because both options define a private key in different ways.
          */
-        privateKeyIdentifier?: string;
+        privateKeyIdentifier?: string | undefined;
         /**
          * Optionally set the maximum TLS version to allow. One
          * of \`'TLSv1.3'\`, \`'TLSv1.2'\`, \`'TLSv1.1'\`, or \`'TLSv1'\`. Cannot be specified along with the
@@ -19205,7 +19899,7 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * \`--tls-max-v1.2\` sets the default to \`'TLSv1.2'\`. Using \`--tls-max-v1.3\` sets the default to
          * \`'TLSv1.3'\`. If multiple of the options are provided, the highest maximum is used.
          */
-        maxVersion?: SecureVersion;
+        maxVersion?: SecureVersion | undefined;
         /**
          * Optionally set the minimum TLS version to allow. One
          * of \`'TLSv1.3'\`, \`'TLSv1.2'\`, \`'TLSv1.1'\`, or \`'TLSv1'\`. Cannot be specified along with the
@@ -19216,11 +19910,11 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * \`'TLSv1.1'\`. Using \`--tls-min-v1.3\` sets the default to
          * 'TLSv1.3'. If multiple of the options are provided, the lowest minimum is used.
          */
-        minVersion?: SecureVersion;
+        minVersion?: SecureVersion | undefined;
         /**
          * Shared passphrase used for a single private key and/or a PFX.
          */
-        passphrase?: string;
+        passphrase?: string | undefined;
         /**
          * PFX or PKCS12 encoded private key and certificate chain. pfx is an
          * alternative to providing key and cert individually. PFX is usually
@@ -19231,13 +19925,13 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * object.passphrase is optional. Encrypted PFX will be decrypted with
          * object.passphrase if provided, or options.passphrase if it is not.
          */
-        pfx?: string | Buffer | Array<string | Buffer | PxfObject>;
+        pfx?: string | Buffer | Array<string | Buffer | PxfObject> | undefined;
         /**
          * Optionally affect the OpenSSL protocol behavior, which is not
          * usually necessary. This should be used carefully if at all! Value is
          * a numeric bitmask of the SSL_OP_* options from OpenSSL Options
          */
-        secureOptions?: number; \/\/ Value is a numeric bitmask of the \`SSL_OP_*\` options
+        secureOptions?: number | undefined; \/\/ Value is a numeric bitmask of the \`SSL_OP_*\` options
         /**
          * Legacy mechanism to select the TLS protocol version to use, it does
          * not support independent control of the minimum and maximum version,
@@ -19249,23 +19943,23 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
          * TLS versions less than 1.2, but it may be required for
          * interoperability. Default: none, see minVersion.
          */
-        secureProtocol?: string;
+        secureProtocol?: string | undefined;
         /**
          * Opaque identifier used by servers to ensure session state is not
          * shared between applications. Unused by clients.
          */
-        sessionIdContext?: string;
+        sessionIdContext?: string | undefined;
         /**
          * 48-bytes of cryptographically strong pseudo-random data.
          * See Session Resumption for more information.
          */
-        ticketKeys?: Buffer;
+        ticketKeys?: Buffer | undefined;
         /**
          * The number of seconds after which a TLS session created by the
          * server will no longer be resumable. See Session Resumption for more
          * information. Default: 300.
          */
-        sessionTimeout?: number;
+        sessionTimeout?: number | undefined;
     }
 
     interface SecureContext {
@@ -19327,7 +20021,8 @@ definitions['tls.d.ts'] = `declare module "tls" {     import * as crypto from "c
     const rootCertificates: ReadonlyArray<string>;
 }
 `;
-definitions['trace_events.d.ts'] = `declare module "trace_events" {     /**
+definitions['trace_events.d.ts'] = `declare module 'trace_events' {
+    /**
      * The \`Tracing\` object is used to enable or disable tracing for sets of
      * categories. Instances are created using the
      * \`trace_events.createTracing()\` method.
@@ -19388,7 +20083,8 @@ definitions['trace_events.d.ts'] = `declare module "trace_events" {     /**
     function getEnabledCategories(): string | undefined;
 }
 `;
-definitions['tty.d.ts'] = `declare module "tty" {     import * as net from "net";
+definitions['tty.d.ts'] = `declare module 'tty' {
+    import * as net from 'net';
 
     function isatty(fd: number): boolean;
     class ReadStream extends net.Socket {
@@ -19454,21 +20150,22 @@ definitions['tty.d.ts'] = `declare module "tty" {     import * as net from "net"
     }
 }
 `;
-definitions['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
+definitions['url.d.ts'] = `declare module 'url' {
+    import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
 
     \/\/ Input to \`url.format\`
     interface UrlObject {
-        auth?: string | null;
-        hash?: string | null;
-        host?: string | null;
-        hostname?: string | null;
-        href?: string | null;
-        pathname?: string | null;
-        protocol?: string | null;
-        search?: string | null;
-        slashes?: boolean | null;
-        port?: string | number | null;
-        query?: string | null | ParsedUrlQueryInput;
+        auth?: string | null | undefined;
+        hash?: string | null | undefined;
+        host?: string | null | undefined;
+        hostname?: string | null | undefined;
+        href?: string | null | undefined;
+        pathname?: string | null | undefined;
+        protocol?: string | null | undefined;
+        search?: string | null | undefined;
+        slashes?: boolean | null | undefined;
+        port?: string | number | null | undefined;
+        query?: string | null | ParsedUrlQueryInput | undefined;
     }
 
     \/\/ Output of \`url.parse\`
@@ -19495,13 +20192,19 @@ definitions['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery, P
         query: string | null;
     }
 
+    /** @deprecated since v11.0.0 - Use the WHATWG URL API. */
     function parse(urlStr: string): UrlWithStringQuery;
+    /** @deprecated since v11.0.0 - Use the WHATWG URL API. */
     function parse(urlStr: string, parseQueryString: false | undefined, slashesDenoteHost?: boolean): UrlWithStringQuery;
+    /** @deprecated since v11.0.0 - Use the WHATWG URL API. */
     function parse(urlStr: string, parseQueryString: true, slashesDenoteHost?: boolean): UrlWithParsedQuery;
+    /** @deprecated since v11.0.0 - Use the WHATWG URL API. */
     function parse(urlStr: string, parseQueryString: boolean, slashesDenoteHost?: boolean): Url;
 
     function format(URL: URL, options?: URLFormatOptions): string;
+    /** @deprecated since v11.0.0 - Use the WHATWG URL API. */
     function format(urlObject: UrlObject | string): string;
+    /** @deprecated since v11.0.0 - Use the WHATWG URL API. */
     function resolve(from: string, to: string): string;
 
     function domainToASCII(domain: string): string;
@@ -19522,10 +20225,10 @@ definitions['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery, P
     function pathToFileURL(url: string): URL;
 
     interface URLFormatOptions {
-        auth?: boolean;
-        fragment?: boolean;
-        search?: boolean;
-        unicode?: boolean;
+        auth?: boolean | undefined;
+        fragment?: boolean | undefined;
+        search?: boolean | undefined;
+        unicode?: boolean | undefined;
     }
 
     class URL {
@@ -19547,7 +20250,7 @@ definitions['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery, P
     }
 
     class URLSearchParams implements Iterable<[string, string]> {
-        constructor(init?: URLSearchParams | string | NodeJS.Dict<string | ReadonlyArray<string>> | Iterable<[string, string]> | ReadonlyArray<[string, string]>);
+        constructor(init?: URLSearchParams | string | Record<string, string | ReadonlyArray<string>> | Iterable<[string, string]> | ReadonlyArray<[string, string]>);
         append(name: string, value: string): void;
         delete(name: string): void;
         entries(): IterableIterator<[string, string]>;
@@ -19564,14 +20267,15 @@ definitions['url.d.ts'] = `declare module "url" {     import { ParsedUrlQuery, P
     }
 }
 `;
-definitions['util.d.ts'] = `declare module "util" {     interface InspectOptions extends NodeJS.InspectOptions { }
+definitions['util.d.ts'] = `declare module 'util' {
+    interface InspectOptions extends NodeJS.InspectOptions { }
     type Style = 'special' | 'number' | 'bigint' | 'boolean' | 'undefined' | 'null' | 'string' | 'symbol' | 'date' | 'regexp' | 'module';
     type CustomInspectFunction = (depth: number, options: InspectOptionsStylized) => string;
     interface InspectOptionsStylized extends InspectOptions {
         stylize(text: string, styleType: Style): string;
     }
-    function format(format: any, ...param: any[]): string;
-    function formatWithOptions(inspectOptions: InspectOptions, format: string, ...param: any[]): string;
+    function format(format?: any, ...param: any[]): string;
+    function formatWithOptions(inspectOptions: InspectOptions, format?: any, ...param: any[]): string;
     /** @deprecated since v0.11.3 - use a third party module instead. */
     function log(string: string): void;
     function inspect(object: any, showHidden?: boolean, depth?: number | null, color?: boolean): string;
@@ -19744,11 +20448,11 @@ definitions['util.d.ts'] = `declare module "util" {     interface InspectOptions
         readonly ignoreBOM: boolean;
         constructor(
           encoding?: string,
-          options?: { fatal?: boolean; ignoreBOM?: boolean }
+          options?: { fatal?: boolean | undefined; ignoreBOM?: boolean | undefined }
         );
         decode(
           input?: NodeJS.ArrayBufferView | ArrayBuffer | null,
-          options?: { stream?: boolean }
+          options?: { stream?: boolean | undefined }
         ): string;
     }
 
@@ -19771,7 +20475,8 @@ definitions['util.d.ts'] = `declare module "util" {     interface InspectOptions
     }
 }
 `;
-definitions['v8.d.ts'] = `declare module "v8" {     import { Readable } from "stream";
+definitions['v8.d.ts'] = `declare module 'v8' {
+    import { Readable } from 'stream';
 
     interface HeapSpaceInfo {
         space_name: string;
@@ -19958,72 +20663,74 @@ definitions['v8.d.ts'] = `declare module "v8" {     import { Readable } from "st
     function deserialize(data: NodeJS.TypedArray): any;
 }
 `;
-definitions['vm.d.ts'] = `declare module "vm" {     interface Context extends NodeJS.Dict<any> { }
+definitions['vm.d.ts'] = `declare module 'vm' {
+    interface Context extends NodeJS.Dict<any> { }
     interface BaseOptions {
         /**
          * Specifies the filename used in stack traces produced by this script.
          * Default: \`''\`.
          */
-        filename?: string;
+        filename?: string | undefined;
         /**
          * Specifies the line number offset that is displayed in stack traces produced by this script.
          * Default: \`0\`.
          */
-        lineOffset?: number;
+        lineOffset?: number | undefined;
         /**
          * Specifies the column number offset that is displayed in stack traces produced by this script.
-         * Default: \`0\`
+         * @default 0
          */
-        columnOffset?: number;
+        columnOffset?: number | undefined;
     }
     interface ScriptOptions extends BaseOptions {
-        displayErrors?: boolean;
-        timeout?: number;
-        cachedData?: Buffer;
-        produceCachedData?: boolean;
+        displayErrors?: boolean | undefined;
+        timeout?: number | undefined;
+        cachedData?: Buffer | undefined;
+        /** @deprecated in favor of \`script.createCachedData()\` */
+        produceCachedData?: boolean | undefined;
     }
     interface RunningScriptOptions extends BaseOptions {
         /**
          * When \`true\`, if an \`Error\` occurs while compiling the \`code\`, the line of code causing the error is attached to the stack trace.
          * Default: \`true\`.
          */
-        displayErrors?: boolean;
+        displayErrors?: boolean | undefined;
         /**
          * Specifies the number of milliseconds to execute code before terminating execution.
          * If execution is terminated, an \`Error\` will be thrown. This value must be a strictly positive integer.
          */
-        timeout?: number;
+        timeout?: number | undefined;
         /**
          * If \`true\`, the execution will be terminated when \`SIGINT\` (Ctrl+C) is received.
          * Existing handlers for the event that have been attached via \`process.on('SIGINT')\` will be disabled during script execution, but will continue to work after that.
          * If execution is terminated, an \`Error\` will be thrown.
          * Default: \`false\`.
          */
-        breakOnSigint?: boolean;
+        breakOnSigint?: boolean | undefined;
         /**
          * If set to \`afterEvaluate\`, microtasks will be run immediately after the script has run.
          */
-        microtaskMode?: 'afterEvaluate';
+        microtaskMode?: 'afterEvaluate' | undefined;
     }
     interface CompileFunctionOptions extends BaseOptions {
         /**
          * Provides an optional data with V8's code cache data for the supplied source.
          */
-        cachedData?: Buffer;
+        cachedData?: Buffer | undefined;
         /**
          * Specifies whether to produce new cache data.
          * Default: \`false\`,
          */
-        produceCachedData?: boolean;
+        produceCachedData?: boolean | undefined;
         /**
          * The sandbox/context in which the said function should be compiled in.
          */
-        parsingContext?: Context;
+        parsingContext?: Context | undefined;
 
         /**
          * An array containing a collection of context extensions (objects wrapping the current scope) to be applied while compiling
          */
-        contextExtensions?: Object[];
+        contextExtensions?: Object[] | undefined;
     }
 
     interface CreateContextOptions {
@@ -20031,7 +20738,7 @@ definitions['vm.d.ts'] = `declare module "vm" {     interface Context extends No
          * Human-readable name of the newly created context.
          * @default 'VM Context i' Where i is an ascending numerical index of the created context.
          */
-        name?: string;
+        name?: string | undefined;
         /**
          * Corresponds to the newly created context for display purposes.
          * The origin should be formatted like a \`URL\`, but with only the scheme, host, and port (if necessary),
@@ -20039,20 +20746,24 @@ definitions['vm.d.ts'] = `declare module "vm" {     interface Context extends No
          * Most notably, this string should omit the trailing slash, as that denotes a path.
          * @default ''
          */
-        origin?: string;
+        origin?: string | undefined;
         codeGeneration?: {
             /**
              * If set to false any calls to eval or function constructors (Function, GeneratorFunction, etc)
              * will throw an EvalError.
              * @default true
              */
-            strings?: boolean;
+            strings?: boolean | undefined;
             /**
              * If set to false any attempt to compile a WebAssembly module will throw a WebAssembly.CompileError.
              * @default true
              */
-            wasm?: boolean;
-        };
+            wasm?: boolean | undefined;
+        } | undefined;
+        /**
+         * If set to \`afterEvaluate\`, microtasks will be run immediately after the script has run.
+         */
+        microtaskMode?: 'afterEvaluate' | undefined;
     }
 
     type MeasureMemoryMode = 'summary' | 'detailed';
@@ -20061,8 +20772,8 @@ definitions['vm.d.ts'] = `declare module "vm" {     interface Context extends No
         /**
          * @default 'summary'
          */
-        mode?: MeasureMemoryMode;
-        context?: Context;
+        mode?: MeasureMemoryMode | undefined;
+        context?: Context | undefined;
     }
 
     interface MemoryMeasurement {
@@ -20078,6 +20789,7 @@ definitions['vm.d.ts'] = `declare module "vm" {     interface Context extends No
         runInNewContext(sandbox?: Context, options?: RunningScriptOptions): any;
         runInThisContext(options?: RunningScriptOptions): any;
         createCachedData(): Buffer;
+        cachedDataRejected?: boolean | undefined;
     }
     function createContext(sandbox?: Context, options?: CreateContextOptions): Context;
     function isContext(sandbox: Context): boolean;
@@ -20104,19 +20816,20 @@ definitions['vm.d.ts'] = `declare module "vm" {     interface Context extends No
     function measureMemory(options?: MeasureMemoryOptions): Promise<MemoryMeasurement>;
 }
 `;
-definitions['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions {
+definitions['wasi.d.ts'] = `declare module 'wasi' {
+    interface WASIOptions {
         /**
          * An array of strings that the WebAssembly application will
          * see as command line arguments. The first argument is the virtual path to the
          * WASI command itself.
          */
-        args?: string[];
+        args?: string[] | undefined;
 
         /**
          * An object similar to \`process.env\` that the WebAssembly
          * application will see as its environment.
          */
-        env?: object;
+        env?: object | undefined;
 
         /**
          * This object represents the WebAssembly application's
@@ -20124,7 +20837,7 @@ definitions['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions {
          * directories within the sandbox. The corresponding values in \`preopens\` are
          * the real paths to those directories on the host machine.
          */
-        preopens?: NodeJS.Dict<string>;
+        preopens?: NodeJS.Dict<string> | undefined;
 
         /**
          * By default, WASI applications terminate the Node.js
@@ -20133,25 +20846,25 @@ definitions['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions {
          * process.
          * @default false
          */
-        returnOnExit?: boolean;
+        returnOnExit?: boolean | undefined;
 
         /**
          * The file descriptor used as standard input in the WebAssembly application.
          * @default 0
          */
-        stdin?: number;
+        stdin?: number | undefined;
 
         /**
          * The file descriptor used as standard output in the WebAssembly application.
          * @default 1
          */
-        stdout?: number;
+        stdout?: number | undefined;
 
         /**
          * The file descriptor used as standard error in the WebAssembly application.
          * @default 2
          */
-        stderr?: number;
+        stderr?: number | undefined;
     }
 
     class WASI {
@@ -20190,11 +20903,12 @@ definitions['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions {
     }
 }
 `;
-definitions['worker_threads.d.ts'] = `declare module "worker_threads" {     import { Context } from "vm";
-    import { EventEmitter } from "events";
-    import { Readable, Writable } from "stream";
-    import { URL } from "url";
-    import { FileHandle } from "fs/promises";
+definitions['worker_threads.d.ts'] = `declare module 'worker_threads' {
+    import { Context } from 'vm';
+    import EventEmitter = require('events');
+    import { Readable, Writable } from 'stream';
+    import { URL } from 'url';
+    import { FileHandle } from 'fs/promises';
 
     const isMainThread: boolean;
     const parentPort: null | MessagePort;
@@ -20265,40 +20979,40 @@ definitions['worker_threads.d.ts'] = `declare module "worker_threads" {     impo
          * but the values will be available on the global \`process.argv\` as if they
          * were passed as CLI options to the script.
          */
-        argv?: any[];
-        env?: NodeJS.Dict<string> | typeof SHARE_ENV;
-        eval?: boolean;
+        argv?: any[] | undefined;
+        env?: NodeJS.Dict<string> | typeof SHARE_ENV | undefined;
+        eval?: boolean | undefined;
         workerData?: any;
-        stdin?: boolean;
-        stdout?: boolean;
-        stderr?: boolean;
-        execArgv?: string[];
-        resourceLimits?: ResourceLimits;
+        stdin?: boolean | undefined;
+        stdout?: boolean | undefined;
+        stderr?: boolean | undefined;
+        execArgv?: string[] | undefined;
+        resourceLimits?: ResourceLimits | undefined;
         /**
          * Additional data to send in the first worker message.
          */
-        transferList?: TransferListItem[];
-        trackUnmanagedFds?: boolean;
+        transferList?: TransferListItem[] | undefined;
+        trackUnmanagedFds?: boolean | undefined;
     }
 
     interface ResourceLimits {
         /**
          * The maximum size of a heap space for recently created objects.
          */
-        maxYoungGenerationSizeMb?: number;
+        maxYoungGenerationSizeMb?: number | undefined;
         /**
          * The maximum size of the main heap in MB.
          */
-        maxOldGenerationSizeMb?: number;
+        maxOldGenerationSizeMb?: number | undefined;
         /**
          * The size of a pre-allocated memory range used for generated code.
          */
-        codeRangeSizeMb?: number;
+        codeRangeSizeMb?: number | undefined;
         /**
          * The default maximum stack size for the thread. Small values may lead to unusable Worker instances.
          * @default 4
          */
-        stackSizeMb?: number;
+        stackSizeMb?: number | undefined;
     }
 
     class Worker extends EventEmitter {
@@ -20306,7 +21020,7 @@ definitions['worker_threads.d.ts'] = `declare module "worker_threads" {     impo
         readonly stdout: Readable;
         readonly stderr: Readable;
         readonly threadId: number;
-        readonly resourceLimits?: ResourceLimits;
+        readonly resourceLimits?: ResourceLimits | undefined;
 
         /**
          * @param filename  The path to the Worker’s main script or module.
@@ -20428,57 +21142,58 @@ definitions['worker_threads.d.ts'] = `declare module "worker_threads" {     impo
     function receiveMessageOnPort(port: MessagePort): { message: any } | undefined;
 }
 `;
-definitions['zlib.d.ts'] = `declare module "zlib" {     import * as stream from "stream";
+definitions['zlib.d.ts'] = `declare module 'zlib' {
+    import * as stream from 'stream';
 
     interface ZlibOptions {
         /**
          * @default constants.Z_NO_FLUSH
          */
-        flush?: number;
+        flush?: number | undefined;
         /**
          * @default constants.Z_FINISH
          */
-        finishFlush?: number;
+        finishFlush?: number | undefined;
         /**
          * @default 16*1024
          */
-        chunkSize?: number;
-        windowBits?: number;
-        level?: number; \/\/ compression only
-        memLevel?: number; \/\/ compression only
-        strategy?: number; \/\/ compression only
-        dictionary?: NodeJS.ArrayBufferView | ArrayBuffer; \/\/ deflate/inflate only, empty dictionary by default
-        info?: boolean;
-        maxOutputLength?: number;
+        chunkSize?: number | undefined;
+        windowBits?: number | undefined;
+        level?: number | undefined; \/\/ compression only
+        memLevel?: number | undefined; \/\/ compression only
+        strategy?: number | undefined; \/\/ compression only
+        dictionary?: NodeJS.ArrayBufferView | ArrayBuffer | undefined; \/\/ deflate/inflate only, empty dictionary by default
+        info?: boolean | undefined;
+        maxOutputLength?: number | undefined;
     }
 
     interface BrotliOptions {
         /**
          * @default constants.BROTLI_OPERATION_PROCESS
          */
-        flush?: number;
+        flush?: number | undefined;
         /**
          * @default constants.BROTLI_OPERATION_FINISH
          */
-        finishFlush?: number;
+        finishFlush?: number | undefined;
         /**
          * @default 16*1024
          */
-        chunkSize?: number;
+        chunkSize?: number | undefined;
         params?: {
             /**
              * Each key is a \`constants.BROTLI_*\` constant.
              */
             [key: number]: boolean | number;
-        };
-        maxOutputLength?: number;
+        } | undefined;
+        maxOutputLength?: number | undefined;
     }
 
     interface Zlib {
         /** @deprecated Use bytesWritten instead. */
         readonly bytesRead: number;
         readonly bytesWritten: number;
-        shell?: boolean | string;
+        shell?: boolean | string | undefined;
         close(callback?: () => void): void;
         flush(kind?: number, callback?: () => void): void;
         flush(callback?: () => void): void;

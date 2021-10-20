@@ -1,6 +1,7 @@
 /**
  * The installer module provides commonly used installation functions for Minecraft.
  * @packageDocumentation
+ * @module @xmcl/installer
  */
 
 export * from "./fabric";

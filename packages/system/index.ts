@@ -1,3 +1,6 @@
+/**
+ * @module @xmcl/system
+ */
 import { open, readEntry, readAllEntries } from "@xmcl/unzip";
 import { access, stat, writeFile, readFile, readdir } from "fs";
 import { join, sep } from "path";

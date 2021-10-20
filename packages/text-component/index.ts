@@ -1,4 +1,7 @@
 /**
+ * @module @xmcl/text-component
+ */
+/**
  * @see https://minecraft.gamepedia.com/Raw_JSON_text_format
  */
 export interface TextComponent {
@@ -329,11 +332,16 @@ class TextFormat<T extends keyof Style> {
         TextFormat.RESET,
     ];
 
+    /**
+     * Get the text format from text code
+     * @param code The text code character like 0, 1, 2
+     * @returns The TextFormat instance
+     */
     static fromCode(code: string) {
         const seq = "0123456789abcdefklmnor";
         const index = seq.indexOf(code);
         if (!index) { return undefined; }
-        return this.list[seq.indexOf(code)];
+        return this.list[index];
     }
 
     toString() {

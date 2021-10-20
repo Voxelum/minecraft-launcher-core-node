@@ -6,8 +6,6 @@
         "build:clean": "node scripts/clean.js",
         "build:definition": "node scripts/generate-definition.js",
         "build:readme": "node scripts/build-readme.js",
-        "build:docs": "node scripts/build-docs.js",
-        "build:web": "vite build",
         "compile": "rollup -c rollup.config.js",
         "compile:watch": "rollup -c rollup.config.js --watch",
         "compile:dry": "tsc --noEmit",

@@ -1,3 +1,6 @@
+/**
+ * @module @xmcl/world
+ */
 import { deserialize } from "@xmcl/nbt";
 import { FileSystem, openFileSystem } from "@xmcl/system";
 import Long from "long";

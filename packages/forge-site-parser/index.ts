@@ -1,3 +1,6 @@
+/**
+ * @module @xmcl/forge-site-parser
+ */
 import { parse as parseHtml, HTMLElement, Node } from "node-html-parser";
 
 /**

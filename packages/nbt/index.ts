@@ -2,6 +2,7 @@
  * The nbt module provides nbt {@link serialize} and {@link deserialize} functions.
  *
  * @packageDocumentation
+ * @module @xmcl/nbt
  */
 
 import ByteBuffer from "bytebuffer";

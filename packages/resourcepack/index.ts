@@ -6,6 +6,7 @@
  * Or you can just load resource pack metadata by {@link readPackMetaAndIcon}.
  *
  * @packageDocumentation
+ * @module @xmcl/resourcepack
  */
 
 import { FileSystem, resolveFileSystem } from "@xmcl/system";

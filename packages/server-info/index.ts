@@ -1,3 +1,6 @@
+/**
+ * @module @xmcl/server-info
+ */
 import { deserialize, serialize, TagType, deserializeSync, serializeSync } from "@xmcl/nbt";
 
 export class ServerInfo {
