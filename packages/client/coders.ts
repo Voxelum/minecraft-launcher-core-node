@@ -146,21 +146,21 @@ export const String: Coder<string> = {
 
 export const Json: Coder<any> = {
     decode: (buffer, inst) => {
-        return JSON.parse(String.decode(buffer, ""));
+        return JSON.parse(String.decode(buffer, inst));
     },
-    encode: (buffer, inst) => {
-        String.encode(buffer, JSON.stringify(inst));
+    encode: (buffer, inst, ctx) => {
+        String.encode(buffer, JSON.stringify(inst), ctx);
     },
 };
 
 
 export const Slot: Coder<SlotData> = {
-    decode: (buffer, inst) => {
-        const blockId = Short.decode(buffer, 0);
+    decode: (buffer, ctx) => {
+        const blockId = Short.decode(buffer, ctx);
         if (blockId === -1) { return { blockId }; }
         const itemCount = Byte.decode(buffer) || undefined;
         const itemDamage = Short.decode(buffer) || undefined;
-        if (Byte.decode(buffer, 0) === 0) {
+        if (Byte.decode(buffer, ctx) === 0) {
             return {
                 blockId,
                 itemCount,

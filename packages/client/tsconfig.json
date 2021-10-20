@@ -4,6 +4,7 @@
         "channel.ts",
         "coders.ts",
         "packet.ts",
+        "lan.ts",
         "status.ts"
     ],
     "compilerOptions": {

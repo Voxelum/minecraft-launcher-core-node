@@ -5,6 +5,7 @@
         "forge.ts",
         "liteloader.ts",
         "curseforge.ts",
+        "java-runtime.ts",
         "optifine.ts",
         "fabric.ts",
         "utils.ts",
@@ -18,20 +19,16 @@
         "http/download.ts",
         "http/fetch.ts",
         "http/metadata.ts",
+        "http/error.ts",
         "http/retry.ts",
         "http/segment.ts",
         "http/status.ts",
         "http/utils.ts",
-        "http/validator.ts",
-        "http/download.test.ts"
+        "http/validator.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
         "module": "esnext",
-        
-        "lib": [
-            "dom"
-        ],
         "experimentalDecorators": true,
         "declaration": true,
         "downlevelIteration": true,

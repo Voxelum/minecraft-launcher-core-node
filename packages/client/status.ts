@@ -141,7 +141,7 @@ export async function queryStatus(server: { host: string, port?: number }, optio
             result = await query(channel, host, port, timeout, protocol);
             break;
         } catch (e) {
-            error = e;
+            error = e as Error;
         }
     }
     if (result) {
