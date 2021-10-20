@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/installer",
-  "version": "3.2.2",
+  "version": "4.0.0",
   "main": "./index.ts",
   "description": "Provides Minecraft/Forge/Fabric/Liteloader installers",
   "engines": {
@@ -12,10 +12,10 @@
     "module": "./dist/index.esm.js"
   },
   "dependencies": {
-    "@xmcl/asm": "^0.1.0",
-    "@xmcl/core": "^2.6.2",
+    "@xmcl/asm": "^0.1.2",
+    "@xmcl/core": "^2.7.0",
     "@xmcl/forge-site-parser": "^2.0.8",
-    "@xmcl/task": "^3.0.0",
+    "@xmcl/task": "^4.0.0",
     "@xmcl/unzip": "^2.0.0",
     "yauzl": "^2.10.0"
   },

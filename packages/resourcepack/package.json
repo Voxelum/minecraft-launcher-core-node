@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/resourcepack",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "./index.ts",
   "description": "Minecraft resource pack parsing",
   "engines": {
@@ -12,7 +12,7 @@
     "module": "./dist/index.esm.js"
   },
   "dependencies": {
-    "@xmcl/system": "^2.2.1"
+    "@xmcl/system": "^2.2.2"
   },
   "repository": {
     "type": "git",

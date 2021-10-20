@@ -1,5 +1,55 @@
 # Changelog
 
+## 5.0.0
+### @xmcl/asm@0.1.2
+#### Bug Fixes
+
+- fix: add missing dependencies ([17fed11b194ac4a325ef19e9cbf1babbac3b263e](https://github.com/voxelum/minecraft-launcher-core-node/commit/17fed11b194ac4a325ef19e9cbf1babbac3b263e))
+### @xmcl/client@2.1.0
+#### Features
+
+- feat(client): add lan client/server ([75ed2efde78f584e56d22135fa896c48e90bf3b4](https://github.com/voxelum/minecraft-launcher-core-node/commit/75ed2efde78f584e56d22135fa896c48e90bf3b4))
+### @xmcl/core@2.7.0
+#### Features
+
+- feat(launch): support forge 1.17 jvm args ([440462f593c20f8a7f677f3f8e0ce060888e4967](https://github.com/voxelum/minecraft-launcher-core-node/commit/440462f593c20f8a7f677f3f8e0ce060888e4967))
+### @xmcl/task@4.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: minify the task API ([3fff63c463397aa0d3838f11d8cb2cacdb0fd68f](https://github.com/voxelum/minecraft-launcher-core-node/commit/3fff63c463397aa0d3838f11d8cb2cacdb0fd68f))
+### @xmcl/system@2.2.2
+#### Bug Fixes
+
+- fix(system): cannot identify buffer in njs ([9ed6080693b7b3a88c7fdf3335b9bc189b51166c](https://github.com/voxelum/minecraft-launcher-core-node/commit/9ed6080693b7b3a88c7fdf3335b9bc189b51166c))
+### @xmcl/installer@4.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: refactor API and rework on download ([a7d31f4d514f1e80612f48250edb527e4184f19a](https://github.com/voxelum/minecraft-launcher-core-node/commit/a7d31f4d514f1e80612f48250edb527e4184f19a))
+#### Features
+
+- feat(installer): support forge 1.17 ([32cfa5071086171e6f8f3e001f93f2dd828072fb](https://github.com/voxelum/minecraft-launcher-core-node/commit/32cfa5071086171e6f8f3e001f93f2dd828072fb))
+- feat(installer): support new java runtime ([85a169ba5542c984d48951d0fd4ab2d6c64b884f](https://github.com/voxelum/minecraft-launcher-core-node/commit/85a169ba5542c984d48951d0fd4ab2d6c64b884f))
+#### Bug Fixes
+
+- fix(installer): support 308 redirect ([bb4e158b63d959b8f088dd10bb12ce704292a3c4](https://github.com/voxelum/minecraft-launcher-core-node/commit/bb4e158b63d959b8f088dd10bb12ce704292a3c4))
+- fix(installer): correctly install intermediary for fabric ([1209e3b15d796394e4a0a4c912a8e93b1c45241c](https://github.com/voxelum/minecraft-launcher-core-node/commit/1209e3b15d796394e4a0a4c912a8e93b1c45241c))
+- Dependency @xmcl/asm bump **patch**
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/task bump **patch**
+### @xmcl/mod-parser@3.1.1
+- Dependency @xmcl/asm bump **patch**
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.1.1
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@1.0.18
+- Dependency @xmcl/resourcepack bump **patch**
+### @xmcl/world@1.1.5
+#### Bug Fixes
+
+- fix: add missing dependencies ([17fed11b194ac4a325ef19e9cbf1babbac3b263e](https://github.com/voxelum/minecraft-launcher-core-node/commit/17fed11b194ac4a325ef19e9cbf1babbac3b263e))
+- Dependency @xmcl/system bump **patch**
+
+
 ## 4.3.2
 ### @xmcl/core@2.6.2
 #### Bug Fixes

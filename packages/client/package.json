@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/client",
-  "version": "2.0.6",
+  "version": "2.1.0",
   "main": "./index.ts",
   "description": "Minecraft socket client pipeline, containing server status query by default",
   "engines": {
