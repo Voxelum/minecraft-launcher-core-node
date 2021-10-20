@@ -1,14 +1,15 @@
-const { workspaces } = require('../package.json');
 const { join } = require('path');
 const { execSync } = require('child_process');
-const { readFileSync } = require('fs');
+const { readFileSync, readdirSync } = require('fs');
 
 console.log(`Publish to tag ${'latest'}`)
 
+const workspaces = readdirSync(join(__dirname, '../packages'))
+
 for (const workspace of workspaces) {
-    const cwd = join(__dirname, '..', workspace);
-    const packageName = workspace.replace('packages', '@xmcl');
+    const cwd = join(__dirname, '..', 'packages', workspace);
     const packageContent = JSON.parse(readFileSync(join(cwd, 'package.json')).toString());
+    const packageName = packageContent.name;
     const packageVersion = packageContent.version;
     const published = execSync(`npm show ${packageName} versions`);
     if (published.indexOf(packageVersion) === -1) {
