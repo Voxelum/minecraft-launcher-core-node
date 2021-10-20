@@ -4,6 +4,7 @@ import * as path from "path";
 import { launch, LaunchOption, launchServer } from "./launch";
 
 declare const tempDir: string;
+declare const inCI: boolean;
 
 function getJavaVersion(javaPath: string) {
     const { stderr } = spawnSync(javaPath, ["-version"], { encoding: "utf8" });
@@ -65,7 +66,7 @@ describe("Launcher", () => {
             javaPath = "";
         }
     }
-    describe("#launch", () => {
+    describe.skip("#launch", () => {
         describe("1.6.4", () => {
             let t = test;
             if ((javaVersion && javaVersion > 8) || !javaPath) { t = test.skip; }
@@ -130,7 +131,7 @@ describe("Launcher", () => {
             });
         });
     });
-    describe("#launchServer", () => {
+    describe.skip("#launchServer", () => {
         test("should launch 1.12.2", async () => {
             const process = await launchServer({
                 version: "1.12.2",
