@@ -1,6 +1,8 @@
 const definitions = {};
-definitions['@xmcl/client/channel.d.ts'] = `\/\// <reference types="node" /> import { EventEmitter } from "events";
+definitions['@xmcl/client/channel.d.ts'] = `\/\// <reference types="node" /> import ByteBuffer from "bytebuffer";
+import { EventEmitter } from "events";
 import { NetConnectOpts } from "net";
+import { Transform, TransformCallback, Writable } from "stream";
 import { Coder } from "./coders";
 import { PacketRegistryEntry, Side } from "./packet";
 export declare type State = keyof States;
@@ -51,6 +53,36 @@ export interface Channel extends EventEmitter {
     on<T>(channel: string, listener: (event: T) => void): this;
     once<T>(channel: string, listener: (event: T) => void): this;
 }
+export declare abstract class PacketInBound extends Transform {
+    private buffer;
+    protected abstract readPacketLength(bb: ByteBuffer): number;
+    _transform(chunk: Buffer, encoding: string, callback: TransformCallback): void;
+}
+export interface PacketRegistry {
+    findCoderById(packetId: number, side: "client" | "server"): Coder<any>;
+    getPacketId(message: any, side: "client" | "server"): number;
+}
+export declare abstract class PacketDecoder extends Transform {
+    private client;
+    constructor(client: PacketRegistry);
+    abstract readPacketId(message: ByteBuffer): number;
+    _transform(chunk: Buffer, encoding: string, callback: TransformCallback): void;
+}
+export declare class PacketEmitter extends Writable {
+    private eventBus;
+    constructor(eventBus: EventEmitter);
+    _write(inst: any, encoding: string, callback: (error?: Error | null) => void): void;
+}
+export declare abstract class PacketEncoder extends Transform {
+    private client;
+    constructor(client: PacketRegistry);
+    protected abstract writePacketId(bb: ByteBuffer, id: number): void;
+    _transform(message: any, encoding: string, callback: TransformCallback): void;
+}
+export declare abstract class PacketOutbound extends Transform {
+    protected abstract writePacketLength(bb: ByteBuffer, len: number): void;
+    _transform(packet: Buffer, encoding: string, callback: TransformCallback): void;
+}
 declare class PacketCoders {
     packetIdCoders: {
         [packetId: number]: Coder<any>;
@@ -62,6 +94,7 @@ declare class PacketCoders {
 export {};
 \/\/# sourceMappingURL=channel.d.ts.map`;
 definitions['@xmcl/client/coders.d.ts'] = `\/\// <reference types="long" /> import ByteBuffer from "bytebuffer";
+import type { PacketRegistry } from "./channel";
 export interface SlotData {
     blockId: number;
     itemCount?: number;
@@ -72,8 +105,8 @@ export interface SlotData {
  * The packet encode/decode algorithm
  */
 export interface Coder<T> {
-    readonly encode: (buffer: ByteBuffer, data: T, context?: any) => void;
-    readonly decode: (buffer: ByteBuffer, context?: any) => T;
+    readonly encode: (buffer: ByteBuffer, data: T, context?: PacketRegistry) => void;
+    readonly decode: (buffer: ByteBuffer, context?: PacketRegistry) => T;
 }
 export declare const VarInt: Coder<number>;
 export declare const Int: Coder<number>;
@@ -97,12 +130,53 @@ definitions['@xmcl/client/index.d.ts'] = `/**  * The client for Minecraft protoc
  * You can use {@link queryStatus} with {@link QueryOptions} to ping a {@link Status} of a server
  *
  * @packageDocumentation
+ * @module @xmcl/client
  */
 export * from "./coders";
 export * from "./packet";
 export * from "./channel";
 export * from "./status";
+export * from "./lan";
 \/\/# sourceMappingURL=index.d.ts.map`;
+definitions['@xmcl/client/lan.d.ts'] = `\/\// <reference types="node" /> import { RemoteInfo } from "dgram";
+import { EventEmitter } from "events";
+export declare const LAN_MULTICAST_ADDR = "224.0.2.60";
+export declare const LAN_MULTICAST_PORT = 4445;
+export interface MinecraftLanDiscover {
+    on(channel: "discover", listener: (event: LanServerInfo & {
+        remote: RemoteInfo;
+    }) => void): this;
+    once(channel: "discover", listener: (event: LanServerInfo & {
+        remote: RemoteInfo;
+    }) => void): this;
+    addListener(channel: "discover", listener: (event: LanServerInfo & {
+        remote: RemoteInfo;
+    }) => void): this;
+    removeListener(channel: "discover", listener: (event: LanServerInfo & {
+        remote: RemoteInfo;
+    }) => void): this;
+}
+export declare class MinecraftLanDiscover extends EventEmitter {
+    private sock;
+    constructor();
+    bind(): Promise<void>;
+    destroy(): Promise<void>;
+}
+export interface LanServerInfo {
+    motd: string;
+    port: number;
+}
+export declare class MinecraftLanBroadcaster {
+    readonly servers: LanServerInfo[];
+    readonly interval: number;
+    private intervalHandle;
+    private sock;
+    constructor(servers: LanServerInfo[], interval: number);
+    boradcast(): void;
+    bind(): void;
+    destroy(): Promise<void>;
+}
+\/\/# sourceMappingURL=lan.d.ts.map`;
 definitions['@xmcl/client/packet.d.ts'] = `import { State } from "./channel"; import { Coder } from "./coders";
 export declare type Side = "server" | "client";
 export interface PacketRegistryEntry {
@@ -260,6 +334,9 @@ export declare function createClient(protocol: number, timeout?: number): {
 export {};
 \/\/# sourceMappingURL=status.d.ts.map`;
 definitions['@xmcl/core/diagnose.d.ts'] = `import { ResolvedLibrary, ResolvedVersion } from "./version"; import { MinecraftFolder, MinecraftLocation } from "./folder";
+/**
+ * Represent a issue for your diagnosed minecraft client.
+ */
 export interface Issue {
     /**
      * The type of the issue.
@@ -381,10 +458,24 @@ export declare function diagnoseFile<T extends string>({ file, expectedChecksum,
  * @beta
  */
 export declare function diagnose(version: string, minecraftLocation: MinecraftLocation): Promise<MinecraftIssueReport>;
+/**
+ * Diagnose assets currently installed.
+ * @param assetObjects The assets object metadata to check
+ * @param minecraft The minecraft location
+ * @returns The diagnose report
+ */
 export declare function diagnoseAssets(assetObjects: Record<string, {
     hash: string;
     size: number;
 }>, minecraft: MinecraftFolder): Promise<Array<AssetIssue>>;
+/**
+ * Diagnose all libraries presented in this resolved version.
+ *
+ * @param resolvedVersion The resolved version to check
+ * @param minecraft The minecraft location
+ * @returns List of libraries issue
+ * @see {@link ResolvedVersion}
+ */
 export declare function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<Array<LibraryIssue>>;
 export declare function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<AssetIndexIssue | undefined>;
 export declare function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<MinecraftJarIssue | undefined>;
@@ -461,6 +552,7 @@ definitions['@xmcl/core/index.d.ts'] = `/**  * The core package for launching Mi
  * and the {@link launch} function to launch the game.
  *
  * @packageDocumentation
+ * @module @xmcl/core
  */
 export * from "./launch";
 export * from "./version";
@@ -678,8 +770,15 @@ export declare namespace LaunchPrecheck {
      */
     function checkLibraries(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption): Promise<void>;
     /**
-     * Ensure the native are correctly extracted there.
-     * @param native The native directory path
+     * Ensure the native are correctly extracted in place.
+     *
+     * It will check native root located in {@link LaunchOption.nativeRoot} if it's presented.
+     * Or, it will use the \`<version-id>-native\` under version folder as native root to check.
+     *
+     * This will automatically extract native if there is not native extracted.
+     *
+     * @param resource The minecraft directory to extract native
+     * @param option If the native root presented here, it will use the root here.
      */
     function checkNatives(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption): Promise<void>;
 }
@@ -795,6 +894,8 @@ export declare function createMinecraftProcessWatcher(process: ChildProcess, emi
  * @see [spawn](https:\/\/nodejs.org/api/spawn.html)
  * @see {@link generateArguments}
  * @see {@link createMinecraftProcessWatcher}
+ * @throws {@link CorruptedVersionJarError}
+ * @throws {@link MissingLibrariesError}
  */
 export declare function launch(options: LaunchOption): Promise<ChildProcess>;
 /**
@@ -804,8 +905,11 @@ export declare function generateArgumentsServer(options: MinecraftServerOptions 
 /**
  * Generate the arguments array by options. This function is useful if you want to launch the process by yourself.
  *
- * This function will NOT check if the runtime libs are completed, and WONT'T check or extract native libs.
+ * This function will **NOT** check if the runtime libs are completed, and **WONT'T** check or extract native libs.
  *
+ * If you want to ensure native. Please see {@link LaunchPrecheck.checkNatives}.
+ *
+ * @param options The launch options.
  * @throws TypeError if options does not fully fulfill the requirement
  */
 export declare function generateArguments(options: LaunchOption): Promise<string[]>;
@@ -836,31 +940,32 @@ definitions['@xmcl/core/utils.d.ts'] = `/**  * @ignore
 \/\// <reference types="node" />
 import { readFile as freadFile, writeFile as fwriteFile, access as faccess, mkdir as fmkdir, link as flink } from "fs";
 import { pipeline as pip } from "stream";
-/** @ignore */
+/** @internal */
 export declare const pipeline: typeof pip.__promisify__;
-/** @ignore */
+/** @internal */
 export declare const access: typeof faccess.__promisify__;
-/** @ignore */
+/** @internal */
 export declare const link: typeof flink.__promisify__;
-/** @ignore */
+/** @internal */
 export declare const readFile: typeof freadFile.__promisify__;
-/** @ignore */
+/** @internal */
 export declare const writeFile: typeof fwriteFile.__promisify__;
-/** @ignore */
+/** @internal */
 export declare const mkdir: typeof fmkdir.__promisify__;
+/** @internal */
 export declare function exists(file: string): Promise<boolean>;
 /**
  * Validate the sha1 value of the file
- * @ignore
+ * @internal
  */
 export declare function validateSha1(target: string, hash?: string, strict?: boolean): Promise<boolean>;
 /**
  * Return the sha1 of a file
- * @ignore
+ * @internal
  */
 export declare function checksum(target: string, algorithm: string): Promise<any>;
 /**
- * @ignore
+ * @internal
  */
 export declare function isNotNull<T>(v: T | undefined): v is T;
 \/\/# sourceMappingURL=utils.d.ts.map`;
@@ -876,6 +981,10 @@ interface PartialResolvedVersion extends Version {
 /**
  * The resolved version for launcher.
  * It could be a combination of multiple versions as there might be some inheritions.
+ *
+ * You can get resolved version of a Minecraft by calling {@link Version.parse}.
+ *
+ * @see {@link Version.parse}
  */
 export interface ResolvedVersion {
     /**
@@ -1732,6 +1841,7 @@ export {};
 definitions['@xmcl/gamesetting/index.d.ts'] = `/**  * Provide function to {@link parse} the options.txt and also {@link stringify} it into the string.
  *
  * @packageDocumentation
+ * @module @xmcl/gamesetting
  */
 /**
  * The AmbientOcclusion enum value in options.txt
@@ -2017,8 +2127,9 @@ export {};
 definitions['@xmcl/installer/curseforge.d.ts'] = `\/\// <reference types="node" /> import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { Task, TaskGroup } from "@xmcl/task";
 import { Entry, ZipFile } from "yauzl";
-import { DownloadCommonOptions } from "./http";
-export interface CurseforgeOptions extends DownloadCommonOptions {
+import { DownloadBaseOptions } from "./http/download";
+import { ParallelTaskOptions } from "./utils";
+export interface CurseforgeOptions extends DownloadBaseOptions, ParallelTaskOptions {
     /**
      * The function to query a curseforge project downloadable url.
      */
@@ -2039,7 +2150,7 @@ export interface CurseforgeOptions extends DownloadCommonOptions {
      */
     filePathResolver?: FilePathResolver;
 }
-export interface InstallFileOptions extends DownloadCommonOptions {
+export interface InstallFileOptions extends DownloadBaseOptions {
     /**
      * The function to query a curseforge project downloadable url.
      */
@@ -2049,13 +2160,6 @@ declare type InputType = string | Buffer | {
     zip: ZipFile;
     entries: Entry[];
 };
-export interface BadCurseforgeModpackError {
-    error: "BadCurseforgeModpack";
-    /**
-     * What required entry is missing in modpack.
-     */
-    entry: string;
-}
 export interface Manifest {
     manifestType: string;
     manifestVersion: number;
@@ -2087,6 +2191,19 @@ export interface File {
     projectID: number;
     fileID: number;
 }
+export declare class BadCurseforgeModpackError extends Error {
+    modpack: InputType;
+    /**
+     * What required entry is missing in modpack.
+     */
+    entry: string;
+    error: string;
+    constructor(modpack: InputType, 
+    /**
+     * What required entry is missing in modpack.
+     */
+    entry: string);
+}
 /**
  * Read the mainifest data from modpack
  * @throws {@link BadCurseforgeModpackError}
@@ -2114,7 +2231,7 @@ export declare class DownloadCurseforgeFilesTask extends TaskGroup<void> {
     readonly minecraft: MinecraftFolder;
     readonly options: CurseforgeOptions;
     constructor(manifest: Manifest, minecraft: MinecraftFolder, options: CurseforgeOptions);
-    protected run(): Promise<void>;
+    protected runTask(): Promise<void>;
 }
 /**
  * Install curseforge modpack to a specific Minecraft location.
@@ -2166,7 +2283,19 @@ export interface InstallProfileIssueReport {
  */
 export declare function diagnoseInstall(installProfile: InstallProfile, minecraftLocation: MinecraftLocation): Promise<InstallProfileIssueReport>;
 \/\/# sourceMappingURL=diagnose.d.ts.map`;
-definitions['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Timestamped } from "./http";
+definitions['@xmcl/installer/downloadTask.d.ts'] = `import { AbortableTask } from "@xmcl/task"; import { Download, DownloadOptions } from "./http/download";
+import { StatusController } from "./http/status";
+export declare class DownloadTask extends AbortableTask<void> implements StatusController {
+    readonly download: Download;
+    protected abort: (isCancelled: boolean) => void;
+    constructor(options: DownloadOptions);
+    reset(progress: number, total: number): void;
+    onProgress(chunkSize: number, progress: number): void;
+    protected process(): Promise<void>;
+    protected isAbortedError(e: any): boolean;
+}
+\/\/# sourceMappingURL=downloadTask.d.ts.map`;
+definitions['@xmcl/installer/fabric.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Timestamped } from "./http/fetch";
 import { InstallOptions } from "./utils";
 export declare const YARN_MAVEN_URL = "https:\/\/maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export declare const LOADER_MAVEN_URL = "https:\/\/maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
@@ -2322,25 +2451,11 @@ export declare function installFabric(loader: FabricLoaderArtifact, minecraft: M
 \/\/# sourceMappingURL=fabric.d.ts.map`;
 definitions['@xmcl/installer/forge.d.ts'] = `import { MinecraftFolder, MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
 import { Entry, ZipFile } from "yauzl";
-import { DownloadFallbackTask, Timestamped } from "./http";
+import { DownloadTask } from "./downloadTask";
+import { Timestamped } from "./http/fetch";
 import { LibraryOptions } from "./minecraft";
 import { InstallProfileOption } from "./profile";
 import { InstallOptions as InstallOptionsBase } from "./utils";
-export interface BadForgeInstallerJarError {
-    error: "BadForgeInstallerJar";
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-}
-export interface BadForgeUniversalJarError {
-    error: "BadForgeUniversalJar";
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-}
-export declare type ForgeError = BadForgeInstallerJarError | BadForgeUniversalJarError;
 export interface ForgeVersionList extends Timestamped {
     mcversion: string;
     versions: ForgeVersion[];
@@ -2410,8 +2525,28 @@ export interface ForgeInstallerEntries {
      * forge-\${forgeVersion}-universal.jar
      */
     legacyUniversalJar?: Entry;
+    /**
+     * data/run.sh
+     */
+    runSh?: Entry;
+    /**
+     * data/run.bat
+     */
+    runBat?: Entry;
+    /**
+     * data/unix_args.txt
+     */
+    unixArgs?: Entry;
+    /**
+     * data/user_jvm_args.txt
+     */
+    userJvmArgs?: Entry;
+    /**
+     * data/win_args.txt
+     */
+    winArgs?: Entry;
 }
-export declare type ForgeInstallerEntriesPattern = ForgeInstallerEntries & Required<Pick<ForgeInstallerEntries, "forgeJar" | "versionJson" | "installProfileJson">>;
+export declare type ForgeInstallerEntriesPattern = ForgeInstallerEntries & Required<Pick<ForgeInstallerEntries, "versionJson" | "installProfileJson">>;
 export declare type ForgeLegacyInstallerEntriesPattern = Required<Pick<ForgeInstallerEntries, "installProfileJson" | "legacyUniversalJar">>;
 declare type RequiredVersion = {
     /**
@@ -2441,7 +2576,7 @@ export declare const DEFAULT_FORGE_MAVEN = "http:\/\/files.minecraftforge.net/ma
  */
 export interface InstallForgeOptions extends LibraryOptions, InstallOptionsBase, InstallProfileOption {
 }
-export declare class DownloadForgeInstallerTask extends DownloadFallbackTask {
+export declare class DownloadForgeInstallerTask extends DownloadTask {
     readonly installJarPath: string;
     constructor(forgeVersion: string, installer: RequiredVersion["installer"], minecraft: MinecraftFolder, options: InstallForgeOptions);
 }
@@ -2453,12 +2588,25 @@ export declare function isForgeInstallerEntries(entries: ForgeInstallerEntries):
  * @param forgeVersion Forge version to install
  */
 export declare function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: string): Promise<ForgeInstallerEntries>;
+export declare class BadForgeInstallerJarError extends Error {
+    jarPath: string;
+    /**
+     * What entry in jar is missing
+     */
+    entry?: string | undefined;
+    error: string;
+    constructor(jarPath: string, 
+    /**
+     * What entry in jar is missing
+     */
+    entry?: string | undefined);
+}
 /**
  * Install forge to target location.
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The installed version name.
- * @throws {@link ForgeError}
+ * @throws {@link BadForgeInstallerJarError}
  */
 export declare function installForge(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions): Promise<string>;
 /**
@@ -2466,7 +2614,7 @@ export declare function installForge(version: RequiredVersion, minecraft: Minecr
  * Installation task for forge with mcversion >= 1.13 requires java installed on your pc.
  * @param version The forge version meta
  * @returns The task to install the forge
- * @throws {@link ForgeError}
+ * @throws {@link BadForgeInstallerJarError}
  */
 export declare function installForgeTask(version: RequiredVersion, minecraft: MinecraftLocation, options?: InstallForgeOptions): Task<string>;
 /**
@@ -2492,6 +2640,360 @@ export declare function getForgeVersionList(option?: {
 }): Promise<ForgeVersionList>;
 export {};
 \/\/# sourceMappingURL=forge.d.ts.map`;
+definitions['@xmcl/installer/http/abort.d.ts'] = `export interface AbortSignal {     readonly aborted: boolean;
+    addEventListener(event: string, handler: () => void): this;
+    removeEventListener(event: string, handler: () => void): this;
+}
+export declare function resolveAbortSignal(signal?: AbortSignal): AbortSignal;
+\/\/# sourceMappingURL=abort.d.ts.map`;
+definitions['@xmcl/installer/http/agents.d.ts'] = `\/\// <reference types="node" /> import { Agent as HttpAgent } from "http";
+import { Agent as HttpsAgent } from "https";
+/**
+ * The http(s) agents object for requesting
+ */
+export interface Agents {
+    http?: HttpAgent;
+    https?: HttpsAgent;
+}
+export interface CreateAgentsOptions {
+    /**
+     * The suggested max concurrency of the download. This is not a strict criteria.
+     *
+     * This is used to generate the \`agents\` maxSocket.
+     * If \`agents\` is assigned, this will be ignore.
+     */
+    maxSocket?: number;
+    /**
+     * The suggested max concurrency of the download. This is not a strict criteria.
+     *
+     * This is used to generate the \`agents\` maxFreeSocket.
+     * If \`agents\` is assigned, this will be ignore.
+     */
+    maxFreeSocket?: number;
+}
+export declare function isAgents(agents?: Agents | CreateAgentsOptions): agents is Agents;
+export declare function resolveAgents(agents?: Agents | CreateAgentsOptions): Agents;
+/**
+ * Default create agents object
+ */
+export declare function createAgents(options?: CreateAgentsOptions): {
+    http: HttpAgent;
+    https: HttpsAgent;
+};
+export declare function withAgents<T extends {
+    agents?: Agents | CreateAgentsOptions;
+}, R>(options: T, scope: (options: T) => R): Promise<R>;
+\/\/# sourceMappingURL=agents.d.ts.map`;
+definitions['@xmcl/installer/http/download.d.ts'] = `\/\// <reference types="node" /> import { URL } from "url";
+import { AbortSignal } from "./abort";
+import { Agents, CreateAgentsOptions } from "./agents";
+import { ResourceMetadata } from "./metadata";
+import { DefaultRetryHandlerOptions, RetryHandler } from "./retry";
+import { DefaultSegmentPolicyOptions, Segment, SegmentPolicy } from "./segment";
+import { StatusController } from "./status";
+import { ChecksumValidatorOptions, Validator } from "./validator";
+export interface DownloadBaseOptions {
+    /**
+     * The agent of the request
+     */
+    agents?: Agents | CreateAgentsOptions;
+    /**
+     * The divide segment options
+     */
+    segmentPolicy?: SegmentPolicy | DefaultSegmentPolicyOptions;
+    /**
+     * The retry handler
+     */
+    retryHandler?: RetryHandler | DefaultRetryHandlerOptions;
+    /**
+     * The header of the request
+     */
+    headers?: Record<string, any>;
+}
+export interface DownloadOptions extends DownloadBaseOptions {
+    /**
+     * The url or urls (fallback) of the resource
+     */
+    url: string | string[];
+    /**
+     * The header of the request
+     */
+    headers?: Record<string, any>;
+    /**
+     * If the download is aborted, and want to recover, you can use this option to recover the download
+     */
+    segments?: Segment[];
+    /**
+     * If the download is aborted, and want to recover, you can use this option to recover the download
+     */
+    metadata?: ResourceMetadata;
+    /**
+     * Where the file will be downloaded to
+     */
+    destination: string;
+    /**
+     * The status controller. If you want to track download progress, you should use this.
+     */
+    statusController?: StatusController;
+    /**
+     * The validator, or the options to create a validator based on checksum.
+     */
+    validator?: Validator | ChecksumValidatorOptions;
+}
+/**
+ * Download url or urls to a file path. This process is abortable, it's compatible with the dom like \`AbortSignal\`.
+ */
+export declare function download(options: DownloadOptions): Promise<void>;
+export declare function createDownload(options: DownloadOptions): Download;
+export declare class Download {
+    /**
+     * The original request url with fallback
+     */
+    readonly urls: string[];
+    /**
+     * The headers of the request
+     */
+    readonly headers: Record<string, any>;
+    /**
+     * The agent of the request
+     */
+    readonly agents: Agents;
+    /**
+     * Where the file download to
+     */
+    readonly destination: string;
+    /**
+    * The current download status
+    */
+    protected segments: Segment[];
+    /**
+     * The cached resource metadata
+     */
+    protected metadata: ResourceMetadata | undefined;
+    protected segmentPolicy: SegmentPolicy;
+    protected statusController: StatusController;
+    protected retryHandler: RetryHandler;
+    protected validator: Validator;
+    /**
+     * current fd
+     */
+    protected fd: number;
+    constructor(
+    /**
+     * The original request url with fallback
+     */
+    urls: string[], 
+    /**
+     * The headers of the request
+     */
+    headers: Record<string, any>, 
+    /**
+     * The agent of the request
+     */
+    agents: Agents, 
+    /**
+     * Where the file download to
+     */
+    destination: string, 
+    /**
+    * The current download status
+    */
+    segments: Segment[], 
+    /**
+     * The cached resource metadata
+     */
+    metadata: ResourceMetadata | undefined, segmentPolicy: SegmentPolicy, statusController: StatusController, retryHandler: RetryHandler, validator: Validator);
+    protected updateMetadata(url: URL): Promise<ResourceMetadata>;
+    protected processDownload(metadata: ResourceMetadata, abortSignal: AbortSignal): Promise<void>;
+    protected downloadUrl(url: string, abortSignal: AbortSignal): Promise<void>;
+    /**
+     * Start to download
+     */
+    start(abortSignal?: AbortSignal): Promise<void>;
+}
+\/\/# sourceMappingURL=download.d.ts.map`;
+definitions['@xmcl/installer/http/error.d.ts'] = `import { ResourceMetadata } from "./metadata"; import { Segment } from "./segment";
+export declare type DownloadFailedReason = "DownloadAborted" | "DownloadValidationFailed" | "GeneralDownloadException" | NetworkErrorType;
+/**
+ * Download
+ */
+export declare class DownloadError extends Error {
+    readonly error: DownloadFailedReason;
+    readonly metadata: ResourceMetadata | undefined;
+    readonly headers: Record<string, any>;
+    readonly destination: string;
+    readonly segments: Segment[];
+    readonly segmentErrors: any[];
+    constructor(error: DownloadFailedReason, metadata: ResourceMetadata | undefined, headers: Record<string, any>, destination: string, segments: Segment[], segmentErrors: any[]);
+}
+export declare type NetworkErrorType = "ConnectionReset" | "ConnectionTimeout" | "OperationCancelled" | "ProtocolError";
+export declare function resolveNetworkErrorType(e: any): NetworkErrorType | undefined;
+/**
+ * A simple util function to determine if this is a common network condition error.
+ * @param e Error object
+ */
+export declare function isCommonNetworkError(e: any): boolean;
+\/\/# sourceMappingURL=error.d.ts.map`;
+definitions['@xmcl/installer/http/fetch.d.ts'] = `import { Agents } from "./agents"; export interface Timestamped {
+    timestamp: string;
+}
+export interface FetchOptions {
+    method: "GET";
+    headers: Record<string, string | string[]>;
+}
+export declare function fetchText(url: string, agent?: Agents): Promise<string>;
+export declare function fetchJson(url: string, agent?: Agents): Promise<any>;
+export declare function getIfUpdate(url: string, timestamp?: string, agent?: Agents): Promise<{
+    timestamp: string;
+    content: string | undefined;
+}>;
+export declare function getAndParseIfUpdate<T extends Timestamped>(url: string, parser: (s: string) => any, lastObject: T | undefined): Promise<T>;
+export declare function getLastModified(url: string, timestamp: string | undefined, agent?: Agents): Promise<readonly [true, string | undefined] | readonly [false, string | undefined]>;
+\/\/# sourceMappingURL=fetch.d.ts.map`;
+definitions['@xmcl/installer/http/metadata.d.ts'] = `\/\// <reference types="node" /> import { Agents } from "./agents";
+import { URL } from "url";
+export interface ResourceMetadata {
+    url: URL;
+    isAcceptRanges: boolean;
+    contentLength: number;
+    lastModified: string | undefined;
+    eTag: string | undefined;
+}
+export declare class FetchMetadataError extends Error {
+    readonly error: "FetchResourceNotFound" | "BadResourceRequest" | "FetchResourceServerUnavaiable";
+    readonly statusCode: number;
+    readonly url: string;
+    constructor(error: "FetchResourceNotFound" | "BadResourceRequest" | "FetchResourceServerUnavaiable", statusCode: number, url: string, message: string);
+}
+export declare function getMetadata(srcUrl: URL, _headers: Record<string, any>, agents: Agents, useGet?: boolean): Promise<ResourceMetadata>;
+\/\/# sourceMappingURL=metadata.d.ts.map`;
+definitions['@xmcl/installer/http/retry.d.ts'] = `import { DownloadError } from "./error"; import { ValidationError } from "./validator";
+/**
+ * The handler that decide whether
+ */
+export interface RetryHandler {
+    retry(url: string, attempt: number, error: ValidationError): boolean | Promise<boolean>;
+    retry(url: string, attempt: number, error: DownloadError): boolean | Promise<boolean>;
+    /**
+     * You should decide whether we should retry the download again?
+     *
+     * @param url The current downloading url
+     * @param attempt How many time it try to retry download? The first retry will be \`1\`.
+     * @param error The error object thrown during this download. It can be {@link DownloadError} or \${@link ValidationError}.
+     * @returns If we should retry and download it again.
+     */
+    retry(url: string, attempt: number, error: any): boolean | Promise<boolean>;
+}
+export interface DefaultRetryHandlerOptions {
+    /**
+     * The max retry count
+     */
+    maxRetryCount?: number;
+    /**
+     * Should we retry on the error
+     */
+    shouldRetry?: (e: any) => boolean;
+}
+export declare function isRetryHandler(options?: DefaultRetryHandlerOptions | RetryHandler): options is RetryHandler;
+export declare function resolveRetryHandler(options?: DefaultRetryHandlerOptions | RetryHandler): RetryHandler;
+/**
+ * Create a simple count based retry handler
+ * @param maxRetryCount The max count we should try
+ * @param shouldRetry Should the error be retry
+ */
+export declare function createRetryHandler(maxRetryCount: number, shouldRetry: (e: any) => boolean): RetryHandler;
+\/\/# sourceMappingURL=retry.d.ts.map`;
+definitions['@xmcl/installer/http/segment.d.ts'] = `export interface Segment {     start: number;
+    end: number;
+}
+export interface SegmentPolicy {
+    computeSegments(contentLength: number): Segment[];
+}
+export declare function isSegmentPolicy(segmentOptions?: SegmentPolicy | DefaultSegmentPolicyOptions): segmentOptions is SegmentPolicy;
+export declare function resolveSegmentPolicy(segmentOptions?: SegmentPolicy | DefaultSegmentPolicyOptions): SegmentPolicy;
+export interface DefaultSegmentPolicyOptions {
+    /**
+     * The minimum bytes a segment should have.
+     * @default 2MB
+     */
+    segmentThreshold?: number;
+}
+export declare class DefaultSegmentPolicy implements SegmentPolicy {
+    readonly segmentThreshold: number;
+    readonly concurrency: number;
+    constructor(segmentThreshold: number, concurrency: number);
+    computeSegments(total: number): Segment[];
+}
+\/\/# sourceMappingURL=segment.d.ts.map`;
+definitions['@xmcl/installer/http/status.d.ts'] = `/**  * The controller that maintain the download status
+ */
+export interface StatusController {
+    readonly total: number;
+    readonly progress: number;
+    reset(progress: number, total: number): void;
+    onProgress(chunkSize: number, progress: number): void;
+}
+export declare function createStatusController(): StatusController;
+export declare function resolveStatusController(controller?: StatusController): StatusController;
+\/\/# sourceMappingURL=status.d.ts.map`;
+definitions['@xmcl/installer/http/utils.d.ts'] = `\/\// <reference types="node" /> import { Agent as HttpAgent, ClientRequest, IncomingMessage, RequestOptions } from "http";
+import { Agent as HttpsAgent } from "https";
+import { URL } from "url";
+export declare function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:";
+export declare function urlToRequestOptions(url: URL): RequestOptions;
+export declare function format(url: RequestOptions): string;
+export declare function fetch(options: RequestOptions, agents?: {
+    http?: HttpAgent;
+    https?: HttpsAgent;
+}): Promise<{
+    request: ClientRequest;
+    message: IncomingMessage;
+}>;
+/**
+ * Join two urls
+ */
+export declare function joinUrl(a: string, b: string): string;
+export declare function checksumFromFd(fd: number, destination: string, algorithm: string): Promise<any>;
+\/\/# sourceMappingURL=utils.d.ts.map`;
+definitions['@xmcl/installer/http/validator.d.ts'] = `export interface Validator {     /**
+     * Validate the download result. It should throw \`ValidationError\` if validation failed.
+     *
+     * @param fd The file desciprtor
+     * @param destination The result file
+     * @param url The url where the file downloaded from
+     */
+    validate(fd: number, destination: string, url: string): Promise<void>;
+}
+export declare class ChecksumValidator implements Validator {
+    protected checksum?: ChecksumValidatorOptions | undefined;
+    constructor(checksum?: ChecksumValidatorOptions | undefined);
+    validate(fd: number, destination: string, url: string): Promise<void>;
+}
+export declare function isValidator(options?: Validator | ChecksumValidatorOptions): options is Validator;
+export declare function resolveValidator(options?: ChecksumValidatorOptions | Validator): Validator;
+export interface ChecksumValidatorOptions {
+    algorithm: string;
+    hash: string;
+}
+export declare class ZipValidator implements Validator {
+    validate(fd: number, destination: string, url: string): Promise<void>;
+}
+export declare class JsonValidator implements Validator {
+    validate(fd: number, destination: string, url: string): Promise<void>;
+}
+export declare class ValidationError extends Error {
+    readonly error: string;
+    constructor(error: string, message?: string);
+}
+export declare class ChecksumNotMatchError extends ValidationError {
+    readonly algorithm: string;
+    readonly expect: string;
+    readonly actual: string;
+    readonly file: string;
+    readonly source?: string | undefined;
+    constructor(algorithm: string, expect: string, actual: string, file: string, source?: string | undefined);
+}
+\/\/# sourceMappingURL=validator.d.ts.map`;
 definitions['@xmcl/installer/http.d.ts'] = `\/\// <reference types="node" /> import { TaskLooped } from "@xmcl/task";
 import { WriteStream } from "fs";
 import { Agent as HttpAgent, ClientRequest, IncomingMessage } from "http";
@@ -2703,6 +3205,7 @@ export {};
 \/\/# sourceMappingURL=http.d.ts.map`;
 definitions['@xmcl/installer/index.d.ts'] = `/**  * The installer module provides commonly used installation functions for Minecraft.
  * @packageDocumentation
+ * @module @xmcl/installer
  */
 export * from "./fabric";
 export * from "./liteloader";
@@ -2712,13 +3215,193 @@ export * from "./profile";
 export * from "./curseforge";
 export * from "./optifine";
 export * from "./java";
+export * from "./java-runtime";
 export * from "./diagnose";
 export { InstallOptions } from "./utils";
-export { DownloadBaseOptions, DownloadCommonOptions, DownloadFallbackTask, DownloadFromPathOptions, DownloadMultiUrlOptions, DownloadSingleUrlOptions, DownloadTask, Segment, Agents, Timestamped, ChecksumNotMatchError, createAgents, withAgents, } from "./http";
+export * from "./http/download";
+export * from "./http/agents";
+export * from "./http/segment";
+export * from "./http/abort";
+export * from "./http/fetch";
+export * from "./http/metadata";
+export * from "./http/retry";
+export * from "./http/status";
+export * from "./http/validator";
+export * from "./downloadTask";
 export * from "./unzip";
 \/\/# sourceMappingURL=index.d.ts.map`;
+definitions['@xmcl/installer/java-runtime.d.ts'] = `import { Platform } from "@xmcl/core"; import { Task } from "@xmcl/task";
+import { DownloadBaseOptions } from "./http/download";
+import { ParallelTaskOptions } from "./utils";
+/**
+ * Contain all java runtimes basic info
+ */
+export interface JavaRuntimes {
+    linux: JavaRuntimeTargets;
+    "linux-i386": JavaRuntimeTargets;
+    "mac-os": JavaRuntimeTargets;
+    "windows-x64": JavaRuntimeTargets;
+    "windows-x86": JavaRuntimeTargets;
+}
+export interface JavaRuntimeTargets {
+    "java-runtime-alpha": JavaRuntimeTarget[];
+    "jre-legacy": JavaRuntimeTarget[];
+    "minecraft-java-exe": JavaRuntimeTarget[];
+}
+export declare enum JavaRuntimeTargetType {
+    /**
+     * The legacy java version
+     */
+    Legacy = "jre-legacy",
+    /**
+     * The new java environment, which is the java 16
+     */
+    Next = "java-runtime-alpha",
+    JavaExe = "minecraft-java-exe"
+}
+/**
+ * Represent a java runtime
+ */
+export interface JavaRuntimeTarget {
+    /**
+     * Guessing this is the flight of this java runtime
+     */
+    availability: {
+        group: number;
+        progress: number;
+    };
+    /**
+     * The manifest detail of the resource
+     */
+    manifest: DownloadInfo;
+    /**
+     * The basic version info of the manifest
+     */
+    version: {
+        /**
+         * The name of the version. e.g. \`8u51\`, \`12\`, \`16.0.1.9.1\`
+         */
+        name: string;
+        /**
+         * The date string (UTC)
+         */
+        released: string;
+    };
+}
+export interface Entry {
+    type: "file" | "link" | "directory";
+}
+export interface LinkEntry extends Entry {
+    type: "link";
+    /**
+     * The link target
+     */
+    target: string;
+}
+export interface DirectoryEntry extends Entry {
+    type: "directory";
+}
+export interface DownloadInfo {
+    /**
+     * The sha info of the resource
+     */
+    sha1: string;
+    /**
+     * The size of the resource
+     */
+    size: number;
+    /**
+     * The url to download resource
+     */
+    url: string;
+}
+export interface FileEntry extends Entry {
+    type: "file";
+    executable: boolean;
+    downloads: {
+        /**
+         * The raw format of the file
+         */
+        raw: DownloadInfo;
+        /**
+         * The lzma format of the file
+         */
+        lzma?: DownloadInfo;
+    };
+}
+export declare type AnyEntry = FileEntry | DirectoryEntry | LinkEntry;
+/**
+ * Contains info about every files in this java runtime
+ */
+export interface JavaRuntimeManifest {
+    target: JavaRuntimeTargetType;
+    /**
+     * The files of the java runtime
+     */
+    files: Record<string, AnyEntry>;
+    version: JavaRuntimeTarget["version"];
+}
+export declare const DEFAULT_RUNTIME_ALL_URL = "https:\/\/launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
+export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
+    /**
+     * The alternative download host for the file
+     */
+    apiHost?: string | string[];
+    /**
+     * The url of the all runtime json
+     */
+    url?: string;
+    /**
+     * The platform to install. It will be auto-resolved by default.
+     * @default getPlatform()
+     */
+    platform?: Platform;
+    /**
+     * The install java runtime type
+     * @default InstallJavaRuntimeTarget.Next
+     */
+    target?: JavaRuntimeTargetType;
+    /**
+     * The index manifest of the java runtime. If this is not presented, it will fetch by platform and all platform url.
+     */
+    manfiestIndex?: JavaRuntimes;
+}
+/**
+ * Fetch java runtime manifest. It should be able to resolve to your platform, or you can assign the platform.
+ *
+ * Also, you should assign the target to download, or it will use the latest java 16.
+ * @param options The options of fetch runtime manifest
+ */
+export declare function fetchJavaRuntimeManifest(options?: FetchJavaRuntimeManifestOptions): Promise<JavaRuntimeManifest>;
+export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, ParallelTaskOptions {
+    /**
+     * The alternative download host for the file
+     */
+    apiHost?: string | string[];
+    /**
+     * The destination of this installation
+     */
+    destination: string;
+    /**
+     * The actual manfiest to install.
+     */
+    manifest: JavaRuntimeManifest;
+    /**
+     * Download lzma compressed version instead of raw version.
+     * - If \`true\`, it will just download lzma file version, you need to decompress by youself!
+     * - If \`Function\`, it will use that function to decompress the file!
+     */
+    lzma?: boolean | ((compressedFilePath: string, targetPath: string) => Promise<void>);
+}
+/**
+ * Install java runtime from java runtime manifest
+ * @param options The options to install java runtime
+ */
+export declare function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Task<void>;
+\/\/# sourceMappingURL=java-runtime.d.ts.map`;
 definitions['@xmcl/installer/java.d.ts'] = `import { Platform } from "@xmcl/core"; import { Task } from "@xmcl/task";
-import { DownloadCommonOptions, DownloadTask } from "./http";
+import { DownloadTask } from "./downloadTask";
+import { DownloadBaseOptions } from "./http/download";
 export interface JavaInfo {
     /**
      * Full java executable path
@@ -2733,7 +3416,7 @@ export interface JavaInfo {
      */
     majorVersion: number;
 }
-export interface InstallJavaOptions extends DownloadCommonOptions {
+export interface InstallJavaOptions extends DownloadBaseOptions {
     /**
      * The destination of this installation
      */
@@ -2809,8 +3492,8 @@ export declare function scanLocalJava(locations: string[]): Promise<JavaInfo[]>;
 export {};
 \/\/# sourceMappingURL=java.d.ts.map`;
 definitions['@xmcl/installer/liteloader.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; import { Task } from "@xmcl/task";
+import { Timestamped } from "./http/fetch";
 import { InstallOptions } from "./utils";
-import { Timestamped } from "./http";
 export declare const DEFAULT_VERSION_MANIFEST = "http:\/\/dl.liteloader.com/versions/versions.json";
 /**
  * The liteloader version list. Containing the minecraft version -> liteloader version info mapping.
@@ -2856,13 +3539,18 @@ export interface LiteloaderVersion {
 /**
  * This error is only thrown from liteloader install currently.
  */
-export interface MissingVersionJsonError {
-    error: "MissingVersionJson";
+export declare class MissingVersionJsonError extends Error {
     version: string;
     /**
      * The path of version json
      */
     path: string;
+    constructor(version: string, 
+    /**
+     * The path of version json
+     */
+    path: string);
+    error: "MissingVersionJson";
 }
 /**
  * Get or update the LiteLoader version list.
@@ -2911,7 +3599,10 @@ export declare function installLiteloader(versionMeta: LiteloaderVersion, locati
 export declare function installLiteloaderTask(versionMeta: LiteloaderVersion, location: MinecraftLocation, options?: InstallOptions): Task<string>;
 \/\/# sourceMappingURL=liteloader.d.ts.map`;
 definitions['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core"; import { Task } from "@xmcl/task";
-import { DownloadCommonOptions, DownloadFallbackTask, Timestamped } from "./http";
+import { DownloadTask } from "./downloadTask";
+import { DownloadBaseOptions } from "./http/download";
+import { Timestamped } from "./http/fetch";
+import { ParallelTaskOptions } from "./utils";
 /**
  * The function to swap library host.
  */
@@ -2997,7 +3688,7 @@ export declare function getVersionList(option?: {
 /**
  * Change the library host url
  */
-export interface LibraryOptions extends DownloadCommonOptions {
+export interface LibraryOptions extends DownloadBaseOptions, ParallelTaskOptions {
     /**
      * A more flexiable way to control library download url.
      * @see mavenHost
@@ -3018,7 +3709,7 @@ export interface LibraryOptions extends DownloadCommonOptions {
 /**
  * Change the host url of assets download
  */
-export interface AssetsOptions extends DownloadCommonOptions {
+export interface AssetsOptions extends DownloadBaseOptions, ParallelTaskOptions {
     /**
      * The alternative assets host to download asset. It will try to use these host from the \`[0]\` to the \`[assetsHost.length - 1]\`
      */
@@ -3039,7 +3730,7 @@ export declare type InstallLibraryVersion = Pick<ResolvedVersion, "libraries" | 
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloadCommonOptions {
+export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions {
     /**
      * The version json url replacement
      */
@@ -3059,22 +3750,7 @@ export interface InstallSideOption {
      */
     side?: "client" | "server";
 }
-export declare type Options = DownloadCommonOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
-export interface PostProcessFailedError {
-    error: "PostProcessFailed";
-    jar: string;
-    commands: string[];
-}
-export interface PostProcessNoMainClassError {
-    error: "PostProcessNoMainClass";
-    jarPath: string;
-}
-export interface PostProcessBadJarError {
-    error: "PostProcessBadJar";
-    jarPath: string;
-    causeBy: Error;
-}
-export declare type PostProcessError = PostProcessBadJarError | PostProcessFailedError | PostProcessNoMainClassError;
+export declare type Options = DownloadBaseOptions & ParallelTaskOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption;
 /**
  * Install the Minecraft game to a location by version metadata.
  *
@@ -3172,19 +3848,19 @@ export declare function installResolvedLibrariesTask(libraries: ResolvedLibrary[
  * @param options The asset option
  */
 export declare function installResolvedAssetsTask(assets: AssetInfo[], folder: MinecraftFolder, options?: AssetsOptions): import("@xmcl/task").TaskRoutine<void>;
-export declare class InstallJsonTask extends DownloadFallbackTask {
+export declare class InstallJsonTask extends DownloadTask {
     constructor(version: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options);
 }
-export declare class InstallJarTask extends DownloadFallbackTask {
+export declare class InstallJarTask extends DownloadTask {
     constructor(version: ResolvedVersion, minecraft: MinecraftLocation, options: Options);
 }
-export declare class InstallAssetIndexTask extends DownloadFallbackTask {
+export declare class InstallAssetIndexTask extends DownloadTask {
     constructor(version: ResolvedVersion, options?: AssetsOptions);
 }
-export declare class InstallLibraryTask extends DownloadFallbackTask {
+export declare class InstallLibraryTask extends DownloadTask {
     constructor(lib: ResolvedLibrary, folder: MinecraftFolder, options: LibraryOptions);
 }
-export declare class InstallAssetTask extends DownloadFallbackTask {
+export declare class InstallAssetTask extends DownloadTask {
     constructor(asset: AssetInfo, folder: MinecraftFolder, options: AssetsOptions);
 }
 /**
@@ -3196,13 +3872,6 @@ export declare class InstallAssetTask extends DownloadFallbackTask {
 export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOptions): string[];
 \/\/# sourceMappingURL=minecraft.d.ts.map`;
 definitions['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core"; import { InstallOptions } from "./utils";
-export interface BadOptifineJarError {
-    error: "BadOptifineJar";
-    /**
-     * What entry in jar is missing
-     */
-    entry: string;
-}
 export interface InstallOptifineOptions extends InstallOptions {
     /**
      * Use "optifine.OptiFineForgeTweaker" instead of "optifine.OptiFineTweaker" for tweakClass.
@@ -3236,6 +3905,19 @@ export interface InstallOptifineOptions extends InstallOptions {
  * @throws {@link BadOptifineJarError}
  */
 export declare function installOptifine(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): Promise<string>;
+export declare class BadOptifineJarError extends Error {
+    optifine: string;
+    /**
+     * What entry in jar is missing
+     */
+    entry: string;
+    constructor(optifine: string, 
+    /**
+     * What entry in jar is missing
+     */
+    entry: string);
+    error: string;
+}
 /**
  * Install optifine by optifine installer task
  *
@@ -3247,8 +3929,8 @@ export declare function installOptifine(installer: string, minecraft: MinecraftL
  */
 export declare function installOptifineTask(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions): import("@xmcl/task").TaskRoutine<string>;
 \/\/# sourceMappingURL=optifine.d.ts.map`;
-definitions['@xmcl/installer/profile.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core"; import { TaskLooped } from "@xmcl/task";
-import { LibraryOptions, InstallSideOption } from "./minecraft";
+definitions['@xmcl/installer/profile.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core"; import { AbortableTask } from "@xmcl/task";
+import { InstallSideOption, LibraryOptions } from "./minecraft";
 export interface PostProcessor {
     /**
      * The executable jar path
@@ -3322,7 +4004,7 @@ export declare function resolveProcessors(side: "client" | "server", installProf
     args: string[];
     outputs: {
         [x: string]: string;
-    };
+    } | undefined;
     /**
      * The executable jar path
      */
@@ -3358,6 +4040,23 @@ export declare function installByProfile(installProfile: InstallProfile, minecra
  * @param options The options to install
  */
 export declare function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options?: InstallProfileOption): import("@xmcl/task").TaskRoutine<void>;
+export declare class PostProcessBadJarError extends Error {
+    jarPath: string;
+    causeBy: Error;
+    constructor(jarPath: string, causeBy: Error);
+    error: string;
+}
+export declare class PostProcessNoMainClassError extends Error {
+    jarPath: string;
+    constructor(jarPath: string);
+    error: string;
+}
+export declare class PostProcessFailedError extends Error {
+    jarPath: string;
+    commands: string[];
+    constructor(jarPath: string, commands: string[], message: string);
+    error: string;
+}
 /**
  * Post process the post processors from \`InstallProfile\`.
  *
@@ -3366,59 +4065,62 @@ export declare function installByProfileTask(installProfile: InstallProfile, min
  * @param java The java executable path
  * @throws {@link PostProcessError}
  */
-export declare class PostProcessingTask extends TaskLooped<void> {
+export declare class PostProcessingTask extends AbortableTask<void> {
     private processors;
     private minecraft;
     private java;
     readonly name: string;
     private pointer;
+    private activeProcess;
     constructor(processors: PostProcessor[], minecraft: MinecraftFolder, java: string);
-    protected shouldProcess(proc: PostProcessor, shouldProcessDefault: boolean): Promise<boolean>;
     protected findMainClass(lib: string): Promise<string>;
+    protected isInvalid(outputs: Required<PostProcessor>["outputs"]): Promise<boolean>;
     protected postProcess(mc: MinecraftFolder, proc: PostProcessor, java: string): Promise<void>;
-    protected process(): Promise<[boolean, void | undefined]>;
-    protected validate(): Promise<void>;
-    protected shouldTolerant(e: any): boolean;
+    protected process(): Promise<void>;
     protected abort(isCancelled: boolean): Promise<void>;
-    protected reset(): void;
+    protected isAbortedError(e: any): boolean;
 }
 \/\/# sourceMappingURL=profile.d.ts.map`;
-definitions['@xmcl/installer/unzip.d.ts'] = `import { TaskLooped } from "@xmcl/task"; import { Entry, ZipFile } from "yauzl";
+definitions['@xmcl/installer/unzip.d.ts'] = `import { BaseTask } from "@xmcl/task"; import { Entry, ZipFile } from "yauzl";
 export interface EntryResolver {
     (entry: Entry): Promise<string> | string;
 }
 export declare function getDefaultEntryResolver(): EntryResolver;
-export declare class UnzipTask extends TaskLooped<void> {
+export declare class UnzipTask extends BaseTask<void> {
     readonly zipFile: ZipFile;
     readonly entries: Entry[];
     readonly resolver: EntryResolver;
     private streams;
+    private _onCancelled;
     constructor(zipFile: ZipFile, entries: Entry[], destination: string, resolver?: EntryResolver);
     protected handleEntry(entry: Entry, relativePath: string): Promise<void>;
-    protected process(): Promise<[boolean, void | undefined]>;
-    protected validate(): Promise<void>;
-    protected shouldTolerant(e: any): boolean;
-    protected abort(isCancelled: boolean): Promise<void>;
-    protected reset(): void;
+    protected runTask(): Promise<void>;
+    protected cancelTask(): Promise<void>;
+    protected pauseTask(): Promise<void>;
+    protected resumeTask(): Promise<void>;
 }
 \/\/# sourceMappingURL=unzip.d.ts.map`;
-definitions['@xmcl/installer/utils.d.ts'] = `\/\// <reference types="node" /> import { _exists as exists, _mkdir as mkdir, _readFile as readFile, _writeFile as writeFile, _pipeline as pipeline } from "@xmcl/core";
-import { ExecOptions } from "child_process";
-import { close as fclose, copyFile as fcopyFile, ftruncate, open as fopen, stat as fstat, unlink as funlink } from "fs";
+definitions['@xmcl/installer/utils.d.ts'] = `\/\// <reference types="node" /> import { _exists as exists, _mkdir as mkdir, _pipeline as pipeline, _readFile as readFile, _writeFile as writeFile } from "@xmcl/core";
+import { ChildProcessWithoutNullStreams, ExecOptions } from "child_process";
+import { close as fclose, copyFile as fcopyFile, ftruncate, link as fslink, open as fopen, stat as fstat, unlink as funlink } from "fs";
 export declare const unlink: typeof funlink.__promisify__;
 export declare const stat: typeof fstat.__promisify__;
+export declare const link: typeof fslink.__promisify__;
 export declare const open: typeof fopen.__promisify__;
 export declare const close: typeof fclose.__promisify__;
 export declare const copyFile: typeof fcopyFile.__promisify__;
 export declare const truncate: typeof ftruncate.__promisify__;
-export { readFile, writeFile, mkdir, exists, pipeline };
 export { checksum } from "@xmcl/core";
+export { readFile, writeFile, mkdir, exists, pipeline };
 export declare function missing(target: string): Promise<boolean>;
 export declare function ensureDir(target: string): Promise<void>;
 export declare function ensureFile(target: string): Promise<void>;
 export declare function normalizeArray<T>(arr?: T | T[]): T[];
-export declare function errorFrom<T>(error: T, message?: string): T & Error;
 export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
+export declare function waitProcess(process: ChildProcessWithoutNullStreams): Promise<void>;
+export interface ParallelTaskOptions {
+    throwErrorImmediately?: boolean;
+}
 /**
  * Shared install options
  */
@@ -3437,6 +4139,7 @@ export interface InstallOptions {
      */
     versionId?: string;
 }
+export declare function errorToString(e: any): any;
 \/\/# sourceMappingURL=utils.d.ts.map`;
 definitions['@xmcl/mod-parser/fabric.d.ts'] = `import { FileSystem } from "@xmcl/system"; declare type Person = {
     /**
@@ -3930,7 +4633,10 @@ export declare namespace ForgeConfig {
     function parse(body: string): ForgeConfig;
 }
 \/\/# sourceMappingURL=forgeConfig.d.ts.map`;
-definitions['@xmcl/mod-parser/index.d.ts'] = `export * from "./forge"; export * from "./forgeConfig";
+definitions['@xmcl/mod-parser/index.d.ts'] = `/**  * @module @xmcl/mod-parser
+ */
+export * from "./forge";
+export * from "./forgeConfig";
 export * from "./liteloader";
 export * from "./fabric";
 \/\/# sourceMappingURL=index.d.ts.map`;
@@ -3990,7 +4696,10 @@ export declare class BlockModelFactory {
 }
 export {};
 \/\/# sourceMappingURL=block.d.ts.map`;
-definitions['@xmcl/model/index.d.ts'] = `export * from "./block"; export * from "./player";
+definitions['@xmcl/model/index.d.ts'] = `/**  * @module @xmcl/model
+ */
+export * from "./block";
+export * from "./player";
 \/\/# sourceMappingURL=index.d.ts.map`;
 definitions['@xmcl/model/player-model.d.ts'] = `export interface ModelTemplate {     head: Part;
     rightLeg: Part;
@@ -4059,6 +4768,7 @@ export default PlayerModel;
 definitions['@xmcl/nbt/index.d.ts'] = `/**  * The nbt module provides nbt {@link serialize} and {@link deserialize} functions.
  *
  * @packageDocumentation
+ * @module @xmcl/nbt
  */
 import ByteBuffer from "bytebuffer";
 declare type Constructor<T> = new (...args: any) => T;
@@ -4452,6 +5162,7 @@ definitions['@xmcl/resourcepack/index.d.ts'] = `/**  * The resource pack module 
  * Or you can just load resource pack metadata by {@link readPackMetaAndIcon}.
  *
  * @packageDocumentation
+ * @module @xmcl/resourcepack
  */
 import { FileSystem } from "@xmcl/system";
 import { PackMeta } from "./format";
@@ -4741,8 +5452,10 @@ definitions['@xmcl/system/system.d.ts'] = `export declare abstract class FileSys
     walkFiles(target: string, walker: (path: string) => void | Promise<void>): Promise<void>;
 }
 \/\/# sourceMappingURL=system.d.ts.map`;
-definitions['@xmcl/task/index.d.ts'] = `export declare class CancelledError<T> extends Error {     readonly partialResult: T | undefined;
-    constructor(partialResult: T | undefined);
+definitions['@xmcl/task/index.d.ts'] = `/**  * @module @xmcl/task
+ */
+export declare class CancelledError extends Error {
+    constructor();
 }
 /**
  * The collection of errors happened during a parallel process
@@ -4767,7 +5480,6 @@ export interface Task<T = any> {
     readonly from: string | undefined;
     readonly to: string | undefined;
     readonly path: string;
-    readonly id: number;
     readonly isCancelled: boolean;
     readonly isPaused: boolean;
     readonly isDone: boolean;
@@ -4776,7 +5488,7 @@ export interface Task<T = any> {
     readonly context: TaskContext | undefined;
     readonly parent: Task<any> | undefined;
     pause(): Promise<void>;
-    resume(): void;
+    resume(): Promise<void>;
     cancel(): Promise<void>;
     start(context?: TaskContext, parent?: Task<any>): void;
     wait(): Promise<T>;
@@ -4799,7 +5511,7 @@ export interface TaskContext {
     onCancelled?(task: Task<any>): void;
 }
 export declare function createFork(): TaskContext["fork"];
-export declare abstract class TaskBase<T> implements Task<T> {
+export declare abstract class BaseTask<T> implements Task<T> {
     protected _state: TaskState;
     protected _promise: Promise<T>;
     protected resolve: (value: T) => void;
@@ -4829,59 +5541,60 @@ export declare abstract class TaskBase<T> implements Task<T> {
     get isDone(): boolean;
     get isRunning(): boolean;
     pause(): Promise<void>;
-    resume(): void;
+    resume(): Promise<void>;
     cancel(): Promise<void>;
     wait(): Promise<T>;
     start(context?: TaskContext, parent?: Task<any>): void;
     startAndWait(context?: TaskContext, parent?: Task<any>): Promise<T>;
     protected update(chunkSize: number): void;
     onChildUpdate(chunkSize: number): void;
-    protected abstract run(): Promise<T>;
-    protected abstract performCancel(): Promise<void>;
-    protected abstract performPause(): Promise<void>;
-    protected abstract performResume(): void;
+    protected abstract runTask(): Promise<T>;
+    protected abstract cancelTask(): Promise<void>;
+    protected abstract pauseTask(): Promise<void>;
+    protected abstract resumeTask(): Promise<void>;
     map<N>(transform: Transform<this, N>): Task<N>;
 }
-export declare abstract class TaskLooped<T> extends TaskBase<T> {
+export declare abstract class AbortableTask<T> extends BaseTask<T> {
     protected _pausing: Promise<void>;
     protected _unpause: () => void;
-    protected abstract process(): Promise<[boolean, T | undefined]>;
-    protected abstract validate(): Promise<void>;
-    protected abstract shouldTolerant(e: any): boolean;
-    protected abstract abort(isCancelled: boolean): Promise<void>;
-    protected abstract reset(): void;
-    protected performCancel(): Promise<void>;
-    protected performPause(): Promise<void>;
-    protected performResume(): void;
-    protected run(): Promise<NonNullable<T>>;
+    protected _onAborted: () => void;
+    protected _onResume: () => void;
+    protected abstract process(): Promise<T>;
+    protected abstract abort(isCancelled: boolean): void;
+    protected abstract isAbortedError(e: any): boolean;
+    protected cancelTask(): Promise<void>;
+    protected pauseTask(): Promise<void>;
+    protected resumeTask(): Promise<void>;
+    protected runTask(): Promise<T>;
 }
-export declare type TaskExecutor<T> = (this: TaskRoutine<any>) => Promise<T> | T;
-export declare abstract class TaskGroup<T> extends TaskBase<T> {
+export declare abstract class TaskGroup<T> extends BaseTask<T> {
     protected children: Task<any>[];
     onChildUpdate(chunkSize: number): void;
-    protected performCancel(): Promise<void>;
-    protected performPause(): Promise<void>;
-    protected performResume(): void;
+    protected cancelTask(): Promise<void>;
+    protected pauseTask(): Promise<void>;
+    protected resumeTask(): Promise<void>;
     all<Z, T extends Task<Z>>(tasks: Iterable<T>, { throwErrorImmediately, getErrorMessage }?: {
         throwErrorImmediately?: boolean;
         getErrorMessage?: (errors: any[]) => string;
     }): Promise<Z[]>;
 }
+export declare type TaskExecutor<T> = (this: TaskRoutine<any>) => Promise<T> | T;
 export declare class TaskRoutine<T> extends TaskGroup<T> {
-    readonly name: string;
     readonly executor: TaskExecutor<T>;
-    readonly param: object;
     constructor(name: string, executor: TaskExecutor<T>, param?: object);
     concat<T>(task: TaskRoutine<T>): Promise<T>;
     /**
      * Yield a new child task to this routine
      */
     yield<T>(task: Task<T>): Promise<T>;
-    protected run(): Promise<T>;
+    protected runTask(): Promise<T>;
 }
 export declare function task<T>(name: string, executor: TaskExecutor<T>, param?: object): TaskRoutine<T>;
 \/\/# sourceMappingURL=index.d.ts.map`;
-definitions['@xmcl/text-component/index.d.ts'] = `/**  * @see https:\/\/minecraft.gamepedia.com/Raw_JSON_text_format
+definitions['@xmcl/text-component/index.d.ts'] = `/**  * @module @xmcl/text-component
+ */
+/**
+ * @see https:\/\/minecraft.gamepedia.com/Raw_JSON_text_format
  */
 export interface TextComponent {
     /**
@@ -5053,7 +5766,10 @@ export declare function toFormattedString(comp: TextComponent): string;
  */
 export declare function fromFormattedString(formatted: string): TextComponent;
 \/\/# sourceMappingURL=index.d.ts.map`;
-definitions['@xmcl/unzip/index.d.ts'] = `\/\// <reference types="node" /> import { Readable } from "stream";
+definitions['@xmcl/unzip/index.d.ts'] = `\/\// <reference types="node" /> /**
+ * @module @xmcl/unzip
+ */
+import { Readable } from "stream";
 import { Entry, ZipFile, ZipFileOptions, Options } from "yauzl";
 export declare type OpenTarget = string | Buffer | number;
 /**
@@ -5414,7 +6130,10 @@ export interface FormItems {
     [name: string]: ItemBlob | string;
 }
 \/\/# sourceMappingURL=base.d.ts.map`;
-definitions['@xmcl/user/index.d.ts'] = `export * from "./auth"; export { GameProfile, GameProfileWithProperties } from "./base";
+definitions['@xmcl/user/index.d.ts'] = `/**  * @module @xmcl/user
+ */
+export * from "./auth";
+export { GameProfile, GameProfileWithProperties } from "./base";
 export * from "./mojang";
 export * from "./service";
 \/\/# sourceMappingURL=index.d.ts.map`;
@@ -5769,9 +6488,21 @@ export interface PlayerDataFrame {
     UUIDLeast: Long;
     UUIDMost: Long;
     DataVersion: number;
-    Pos: [number, number, number];
-    Rotation: [number, number, number];
-    Motion: [number, number, number];
+    Pos: [
+        number,
+        number,
+        number
+    ];
+    Rotation: [
+        number,
+        number,
+        number
+    ];
+    Motion: [
+        number,
+        number,
+        number
+    ];
     Dimension: number;
     SpawnX: number;
     SpawnY: number;
