@@ -1,11 +1,18 @@
 {
   "name": "docs",
   "private": true,
+  "scripts": {
+    "build:docs": "node scripts/build-docs.js",
+    "build:web": "vite build"
+  },
   "devDependencies": {
     "@types/three": "^0.127.0",
-    "typedoc": "^0.22.6",
+    "monaco-editor": "^0.29.1",
     "three": "^0.127.0",
-    "monaco-editor": "^0.23.0",
-    "vite": "^2.1.5"
+    "typedoc": "^0.22.6",
+    "vite": "^2.6.10"
+  },
+  "dependencies": {
+    "@xmcl/model": "workspace:^1.0.17"
   }
 }

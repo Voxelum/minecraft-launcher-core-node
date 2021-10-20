@@ -15,25 +15,26 @@ import {
 import { promisify } from "util";
 import { pipeline as pip } from "stream";
 
-/** @ignore */
+/** @internal */
 export const pipeline = promisify(pip);
-/** @ignore */
+/** @internal */
 export const access = promisify(faccess);
-/** @ignore */
+/** @internal */
 export const link = promisify(flink);
-/** @ignore */
+/** @internal */
 export const readFile = promisify(freadFile);
-/** @ignore */
+/** @internal */
 export const writeFile = promisify(fwriteFile);
-/** @ignore */
+/** @internal */
 export const mkdir = promisify(fmkdir);
 
+/** @internal */
 export function exists(file: string) {
     return access(file, constants.F_OK).then(() => true, () => false);
 }
 /**
  * Validate the sha1 value of the file
- * @ignore
+ * @internal
  */
 export async function validateSha1(target: string, hash?: string, strict: boolean = false) {
     if (await access(target).then(() => false, () => true)) { return false; }
@@ -43,7 +44,7 @@ export async function validateSha1(target: string, hash?: string, strict: boolea
 }
 /**
  * Return the sha1 of a file
- * @ignore
+ * @internal
  */
 export async function checksum(target: string, algorithm: string) {
     let hash = createHash(algorithm).setEncoding("hex");
@@ -51,7 +52,7 @@ export async function checksum(target: string, algorithm: string) {
     return hash.read();
 }
 /**
- * @ignore
+ * @internal
  */
 export function isNotNull<T>(v: T | undefined): v is T {
     return v !== undefined

@@ -273,8 +273,15 @@ export namespace LaunchPrecheck {
         }
     };
     /**
-     * Ensure the native are correctly extracted there.
-     * @param native The native directory path
+     * Ensure the native are correctly extracted in place.
+     *
+     * It will check native root located in {@link LaunchOption.nativeRoot} if it's presented.
+     * Or, it will use the `<version-id>-native` under version folder as native root to check.
+     *
+     * This will automatically extract native if there is not native extracted.
+     *
+     * @param resource The minecraft directory to extract native
+     * @param option If the native root presented here, it will use the root here.
      */
     export async function checkNatives(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
         const native: string = option.nativeRoot || resource.getNativesRoot(version.id);
@@ -504,6 +511,8 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
  * @see [spawn](https://nodejs.org/api/spawn.html)
  * @see {@link generateArguments}
  * @see {@link createMinecraftProcessWatcher}
+ * @throws {@link CorruptedVersionJarError}
+ * @throws {@link MissingLibrariesError}
  */
 export async function launch(options: LaunchOption): Promise<ChildProcess> {
     const gamePath = !isAbsolute(options.gamePath) ? resolve(options.gamePath) : options.gamePath;
@@ -560,8 +569,11 @@ export async function generateArgumentsServer(options: MinecraftServerOptions | 
 /**
  * Generate the arguments array by options. This function is useful if you want to launch the process by yourself.
  *
- * This function will NOT check if the runtime libs are completed, and WONT'T check or extract native libs.
+ * This function will **NOT** check if the runtime libs are completed, and **WONT'T** check or extract native libs.
  *
+ * If you want to ensure native. Please see {@link LaunchPrecheck.checkNatives}.
+ *
+ * @param options The launch options.
  * @throws TypeError if options does not fully fulfill the requirement
  */
 export async function generateArguments(options: LaunchOption) {

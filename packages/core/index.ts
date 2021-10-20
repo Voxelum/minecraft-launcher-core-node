@@ -4,6 +4,7 @@
  * and the {@link launch} function to launch the game.
  *
  * @packageDocumentation
+ * @module @xmcl/core
  */
 
 export * from "./launch";

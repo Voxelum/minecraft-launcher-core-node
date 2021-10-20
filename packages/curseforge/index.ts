@@ -1,3 +1,6 @@
+/**
+ * @module @xmcl/curseforge
+ */
 import { httpRequester } from "./http";
 import { Agent } from "https";
 

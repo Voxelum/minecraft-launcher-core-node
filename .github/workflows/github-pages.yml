@@ -28,9 +28,11 @@ jobs:
       env:
         CI: true
     - name: Build Github Pages
+      working-directory: "./docs"
       run: |
         npm run build:web
     - name: Build Typedoc documentation
+      working-directory: "./docs"
       run: |
         npm run build:docs
     - name: Deploy to Github Pages

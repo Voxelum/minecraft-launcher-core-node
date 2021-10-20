@@ -51,8 +51,8 @@ class TimeoutTask extends BaseTask<void> {
 }
 
 class MockTask extends BaseTask<void> {
-    public context!: TaskContext
-    public _promise!: Promise<void>
+    public context: TaskContext = {};
+    public _promise: Promise<void> = new Promise(() => {});
     constructor(
         public runTask: () => Promise<void> = jest.fn().mockReturnValue(Promise.resolve()),
         public cancelTask: () => Promise<void> = jest.fn().mockReturnValue(Promise.resolve()),

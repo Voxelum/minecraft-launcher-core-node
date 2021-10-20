@@ -456,7 +456,7 @@ Put them together in efficent way (don't open resource pack again and again):
 Parse minecraft version as a resolved version, which is used for launching process. You can also read version info from it if you want.
 
 ```ts
-    import { Versoin } from "@xmcl/core";
+    import { Version } from "@xmcl/core";
     const minecraftLocation: string;
     const minecraftVersionId: string;
 

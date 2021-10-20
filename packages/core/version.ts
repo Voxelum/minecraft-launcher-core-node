@@ -14,6 +14,10 @@ interface PartialResolvedVersion extends Version {
 /**
  * The resolved version for launcher.
  * It could be a combination of multiple versions as there might be some inheritions.
+ *
+ * You can get resolved version of a Minecraft by calling {@link Version.parse}.
+ *
+ * @see {@link Version.parse}
  */
 export interface ResolvedVersion {
     /**

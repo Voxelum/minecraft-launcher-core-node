@@ -2,6 +2,9 @@ import { ResolvedLibrary, ResolvedVersion, Version } from "./version";
 import { MinecraftFolder, MinecraftLocation } from "./folder";
 import { checksum, exists, isNotNull, readFile } from "./utils";
 
+/**
+ * Represent a issue for your diagnosed minecraft client.
+ */
 export interface Issue {
     /**
      * The type of the issue.
@@ -191,6 +194,12 @@ export async function diagnose(version: string, minecraftLocation: MinecraftLoca
     return report;
 }
 
+/**
+ * Diagnose assets currently installed.
+ * @param assetObjects The assets object metadata to check
+ * @param minecraft The minecraft location
+ * @returns The diagnose report
+ */
 export async function diagnoseAssets(assetObjects: Record<string, { hash: string; size: number }>, minecraft: MinecraftFolder): Promise<Array<AssetIssue>> {
     const filenames = Object.keys(assetObjects);
     const issues = await Promise.all(filenames.map(async (filename) => {
@@ -207,6 +216,14 @@ export async function diagnoseAssets(assetObjects: Record<string, { hash: string
     return issues.filter(isNotNull);
 }
 
+/**
+ * Diagnose all libraries presented in this resolved version.
+ *
+ * @param resolvedVersion The resolved version to check
+ * @param minecraft The minecraft location
+ * @returns List of libraries issue
+ * @see {@link ResolvedVersion}
+ */
 export async function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<Array<LibraryIssue>> {
     const issues = await Promise.all(resolvedVersion.libraries.map(async (lib) => {
         const libPath = minecraft.getLibraryByPath(lib.download.path);
