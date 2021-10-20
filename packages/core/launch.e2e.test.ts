@@ -108,7 +108,7 @@ describe("Launcher", () => {
                 await waitGameProcess(await launch(option), "LiteLoader begin POSTINIT");
             });
             t("should launch forge liteloader minecraft", async () => {
-                const option: LaunchOption = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: root, javaPath };
+                const option: LaunchOption = { version: "1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT", gamePath: tempDir, javaPath };
                 await waitGameProcess(await launch(option), "LiteLoader begin POSTINIT", "[main/INFO] [FML]:");
             });
         });

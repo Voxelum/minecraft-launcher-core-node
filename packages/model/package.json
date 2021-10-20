@@ -11,10 +11,10 @@
     "main": "./dist/index.js",
     "module": "./dist/index.esm.js"
   },
-  "peerDependencies": {
+  "dependencies": {
     "@types/three": "^0.127.0",
     "three": "^0.127.0",
-    "@xmcl/resourcepack": "^1.0.16"
+    "@xmcl/resourcepack": "^1.1.0"
   },
   "repository": {
     "type": "git",

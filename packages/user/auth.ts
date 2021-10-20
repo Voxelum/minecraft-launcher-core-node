@@ -213,7 +213,7 @@ function post(url: string, payload: object): Promise<object | undefined> {
                 throw err;
             }
         } catch (e) {
-            if (typeof e.error === "string") {
+            if (typeof (e as any).error === "string") {
                 throw e;
             }
             throw {

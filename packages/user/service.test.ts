@@ -154,9 +154,9 @@ describe("ProfileService", () => {
             try {
                 await fetch("uuid");
             } catch (e) {
-                expect(e.statusCode).toEqual(429);
-                expect(e.error).toEqual("TooManyRequestsException");
-                expect(e.errorMessage).toEqual("The client has sent too many requests within a certain amount of time");
+                expect((e as any).statusCode).toEqual(429);
+                expect((e as any).error).toEqual("TooManyRequestsException");
+                expect((e as any).errorMessage).toEqual("The client has sent too many requests within a certain amount of time");
             }
         });
         test("should fetch the correct username and uuid", async () => {

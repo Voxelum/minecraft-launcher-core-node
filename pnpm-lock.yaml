@@ -39,16 +39,19 @@ importers:
   docs:
     specifiers:
       '@types/three': ^0.127.0
-      monaco-editor: ^0.23.0
+      '@xmcl/model': workspace:^1.0.17
+      monaco-editor: ^0.29.1
       three: ^0.127.0
       typedoc: ^0.22.6
-      vite: ^2.1.5
+      vite: ^2.6.10
+    dependencies:
+      '@xmcl/model': link:../packages/model
     devDependencies:
       '@types/three': 0.127.1
-      monaco-editor: 0.23.0
+      monaco-editor: 0.29.1
       three: 0.127.0
       typedoc: 0.22.6_typescript@4.4.4
-      vite: 2.6.7
+      vite: 2.6.10
 
   packages/asm:
     specifiers:
@@ -138,7 +141,14 @@ importers:
       '@xmcl/system': link:../system
 
   packages/model:
-    specifiers: {}
+    specifiers:
+      '@types/three': ^0.127.0
+      '@xmcl/resourcepack': ^1.1.0
+      three: ^0.127.0
+    dependencies:
+      '@types/three': 0.127.1
+      '@xmcl/resourcepack': link:../resourcepack
+      three: 0.127.0
 
   packages/nbt:
     specifiers:
@@ -1192,7 +1202,6 @@ packages:
 
   /@types/three/0.127.1:
     resolution: {integrity: sha512-e90iYq3zde3axANg7BPZY0fKrez1AzveamIIFk23PMh9WtCx91geokDy+yEAIymdIldgUpvezAP6+zCV3oekXw==}
-    dev: true
 
   /@types/uuid/8.3.1:
     resolution: {integrity: sha512-Y2mHTRAbqfFkpjldbkHGY8JIzRN6XqYRliG8/24FcHm2D2PwW24fl5xMRTVGdrb7iMrwCaIEbLWerGIkXuFWVg==}
@@ -3719,8 +3728,8 @@ packages:
       is-extendable: 1.0.1
     dev: true
 
-  /monaco-editor/0.23.0:
-    resolution: {integrity: sha512-q+CP5zMR/aFiMTE9QlIavGyGicKnG2v/H8qVvybLzeFsARM8f6G9fL0sMST2tyVYCwDKkGamZUI6647A0jR/Lg==}
+  /monaco-editor/0.29.1:
+    resolution: {integrity: sha512-rguaEG/zrPQSaKzQB7IfX/PpNa0qxF1FY8ZXRkN4WIl8qZdTQRSRJCtRto7IMcSgrU6H53RXI+fTcywOBC4aVw==}
     dev: true
 
   /ms/2.0.0:
@@ -4608,7 +4617,6 @@ packages:
 
   /three/0.127.0:
     resolution: {integrity: sha512-wtgrn+mhYUbobxT7QN3GPdu3SRpSBQvwY6uOzLChWS7QE//f7paDU/+wlzbg+ngeIvBBqjBHSRuywTh8A99Jng==}
-    dev: true
 
   /throat/5.0.0:
     resolution: {integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==}
@@ -4828,8 +4836,8 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite/2.6.7:
-    resolution: {integrity: sha512-ewk//jve9k6vlU8PfJmWUHN8k0YYdw4VaKOMvoQ3nT2Pb6k5OSMKQi4jPOzVH/TlUqMsCrq7IJ80xcuDDVyigg==}
+  /vite/2.6.10:
+    resolution: {integrity: sha512-XbevwpDJMs3lKiGEj0UQScsOCpwHIjFgfzPnFVkPgnxsF9oPv1uGyckLg58XkXv6LnO46KN9yZqJzINFmAxtUg==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     peerDependencies:

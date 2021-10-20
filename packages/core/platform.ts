@@ -35,9 +35,3 @@ export function getPlatform(): Platform {
             return { name: "unknown", version, arch };
     }
 }
-
-/**
- * The current platform
- * @deprecated Will be removed in next patch
- */
-export const currentPlatform: Platform = getPlatform();
