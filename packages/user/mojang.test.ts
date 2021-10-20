@@ -61,4 +61,8 @@ describe("MojangService", () => {
                 .toBeFalsy();
         });
     });
+    afterEach(() => {
+        nock.cleanAll()
+        nock.enableNetConnect()
+    })
 });

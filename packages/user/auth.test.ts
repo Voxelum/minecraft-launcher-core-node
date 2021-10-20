@@ -366,4 +366,9 @@ describe("Auth", () => {
         expect(offlineUser.clientToken).toBeTruthy();
         expect(offlineUser.user!.id).toBeTruthy();
     });
+
+    afterEach(() => {
+        nock.cleanAll()
+        nock.enableNetConnect()
+    })
 });

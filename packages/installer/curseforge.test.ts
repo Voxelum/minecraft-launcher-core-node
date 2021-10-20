@@ -1,5 +1,4 @@
 import { existsSync, readdirSync, rmdirSync, statSync, unlinkSync } from "fs";
-import nock from "nock";
 import { join, resolve } from "path";
 import { installCurseforgeModpack } from ".";
 
@@ -28,8 +27,6 @@ describe("CurseforgeInstaller", () => {
 
             const dest = join(tempDir, "modpack-test-tempRoot");
             remove(dest);
-            nock.cleanAll();
-            nock.restore();
             const manifest = await installCurseforgeModpack(join(mockDir, "modpack.zip"), dest, {});
             expect(existsSync(join(dest, "mods", "# LibLoader.jar"))).toBeTruthy();
             expect(existsSync(join(dest, "mods", "jei_1.12.2-4.15.0.291.jar"))).toBeTruthy();
