@@ -264,4 +264,8 @@ describe("ProfileLookuper", () => {
             ]);
         });
     });
+    afterEach(() => {
+        nock.cleanAll()
+        nock.enableNetConnect()
+    })
 });

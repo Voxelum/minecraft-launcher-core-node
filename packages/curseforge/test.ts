@@ -126,4 +126,9 @@ describe("Curseforge", () => {
             expect(nock.isDone()).toBeTruthy();
         });
     });
+
+    afterEach(() => {
+        nock.cleanAll()
+        nock.enableNetConnect()
+    })
 });
