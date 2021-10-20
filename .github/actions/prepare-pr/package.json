@@ -2,5 +2,9 @@
   "private": true,
   "devDependencies": {
     "@actions/core": "1.2.0"
+  },
+  "dependencies": {
+    "conventional-recommended-bump": "^6.1.0",
+    "semver": "^7.3.5"
   }
 }
