@@ -12,10 +12,14 @@ for (const workspace of workspaces) {
     const packageName = packageContent.name;
     const packageVersion = packageContent.version;
     const published = execSync(`npm show ${packageName} versions`);
-    if (published.indexOf(packageVersion) === -1) {
-        const result = execSync(`npm publish --access public`, { cwd }).toString('utf-8');
-        console.log(result);
-    } else {
-        console.log(`${packageName}@${packageVersion} is already published. Skip it.`)
+    try {
+        if (published.indexOf(packageVersion) === -1) {
+            const result = execSync(`pnpm publish --access public`, { cwd });
+            console.log(result.toString());
+        } else {
+            console.log(`${packageName}@${packageVersion} is already published. Skip it.`)
+        }
+    } catch (e) {
+        console.log(e.stdout.toString());
     }
 }
