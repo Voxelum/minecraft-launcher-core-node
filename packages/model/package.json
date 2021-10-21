@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/model",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "main": "./index.ts",
   "description": "Create Three.js model for player and block",
   "engines": {
@@ -14,7 +14,7 @@
   "dependencies": {
     "@types/three": "^0.127.0",
     "three": "^0.127.0",
-    "@xmcl/resourcepack": "^1.1.1"
+    "@xmcl/resourcepack": "^1.1.2"
   },
   "repository": {
     "type": "git",

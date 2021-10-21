@@ -123,10 +123,10 @@ importers:
   packages/installer:
     specifiers:
       '@types/yauzl': ^2.9.2
-      '@xmcl/asm': ^0.1.2
-      '@xmcl/core': ^2.7.0
+      '@xmcl/asm': ^0.1.3
+      '@xmcl/core': ^2.7.1
       '@xmcl/forge-site-parser': ^2.0.8
-      '@xmcl/task': ^4.0.0
+      '@xmcl/task': ^4.0.1
       '@xmcl/unzip': ^2.0.0
       nock: ^12.0.3
       yauzl: ^2.10.0
@@ -144,8 +144,8 @@ importers:
   packages/mod-parser:
     specifiers:
       '@iarna/toml': 2.2.3
-      '@xmcl/asm': ^0.1.2
-      '@xmcl/system': ^2.2.2
+      '@xmcl/asm': ^0.1.3
+      '@xmcl/system': ^2.2.3
     dependencies:
       '@iarna/toml': 2.2.3
       '@xmcl/asm': link:../asm
@@ -154,7 +154,7 @@ importers:
   packages/model:
     specifiers:
       '@types/three': ^0.127.0
-      '@xmcl/resourcepack': ^1.1.1
+      '@xmcl/resourcepack': ^1.1.2
       three: ^0.127.0
     dependencies:
       '@types/three': 0.127.1
@@ -197,7 +197,7 @@ importers:
 
   packages/resourcepack:
     specifiers:
-      '@xmcl/system': ^2.2.2
+      '@xmcl/system': ^2.2.3
     dependencies:
       '@xmcl/system': link:../system
 
@@ -256,7 +256,7 @@ importers:
   packages/world:
     specifiers:
       '@xmcl/nbt': ^2.0.3
-      '@xmcl/system': ^2.2.2
+      '@xmcl/system': ^2.2.3
       long: ~3
     dependencies:
       '@xmcl/nbt': link:../nbt
