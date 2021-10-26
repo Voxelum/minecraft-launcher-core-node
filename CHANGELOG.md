@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.0.2
+### @xmcl/user@2.1.6
+#### Bug Fixes
+
+- fix: bundle uuid v35 into dist to fix build fail issue ([7b5403b9bd72ba66708637ca975707dcb82f2f83](https://github.com/voxelum/minecraft-launcher-core-node/commit/7b5403b9bd72ba66708637ca975707dcb82f2f83))
+
+
 ## 5.0.0
 ### @xmcl/asm@0.1.2
 #### Bug Fixes
