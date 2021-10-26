@@ -4,7 +4,7 @@ import { httpRequester as request } from "./util";
 
 import { sha1, v35 } from "./v5";
 
-export const v5 = (s: string) => v35("", 50, sha1)(s, new (class A extends Array { concat(o: any[]) { return o; } })(16));
+export const v5 = (s: string) => v35("", 50, sha1)(s, new (class A extends Array { concat(o: any[]) { return o; } })(16)) as string;
 
 type LoginWithUser = { username: string; password: string; requestUser: true }
     | { username: string; password: string; };
@@ -301,7 +301,7 @@ export async function signout(option: { username: string, password: string }, ap
  */
 export function offline(username: string): Authentication {
     const prof = {
-        id: v5(username).replace(/-/g, "") as string,
+        id: v5(username).replace(/-/g, ""),
         name: username,
     };
     return {

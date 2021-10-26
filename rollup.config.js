@@ -16,12 +16,12 @@ function generate(packagePath) {
     Object.keys(packageJson.peerDependencies || {})
   );
   const external = [
-    "uuid/dist/esm-node/sha1",
-    "uuid/dist/esm-node/v35",
-    "uuid/dist/sha1",
-    "uuid/dist/v35",
-    "uuid/dist/esm-browser/sha1",
-    "uuid/dist/esm-browser/v35",
+    // "uuid/dist/esm-node/sha1",
+    // "uuid/dist/esm-node/v35",
+    // "uuid/dist/sha1",
+    // "uuid/dist/v35",
+    // "uuid/dist/esm-browser/sha1",
+    // "uuid/dist/esm-browser/v35",
     "fs",
     "util",
     "url",
