@@ -28,6 +28,7 @@ It's the next generation Minecraft launcher core written in C# providing the fre
 
 ### Featured Launcher
 
+- [x-minecraft-launcher](https://github.com/voxelum/x-minecraft-launcher): An launcher provides general electron api related to minecraft launching (in renderer side), making other developers can easily create new launcher view.
 - [PureLauncher](https://github.com/Apisium/PureLauncher): An awesome Minecraft Launcher using React to build beautiful UI.
 
 
