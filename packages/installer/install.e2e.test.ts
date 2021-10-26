@@ -145,7 +145,7 @@ describe("ForgeInstaller", () => {
             mcversion: "1.12.2",
             version: "14.23.5.2852",
             installer: {
-                sha1: "9c2b201b97730688f9e8ae2a1d671707f5c937f5",
+                sha1: "b6c69249e0649bc6fd91c8d3d824439634d2d43e",
                 path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2852/forge-1.12.2-14.23.5.2852-installer.jar"
             }
         };
@@ -167,8 +167,8 @@ describe("ForgeInstaller", () => {
                 path: "/maven/net/minecraftforge/forge/1.14.4-28.0.45/forge-1.14.4-28.0.45-universal.jar",
             },
             installer: {
-                md5: "f719c80d52a3d0ea60e1feba96dd394e",
-                sha1: "ee1f3a8268894134d9b37b7469e5cf07021bbac1",
+                md5: "a17c1f9ae4ba0bcefc53860a2563ef10",
+                sha1: "aec28eddeedc8ef35f5c76e9cf6a88591d49a203",
                 path: "/maven/net/minecraftforge/forge/1.14.4-28.0.45/forge-1.14.4-28.0.45-installer.jar",
             },
             type: "common",
