@@ -283,18 +283,20 @@ export class Download {
                 }
             }
 
+            let succeed = false
             const aggregatedErrors: any[] = [];
             for (const url of this.urls) {
                 try {
                     await this.downloadUrl(url, abortSignal);
                     await pfdatasync(this.fd);
                     await this.validator.validate(this.fd, this.destination, url)
+                    succeed = true
                     break;
                 } catch (e) {
                     aggregatedErrors.push(e)
                 }
             }
-            if (aggregatedErrors.length > 0) {
+            if (!succeed && aggregatedErrors.length > 0) {
                 throw aggregatedErrors;
             }
         } catch (e) {
