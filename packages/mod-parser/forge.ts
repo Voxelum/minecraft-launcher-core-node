@@ -610,6 +610,16 @@ export async function readForgeModJson(mod: ForgeModInput): Promise<ForgeModMcmo
             const json = JSON.parse(text);
             readJsonMetadata(json);
         } catch (e) { }
+    } else {
+        const files = await fs.listFiles("./")
+        const infoFile = files.find(f => f.endsWith(".info")) 
+        if (infoFile) {
+            try {
+                const text = (await fs.readFile(infoFile, "utf-8")).replace(/^\uFEFF/, "").replace(/\n\n/g, "\\n").replace(/\n/g, "");
+                const json = JSON.parse(text);
+                readJsonMetadata(json);
+            } catch (e) { }
+        }
     }
     return all;
 }
