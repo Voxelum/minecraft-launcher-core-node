@@ -343,7 +343,7 @@ class ModClassVisitor extends ClassVisitor {
     }
 
     visitEnd() {
-        if (this.className === "Config" && this.fields && this.fields.OF_NAME) {
+        if ((this.className === "Config" || this.className === "net/optifine/Config" || this.className === "notch/net/optifine/Config") && this.fields && this.fields.OF_NAME) {
             this.result.modAnnotations.push({
                 modid: this.fields.OF_NAME,
                 name: this.fields.OF_NAME,
