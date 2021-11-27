@@ -20,8 +20,10 @@ export interface JavaRuntimes {
 
 export interface JavaRuntimeTargets {
     "java-runtime-alpha": JavaRuntimeTarget[]
+    "java-runtime-beta": JavaRuntimeTarget[]
     "jre-legacy": JavaRuntimeTarget[]
     "minecraft-java-exe": JavaRuntimeTarget[]
+    [key: string]: JavaRuntimeTarget[]
 }
 
 export enum JavaRuntimeTargetType {
@@ -32,7 +34,8 @@ export enum JavaRuntimeTargetType {
     /**
      * The new java environment, which is the java 16
      */
-    Next = "java-runtime-alpha",
+    Alpha = "java-runtime-alpha",
+    Beta = "java-runtime-beta",
     JavaExe = "minecraft-java-exe",
 }
 
@@ -119,7 +122,7 @@ export type AnyEntry = FileEntry | DirectoryEntry | LinkEntry;
  * Contains info about every files in this java runtime
  */
 export interface JavaRuntimeManifest {
-    target: JavaRuntimeTargetType;
+    target: JavaRuntimeTargetType | string;
     /**
      * The files of the java runtime
      */
@@ -164,11 +167,11 @@ export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
      * The install java runtime type
      * @default InstallJavaRuntimeTarget.Next
      */
-    target?: JavaRuntimeTargetType;
+    target?: JavaRuntimeTargetType | string;
     /**
      * The index manifest of the java runtime. If this is not presented, it will fetch by platform and all platform url.
      */
-    manfiestIndex?: JavaRuntimes;
+    manifestIndex?: JavaRuntimes;
 }
 
 /**
@@ -178,9 +181,9 @@ export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
  * @param options The options of fetch runtime manifest
  */
 export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifestOptions = {}): Promise<JavaRuntimeManifest> {
-    const manifestIndex = options.manfiestIndex ?? await fetchJson(normalizeUrls(options.url ?? DEFAULT_RUNTIME_ALL_URL, options.apiHost)[0]) as JavaRuntimes;
+    const manifestIndex = options.manifestIndex ?? await fetchJson(normalizeUrls(options.url ?? DEFAULT_RUNTIME_ALL_URL, options.apiHost)[0]) as JavaRuntimes;
     const platform = options.platform ?? getPlatform();
-    const runtimeTarget = options.target ?? JavaRuntimeTargetType.Next;
+    const runtimeTarget = options.target ?? JavaRuntimeTargetType.Beta;
     const resolveTarget = () => {
         if (platform.name === "windows") {
             if (platform.arch === "x64") {
