@@ -184,8 +184,8 @@ export class Download {
                 });
                 // create abort handler
                 const abortHandler = () => {
-                    response.unpipe();
                     request.destroy(new AbortError());
+                    response.unpipe();
                 }
                 abortHandlers.push(abortHandler)
                 // add abort handler to abort signal
@@ -193,7 +193,7 @@ export class Download {
                 await pipeline(response, fileStream);
                 abortSignal.removeEventListener("abort", abortHandler);
             } catch (e) {
-                if (e instanceof AbortError) {
+                if (e instanceof AbortError || (e as any).message === "aborted") {
                     // user abort the operation, or abort by other sibling error
                     if (flag === 0) { flag = 1; }
                 } else {
@@ -293,6 +293,9 @@ export class Download {
                     succeed = true
                     break;
                 } catch (e) {
+                    if (e instanceof DownloadError && e.error === "DownloadAborted") {
+                        throw e;
+                    }
                     aggregatedErrors.push(e)
                 }
             }
