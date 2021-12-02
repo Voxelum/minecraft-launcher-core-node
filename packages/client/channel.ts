@@ -102,9 +102,6 @@ export class Channel extends EventEmitter {
      * Open the connection and start to listen the port.
      */
     async listen(option: NetConnectOpts & { keepalive?: boolean | number }) {
-        if (this.ready) {
-            this.connection.destroy();
-        }
         await new Promise<void>((resolve, reject) => {
             this.connection.connect(option, () => {
                 resolve();
