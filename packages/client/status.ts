@@ -128,7 +128,7 @@ export async function queryStatus(server: { host: string, port?: number }, optio
     const host = server.host;
     const port = server.port || 25565;
     const timeout = options.timeout || 4000;
-    const protocol = options.protocol || 210;
+    const protocol = options.protocol || 498;
     const retry = typeof options.retryTimes === "number" ? options.retryTimes : 0;
 
     let result: Status | undefined;
@@ -187,6 +187,9 @@ async function query(channel: Channel, host: string, port: number, timeout: numb
             });
             channel.state = "status";
             channel.send(new ServerQuery());
+            setTimeout(() => {
+                reject(new Error("Timeout"))
+            }, timeout * 10);
         } catch (e) {
             reject(e);
         }
