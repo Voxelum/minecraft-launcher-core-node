@@ -196,7 +196,7 @@ export function installCurseforgeModpackTask(input: InputType, minecraft: Minecr
             zip.entries.filter((e) => !e.fileName.endsWith("/") && e.fileName.startsWith(manifest.overrides)),
             folder.root,
             (e) => e.fileName.substring(manifest.overrides.length)
-        ).setName('unpack'));
+        ).setName("unpack"));
         return manifest;
     });
 }
