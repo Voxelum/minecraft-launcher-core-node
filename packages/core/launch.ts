@@ -668,7 +668,12 @@ export async function generateArguments(options: LaunchOption) {
         }
         cmd.push(...options.extraJVMArgs);
     } else {
-        cmd.push(...DEFAULT_EXTRA_JVM_ARGS);
+        // if options object already has `maxMemory` property, exclude the "-Xmx2G" option from the default extra jvm args
+        if (options.maxMemory) {
+            cmd.push(...DEFAULT_EXTRA_JVM_ARGS.filter((v) => v !== "-Xmx2G"));
+        } else {
+            cmd.push(...DEFAULT_EXTRA_JVM_ARGS);
+        }
     }
 
     cmd.push(version.mainClass);
