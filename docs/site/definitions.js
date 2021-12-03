@@ -1022,6 +1022,10 @@ export interface ResolvedVersion {
         };
     };
     /**
+     * Recommended java version
+     */
+    javaVersion: JavaVersion;
+    /**
      * The minecraft version of this version
      */
     minecraftVersion: string;
@@ -1298,6 +1302,14 @@ export declare namespace Version {
      */
     function normalizeVersionJson(versionString: string, root: string, platform?: Platform): PartialResolvedVersion;
 }
+export interface JavaVersion {
+    /**
+     * Corresponding with java manifest json.
+     * @example "jre-legacy"
+     */
+    component: string;
+    majorVersion: number;
+}
 /**
  * The raw json format provided by Minecraft. Also the namespace of version operation.
  *
@@ -1339,6 +1351,7 @@ export interface Version {
             type: string;
         };
     };
+    javaVersion?: JavaVersion;
 }
 export {};
 \/\/# sourceMappingURL=version.d.ts.map`;
@@ -3036,8 +3049,10 @@ export interface JavaRuntimes {
 }
 export interface JavaRuntimeTargets {
     "java-runtime-alpha": JavaRuntimeTarget[];
+    "java-runtime-beta": JavaRuntimeTarget[];
     "jre-legacy": JavaRuntimeTarget[];
     "minecraft-java-exe": JavaRuntimeTarget[];
+    [key: string]: JavaRuntimeTarget[];
 }
 export declare enum JavaRuntimeTargetType {
     /**
@@ -3047,7 +3062,8 @@ export declare enum JavaRuntimeTargetType {
     /**
      * The new java environment, which is the java 16
      */
-    Next = "java-runtime-alpha",
+    Alpha = "java-runtime-alpha",
+    Beta = "java-runtime-beta",
     JavaExe = "minecraft-java-exe"
 }
 /**
@@ -3125,7 +3141,7 @@ export declare type AnyEntry = FileEntry | DirectoryEntry | LinkEntry;
  * Contains info about every files in this java runtime
  */
 export interface JavaRuntimeManifest {
-    target: JavaRuntimeTargetType;
+    target: JavaRuntimeTargetType | string;
     /**
      * The files of the java runtime
      */
@@ -3151,11 +3167,11 @@ export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
      * The install java runtime type
      * @default InstallJavaRuntimeTarget.Next
      */
-    target?: JavaRuntimeTargetType;
+    target?: JavaRuntimeTargetType | string;
     /**
      * The index manifest of the java runtime. If this is not presented, it will fetch by platform and all platform url.
      */
-    manfiestIndex?: JavaRuntimes;
+    manifestIndex?: JavaRuntimes;
 }
 /**
  * Fetch java runtime manifest. It should be able to resolve to your platform, or you can assign the platform.
@@ -5256,14 +5272,15 @@ export declare class MultipleError extends Error {
     constructor(errors: unknown[], message?: string);
 }
 export declare enum TaskState {
-    Idel = 0,
+    Idle = 0,
     Running = 1,
     Cancelled = 2,
     Paused = 3,
-    Successed = 4,
+    Succeed = 4,
     Failed = 5
 }
 export interface Task<T = any> {
+    readonly id: number;
     readonly name: string;
     readonly param: Record<string, any>;
     readonly progress: number;
@@ -5296,7 +5313,7 @@ export interface TaskContext {
     onStart?(task: Task<any>): void;
     onUpdate?(task: Task<any>, chunkSize: number): void;
     onFailed?(task: Task<any>, error: any): void;
-    onSuccessed?(task: Task<any>, result: any): void;
+    onSucceed?(task: Task<any>, result: any): void;
     onPaused?(task: Task<any>): void;
     onResumed?(task: Task<any>): void;
     onCancelled?(task: Task<any>): void;
