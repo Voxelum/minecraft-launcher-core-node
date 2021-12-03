@@ -86,7 +86,7 @@ describe("Task", () => {
         describe("constructor", () => {
             it("should set state to idle", () => {
                 const task = new MockTask();
-                expect(task.state).toEqual(TaskState.Idel);
+                expect(task.state).toEqual(TaskState.Idle);
                 expect(task.progress).toEqual(0);
                 expect(task.total).toEqual(-1);
                 expect(task.from).toBeUndefined();
@@ -137,7 +137,7 @@ describe("Task", () => {
                 const task = new MockTask();
                 await task.pause();
                 expect(task.pauseTask).toBeCalledTimes(0);
-                expect(task.state).toEqual(TaskState.Idel);
+                expect(task.state).toEqual(TaskState.Idle);
                 expect(task.isPaused).toBe(false);
             });
             it("should not call pauseTask twice if task is paused to pause the task", async () => {
@@ -153,7 +153,7 @@ describe("Task", () => {
                 const task = new MockTask(() => wait(100));
                 await task.resume();
                 expect(task.resumeTask).toBeCalledTimes(0);
-                expect(task.state).toBe(TaskState.Idel);
+                expect(task.state).toBe(TaskState.Idle);
             });
             it("should resume task and set state to running", async () => {
                 const task = new MockTask(() => wait(100));
@@ -175,7 +175,7 @@ describe("Task", () => {
             });
         });
         describe("#cancel", () => {
-            it("should cancel idel task", async () => {
+            it("should cancel idle task", async () => {
                 const task = new MockTask(() => wait(100));
                 await task.cancel();
                 expect(task.isCancelled).toBe(true);
@@ -238,7 +238,7 @@ describe("Task", () => {
                     onPaused: noop,
                     onCancelled: noop,
                     onStart: pushTask("start"),
-                    onSuccessed: pushTask("success"),
+                    onSucceed: pushTask("success"),
                     onUpdate: pushTask("update"),
                 });
                 expect(noop).not.toBeCalled();
@@ -271,7 +271,7 @@ describe("Task", () => {
                     onPaused: noop,
                     onCancelled: noop,
                     onStart: pushTask("start"),
-                    onSuccessed: pushTask("success"),
+                    onSucceed: pushTask("success"),
                     onUpdate: pushTask("update"),
                 });
                 expect(noop).not.toBeCalled();
@@ -309,7 +309,7 @@ describe("Task", () => {
                     onPaused: noop,
                     onCancelled: noop,
                     onStart: pushTask("start"),
-                    onSuccessed: pushTask("success"),
+                    onSucceed: pushTask("success"),
                     onUpdate: pushTask("update"),
                 });
                 expect(events).toEqual([
