@@ -1,5 +1,43 @@
 # Changelog
 
+## 5.1.0
+### @xmcl/client@2.1.2
+#### Bug Fixes
+
+- fix(client): use 1.14.4 protocol as default ([5cdfe3a9749921c9ac648bc99f918e11ec1d76c1](https://github.com/voxelum/minecraft-launcher-core-node/commit/5cdfe3a9749921c9ac648bc99f918e11ec1d76c1))
+- fix(client): should not destroy sock for reconnect ([ae5d771cdb11c1871989b9fb3d476ee7a00d266b](https://github.com/voxelum/minecraft-launcher-core-node/commit/ae5d771cdb11c1871989b9fb3d476ee7a00d266b))
+### @xmcl/core@2.8.0
+#### Features
+
+- feat(core): support parse javaVersion in version json ([9271499d2c64e17ab4c3e0f4f7eb0ceb9ccd2738](https://github.com/voxelum/minecraft-launcher-core-node/commit/9271499d2c64e17ab4c3e0f4f7eb0ceb9ccd2738))
+#### Bug Fixes
+
+- fix: options.maxMemory overwrite bug #221 (#222) ([3072f875d500dec67ae1925482b3097f7f4065a0](https://github.com/voxelum/minecraft-launcher-core-node/commit/3072f875d500dec67ae1925482b3097f7f4065a0))
+### @xmcl/task@4.0.2
+#### Bug Fixes
+
+- fix(task): typo & task.map ([21875229eeae19670c2b6f062bded2a9e556108c](https://github.com/voxelum/minecraft-launcher-core-node/commit/21875229eeae19670c2b6f062bded2a9e556108c))
+### @xmcl/mod-parser@3.2.0
+#### Features
+
+- feat(mod-parser): try to parse all .info files in root ([5241cea867da011ac5da1aa4c12a684a71272573](https://github.com/voxelum/minecraft-launcher-core-node/commit/5241cea867da011ac5da1aa4c12a684a71272573))
+#### Bug Fixes
+
+- fix: support optifine new version ([9e28696c1e820c5c31ae5fd189ae1fb74772ba17](https://github.com/voxelum/minecraft-launcher-core-node/commit/9e28696c1e820c5c31ae5fd189ae1fb74772ba17))
+### @xmcl/installer@4.0.2
+#### Bug Fixes
+
+- fix(installer): curseforge unpack task name ([5c4ec33cf7fc262d1427b713c180a68ef4a08c70](https://github.com/voxelum/minecraft-launcher-core-node/commit/5c4ec33cf7fc262d1427b713c180a68ef4a08c70))
+- fix: correctly propagate abort/pause ([788234944486d90c1f79f4f10aeb01800cf985e1](https://github.com/voxelum/minecraft-launcher-core-node/commit/788234944486d90c1f79f4f10aeb01800cf985e1))
+- fix(installer): not restrict jre runtime target ([1a907bf7ba891301e65dd14a6cb6653d2ac9642a](https://github.com/voxelum/minecraft-launcher-core-node/commit/1a907bf7ba891301e65dd14a6cb6653d2ac9642a))
+- fix: support optifine new version ([9e28696c1e820c5c31ae5fd189ae1fb74772ba17](https://github.com/voxelum/minecraft-launcher-core-node/commit/9e28696c1e820c5c31ae5fd189ae1fb74772ba17))
+- fix(installer): readable fabric version id ([e824d0ef90d2ccf4b9cf0e17174e39d04ed4ac9f](https://github.com/voxelum/minecraft-launcher-core-node/commit/e824d0ef90d2ccf4b9cf0e17174e39d04ed4ac9f))
+- fix(installer): not fail during fallback ([c4e436e911d7fe7e70e019d8ca6fafe19c8caffb](https://github.com/voxelum/minecraft-launcher-core-node/commit/c4e436e911d7fe7e70e019d8ca6fafe19c8caffb))
+- fix(installer): handle redirect 3xx ([67bd82e194a0a8f551192a2e4a53ef9fbea735b3](https://github.com/voxelum/minecraft-launcher-core-node/commit/67bd82e194a0a8f551192a2e4a53ef9fbea735b3))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/task bump **patch**
+
+
 ## 5.0.2
 ### @xmcl/user@2.1.6
 #### Bug Fixes
