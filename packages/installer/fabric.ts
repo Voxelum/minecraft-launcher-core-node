@@ -226,9 +226,10 @@ export async function installFabric(loader: FabricLoaderArtifact, minecraft: Min
     if (!id) {
         id = mcversion;
         if (yarn) {
-            id += `-fabric${yarn}`;
+            id += `-fabric${yarn}-loader${loader.loader.version}`;
+        } else {
+            id += `-fabric${loader.loader.version}`;
         }
-        id += loader.loader.version;
     }
     let libraries = [
         { name: loader.loader.maven, url: "https://maven.fabricmc.net/" },

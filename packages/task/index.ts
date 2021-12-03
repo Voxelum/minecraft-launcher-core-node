@@ -16,15 +16,16 @@ export class MultipleError extends Error {
 }
 
 export enum TaskState {
-    Idel,
+    Idle,
     Running,
     Cancelled,
     Paused,
-    Successed,
+    Succeed,
     Failed
 }
 
 export interface Task<T = any> {
+    readonly id: number;
     readonly name: string;
     readonly param: Record<string, any>;
     readonly progress: number;
@@ -65,7 +66,7 @@ export interface TaskContext {
     onStart?(task: Task<any>): void;
     onUpdate?(task: Task<any>, chunkSize: number): void;
     onFailed?(task: Task<any>, error: any): void;
-    onSuccessed?(task: Task<any>, result: any): void;
+    onSucceed?(task: Task<any>, result: any): void;
     onPaused?(task: Task<any>): void;
     onResumed?(task: Task<any>): void;
     onCancelled?(task: Task<any>): void;
@@ -77,7 +78,7 @@ export function createFork(): TaskContext["fork"] {
 }
 
 export abstract class BaseTask<T> implements Task<T> {
-    protected _state: TaskState = TaskState.Idel;
+    protected _state: TaskState = TaskState.Idle;
     protected _promise: Promise<T> = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -108,7 +109,7 @@ export abstract class BaseTask<T> implements Task<T> {
     }
 
     get(): T | void {
-        if (this.state === TaskState.Successed) {
+        if (this.state === TaskState.Succeed) {
             return this.resultOrError;
         } else if (this.state === TaskState.Failed) {
             throw this.resultOrError;
@@ -125,7 +126,7 @@ export abstract class BaseTask<T> implements Task<T> {
 
     get isCancelled() { return this._state === TaskState.Cancelled; }
     get isPaused() { return this._state === TaskState.Paused; }
-    get isDone() { return this._state === TaskState.Successed; }
+    get isDone() { return this._state === TaskState.Succeed; }
     get isRunning() { return this._state === TaskState.Running; }
 
     async pause() {
@@ -143,7 +144,7 @@ export abstract class BaseTask<T> implements Task<T> {
         });
     }
     async cancel() {
-        if (this.state !== TaskState.Running && this.state !== TaskState.Idel) { return; }
+        if (this.state !== TaskState.Running && this.state !== TaskState.Idle) { return; }
         this._state = TaskState.Cancelled;
         await this.cancelTask().then(() => {
             this.context.onCancelled?.(this);
@@ -156,7 +157,7 @@ export abstract class BaseTask<T> implements Task<T> {
         if (this._state === TaskState.Cancelled) {
             throw new CancelledError();
         }
-        if (this._state !== TaskState.Idel) {
+        if (this._state !== TaskState.Idle) {
             return;
         }
         if (context) {
@@ -170,9 +171,9 @@ export abstract class BaseTask<T> implements Task<T> {
         this.context.onStart?.(this);
         this.runTask().then((value) => {
             this.resolve(value);
-            this._state = TaskState.Successed;
+            this._state = TaskState.Succeed;
             this.resultOrError = value;
-            this.context.onSuccessed?.(this, value);
+            this.context.onSucceed?.(this, value);
         }, (error) => {
             this.reject(error);
             this.resultOrError = error;
@@ -208,9 +209,9 @@ export abstract class BaseTask<T> implements Task<T> {
             // @ts-expect-error
             return wait.bind(this)().then((r) => transform.bind(this)(r));
         };
-        copy.startAndWait = function (this: typeof copy) {
+        copy.startAndWait = function (this: typeof copy, context?: TaskContext, parent?: Task<any>) {
             // @ts-expect-error
-            return startAndWait.bind(this)().then((r) => transform.bind(this)(r));
+            return startAndWait.bind(this)(context, parent).then((r) => transform.bind(this)(r));
         };
         return copy;
     }

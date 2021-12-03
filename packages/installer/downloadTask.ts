@@ -48,6 +48,7 @@ export class DownloadTask extends AbortableTask<void> implements StatusControlle
   }
 
   protected isAbortedError(e: any): boolean {
+      if (e instanceof Array) { e = e[0] }
       if (e instanceof DownloadError && e.error === "DownloadAborted") {
           return true;
       }

@@ -101,7 +101,7 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
         const record = getEntriesRecord(entries);
         // context.update(10, 100);
 
-        const entry = record["net/optifine/Config.class"] ?? record["Config.class"];
+        const entry = record["net/optifine/Config.class"] ?? record["Config.class"] ?? record["notch/net/optifine/Config.class"] ;
         if (!entry) {
             throw new BadOptifineJarError(installer, "net/optifine/Config.class");
         }

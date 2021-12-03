@@ -55,7 +55,10 @@ export interface ResolvedVersion {
             type: string;
         };
     };
-
+    /**
+     * Recommended java version
+     */
+    javaVersion: JavaVersion
     /**
      * The minecraft version of this version
      */
@@ -415,6 +418,7 @@ export namespace Version {
         let logging: any;
         let minecraftVersion: string = rootVersion.id;
         let location: string;
+        let javaVersion: JavaVersion = { majorVersion: 8, component: "jre-legacy" }
 
         const chains: string[] = hierarchy.map((j) => folder.getVersionRoot(j.id));
         const inheritances = hierarchy.map((j) => j.id);
@@ -440,6 +444,7 @@ export namespace Version {
             type = json.type || type;
             mainClass = json.mainClass || mainClass;
             assetIndex = json.assetIndex || assetIndex;
+            javaVersion = json.javaVersion || javaVersion;
             if (json.libraries) {
                 json.libraries.forEach((lib) => {
                     const libOrgName = lib.name.substring(0, lib.name.lastIndexOf(":"));
@@ -491,6 +496,7 @@ export namespace Version {
             mainClass, minimumLauncherVersion, releaseTime, time, type, logging,
             pathChain: chains,
             minecraftDirectory: location,
+            javaVersion,
         } as ResolvedVersion;
     }
 
@@ -758,6 +764,15 @@ export namespace Version {
     }
 }
 
+export interface JavaVersion {
+    /**
+     * Corresponding with java manifest json.
+     * @example "jre-legacy"
+     */
+    component: string;
+    majorVersion: number;
+}
+
 /**
  * The raw json format provided by Minecraft. Also the namespace of version operation.
  *
@@ -804,4 +819,6 @@ export interface Version {
             type: string;
         },
     };
+
+    javaVersion?: JavaVersion
 }
