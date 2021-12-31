@@ -131,40 +131,6 @@ export function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLoc
     return installCurseforgeModpackTask(zip, minecraft, options).startAndWait();
 }
 
-
-export class DownloadCurseforgeFilesTask extends TaskGroup<void> {
-    constructor(readonly manifest: Manifest, readonly minecraft: MinecraftFolder, readonly options: CurseforgeOptions) {
-        super();
-        this.name = "download";
-        this.param = manifest;
-    }
-
-    protected async runTask(): Promise<void> {
-        const requestor = this.options?.queryFileUrl || createDefaultCurseforgeQuery();
-        const resolver = this.options?.filePathResolver || ((p, f, m, u) => m.getMod(basename(u)));
-        const minecraft = this.minecraft;
-        return withAgents(this.options, async (options) => {
-            const tasks = await Promise.all(this.manifest.files.map(async (f) => {
-                const from = await requestor(f.projectID, f.fileID);
-                const to = await resolver(f.projectID, f.fileID, minecraft, from);
-
-                return new DownloadTask({
-                    url: from,
-                    destination: to,
-                    agents: options.agents,
-                    segmentPolicy: options.segmentPolicy,
-                    retryHandler: options.retryHandler,
-                });
-            }));
-            this.children.push(...tasks);
-            await this.all(tasks, {
-                throwErrorImmediately: this.options.throwErrorImmediately ?? false,
-                getErrorMessage: (errs) => `Fail to install curseforge modpack to ${minecraft.root}: ${errs.map(errorToString).join("\n")}`
-            });
-        })
-    }
-}
-
 async function normalizeInput(input: InputType): Promise<{ zip: ZipFile; entries: Entry[] }> {
     if (typeof input === "string" || input instanceof Buffer) {
         const zip = await open(input, { lazyEntries: true, autoClose: false });
@@ -190,7 +156,26 @@ export function installCurseforgeModpackTask(input: InputType, minecraft: Minecr
         const folder = MinecraftFolder.from(minecraft);
         const zip = await normalizeInput(input);
         const manifest = options?.manifest ?? (await this.yield(readManifestTask(zip)));
-        await this.yield(new DownloadCurseforgeFilesTask(manifest, folder, options));
+        const requestor = options?.queryFileUrl || createDefaultCurseforgeQuery();
+        const resolver = options?.filePathResolver || ((p, f, m, u) => m.getMod(basename(u)));
+        await withAgents(options, async (options) => {
+            const tasks = await Promise.all(manifest.files.map(async (f) => {
+                const from = await requestor(f.projectID, f.fileID);
+                const to = await resolver(f.projectID, f.fileID, folder, from);
+
+                return new DownloadTask({
+                    url: from,
+                    destination: to,
+                    agents: options.agents,
+                    segmentPolicy: options.segmentPolicy,
+                    retryHandler: options.retryHandler,
+                }).setName('download');
+            }));
+            await this.all(tasks, {
+                throwErrorImmediately: options.throwErrorImmediately ?? false,
+                getErrorMessage: (errs) => `Fail to install curseforge modpack to ${folder.root}: ${errs.map(errorToString).join("\n")}`
+            });
+        });
         await this.yield(new UnzipTask(
             zip.zip,
             zip.entries.filter((e) => !e.fileName.endsWith("/") && e.fileName.startsWith(manifest.overrides)),
