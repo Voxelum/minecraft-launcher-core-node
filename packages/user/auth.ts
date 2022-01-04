@@ -297,7 +297,7 @@ export async function signout(option: { username: string, password: string }, ap
  */
 export function offline(username: string): Authentication {
     const prof = {
-        id: v5(username, "").replace(/-/g, ""),
+        id: v5(username, "00000000-0000-0000-0000-000000000000").replace(/-/g, ""),
         name: username,
     };
     return {
@@ -306,7 +306,7 @@ export function offline(username: string): Authentication {
         selectedProfile: prof,
         availableProfiles: [prof],
         user: {
-            id: v5(username, ""),
+            id: v5(username, "00000000-0000-0000-0000-000000000000"),
             username: username,
         },
     };
