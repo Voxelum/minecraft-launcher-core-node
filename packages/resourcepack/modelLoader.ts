@@ -42,7 +42,7 @@ export class ModelLoader {
 
         if (raw.parent) {
             const parentModel = await this.loadModel(raw.parent);
-            if (!parentModel) { throw new Error(`Missing parent model ${raw.parent} for ${location.toString()}`); }
+            if (!parentModel) { throw new Error(`Missing parent model ${raw.parent} for ${res.location}`); }
             if (!raw.elements) { raw.elements = parentModel.elements; }
             if (!raw.ambientocclusion) { raw.ambientocclusion = parentModel.ambientocclusion; }
             if (!raw.display) { raw.display = parentModel.display; }
