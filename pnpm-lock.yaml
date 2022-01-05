@@ -78,6 +78,7 @@ importers:
       '@xmcl/text-component': ^2.1.1
       bytebuffer: ^5.0.1
       long: ~3
+      tslib: ^2.3.1
       uuid: ^8.3.2
     dependencies:
       '@xmcl/nbt': link:../nbt
@@ -88,6 +89,7 @@ importers:
     devDependencies:
       '@types/bytebuffer': 5.0.42
       '@types/uuid': 8.3.1
+      tslib: 2.3.1
 
   packages/core:
     specifiers:
