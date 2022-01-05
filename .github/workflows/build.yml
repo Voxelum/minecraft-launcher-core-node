@@ -6,6 +6,8 @@ on:
       - master
     paths:
       - 'packages/*/*.ts'
+      - 'packages/*/package.json'
+      - 'pnpm-lock.yaml'
       - '.github/*'
 
 jobs:
