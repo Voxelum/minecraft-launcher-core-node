@@ -169,7 +169,7 @@ export function installCurseforgeModpackTask(input: InputType, minecraft: Minecr
                     agents: options.agents,
                     segmentPolicy: options.segmentPolicy,
                     retryHandler: options.retryHandler,
-                }).setName('download');
+                }).setName("download");
             }));
             await this.all(tasks, {
                 throwErrorImmediately: options.throwErrorImmediately ?? false,
