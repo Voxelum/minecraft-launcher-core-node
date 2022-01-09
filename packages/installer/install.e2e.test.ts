@@ -214,9 +214,9 @@ describe("LiteloaderInstaller", () => {
 
 
 describe("FabricInstaller", () => {
-    test("should be able to install fabric", async () => {
-        await installFabricYarnAndLoader("1.14.1+build.10", "0.4.7+build.147", tempDir);
-        expect(existsSync(MinecraftFolder.from(tempDir).getVersionJson("1.14.1-fabric1.14.1+build.10-0.4.7+build.147")))
-            .toBeTruthy();
-    });
+    // test("should be able to install fabric", async () => {
+    //     await installFabricYarnAndLoader("1.14.1+build.10", "0.4.7+build.147", tempDir);
+    //     expect(existsSync(MinecraftFolder.from(tempDir).getVersionJson("1.14.1-fabric1.14.1+build.10-0.4.7+build.147")))
+    //         .toBeTruthy();
+    // });
 });
