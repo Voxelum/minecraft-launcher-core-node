@@ -2138,7 +2138,7 @@ export declare type GameSetting = ReturnType<typeof getDefaultFrame>;
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
 definitions['@xmcl/installer/curseforge.d.ts'] = `\/\// <reference types="node" /> import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
-import { Task, TaskGroup } from "@xmcl/task";
+import { Task } from "@xmcl/task";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadBaseOptions } from "./http/download";
 import { ParallelTaskOptions } from "./utils";
@@ -2239,13 +2239,6 @@ export declare function createDefaultCurseforgeQuery(): CurseforgeURLQuery;
  * @param options The options for query curseforge
  */
 export declare function installCurseforgeModpack(zip: InputType, minecraft: MinecraftLocation, options?: CurseforgeOptions): Promise<Manifest>;
-export declare class DownloadCurseforgeFilesTask extends TaskGroup<void> {
-    readonly manifest: Manifest;
-    readonly minecraft: MinecraftFolder;
-    readonly options: CurseforgeOptions;
-    constructor(manifest: Manifest, minecraft: MinecraftFolder, options: CurseforgeOptions);
-    protected runTask(): Promise<void>;
-}
 /**
  * Install curseforge modpack to a specific Minecraft location.
  *
@@ -3751,6 +3744,7 @@ export interface PostProcessor {
     outputs?: {
         [key: string]: string;
     };
+    sides?: Array<"client" | "server">;
 }
 export interface InstallProfile {
     spec?: number;
@@ -3820,6 +3814,7 @@ export declare function resolveProcessors(side: "client" | "server", installProf
      * The classpath to run
      */
     classpath: string[];
+    sides?: ("client" | "server")[] | undefined;
 }[];
 /**
  * Post process the post processors from \`InstallProfile\`.
@@ -5624,8 +5619,7 @@ export declare function getEntriesRecord(entries: Entry[]): Record<string, Entry
  */
 export declare function readAllEntries(zipFile: ZipFile): Promise<Entry[]>;
 \/\/# sourceMappingURL=index.d.ts.map`;
-definitions['@xmcl/user/auth.d.ts'] = `import { GameProfile } from "./base"; export declare const v5: (s: string) => string;
-declare type LoginWithUser = {
+definitions['@xmcl/user/auth.d.ts'] = `import { GameProfile } from "./base"; declare type LoginWithUser = {
     username: string;
     password: string;
     requestUser: true;
