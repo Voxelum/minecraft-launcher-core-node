@@ -120,7 +120,7 @@ export function resolveProcessors(side: "client" | "server", installProfile: Ins
         outputs: proc.outputs
             ? Object.entries(proc.outputs).map(([k, v]) => ({ [normalizeVariable(k)]: normalizeVariable(v) })).reduce((a, b) => Object.assign(a, b), {})
             : undefined,
-    })).filter(proc => proc.sides ? proc.sides.indexOf(side) !== -1 : true);
+    })).filter((proc) => proc.sides ? proc.sides.indexOf(side) !== -1 : true);
     return processors;
 }
 
