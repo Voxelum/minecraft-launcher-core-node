@@ -1,5 +1,23 @@
 # Changelog
 
+## 5.2.0
+### @xmcl/installer@4.1.0
+#### Features
+
+- feat(installer): support forge 1.18 (#224) ([1cd283144e6b4b6a8c07ae7556a5df016a248fc1](https://github.com/voxelum/minecraft-launcher-core-node/commit/1cd283144e6b4b6a8c07ae7556a5df016a248fc1))
+### @xmcl/resourcepack@1.1.3
+#### Bug Fixes
+
+- fix(resourcepack): optimize error msg ([64e4d0cf85dcade6edfa1cedc38dc14d58fc3e2f](https://github.com/voxelum/minecraft-launcher-core-node/commit/64e4d0cf85dcade6edfa1cedc38dc14d58fc3e2f))
+### @xmcl/user@2.1.7
+#### Bug Fixes
+
+- fix(user): v5 uuid namespace ([dce694a48cdf5dd47d4675d7f7556f8d6712bdc6](https://github.com/voxelum/minecraft-launcher-core-node/commit/dce694a48cdf5dd47d4675d7f7556f8d6712bdc6))
+- fix(user): fix the uuid gen ([6ac31c6d77b16bb920fe32a13a5ce7d5290cbc65](https://github.com/voxelum/minecraft-launcher-core-node/commit/6ac31c6d77b16bb920fe32a13a5ce7d5290cbc65))
+### @xmcl/model@1.0.20
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 5.1.0
 ### @xmcl/client@2.1.2
 #### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/installer",
-  "version": "4.0.2",
+  "version": "4.1.0",
   "main": "./index.ts",
   "description": "Provides Minecraft/Forge/Fabric/Liteloader installers",
   "engines": {
