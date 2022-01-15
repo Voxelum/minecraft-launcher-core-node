@@ -19,6 +19,5 @@ You can use keyword to search
     const searchOptions: SearchOptions = {
         categoryId: 6, // 6 is mod,
     };
-    const setting: GameSetting = searchAddons(settingString);
-    const string: string = GameSetting.stringify(setting);
+    const addons: AddonInfo[] = await searchAddons(searchOptions);
 ```
