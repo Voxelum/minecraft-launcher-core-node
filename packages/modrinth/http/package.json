@@ -1,5 +1,5 @@
 {
-  "name": "util",
+  "name": "modrinth-util",
   "private": true,
   "version": "0.0.0",
   "main": "./index.cjs.js",
