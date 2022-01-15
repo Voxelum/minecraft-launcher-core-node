@@ -98,8 +98,26 @@ You can use keyword to search
     const searchOptions: SearchOptions = {
         categoryId: 6, // 6 is mod,
     };
-    const setting: GameSetting = searchAddons(settingString);
-    const string: string = GameSetting.stringify(setting);
+    const addons: AddonInfo[] = await searchAddons(searchOptions);
+```
+
+### Get Mod in Modrinth
+
+You can get mod detail info via mod id, including the download url
+
+```ts
+import { getMod, Mod, getModVersion, ModVersionFile, ModVersion } from '@xmcl/modrinth'
+
+const modid: string; // you can get this id from searchMods
+const mod: Mod = await getMod(modid) // mod details
+const modVersions: string[] = mod.versions;
+const oneModVersion: string = modVersions[0];
+
+const modVersion: ModVersion = await getModVersion(oneModVersion);
+
+const files: ModVersionFile[] = modVersion.files;
+
+const { url, name, hashes } = files[0]; // now you can get file name, file hashes and download url of the file
 ```
 
 ### Install Fabric
@@ -784,6 +802,23 @@ Read the level info from a buffer.
     const chunkZ: number;
     const region: RegionDataFrame = await reader.getRegionData(chunkX, chunkZ);
 ```
+
+### Search Mod in Modrinth
+
+You can use keyword to search
+
+```ts
+    import { searchMods } from '@xmcl/modrinth'
+    const searchOptions: SearchOptions = {
+        categoryId: 6, // 6 is mod,
+    };
+    const result: SearchModResult = await searchMods(settingString);
+    const totalModsCounts = result.total_hits;
+    for (const mod of result.hits) {
+        console.log(`${mod.mod_id} ${mod.title} ${mod.description}`); // print mod info
+    }
+```
+
 
 ### TextComponent
 
