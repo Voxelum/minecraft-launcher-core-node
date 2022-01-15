@@ -22,6 +22,7 @@
         "packages/forge-site-parser/**/*.ts",
         "packages/gamesetting/**/*.ts",
         "packages/installer/**/*.ts",
+        "packages/modrinth/**/*.ts",
         "packages/mod-parser/**/*.ts",
         "packages/model/**/*.ts",
         "packages/nbt/**/*.ts",

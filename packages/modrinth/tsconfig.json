@@ -9,10 +9,6 @@
     "compilerOptions": {
         "target": "es2018",
         "module": "esnext",
-        
-        "lib": [
-            "dom"
-        ],
         "experimentalDecorators": true,
         "declaration": true,
         "downlevelIteration": true,

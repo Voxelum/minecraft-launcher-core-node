@@ -126,7 +126,7 @@ export interface SearchModResult {
 async function get(path: string) {
     const { body, statusCode } = await httpRequester({
         url: `${BASE_URL}${path}`,
-        method: 'GET',
+        method: "GET",
         headers: {},
     })
     if (statusCode !== 200) {
@@ -137,10 +137,10 @@ async function get(path: string) {
 
 export function searchMods(options: SearchModOptions): Promise<SearchModResult> {
     return get(`/api/v1/mod?${stringify({
-        query: options.query ?? '',
-        filter: options.filters ?? '',
-        version: options.version ?? '',
-        index: options.index ?? 'relevance',
+        query: options.query ?? "",
+        filter: options.filters ?? "",
+        version: options.version ?? "",
+        index: options.index ?? "relevance",
         offset: options.offset ?? 0,
         limit: options.limit ?? 10,
     })}`)
@@ -159,13 +159,13 @@ export function getModVersion(versionId: string): Promise<ModVersion> {
 }
 
 export function listCategories(): Promise<string[]> {
-    return get(`/api/v1/tag/category`)
+    return get("/api/v1/tag/category")
 }
 
 export function listLoaders(): Promise<string[]> {
-    return get(`/api/v1/tag/loader`)
+    return get("/api/v1/tag/loader")
 }
 
 export async function listGameVersion(): Promise<string[]> {
-    return get(`/api/v1/tag/game_version`)
+    return get("/api/v1/tag/game_version")
 }
