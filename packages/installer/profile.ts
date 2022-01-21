@@ -1,7 +1,7 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
 import { CancelledError, task, AbortableTask } from "@xmcl/task";
 import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
-import type{ ChildProcess } from "child_process";
+import type { ChildProcess } from "child_process";
 import { delimiter, dirname } from "path";
 import { ZipFile } from "yauzl";
 import { installResolvedLibrariesTask, InstallSideOption, LibraryOptions } from "./minecraft";
