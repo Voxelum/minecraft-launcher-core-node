@@ -1,6 +1,5 @@
 import { open, openEntryReadStream, walkEntriesGenerator } from "@xmcl/unzip";
-import { ChildProcess, SpawnOptions } from "child_process";
-import { spawn } from "cross-spawn";
+import { ChildProcess, SpawnOptions, spawn } from "child_process";
 import { EventEmitter } from "events";
 import { createWriteStream, existsSync } from "fs";
 import { EOL } from "os";
@@ -177,6 +176,11 @@ export interface LaunchOption {
      * @see {@link generateArguments}
      */
     prechecks?: LaunchPrecheck[];
+
+    /**
+    * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
+    */
+   spawnFunction?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
 }
 
 /**
@@ -375,6 +379,11 @@ export interface BaseServerOptions {
     extraJVMArgs?: string[];
     extraMCArgs?: string[];
     extraExecOption?: SpawnOptions;
+
+    /**
+    * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
+    */
+   spawnFunction?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
 }
 
 export interface MinecraftServerOptions extends BaseServerOptions {
@@ -408,7 +417,7 @@ export async function launchServer(options: MinecraftServerOptions | ServerOptio
         cwd = dirname(options.serverExectuableJarPath);
     }
     const spawnOption = { cwd, env: process.env, ...(options.extraExecOption || {}) };
-    return spawn(args[0], args.slice(1), spawnOption);
+    return (options.spawnFunction ?? spawn)(args[0], args.slice(1), spawnOption);
 }
 
 /**
@@ -535,7 +544,7 @@ export async function launch(options: LaunchOption): Promise<ChildProcess> {
         await mkdir(gamePath);
     }
 
-    return spawn(args[0], args.slice(1), spawnOption);
+    return (options.spawnFunction ?? spawn)(args[0], args.slice(1), spawnOption);
 }
 
 /**

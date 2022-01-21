@@ -17,7 +17,6 @@
     "@xmcl/forge-site-parser": "^2.0.8",
     "@xmcl/task": "^4.0.2",
     "@xmcl/unzip": "^2.0.0",
-    "cross-spawn": "^7.0.3",
     "yauzl": "^2.10.0"
   },
   "repository": {
@@ -39,7 +38,6 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
-    "@types/cross-spawn": "^6.0.2",
     "@types/yauzl": "^2.9.2",
     "nock": "^12.0.3"
   }

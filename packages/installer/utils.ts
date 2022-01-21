@@ -1,6 +1,5 @@
 import { _exists as exists, _mkdir as mkdir, _pipeline as pipeline, _readFile as readFile, _writeFile as writeFile } from "@xmcl/core";
-import { ChildProcessWithoutNullStreams, ExecOptions } from "child_process";
-import { spawn } from "cross-spawn";
+import { ChildProcess, spawn, ExecOptions } from "child_process";
 import { close as fclose, copyFile as fcopyFile, ftruncate, link as fslink, open as fopen, stat as fstat, unlink as funlink } from "fs";
 import { dirname } from "path";
 import { promisify } from "util";
@@ -21,6 +20,7 @@ export { readFile, writeFile, mkdir, exists, pipeline };
 export function missing(target: string) {
     return exists(target).then((v) => !v);
 }
+
 export async function ensureDir(target: string) {
     try {
         await mkdir(target);
@@ -51,11 +51,11 @@ export function normalizeArray<T>(arr: T | T[] = []): T[] {
     return arr instanceof Array ? arr : [arr];
 }
 export function spawnProcess(javaPath: string, args: string[], options?: ExecOptions) {
-    let process = spawn(javaPath, args, options);
+    let process = (options?.spawnFunction ?? spawn)(javaPath, args, options);
     return waitProcess(process);
 }
 
-export function waitProcess(process: ChildProcessWithoutNullStreams) {
+export function waitProcess(process: ChildProcess) {
     return new Promise<void>((resolve, reject) => {
         let errorMsg: string[] = [];
         process.on("error", reject);
@@ -65,10 +65,10 @@ export function waitProcess(process: ChildProcessWithoutNullStreams) {
         process.on("exit", (code) => {
             if (code !== 0) { reject(errorMsg.join("")); } else { resolve(); }
         });
-        process.stdout.setEncoding("utf-8");
-        process.stdout.on("data", (buf) => { });
-        process.stderr.setEncoding("utf-8");
-        process.stderr.on("data", (buf) => { errorMsg.push(buf.toString()) });
+        process.stdout?.setEncoding("utf-8");
+        process.stdout?.on("data", (buf) => { });
+        process.stderr?.setEncoding("utf-8");
+        process.stderr?.on("data", (buf) => { errorMsg.push(buf.toString()) });
     });
 }
 
