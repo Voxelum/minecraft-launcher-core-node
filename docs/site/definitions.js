@@ -624,7 +624,7 @@ export interface LaunchOption {
      */
     resourcePath?: string;
     /**
-     * The java executable file path. (Not the java home direcotry!)
+     * The java executable file path. (Not the java home directory!)
      */
     javaPath: string;
     /**
@@ -721,6 +721,12 @@ export interface LaunchOption {
      * @see {@link generateArguments}
      */
     prechecks?: LaunchPrecheck[];
+    /**
+     * The spawn process function. Used for spawn the java process at the end.
+     *
+     * By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https:\/\/www.npmjs.com/package/cross-spawn)
+     */
+    spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
 }
 /**
  * The function to check the game status before the game launched. Will be used in \`launch\` function.
@@ -800,6 +806,10 @@ export interface BaseServerOptions {
     extraJVMArgs?: string[];
     extraMCArgs?: string[];
     extraExecOption?: SpawnOptions;
+    /**
+     * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https:\/\/www.npmjs.com/package/cross-spawn)
+     */
+    spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
 }
 export interface MinecraftServerOptions extends BaseServerOptions {
     /**
@@ -3671,7 +3681,7 @@ export declare class InstallAssetTask extends DownloadTask {
  */
 export declare function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOptions: LibraryOptions): string[];
 \/\/# sourceMappingURL=minecraft.d.ts.map`;
-definitions['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core"; import { InstallOptions } from "./utils";
+definitions['@xmcl/installer/optifine.d.ts'] = `import { MinecraftLocation, Version } from "@xmcl/core"; import { InstallOptions, SpawnJavaOptions } from "./utils";
 export interface InstallOptifineOptions extends InstallOptions {
     /**
      * Use "optifine.OptiFineForgeTweaker" instead of "optifine.OptiFineTweaker" for tweakClass.
@@ -3689,11 +3699,7 @@ export interface InstallOptifineOptions extends InstallOptions {
  * @beta Might be changed and don't break the major version
  */
 export declare function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion?: string, options?: InstallOptifineOptions): Version;
-export interface InstallOptifineOptions extends InstallOptions {
-    /**
-     * The java exectable path. It will use \`java\` by default.
-     */
-    java?: string;
+export interface InstallOptifineOptions extends InstallOptions, SpawnJavaOptions {
 }
 /**
  * Install optifine by optifine installer
@@ -3731,6 +3737,7 @@ export declare function installOptifineTask(installer: string, minecraft: Minecr
 \/\/# sourceMappingURL=optifine.d.ts.map`;
 definitions['@xmcl/installer/profile.d.ts'] = `import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core"; import { AbortableTask } from "@xmcl/task";
 import { InstallSideOption, LibraryOptions } from "./minecraft";
+import { SpawnJavaOptions } from "./utils";
 export interface PostProcessor {
     /**
      * The executable jar path
@@ -3792,7 +3799,7 @@ export interface InstallProfile {
      */
     versionInfo?: VersionJson;
 }
-export interface InstallProfileOption extends LibraryOptions, InstallSideOption {
+export interface InstallProfileOption extends LibraryOptions, InstallSideOption, SpawnJavaOptions {
     /**
      * New forge (>=1.13) require java to install. Can be a executor or java executable path.
      */
@@ -3824,7 +3831,7 @@ export declare function resolveProcessors(side: "client" | "server", installProf
  * @param java The java executable path
  * @throws {@link PostProcessError}
  */
-export declare function postProcess(processors: PostProcessor[], minecraft: MinecraftFolder, java: string): Promise<void>;
+export declare function postProcess(processors: PostProcessor[], minecraft: MinecraftFolder, javaOptions: SpawnJavaOptions): Promise<void>;
 /**
  * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
  *
@@ -3874,10 +3881,10 @@ export declare class PostProcessingTask extends AbortableTask<void> {
     readonly name: string;
     private pointer;
     private activeProcess;
-    constructor(processors: PostProcessor[], minecraft: MinecraftFolder, java: string);
+    constructor(processors: PostProcessor[], minecraft: MinecraftFolder, java: SpawnJavaOptions);
     protected findMainClass(lib: string): Promise<string>;
     protected isInvalid(outputs: Required<PostProcessor>["outputs"]): Promise<boolean>;
-    protected postProcess(mc: MinecraftFolder, proc: PostProcessor, java: string): Promise<void>;
+    protected postProcess(mc: MinecraftFolder, proc: PostProcessor, javaOptions: SpawnJavaOptions): Promise<void>;
     protected process(): Promise<void>;
     protected abort(isCancelled: boolean): Promise<void>;
     protected isAbortedError(e: any): boolean;
@@ -3903,7 +3910,7 @@ export declare class UnzipTask extends BaseTask<void> {
 }
 \/\/# sourceMappingURL=unzip.d.ts.map`;
 definitions['@xmcl/installer/utils.d.ts'] = `\/\// <reference types="node" /> import { _exists as exists, _mkdir as mkdir, _pipeline as pipeline, _readFile as readFile, _writeFile as writeFile } from "@xmcl/core";
-import { ChildProcessWithoutNullStreams, ExecOptions } from "child_process";
+import { ChildProcess, ExecOptions, SpawnOptions } from "child_process";
 import { close as fclose, copyFile as fcopyFile, ftruncate, link as fslink, open as fopen, stat as fstat, unlink as funlink } from "fs";
 export declare const unlink: typeof funlink.__promisify__;
 export declare const stat: typeof fstat.__promisify__;
@@ -3916,10 +3923,24 @@ export { checksum } from "@xmcl/core";
 export { readFile, writeFile, mkdir, exists, pipeline };
 export declare function missing(target: string): Promise<boolean>;
 export declare function ensureDir(target: string): Promise<void>;
+export interface SpawnJavaOptions {
+    /**
+     * The java exectable path. It will use \`java\` by default.
+     *
+     * @defaults "java"
+     */
+    java?: string;
+    /**
+     * The spawn process function. Used for spawn the java process at the end.
+     *
+     * By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https:\/\/www.npmjs.com/package/cross-spawn)
+     */
+    spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
+}
 export declare function ensureFile(target: string): Promise<void>;
 export declare function normalizeArray<T>(arr?: T | T[]): T[];
-export declare function spawnProcess(javaPath: string, args: string[], options?: ExecOptions): Promise<void>;
-export declare function waitProcess(process: ChildProcessWithoutNullStreams): Promise<void>;
+export declare function spawnProcess(spawnJavaOptions: SpawnJavaOptions, args: string[], options?: ExecOptions): Promise<void>;
+export declare function waitProcess(process: ChildProcess): Promise<void>;
 export interface ParallelTaskOptions {
     throwErrorImmediately?: boolean;
 }
