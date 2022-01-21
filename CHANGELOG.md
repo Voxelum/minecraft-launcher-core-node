@@ -1,5 +1,17 @@
 # Changelog
 
+## 5.3.0
+### @xmcl/core@2.9.0
+#### Features
+
+- feat: add options API for spawn function ([990fd7cd21d92020271f2c667e3cf3b8c6c1f40e](https://github.com/voxelum/minecraft-launcher-core-node/commit/990fd7cd21d92020271f2c667e3cf3b8c6c1f40e))
+### @xmcl/installer@4.2.0
+#### Features
+
+- feat: add options API for spawn function ([990fd7cd21d92020271f2c667e3cf3b8c6c1f40e](https://github.com/voxelum/minecraft-launcher-core-node/commit/990fd7cd21d92020271f2c667e3cf3b8c6c1f40e))
+- Dependency @xmcl/core bump **patch**
+
+
 ## 5.2.0
 ### @xmcl/installer@4.1.0
 #### Features
