@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@xmcl/unzip": "^2.0.0",
+    "cross-spawn": "^7.0.3",
     "uuid": "^8.3.2",
     "yauzl": "^2.10.0"
   },
@@ -35,6 +36,7 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
+    "@types/cross-spawn": "^6.0.2",
     "@types/yauzl": "^2.9.2"
   }
 }
