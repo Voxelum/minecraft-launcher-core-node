@@ -1,6 +1,6 @@
 import { open, openEntryReadStream, walkEntriesGenerator } from "@xmcl/unzip";
 import { ChildProcess, SpawnOptions } from "child_process";
-import { spawn } from 'cross-spawn';
+import { spawn } from "cross-spawn";
 import { EventEmitter } from "events";
 import { createWriteStream, existsSync } from "fs";
 import { EOL } from "os";

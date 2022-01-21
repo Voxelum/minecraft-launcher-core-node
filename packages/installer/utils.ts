@@ -1,5 +1,6 @@
 import { _exists as exists, _mkdir as mkdir, _pipeline as pipeline, _readFile as readFile, _writeFile as writeFile } from "@xmcl/core";
-import { ChildProcessWithoutNullStreams, ExecOptions, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, ExecOptions } from "child_process";
+import { spawn } from "cross-spawn";
 import { close as fclose, copyFile as fcopyFile, ftruncate, link as fslink, open as fopen, stat as fstat, unlink as funlink } from "fs";
 import { dirname } from "path";
 import { promisify } from "util";
