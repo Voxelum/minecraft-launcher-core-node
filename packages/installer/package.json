@@ -38,7 +38,7 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
-    "nock": "^12.0.3",
-    "@types/yauzl": "^2.9.2"
+    "@types/yauzl": "^2.9.2",
+    "nock": "^12.0.3"
   }
 }

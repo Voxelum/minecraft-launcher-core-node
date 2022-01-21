@@ -1,7 +1,7 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
 import { CancelledError, task, AbortableTask } from "@xmcl/task";
 import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
-import { ChildProcess, spawn } from "child_process";
+import type { ChildProcess } from "child_process";
 import { delimiter, dirname } from "path";
 import { ZipFile } from "yauzl";
 import { installResolvedLibrariesTask, InstallSideOption, LibraryOptions } from "./minecraft";
@@ -257,8 +257,7 @@ export class PostProcessingTask extends AbortableTask<void> {
         let cp = [...proc.classpath, proc.jar].map(LibraryInfo.resolve).map((p) => mc.getLibraryByPath(p.path)).join(delimiter);
         let cmd = ["-cp", cp, mainClass, ...proc.args];
         try {
-            const process = spawn(java, cmd);
-            await waitProcess(process);
+            await spawnProcess(java, cmd);
         } catch (e) {
             if (typeof e === "string") {
                 throw new PostProcessFailedError(proc.jar, [java, ...cmd], e);
