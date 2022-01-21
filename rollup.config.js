@@ -9,6 +9,9 @@ import { join } from "path";
  * @param {string} packagePath
  */
 function generate(packagePath) {
+  if (!fs.existsSync(`${packagePath}/package.json`)) {
+    return
+  }
   const packageJson = JSON.parse(
     fs.readFileSync(`${packagePath}/package.json`).toString()
   );
@@ -120,6 +123,7 @@ function generate(packagePath) {
 const options = readdirSync("./packages")
   .map((p) => join(__dirname, "packages", p))
   .map(generate)
+  .filter(v => !!v)
   .reduce((all, cur) => all.concat(cur));
 
 export default options;

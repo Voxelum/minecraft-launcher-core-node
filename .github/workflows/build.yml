@@ -14,6 +14,8 @@ jobs:
   automation:
     runs-on: ubuntu-latest
 
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
+
     strategy:
       matrix:
         node-version: [15]
