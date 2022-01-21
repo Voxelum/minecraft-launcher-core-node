@@ -1,5 +1,5 @@
 import { _exists as exists, _mkdir as mkdir, _pipeline as pipeline, _readFile as readFile, _writeFile as writeFile } from "@xmcl/core";
-import { ChildProcess, spawn, ExecOptions } from "child_process";
+import { ChildProcess, spawn, ExecOptions, SpawnOptions } from "child_process";
 import { close as fclose, copyFile as fcopyFile, ftruncate, link as fslink, open as fopen, stat as fstat, unlink as funlink } from "fs";
 import { dirname } from "path";
 import { promisify } from "util";
@@ -44,14 +44,31 @@ export async function ensureDir(target: string) {
         throw e;
     }
 }
+
+export interface SpawnJavaOptions {
+    /**
+     * The java exectable path. It will use `java` by default.
+     *
+     * @defaults "java"
+     */
+    java?: string
+
+    /**
+     * The spawn process function. Used for spawn the java process at the end.
+     *
+     * By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
+     */
+    spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
+}
+
 export function ensureFile(target: string) {
     return ensureDir(dirname(target));
 }
 export function normalizeArray<T>(arr: T | T[] = []): T[] {
     return arr instanceof Array ? arr : [arr];
 }
-export function spawnProcess(javaPath: string, args: string[], options?: ExecOptions) {
-    let process = (options?.spawnFunction ?? spawn)(javaPath, args, options);
+export function spawnProcess(spawnJavaOptions: SpawnJavaOptions, args: string[], options?: ExecOptions) {
+    const process = (spawnJavaOptions?.spawn ?? spawn)(spawnJavaOptions.java ?? "java", args, options);
     return waitProcess(process);
 }
 

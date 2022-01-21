@@ -84,7 +84,7 @@ export interface LaunchOption {
      */
     resourcePath?: string;
     /**
-     * The java executable file path. (Not the java home direcotry!)
+     * The java executable file path. (Not the java home directory!)
      */
     javaPath: string;
     /**
@@ -178,9 +178,11 @@ export interface LaunchOption {
     prechecks?: LaunchPrecheck[];
 
     /**
-    * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
-    */
-   spawnFunction?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
+     * The spawn process function. Used for spawn the java process at the end.
+     *
+     * By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
+     */
+    spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
 }
 
 /**
@@ -381,9 +383,9 @@ export interface BaseServerOptions {
     extraExecOption?: SpawnOptions;
 
     /**
-    * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
-    */
-   spawnFunction?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
+     * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
+     */
+    spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess;
 }
 
 export interface MinecraftServerOptions extends BaseServerOptions {
@@ -417,7 +419,7 @@ export async function launchServer(options: MinecraftServerOptions | ServerOptio
         cwd = dirname(options.serverExectuableJarPath);
     }
     const spawnOption = { cwd, env: process.env, ...(options.extraExecOption || {}) };
-    return (options.spawnFunction ?? spawn)(args[0], args.slice(1), spawnOption);
+    return (options.spawn ?? spawn)(args[0], args.slice(1), spawnOption);
 }
 
 /**
@@ -544,7 +546,7 @@ export async function launch(options: LaunchOption): Promise<ChildProcess> {
         await mkdir(gamePath);
     }
 
-    return (options.spawnFunction ?? spawn)(args[0], args.slice(1), spawnOption);
+    return (options.spawn ?? spawn)(args[0], args.slice(1), spawnOption);
 }
 
 /**

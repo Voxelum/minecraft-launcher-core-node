@@ -1,11 +1,11 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from "@xmcl/core";
-import { CancelledError, task, AbortableTask } from "@xmcl/task";
+import { AbortableTask, CancelledError, task } from "@xmcl/task";
 import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
 import type { ChildProcess } from "child_process";
 import { delimiter, dirname } from "path";
 import { ZipFile } from "yauzl";
 import { installResolvedLibrariesTask, InstallSideOption, LibraryOptions } from "./minecraft";
-import { checksum, readFile, spawnProcess, waitProcess } from "./utils";
+import { checksum, readFile, SpawnJavaOptions, spawnProcess } from "./utils";
 
 export interface PostProcessor {
     /**
@@ -63,7 +63,7 @@ export interface InstallProfile {
     versionInfo?: VersionJson;
 }
 
-export interface InstallProfileOption extends LibraryOptions, InstallSideOption {
+export interface InstallProfileOption extends LibraryOptions, InstallSideOption, SpawnJavaOptions {
     /**
      * New forge (>=1.13) require java to install. Can be a executor or java executable path.
      */
@@ -132,8 +132,8 @@ export function resolveProcessors(side: "client" | "server", installProfile: Ins
  * @param java The java executable path
  * @throws {@link PostProcessError}
  */
-export function postProcess(processors: PostProcessor[], minecraft: MinecraftFolder, java: string) {
-    return new PostProcessingTask(processors, minecraft, java).startAndWait();
+export function postProcess(processors: PostProcessor[], minecraft: MinecraftFolder, javaOptions: SpawnJavaOptions) {
+    return new PostProcessingTask(processors, minecraft, javaOptions).startAndWait();
 }
 
 
@@ -159,7 +159,6 @@ export function installByProfile(installProfile: InstallProfile, minecraft: Mine
 export function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
     return task("installByProfile", async function () {
         const minecraftFolder = MinecraftFolder.from(minecraft);
-        const java = options.java || "java";
 
         const processor = resolveProcessors(options.side || "client", installProfile, minecraftFolder);
 
@@ -167,7 +166,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         const libraries = VersionJson.resolveLibraries([...installProfile.libraries, ...versionJson.libraries]);
 
         await this.yield(installResolvedLibrariesTask(libraries, minecraft, options));
-        await this.yield(new PostProcessingTask(processor, minecraftFolder, java));
+        await this.yield(new PostProcessingTask(processor, minecraftFolder, options));
     });
 }
 
@@ -209,7 +208,7 @@ export class PostProcessingTask extends AbortableTask<void> {
 
     private activeProcess: ChildProcess | undefined
 
-    constructor(private processors: PostProcessor[], private minecraft: MinecraftFolder, private java: string) {
+    constructor(private processors: PostProcessor[], private minecraft: MinecraftFolder, private java: SpawnJavaOptions) {
         super();
         this.param = processors
         this._total = processors.length;
@@ -251,21 +250,21 @@ export class PostProcessingTask extends AbortableTask<void> {
         return false;
     }
 
-    protected async postProcess(mc: MinecraftFolder, proc: PostProcessor, java: string) {
+    protected async postProcess(mc: MinecraftFolder, proc: PostProcessor, javaOptions: SpawnJavaOptions) {
         let jarRealPath = mc.getLibraryByPath(LibraryInfo.resolve(proc.jar).path);
         let mainClass = await this.findMainClass(jarRealPath);
         let cp = [...proc.classpath, proc.jar].map(LibraryInfo.resolve).map((p) => mc.getLibraryByPath(p.path)).join(delimiter);
         let cmd = ["-cp", cp, mainClass, ...proc.args];
         try {
-            await spawnProcess(java, cmd);
+            await spawnProcess(javaOptions, cmd);
         } catch (e) {
             if (typeof e === "string") {
-                throw new PostProcessFailedError(proc.jar, [java, ...cmd], e);
+                throw new PostProcessFailedError(proc.jar, [javaOptions.java ?? "java", ...cmd], e);
             }
             throw e;
         }
         if (proc.outputs && await this.isInvalid(proc.outputs)) {
-            throw new PostProcessFailedError(proc.jar, [java, ...cmd], "Validate the output of process failed!");
+            throw new PostProcessFailedError(proc.jar, [javaOptions.java ?? "java", ...cmd], "Validate the output of process failed!");
         }
     }
 

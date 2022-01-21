@@ -2,7 +2,7 @@ import { ClassReader, ClassVisitor, Opcodes } from "@xmcl/asm";
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import { task } from "@xmcl/task";
 import { getEntriesRecord, open, readAllEntries, readEntry } from "@xmcl/unzip";
-import { ensureFile, InstallOptions, spawnProcess, writeFile } from "./utils";
+import { ensureFile, InstallOptions, SpawnJavaOptions, spawnProcess, writeFile } from "./utils";
 
 export interface InstallOptifineOptions extends InstallOptions {
     /**
@@ -47,11 +47,7 @@ export function generateOptifineVersion(editionRelease: string, minecraftVersion
     };
 }
 
-export interface InstallOptifineOptions extends InstallOptions {
-    /**
-     * The java exectable path. It will use `java` by default.
-     */
-    java?: string;
+export interface InstallOptifineOptions extends InstallOptions, SpawnJavaOptions {
 }
 
 /**
@@ -101,7 +97,7 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
         const record = getEntriesRecord(entries);
         // context.update(10, 100);
 
-        const entry = record["net/optifine/Config.class"] ?? record["Config.class"] ?? record["notch/net/optifine/Config.class"] ;
+        const entry = record["net/optifine/Config.class"] ?? record["Config.class"] ?? record["notch/net/optifine/Config.class"];
         if (!entry) {
             throw new BadOptifineJarError(installer, "net/optifine/Config.class");
         }
@@ -154,7 +150,7 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
             const mcJar = mc.getVersionJar(mcversion);
 
             await ensureFile(dest);
-            await spawnProcess(options.java ?? "java", ["-cp", installer, "optifine.Patcher", mcJar, installer, dest]);
+            await spawnProcess(options, ["-cp", installer, "optifine.Patcher", mcJar, installer, dest]);
         }));
 
         return versionJSON.id;
