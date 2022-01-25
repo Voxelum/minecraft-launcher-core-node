@@ -53,7 +53,6 @@ If you still not satisfied, as you want even provide the function to parse exist
 
 There are more packages for advantage usages, and you can check out the getting started section to navigate.
 
-
 ### Bundle & Treeshaking
 
 The module built with `ES5` module option by typescript. To use treeshake, please make sure your bundle system support esm import/export.
@@ -85,6 +84,7 @@ Or you can read the full [document](https://voxelum.github.io/minecraft-launcher
 | @xmcl/installer         | Install Minecraft                 | [![npm version](https://img.shields.io/npm/v/@xmcl/installer.svg)](https://www.npmjs.com/package/@xmcl/installer)                 | [packages/installer        ](/packages/installer)         | Node                |
 | @xmcl/user              | User Authentication and skin      | [![npm version](https://img.shields.io/npm/v/@xmcl/user.svg)](https://www.npmjs.com/package/@xmcl/user)                           | [packages/user             ](/packages/user)              | Node/Browser        |
 | @xmcl/mod-parser        | Parse forge/liteloader/fabric mod | [![npm version](https://img.shields.io/npm/v/@xmcl/mod-parser.svg)](https://www.npmjs.com/package/@xmcl/mod-parser)               | [packages/mod-parser       ](/packages/mod-parser)        | Node/Browser        |
+| @xmcl/modrinth          | Provide Modrinth API              | [![npm version](https://img.shields.io/npm/v/@xmcl/modrinth.svg)](https://www.npmjs.com/package/@xmcl/modrinth)                   | [packages/modrinth         ](/packages/modrinth)          | Node/Browser        |
 | @xmcl/forge-site-parser | Parse forge website               | [![npm version](https://img.shields.io/npm/v/@xmcl/forge-site-parser.svg)](https://www.npmjs.com/package/@xmcl/forge-site-parser) | [packages/forge-site-parser](/packages/forge-site-parser) | Node/Browser        |
 | @xmcl/client            | Ping Minecraft Server             | [![npm version](https://img.shields.io/npm/v/@xmcl/client.svg)](https://www.npmjs.com/package/@xmcl/client)                       | [packages/client           ](/packages/client)            | Node                |
 | @xmcl/model             | Display player/block model        | [![npm version](https://img.shields.io/npm/v/@xmcl/model.svg)](https://www.npmjs.com/package/@xmcl/model)                         | [packages/model            ](/packages/model)             | Browser             |

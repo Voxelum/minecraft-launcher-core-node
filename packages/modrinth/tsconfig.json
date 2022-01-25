@@ -1,0 +1,22 @@
+{
+    "files": [
+        "index.ts",
+        "types.ts",
+        "http/base.ts",
+        "http/index.ts",
+        "http/index.browser.ts"
+    ],
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "esnext",
+        "experimentalDecorators": true,
+        "declaration": true,
+        "downlevelIteration": true,
+        "strict": true,
+        "inlineSourceMap": true,
+        "inlineSources": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    }
+}

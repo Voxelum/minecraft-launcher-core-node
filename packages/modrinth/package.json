@@ -1,0 +1,38 @@
+{
+  "name": "@xmcl/modrinth",
+  "version": "0.0.1",
+  "main": "./index.ts",
+  "browser": "./browser/index.js",
+  "sideEffects": false,
+  "description": "Provide the modrinth described in https://github.com/modrinth/labrinth/wiki/API-Documentation",
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "module": "./dist/index.esm.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
+  },
+  "author": "cijhn@hotmail.com",
+  "keywords": [
+    "minecraft",
+    "typescript",
+    "minecraft-launcher",
+    "nodejs",
+    "electron",
+    "modrinth"
+  ],
+  "license": "MIT",
+  "dependencies": {},
+  "bugs": {
+    "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
+  },
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
+  "devDependencies": {
+    "nock": "^12.0.3"
+  }
+}

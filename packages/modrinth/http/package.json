@@ -1,0 +1,11 @@
+{
+  "name": "modrinth-util",
+  "private": true,
+  "version": "0.0.0",
+  "main": "./index.cjs.js",
+  "module": "./index.js",
+  "browser": "./index.browser.ts",
+  "sideEffects": false,
+  "dependencies": {
+  }
+}
