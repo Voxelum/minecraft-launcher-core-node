@@ -169,3 +169,7 @@ export function listLoaders(): Promise<string[]> {
 export async function listGameVersion(): Promise<string[]> {
     return get("/api/v1/tag/game_version")
 }
+
+export async function listLicenses(): Promise<string[]> {
+    return get("/api/v1/tag/license")
+}
