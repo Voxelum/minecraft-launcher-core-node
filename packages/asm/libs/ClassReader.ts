@@ -175,16 +175,16 @@ export class ClassReader {
      * @param off the start offset of the class data.
      * @param len the length of the class data.
      */
-    public constructor(buffer: Uint8Array, off: number = 0, len: number = buffer.length) {
+    public constructor(buffer: Uint8Array, classFileOffset: number = 0, len: number = buffer.length) {
         this.maxStringLength = 0;
         this.header = 0;
         this.buf = buffer;
-        if (this.readShort(off + 6) > Opcodes.V1_8) { throw new Error(); }
-        this.items = new Array(this.readUnsignedShort(off + 8));
+        // if (this.readShort(classFileOffset + 6) > Opcodes.V1_8) { throw new Error(); }
+        this.items = new Array(this.readUnsignedShort(classFileOffset + 8));
         let n: number = this.items.length;
         this.strings = new Array(n);
         let max: number = 0;
-        let index: number = off + 10;
+        let index: number = classFileOffset + 10;
         for (let i: number = 1; i < n; ++i) {
             this.items[i] = index + 1;
             let size: number;
