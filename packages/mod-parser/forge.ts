@@ -666,7 +666,13 @@ export async function readForgeMod(mod: ForgeModInput): Promise<ForgeModMetadata
     const manifest: Record<string, any> = {};
     const manifestMetadata = await readForgeModManifest(fs, manifest);
     const tomls = await readForgeModToml(fs, manifest);
-    const base = await readForgeModAsm(fs, manifest);
+    const base = await readForgeModAsm(fs, manifest).catch(() => ({
+        usedLegacyFMLPackage: false,
+        usedForgePackage: false,
+        usedMinecraftPackage: false,
+        usedMinecraftClientPackage: false,
+        modAnnotations: [],
+    }));
 
     if (jsons.length === 0 && (!manifestMetadata || !manifestMetadata.modid) && tomls.length === 0 && base.modAnnotations.length === 0) {
         throw new ForgeModParseFailedError(mod, base, manifest);
