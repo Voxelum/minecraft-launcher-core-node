@@ -140,7 +140,7 @@ export function searchMods(options: SearchModOptions): Promise<SearchModResult> 
         query: options.query ?? "",
         filter: options.filters ?? "",
         version: options.version ?? "",
-        index: options.index ?? "relevance",
+        index: options.index || "relevance",
         offset: options.offset ?? 0,
         limit: options.limit ?? 10,
     })}`)
