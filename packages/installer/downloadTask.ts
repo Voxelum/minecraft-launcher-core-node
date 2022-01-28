@@ -12,6 +12,7 @@ export class DownloadTask extends AbortableTask<void> implements StatusControlle
       super();
       options.statusController = this;
       this.download = createDownload(options);
+      this._to = options.destination;
   }
 
   reset(progress: number, total: number): void {
@@ -19,8 +20,9 @@ export class DownloadTask extends AbortableTask<void> implements StatusControlle
       this._total = total;
   }
 
-  onProgress(chunkSize: number, progress: number): void {
+  onProgress(url: string, chunkSize: number, progress: number): void {
       this._progress = progress;
+      this._from = url;
       this.update(chunkSize);
   }
 

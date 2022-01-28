@@ -5,7 +5,7 @@ export interface StatusController {
   readonly total: number
   readonly progress: number
   reset(progress: number, total: number): void
-  onProgress(chunkSize: number, progress: number): void
+  onProgress(url: string, chunkSize: number, progress: number): void
 }
 
 export function createStatusController() {
@@ -15,7 +15,7 @@ export function createStatusController() {
         get total() { return total },
         get progress() { return progress },
         reset(_progress, _total) { progress = _progress; total = _total },
-        onProgress(_, _progress) { progress = _progress }
+        onProgress(_, __, _progress) { progress = _progress }
     }
     return controller;
 }

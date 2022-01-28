@@ -146,7 +146,7 @@ export class Download {
         return this.metadata
     }
 
-    protected async processDownload(metadata: ResourceMetadata, abortSignal: AbortSignal): Promise<void> {
+    protected async processDownload(url: string, metadata: ResourceMetadata, abortSignal: AbortSignal): Promise<void> {
         let flag = 0;
         const abortHandlers: Array<() => void> = [];
         const errors: any[] = []
@@ -180,7 +180,7 @@ export class Download {
                 // track the progress
                 response.on("data", (chunk) => {
                     segment.start += chunk.length;
-                    this.statusController.onProgress(chunk.length, this.statusController.progress + chunk.length);
+                    this.statusController.onProgress(url, chunk.length, this.statusController.progress + chunk.length);
                 });
                 // create abort handler
                 const abortHandler = () => {
@@ -234,7 +234,7 @@ export class Download {
             try {
                 attempt += 1;
                 const metadata = await this.updateMetadata(parsedUrl);
-                await this.processDownload(metadata, abortSignal);
+                await this.processDownload(url, metadata, abortSignal);
                 return;
             } catch (e) {
                 // user abort should throw anyway
