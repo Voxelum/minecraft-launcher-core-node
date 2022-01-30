@@ -1,5 +1,6 @@
 import { Agents } from "./agents";
 import { fetch, urlToRequestOptions } from "./utils"
+import { AbortSignal } from "./abort";
 import { URL } from "url";
 
 export interface ResourceMetadata {
@@ -21,19 +22,19 @@ export class FetchMetadataError extends Error {
     }
 }
 
-export async function getMetadata(srcUrl: URL, _headers: Record<string, any>, agents: Agents, useGet: boolean = false): Promise<ResourceMetadata> {
+export async function getMetadata(srcUrl: URL, _headers: Record<string, any>, agents: Agents, useGet: boolean = false, abortSignal?: AbortSignal): Promise<ResourceMetadata> {
     const { message, request } = await fetch({
         ...urlToRequestOptions(srcUrl),
         method: useGet ? "GET" : "HEAD",
-        ..._headers
-    }, agents);
+        ..._headers,
+    }, agents, abortSignal);
 
     message.resume();
     request.destroy();
 
     let { headers, url: resultUrl, statusCode } = message;
     if (statusCode === 405 && !useGet) {
-        return getMetadata(srcUrl, _headers, agents, useGet);
+        return getMetadata(srcUrl, _headers, agents, useGet, abortSignal);
     }
     statusCode = statusCode ?? 500;
     if (statusCode !== 200 && statusCode !== 201) {

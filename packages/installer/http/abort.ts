@@ -12,3 +12,5 @@ export function resolveAbortSignal(signal?: AbortSignal) {
         removeEventListener() { return this }
     }
 }
+
+export class AbortError extends Error { }

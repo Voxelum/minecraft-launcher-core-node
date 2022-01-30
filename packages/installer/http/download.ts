@@ -4,7 +4,7 @@ import { RequestOptions } from "http";
 import { fileURLToPath, URL } from "url";
 import { promisify } from "util";
 import { close, copyFile, ensureFile, exists, open, pipeline, truncate, unlink } from "../utils";
-import { AbortSignal, resolveAbortSignal } from "./abort";
+import { AbortError, AbortSignal, resolveAbortSignal } from "./abort";
 import { Agents, CreateAgentsOptions, resolveAgents } from "./agents";
 import { DownloadError, resolveNetworkErrorType } from "./error";
 import { getMetadata, ResourceMetadata } from "./metadata";
@@ -68,8 +68,6 @@ export interface DownloadOptions extends DownloadBaseOptions {
     validator?: Validator | ChecksumValidatorOptions;
 }
 
-class AbortError extends Error { }
-
 /**
  * Download url or urls to a file path. This process is abortable, it's compatible with the dom like `AbortSignal`.
  */
@@ -130,8 +128,8 @@ export class Download {
         protected validator: Validator,
     ) { }
 
-    protected async updateMetadata(url: URL) {
-        const metadata = await getMetadata(url, this.headers, this.agents);
+    protected async updateMetadata(url: URL, abortSignal: AbortSignal) {
+        const metadata = await getMetadata(url, this.headers, this.agents, false, abortSignal);
         if (!metadata || metadata.eTag != this.metadata?.eTag || metadata.eTag === undefined || metadata.contentLength !== this.metadata?.contentLength) {
             this.metadata = metadata;
             const contentLength = metadata.contentLength;
@@ -165,7 +163,7 @@ export class Download {
             };
             try {
                 if (abortSignal.aborted || flag) { throw new AbortError(); }
-                const { message: response, request } = await fetch(options, this.agents);
+                const { message: response, request } = await fetch(options, this.agents, abortSignal);
                 if (abortSignal.aborted || flag) {
                     // ensure we correctly release the message
                     response.resume();
@@ -225,7 +223,7 @@ export class Download {
             const filePath = fileURLToPath(url);
             if (await exists(filePath)) {
                 // properly handle the file protocol. we just copy the file
-                // luckly, opening file won't affect file copy 😀
+                // lucky, opening file won't affect file copy 😀
                 await copyFile(fileURLToPath(url), this.destination);
                 return;
             }
@@ -233,7 +231,7 @@ export class Download {
         while (true) {
             try {
                 attempt += 1;
-                const metadata = await this.updateMetadata(parsedUrl);
+                const metadata = await this.updateMetadata(parsedUrl, abortSignal);
                 await this.processDownload(url, metadata, abortSignal);
                 return;
             } catch (e) {
