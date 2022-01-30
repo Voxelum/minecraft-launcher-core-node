@@ -1,6 +1,6 @@
 import { getPlatform, Platform } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
-import { join } from "path";
+import { dirname, join } from "path";
 import { URL } from "url";
 import { DownloadTask } from "./downloadTask";
 import { Agents, withAgents } from "./http/agents";
@@ -301,7 +301,7 @@ export function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Tas
                 if (entry.type === "directory") {
                     await ensureDir(dest);
                 } else if (entry.type === "link") {
-                    await link(join(destination, entry.target), destination);
+                    await link(join(dirname(dest), entry.target), dest);
                 }
             }));
     });
