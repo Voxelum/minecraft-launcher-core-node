@@ -79,6 +79,8 @@ export interface SearchModOptions {
      * The query to search for
      */
     query?: string
+
+    facets?: string
     /**
      * A list of filters relating to the categories of a mod
      */
@@ -136,14 +138,18 @@ async function get(path: string) {
 }
 
 export function searchMods(options: SearchModOptions): Promise<SearchModResult> {
-    return get(`/api/v1/mod?${stringify({
+    const params: Record<string, string | undefined | number> = {
         query: options.query ?? "",
-        filter: options.filters ?? "",
+        filter: options.filters ?? undefined,
         version: options.version ?? "",
         index: options.index || "relevance",
         offset: options.offset ?? 0,
         limit: options.limit ?? 10,
-    })}`)
+    };
+    if (options.facets) {
+        params.facets = options.facets;
+    }
+    return get(`/api/v1/mod?${stringify(params)}`);
 }
 
 export function getMod(id: string): Promise<Mod> {
