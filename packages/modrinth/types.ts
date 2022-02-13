@@ -69,11 +69,11 @@ export interface Mod {
     /**
      * The date at which the mod was first published
      */
-    published: Date
+    published: string
     /**
      * The date at which the mod was updated
      */
-    updated: Date
+    updated: string
     /**
      * The status of the mod - approved, rejected, draft, unlisted, processing, or unknown
      */
