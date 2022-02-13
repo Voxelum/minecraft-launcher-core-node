@@ -88,17 +88,17 @@ export class BadCurseforgeModpackError extends Error {
 }
 
 /**
- * Read the mainifest data from modpack
+ * Read the manifest data from modpack
  * @throws {@link BadCurseforgeModpackError}
  */
 export function readManifestTask(input: InputType): Task<Manifest> {
     return task("unpack", async () => {
         const zip = await normalizeInput(input);
-        const mainfiestEntry = zip.entries.find((e) => e.fileName === "manifest.json");
-        if (!mainfiestEntry) {
+        const manifestEntry = zip.entries.find((e) => e.fileName === "manifest.json");
+        if (!manifestEntry) {
             throw new BadCurseforgeModpackError(input, "manifest.json");
         }
-        const buffer = await readEntry(zip.zip, mainfiestEntry)
+        const buffer = await readEntry(zip.zip, manifestEntry)
         const content: Manifest = JSON.parse(buffer.toString());
         return content;
     })
@@ -187,14 +187,14 @@ export function installCurseforgeModpackTask(input: InputType, minecraft: Minecr
 }
 
 /**
- * Install a cureseforge xml file to a specific locations
+ * Install a curseforge xml file to a specific locations
  */
 export function installCurseforgeFile(file: File, destination: string, options?: InstallFileOptions) {
     return installCurseforgeFileTask(file, destination, options).startAndWait();
 }
 
 /**
- * Install a cureseforge xml file to a specific locations
+ * Install a curseforge xml file to a specific locations
  */
 export function installCurseforgeFileTask(file: File, destination: string, options: InstallFileOptions = {}) {
     return task("installCurseforgeFile", async function () {
