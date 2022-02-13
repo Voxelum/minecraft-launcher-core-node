@@ -212,14 +212,17 @@ export async function setTexture(option: SetTextureOption, api: ProfileServiceAP
     };
     if (!option.texture) {
         // delete texture
-        await request({
+        const response = await request({
             url: urlString,
             method: "DELETE",
             headers,
         });
+        if (response.statusCode >= 300) {
+            throw new Error(`Status code ${response.statusCode}!`)
+        }
     } else if ("data" in option.texture) {
         // upload texture
-        await request({
+        const response = await request({
             url: urlString,
             method: "PUT",
             body: {
@@ -229,9 +232,12 @@ export async function setTexture(option: SetTextureOption, api: ProfileServiceAP
             bodyType: "formMultiPart",
             headers,
         });
+        if (response.statusCode >= 300) {
+            throw new Error(`Status code ${response.statusCode}!`)
+        }
     } else if ("url" in option.texture) {
         // set texture
-        await request({
+        const response = await request({
             url: urlString,
             method: "POST",
             body: {
@@ -241,6 +247,9 @@ export async function setTexture(option: SetTextureOption, api: ProfileServiceAP
             bodyType: "search",
             headers,
         });
+        if (response.statusCode >= 300) {
+            throw new Error(`Status code ${response.statusCode}!`)
+        }
     } else {
         throw new Error("Illegal Option Format!");
     }
