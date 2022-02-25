@@ -1,4 +1,4 @@
-import { v4, v5 } from "uuid";
+import { v3, v4 } from "uuid";
 import { GameProfile } from "./base";
 import { httpRequester as request } from "./util";
 
@@ -297,7 +297,7 @@ export async function signout(option: { username: string, password: string }, ap
  */
 export function offline(username: string): Authentication {
     const prof = {
-        id: v5(username, "00000000-0000-0000-0000-000000000000").replace(/-/g, ""),
+        id: v3(username, "00000000-0000-0000-0000-000000000000"),
         name: username,
     };
     return {
@@ -306,7 +306,7 @@ export function offline(username: string): Authentication {
         selectedProfile: prof,
         availableProfiles: [prof],
         user: {
-            id: v5(username, "00000000-0000-0000-0000-000000000000"),
+            id: v3(username, "00000000-0000-0000-0000-000000000000"),
             username: username,
         },
     };
