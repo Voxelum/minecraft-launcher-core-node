@@ -2,7 +2,6 @@ import { httpRequester } from "./http";
 import { stringify } from "querystring";
 import { Mod, ModVersion } from "./types";
 import { Agent } from "https";
-import { Agent as HttpAgent } from "https";
 
 export * from "./types";
 
@@ -127,7 +126,7 @@ export interface SearchModResult {
     total_hits: number
 }
 
-async function get(path: string, agent?: Agent | HttpAgent) {
+async function get(path: string, agent?: Agent) {
     const { body, statusCode } = await httpRequester({
         url: `${BASE_URL}${path}`,
         method: "GET",
@@ -140,7 +139,7 @@ async function get(path: string, agent?: Agent | HttpAgent) {
     return JSON.parse(body)
 }
 
-export function searchMods(options: SearchModOptions, agent?: Agent | HttpAgent): Promise<SearchModResult> {
+export function searchMods(options: SearchModOptions, agent?: Agent): Promise<SearchModResult> {
     const params: Record<string, string | undefined | number> = {
         query: options.query ?? "",
         filter: options.filters ?? undefined,
@@ -155,30 +154,30 @@ export function searchMods(options: SearchModOptions, agent?: Agent | HttpAgent)
     return get(`/api/v1/mod?${stringify(params)}`, agent);
 }
 
-export function getMod(id: string, agent?: Agent | HttpAgent): Promise<Mod> {
+export function getMod(id: string, agent?: Agent): Promise<Mod> {
     return get(`/api/v1/mod/${id}`, agent)
 }
 
-export function getModVersions(id: string, agent?: Agent | HttpAgent): Promise<string[]> {
+export function getModVersions(id: string, agent?: Agent): Promise<string[]> {
     return get(`/api/v1/mod/${id}/version`, agent)
 }
 
-export function getModVersion(versionId: string, agent?: Agent | HttpAgent): Promise<ModVersion> {
+export function getModVersion(versionId: string, agent?: Agent): Promise<ModVersion> {
     return get(`/api/v1/version/${versionId}`, agent)
 }
 
-export function listCategories(agent?: Agent | HttpAgent): Promise<string[]> {
+export function listCategories(agent?: Agent): Promise<string[]> {
     return get("/api/v1/tag/category", agent)
 }
 
-export function listLoaders(agent?: Agent | HttpAgent): Promise<string[]> {
+export function listLoaders(agent?: Agent): Promise<string[]> {
     return get("/api/v1/tag/loader", agent)
 }
 
-export async function listGameVersion(agent?: Agent | HttpAgent): Promise<string[]> {
+export async function listGameVersion(agent?: Agent): Promise<string[]> {
     return get("/api/v1/tag/game_version", agent)
 }
 
-export async function listLicenses(agent?: Agent | HttpAgent): Promise<string[]> {
+export async function listLicenses(agent?: Agent): Promise<string[]> {
     return get("/api/v1/tag/license", agent)
 }
