@@ -20,7 +20,7 @@ export interface AddonInfo {
      */
     authors: Author[];
     /**
-     * The attachments. Usually include the project icon and the exmaple images.
+     * The attachments. Usually include the project icon and the example images.
      */
     attachments: Attachment[];
     websiteUrl: string;
