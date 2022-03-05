@@ -34,7 +34,7 @@ export async function getMetadata(srcUrl: URL, _headers: Record<string, any>, ag
 
     let { headers, url: resultUrl, statusCode } = message;
     if (statusCode === 405 && !useGet) {
-        return getMetadata(srcUrl, _headers, agents, useGet, abortSignal);
+        return getMetadata(srcUrl, _headers, agents, true, abortSignal);
     }
     statusCode = statusCode ?? 500;
     if (statusCode !== 200 && statusCode !== 201) {
