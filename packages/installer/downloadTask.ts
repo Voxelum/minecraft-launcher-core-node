@@ -12,6 +12,7 @@ export class DownloadTask extends AbortableTask<void> implements StatusControlle
       super();
       options.statusController = this;
       this.download = createDownload(options);
+      this._from = options.url[0];
       this._to = options.destination;
   }
 
