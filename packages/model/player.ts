@@ -104,19 +104,19 @@ function mapCubeUV(mesh: Mesh, src: CubeUVMapping) {
 export class PlayerObject3D extends Object3D {
     private _slim: boolean = false;
 
-    constructor(skin: MeshBasicMaterial, cape: MeshBasicMaterial, tranparent: MeshBasicMaterial, slim: boolean) {
+    constructor(skin: MeshBasicMaterial, cape: MeshBasicMaterial, transparent: MeshBasicMaterial, slim: boolean) {
         super();
         this._slim = slim;
-        buildPlayerModel(this, skin, cape, tranparent, slim);
+        buildPlayerModel(this, skin, cape, transparent, slim);
     }
 
     get slim() {
         return this._slim;
     }
 
-    set slim(s: boolean) {
-        if (s !== this._slim) {
-            const template = s ? format.alex : format.steve;
+    set slim(slim: boolean) {
+        if (slim !== this._slim) {
+            const template = slim ? format.alex : format.steve;
             const leftArm = this.getObjectByName("leftArm")! as Mesh;
             const rightArm = this.getObjectByName("rightArm")! as Mesh;
 
@@ -136,11 +136,11 @@ export class PlayerObject3D extends Object3D {
                 mapCubeUV(rightArmLayer, template.rightArm.layer);
             }
         }
-        this._slim = s;
+        this._slim = slim;
     }
 }
 
-function buildPlayerModel(root: Object3D, skin: MeshBasicMaterial, cape: MeshBasicMaterial, tranparent: MeshBasicMaterial, slim: boolean): Object3D {
+function buildPlayerModel(root: Object3D, skin: MeshBasicMaterial, cape: MeshBasicMaterial, transparent: MeshBasicMaterial, slim: boolean): Object3D {
     const template = slim ? format.alex : format.steve;
     const partsNames: Array<keyof ModelTemplate> = Object.keys(template) as any;
 
@@ -166,7 +166,7 @@ function buildPlayerModel(root: Object3D, skin: MeshBasicMaterial, cape: MeshBas
 
         if ("layer" in model) {
             const layer = model.layer;
-            const layerMesh = new Mesh(new BoxGeometry(layer.w, layer.h, layer.d), tranparent);
+            const layerMesh = new Mesh(new BoxGeometry(layer.w, layer.h, layer.d), transparent);
             layerMesh.name = `${partName}Layer`;
             if (layer.y) { layerMesh.position.y = layer.y; }
             if (layer.x) { layerMesh.position.x = layer.x; }
@@ -189,6 +189,7 @@ function ensureImage(textureSource: TextureSource) {
     }
     return new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
+        img.crossOrigin = 'anonymous'
         img.onload = () => { resolve(img); };
         img.onerror = (e, source, lineno, colno, error) => { reject(error) }
         if (textureSource instanceof URL) {
