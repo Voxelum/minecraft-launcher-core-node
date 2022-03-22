@@ -1,97 +1,110 @@
 import { httpRequester } from "./http";
 import { stringify } from "querystring";
-import { Mod, ModVersion } from "./types";
+import { Project, ProjectVersion, User } from "./types";
 import { Agent } from "https";
 
 export * from "./types";
 
-const BASE_URL = "https://api.modrinth.com";
+const BASE_URL = "https://api.modrinth.com/v2";
 
 /* eslint-disable camelcase */
-export interface ModResult {
+export interface SearchResultHit {
     /**
-     * The id of the mod; prefixed with local-
+     * The slug of project, e.g. "my_project"
      */
-    mod_id: string
+    slug: string
     /**
-     * The project type of the mod
+     * The id of the project; prefixed with local-
+     */
+    project_id: string
+    /**
+     * The project type of the project.
+     * @enum "mod" "modpack"
      * */
     project_type: string
     /**
-     * The username of the author of the mod
+     * The username of the author of the project
      */
     author: string
     /**
-     * The name of the mod
+     * The name of the project.
      */
     title: string
     /**
-     * A short description of the mod */
+     * A short description of the project
+     */
     description: string
     /**
-     * A list of the categories the mod is in
+     * A list of the categories the project is in.
      */
     categories: Array<string>
     /**
-     * A list of the minecraft versions supported by the mod
+     * A list of the minecraft versions supported by the project.
      */
     versions: Array<string>
     /**
-     * The total number of downloads for the mod
+     * The total number of downloads for the project
      */
     downloads: number
     /**
-     * A link to the mod's main page; */
+     * A link to the project's main page; */
     page_url: string
     /**
-     * The url of the mod's icon */
+     * The url of the project's icon */
     icon_url: string
     /**
-     * The url of the mod's author */
+     * The url of the project's author */
     author_url: string
     /**
-     * The date that the mod was originally created
+     * The date that the project was originally created
      */
     date_created: Date
     /**
-     * The date that the mod was last modified
+     * The date that the project was last modified
      */
     date_modified: Date
     /**
-     * The latest version of minecraft that this mod supports */
+     * The latest version of minecraft that this project supports */
     latest_version: string
     /**
-     * The id of the license this mod follows */
+     * The id of the license this project follows */
     license: string
     /**
-     * The side type id that this mod is on the client */
+     * The side type id that this project is on the client */
     client_side: string
     /**
-     * The side type id that this mod is on the server */
+     * The side type id that this project is on the server */
     server_side: string
     /**
-     * The host that this mod is from, always modrinth */
+     * The host that this project is from, always modrinth */
     host: string
 }
 
 
-export interface SearchModOptions {
+export interface SearchProjectOptions {
     /**
      * The query to search for
      */
     query?: string
 
+    /**
+     * The recommended way of filtering search results. [Learn more about using facets](https://docs.modrinth.com/docs/tutorials/search).
+     *
+     * @enum "categories" "versions" "license" "project_type"
+     * @example [["categories:forge"],["versions:1.17.1"],["project_type:mod"]]
+     */
     facets?: string
     /**
-     * A list of filters relating to the categories of a mod
+     * A list of filters relating to the properties of a project. Use filters when there isn't an available facet for your needs. [More information](https://docs.meilisearch.com/reference/features/filtering.html)
+     * 
+     * @example filters=categories="fabric" AND (categories="technology" OR categories="utility")
      */
     filters?: string
     /**
-     * A list of filters relating to the versions of a mod
-     */
-    version?: string
-    /**
      * What the results are sorted by
+     * 
+     * @enum "relevance" "downloads" "follows" "newest" "updated"
+     * @example "downloads"
      * @default relevance
      */
     index?: string
@@ -107,11 +120,11 @@ export interface SearchModOptions {
     limit?: number
 }
 
-export interface SearchModResult {
+export interface SearchResult {
     /**
      * The list of results
      */
-    hits: Array<ModResult>
+    hits: Array<SearchResultHit>
     /**
      * The number of results that were skipped by the query
      */
@@ -134,16 +147,15 @@ async function get(path: string, agent?: Agent) {
         userAgent: agent
     })
     if (statusCode !== 200) {
-        throw new Error(`HTTP Failed: Status Code ${statusCode}.`)
+        throw new Error(`HTTP Failed: ${BASE_URL}${path} Status Code ${statusCode}.`)
     }
     return JSON.parse(body)
 }
 
-export function searchMods(options: SearchModOptions, agent?: Agent): Promise<SearchModResult> {
+export function searchProjects(options: SearchProjectOptions, agent?: Agent): Promise<SearchResult> {
     const params: Record<string, string | undefined | number> = {
         query: options.query ?? "",
         filter: options.filters ?? undefined,
-        version: options.version ?? "",
         index: options.index || "relevance",
         offset: options.offset ?? 0,
         limit: options.limit ?? 10,
@@ -151,33 +163,94 @@ export function searchMods(options: SearchModOptions, agent?: Agent): Promise<Se
     if (options.facets) {
         params.facets = options.facets;
     }
-    return get(`/api/v1/mod?${stringify(params)}`, agent);
+    return get(`/search?${stringify(params)}`, agent);
 }
 
-export function getMod(id: string, agent?: Agent): Promise<Mod> {
-    return get(`/api/v1/mod/${id}`, agent)
+/**
+ * @param id project id or slug
+ */
+export function getProject(id: string, agent?: Agent): Promise<Project> {
+    return get(`/project/${id}`, agent)
 }
 
-export function getModVersions(id: string, agent?: Agent): Promise<string[]> {
-    return get(`/api/v1/mod/${id}/version`, agent)
+export interface GetProjectVersionsOptions {
+    id: string
+    loaders?: Array<string>
+    /**
+     * Minecraft version filtering
+     */
+    game_versions?: Array<string>
+    featured?: boolean
 }
 
-export function getModVersion(versionId: string, agent?: Agent): Promise<ModVersion> {
-    return get(`/api/v1/version/${versionId}`, agent)
+/**
+ * @param id project id or slug
+ */
+export function getProjectVersions(options: string | GetProjectVersionsOptions, agent?: Agent): Promise<ProjectVersion[]> {
+    if (typeof options === 'string') {
+        return get(`/project/${options}/version`, agent)
+    }
+
+    const params = {
+        loaders: options.loaders,
+        game_versions: options.game_versions,
+        featured: options.featured,
+    }
+    return get(`/project/${options.id}/version?${stringify(params)}`, agent)
 }
 
-export function listCategories(agent?: Agent): Promise<string[]> {
-    return get("/api/v1/tag/category", agent)
+
+export function getProjectVersion(versionId: string, agent?: Agent): Promise<ProjectVersion> {
+    return get(`/version/${versionId}`, agent)
 }
 
-export function listLoaders(agent?: Agent): Promise<string[]> {
-    return get("/api/v1/tag/loader", agent)
+/**
+ * @param id User id or username
+ */
+export function getUser(id: string, agent?: Agent): Promise<User> {
+    return get(`/user/${id}`, agent)
 }
 
-export async function listGameVersion(agent?: Agent): Promise<string[]> {
-    return get("/api/v1/tag/game_version", agent)
+export function getUserProjects(id: string, agent?: Agent): Promise<Project[]> {
+    return get(`/user/${id}/projects`, agent)
 }
 
-export async function listLicenses(agent?: Agent): Promise<string[]> {
-    return get("/api/v1/tag/license", agent)
+export interface Category {
+    icon: string;
+    name: string;
+    project_type: string;
+}
+
+export function listCategories(agent?: Agent): Promise<Category[]> {
+    return get("/tag/category", agent)
+}
+
+export interface Loader {
+    icon: string;
+    name: string;
+    supported_project_types: string[];
+}
+
+export function listLoaders(agent?: Agent): Promise<Loader[]> {
+    return get("/tag/loader", agent)
+}
+
+export interface GameVersion {
+    date: string
+    major: boolean
+    version: string
+    version_type: string
+}
+
+export async function listGameVersion(agent?: Agent): Promise<GameVersion[]> {
+    return get("/tag/game_version", agent)
+}
+
+export interface License {
+    name: string
+    short: string
+}
+
+export async function listLicenses(agent?: Agent): Promise<License[]> {
+    return get("/tag/license", agent)
 }

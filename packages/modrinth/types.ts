@@ -37,7 +37,7 @@ export interface User {
     role: string
 }
 
-export interface Mod {
+export interface Project {
     /**
      * The ID of the mod, encoded as a base62 string
      */
@@ -128,15 +128,15 @@ export interface Mod {
     donation_urls: Array<DonationLink>
 }
 
-export interface ModVersion {
+export interface ProjectVersion {
     /**
      * The ID of the version, encoded as a base62 string
      */
     id: string
     /**
-     * The ID of the mod this version is for
+     * The ID of the project this version is for
      */
-    mod_id: string
+    project_id: string
     /**
      * The ID of the author who published this version
      */
@@ -180,7 +180,7 @@ export interface ModVersion {
     /**
      * A list of specific versions of mods that this version depends on
      */
-    dependencies: Array<string>
+    dependencies: Array<{ version_id: string; project_id: string; dependency_type: string }>
     /**
      * A list of versions of Minecraft that this version of the mod supports
      */
@@ -235,3 +235,5 @@ export interface DonationLink {
      */
     url: string
 }
+
+
