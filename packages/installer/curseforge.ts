@@ -116,8 +116,7 @@ export type FilePathResolver = (projectId: number, fileId: number, minecraft: Mi
 export type CurseforgeURLQuery = (projectId: number, fileId: number) => Promise<string>;
 export type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "resourcepacks">;
 
-export function createDefaultCurseforgeQuery(): CurseforgeURLQuery {
-    let agent = new HttpsAgent();
+export function createDefaultCurseforgeQuery(agent: HttpsAgent = new HttpsAgent()): CurseforgeURLQuery {
     return (projectId, fileId) => fetchText(`https://addons-ecs.forgesvc.net/api/v2/addon/${projectId}/file/${fileId}/download-url`, { https: agent });
 }
 /**
