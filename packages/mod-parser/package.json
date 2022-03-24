@@ -12,7 +12,7 @@
     "module": "./dist/index.esm.js"
   },
   "dependencies": {
-    "@iarna/toml": "2.2.3",
+    "toml": "^3.0.0",
     "@xmcl/system": "^2.2.3",
     "@xmcl/asm": "^0.1.3"
   },
