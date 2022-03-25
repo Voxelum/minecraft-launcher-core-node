@@ -204,14 +204,9 @@ export abstract class BaseTask<T> implements Task<T> {
     map<N>(transform: Transform<this, N>): Task<N> {
         const copy = Object.create(this);
         const wait = copy.wait;
-        const startAndWait = copy.startAndWait;
         copy.wait = function (this: typeof copy) {
             // @ts-expect-error
             return wait.bind(this)().then((r) => transform.bind(this)(r));
-        };
-        copy.startAndWait = function (this: typeof copy, context?: TaskContext, parent?: Task<any>) {
-            // @ts-expect-error
-            return startAndWait.bind(this)(context, parent).then((r) => transform.bind(this)(r));
         };
         return copy;
     }
