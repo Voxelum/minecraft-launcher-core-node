@@ -128,8 +128,17 @@ export interface MissingVersionJsonError {
     version: string;
     path: string;
 }
+export interface CircularDependenciesError {
+    error: "CircularDependencies";
+    /**
+     * The version has circular dependencies
+     */
+    version: string;
 
-export type VersionParseError = ((BadVersionJsonError | CorruptedVersionJsonError | MissingVersionJsonError) & Error) | Error;
+    chain: string[];
+}
+
+export type VersionParseError = ((BadVersionJsonError | CorruptedVersionJsonError | MissingVersionJsonError | CircularDependenciesError) & Error) | Error;
 
 export namespace LibraryInfo {
     /**
@@ -627,6 +636,13 @@ export namespace Version {
                 throw e;
             }
             if (nextVersion) {
+                if (stack.some(v => v.id === nextVersion)) {
+                    throw Object.assign(new Error(`Cannot resolve circular dependencies`), {
+                        error: "CircularDependenciesError",
+                        version,
+                        chain: stack.map(v => v.id).concat(nextVersion)
+                    })
+                }
                 await walk(nextVersion);
             }
         }
