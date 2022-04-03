@@ -3,7 +3,7 @@ import { task, Task } from "@xmcl/task";
 import { join } from "path";
 import { withAgents } from "./http/agents";
 import { DownloadTask } from "./downloadTask";
-import { DownloadBaseOptions } from "./http/download";
+import { Download, DownloadBaseOptions } from "./http/download";
 import { getAndParseIfUpdate, Timestamped } from "./http/fetch";
 import { joinUrl } from "./http/utils";
 import { ensureDir, errorToString, normalizeArray, ParallelTaskOptions, readFile } from "./utils";
@@ -308,6 +308,18 @@ export function installDependenciesTask(version: ResolvedVersion, options: Optio
 export function installAssetsTask(version: ResolvedVersion, options: AssetsOptions = {}): Task<ResolvedVersion> {
     return task("assets", async function () {
         const folder = MinecraftFolder.from(version.minecraftDirectory);
+        if (version.logging?.client?.file) {
+            const file = version.logging.client.file
+
+            await this.yield(new DownloadTask({
+                url: file.url,
+                validator: {
+                    algorithm: 'sha1',
+                    hash: file.sha1,
+                },
+                destination: folder.getLogConfig(file.id),
+            }).setName("asset", { name: file.id, hash: file.sha1, size: file.size }))
+        }
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
         await this.yield(new InstallAssetIndexTask(version, options));
