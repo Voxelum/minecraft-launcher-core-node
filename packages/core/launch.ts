@@ -671,6 +671,15 @@ export async function generateArguments(options: LaunchOption) {
         ...featureValues,
     };
 
+    if (version.logging && version.logging.client) {
+        const client = version.logging.client
+        const argument = client.argument
+        const filePath = mc.getLogConfig(client.file.id)
+        if (existsSync(filePath)) {
+            jvmArguments.push(argument.replace("${path}", filePath))
+        }
+    }
+
     cmd.push(...jvmArguments.map((arg) => format(arg, jvmOptions)));
 
     // add extra jvm args

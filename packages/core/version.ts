@@ -50,7 +50,7 @@ export interface ResolvedVersion {
     type: string;
     logging?: {
         [key: string]: {
-            file: Version.Download;
+            file: Version.Download & { id: string };
             argument: string;
             type: string;
         };

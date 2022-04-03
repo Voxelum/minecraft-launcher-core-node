@@ -54,6 +54,7 @@ export class MinecraftFolder {
     }
     getAssetsIndex(versionAssets: string): string { return this.getPath("assets", "indexes", versionAssets + ".json"); }
     getAsset(hash: string): string { return this.getPath("assets", "objects", hash.substring(0, 2), hash); }
+    getLogConfig(file: string): string { return this.getPath("assets", "log_configs", file); }
     getPath(...path: string[]) {
         return join(this.root, ...path);
     }
