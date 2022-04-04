@@ -517,6 +517,7 @@ export declare class MinecraftFolder {
     getLibraryByPath(libraryPath: string): string;
     getAssetsIndex(versionAssets: string): string;
     getAsset(hash: string): string;
+    getLogConfig(file: string): string;
     getPath(...path: string[]): string;
 }
 export declare namespace MinecraftPath {
@@ -1026,7 +1027,9 @@ export interface ResolvedVersion {
     type: string;
     logging?: {
         [key: string]: {
-            file: Version.Download;
+            file: Version.Download & {
+                id: string;
+            };
             argument: string;
             type: string;
         };
@@ -1100,7 +1103,15 @@ export interface MissingVersionJsonError {
     version: string;
     path: string;
 }
-export declare type VersionParseError = ((BadVersionJsonError | CorruptedVersionJsonError | MissingVersionJsonError) & Error) | Error;
+export interface CircularDependenciesError {
+    error: "CircularDependencies";
+    /**
+     * The version has circular dependencies
+     */
+    version: string;
+    chain: string[];
+}
+export declare type VersionParseError = ((BadVersionJsonError | CorruptedVersionJsonError | MissingVersionJsonError | CircularDependenciesError) & Error) | Error;
 export declare namespace LibraryInfo {
     /**
      * Resolve the library info from the maven path.
@@ -1362,6 +1373,10 @@ export interface Version {
         };
     };
     javaVersion?: JavaVersion;
+    /**
+     * NON CONVERSION! This only present in some third party launcher like PCL to mark the real minecraft version
+     */
+    clientVersion?: string;
 }
 export {};
 \/\/# sourceMappingURL=version.d.ts.map`;
@@ -1408,7 +1423,7 @@ export interface AddonInfo {
      */
     authors: Author[];
     /**
-     * The attachments. Usually include the project icon and the exmaple images.
+     * The attachments. Usually include the project icon and the example images.
      */
     attachments: Attachment[];
     websiteUrl: string;
@@ -2149,6 +2164,7 @@ export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
 definitions['@xmcl/installer/curseforge.d.ts'] = `\/\// <reference types="node" /> import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { Task } from "@xmcl/task";
+import { Agent as HttpsAgent } from "https";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadBaseOptions } from "./http/download";
 import { ParallelTaskOptions } from "./utils";
@@ -2228,7 +2244,7 @@ export declare class BadCurseforgeModpackError extends Error {
     entry: string);
 }
 /**
- * Read the mainifest data from modpack
+ * Read the manifest data from modpack
  * @throws {@link BadCurseforgeModpackError}
  */
 export declare function readManifestTask(input: InputType): Task<Manifest>;
@@ -2240,7 +2256,7 @@ export declare function readManifest(zip: InputType): Promise<Manifest>;
 export declare type FilePathResolver = (projectId: number, fileId: number, minecraft: MinecraftFolder, url: string) => string | Promise<string>;
 export declare type CurseforgeURLQuery = (projectId: number, fileId: number) => Promise<string>;
 export declare type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "resourcepacks">;
-export declare function createDefaultCurseforgeQuery(): CurseforgeURLQuery;
+export declare function createDefaultCurseforgeQuery(agent?: HttpsAgent): CurseforgeURLQuery;
 /**
  * Install curseforge modpack to a specific Minecraft location.
  *
@@ -2262,11 +2278,11 @@ export declare function installCurseforgeModpack(zip: InputType, minecraft: Mine
  */
 export declare function installCurseforgeModpackTask(input: InputType, minecraft: MinecraftLocation, options?: CurseforgeOptions): import("@xmcl/task").TaskRoutine<Manifest>;
 /**
- * Install a cureseforge xml file to a specific locations
+ * Install a curseforge xml file to a specific locations
  */
 export declare function installCurseforgeFile(file: File, destination: string, options?: InstallFileOptions): Promise<void>;
 /**
- * Install a cureseforge xml file to a specific locations
+ * Install a curseforge xml file to a specific locations
  */
 export declare function installCurseforgeFileTask(file: File, destination: string, options?: InstallFileOptions): import("@xmcl/task").TaskRoutine<void>;
 export {};
@@ -2306,7 +2322,7 @@ export declare class DownloadTask extends AbortableTask<void> implements StatusC
     protected abort: (isCancelled: boolean) => void;
     constructor(options: DownloadOptions);
     reset(progress: number, total: number): void;
-    onProgress(chunkSize: number, progress: number): void;
+    onProgress(url: string, chunkSize: number, progress: number): void;
     protected process(): Promise<void>;
     protected isAbortedError(e: any): boolean;
 }
@@ -2661,6 +2677,8 @@ definitions['@xmcl/installer/http/abort.d.ts'] = `export interface AbortSignal {
     removeEventListener(event: string, handler: () => void): this;
 }
 export declare function resolveAbortSignal(signal?: AbortSignal): AbortSignal;
+export declare class AbortError extends Error {
+}
 \/\/# sourceMappingURL=abort.d.ts.map`;
 definitions['@xmcl/installer/http/agents.d.ts'] = `\/\// <reference types="node" /> import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
@@ -2819,8 +2837,8 @@ export declare class Download {
      * The cached resource metadata
      */
     metadata: ResourceMetadata | undefined, segmentPolicy: SegmentPolicy, statusController: StatusController, retryHandler: RetryHandler, validator: Validator);
-    protected updateMetadata(url: URL): Promise<ResourceMetadata>;
-    protected processDownload(metadata: ResourceMetadata, abortSignal: AbortSignal): Promise<void>;
+    protected updateMetadata(url: URL, abortSignal: AbortSignal): Promise<ResourceMetadata>;
+    protected processDownload(url: string, metadata: ResourceMetadata, abortSignal: AbortSignal): Promise<void>;
     protected downloadUrl(url: string, abortSignal: AbortSignal): Promise<void>;
     /**
      * Start to download
@@ -2867,6 +2885,7 @@ export declare function getAndParseIfUpdate<T extends Timestamped>(url: string, 
 export declare function getLastModified(url: string, timestamp: string | undefined, agent?: Agents): Promise<readonly [true, string | undefined] | readonly [false, string | undefined]>;
 \/\/# sourceMappingURL=fetch.d.ts.map`;
 definitions['@xmcl/installer/http/metadata.d.ts'] = `\/\// <reference types="node" /> import { Agents } from "./agents";
+import { AbortSignal } from "./abort";
 import { URL } from "url";
 export interface ResourceMetadata {
     url: URL;
@@ -2881,7 +2900,7 @@ export declare class FetchMetadataError extends Error {
     readonly url: string;
     constructor(error: "FetchResourceNotFound" | "BadResourceRequest" | "FetchResourceServerUnavaiable", statusCode: number, url: string, message: string);
 }
-export declare function getMetadata(srcUrl: URL, _headers: Record<string, any>, agents: Agents, useGet?: boolean): Promise<ResourceMetadata>;
+export declare function getMetadata(srcUrl: URL, _headers: Record<string, any>, agents: Agents, useGet?: boolean, abortSignal?: AbortSignal): Promise<ResourceMetadata>;
 \/\/# sourceMappingURL=metadata.d.ts.map`;
 definitions['@xmcl/installer/http/retry.d.ts'] = `import { DownloadError } from "./error"; import { ValidationError } from "./validator";
 /**
@@ -2947,12 +2966,13 @@ export interface StatusController {
     readonly total: number;
     readonly progress: number;
     reset(progress: number, total: number): void;
-    onProgress(chunkSize: number, progress: number): void;
+    onProgress(url: string, chunkSize: number, progress: number): void;
 }
 export declare function createStatusController(): StatusController;
 export declare function resolveStatusController(controller?: StatusController): StatusController;
 \/\/# sourceMappingURL=status.d.ts.map`;
 definitions['@xmcl/installer/http/utils.d.ts'] = `\/\// <reference types="node" /> import { Agent as HttpAgent, ClientRequest, IncomingMessage, RequestOptions } from "http";
+import { AbortSignal } from "./abort";
 import { Agent as HttpsAgent } from "https";
 import { URL } from "url";
 export declare function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:";
@@ -2961,7 +2981,7 @@ export declare function format(url: RequestOptions): string;
 export declare function fetch(options: RequestOptions, agents?: {
     http?: HttpAgent;
     https?: HttpsAgent;
-}): Promise<{
+}, abortSignal?: AbortSignal): Promise<{
     request: ClientRequest;
     message: IncomingMessage;
 }>;
@@ -4566,9 +4586,9 @@ import { CanvasTexture } from "three/src/textures/CanvasTexture";
 declare type TextureSource = string | HTMLImageElement | URL;
 export declare class PlayerObject3D extends Object3D {
     private _slim;
-    constructor(skin: MeshBasicMaterial, cape: MeshBasicMaterial, tranparent: MeshBasicMaterial, slim: boolean);
+    constructor(skin: MeshBasicMaterial, cape: MeshBasicMaterial, transparent: MeshBasicMaterial, slim: boolean);
     get slim(): boolean;
-    set slim(s: boolean);
+    set slim(slim: boolean);
 }
 export declare class PlayerModel {
     static create(): PlayerModel;
@@ -4588,6 +4608,448 @@ export declare class PlayerModel {
 }
 export default PlayerModel;
 \/\/# sourceMappingURL=player.d.ts.map`;
+definitions['@xmcl/modrinth/http/base.d.ts'] = `\/\// <reference types="node" /> import { Agent } from "https";
+/**
+ * Abstract layer for http requester.
+ */
+export declare type HttpRequester = (option: {
+    url: string;
+    method: string;
+    headers: {
+        [key: string]: string;
+    };
+    /**
+     * Search string
+     */
+    search?: {
+        [key: string]: string | string[] | undefined;
+    };
+    body?: object;
+    userAgent?: Agent;
+}) => Promise<{
+    body: string;
+    statusMessage: string;
+    statusCode: number;
+}>;
+\/\/# sourceMappingURL=base.d.ts.map`;
+definitions['@xmcl/modrinth/http/index.browser.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
+\/\/# sourceMappingURL=index.browser.d.ts.map`;
+definitions['@xmcl/modrinth/http/index.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
+\/\/# sourceMappingURL=index.d.ts.map`;
+definitions['@xmcl/modrinth/index.d.ts'] = `\/\// <reference types="node" /> import { Project, ProjectVersion, User } from "./types";
+import { Agent } from "https";
+export * from "./types";
+export interface SearchResultHit {
+    /**
+     * The slug of project, e.g. "my_project"
+     */
+    slug: string;
+    /**
+     * The id of the project; prefixed with local-
+     */
+    project_id: string;
+    /**
+     * The project type of the project.
+     * @enum "mod" "modpack"
+     * */
+    project_type: string;
+    /**
+     * The username of the author of the project
+     */
+    author: string;
+    /**
+     * The name of the project.
+     */
+    title: string;
+    /**
+     * A short description of the project
+     */
+    description: string;
+    /**
+     * A list of the categories the project is in.
+     */
+    categories: Array<string>;
+    /**
+     * A list of the minecraft versions supported by the project.
+     */
+    versions: Array<string>;
+    /**
+     * The total number of downloads for the project
+     */
+    downloads: number;
+    /**
+     * A link to the project's main page; */
+    page_url: string;
+    /**
+     * The url of the project's icon */
+    icon_url: string;
+    /**
+     * The url of the project's author */
+    author_url: string;
+    /**
+     * The date that the project was originally created
+     */
+    date_created: Date;
+    /**
+     * The date that the project was last modified
+     */
+    date_modified: Date;
+    /**
+     * The latest version of minecraft that this project supports */
+    latest_version: string;
+    /**
+     * The id of the license this project follows */
+    license: string;
+    /**
+     * The side type id that this project is on the client */
+    client_side: string;
+    /**
+     * The side type id that this project is on the server */
+    server_side: string;
+    /**
+     * The host that this project is from, always modrinth */
+    host: string;
+}
+export interface SearchProjectOptions {
+    /**
+     * The query to search for
+     */
+    query?: string;
+    /**
+     * The recommended way of filtering search results. [Learn more about using facets](https:\/\/docs.modrinth.com/docs/tutorials/search).
+     *
+     * @enum "categories" "versions" "license" "project_type"
+     * @example [["categories:forge"],["versions:1.17.1"],["project_type:mod"]]
+     */
+    facets?: string;
+    /**
+     * A list of filters relating to the properties of a project. Use filters when there isn't an available facet for your needs. [More information](https:\/\/docs.meilisearch.com/reference/features/filtering.html)
+     *
+     * @example filters=categories="fabric" AND (categories="technology" OR categories="utility")
+     */
+    filters?: string;
+    /**
+     * What the results are sorted by
+     *
+     * @enum "relevance" "downloads" "follows" "newest" "updated"
+     * @example "downloads"
+     * @default relevance
+     */
+    index?: string;
+    /**
+     * The offset into the search; skips this number of results
+     * @default 0
+     */
+    offset?: number;
+    /**
+     * The number of mods returned by the search
+     * @default 10
+     */
+    limit?: number;
+}
+export interface SearchResult {
+    /**
+     * The list of results
+     */
+    hits: Array<SearchResultHit>;
+    /**
+     * The number of results that were skipped by the query
+     */
+    offset: number;
+    /**
+     * The number of mods returned by the query
+     */
+    limit: number;
+    /**
+     * The total number of mods that the query found
+     */
+    total_hits: number;
+}
+export declare function searchProjects(options: SearchProjectOptions, agent?: Agent): Promise<SearchResult>;
+/**
+ * @param id project id or slug
+ */
+export declare function getProject(id: string, agent?: Agent): Promise<Project>;
+export interface GetProjectVersionsOptions {
+    id: string;
+    loaders?: Array<string>;
+    /**
+     * Minecraft version filtering
+     */
+    game_versions?: Array<string>;
+    featured?: boolean;
+}
+/**
+ * @param id project id or slug
+ */
+export declare function getProjectVersions(options: string | GetProjectVersionsOptions, agent?: Agent): Promise<ProjectVersion[]>;
+export declare function getProjectVersion(versionId: string, agent?: Agent): Promise<ProjectVersion>;
+/**
+ * @param id User id or username
+ */
+export declare function getUser(id: string, agent?: Agent): Promise<User>;
+export declare function getUserProjects(id: string, agent?: Agent): Promise<Project[]>;
+export interface Category {
+    icon: string;
+    name: string;
+    project_type: string;
+}
+export declare function listCategories(agent?: Agent): Promise<Category[]>;
+export interface Loader {
+    icon: string;
+    name: string;
+    supported_project_types: string[];
+}
+export declare function listLoaders(agent?: Agent): Promise<Loader[]>;
+export interface GameVersion {
+    date: string;
+    major: boolean;
+    version: string;
+    version_type: string;
+}
+export declare function listGameVersion(agent?: Agent): Promise<GameVersion[]>;
+export interface License {
+    name: string;
+    short: string;
+}
+export declare function listLicenses(agent?: Agent): Promise<License[]>;
+\/\/# sourceMappingURL=index.d.ts.map`;
+definitions['@xmcl/modrinth/types.d.ts'] = `export interface User {     /**
+     * The user's id
+     */
+    id: string;
+    /**
+     * The user's github id; only visible to the user themself
+     */
+    github_id: number;
+    /**
+     * The user's username
+     */
+    username: string;
+    /**
+     * The user's display name
+     */
+    name: string;
+    /**
+     * The user's email; only visible to the user themself
+     */
+    email?: string;
+    /**
+     * The user's avatar url; uses github's icons
+     */
+    avatar_url?: string;
+    /**
+     * A description of the user
+     */
+    bio: string;
+    /**
+     * The time at which the user was created
+     */
+    created: Date;
+    /**
+     * The user's role developer, moderator, or admin
+     */
+    role: string;
+}
+export interface Project {
+    /**
+     * The ID of the mod, encoded as a base62 string
+     */
+    id: string;
+    /**
+     * The slug of a mod, used for vanity URLs
+     */
+    slug: string;
+    /**
+     * The id of the team that has ownership of this mod
+     */
+    team: string;
+    /**
+     * The title or name of the mod
+     */
+    title: string;
+    /**
+     * A short description of the mod
+     */
+    description: string;
+    /**
+     * A long form description of the mod.
+     */
+    body: string;
+    /**
+     * DEPRECATED The link to the long description of the mod
+     */
+    body_url?: string;
+    /**
+     * The date at which the mod was first published
+     */
+    published: string;
+    /**
+     * The date at which the mod was updated
+     */
+    updated: string;
+    /**
+     * The status of the mod - approved, rejected, draft, unlisted, processing, or unknown
+     */
+    status: string;
+    /**
+     * The license of the mod
+     */
+    license: License;
+    /**
+     * The support range for the client mod - required, optional, unsupported, or unknown
+     */
+    client_side: string;
+    /**
+     * The support range for the server mod - required, optional, unsupported, or unknown
+     */
+    server_side: string;
+    /**
+     * The total number of downloads the mod has
+     */
+    downloads: number;
+    /**
+     * A list of the categories that the mod is in
+     */
+    categories: Array<string>;
+    /**
+     * A list of ids for versions of the mod
+     */
+    versions: Array<string>;
+    /**
+     * The URL of the icon of the mod
+     */
+    icon_url?: string;
+    /**
+     * An optional link to where to submit bugs or issues with the mod
+     */
+    issues_url?: string;
+    /**
+     * An optional link to the source code for the mod
+     */
+    source_url?: string;
+    /**
+     * An optional link to the mod's wiki page or other relevant information
+     */
+    wiki_url?: string;
+    /**
+     * An optional link to the mod's discord
+     */
+    discord_url?: string;
+    /**
+     * An optional list of all donation links the mod has
+     */
+    donation_urls: Array<DonationLink>;
+}
+export interface ProjectVersion {
+    /**
+     * The ID of the version, encoded as a base62 string
+     */
+    id: string;
+    /**
+     * The ID of the project this version is for
+     */
+    project_id: string;
+    /**
+     * The ID of the author who published this version
+     */
+    author_id: string;
+    /**
+     * Whether the version is featured or not
+     */
+    featured: string;
+    /**
+     * The name of this version
+     */
+    name: string;
+    /**
+     * The version number. Ideally will follow semantic versioning
+     */
+    version_number: string;
+    /**
+     * The changelog for this version of the mod.
+     */
+    changelog?: string;
+    /**
+     * DEPRECATED A link to the changelog for this version of the mod
+     */
+    changelog_url?: string;
+    /**
+     * The date that this version was published
+     */
+    date_published: Date;
+    /**
+     * The number of downloads this specific version has
+     */
+    downloads: number;
+    /**
+     * The type of the release - alpha, beta, or release
+     */
+    version_type: string;
+    /**
+     * A list of files available for download for this version
+     */
+    files: Array<ModVersionFile>;
+    /**
+     * A list of specific versions of mods that this version depends on
+     */
+    dependencies: Array<{
+        version_id: string;
+        project_id: string;
+        dependency_type: string;
+    }>;
+    /**
+     * A list of versions of Minecraft that this version of the mod supports
+     */
+    game_versions: Array<string>;
+    /**
+     * The mod loaders that this version supports
+     */
+    loaders: Array<string>;
+}
+export interface ModVersionFile {
+    /**
+     * A map of hashes of the file. The key is the hashing algorithm and the value is the string version of the hash.
+     */
+    hashes: Record<string, string>;
+    /**
+     * A direct link to the file
+     */
+    url: string;
+    /**
+     * The name of the file
+     */
+    filename: string;
+}
+export interface License {
+    /**
+     * The license id of a mod, retrieved from the licenses get route
+     */
+    id: string;
+    /**
+     * The long for name of a license
+     */
+    name: string;
+    /**
+     * The URL to this license
+     */
+    url: string;
+}
+export interface DonationLink {
+    /**
+     * The platform id of a mod, retrieved from the donation platforms get route
+     */
+    id: string;
+    /**
+     * The long for name of a platform
+     */
+    platform: string;
+    /**
+     * The URL to this donation link
+     */
+    url: string;
+}
+\/\/# sourceMappingURL=types.d.ts.map`;
 definitions['@xmcl/nbt/index.d.ts'] = `/**  * The nbt module provides nbt {@link serialize} and {@link deserialize} functions.
  *
  * @packageDocumentation
@@ -6581,8 +7043,7 @@ export interface RegionDataFrame {
 }
 export {};
 \/\/# sourceMappingURL=index.d.ts.map`;
-definitions['assert.d.ts'] = `declare module 'assert' {
-    /** An alias of \`assert.ok()\`. */
+definitions['assert.d.ts'] = `declare module 'assert' {     /** An alias of \`assert.ok()\`. */
     function assert(value: any, message?: string | Error): asserts value;
     namespace assert {
         class AssertionError extends Error {
@@ -6706,8 +7167,7 @@ definitions['assert.d.ts'] = `declare module 'assert' {
     export = assert;
 }
 `;
-definitions['async_hooks.d.ts'] = `/**
- * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
+definitions['async_hooks.d.ts'] = `/**  * Async Hooks module: https:\/\/nodejs.org/api/async_hooks.html
  */
 declare module 'async_hooks' {
     /**
@@ -6933,8 +7393,7 @@ declare module 'async_hooks' {
     }
 }
 `;
-definitions['buffer.d.ts'] = `declare module 'buffer' {
-    export const INSPECT_MAX_BYTES: number;
+definitions['buffer.d.ts'] = `declare module 'buffer' {     export const INSPECT_MAX_BYTES: number;
     export const kMaxLength: number;
     export const kStringMaxLength: number;
     export const constants: {
@@ -6956,8 +7415,7 @@ definitions['buffer.d.ts'] = `declare module 'buffer' {
     export { BuffType as Buffer };
 }
 `;
-definitions['child_process.d.ts'] = `declare module 'child_process' {
-    import { BaseEncodingOptions } from 'fs';
+definitions['child_process.d.ts'] = `declare module 'child_process' {     import { BaseEncodingOptions } from 'fs';
     import * as events from 'events';
     import * as net from 'net';
     import { Writable, Readable, Stream, Pipe } from 'stream';
@@ -7468,8 +7926,7 @@ definitions['child_process.d.ts'] = `declare module 'child_process' {
     function execFileSync(command: string, args?: ReadonlyArray<string>, options?: ExecFileSyncOptions): string | Buffer;
 }
 `;
-definitions['cluster.d.ts'] = `declare module 'cluster' {
-    import * as child from 'child_process';
+definitions['cluster.d.ts'] = `declare module 'cluster' {     import * as child from 'child_process';
     import EventEmitter = require('events');
     import * as net from 'net';
 
@@ -7731,8 +8188,7 @@ definitions['cluster.d.ts'] = `declare module 'cluster' {
     function eventNames(): string[];
 }
 `;
-definitions['console.d.ts'] = `declare module 'console' {
-    import { InspectOptions } from 'util';
+definitions['console.d.ts'] = `declare module 'console' {     import { InspectOptions } from 'util';
 
     global {
         \/\/ This needs to be global to avoid TS2403 in case lib.dom.d.ts is present in the same build
@@ -7870,8 +8326,7 @@ definitions['console.d.ts'] = `declare module 'console' {
     export = console;
 }
 `;
-definitions['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */
-declare module 'constants' {
+definitions['constants.d.ts'] = `/** @deprecated since v6.3.0 - use constants property exposed by the relevant module instead. */ declare module 'constants' {
     import { constants as osConstants, SignalConstants } from 'os';
     import { constants as cryptoConstants } from 'crypto';
     import { constants as fsConstants } from 'fs';
@@ -7884,8 +8339,7 @@ declare module 'constants' {
     export = exp;
 }
 `;
-definitions['crypto.d.ts'] = `declare module 'crypto' {
-    import * as stream from 'stream';
+definitions['crypto.d.ts'] = `declare module 'crypto' {     import * as stream from 'stream';
 
     interface Certificate {
         /**
@@ -9071,8 +9525,7 @@ definitions['crypto.d.ts'] = `declare module 'crypto' {
     function diffieHellman(options: { privateKey: KeyObject; publicKey: KeyObject }): Buffer;
 }
 `;
-definitions['dgram.d.ts'] = `declare module 'dgram' {
-    import { AddressInfo } from 'net';
+definitions['dgram.d.ts'] = `declare module 'dgram' {     import { AddressInfo } from 'net';
     import * as dns from 'dns';
     import EventEmitter = require('events');
 
@@ -9213,8 +9666,7 @@ definitions['dgram.d.ts'] = `declare module 'dgram' {
     }
 }
 `;
-definitions['dns.d.ts'] = `declare module 'dns' {
-    \/\/ Supported getaddrinfo flags.
+definitions['dns.d.ts'] = `declare module 'dns' {     \/\/ Supported getaddrinfo flags.
     const ADDRCONFIG: number;
     const V4MAPPED: number;
     /**
@@ -9594,8 +10046,7 @@ definitions['dns.d.ts'] = `declare module 'dns' {
     }
 }
 `;
-definitions['domain.d.ts'] = `declare module 'domain' {
-    import EventEmitter = require('events');
+definitions['domain.d.ts'] = `declare module 'domain' {     import EventEmitter = require('events');
 
     global {
         namespace NodeJS {
@@ -9619,8 +10070,7 @@ definitions['domain.d.ts'] = `declare module 'domain' {
     function create(): Domain;
 }
 `;
-definitions['events.d.ts'] = `declare module 'events' {
-    interface EventEmitterOptions {
+definitions['events.d.ts'] = `declare module 'events' {     interface EventEmitterOptions {
         /**
          * Enables automatic capturing of promise rejection.
          */
@@ -9698,8 +10148,7 @@ definitions['events.d.ts'] = `declare module 'events' {
     export = EventEmitter;
 }
 `;
-definitions['fs.d.ts'] = `declare module 'fs' {
-    import * as stream from 'stream';
+definitions['fs.d.ts'] = `declare module 'fs' {     import * as stream from 'stream';
     import EventEmitter = require('events');
     import { URL } from 'url';
     import * as promises from 'fs/promises';
@@ -11969,8 +12418,7 @@ definitions['fs.d.ts'] = `declare module 'fs' {
     }
 }
 `;
-definitions['globals.d.ts'] = `\/\/ Declare "static" methods in Error
-interface ErrorConstructor {
+definitions['globals.d.ts'] = `\/\/ Declare "static" methods in Error interface ErrorConstructor {
     /** Create .stack property on a target object */
     captureStackTrace(targetObject: object, constructorOpt?: Function): void;
 
@@ -12583,10 +13031,8 @@ declare namespace NodeJS {
     }
 }
 `;
-definitions['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis;
-`;
-definitions['http.d.ts'] = `declare module 'http' {
-    import * as stream from 'stream';
+definitions['globals.global.d.ts'] = `declare var global: NodeJS.Global & typeof globalThis; `;
+definitions['http.d.ts'] = `declare module 'http' {     import * as stream from 'stream';
     import { URL } from 'url';
     import { Socket, Server as NetServer } from 'net';
 
@@ -13072,8 +13518,7 @@ definitions['http.d.ts'] = `declare module 'http' {
     const maxHeaderSize: number;
 }
 `;
-definitions['http2.d.ts'] = `declare module 'http2' {
-    import EventEmitter = require('events');
+definitions['http2.d.ts'] = `declare module 'http2' {     import EventEmitter = require('events');
     import * as fs from 'fs';
     import * as net from 'net';
     import * as stream from 'stream';
@@ -14031,8 +14476,7 @@ definitions['http2.d.ts'] = `declare module 'http2' {
     ): ClientHttp2Session;
 }
 `;
-definitions['https.d.ts'] = `declare module 'https' {
-    import { Duplex } from 'stream';
+definitions['https.d.ts'] = `declare module 'https' {     import { Duplex } from 'stream';
     import * as tls from 'tls';
     import * as http from 'http';
     import { URL } from 'url';
@@ -14171,8 +14615,7 @@ definitions['https.d.ts'] = `declare module 'https' {
     let globalAgent: Agent;
 }
 `;
-definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.17
-\/\/ Project: https:\/\/nodejs.org/
+definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 14.17 \/\/ Project: https:\/\/nodejs.org/
 \/\/ Definitions by: Microsoft TypeScript <https:\/\/github.com/Microsoft>
 \/\/                 DefinitelyTyped <https:\/\/github.com/DefinitelyTyped>
 \/\/                 Alberto Schiabel <https:\/\/github.com/jkomyno>
@@ -14270,8 +14713,7 @@ definitions['index.d.ts'] = `\/\/ Type definitions for non-npm package Node.js 1
 
 \/\// <reference path="globals.global.d.ts" />
 `;
-definitions['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header
-\/\/ Type definitions for inspector
+definitions['inspector.d.ts'] = `\/\/ tslint:disable-next-line:dt-header \/\/ Type definitions for inspector
 
 \/\/ These definitions are auto-generated.
 \/\/ Please see https:\/\/github.com/DefinitelyTyped/DefinitelyTyped/pull/19330
@@ -17318,8 +17760,7 @@ declare module 'inspector' {
     function waitForDebugger(): void;
 }
 `;
-definitions['module.d.ts'] = `declare module 'module' {
-    import { URL } from 'url';
+definitions['module.d.ts'] = `declare module 'module' {     import { URL } from 'url';
     namespace Module {
         /**
          * Updates all the live bindings for builtin ES Modules to match the properties of the CommonJS exports.
@@ -17371,8 +17812,7 @@ definitions['module.d.ts'] = `declare module 'module' {
     export = Module;
 }
 `;
-definitions['net.d.ts'] = `declare module 'net' {
-    import * as stream from 'stream';
+definitions['net.d.ts'] = `declare module 'net' {     import * as stream from 'stream';
     import EventEmitter = require('events');
     import * as dns from 'dns';
 
@@ -17665,8 +18105,7 @@ definitions['net.d.ts'] = `declare module 'net' {
     function isIPv6(input: string): boolean;
 }
 `;
-definitions['os.d.ts'] = `declare module 'os' {
-    interface CpuInfo {
+definitions['os.d.ts'] = `declare module 'os' {     interface CpuInfo {
         model: string;
         speed: number;
         times: {
@@ -17905,8 +18344,7 @@ definitions['os.d.ts'] = `declare module 'os' {
     function setPriority(pid: number, priority: number): void;
 }
 `;
-definitions['path.d.ts'] = `declare module 'path' {
-    namespace path {
+definitions['path.d.ts'] = `declare module 'path' {     namespace path {
         /**
          * A parsed path object generated by path.parse() or consumed by path.format().
          */
@@ -18059,8 +18497,7 @@ definitions['path.d.ts'] = `declare module 'path' {
     export = path;
 }
 `;
-definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
-    import { AsyncResource } from 'async_hooks';
+definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {     import { AsyncResource } from 'async_hooks';
 
     type EntryType = 'node' | 'mark' | 'measure' | 'gc' | 'function' | 'http2' | 'http';
 
@@ -18331,8 +18768,7 @@ definitions['perf_hooks.d.ts'] = `declare module 'perf_hooks' {
     function monitorEventLoopDelay(options?: EventLoopMonitorOptions): EventLoopDelayMonitor;
 }
 `;
-definitions['process.d.ts'] = `declare module 'process' {
-    import * as tty from 'tty';
+definitions['process.d.ts'] = `declare module 'process' {     import * as tty from 'tty';
 
     global {
         var process: NodeJS.Process;
@@ -18741,8 +19177,7 @@ definitions['process.d.ts'] = `declare module 'process' {
     export = process;
 }
 `;
-definitions['punycode.d.ts'] = `/**
- * @deprecated since v7.0.0
+definitions['punycode.d.ts'] = `/**  * @deprecated since v7.0.0
  * The version of the punycode module bundled in Node.js is being deprecated.
  * In a future major version of Node.js this module will be removed.
  * Users currently depending on the punycode module should switch to using
@@ -18817,8 +19252,7 @@ declare module 'punycode' {
     const version: string;
 }
 `;
-definitions['querystring.d.ts'] = `declare module 'querystring' {
-    interface StringifyOptions {
+definitions['querystring.d.ts'] = `declare module 'querystring' {     interface StringifyOptions {
         encodeURIComponent?: ((str: string) => string) | undefined;
     }
 
@@ -18846,8 +19280,7 @@ definitions['querystring.d.ts'] = `declare module 'querystring' {
     function unescape(str: string): string;
 }
 `;
-definitions['readline.d.ts'] = `declare module 'readline' {
-    import EventEmitter = require('events');
+definitions['readline.d.ts'] = `declare module 'readline' {     import EventEmitter = require('events');
 
     interface Key {
         sequence?: string | undefined;
@@ -19017,8 +19450,7 @@ definitions['readline.d.ts'] = `declare module 'readline' {
     function moveCursor(stream: NodeJS.WritableStream, dx: number, dy: number, callback?: () => void): boolean;
 }
 `;
-definitions['repl.d.ts'] = `declare module 'repl' {
-    import { Interface, Completer, AsyncCompleter } from 'readline';
+definitions['repl.d.ts'] = `declare module 'repl' {     import { Interface, Completer, AsyncCompleter } from 'readline';
     import { Context } from 'vm';
     import { InspectOptions } from 'util';
 
@@ -19413,8 +19845,7 @@ definitions['repl.d.ts'] = `declare module 'repl' {
     }
 }
 `;
-definitions['stream.d.ts'] = `declare module 'stream' {
-    import EventEmitter = require('events');
+definitions['stream.d.ts'] = `declare module 'stream' {     import EventEmitter = require('events');
 
     class internal extends EventEmitter {
         pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean | undefined; }): T;
@@ -19769,16 +20200,14 @@ definitions['stream.d.ts'] = `declare module 'stream' {
     export = internal;
 }
 `;
-definitions['string_decoder.d.ts'] = `declare module 'string_decoder' {
-    class StringDecoder {
+definitions['string_decoder.d.ts'] = `declare module 'string_decoder' {     class StringDecoder {
         constructor(encoding?: BufferEncoding);
         write(buffer: Buffer): string;
         end(buffer?: Buffer): string;
     }
 }
 `;
-definitions['timers.d.ts'] = `declare module 'timers' {
-    function setTimeout(callback: (...args: any[]) => void, ms?: number, ...args: any[]): NodeJS.Timeout;
+definitions['timers.d.ts'] = `declare module 'timers' {     function setTimeout(callback: (...args: any[]) => void, ms?: number, ...args: any[]): NodeJS.Timeout;
     namespace setTimeout {
         function __promisify__(ms: number): Promise<void>;
         function __promisify__<T>(ms: number, value: T): Promise<T>;
@@ -19794,8 +20223,7 @@ definitions['timers.d.ts'] = `declare module 'timers' {
     function clearImmediate(immediateId: NodeJS.Immediate): void;
 }
 `;
-definitions['tls.d.ts'] = `declare module 'tls' {
-    import * as net from 'net';
+definitions['tls.d.ts'] = `declare module 'tls' {     import * as net from 'net';
 
     const CLIENT_RENEG_LIMIT: number;
     const CLIENT_RENEG_WINDOW: number;
@@ -20575,8 +21003,7 @@ definitions['tls.d.ts'] = `declare module 'tls' {
     const rootCertificates: ReadonlyArray<string>;
 }
 `;
-definitions['trace_events.d.ts'] = `declare module 'trace_events' {
-    /**
+definitions['trace_events.d.ts'] = `declare module 'trace_events' {     /**
      * The \`Tracing\` object is used to enable or disable tracing for sets of
      * categories. Instances are created using the
      * \`trace_events.createTracing()\` method.
@@ -20637,8 +21064,7 @@ definitions['trace_events.d.ts'] = `declare module 'trace_events' {
     function getEnabledCategories(): string | undefined;
 }
 `;
-definitions['tty.d.ts'] = `declare module 'tty' {
-    import * as net from 'net';
+definitions['tty.d.ts'] = `declare module 'tty' {     import * as net from 'net';
 
     function isatty(fd: number): boolean;
     class ReadStream extends net.Socket {
@@ -20704,8 +21130,7 @@ definitions['tty.d.ts'] = `declare module 'tty' {
     }
 }
 `;
-definitions['url.d.ts'] = `declare module 'url' {
-    import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
+definitions['url.d.ts'] = `declare module 'url' {     import { ParsedUrlQuery, ParsedUrlQueryInput } from 'querystring';
 
     \/\/ Input to \`url.format\`
     interface UrlObject {
@@ -20821,8 +21246,7 @@ definitions['url.d.ts'] = `declare module 'url' {
     }
 }
 `;
-definitions['util.d.ts'] = `declare module 'util' {
-    interface InspectOptions extends NodeJS.InspectOptions { }
+definitions['util.d.ts'] = `declare module 'util' {     interface InspectOptions extends NodeJS.InspectOptions { }
     type Style = 'special' | 'number' | 'bigint' | 'boolean' | 'undefined' | 'null' | 'string' | 'symbol' | 'date' | 'regexp' | 'module';
     type CustomInspectFunction = (depth: number, options: InspectOptionsStylized) => string;
     interface InspectOptionsStylized extends InspectOptions {
@@ -21029,8 +21453,7 @@ definitions['util.d.ts'] = `declare module 'util' {
     }
 }
 `;
-definitions['v8.d.ts'] = `declare module 'v8' {
-    import { Readable } from 'stream';
+definitions['v8.d.ts'] = `declare module 'v8' {     import { Readable } from 'stream';
 
     interface HeapSpaceInfo {
         space_name: string;
@@ -21217,8 +21640,7 @@ definitions['v8.d.ts'] = `declare module 'v8' {
     function deserialize(data: NodeJS.TypedArray): any;
 }
 `;
-definitions['vm.d.ts'] = `declare module 'vm' {
-    interface Context extends NodeJS.Dict<any> { }
+definitions['vm.d.ts'] = `declare module 'vm' {     interface Context extends NodeJS.Dict<any> { }
     interface BaseOptions {
         /**
          * Specifies the filename used in stack traces produced by this script.
@@ -21370,8 +21792,7 @@ definitions['vm.d.ts'] = `declare module 'vm' {
     function measureMemory(options?: MeasureMemoryOptions): Promise<MemoryMeasurement>;
 }
 `;
-definitions['wasi.d.ts'] = `declare module 'wasi' {
-    interface WASIOptions {
+definitions['wasi.d.ts'] = `declare module 'wasi' {     interface WASIOptions {
         /**
          * An array of strings that the WebAssembly application will
          * see as command line arguments. The first argument is the virtual path to the
@@ -21457,8 +21878,7 @@ definitions['wasi.d.ts'] = `declare module 'wasi' {
     }
 }
 `;
-definitions['worker_threads.d.ts'] = `declare module 'worker_threads' {
-    import { Context } from 'vm';
+definitions['worker_threads.d.ts'] = `declare module 'worker_threads' {     import { Context } from 'vm';
     import EventEmitter = require('events');
     import { Readable, Writable } from 'stream';
     import { URL } from 'url';
@@ -21696,8 +22116,7 @@ definitions['worker_threads.d.ts'] = `declare module 'worker_threads' {
     function receiveMessageOnPort(port: MessagePort): { message: any } | undefined;
 }
 `;
-definitions['zlib.d.ts'] = `declare module 'zlib' {
-    import * as stream from 'stream';
+definitions['zlib.d.ts'] = `declare module 'zlib' {     import * as stream from 'stream';
 
     interface ZlibOptions {
         /**
