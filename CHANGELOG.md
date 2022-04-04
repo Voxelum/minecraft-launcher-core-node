@@ -1,5 +1,71 @@
 # Changelog
 
+## 6.0.0
+### @xmcl/asm@0.1.4
+#### Bug Fixes
+
+- fix(asm): don't check max version ([b5a5e6b5ef9a18af728e47d326a9767e00713263](https://github.com/voxelum/minecraft-launcher-core-node/commit/b5a5e6b5ef9a18af728e47d326a9767e00713263))
+### @xmcl/core@2.10.0
+#### Features
+
+- feat(core): compatible with some thirdparty launcher version json ([c49fd5675a75d3c8d22a76c4074bee44eb063a9f](https://github.com/voxelum/minecraft-launcher-core-node/commit/c49fd5675a75d3c8d22a76c4074bee44eb063a9f))
+- feat: add log config to launch arg ([241a759a28dd45a32cb88fbd1e3dd7e1f6bc9860](https://github.com/voxelum/minecraft-launcher-core-node/commit/241a759a28dd45a32cb88fbd1e3dd7e1f6bc9860))
+- feat(core): add circular dependencies error ([281bf04a6ca9ed6b104b648020eedbc68ba90140](https://github.com/voxelum/minecraft-launcher-core-node/commit/281bf04a6ca9ed6b104b648020eedbc68ba90140))
+### @xmcl/curseforge@0.2.0
+#### Features
+
+- feat: Support modrinth (#227) ([11c6b551d076e2059b609f6efbee8ff91542e17d](https://github.com/voxelum/minecraft-launcher-core-node/commit/11c6b551d076e2059b609f6efbee8ff91542e17d))
+### @xmcl/task@4.0.3
+#### Bug Fixes
+
+- fix: don't transform twice ([d694000df969abc3fe51e323af8bf2336da04d43](https://github.com/voxelum/minecraft-launcher-core-node/commit/d694000df969abc3fe51e323af8bf2336da04d43))
+### @xmcl/model@1.0.21
+#### Bug Fixes
+
+- fix: model image load cros error ([366b80c85f4776c38ab030650502b73bcea9cd92](https://github.com/voxelum/minecraft-launcher-core-node/commit/366b80c85f4776c38ab030650502b73bcea9cd92))
+### @xmcl/modrinth@1.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE(modrinth): modrinth v2 api ([d7d5190825898f61c8a52001f13bd7c652abe22f](https://github.com/voxelum/minecraft-launcher-core-node/commit/d7d5190825898f61c8a52001f13bd7c652abe22f))
+#### Features
+
+- feat: support agent ([ff82d5a912abb199ff6d3d9b092e607eff7948c5](https://github.com/voxelum/minecraft-launcher-core-node/commit/ff82d5a912abb199ff6d3d9b092e607eff7948c5))
+- feat: Support modrinth (#227) ([11c6b551d076e2059b609f6efbee8ff91542e17d](https://github.com/voxelum/minecraft-launcher-core-node/commit/11c6b551d076e2059b609f6efbee8ff91542e17d))
+#### Bug Fixes
+
+- fix(modrinth): the type of the response date ([b16c12dfe4cf5377b569db3ffc4144941aedf212](https://github.com/voxelum/minecraft-launcher-core-node/commit/b16c12dfe4cf5377b569db3ffc4144941aedf212))
+- fix: should pass facets ([62c111005a26615b13e652ff6b47ed240462f079](https://github.com/voxelum/minecraft-launcher-core-node/commit/62c111005a26615b13e652ff6b47ed240462f079))
+- fix(modrinth): fallback to relevance if index is empty ([7a3da01d55c7234dc7dd6f1360d5c8f59457318e](https://github.com/voxelum/minecraft-launcher-core-node/commit/7a3da01d55c7234dc7dd6f1360d5c8f59457318e))
+- fix: add missing licenses cat ([621ecef4a0677737f4750c5df24192c360be9c5f](https://github.com/voxelum/minecraft-launcher-core-node/commit/621ecef4a0677737f4750c5df24192c360be9c5f))
+### @xmcl/user@2.1.8
+#### Bug Fixes
+
+- fix(user): invalid uuid format ([41dee2f53b3059100524548a12f9409ea8515f96](https://github.com/voxelum/minecraft-launcher-core-node/commit/41dee2f53b3059100524548a12f9409ea8515f96))
+- fix(user): correctly propagate error ([82418b2692fce2447c746410f4fadbf0483bf685](https://github.com/voxelum/minecraft-launcher-core-node/commit/82418b2692fce2447c746410f4fadbf0483bf685))
+### @xmcl/installer@4.3.0
+#### Features
+
+- feat: download log config during download assets ([794ecc38c76285b879510c22be188b9471741263](https://github.com/voxelum/minecraft-launcher-core-node/commit/794ecc38c76285b879510c22be188b9471741263))
+- feat(installer): correctly propagate download url ([ffef59fc362dfa83cb70999baadbfc43fb22f7cd](https://github.com/voxelum/minecraft-launcher-core-node/commit/ffef59fc362dfa83cb70999baadbfc43fb22f7cd))
+#### Bug Fixes
+
+- fix: correctly assign url ([1c3cfaa8419407d8f3c88bdfaea019540af9cfd3](https://github.com/voxelum/minecraft-launcher-core-node/commit/1c3cfaa8419407d8f3c88bdfaea019540af9cfd3))
+- fix: allow agent to prevent cf request overflow ([aafe85f4bac16b27431f0b9a8dd9983d9d51ea84](https://github.com/voxelum/minecraft-launcher-core-node/commit/aafe85f4bac16b27431f0b9a8dd9983d9d51ea84))
+- fix: propagate the url at first ([2b60486747a188cbe75a5844d95bc0c2b61042c1](https://github.com/voxelum/minecraft-launcher-core-node/commit/2b60486747a188cbe75a5844d95bc0c2b61042c1))
+- fix: should switch method to fetch metadata ([00c82834a20e1be9ce3048fee4ccc2c577dc23fc](https://github.com/voxelum/minecraft-launcher-core-node/commit/00c82834a20e1be9ce3048fee4ccc2c577dc23fc))
+- fix(installer): correctly link java ([daf601bf54e715c726382345b786ca9333d1261d](https://github.com/voxelum/minecraft-launcher-core-node/commit/daf601bf54e715c726382345b786ca9333d1261d))
+- fix(installer): not abortable during fetching ([2595cceb90cc1d8b94ad326fb389d497e5293864](https://github.com/voxelum/minecraft-launcher-core-node/commit/2595cceb90cc1d8b94ad326fb389d497e5293864))
+- Dependency @xmcl/asm bump **patch**
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/task bump **patch**
+### @xmcl/mod-parser@3.2.1
+#### Bug Fixes
+
+- fix: change toml lib to parse malform toml mod ([c7b5b1ddc106d997fd9e74c3667f0239a286aa5f](https://github.com/voxelum/minecraft-launcher-core-node/commit/c7b5b1ddc106d997fd9e74c3667f0239a286aa5f))
+- fix(mod-parser): don't crash if the bytecode parsing failed ([c1b10f24c49897a9fe0f3e7ad3a458de91346785](https://github.com/voxelum/minecraft-launcher-core-node/commit/c1b10f24c49897a9fe0f3e7ad3a458de91346785))
+- Dependency @xmcl/asm bump **patch**
+
+
 ## 5.3.0
 ### @xmcl/core@2.9.0
 #### Features

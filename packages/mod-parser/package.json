@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/mod-parser",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "main": "./index.ts",
   "description": "Minecraft Mod parser. Provides the utilities to parse forge/liteloader/fabric mod metadata.",
   "engines": {
@@ -14,7 +14,7 @@
   "dependencies": {
     "toml": "^3.0.0",
     "@xmcl/system": "^2.2.3",
-    "@xmcl/asm": "^0.1.3"
+    "@xmcl/asm": "^0.1.4"
   },
   "repository": {
     "type": "git",
