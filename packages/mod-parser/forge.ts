@@ -459,7 +459,7 @@ export async function readForgeModToml(mod: ForgeModInput, manifest?: Record<str
             const root = parseToml(str);
             if (root.mods instanceof Array) {
                 for (const mod of root.mods) {
-                    const tomlMod = mod as any;
+                    const tomlMod = mod ;
                     const modObject: ForgeModTOMLData = {
                         modid: tomlMod.modId ?? "",
                         authors: tomlMod.authors ?? root.authors as string ?? "",

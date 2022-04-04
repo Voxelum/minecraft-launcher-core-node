@@ -636,11 +636,11 @@ export namespace Version {
                 throw e;
             }
             if (nextVersion) {
-                if (stack.some(v => v.id === nextVersion)) {
-                    throw Object.assign(new Error(`Cannot resolve circular dependencies`), {
+                if (stack.some((v) => v.id === nextVersion)) {
+                    throw Object.assign(new Error("Cannot resolve circular dependencies"), {
                         error: "CircularDependenciesError",
                         version,
-                        chain: stack.map(v => v.id).concat(nextVersion)
+                        chain: stack.map((v) => v.id).concat(nextVersion)
                     })
                 }
                 await walk(nextVersion);

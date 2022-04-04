@@ -96,13 +96,13 @@ export interface SearchProjectOptions {
     facets?: string
     /**
      * A list of filters relating to the properties of a project. Use filters when there isn't an available facet for your needs. [More information](https://docs.meilisearch.com/reference/features/filtering.html)
-     * 
+     *
      * @example filters=categories="fabric" AND (categories="technology" OR categories="utility")
      */
     filters?: string
     /**
      * What the results are sorted by
-     * 
+     *
      * @enum "relevance" "downloads" "follows" "newest" "updated"
      * @example "downloads"
      * @default relevance
@@ -187,7 +187,7 @@ export interface GetProjectVersionsOptions {
  * @param id project id or slug
  */
 export function getProjectVersions(options: string | GetProjectVersionsOptions, agent?: Agent): Promise<ProjectVersion[]> {
-    if (typeof options === 'string') {
+    if (typeof options === "string") {
         return get(`/project/${options}/version`, agent)
     }
 

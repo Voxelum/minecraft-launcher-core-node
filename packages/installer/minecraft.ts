@@ -314,7 +314,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
             await this.yield(new DownloadTask({
                 url: file.url,
                 validator: {
-                    algorithm: 'sha1',
+                    algorithm: "sha1",
                     hash: file.sha1,
                 },
                 destination: folder.getLogConfig(file.id),
