@@ -334,7 +334,7 @@ to prepare new releases for changed packages.\n\n### Package Changes\n\n`;
  * @param {string} version 
  */
 function getCommitMessage(version) {
-    return `chore: bump version ${version}`
+    return `chore(release): bump version ${version}`
 }
 
 async function main(output) {
