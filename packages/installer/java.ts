@@ -1,7 +1,7 @@
 import { getPlatform, Platform } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { exec } from "child_process";
-import { EOL, platform, tmpdir } from "os";
+import { arch, EOL, platform, tmpdir } from "os";
 import { basename, join, resolve } from "path";
 import { DownloadTask } from "./downloadTask";
 import { DownloadBaseOptions } from "./http/download";
@@ -154,7 +154,7 @@ export function parseJavaVersion(versionText: string): { version: string; majorV
         if (!str) { return undefined; }
         const match = /(\d+\.\d+\.\d+)(_(\d+))?/.exec(str);
         if (match === null) { return undefined; }
-        return match[1];
+        return match[0];
     };
     let javaVersion = getVersion(versionText);
 
@@ -211,7 +211,9 @@ export async function getPotentialJavaLocations(): Promise<string[]> {
         for (const o of [...out, ...await where()]) {
             unchecked.add(o);
         }
+        const currentArch = arch()
         unchecked.add("C:\\Program Files (x86)\\Minecraft Launcher\\runtime\\jre-x64/X86");
+        unchecked.add(`C:\\Program Files (x86)\\Minecraft Launcher\\runtime\\jre-legacy\\windows-${currentArch}\\jre-legacy`);
     } else if (currentPlatform === "darwin") {
         unchecked.add("/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java");
         unchecked.add(await which());
