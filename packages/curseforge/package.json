@@ -2,6 +2,7 @@
   "name": "@xmcl/curseforge",
   "version": "0.2.0",
   "main": "./index.ts",
+  "module": "./index.ts",
   "browser": "./browser/index.js",
   "sideEffects": false,
   "description": "Provide the curseforge (twitch) API in https://twitchappapi.docs.apiary.io/",

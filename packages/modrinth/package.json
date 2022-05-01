@@ -2,6 +2,7 @@
   "name": "@xmcl/modrinth",
   "version": "1.0.0",
   "main": "./index.ts",
+  "module": "./index.ts",
   "browser": "./browser/index.js",
   "sideEffects": false,
   "description": "Provide the modrinth described in https://github.com/modrinth/labrinth/wiki/API-Documentation",
