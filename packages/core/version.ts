@@ -615,6 +615,7 @@ export namespace Version {
             } catch (err) {
                 const e: any = err;
                 throw Object.assign(new Error(e.message), {
+                    name: "MissingVersionJson",
                     error: "MissingVersionJson",
                     version: versionName,
                     path: jsonPath,
@@ -628,6 +629,7 @@ export namespace Version {
             } catch (e) {
                 if (e instanceof SyntaxError) {
                     throw Object.assign(new Error(e.message), {
+                        name: "CorruptedVersionJson",
                         error: "CorruptedVersionJson",
                         version: versionName,
                         json: contentString
@@ -638,6 +640,7 @@ export namespace Version {
             if (nextVersion) {
                 if (stack.some((v) => v.id === nextVersion)) {
                     throw Object.assign(new Error("Cannot resolve circular dependencies"), {
+                        name: "CircularDependenciesError",
                         error: "CircularDependenciesError",
                         version,
                         chain: stack.map((v) => v.id).concat(nextVersion)
