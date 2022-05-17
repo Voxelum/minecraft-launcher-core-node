@@ -432,7 +432,7 @@ export async function getForgeVersionList(option: {
      * If this presents, it will send request with the original list timestamp.
      *
      * If the server believes there is no modification after the original one,
-     * it will directly return the orignal one.
+     * it will directly return the original one.
      */
     original?: ForgeVersionList;
 } = {}): Promise<ForgeVersionList> {

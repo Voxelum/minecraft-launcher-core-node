@@ -35,7 +35,7 @@ Only If there are somethings missing, you can try to run `npm run update` or `np
 
 ### How to Dev
 
-The code are splited into seperated projects, which layed in under `packages` folder. Most of them are really simple (only one `index.ts` file or few files).
+The code are split into separated projects, which layed in under `packages` folder. Most of them are really simple (only one `index.ts` file or few files).
 
 The simplest way to run the code is write a test and then run it.
 
