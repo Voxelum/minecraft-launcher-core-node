@@ -149,26 +149,28 @@ export async function resolveJava(path: string): Promise<JavaInfo | undefined> {
  *
  * @param versionText The stderr for `java -version`
  */
-export function parseJavaVersion(versionText: string): { version: string; majorVersion: number } | undefined {
+export function parseJavaVersion(versionText: string): { version: string; majorVersion: number; patch: number } | undefined {
     const getVersion = (str?: string) => {
         if (!str) { return undefined; }
-        const match = /(\d+\.\d+\.\d+)(_(\d+))?/.exec(str);
+        const match = /(\d+)\.(\d)+\.(\d+)(_\d+)?/.exec(str);
         if (match === null) { return undefined; }
-        return match[0];
+        if (match[1] === '1') {
+            return { 
+                version: match[0],
+                majorVersion: Number.parseInt(match[2]),
+                patch: Number.parseInt(match[4].substring(1)),
+            }
+        }
+        return {
+            version: str,
+            majorVersion: Number.parseInt(match[1]),
+            patch: Number.parseInt(match[3]),
+        };
     };
     let javaVersion = getVersion(versionText);
 
     if (!javaVersion) { return undefined; }
-
-    let majorVersion = Number.parseInt(javaVersion.split(".")[0], 10);
-    if (majorVersion === 1) {
-        majorVersion = Number.parseInt(javaVersion.split(".")[1], 10);
-    }
-    let java = {
-        version: javaVersion,
-        majorVersion,
-    };
-    return java;
+    return javaVersion;
 }
 
 /**
