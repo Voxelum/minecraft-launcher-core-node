@@ -457,7 +457,7 @@ export async function getAddonFileChangelog(addonID: number, fileID: number, opt
 export async function getAddonFileInfo(addonID: number, fileID: number, options: QueryOption = {}) {
     let url = `/api/v2/addon/${addonID}/file/${fileID}`;
     let body = await get(url, options);
-    return body as File[];
+    return body as File;
 }
 /**
  * Return the addon file download url string.
