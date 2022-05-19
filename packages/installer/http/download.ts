@@ -250,6 +250,7 @@ export class Download {
                         this.metadata,
                         this.headers,
                         this.destination,
+                        attempt,
                         this.segments,
                         [e],
                     );

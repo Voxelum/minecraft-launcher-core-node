@@ -12,10 +12,12 @@ export class DownloadError extends Error {
         readonly metadata: ResourceMetadata | undefined,
         readonly headers: Record<string, any>,
         readonly destination: string,
+        readonly retryAttempt: number,
         readonly segments: Segment[],
         readonly segmentErrors: any[]
     ) {
         super(`The download failed! ${error}`);
+        this.name = 'DownloadError'
     }
 }
 
