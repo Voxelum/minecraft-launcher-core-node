@@ -204,12 +204,13 @@ export class Download {
             }
         }))
         // use local aborted flag instead of signal.aborted
-        // as local aborted flag means the request is TRUELY aborted
+        // as local aborted flag means the request is TRULY aborted
         if (flag) {
             throw new DownloadError(flag === 1 ? "DownloadAborted" : resolveNetworkErrorType(errors[0]) ?? "GeneralDownloadException",
                 this.metadata,
                 this.headers,
                 this.destination,
+                1,
                 this.segments,
                 errors,
             );
