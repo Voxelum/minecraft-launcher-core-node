@@ -214,6 +214,9 @@ export interface ForgeModASMData {
      */
     usedMinecraftClientPackage: boolean;
 
+    fmlPluginClassName?: string
+    fmlPluginMcVersion?: string
+
     modAnnotations: ForgeModAnnotationData[];
 }
 
@@ -239,6 +242,15 @@ class ModAnnotationVisitor extends AnnotationVisitor {
         }
     }
 }
+class McVersionAnnotationVisitor extends AnnotationVisitor {
+    constructor(readonly map: (v: string) => void) { super(Opcodes.ASM5); }
+    public visit(s: string, o: any) {
+        if (s === "value") {
+            this.map(o)
+        }
+    }
+}
+
 class DummyModConstructorVisitor extends MethodVisitor {
     private stack: any[] = [];
     constructor(private parent: ModClassVisitor, api: number) {
@@ -274,6 +286,8 @@ class ModClassVisitor extends ClassVisitor {
     public className: string = "";
     public isDummyModContainer: boolean = false;
     public isPluginClass: boolean = false;
+    public mcVersionInPlugin: string = "";
+    public pluginName: string = "";
 
     public constructor(readonly result: ForgeModASMData, public guess: Partial<ForgeModAnnotationData>, readonly corePlugin?: string) {
         super(Opcodes.ASM5);
@@ -303,6 +317,9 @@ class ModClassVisitor extends ClassVisitor {
         this.validateType(superName);
         for (const intef of interfaces) {
             this.validateType(intef);
+            if (intef.indexOf("net/minecraftforge/fml/relauncher/IFMLLoadingPlugin") !== -1) {
+                this.result.fmlPluginClassName = name;
+            }
         }
     }
 
@@ -338,6 +355,8 @@ class ModClassVisitor extends ClassVisitor {
             }
             this.result.modAnnotations.push(annotationData);
             return new ModAnnotationVisitor(annotationData);
+        } else if (desc == "Lnet/minecraftforge/fml/relauncher/IFMLLoadingPlugin$MCVersion;") {
+            return new McVersionAnnotationVisitor((v) => { this.result.fmlPluginMcVersion = v });
         }
         return null;
     }
@@ -501,7 +520,7 @@ export async function readForgeModAsm(mod: ForgeModInput, manifest: Record<strin
     if (manifest) {
         if (typeof manifest.FMLCorePlugin === "string") {
             const clazz = manifest.FMLCorePlugin.replace(/\./g, "/");
-            if (await fs.existsFile(clazz) || await fs.existsFile(`/${clazz}`)) {
+            if (await fs.existsFile(clazz) || await fs.existsFile(`/${clazz}`) || await fs.existsFile(`/${clazz}.class`) || await fs.existsFile(clazz + ".class") ) {
                 corePluginClass = clazz;
             }
         }
@@ -693,7 +712,7 @@ export async function readForgeMod(mod: ForgeModInput): Promise<ForgeModMetadata
 }
 
 export class ForgeModParseFailedError extends Error {
-    constructor(readonly mod: ForgeModInput, readonly asm: Omit<ForgeModASMData, "modAnnotations">, readonly manifest: Record<string, any>) {
+    constructor(readonly mod: ForgeModInput, readonly asm: ForgeModASMData, readonly manifest: Record<string, any>) {
         super("Cannot find the mod metadata in the mod!");
     }
 }
