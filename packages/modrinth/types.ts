@@ -126,6 +126,8 @@ export interface Project {
      * An optional list of all donation links the mod has
      */
     donation_urls: Array<DonationLink>
+
+    project_type: string
 }
 
 export interface ProjectVersion {
