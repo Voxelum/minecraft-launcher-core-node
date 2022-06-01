@@ -14,6 +14,7 @@ export * from "./optifine";
 export * from "./java";
 export * from "./java-runtime";
 export * from "./diagnose";
+export * from "./quilt";
 export { InstallOptions } from "./utils";
 export * from "./http/download";
 export * from "./http/agents";
