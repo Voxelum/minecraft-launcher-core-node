@@ -94,6 +94,8 @@ export interface Project {
      * The total number of downloads the mod has
      */
     downloads: number
+
+    followers: number
     /**
      * A list of the categories that the mod is in
      */
@@ -128,6 +130,17 @@ export interface Project {
     donation_urls: Array<DonationLink>
 
     project_type: string
+
+    gallery: ProjectGallery[]
+}
+
+
+export interface ProjectGallery {
+    created: string
+    description: string
+    featured: boolean
+    title: string
+    url: string
 }
 
 export interface ProjectVersion {
@@ -166,7 +179,7 @@ export interface ProjectVersion {
     /**
      * The date that this version was published
      */
-    date_published: Date
+    date_published: string
     /**
      * The number of downloads this specific version has
      */
