@@ -301,7 +301,7 @@ export function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Tas
                 if (entry.type === "directory") {
                     await ensureDir(dest);
                 } else if (entry.type === "link") {
-                    await link(join(dirname(dest), entry.target), dest);
+                    await link(dest, join(dirname(dest), entry.target)).catch(() => { });
                 }
             }));
     });
