@@ -28,7 +28,7 @@
   "dependencies": {
     "bytebuffer": "^5.0.1",
     "file-type": "^12.4.2",
-    "long": "~3"
+    "long": "^5.2.0"
   },
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"

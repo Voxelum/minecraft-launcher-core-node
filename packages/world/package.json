@@ -14,7 +14,7 @@
   "dependencies": {
     "@xmcl/nbt": "^2.0.3",
     "@xmcl/system": "^2.2.3",
-    "long": "~3"
+    "long": "^5.2.0"
   },
   "repository": {
     "type": "git",

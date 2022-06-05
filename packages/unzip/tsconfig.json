@@ -5,10 +5,8 @@
     "compilerOptions": {
         "target": "es2018",
         "module": "esnext",
-        
-        "lib": [
-            "dom"
-        ],
+        "forceConsistentCasingInFileNames": true,
+        "lib": [],
         "experimentalDecorators": true,
         "declaration": true,
         "downlevelIteration": true,

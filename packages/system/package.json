@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@xmcl/unzip": "^2.0.0",
+    "@types/yauzl": "^2.10.0",
     "jszip": "^3.7.1"
   },
   "repository": {

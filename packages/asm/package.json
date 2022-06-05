@@ -29,6 +29,6 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "dependencies": {
-    "long": "~3"
+    "long": "^5.2.0"
   }
 }

@@ -6,7 +6,7 @@ import { EOL } from "os";
 import { delimiter, dirname, isAbsolute, join, resolve } from "path";
 import { pipeline } from "stream";
 import { promisify } from "util";
-import { v4 } from "uuid";
+import { randomUUID } from "crypto"
 import { MinecraftFolder } from "./folder";
 import { getPlatform, Platform } from "./platform";
 import { checksum, link, mkdir, readFile, validateSha1, writeFile } from "./utils";
@@ -599,8 +599,8 @@ export async function generateArguments(options: LaunchOption) {
     const mc = MinecraftFolder.from(resourcePath);
     const cmd: string[] = [];
 
-    const { id = v4().replace(/-/g, ""), name = "Steve" } = options.gameProfile || {};
-    const accessToken = options.accessToken || v4().replace(/-/g, "");
+    const { id = randomUUID().replace(/-/g, ""), name = "Steve" } = options.gameProfile || {};
+    const accessToken = options.accessToken || randomUUID().replace(/-/g, "");
     const properties = options.properties || {};
     const userType = options.userType || "Mojang";
     const features = options.features || {};

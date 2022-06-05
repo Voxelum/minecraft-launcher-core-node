@@ -361,7 +361,7 @@ const IO: IO[] = [
         read(buf) {
             const len = buf.readInt();
             const arr: Long[] = new Array(len);
-            for (let i = 0; i < len; i++) { arr[i] = buf.readInt64(); }
+            for (let i = 0; i < len; i++) { arr[i] = buf.readInt64() as any; }
             return arr;
         },
         write(buf, v = []) {

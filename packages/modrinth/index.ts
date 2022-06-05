@@ -58,11 +58,11 @@ export interface SearchResultHit {
     /**
      * The date that the project was originally created
      */
-    date_created: Date
+    date_created: string
     /**
      * The date that the project was last modified
      */
-    date_modified: Date
+    date_modified: string
     /**
      * The latest version of minecraft that this project supports */
     latest_version: string
