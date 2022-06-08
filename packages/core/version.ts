@@ -456,7 +456,10 @@ export namespace Version {
             javaVersion = json.javaVersion || javaVersion;
             if (json.libraries) {
                 json.libraries.forEach((lib) => {
-                    const libOrgName = lib.name.substring(0, lib.name.lastIndexOf(":"));
+                    let libOrgName = `${lib.groupId}:${lib.artifactId}`;
+                    if (lib.classifier) {
+                        libOrgName += `-${lib.classifier};`
+                    }
                     if (lib instanceof ResolvedNative) {
                         nativesMap[libOrgName] = lib;
                     } else {

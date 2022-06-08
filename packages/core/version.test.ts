@@ -173,16 +173,16 @@ describe("Version", () => {
             expect(onLinux).toBeTruthy();
         });
         test("should resolve 1.19 natives", () => {
-            const selectionNative = {
+            const selectionNative =    {
                 "downloads": {
                     "artifact": {
-                        "path": "org/lwjgl/lwjgl-opengl/3.3.1/lwjgl-opengl-3.3.1-natives-windows.jar",
-                        "sha1": "c1807e9bd571402787d7e37e3029776ae2513bb8",
-                        "size": 100205,
-                        "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl-opengl/3.3.1/lwjgl-opengl-3.3.1-natives-windows.jar"
+                        "path": "org/lwjgl/lwjgl/3.3.1/lwjgl-3.3.1-natives-windows.jar",
+                        "sha1": "0036c37f16ab611b3aa11f3bcf80b1d509b4ce6b",
+                        "size": 159361,
+                        "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl/3.3.1/lwjgl-3.3.1-natives-windows.jar"
                     }
                 },
-                "name": "org.lwjgl:lwjgl-opengl:3.3.1:natives-windows",
+                "name": "org.lwjgl:lwjgl:3.3.1:natives-windows",
                 "rules": [
                     {
                         "action": "allow",

@@ -327,7 +327,15 @@ export namespace LaunchPrecheck {
             const zip = await open(from, { lazyEntries: true, autoClose: false });
             for await (const entry of walkEntriesGenerator(zip)) {
                 if (containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName)) {
+                    if (entry.fileName.endsWith("/")) {
+                        continue
+                    }
                     const dest = join(native, entry.fileName);
+                    if (entry.fileName.indexOf("/") !== -1) {
+                        await mkdir(dirname(dest), {
+                            recursive: true
+                        }).catch((e) => {})
+                    }
                     extractedNatives.push({ file: entry.fileName, name: n.name, sha1: "" });
                     promises.push(promisify(pipeline)(await openEntryReadStream(zip, entry), createWriteStream(dest)));
                 }
