@@ -154,8 +154,8 @@ export function parseJavaVersion(versionText: string): { version: string; majorV
         if (!str) { return undefined; }
         const match = /(\d+)\.(\d)+\.(\d+)(_\d+)?/.exec(str);
         if (match === null) { return undefined; }
-        if (match[1] === '1') {
-            return { 
+        if (match[1] === "1") {
+            return {
                 version: match[0],
                 majorVersion: Number.parseInt(match[2]),
                 patch: Number.parseInt(match[4].substring(1)),

@@ -17,7 +17,7 @@ export class DownloadError extends Error {
         readonly segmentErrors: any[]
     ) {
         super(`The download failed! ${error}`);
-        this.name = 'DownloadError'
+        this.name = "DownloadError"
     }
 }
 
