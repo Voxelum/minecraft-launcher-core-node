@@ -674,6 +674,10 @@ export namespace Version {
                     ? "https://files.minecraftforge.net/maven/" + lib.downloads.artifact.path
                     : "https://libraries.minecraft.net/" + lib.downloads.artifact.path;
             }
+            if (info.classifier.startsWith("natives")) {
+                // new native format introduced by 1.19
+                return new ResolvedNative(info.name, info, lib.downloads.artifact);
+            }
             return new ResolvedLibrary(lib.name, info, lib.downloads.artifact);
         }
         const maven = lib.url || "https://libraries.minecraft.net/";

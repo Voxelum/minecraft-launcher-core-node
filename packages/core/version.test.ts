@@ -172,6 +172,34 @@ describe("Version", () => {
             expect(onWin).toBeTruthy();
             expect(onLinux).toBeTruthy();
         });
+        test("should resolve 1.19 natives", () => {
+            const selectionNative = {
+                "downloads": {
+                    "artifact": {
+                        "path": "org/lwjgl/lwjgl-opengl/3.3.1/lwjgl-opengl-3.3.1-natives-windows.jar",
+                        "sha1": "c1807e9bd571402787d7e37e3029776ae2513bb8",
+                        "size": 100205,
+                        "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl-opengl/3.3.1/lwjgl-opengl-3.3.1-natives-windows.jar"
+                    }
+                },
+                "name": "org.lwjgl:lwjgl-opengl:3.3.1:natives-windows",
+                "rules": [
+                    {
+                        "action": "allow",
+                        "os": {
+                            "name": "windows"
+                        }
+                    }
+                ]
+            };
+
+            const [onOsx] = Version.resolveLibraries([selectionNative], { name: "osx", version: "", arch: "64" });
+            const [onWin] = Version.resolveLibraries([selectionNative], { name: "windows", version: "", arch: "64" });
+            const [onLinux] = Version.resolveLibraries([selectionNative], { name: "linux", version: "", arch: "64" });
+            expect(onOsx).toBeUndefined();
+            expect(onWin).toBeInstanceOf(ResolvedNative);
+            expect(onLinux).toBeUndefined();
+        });
         test("should be able to select correct native library by system", () => {
             const selectionNative = {
                 extract: {
