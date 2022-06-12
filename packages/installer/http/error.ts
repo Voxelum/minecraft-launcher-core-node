@@ -39,6 +39,7 @@ export function isCommonNetworkError(e: any) {
         return e.code === "ECONNRESET"
             || e.code === "ETIMEDOUT"
             || e.code === "EPROTO"
+            || e.code === "ENOENT"
             || e.code === "ECANCELED";
     }
     return false
