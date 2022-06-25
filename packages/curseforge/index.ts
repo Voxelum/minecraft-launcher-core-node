@@ -574,13 +574,13 @@ export async function getAddons(addonIDs: number[], options: QueryOption = {}) {
  * List the addons by category/section or search addons by keyword.
  */
 export async function searchAddons(searchOptions: SearchOptions, options: QueryOption = {}) {
-    let url = `/api/v2/addon/search?gameId=${searchOptions.gameId ?? 432}&gameVersion=${searchOptions.gameVersion ?? ""}&index=${searchOptions.index ?? 0}&pageSize=${searchOptions.pageSize ?? 12}&sort=${searchOptions.sort ?? 0}`;
+    let url = `/api/v2/addon/search?gameId=${searchOptions.gameId ?? 432}&gameVersion=${searchOptions.gameVersion ?? ""}&index=${searchOptions.index ?? 0}&pageSize=${searchOptions.pageSize ?? 12}&sortField=${searchOptions.sortField ?? 1}`;
     if (typeof searchOptions.searchFilter === "string") {
         url += `&searchFilter=${searchOptions.searchFilter}`;
     }
-    if (typeof searchOptions.sectionId === "number") {
-        url += `&sectionId=${searchOptions.sectionId}`;
-    }
+    // if (typeof searchOptions.sectionId === "number") {
+    //     url += `&sectionId=${searchOptions.sectionId}`;
+    // }
     if (typeof searchOptions.categoryId === "number") {
         url += `&categoryId=${searchOptions.categoryId}`;
     }
@@ -654,7 +654,7 @@ export async function getFeaturedAddons(getOptions: GetFeaturedAddonOptions = {}
 export async function getCategories(options: QueryOption = {}) {
     let url = "/api/v2/category";
     let body = await get(url, options);
-    return body as Category[];
+    return body as ProjectCategory[];
 }
 /**
  * Get the timestamp of the categories data base.
