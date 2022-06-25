@@ -32,15 +32,15 @@ export interface ResolvedVersion {
      * The main class full qualified name
      */
     mainClass: string;
-    assetIndex: Version.AssetIndex;
+    assetIndex?: Version.AssetIndex;
     /**
      * The asset index id of this version. Should be something like `1.14`, `1.12`
      */
     assets: string;
     downloads: {
-        client: Version.Download;
-        server: Version.Download;
-        [key: string]: Version.Download;
+        client?: Version.Download;
+        server?: Version.Download;
+        [key: string]: Version.Download | undefined;
     };
     libraries: ResolvedLibrary[];
 
@@ -476,25 +476,28 @@ export namespace Version {
 
         if (!mainClass) {
             throw Object.assign(new Error(), {
+                name: "BadVersionJson",
                 error: "BadVersionJson",
                 version: id,
                 missing: "MainClass",
             } as BadVersionJsonError);
         }
-        if (!assetIndex) {
-            throw Object.assign(new Error(), {
-                error: "BadVersionJson",
-                version: id,
-                missing: "AssetIndex",
-            } as BadVersionJsonError);
-        }
-        if (Object.keys(downloadsMap).length === 0) {
-            throw Object.assign(new Error(), {
-                error: "BadVersionJson",
-                version: id,
-                missing: "Downloads",
-            } as BadVersionJsonError);
-        }
+        // if (!assetIndex) {
+        //     throw Object.assign(new Error(), {
+        //         name: "BadVersionJson",
+        //         error: "BadVersionJson",
+        //         version: id,
+        //         missing: "AssetIndex",
+        //     } as BadVersionJsonError);
+        // }
+        // if (Object.keys(downloadsMap).length === 0) {
+        //     throw Object.assign(new Error(), {
+        //         name: "BadVersionJson",
+        //         error: "BadVersionJson",
+        //         version: id,
+        //         missing: "Downloads",
+        //     } as BadVersionJsonError);
+        // }
 
         return {
             id,
@@ -665,9 +668,17 @@ export namespace Version {
         if ("natives" in lib) {
             if (!lib.natives[platform.name]) { return undefined; }
             const classifier = (lib.natives[platform.name]).replace("${arch}", platform.arch.substring(1));
-            const nativeArtifact = lib.downloads.classifiers[classifier];
-            if (!nativeArtifact) { return undefined; }
-            return new ResolvedNative(lib.name + ":" + classifier, LibraryInfo.resolve(lib.name + ":" + classifier), nativeArtifact, lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
+            let nativeArtifact = lib.downloads?.classifiers?.[classifier];
+            const info = LibraryInfo.resolve(lib.name + ":" + classifier);
+            if (!nativeArtifact) { 
+                nativeArtifact = {
+                    path: info.path,
+                    sha1: "",
+                    size: -1,
+                    url: "https://libraries.minecraft.net/" + info.path,
+                }
+            }
+            return new ResolvedNative(lib.name + ":" + classifier, info, nativeArtifact, lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined);
         }
         const info = LibraryInfo.resolve(lib.name);
         // normal library

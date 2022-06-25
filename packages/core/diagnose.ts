@@ -239,7 +239,7 @@ export async function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecr
 export async function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<AssetIndexIssue | undefined> {
     const assetsIndexPath = minecraft.getAssetsIndex(resolvedVersion.assets);
     const issue = await diagnoseFile(
-        { file: assetsIndexPath, expectedChecksum: resolvedVersion.assetIndex.sha1, role: "assetIndex", hint: "Problem on assets index file! Please consider to use Installer.installAssets to fix." });
+        { file: assetsIndexPath, expectedChecksum: resolvedVersion.assetIndex?.sha1 ?? "", role: "assetIndex", hint: "Problem on assets index file! Please consider to use Installer.installAssets to fix." });
     if (issue) {
         return Object.assign(issue, { version: resolvedVersion.minecraftVersion });
     }
@@ -249,7 +249,7 @@ export async function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minec
 export async function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<MinecraftJarIssue | undefined> {
     const jarPath = minecraft.getVersionJar(resolvedVersion.minecraftVersion);
     const issue = await diagnoseFile(
-        { file: jarPath, expectedChecksum: resolvedVersion.downloads.client.sha1, role: "minecraftJar", hint: "Problem on Minecraft jar! Please consider to use Installer.instalVersion to fix." });
+        { file: jarPath, expectedChecksum: resolvedVersion.downloads.client?.sha1 ?? "", role: "minecraftJar", hint: "Problem on Minecraft jar! Please consider to use Installer.instalVersion to fix." });
     if (issue) {
         return Object.assign(issue, { version: resolvedVersion.minecraftVersion });
     }

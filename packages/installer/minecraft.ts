@@ -1,4 +1,4 @@
-import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version as VersionJson } from "@xmcl/core";
+import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version, Version as VersionJson } from "@xmcl/core";
 import { task, Task } from "@xmcl/task";
 import { join } from "path";
 import { withAgents } from "./http/agents";
@@ -157,7 +157,7 @@ function resolveDownloadUrls<T>(original: string, version: T, option?: string | 
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions {
+export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions, InstallSideOption {
     /**
      * The version json url replacement
      */
@@ -277,7 +277,9 @@ export function installVersionTask(versionMeta: MinecraftVersionBaseInfo, minecr
         return withAgents(options, async (options) => {
             await this.yield(new InstallJsonTask(versionMeta, minecraft, options));
             const version = await VersionJson.parse(minecraft, versionMeta.id);
-            await this.yield(new InstallJarTask(version, minecraft, options));
+            if (version.downloads[options.side ?? "client"]) {
+                await this.yield(new InstallJarTask(version as any, minecraft, options));
+            }
             return version;
         });
     }, versionMeta);
@@ -322,7 +324,9 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
         }
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 
-        await this.yield(new InstallAssetIndexTask(version, options));
+        if (version.assetIndex) {
+            await this.yield(new InstallAssetIndexTask(version as any, options));
+        }
 
         await ensureDir(folder.getPath("assets", "objects"));
         interface AssetIndex {
@@ -412,13 +416,17 @@ export class InstallJsonTask extends DownloadTask {
 }
 
 export class InstallJarTask extends DownloadTask {
-    constructor(version: ResolvedVersion, minecraft: MinecraftLocation, options: Options) {
+    constructor(version: ResolvedVersion & { downloads: Required<ResolvedVersion>['downloads'] }, minecraft: MinecraftLocation, options: Options) {
         const folder = MinecraftFolder.from(minecraft);
         const type = options.side ?? "client";
         const destination = join(folder.getVersionRoot(version.id),
             type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar");
-        const urls = resolveDownloadUrls(version.downloads[type].url, version, options[type]);
-        const expectSha1 = version.downloads[type].sha1;
+        const download = version.downloads[type]
+        if (!download) {
+            throw new Error(`Cannot find downloadable jar in ${type}`);       
+        }
+        const urls = resolveDownloadUrls(download.url, version, options[type]);
+        const expectSha1 = download.sha1;
 
         super({
             url: urls,
@@ -435,7 +443,7 @@ export class InstallJarTask extends DownloadTask {
 }
 
 export class InstallAssetIndexTask extends DownloadTask {
-    constructor(version: ResolvedVersion, options: AssetsOptions = {}) {
+    constructor(version: ResolvedVersion & { assetIndex: Version.AssetIndex }, options: AssetsOptions = {}) {
         const folder = MinecraftFolder.from(version.minecraftDirectory);
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
 

@@ -255,11 +255,13 @@ export namespace LaunchPrecheck {
      */
     export async function checkVersion(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
         const jarPath = resource.getVersionJar(version.minecraftVersion);
-        if (!await validateSha1(jarPath, version.downloads.client.sha1)) {
-            throw Object.assign(new Error(`Corrupted Version jar ${jarPath}. Either the file not reachable or the file sha1 not matched!`), {
-                error: "CorruptedVersionJar",
-                version: version.minecraftVersion,
-            } as CorruptedVersionJarError);
+        if (version.downloads.client?.sha1) {
+            if (!await validateSha1(jarPath, version.downloads.client.sha1)) {
+                throw Object.assign(new Error(`Corrupted Version jar ${jarPath}. Either the file not reachable or the file sha1 not matched!`), {
+                    error: "CorruptedVersionJar",
+                    version: version.minecraftVersion,
+                } as CorruptedVersionJarError);
+            }
         }
     };
     /**
@@ -621,7 +623,7 @@ export async function generateArguments(options: LaunchOption) {
 
     let gameIcon = options.gameIcon;
     if (!gameIcon) {
-        const index = mc.getAssetsIndex(version.assetIndex.id);
+        const index = mc.getAssetsIndex(version.assets);
         const indexContent = await readFile(index, { encoding: "utf-8" }).then((b) => JSON.parse(b.toString()), () => ({}));
         if ("icons/minecraft.icns" in indexContent) {
             gameIcon = mc.getAsset(indexContent["icons/minecraft.icns"].hash);
