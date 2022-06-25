@@ -307,7 +307,7 @@ export interface Module {
     /**
      * Actually the file name, not the folder
      */
-    foldername: string;
+    name: string;
     /**
      * A number represent fingerprint
      */
