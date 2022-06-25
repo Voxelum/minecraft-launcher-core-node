@@ -30,7 +30,7 @@ Read the forge mod metadata, including `@Mod` annotation, mcmods.info, and toml 
     const modid = metadata[0].modid; // get modid of first mods
 ```
 
-If you don't want to read that much (as it will transver all the file in jar), you can try to use them separately:
+If you don't want to read that much (as it will transverse all the file in jar), you can try to use them separately:
 
 ```ts
     import { resolveFileSystem } from "@xmcl/system";
