@@ -6,62 +6,149 @@ import { Agent } from "https";
 
 const BASE_URL = "https://addons-ecs.forgesvc.net";
 
+export interface AddonAsset {
+    id: number;
+    modId: number;
+    title: string;
+    description: string;
+    thumbnailUrl: string;
+    url: string;
+}
+
+export const enum AddonStatus {
+    New = 1,
+    ChangesRequired = 2,
+    UnderSoftReview = 3,
+    Approved = 4,
+    Rejected = 5,
+    ChangesMade = 6,
+    Inactive = 7,
+    Abandoned = 8,
+    Deleted = 9,
+    UnderReview = 10,
+}
+export const enum FileReleaseType {
+    Release = 1,
+    Beta = 2,
+    Alpha = 3,
+}
+
+export const enum FileModLoaderType {
+    Any = 0,
+    Forge = 1,
+    Cauldron = 2,
+    LiteLoader = 3,
+    Fabric = 4,
+    Quilt = 5,
+}
+export interface FileIndex {
+    gameVersion: string
+    field: number
+    filename: string
+    releaseType: FileReleaseType
+
+    gameVersionTypeId: number | null
+    modLoader: FileModLoaderType
+}
+
 export interface AddonInfo {
     /**
      * The addon id. You can use this in many functions required the `addonID`
      */
     id: number;
     /**
+     * Game id. Minecraft is 432.
+     */
+    gameId: number;
+    /**
      * The display name of the addon
      */
     name: string;
     /**
-     * The list of authors
+     * The mod slug that would appear in the URL
      */
-    authors: Author[];
-    /**
-     * The attachments. Usually include the project icon and the example images.
-     */
-    attachments: Attachment[];
-    websiteUrl: string;
-    /**
-     * Game id. Minecraft is 432.
-     */
-    gameId: number;
+    slug: string;
+    /** Relevant links for the mod such as Issue tracker and Wiki */
+    links: {
+        websiteUrl: string
+        wikiUrl: string
+        issuesUrl: string
+        sourceYUrl: string
+    };
     /**
      * One line summery
      */
     summary: string;
     /**
+     * Current mod status
+     */
+    status: AddonStatus;
+    /**
+     * Number of downloads for the mod
+     */
+    downloadCount: number;
+    /**
+     * Whether the mod is included in the featured mods list
+     */
+    isFeatured: boolean;
+    /**
+     * The main category of the mod as it was chosen by the mod author
+     */
+    primaryCategoryId: number;
+    /**
+     * List of categories that this mod is related to
+     */
+    categories: ProjectCategory[];
+    /**
+     * The class id this mod belongs to
+     */
+    classId: number | null
+    /**
+     * The list of authors
+     */
+    authors: Author[];
+
+    logo: AddonAsset;
+
+    screenshots: AddonAsset[];
+    /**
+     * The id of the main file of the mod
+     */
+    mainFileId: number;
+    latestFiles: File[];
+    /**
+     * List of file related details for the latest files of the mod
+     */
+    latestFilesIndexes: FileIndex[];
+    /**
+     * The creation date of the mod
+     */
+    dateCreated: string;
+
+    dateModified: string;
+    dateReleased: string;
+
+    /**
+     * Is mod allowed to be distributed
+     */
+    allowModDistribution: boolean | null
+    /**
+     * The mod popularity rank for the game
+     */
+    gamePopularityRank: number
+    /**
+     * Is the mod available for search. This can be false when a mod is experimental, in a deleted state or has only alpha files
+     */
+    isAvailable: boolean;
+
+    /**
      * The default download file id
      */
     defaultFileId: number;
-    downloadCount: number;
-    latestFiles: File[];
     /**
-     * The category of the project
+     * The mod's thumbs up count
      */
-    categories: ProjectCategory[];
-    status: number;
-    primaryCategoryId: number;
-    /**
-     * The big category section
-     */
-    categorySection: CategorySection;
-    slug: string;
-    gameVersionLatestFiles: GameVersionLatestFile[];
-    isFeatured: boolean;
-    popularityScore: number;
-    gamePopularityRank: number;
-    primaryLanguage: string;
-    gameSlug: string;
-    gameName: string;
-    portalName: string;
-    dateModified: string;
-    dateCreated: string;
-    dateReleased: string;
-    isAvailable: boolean;
-    isExperiemental: boolean;
+    thumbsUpCount: number
 }
 
 export interface GameVersionLatestFile {
@@ -81,12 +168,50 @@ export interface CategorySection {
     extraIncludePattern?: any;
     gameCategoryId: number;
 }
+export const enum HashAlgo {
+    Sha1 = 1,
+    Md5 = 2,
+}
+export interface FileHash {
+    algo: HashAlgo
+    value: string
+}
+
+export const enum FileStatus {
+    Processing = 1,
+    ChangesRequired = 2,
+    UnderReview = 3,
+    Approved = 4,
+    Rejected = 5,
+    MalwareDetected = 6,
+    Deleted = 7,
+    Archived = 8,
+    Testing = 9,
+    Released = 10,
+    ReadyForReview = 11,
+    Deprecated = 12,
+    Baking = 13,
+    AwaitingPublishing = 14,
+    FailedPublishing = 15,
+}
 
 export interface File {
     /**
      * The fileID
      */
     id: number;
+    /**
+     * The game id related to the mod that this file belongs to
+     */
+    gameId: number;
+    /**
+     * The projectId (addonId)
+     */
+    modId: number;
+    /**
+     * Whether the file is available to download
+     */
+    isAvailable: boolean;
     /**
      * Display name
      */
@@ -96,6 +221,18 @@ export interface File {
      */
     fileName: string;
     /**
+    * Release or type.
+    * - `1` is the release
+    * - `2` beta
+    * - `3` alpha
+    */
+    releaseType: number;
+
+    fileStatus: FileStatus;
+
+    hashes: FileHash[];
+
+    /**
      * The date of this file uploaded
      */
     fileDate: string;
@@ -103,30 +240,33 @@ export interface File {
      * # bytes of this file.
      */
     fileLength: number;
+
     /**
-     * Release or type.
-     * - `1` is the release
-     * - ``
+     * Number of downloads for the mod
      */
-    releaseType: number;
-    fileStatus: number;
+    downloadCount: number;
+
     /**
      * Url to download
      */
     downloadUrl: string;
+    /**
+     * Game version string array, like `["1.12.2"]`
+     */
+    gameVersions: string[]
+    /**
+     * Metadata used for sorting by game versions
+     */
+    sortableGameVersions: string[]
     isAlternate: boolean;
     alternateFileId: number;
     dependencies: any[];
-    isAvailable: boolean;
     /**
      * What files inside?
      */
     modules: Module[];
     packageFingerprint: number;
-    /**
-     * Game version string array, like `["1.12.2"]`
-     */
-    gameVersion: string[];
+    
     sortableGameVersion?: SortableGameVersion[];
     installMetadata?: any;
     changelog?: any;
@@ -137,10 +277,6 @@ export interface File {
     projectStatus: number;
     renderCacheId: number;
     fileLegacyMappingId?: any;
-    /**
-     * The projectId (addonId)
-     */
-    projectId: number;
     parentProjectFileId?: any;
     parentFileLegacyMappingId?: any;
     fileTypeId?: any;
@@ -152,7 +288,7 @@ export interface File {
      * A number represents the game version id from curseforge (Not the same with Minecraft version string id).
      */
     gameVersionId: number;
-    gameId: number;
+
     isServerPack: boolean;
     serverPackFileId?: any;
 }
@@ -228,55 +364,32 @@ export interface Author {
 
 
 export interface ProjectCategory {
-    categoryId: number;
-    name: string;
-    url: string;
-    avatarUrl: string;
-    parentId: number;
-    rootId: number;
-    projectId: number;
-    avatarId: number;
-    gameId: number;
-}
-
-/**
- * The category in curseforge. For example, "World", "Resource Packs", "Modpacks", "Mods"... and so on..
- */
-export interface Category {
     /**
-     * The number id of the category. e.g. `4471`
+     * The category id
      */
     id: number;
-    /**
-     * The display name of the category. For example, "Resource Packs", "Modpacks", "Mods"...
-     */
-    name: string;
-    /**
-     * The slug is used on url path. It should looks like, "modpacks", "texture-packs", "mc-mods"...
-     */
-    slug: string;
-    /**
-     * The display icon of the category
-     */
-    avatarUrl: string;
-    /**
-     * Last modified date. The string of `Date`.
-     */
-    dateModified: string;
-    /**
-     * The parent category id (`Category.id`)
-     */
-    parentGameCategoryId: number;
-    /**
-     * The root category id. Which will be used for `sectionId` in search
-     *
-     * @see {@link SearchOptions.sectionId}
-     */
-    rootGameCategoryId: number;
-    /**
-     * The game id. Minecraft is 432.
-     */
     gameId: number;
+    name: string;
+    slug: string
+    url: string;
+    iconUrl: string;
+    dateModified: string
+    /**
+     * A top level category for other categories
+     */
+    isClass: boolean | null
+    /**
+     * The class id of the category, meaning - the class of which this category is under
+     */
+    classId: number | null
+    /**
+     * 	The parent category for this category
+     */
+    parentCategoryId: number | null
+    /**
+     * 	The display index for this category
+     */
+    displayIndex: number | null
 }
 
 /**
@@ -289,7 +402,7 @@ export interface SearchOptions {
      * The category section id, which is also a category id.
      * You can fetch if from `getCategories`.
      *
-     * To get availiable categories, you can:
+     * To get available categories, you can:
      *
      * ```ts
      * const cat = await getCategories();
@@ -301,12 +414,11 @@ export interface SearchOptions {
      *
      * @see {@link getCategories}
      */
-    sectionId?: number;
-
+    classId?: number;
     /**
      * This is actually the sub category id of the `sectionId`. All the numbers for this should also be fetch by `getCategories`.
      *
-     * To get availiable values, you can:
+     * To get available values, you can:
      *
      * ```ts
      * const cat = await getCategories();
@@ -328,17 +440,37 @@ export interface SearchOptions {
      */
     gameId?: number;
     /**
-     * The game version. For Minecraft, it should looks lile 1.12.2.
+     * The game version. For Minecraft, it should looks like 1.12.2.
      */
     gameVersion?: string;
     /**
      * The index of the addon, NOT the page!
      *
-     * When your page size is 25, if you want to get next page contents, you should have index = 25 to gext 2nd page content.
+     * When your page size is 25, if you want to get next page contents, you should have index = 25 to get 2nd page content.
      *
      * @default 0
      */
     index?: number;
+    /**
+     * Filter by ModsSearchSortField enumeration
+     */
+    sortField?: ModsSearchSortField;
+    /**
+     * 'asc' if sort is in ascending order, 'desc' if sort is in descending order
+     */
+    sortOrder?: "asc" | "desc";
+    /**
+     * Filter only mods associated to a given modloader (Forge, Fabric ...). Must be coupled with gameVersion.
+     */
+    modLoaderType?: FileModLoaderType
+    /**
+     * Filter only mods that contain files tagged with versions of the given gameVersionTypeId
+     */
+    gameVersionTypeId?: number
+    /**
+     * Filter by slug (coupled with classId will result in a unique result).
+     */
+    slug?: string
     /**
      * The page size, or the number of the addons in a page.
      *
@@ -346,20 +478,20 @@ export interface SearchOptions {
      */
     pageSize?: number;
     /**
-     * The keyword of search. If this is absent, it just list out the avaiable addons by `sectionId` and `categoryId`.
+     * The keyword of search. If this is absent, it just list out the available addons by `sectionId` and `categoryId`.
      */
     searchFilter?: string;
-    /**
-     * The way to sort the result. These are commonly used values:
-     *
-     * - `1`, sort by popularity
-     * - `2`, sort by last updated date
-     * - `3`, sort by name of the project
-     * - `5`, sort by total download counts
-     *
-     * @default 0
-     */
-    sort?: number;
+}
+
+export const enum ModsSearchSortField {
+    Featured = 1,
+    Popularity = 2,
+    LastUpdated = 3,
+    Name = 4,
+    Author = 5,
+    TotalDownloads = 6,
+    Category = 7,
+    GameVersion = 8,
 }
 
 export interface GetFeaturedAddonOptions {
@@ -403,6 +535,25 @@ async function get(url: string, options: QueryOption, body?: object, text?: bool
     }
 }
 
+export interface Pagination {
+    /**
+     * A zero based index of the first item that is included in the response
+     */
+    index: number
+    /**
+     * The requested number of items to be included in the response
+     */
+    pageSize: number
+    /**
+     * The actual number of items that were included in the response
+     */
+    resultCount: number
+    /**
+     * The total number of items available by the request
+     */
+    totalCount: number
+}
+
 /**
  * Get the addon by addon Id.
  * @param addonID The id of addon
@@ -427,7 +578,7 @@ export async function searchAddons(searchOptions: SearchOptions, options: QueryO
     if (typeof searchOptions.searchFilter === "string") {
         url += `&searchFilter=${searchOptions.searchFilter}`;
     }
-    if (typeof searchOptions.sectionId  === "number") {
+    if (typeof searchOptions.sectionId === "number") {
         url += `&sectionId=${searchOptions.sectionId}`;
     }
     if (typeof searchOptions.categoryId === "number") {
