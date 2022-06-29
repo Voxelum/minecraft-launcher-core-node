@@ -25,7 +25,7 @@ export interface DependencyObject {
 
   /**
    * Should be a version specifier or array of version specifiers defining what versions this dependency applies to. If an array of versions is provided, the dependency matches if it matches ANY of the listed versions.
-   * 
+   *
    * @default "*"
    */
   versions?: string | string[]
@@ -39,16 +39,16 @@ export interface DependencyObject {
   optional?: boolean
   /**
    * Describes situations where this dependency can be ignored. For example:
-   * 
+   *
    * ```
    * {
    *     "id": "sodium",
    *     "unless": "indium"
    * }
    * ```
-   * 
+   *
    * Game providers and loader plugins can also add their own optional fields to the dependency object for extra context when resolving dependencies. The Minecraft game provider, for instance, might define an "environment" field that can be used like so:
-   * 
+   *
    * ```
    * {
    *     "id": "modmenu",
@@ -90,7 +90,7 @@ export interface QuiltLoaderData {
     description?: string
     /**
      * A collection of key: value pairs denoting the persons or organizations that contributed to this project. The key should be the name of the person or organization, while the value can be either a string representing a single role or an array of strings each one representing a single role.
-     * 
+     *
      * A role can be any valid string. The "Owner" role is defined as being the person(s) or organization in charge of the project.
      */
     contributors?: Record<string, string>
@@ -110,7 +110,7 @@ export interface QuiltLoaderData {
      * The license or array of licenses this project operates under.
      *
      * A license is defined as either an SPDX identifier string or an object in the following form:
-     * 
+     *
      * ```
      * {
      *     "name": "Perfectly Awesome License v1.0",
@@ -128,7 +128,7 @@ export interface QuiltLoaderData {
     } | Array<string>
     /**
      * One or more paths to a square .PNG file. If an object is provided, the keys must be the resolution of the corresponding file. For example:
-     * 
+     *
      * ```
      * "icon": {
      *     "32": "path/to/icon32.png",
@@ -136,25 +136,25 @@ export interface QuiltLoaderData {
      *     "4096": "path/to/icon4096.png"
      * }
      * ```
-     * 
+     *
      * @example `assets/example_mod/icon.png`
      */
     icon?: string | Record<string, string>
   }
   /**
    * A collection of `key: value` pairs, where each key is the type of the entrypoints specified and each values is either a single entrypoint or an array of entrypoints. An entrypoint is an object with the following keys:
-   * 
+   *
    * - adapter — Language adapter to use for this entrypoint. By default this is `default` and tells loader to parse using the JVM entrypoint notation.
    * - value — Points to an implementation of the entrypoint. See below for the default JVM notation.
    *
    * If an entrypoint does not need to specify a language adapter other than the default language adapter, the entrypoint can be represented simply as the value string instead.
-   * 
+   *
    * ### JVM entrypoint notation
    *
    * When referring to a class, the binary name is used. An example of a binary name is `my.mod.MyClass$Inner`.
-   * 
+   *
    * One of the following `value` notations may be used in the JVM notation:
-   * 
+   *
    * - Implementation onto a class
    *   - The value must contain a fully qualified binary name to the class.
    *   - Implementing class must extend or implement the entrypoint interface.
@@ -212,19 +212,19 @@ export interface QuiltLoaderData {
 
   /**
    * Influences whether or not a mod candidate should be loaded or not. May be any of these values:
-   * 
+   *
    * - "always" (default for mods directly in the mods folder)
    * - "if_possible"
    * - "if_required" (default for jar-in-jar mods)
    *
    * This doesn't affect mods directly placed in the mods folder.
-   * 
+   *
    * ##### Always
    * If any versions of this mod are present, then one of them will be loaded. Due to how mod loading actually works if any of the different versions of this mod are present, and one of them has "load_type" set to "always", then all of them are treated as it being set to "always".
-   * 
+   *
    * ##### If Possible
    * If this mod can be loaded, then it will - otherwise it will silently not be loaded.
-   * 
+   *
    * ##### If Required
    * If this mod is in another mods "depends" field then it will be loaded, otherwise it will silently not be loaded.
    */
@@ -263,9 +263,9 @@ export interface QuiltLoaderData {
  * @param file The jar file or directory path. I can also be the binary content of the jar if you have already read the jar.
  */
 export async function readQuiltMod(file: FileSystem | string | Uint8Array): Promise<QuiltModMetadata> {
-  const fs = await resolveFileSystem(file);
-  const content = await fs.readFile("quilt.mod.json", "utf-8");
-  return JSON.parse(content.replace(/^\uFEFF/g, "").replace(/\n/g, ""));
+    const fs = await resolveFileSystem(file);
+    const content = await fs.readFile("quilt.mod.json", "utf-8");
+    return JSON.parse(content.replace(/^\uFEFF/g, "").replace(/\n/g, ""));
 }
 
 
