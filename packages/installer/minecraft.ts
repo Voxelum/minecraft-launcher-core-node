@@ -416,14 +416,14 @@ export class InstallJsonTask extends DownloadTask {
 }
 
 export class InstallJarTask extends DownloadTask {
-    constructor(version: ResolvedVersion & { downloads: Required<ResolvedVersion>['downloads'] }, minecraft: MinecraftLocation, options: Options) {
+    constructor(version: ResolvedVersion & { downloads: Required<ResolvedVersion>["downloads"] }, minecraft: MinecraftLocation, options: Options) {
         const folder = MinecraftFolder.from(minecraft);
         const type = options.side ?? "client";
         const destination = join(folder.getVersionRoot(version.id),
             type === "client" ? version.id + ".jar" : version.id + "-" + type + ".jar");
         const download = version.downloads[type]
         if (!download) {
-            throw new Error(`Cannot find downloadable jar in ${type}`);       
+            throw new Error(`Cannot find downloadable jar in ${type}`);
         }
         const urls = resolveDownloadUrls(download.url, version, options[type]);
         const expectSha1 = download.sha1;

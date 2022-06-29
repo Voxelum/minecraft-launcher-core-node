@@ -13,7 +13,7 @@ export type OpenTarget = string | Buffer | number;
  */
 export async function open(target: OpenTarget, options: Options = { lazyEntries: true, autoClose: false }) {
     return new Promise<ZipFile>((resolve, reject) => {
-        function handleZip(err: Error | null, zipfile: ZipFile | null) {
+        function handleZip(err: Error | undefined, zipfile: ZipFile | undefined) {
             if (err || !zipfile) {
                 reject(err ?? new Error("Cannot open zip!"));
             } else {
@@ -38,7 +38,7 @@ export async function open(target: OpenTarget, options: Options = { lazyEntries:
  */
 export function openEntryReadStream(zip: ZipFile, entry: Entry, options?: ZipFileOptions) {
     return new Promise<Readable>((resolve, reject) => {
-        function handleStream(err: Error | null, stream: Readable | null) {
+        function handleStream(err: Error | undefined, stream: Readable | undefined) {
             if (err || !stream) { reject(err); }
             else { resolve(stream); }
         }

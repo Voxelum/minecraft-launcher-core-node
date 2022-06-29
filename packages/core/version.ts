@@ -670,7 +670,7 @@ export namespace Version {
             const classifier = (lib.natives[platform.name]).replace("${arch}", platform.arch.substring(1));
             let nativeArtifact = lib.downloads?.classifiers?.[classifier];
             const info = LibraryInfo.resolve(lib.name + ":" + classifier);
-            if (!nativeArtifact) { 
+            if (!nativeArtifact) {
                 nativeArtifact = {
                     path: info.path,
                     sha1: "",

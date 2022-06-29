@@ -266,7 +266,7 @@ export interface File {
      */
     modules: Module[];
     packageFingerprint: number;
-    
+
     sortableGameVersion?: SortableGameVersion[];
     installMetadata?: any;
     changelog?: any;
