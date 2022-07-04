@@ -222,6 +222,52 @@ export class BlockModelFactory {
             const uvAttr: Vector2[] = []
 
             const faces = ["east", "west", "up", "down", "south", "north"] as const;
+
+            const getDefaultUv = (i: number) => [
+                [
+                    // east
+                    element.from[2],
+                    element.from[1],
+                    element.to[2],
+                    element.to[1],
+                ],
+                [
+                    // west
+                    element.from[2],
+                    element.from[1],
+                    element.to[2],
+                    element.to[1],
+                ],
+                [
+                    // up
+                    element.from[0],
+                    element.from[2],
+                    element.to[0],
+                    element.to[2],
+                ],
+                [
+                    // down
+                    element.from[0],
+                    element.from[2],
+                    element.to[0],
+                    element.to[2],
+                ],
+                [
+                    // south
+                    element.from[0],
+                    element.from[1],
+                    element.to[0],
+                    element.to[1],
+                ],
+                [
+                    // north
+                    element.from[0],
+                    element.from[1],
+                    element.to[0],
+                    element.to[1],
+                ]
+            ][i]
+
             for (let i = 0; i < 6; i++) {
                 const face = element.faces[faces[i]];
                 let materialIndex = 0
@@ -230,7 +276,7 @@ export class BlockModelFactory {
                     // get material index
                     materialIndex = materialIndexes[face.texture.substring(1, face.texture.length)];  // references.indexOf(ref[0] == '#' ? ref.substring(1) : ref)
 
-                    uv = face.uv || [0, 0, 16, 16];
+                    uv = face.uv || getDefaultUv(i);
 
                     if (clipUVs) {
                         uv = uv.map((e) => {
@@ -245,13 +291,6 @@ export class BlockModelFactory {
                     }
 
                     uv = uv.map((e) => e / 16);
-
-                    // let map = [
-                    //     new Vector2(x1, 1 - y1),
-                    //     new Vector2(x2, 1 - y1),
-                    //     new Vector2(x1, 1 - y2),
-                    //     new Vector2(x2, 1 - y2),
-                    // ];
                 } else {
                     uv = [0, 0, 1, 1]
                     // transparent material

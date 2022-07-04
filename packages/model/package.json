@@ -12,8 +12,8 @@
     "module": "./dist/index.esm.js"
   },
   "dependencies": {
-    "@types/three": "^0.127.0",
-    "three": "^0.127.0",
+    "@types/three": "^0.141.0",
+    "three": "^0.142.0",
     "@xmcl/resourcepack": "^1.1.3"
   },
   "repository": {
