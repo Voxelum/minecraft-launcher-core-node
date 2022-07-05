@@ -356,23 +356,13 @@ describe("Version", () => {
                     version: "no-main-class",
                 }));
         });
-        test("should throw if no asset json", async () => {
+        test("should not throw if no asset json", async () => {
             await expect(Version.parse(mockDir, "no-assets-json"))
-                .rejects
-                .toEqual(Object.assign(new Error(), {
-                    error: "BadVersionJson",
-                    version: "no-assets-json",
-                    missing: "AssetIndex",
-                }));
+                .resolves;
         });
-        test("should throw if no downloads", async () => {
+        test("should not throw if no downloads", async () => {
             await expect(Version.parse(mockDir, "no-downloads"))
-                .rejects
-                .toEqual(Object.assign(new Error(), {
-                    error: "BadVersionJson",
-                    missing: "Downloads",
-                    version: "no-downloads",
-                }));
+                .resolves;
         });
         test("should be able to parse 1.17.10 version", async () => {
             const version = await Version.parse(mockDir, "1.7.10");

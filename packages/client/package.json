@@ -15,7 +15,8 @@
     "@xmcl/nbt": "^2.0.3",
     "@xmcl/text-component": "^2.1.1",
     "bytebuffer": "^5.0.1",
-    "long": "^5.2.0",
+    "@types/long": "^4.0.2",
+    "long": "~3",
     "uuid": "^8.3.2"
   },
   "repository": {

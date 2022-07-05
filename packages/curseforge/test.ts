@@ -1,26 +1,26 @@
 import nock from "nock";
 import {
-// searchAddons,
-// getAddonDatabaseTimestamp,
-// getAddonDescription,
-// getAddonFileInfo,
-// getAddonFileChangelog,
-// getAddonFileDownloadURL,
-// getAddonFiles,
-// getAddonInfo,
-// getAddons,
-// getCategories,
-// getCategoryTimestamp,
-// getFeaturedAddons,
+    getMod,
+    // getAddonDatabaseTimestamp,
+    // getAddonDescription,
+    // getAddonFileInfo,
+    // getAddonFileChangelog,
+    // getAddonFileDownloadURL,
+    // getAddonFiles,
+    // getAddonInfo,
+    // getAddons,
+    // getCategories,
+    // getCategoryTimestamp,
+    // getFeaturedAddons,
 } from "./index";
 
-describe.skip("Curseforge", () => {
-    // test("#getAddonInfo", async () => {
-    //     nock("https://addons-ecs.forgesvc.net").get("/api/v2/addon/310806")
-    //         .reply(200, {});
-    //     await getAddonInfo(310806);
-    //     expect(nock.isDone()).toBeTruthy();
-    // });
+describe("Curseforge", () => {
+    test.skip("#getMod", async () => {
+        nock("https://api.curseforge.com").get("/v1/mods/310806")
+            .reply(200, {});
+        await getMod(310806);
+        expect(nock.isDone()).toBeTruthy();
+    });
     // test("#getAddons", async () => {
     //     nock("https://addons-ecs.forgesvc.net").post("/api/v2/addon", [310806, 2])
     //         .reply(200, []);
