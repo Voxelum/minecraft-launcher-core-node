@@ -95,14 +95,14 @@ importers:
 
   packages/core:
     specifiers:
-      '@types/yauzl': ^2.9.2
+      '@types/yauzl': ^2.10.0
       '@xmcl/unzip': ^2.0.0
       yauzl: ^2.10.0
     dependencies:
       '@xmcl/unzip': link:../unzip
       yauzl: 2.10.0
     devDependencies:
-      '@types/yauzl': 2.9.2
+      '@types/yauzl': 2.10.0
 
   packages/curseforge:
     specifiers:
@@ -124,7 +124,7 @@ importers:
 
   packages/installer:
     specifiers:
-      '@types/yauzl': ^2.9.2
+      '@types/yauzl': ^2.10.0
       '@xmcl/asm': ^0.1.4
       '@xmcl/core': ^2.10.0
       '@xmcl/forge-site-parser': ^2.0.8
@@ -140,7 +140,7 @@ importers:
       '@xmcl/unzip': link:../unzip
       yauzl: 2.10.0
     devDependencies:
-      '@types/yauzl': 2.9.2
+      '@types/yauzl': 2.10.0
       nock: 12.0.3
 
   packages/mod-parser:
@@ -238,12 +238,12 @@ importers:
     specifiers:
       '@types/node': ^15.14.9
       '@types/uuid': ^8.3.1
-      '@types/yauzl': ^2.9.2
+      '@types/yauzl': ^2.10.0
       yauzl: ^2.10.0
     devDependencies:
       '@types/node': 15.14.9
       '@types/uuid': 8.3.1
-      '@types/yauzl': 2.9.2
+      '@types/yauzl': 2.10.0
       yauzl: 2.10.0
 
   packages/user:
@@ -1265,13 +1265,6 @@ packages:
     resolution: {integrity: sha512-Cn6WYCm0tXv8p6k+A8PvbDG763EDpBoTzHdA+Q/MF6H3sapGjCm9NzoaJncJS9tUKSuCoDs9XHxYYsQDgxR6kw==}
     dependencies:
       '@types/node': 14.17.22
-    dev: false
-
-  /@types/yauzl/2.9.2:
-    resolution: {integrity: sha512-8uALY5LTvSuHgloDVUvWP3pIauILm+8/0pDMokuDYIoNsOkSwd5AiHBTSEJjKTDcZr5z8UpgOWZkxBF4iJftoA==}
-    dependencies:
-      '@types/node': 14.17.22
-    dev: true
 
   /@typescript-eslint/eslint-plugin/4.33.0_zrqxgwgitu7trrjeml3nqco3jq:
     resolution: {integrity: sha512-aINiAxGVdOl1eJyVjaWn/YcVAq4Gi/Yo35qHGCnqbWVz61g39D0h23veY/MA0rFFGfxK7TySg2uwDeNv+JgVpg==}
