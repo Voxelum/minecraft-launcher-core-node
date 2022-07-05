@@ -3,6 +3,7 @@
 [![npm](https://img.shields.io/npm/l/@xmcl/core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 [![Convensional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://www.conventionalcommits.org)
+[![Discord](https://discord.com/api/guilds/405213567118213121/widget.png)](https://discord.gg/W5XVwYY7GQ)
 
 Provide several useful functions to build a Minecraft Launcher.
 
@@ -71,6 +72,8 @@ It means you don't need to do anything in extra ideally.
 Recommend to use the latest electron, so you don't need to setup babel with webpack 4.
 
 ## Getting Started
+
+> Please respect the typescript interface and jsdoc in type definition if the markdown document is outdated. Contact the developer if you find the document outdated or mismatched!
 
 Go [Getting Started](/USAGE.md) page.
 
