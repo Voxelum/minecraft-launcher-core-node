@@ -162,7 +162,7 @@ export function parseJavaVersion(versionText: string): { version: string; majorV
             }
         }
         return {
-            version: str,
+            version: match[0],
             majorVersion: Number.parseInt(match[1]),
             patch: Number.parseInt(match[3]),
         };
