@@ -54,6 +54,7 @@ importers:
       monaco-editor: ^0.29.1
       three: ^0.127.0
       typedoc: ^0.22.6
+      typescript: ^4.4.4
       vite: ^2.6.10
     dependencies:
       '@xmcl/model': link:../packages/model
@@ -61,7 +62,8 @@ importers:
       '@types/three': 0.127.1
       monaco-editor: 0.29.1
       three: 0.127.0
-      typedoc: 0.22.6
+      typedoc: 0.22.6_typescript@4.4.4
+      typescript: 4.4.4
       vite: 2.6.10
 
   packages/asm:
@@ -153,13 +155,13 @@ importers:
 
   packages/model:
     specifiers:
-      '@types/three': ^0.127.0
+      '@types/three': ^0.141.0
       '@xmcl/resourcepack': ^1.1.3
-      three: ^0.127.0
+      three: ^0.142.0
     dependencies:
-      '@types/three': 0.127.1
+      '@types/three': 0.141.0
       '@xmcl/resourcepack': link:../resourcepack
-      three: 0.127.0
+      three: 0.142.0
 
   packages/modrinth:
     specifiers:
@@ -1233,10 +1235,21 @@ packages:
 
   /@types/three/0.127.1:
     resolution: {integrity: sha512-e90iYq3zde3axANg7BPZY0fKrez1AzveamIIFk23PMh9WtCx91geokDy+yEAIymdIldgUpvezAP6+zCV3oekXw==}
+    dev: true
+
+  /@types/three/0.141.0:
+    resolution: {integrity: sha512-OJdKDgTPVBUgc+s74DYoy4aLznbFFC38Xm4ElmU1YwGNgR7GGFVvFCX7lpVgOsT6S1zSJtGdajTsOYE8/xY9nA==}
+    dependencies:
+      '@types/webxr': 0.4.0
+    dev: false
 
   /@types/uuid/8.3.1:
     resolution: {integrity: sha512-Y2mHTRAbqfFkpjldbkHGY8JIzRN6XqYRliG8/24FcHm2D2PwW24fl5xMRTVGdrb7iMrwCaIEbLWerGIkXuFWVg==}
     dev: true
+
+  /@types/webxr/0.4.0:
+    resolution: {integrity: sha512-LQvrACV3Pj17GpkwHwXuTd733gfY+D7b9mKdrTmLdO7vo7P/o6209Qqtk63y/FCv/lspdmi0pWz6Qe/ull9kQg==}
+    dev: false
 
   /@types/yargs-parser/20.2.1:
     resolution: {integrity: sha512-7tFImggNeNBVMsn0vLrpn1H1uPrUBdnARPTpZoitY37ZrdJREzf7I16tMrlK3hen349gr1NYh8CmZQa7CTG6Aw==}
@@ -4890,6 +4903,11 @@ packages:
 
   /three/0.127.0:
     resolution: {integrity: sha512-wtgrn+mhYUbobxT7QN3GPdu3SRpSBQvwY6uOzLChWS7QE//f7paDU/+wlzbg+ngeIvBBqjBHSRuywTh8A99Jng==}
+    dev: true
+
+  /three/0.142.0:
+    resolution: {integrity: sha512-ESjPO+3geFr+ZUfVMpMnF/eVU2uJPOh0e2ZpMFqjNca1wApS9lJb7E4MjwGIczgt9iuKd8PEm6Pfgp2bJ92Xtg==}
+    dev: false
 
   /throat/5.0.0:
     resolution: {integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==}
@@ -5041,7 +5059,7 @@ packages:
     resolution: {integrity: sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=}
     dev: false
 
-  /typedoc/0.22.6:
+  /typedoc/0.22.6_typescript@4.4.4:
     resolution: {integrity: sha512-ePbJqOaz0GNkU2ehRwFwBpLD4Gp6m7jbJfHysXmDdjVKc1g8DFJ83r/LOZ9TZrkC661vgpoIY3FjSPEtUilHNA==}
     engines: {node: '>= 12.10.0'}
     hasBin: true
@@ -5053,6 +5071,7 @@ packages:
       marked: 3.0.7
       minimatch: 3.0.4
       shiki: 0.9.12
+      typescript: 4.4.4
     dev: true
 
   /typescript/4.4.4:
