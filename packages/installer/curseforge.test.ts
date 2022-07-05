@@ -23,7 +23,7 @@ function remove(f: string) {
 describe("CurseforgeInstaller", () => {
     describe("#install", () => {
         jest.setTimeout(1000000);
-        test("should be able to install curseforge", async () => {
+        test.skip("should be able to install curseforge", async () => {
 
             const dest = join(tempDir, "modpack-test-tempRoot");
             remove(dest);
