@@ -68,25 +68,29 @@ importers:
 
   packages/asm:
     specifiers:
-      long: ^5.2.0
+      '@types/long': ^4.0.2
+      long: ~3
     dependencies:
-      long: 5.2.0
+      '@types/long': 4.0.2
+      long: 3.2.0
 
   packages/client:
     specifiers:
       '@types/bytebuffer': ^5.0.42
+      '@types/long': ^4.0.2
       '@types/uuid': ^8.3.1
       '@xmcl/nbt': ^2.0.3
       '@xmcl/text-component': ^2.1.1
       bytebuffer: ^5.0.1
-      long: ^5.2.0
+      long: ~3
       tslib: ^2.3.1
       uuid: ^8.3.2
     dependencies:
+      '@types/long': 4.0.2
       '@xmcl/nbt': link:../nbt
       '@xmcl/text-component': link:../text-component
       bytebuffer: 5.0.1
-      long: 5.2.0
+      long: 3.2.0
       uuid: 8.3.2
     devDependencies:
       '@types/bytebuffer': 5.0.42
@@ -175,15 +179,17 @@ importers:
   packages/nbt:
     specifiers:
       '@types/bytebuffer': ^5.0.42
+      '@types/long': ^4.0.2
       '@types/pako': ^1.0.1
       bytebuffer: ^5.0.1
       file-type: ^12.4.2
-      long: ^5.2.0
+      long: ~3
       pako: ^1.0.10
     dependencies:
+      '@types/long': 4.0.2
       bytebuffer: 5.0.1
       file-type: 12.4.2
-      long: 5.2.0
+      long: 3.2.0
     devDependencies:
       '@types/bytebuffer': 5.0.42
       '@types/pako': 1.0.2
@@ -195,12 +201,12 @@ importers:
       '@types/pako': ^1.0.1
       bytebuffer: ^5.0.1
       file-type: ^11.0.0
-      long: ^5.2.0
+      long: ~3
       pako: ^1.0.10
     dependencies:
       bytebuffer: 5.0.1
       file-type: 11.1.0
-      long: 5.2.0
+      long: 3.2.0
       pako: 1.0.11
     devDependencies:
       '@types/bytebuffer': 5.0.42
@@ -272,13 +278,15 @@ importers:
 
   packages/world:
     specifiers:
+      '@types/long': ^4.0.2
       '@xmcl/nbt': ^2.0.3
       '@xmcl/system': ^2.2.3
-      long: ^5.2.0
+      long: ~3
     dependencies:
+      '@types/long': 4.0.2
       '@xmcl/nbt': link:../nbt
       '@xmcl/system': link:../system
-      long: 5.2.0
+      long: 3.2.0
 
 packages:
 
@@ -1152,7 +1160,7 @@ packages:
   /@types/bytebuffer/5.0.42:
     resolution: {integrity: sha512-lEgKojWUAc/MG2t649oZS5AfYFP2xRNPoDuwDBlBMjHXd8MaGPgFgtCXUK7inZdBOygmVf10qxc1Us8GXC96aw==}
     dependencies:
-      '@types/long': 4.0.1
+      '@types/long': 4.0.2
       '@types/node': 14.17.22
     dev: true
 
@@ -1197,9 +1205,8 @@ packages:
     resolution: {integrity: sha512-qcUXuemtEu+E5wZSJHNxUXeCZhAfXKQ41D+duX+VYPde7xyEVZci+/oXKJL13tnRs9lR2pr4fod59GT6/X1/yQ==}
     dev: true
 
-  /@types/long/4.0.1:
-    resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
-    dev: true
+  /@types/long/4.0.2:
+    resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
 
   /@types/minimist/1.2.2:
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
@@ -3788,10 +3795,6 @@ packages:
   /long/3.2.0:
     resolution: {integrity: sha512-ZYvPPOMqUwPoDsbJaR10iQJYnMuZhRTvHYl62ErLIEX7RgFlziSBUUvrt3OVfc47QlHHpzPZYP17g3Fv7oeJkg==}
     engines: {node: '>=0.6'}
-    dev: false
-
-  /long/5.2.0:
-    resolution: {integrity: sha512-9RTUNjK60eJbx3uz+TEGF7fUr29ZDxR5QzXcyDpeSfeH28S9ycINflOgOlppit5U+4kNTe83KQnMEerw7GmE8w==}
     dev: false
 
   /lru-cache/5.1.1:
