@@ -4,9 +4,9 @@
 import { httpRequester } from "./http";
 import { Agent } from "https";
 
-const BASE_URL = "https://addons-ecs.forgesvc.net";
+const BASE_URL = "https://api.curseforge.com";
 
-export interface AddonAsset {
+export interface ModAsset {
     id: number;
     modId: number;
     title: string;
@@ -15,7 +15,7 @@ export interface AddonAsset {
     url: string;
 }
 
-export const enum AddonStatus {
+export const enum ModStatus {
     New = 1,
     ChangesRequired = 2,
     UnderSoftReview = 3,
@@ -51,7 +51,7 @@ export interface FileIndex {
     modLoader: FileModLoaderType
 }
 
-export interface AddonInfo {
+export interface Mod {
     /**
      * The addon id. You can use this in many functions required the `addonID`
      */
@@ -82,7 +82,7 @@ export interface AddonInfo {
     /**
      * Current mod status
      */
-    status: AddonStatus;
+    status: ModStatus;
     /**
      * Number of downloads for the mod
      */
@@ -98,7 +98,7 @@ export interface AddonInfo {
     /**
      * List of categories that this mod is related to
      */
-    categories: ProjectCategory[];
+    categories: ModCategory[];
     /**
      * The class id this mod belongs to
      */
@@ -108,9 +108,9 @@ export interface AddonInfo {
      */
     authors: Author[];
 
-    logo: AddonAsset;
+    logo: ModAsset;
 
-    screenshots: AddonAsset[];
+    screenshots: ModAsset[];
     /**
      * The id of the main file of the mod
      */
@@ -315,26 +315,6 @@ export interface Module {
     type: number;
 }
 
-export interface Attachment {
-    id: number;
-    projectId: number;
-    description: string;
-    isDefault: boolean;
-    /**
-     * Small icon
-     */
-    thumbnailUrl: string;
-    /**
-     * The title of this attachment
-     */
-    title: string;
-    /**
-     * The url. Usually the image url.
-     */
-    url: string;
-    status: number;
-}
-
 /**
  * The author info
  */
@@ -363,7 +343,7 @@ export interface Author {
 }
 
 
-export interface ProjectCategory {
+export interface ModCategory {
     /**
      * The category id
      */
@@ -395,7 +375,7 @@ export interface ProjectCategory {
 /**
  * The search options of the search API.
  *
- * @see {@link searchAddons}
+ * @see {@link searchMods}
  */
 export interface SearchOptions {
     /**
@@ -494,20 +474,6 @@ export const enum ModsSearchSortField {
     GameVersion = 8,
 }
 
-export interface GetFeaturedAddonOptions {
-    /**
-     * The game id. The Minecraft is 432.
-     * @default 432
-     */
-    gameId?: number;
-    /**
-     * The # of featured
-     */
-    featuredCount?: number;
-    popularCount?: number;
-    updatedCount?: number;
-}
-
 /**
  * The options to query
  */
@@ -520,6 +486,10 @@ export interface QueryOption {
      * The user agent in nodejs of https
      */
     userAgent?: Agent;
+    /**
+     * override the http client
+     */
+    client?: (url: string, options: QueryOption, body?: object, text?: boolean) => Promise<object | string>
 }
 
 async function get(url: string, options: QueryOption, body?: object, text?: boolean) {
@@ -555,113 +525,66 @@ export interface Pagination {
 }
 
 /**
- * Get the addon by addon Id.
- * @param addonID The id of addon
+ * Get the mod by mod Id.
+ * @param modId The id of mod
  * @param options The query options
  */
-export async function getAddonInfo(addonID: number, options: QueryOption = {}) {
-    let body = await get(`/api/v2/addon/${addonID}`, options);
-    return body as AddonInfo;
-}
-/**
- * Get the list of addon by addon ids.
- */
-export async function getAddons(addonIDs: number[], options: QueryOption = {}) {
-    let body = await get("/api/v2/addon", options, addonIDs);
-    return body as AddonInfo[];
+export async function getMod(modId: number, options: QueryOption = {}) {
+    let body = await (options.client ?? get)(`/v1/mods/${modId}`, options);
+    return body as Mod;
 }
 /**
  * List the addons by category/section or search addons by keyword.
  */
-export async function searchAddons(searchOptions: SearchOptions, options: QueryOption = {}) {
-    let url = `/api/v2/addon/search?gameId=${searchOptions.gameId ?? 432}&gameVersion=${searchOptions.gameVersion ?? ""}&index=${searchOptions.index ?? 0}&pageSize=${searchOptions.pageSize ?? 12}&sortField=${searchOptions.sortField ?? 1}`;
+export async function searchMods(searchOptions: SearchOptions, options: QueryOption = {}) {
+    let url = `/api/v2/addon/search?gameId=${searchOptions.gameId ?? 432}&classId=${searchOptions.classId ?? ""}&gameVersion=${searchOptions.gameVersion ?? ""}&index=${searchOptions.index ?? 0}&pageSize=${searchOptions.pageSize ?? 12}&sortField=${searchOptions.sortField ?? 1}`;
     if (typeof searchOptions.searchFilter === "string") {
         url += `&searchFilter=${searchOptions.searchFilter}`;
     }
-    // if (typeof searchOptions.sectionId === "number") {
-    //     url += `&sectionId=${searchOptions.sectionId}`;
-    // }
+    if (typeof searchOptions.slug === "string") {
+        url += `&slug=${searchOptions.slug}`;
+    }
+    if (typeof searchOptions.sortOrder === "string") {
+        url += `&sortOrder=${searchOptions.sortOrder}`;
+    }
+    if (typeof searchOptions.modLoaderType === "number") {
+        url += `&modLoaderType=${searchOptions.modLoaderType}`;
+    }
     if (typeof searchOptions.categoryId === "number") {
         url += `&categoryId=${searchOptions.categoryId}`;
     }
-    let body = await get(url, options);
-    return body as AddonInfo[];
+    let body: { data: Mod[]; pagination: Pagination } = await (options.client ?? get)(url, options);
+    return body;
 }
 /**
  * Get the addon project description HTML string.
  *
  * @returns The string of description HTML.
  */
-export async function getAddonDescription(addonID: number, options: QueryOption = {}) {
-    let url = `/api/v2/addon/${addonID}/description`;
-    let body = await get(url, options, undefined, true);
-    return body as string;
+export async function getAddonDescription(modId: number, options: QueryOption = {}) {
+    let url = `/v1/mods/${modId}/description`;
+    let body = await (options.client ?? get)(url, options, undefined, true);
+    return body.data as string;
 }
-/**
- * Get the content of the changelog of a addon's file
- */
-export async function getAddonFileChangelog(addonID: number, fileID: number, options: QueryOption = {}) {
-    let url = `/api/v2/addon/${addonID}/file/${fileID}/changelog`;
-    let body = await get(url, options, undefined, true);
-    return body as string;
-}
-export async function getAddonFileInfo(addonID: number, fileID: number, options: QueryOption = {}) {
-    let url = `/api/v2/addon/${addonID}/file/${fileID}`;
-    let body = await get(url, options);
-    return body as File;
-}
-/**
- * Return the addon file download url string.
- */
-export async function getAddonFileDownloadURL(addonID: number, fileID: number, options: QueryOption = {}) {
-    let url = `/api/v2/addon/${addonID}/file/${fileID}/download-url`;
-    let body = await get(url, options, undefined, true);
-    return body as string;
+
+export async function getModFile(modId: number, fileId: number, options: QueryOption = {}) {
+    let url = `/v1/mods/${modId}/files/${fileId}`;
+    let body = await (options.client ?? get)(url, options);
+    return body.data as File;
 }
 /**
  * Get the file list of the addon.
  */
-export async function getAddonFiles(addonID: number, options: QueryOption = {}) {
-    let url = `/api/v2/addon/${addonID}/files`;
-    let body = await get(url, options);
-    return body as File[];
-}
-/**
- * Get the addon data base timestamp in string of `Date`, like "2019-06-09T23:34:29.103Z".
- */
-export async function getAddonDatabaseTimestamp(options: QueryOption = {}) {
-    let url = "/api/v2/addon/timestamp";
-    let body = await get(url, options, undefined, false);
-    return body as string;
-}
-/**
- * Select several addons for the game.
- */
-export async function getFeaturedAddons(getOptions: GetFeaturedAddonOptions = {}, options: QueryOption = {}) {
-    let url = "/api/v2/addon/featured";
-    let body = await get(url, options, {
-        "GameId": getOptions.gameId ?? 432,
-        "addonIds": [],
-        "featuredCount": getOptions.featuredCount ?? 4,
-        "popularCount": getOptions.popularCount ?? 4,
-        "updatedCount": getOptions.updatedCount ?? 4,
-    });
-    return body as AddonInfo[];
+export async function getModFiles(modId: number, options: QueryOption = {}) {
+    let url = `/v1/mods/${modId}/files`;
+    let body = await (options.client ?? get)(url, options);
+    return body as { data: File[]; pagination: Pagination };
 }
 /**
  * Get the list of category. You can use the `category.id` in params of `searchAddon` function.
  */
 export async function getCategories(options: QueryOption = {}) {
-    let url = "/api/v2/category";
-    let body = await get(url, options);
-    return body as ProjectCategory[];
-}
-/**
- * Get the timestamp of the categories data base.
- * It should return the `Date` string like "2019-06-09T23:34:29.103Z"
- */
-export async function getCategoryTimestamp(options: QueryOption = {}) {
-    let url = "/api/v2/category/timestamp";
-    let body = await get(url, options, undefined, false);
-    return body;
+    let url = "/v1/categories?gameId=432";
+    let body = await (options.client ?? get)(url, options);
+    return body as ModCategory[];
 }
