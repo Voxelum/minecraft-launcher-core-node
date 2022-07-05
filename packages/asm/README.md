@@ -10,7 +10,7 @@ Provide some functions to query Minecraft server status.
 
 ## Usage
 
-### Ping Minecraft Server  
+### Visit java class in jar file
 
 The usage is just like asm library in java:
 
