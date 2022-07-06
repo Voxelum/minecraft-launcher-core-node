@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/modrinth",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "./index.ts",
   "module": "./index.ts",
   "browser": "./browser/index.js",

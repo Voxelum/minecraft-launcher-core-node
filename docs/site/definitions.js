@@ -167,12 +167,9 @@ export interface LanServerInfo {
     port: number;
 }
 export declare class MinecraftLanBroadcaster {
-    readonly servers: LanServerInfo[];
-    readonly interval: number;
-    private intervalHandle;
     private sock;
-    constructor(servers: LanServerInfo[], interval: number);
-    boradcast(): void;
+    constructor();
+    broadcast(inf: LanServerInfo): void;
     bind(): void;
     destroy(): Promise<void>;
 }
@@ -1010,15 +1007,15 @@ export interface ResolvedVersion {
      * The main class full qualified name
      */
     mainClass: string;
-    assetIndex: Version.AssetIndex;
+    assetIndex?: Version.AssetIndex;
     /**
      * The asset index id of this version. Should be something like \`1.14\`, \`1.12\`
      */
     assets: string;
     downloads: {
-        client: Version.Download;
-        server: Version.Download;
-        [key: string]: Version.Download;
+        client?: Version.Download;
+        server?: Version.Download;
+        [key: string]: Version.Download | undefined;
     };
     libraries: ResolvedLibrary[];
     minimumLauncherVersion: number;
@@ -1409,62 +1406,140 @@ definitions['@xmcl/curseforge/http/index.browser.d.ts'] = `import { HttpRequeste
 definitions['@xmcl/curseforge/http/index.d.ts'] = `import { HttpRequester } from "./base"; export declare const httpRequester: HttpRequester;
 \/\/# sourceMappingURL=index.d.ts.map`;
 definitions['@xmcl/curseforge/index.d.ts'] = `\/\// <reference types="node" /> import { Agent } from "https";
-export interface AddonInfo {
+export interface ModAsset {
+    id: number;
+    modId: number;
+    title: string;
+    description: string;
+    thumbnailUrl: string;
+    url: string;
+}
+export declare const enum ModStatus {
+    New = 1,
+    ChangesRequired = 2,
+    UnderSoftReview = 3,
+    Approved = 4,
+    Rejected = 5,
+    ChangesMade = 6,
+    Inactive = 7,
+    Abandoned = 8,
+    Deleted = 9,
+    UnderReview = 10
+}
+export declare const enum FileReleaseType {
+    Release = 1,
+    Beta = 2,
+    Alpha = 3
+}
+export declare const enum FileModLoaderType {
+    Any = 0,
+    Forge = 1,
+    Cauldron = 2,
+    LiteLoader = 3,
+    Fabric = 4,
+    Quilt = 5
+}
+export interface FileIndex {
+    gameVersion: string;
+    field: number;
+    filename: string;
+    releaseType: FileReleaseType;
+    gameVersionTypeId: number | null;
+    modLoader: FileModLoaderType;
+}
+export interface Mod {
     /**
      * The addon id. You can use this in many functions required the \`addonID\`
      */
     id: number;
     /**
+     * Game id. Minecraft is 432.
+     */
+    gameId: number;
+    /**
      * The display name of the addon
      */
     name: string;
     /**
-     * The list of authors
+     * The mod slug that would appear in the URL
      */
-    authors: Author[];
-    /**
-     * The attachments. Usually include the project icon and the example images.
-     */
-    attachments: Attachment[];
-    websiteUrl: string;
-    /**
-     * Game id. Minecraft is 432.
-     */
-    gameId: number;
+    slug: string;
+    /** Relevant links for the mod such as Issue tracker and Wiki */
+    links: {
+        websiteUrl: string;
+        wikiUrl: string;
+        issuesUrl: string;
+        sourceYUrl: string;
+    };
     /**
      * One line summery
      */
     summary: string;
     /**
+     * Current mod status
+     */
+    status: ModStatus;
+    /**
+     * Number of downloads for the mod
+     */
+    downloadCount: number;
+    /**
+     * Whether the mod is included in the featured mods list
+     */
+    isFeatured: boolean;
+    /**
+     * The main category of the mod as it was chosen by the mod author
+     */
+    primaryCategoryId: number;
+    /**
+     * List of categories that this mod is related to
+     */
+    categories: ModCategory[];
+    /**
+     * The class id this mod belongs to
+     */
+    classId: number | null;
+    /**
+     * The list of authors
+     */
+    authors: Author[];
+    logo: ModAsset;
+    screenshots: ModAsset[];
+    /**
+     * The id of the main file of the mod
+     */
+    mainFileId: number;
+    latestFiles: File[];
+    /**
+     * List of file related details for the latest files of the mod
+     */
+    latestFilesIndexes: FileIndex[];
+    /**
+     * The creation date of the mod
+     */
+    dateCreated: string;
+    dateModified: string;
+    dateReleased: string;
+    /**
+     * Is mod allowed to be distributed
+     */
+    allowModDistribution: boolean | null;
+    /**
+     * The mod popularity rank for the game
+     */
+    gamePopularityRank: number;
+    /**
+     * Is the mod available for search. This can be false when a mod is experimental, in a deleted state or has only alpha files
+     */
+    isAvailable: boolean;
+    /**
      * The default download file id
      */
     defaultFileId: number;
-    downloadCount: number;
-    latestFiles: File[];
     /**
-     * The category of the project
+     * The mod's thumbs up count
      */
-    categories: ProjectCategory[];
-    status: number;
-    primaryCategoryId: number;
-    /**
-     * The big category section
-     */
-    categorySection: CategorySection;
-    slug: string;
-    gameVersionLatestFiles: GameVersionLatestFile[];
-    isFeatured: boolean;
-    popularityScore: number;
-    gamePopularityRank: number;
-    primaryLanguage: string;
-    gameSlug: string;
-    gameName: string;
-    portalName: string;
-    dateModified: string;
-    dateCreated: string;
-    dateReleased: string;
-    isAvailable: boolean;
-    isExperiemental: boolean;
+    thumbsUpCount: number;
 }
 export interface GameVersionLatestFile {
     gameVersion: string;
@@ -1482,11 +1557,48 @@ export interface CategorySection {
     extraIncludePattern?: any;
     gameCategoryId: number;
 }
+export declare const enum HashAlgo {
+    Sha1 = 1,
+    Md5 = 2
+}
+export interface FileHash {
+    algo: HashAlgo;
+    value: string;
+}
+export declare const enum FileStatus {
+    Processing = 1,
+    ChangesRequired = 2,
+    UnderReview = 3,
+    Approved = 4,
+    Rejected = 5,
+    MalwareDetected = 6,
+    Deleted = 7,
+    Archived = 8,
+    Testing = 9,
+    Released = 10,
+    ReadyForReview = 11,
+    Deprecated = 12,
+    Baking = 13,
+    AwaitingPublishing = 14,
+    FailedPublishing = 15
+}
 export interface File {
     /**
      * The fileID
      */
     id: number;
+    /**
+     * The game id related to the mod that this file belongs to
+     */
+    gameId: number;
+    /**
+     * The projectId (addonId)
+     */
+    modId: number;
+    /**
+     * Whether the file is available to download
+     */
+    isAvailable: boolean;
     /**
      * Display name
      */
@@ -1496,6 +1608,15 @@ export interface File {
      */
     fileName: string;
     /**
+    * Release or type.
+    * - \`1\` is the release
+    * - \`2\` beta
+    * - \`3\` alpha
+    */
+    releaseType: number;
+    fileStatus: FileStatus;
+    hashes: FileHash[];
+    /**
      * The date of this file uploaded
      */
     fileDate: string;
@@ -1504,29 +1625,29 @@ export interface File {
      */
     fileLength: number;
     /**
-     * Release or type.
-     * - \`1\` is the release
-     * - \`\`
+     * Number of downloads for the mod
      */
-    releaseType: number;
-    fileStatus: number;
+    downloadCount: number;
     /**
      * Url to download
      */
     downloadUrl: string;
+    /**
+     * Game version string array, like \`["1.12.2"]\`
+     */
+    gameVersions: string[];
+    /**
+     * Metadata used for sorting by game versions
+     */
+    sortableGameVersions: string[];
     isAlternate: boolean;
     alternateFileId: number;
     dependencies: any[];
-    isAvailable: boolean;
     /**
      * What files inside?
      */
     modules: Module[];
     packageFingerprint: number;
-    /**
-     * Game version string array, like \`["1.12.2"]\`
-     */
-    gameVersion: string[];
     sortableGameVersion?: SortableGameVersion[];
     installMetadata?: any;
     changelog?: any;
@@ -1537,10 +1658,6 @@ export interface File {
     projectStatus: number;
     renderCacheId: number;
     fileLegacyMappingId?: any;
-    /**
-     * The projectId (addonId)
-     */
-    projectId: number;
     parentProjectFileId?: any;
     parentFileLegacyMappingId?: any;
     fileTypeId?: any;
@@ -1552,7 +1669,6 @@ export interface File {
      * A number represents the game version id from curseforge (Not the same with Minecraft version string id).
      */
     gameVersionId: number;
-    gameId: number;
     isServerPack: boolean;
     serverPackFileId?: any;
 }
@@ -1569,31 +1685,12 @@ export interface Module {
     /**
      * Actually the file name, not the folder
      */
-    foldername: string;
+    name: string;
     /**
      * A number represent fingerprint
      */
     fingerprint: number;
     type: number;
-}
-export interface Attachment {
-    id: number;
-    projectId: number;
-    description: string;
-    isDefault: boolean;
-    /**
-     * Small icon
-     */
-    thumbnailUrl: string;
-    /**
-     * The title of this attachment
-     */
-    title: string;
-    /**
-     * The url. Usually the image url.
-     */
-    url: string;
-    status: number;
 }
 /**
  * The author info
@@ -1620,67 +1717,45 @@ export interface Author {
     userId: number;
     twitchId: number;
 }
-export interface ProjectCategory {
-    categoryId: number;
-    name: string;
-    url: string;
-    avatarUrl: string;
-    parentId: number;
-    rootId: number;
-    projectId: number;
-    avatarId: number;
-    gameId: number;
-}
-/**
- * The category in curseforge. For example, "World", "Resource Packs", "Modpacks", "Mods"... and so on..
- */
-export interface Category {
+export interface ModCategory {
     /**
-     * The number id of the category. e.g. \`4471\`
+     * The category id
      */
     id: number;
-    /**
-     * The display name of the category. For example, "Resource Packs", "Modpacks", "Mods"...
-     */
+    gameId: number;
     name: string;
-    /**
-     * The slug is used on url path. It should looks like, "modpacks", "texture-packs", "mc-mods"...
-     */
     slug: string;
-    /**
-     * The display icon of the category
-     */
-    avatarUrl: string;
-    /**
-     * Last modified date. The string of \`Date\`.
-     */
+    url: string;
+    iconUrl: string;
     dateModified: string;
     /**
-     * The parent category id (\`Category.id\`)
+     * A top level category for other categories
      */
-    parentGameCategoryId: number;
+    isClass: boolean | null;
     /**
-     * The root category id. Which will be used for \`sectionId\` in search
-     *
-     * @see {@link SearchOptions.sectionId}
+     * The class id of the category, meaning - the class of which this category is under
      */
-    rootGameCategoryId: number;
+    classId: number | null;
     /**
-     * The game id. Minecraft is 432.
+     * 	The parent category for this category
      */
-    gameId: number;
+    parentCategoryId: number | null;
+    /**
+     * 	The display index for this category
+     */
+    displayIndex: number | null;
 }
 /**
  * The search options of the search API.
  *
- * @see {@link searchAddons}
+ * @see {@link searchMods}
  */
 export interface SearchOptions {
     /**
      * The category section id, which is also a category id.
      * You can fetch if from \`getCategories\`.
      *
-     * To get availiable categories, you can:
+     * To get available categories, you can:
      *
      * \`\`\`ts
      * const cat = await getCategories();
@@ -1692,11 +1767,11 @@ export interface SearchOptions {
      *
      * @see {@link getCategories}
      */
-    sectionId?: number;
+    classId?: number;
     /**
      * This is actually the sub category id of the \`sectionId\`. All the numbers for this should also be fetch by \`getCategories\`.
      *
-     * To get availiable values, you can:
+     * To get available values, you can:
      *
      * \`\`\`ts
      * const cat = await getCategories();
@@ -1718,17 +1793,37 @@ export interface SearchOptions {
      */
     gameId?: number;
     /**
-     * The game version. For Minecraft, it should looks lile 1.12.2.
+     * The game version. For Minecraft, it should looks like 1.12.2.
      */
     gameVersion?: string;
     /**
      * The index of the addon, NOT the page!
      *
-     * When your page size is 25, if you want to get next page contents, you should have index = 25 to gext 2nd page content.
+     * When your page size is 25, if you want to get next page contents, you should have index = 25 to get 2nd page content.
      *
      * @default 0
      */
     index?: number;
+    /**
+     * Filter by ModsSearchSortField enumeration
+     */
+    sortField?: ModsSearchSortField;
+    /**
+     * 'asc' if sort is in ascending order, 'desc' if sort is in descending order
+     */
+    sortOrder?: "asc" | "desc";
+    /**
+     * Filter only mods associated to a given modloader (Forge, Fabric ...). Must be coupled with gameVersion.
+     */
+    modLoaderType?: FileModLoaderType;
+    /**
+     * Filter only mods that contain files tagged with versions of the given gameVersionTypeId
+     */
+    gameVersionTypeId?: number;
+    /**
+     * Filter by slug (coupled with classId will result in a unique result).
+     */
+    slug?: string;
     /**
      * The page size, or the number of the addons in a page.
      *
@@ -1736,33 +1831,19 @@ export interface SearchOptions {
      */
     pageSize?: number;
     /**
-     * The keyword of search. If this is absent, it just list out the avaiable addons by \`sectionId\` and \`categoryId\`.
+     * The keyword of search. If this is absent, it just list out the available addons by \`sectionId\` and \`categoryId\`.
      */
     searchFilter?: string;
-    /**
-     * The way to sort the result. These are commonly used values:
-     *
-     * - \`1\`, sort by popularity
-     * - \`2\`, sort by last updated date
-     * - \`3\`, sort by name of the project
-     * - \`5\`, sort by total download counts
-     *
-     * @default 0
-     */
-    sort?: number;
 }
-export interface GetFeaturedAddonOptions {
-    /**
-     * The game id. The Minecraft is 432.
-     * @default 432
-     */
-    gameId?: number;
-    /**
-     * The # of featured
-     */
-    featuredCount?: number;
-    popularCount?: number;
-    updatedCount?: number;
+export declare const enum ModsSearchSortField {
+    Featured = 1,
+    Popularity = 2,
+    LastUpdated = 3,
+    Name = 4,
+    Author = 5,
+    TotalDownloads = 6,
+    Category = 7,
+    GameVersion = 8
 }
 /**
  * The options to query
@@ -1776,57 +1857,60 @@ export interface QueryOption {
      * The user agent in nodejs of https
      */
     userAgent?: Agent;
+    /**
+     * override the http client
+     */
+    client?: (url: string, options: QueryOption, body?: object, text?: boolean) => Promise<object | string>;
+}
+export interface Pagination {
+    /**
+     * A zero based index of the first item that is included in the response
+     */
+    index: number;
+    /**
+     * The requested number of items to be included in the response
+     */
+    pageSize: number;
+    /**
+     * The actual number of items that were included in the response
+     */
+    resultCount: number;
+    /**
+     * The total number of items available by the request
+     */
+    totalCount: number;
 }
 /**
- * Get the addon by addon Id.
- * @param addonID The id of addon
+ * Get the mod by mod Id.
+ * @param modId The id of mod
  * @param options The query options
  */
-export declare function getAddonInfo(addonID: number, options?: QueryOption): Promise<AddonInfo>;
-/**
- * Get the list of addon by addon ids.
- */
-export declare function getAddons(addonIDs: number[], options?: QueryOption): Promise<AddonInfo[]>;
+export declare function getMod(modId: number, options?: QueryOption): Promise<Mod>;
 /**
  * List the addons by category/section or search addons by keyword.
  */
-export declare function searchAddons(searchOptions: SearchOptions, options?: QueryOption): Promise<AddonInfo[]>;
+export declare function searchMods(searchOptions: SearchOptions, options?: QueryOption): Promise<{
+    data: Mod[];
+    pagination: Pagination;
+}>;
 /**
  * Get the addon project description HTML string.
  *
  * @returns The string of description HTML.
  */
-export declare function getAddonDescription(addonID: number, options?: QueryOption): Promise<string>;
-/**
- * Get the content of the changelog of a addon's file
- */
-export declare function getAddonFileChangelog(addonID: number, fileID: number, options?: QueryOption): Promise<string>;
-export declare function getAddonFileInfo(addonID: number, fileID: number, options?: QueryOption): Promise<File[]>;
-/**
- * Return the addon file download url string.
- */
-export declare function getAddonFileDownloadURL(addonID: number, fileID: number, options?: QueryOption): Promise<string>;
+export declare function getAddonDescription(modId: number, options?: QueryOption): Promise<string>;
+export declare function getModFile(modId: number, fileId: number, options?: QueryOption): Promise<File>;
 /**
  * Get the file list of the addon.
  */
-export declare function getAddonFiles(addonID: number, options?: QueryOption): Promise<File[]>;
-/**
- * Get the addon data base timestamp in string of \`Date\`, like "2019-06-09T23:34:29.103Z".
- */
-export declare function getAddonDatabaseTimestamp(options?: QueryOption): Promise<string>;
-/**
- * Select several addons for the game.
- */
-export declare function getFeaturedAddons(getOptions?: GetFeaturedAddonOptions, options?: QueryOption): Promise<AddonInfo[]>;
+export declare function getModFiles(modId: number, options?: QueryOption): Promise<{
+    data: File[];
+    pagination: Pagination;
+}>;
 /**
  * Get the list of category. You can use the \`category.id\` in params of \`searchAddon\` function.
  */
-export declare function getCategories(options?: QueryOption): Promise<Category[]>;
-/**
- * Get the timestamp of the categories data base.
- * It should return the \`Date\` string like "2019-06-09T23:34:29.103Z"
- */
-export declare function getCategoryTimestamp(options?: QueryOption): Promise<any>;
+export declare function getCategories(options?: QueryOption): Promise<ModCategory[]>;
 \/\/# sourceMappingURL=index.d.ts.map`;
 definitions['@xmcl/forge-site-parser/index.d.ts'] = `/**  * One forge version download info
  */
@@ -2666,7 +2750,7 @@ export declare function getForgeVersionList(option?: {
      * If this presents, it will send request with the original list timestamp.
      *
      * If the server believes there is no modification after the original one,
-     * it will directly return the orignal one.
+     * it will directly return the original one.
      */
     original?: ForgeVersionList;
 }): Promise<ForgeVersionList>;
@@ -2856,9 +2940,10 @@ export declare class DownloadError extends Error {
     readonly metadata: ResourceMetadata | undefined;
     readonly headers: Record<string, any>;
     readonly destination: string;
+    readonly retryAttempt: number;
     readonly segments: Segment[];
     readonly segmentErrors: any[];
-    constructor(error: DownloadFailedReason, metadata: ResourceMetadata | undefined, headers: Record<string, any>, destination: string, segments: Segment[], segmentErrors: any[]);
+    constructor(error: DownloadFailedReason, metadata: ResourceMetadata | undefined, headers: Record<string, any>, destination: string, retryAttempt: number, segments: Segment[], segmentErrors: any[]);
 }
 export declare type NetworkErrorType = "ConnectionReset" | "ConnectionTimeout" | "OperationCancelled" | "ProtocolError";
 export declare function resolveNetworkErrorType(e: any): NetworkErrorType | undefined;
@@ -3044,6 +3129,7 @@ export * from "./optifine";
 export * from "./java";
 export * from "./java-runtime";
 export * from "./diagnose";
+export * from "./quilt";
 export { InstallOptions } from "./utils";
 export * from "./http/download";
 export * from "./http/agents";
@@ -3298,6 +3384,7 @@ export declare function resolveJava(path: string): Promise<JavaInfo | undefined>
 export declare function parseJavaVersion(versionText: string): {
     version: string;
     majorVersion: number;
+    patch: number;
 } | undefined;
 /**
  * Get all potential java locations for Minecraft.
@@ -3428,7 +3515,7 @@ export declare function installLiteloader(versionMeta: LiteloaderVersion, locati
  */
 export declare function installLiteloaderTask(versionMeta: LiteloaderVersion, location: MinecraftLocation, options?: InstallOptions): Task<string>;
 \/\/# sourceMappingURL=liteloader.d.ts.map`;
-definitions['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion } from "@xmcl/core"; import { Task } from "@xmcl/task";
+definitions['@xmcl/installer/minecraft.d.ts'] = `import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version } from "@xmcl/core"; import { Task } from "@xmcl/task";
 import { DownloadTask } from "./downloadTask";
 import { DownloadBaseOptions } from "./http/download";
 import { Timestamped } from "./http/fetch";
@@ -3560,7 +3647,7 @@ export declare type InstallLibraryVersion = Pick<ResolvedVersion, "libraries" | 
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions {
+export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions, InstallSideOption {
     /**
      * The version json url replacement
      */
@@ -3682,10 +3769,14 @@ export declare class InstallJsonTask extends DownloadTask {
     constructor(version: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options);
 }
 export declare class InstallJarTask extends DownloadTask {
-    constructor(version: ResolvedVersion, minecraft: MinecraftLocation, options: Options);
+    constructor(version: ResolvedVersion & {
+        downloads: Required<ResolvedVersion>["downloads"];
+    }, minecraft: MinecraftLocation, options: Options);
 }
 export declare class InstallAssetIndexTask extends DownloadTask {
-    constructor(version: ResolvedVersion, options?: AssetsOptions);
+    constructor(version: ResolvedVersion & {
+        assetIndex: Version.AssetIndex;
+    }, options?: AssetsOptions);
 }
 export declare class InstallLibraryTask extends DownloadTask {
     constructor(lib: ResolvedLibrary, folder: MinecraftFolder, options: LibraryOptions);
@@ -3910,6 +4001,32 @@ export declare class PostProcessingTask extends AbortableTask<void> {
     protected isAbortedError(e: any): boolean;
 }
 \/\/# sourceMappingURL=profile.d.ts.map`;
+definitions['@xmcl/installer/quilt.d.ts'] = `import { MinecraftLocation } from "@xmcl/core"; export declare const DEFAULT_META_URL = "https:\/\/meta.quiltmc.org";
+export interface InstallQuiltVersionOptions {
+    minecraftVersion: string;
+    version: string;
+    minecraft: MinecraftLocation;
+    remote?: string;
+}
+export declare function installQuiltVersion(options: InstallQuiltVersionOptions): Promise<string>;
+export interface GetQuiltOptions {
+    remote?: string;
+    cache?: {
+        timestamp: string;
+        value: QuiltArtifactVersion[];
+    };
+}
+export interface QuiltArtifactVersion {
+    separator: string;
+    build: number;
+    /**
+     * e.g. "org.quiltmc:quilt-loader:0.16.1",
+     */
+    maven: string;
+    version: string;
+}
+export declare function getQuiltVersionsList(options?: GetQuiltOptions): Promise<QuiltArtifactVersion[]>;
+\/\/# sourceMappingURL=quilt.d.ts.map`;
 definitions['@xmcl/installer/unzip.d.ts'] = `import { BaseTask } from "@xmcl/task"; import { Entry, ZipFile } from "yauzl";
 export interface EntryResolver {
     (entry: Entry): Promise<string> | string;
@@ -4375,6 +4492,8 @@ export interface ForgeModASMData {
      * Does class files contain minecraft.client package
      */
     usedMinecraftClientPackage: boolean;
+    fmlPluginClassName?: string;
+    fmlPluginMcVersion?: string;
     modAnnotations: ForgeModAnnotationData[];
 }
 /**
@@ -4443,9 +4562,9 @@ export interface ForgeModMetadata extends ForgeModASMData {
 export declare function readForgeMod(mod: ForgeModInput): Promise<ForgeModMetadata>;
 export declare class ForgeModParseFailedError extends Error {
     readonly mod: ForgeModInput;
-    readonly asm: Omit<ForgeModASMData, "modAnnotations">;
+    readonly asm: ForgeModASMData;
     readonly manifest: Record<string, any>;
-    constructor(mod: ForgeModInput, asm: Omit<ForgeModASMData, "modAnnotations">, manifest: Record<string, any>);
+    constructor(mod: ForgeModInput, asm: ForgeModASMData, manifest: Record<string, any>);
 }
 export {};
 \/\/# sourceMappingURL=forge.d.ts.map`;
@@ -4482,6 +4601,7 @@ export * from "./forge";
 export * from "./forgeConfig";
 export * from "./liteloader";
 export * from "./fabric";
+export * from "./quilt";
 \/\/# sourceMappingURL=index.d.ts.map`;
 definitions['@xmcl/mod-parser/liteloader.d.ts'] = `import { FileSystem } from "@xmcl/system"; export interface LiteloaderModMetadata {
     readonly mcversion: string;
@@ -4499,6 +4619,257 @@ definitions['@xmcl/mod-parser/liteloader.d.ts'] = `import { FileSystem } from "@
 }
 export declare function readLiteloaderMod(mod: string | Uint8Array | FileSystem): Promise<LiteloaderModMetadata>;
 \/\/# sourceMappingURL=liteloader.d.ts.map`;
+definitions['@xmcl/mod-parser/quilt.d.ts'] = `import { FileSystem } from "@xmcl/system"; export interface QuiltModMetadata {
+    /**
+     * \`1\` for now
+     */
+    schema_version: number;
+    quilt_loader: QuiltLoaderData;
+    /**
+     * e.g. "example_mod.mixins.json"
+     */
+    mixin?: string | string[];
+}
+/**
+ * A dependency object defines what mods/plugins a given mod depends on or breaks.
+ * It can be represented as either an object containing at least the id field, a string mod identifier in the form of either mavenGroup:modId or modId, or an array of dependency objects.
+ * If an array of dependency objects is provided, the dependency matches if it matches ANY of the dependency objects for the "depends" and "unless" fields, and ALL for the "breaks" field.
+ */
+export interface DependencyObject {
+    /**
+     * A mod identifier in the form of either mavenGroup:modId or modId.
+     */
+    id: string;
+    /**
+     * Should be a version specifier or array of version specifiers defining what versions this dependency applies to. If an array of versions is provided, the dependency matches if it matches ANY of the listed versions.
+     *
+     * @default "*"
+     */
+    versions?: string | string[];
+    /**
+     * A short, human-readable reason for the dependency object to exist.
+     */
+    reason?: string;
+    /**
+     * Dependencies marked as optional will only be checked if the mod/plugin specified by the id field is present.
+     */
+    optional?: boolean;
+    /**
+     * Describes situations where this dependency can be ignored. For example:
+     *
+     * \`\`\`
+     * {
+     *     "id": "sodium",
+     *     "unless": "indium"
+     * }
+     * \`\`\`
+     *
+     * Game providers and loader plugins can also add their own optional fields to the dependency object for extra context when resolving dependencies. The Minecraft game provider, for instance, might define an "environment" field that can be used like so:
+     *
+     * \`\`\`
+     * {
+     *     "id": "modmenu",
+     *     "environment": "client"
+     * }
+     * \`\`\`
+     */
+    unless?: DependencyObject;
+}
+export interface QuiltLoaderData {
+    /**
+     * A unique identifier for the organization behind or developers of the mod. The group string must match the ^[a-zA-Z0-9-_.]+\$ regular expression, and must not begin with the reserved namespace loader.plugin. It is recommended, but not required, to follow Maven's [guide to naming conventions](https:\/\/maven.apache.org/guides/mini/guide-naming-conventions.html).
+     */
+    group: string;
+    /**
+     * A unique identifier for the mod or library defined by this file, matching the ^[a-z][a-z0-9-_]{1,63}\$ regular expression. Best practice is that mod ID's are in snake_case.
+     */
+    id: string;
+    /**
+     * An array of ProvidesObjects describing other mods/APIs that this package provides.
+     */
+    provides?: Array<string>;
+    /**
+     * Must conform to the Semantic Versioning 2.0.0 specification. In a development environment, the value \${version} can be used as a placeholder by quilt-gradle to be replaced on building the resulting JAR.
+     */
+    version: string;
+    /**
+     * Optional metadata that can be used by mods to display information about the mods installed.
+     */
+    metadata?: {
+        /**
+         * A human-readable name for this mod.
+         */
+        name?: string;
+        /**
+         * A human-readable description of this mod. This description should be plain text, with the exception of line breaks, which can be represented with the newline character \n.
+         */
+        description?: string;
+        /**
+         * A collection of key: value pairs denoting the persons or organizations that contributed to this project. The key should be the name of the person or organization, while the value can be either a string representing a single role or an array of strings each one representing a single role.
+         *
+         * A role can be any valid string. The "Owner" role is defined as being the person(s) or organization in charge of the project.
+         */
+        contributors?: Record<string, string>;
+        /**
+         * A collection of key: value pairs denoting various contact information for the people behind this mod, with all values being strings. The following keys are officially defined, though mods can provide as many additional values as they wish:
+         */
+        contact?: {
+            homepage?: string;
+            issues?: string;
+            sources?: string;
+            /**
+             * Valid e-mail address for the organization/developers
+             */
+            email?: string;
+        };
+        /**
+         * The license or array of licenses this project operates under.
+         *
+         * A license is defined as either an SPDX identifier string or an object in the following form:
+         *
+         * \`\`\`
+         * {
+         *     "name": "Perfectly Awesome License v1.0",
+         *     "id": "PAL-1.0",
+         *     "url": "https:\/\/theperfectlyawesomelicense.com/",
+         *     "description": "This license does things and stuff and says that you can do things and stuff too!"
+         * }
+         * \`\`\`
+         */
+        license?: string | {
+            name: string;
+            id: string;
+            url: string;
+            description?: string;
+        } | Array<string>;
+        /**
+         * One or more paths to a square .PNG file. If an object is provided, the keys must be the resolution of the corresponding file. For example:
+         *
+         * \`\`\`
+         * "icon": {
+         *     "32": "path/to/icon32.png",
+         *     "64": "path/to/icon64.png",
+         *     "4096": "path/to/icon4096.png"
+         * }
+         * \`\`\`
+         *
+         * @example \`assets/example_mod/icon.png\`
+         */
+        icon?: string | Record<string, string>;
+    };
+    /**
+     * A collection of \`key: value\` pairs, where each key is the type of the entrypoints specified and each values is either a single entrypoint or an array of entrypoints. An entrypoint is an object with the following keys:
+     *
+     * - adapter — Language adapter to use for this entrypoint. By default this is \`default\` and tells loader to parse using the JVM entrypoint notation.
+     * - value — Points to an implementation of the entrypoint. See below for the default JVM notation.
+     *
+     * If an entrypoint does not need to specify a language adapter other than the default language adapter, the entrypoint can be represented simply as the value string instead.
+     *
+     * ### JVM entrypoint notation
+     *
+     * When referring to a class, the binary name is used. An example of a binary name is \`my.mod.MyClass\$Inner\`.
+     *
+     * One of the following \`value\` notations may be used in the JVM notation:
+     *
+     * - Implementation onto a class
+     *   - The value must contain a fully qualified binary name to the class.
+     *   - Implementing class must extend or implement the entrypoint interface.
+     *   - Class must have a no-argument public constructor.
+     *   - Example: example.mod.MainModClass
+     * - A field inside of a class.
+     *   - The value must contain a fully qualified binary name to the class followed by :: and a field name.
+     *   - The field must be static.
+     *   - The type of the field must be assignable from the field's class.
+     *   - Example: example.mod.MainModClass::THE_INSTANCE
+     *   - If there is ambiguity with a method's name, an exception will be thrown.
+     * - A method inside of a class.
+     *   - The value must contain a fully qualified binary name to the class followed by :: and a method name.
+     *   - The method must be capable to implement the entrypoint type as a method reference. Generally this means classes which are functional interfaces.
+     *   - Constructor requirement varies based on the method being static or instance level:
+     *     - A static method does not require a public no-argument constructor.
+     *     - An instance method requires a public no-argument constructor.
+     *   - Example: example.mod.MainModClass::init
+     *   - If there is ambiguity with a fields's name or other method, an exception will be thrown.
+  
+     */
+    entrypoints?: Record<string, string>;
+    /**
+     * An array of loader plugins. A plugin is an object with the following keys:
+     *
+     * - adapter — Language adapter to use for this plugin
+     * - value — Points to an implementation of the \`LoaderPlugin\` interface. Can be in either of the following forms:
+     *   - \`my.package.MyClass\` — A class to be instantiated and used
+     *   - \`my.package.MyClass::thing\` — A static field containing an instance of a \`LoaderPlugin\`
+     *
+     * If a plugin does not need to specify a language adapter other than the default language adapter, the plugin can be represented simply as the value string instead.
+     */
+    plugins?: Array<string>;
+    /**
+     * A list of paths to nested JAR files to load, relative to the root directory inside of the mods JAR.
+     */
+    jars?: Array<string>;
+    /**
+     * A collection of \`key: value\` pairs, where each key is the namespace of a language adapter and the value is an implementation of the \`LanguageAdapter\` interface.
+     */
+    language_adapters?: Record<string, string>;
+    /**
+     * An array of dependency objects. Defines mods that this mod will not function without.
+     */
+    depends?: Array<DependencyObject>;
+    /**
+     * An array of dependency objects. Defines mods that this mod either breaks or is broken by.
+     */
+    breaks?: Array<DependencyObject>;
+    /**
+     * Influences whether or not a mod candidate should be loaded or not. May be any of these values:
+     *
+     * - "always" (default for mods directly in the mods folder)
+     * - "if_possible"
+     * - "if_required" (default for jar-in-jar mods)
+     *
+     * This doesn't affect mods directly placed in the mods folder.
+     *
+     * ##### Always
+     * If any versions of this mod are present, then one of them will be loaded. Due to how mod loading actually works if any of the different versions of this mod are present, and one of them has "load_type" set to "always", then all of them are treated as it being set to "always".
+     *
+     * ##### If Possible
+     * If this mod can be loaded, then it will - otherwise it will silently not be loaded.
+     *
+     * ##### If Required
+     * If this mod is in another mods "depends" field then it will be loaded, otherwise it will silently not be loaded.
+     */
+    load_type?: string;
+    /**
+     * A list of Maven repository URL strings where dependencies can be looked for in addition to Quilt's central repository.
+     */
+    repositories?: Array<string>;
+    /**
+     * The intermediate mappings used for this mod. The intermediate mappings string must be a valid maven coordinate and match the ^[a-zA-Z0-9-_.]+:[a-zA-Z0-9-_.]+\$ regular expression. This field currently only officially supports org.quiltmc:hashed and net.fabricmc:intermediary.
+     *
+     * @default "org.quiltmc:hashed"
+     */
+    intermediate_mappings?: string;
+    minecraft?: {
+        /**
+         * Defines the environment(s) that this mod should be loaded on. Valid values are:
+         *
+         * - \`*\` — All environments (default)
+         * - \`client\` — The physical client
+         * - \`dedicated_server\` — The dedicated server
+         */
+        environment?: string;
+        /**
+         * A single or array of paths to access widener files relative to the root of the mod JAR.
+         */
+        access_widener?: string | string[];
+    };
+}
+/**
+ * Read fabric mod metadata json from a jar file or a directory
+ * @param file The jar file or directory path. I can also be the binary content of the jar if you have already read the jar.
+ */
+export declare function readQuiltMod(file: FileSystem | string | Uint8Array): Promise<QuiltModMetadata>;
+\/\/# sourceMappingURL=quilt.d.ts.map`;
 definitions['@xmcl/model/block.d.ts'] = `import { BlockModel, PackMeta } from "@xmcl/resourcepack"; import { Object3D } from "three/src/core/Object3D";
 import { Vector3 } from "three/src/math/Vector3";
 interface Texture {
@@ -4689,11 +5060,11 @@ export interface SearchResultHit {
     /**
      * The date that the project was originally created
      */
-    date_created: Date;
+    date_created: string;
     /**
      * The date that the project was last modified
      */
-    date_modified: Date;
+    date_modified: string;
     /**
      * The latest version of minecraft that this project supports */
     latest_version: string;
@@ -4908,6 +5279,7 @@ export interface Project {
      * The total number of downloads the mod has
      */
     downloads: number;
+    followers: number;
     /**
      * A list of the categories that the mod is in
      */
@@ -4940,6 +5312,15 @@ export interface Project {
      * An optional list of all donation links the mod has
      */
     donation_urls: Array<DonationLink>;
+    project_type: string;
+    gallery: ProjectGallery[];
+}
+export interface ProjectGallery {
+    created: string;
+    description: string;
+    featured: boolean;
+    title: string;
+    url: string;
 }
 export interface ProjectVersion {
     /**
@@ -4977,7 +5358,7 @@ export interface ProjectVersion {
     /**
      * The date that this version was published
      */
-    date_published: Date;
+    date_published: string;
     /**
      * The number of downloads this specific version has
      */
@@ -6698,6 +7079,19 @@ export declare class WorldReader {
      * @param chunkZ The z value of chunk coord
      */
     getRegionData(chunkX: number, chunkZ: number): Promise<RegionDataFrame>;
+    /**
+     * Get entity data frame
+     * @param chunkX The x value of chunk coord
+     * @param chunkZ The z value of chunk coord
+     */
+    getEntityData(chunkX: number, chunkZ: number): Promise<RegionDataFrame>;
+    /**
+     * Get mca data frame
+     * @param prefix The folder to load the .mca file from
+     * @param chunkX The x value of chunk coord
+     * @param chunkZ The z value of chunk coord
+     */
+    getMCAData(prefix: string, chunkX: number, chunkZ: number): Promise<RegionDataFrame>;
     /**
      * Read the level data
      */

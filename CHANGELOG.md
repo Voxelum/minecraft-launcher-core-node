@@ -1,5 +1,65 @@
 # Changelog
 
+## 7.0.0
+### @xmcl/client@2.1.3
+#### Bug Fixes
+
+- fix: wrong listen multicast addr ([0dc9d85c6bc38b87d606ba450e916d811d01b84d](https://github.com/voxelum/minecraft-launcher-core-node/commit/0dc9d85c6bc38b87d606ba450e916d811d01b84d))
+### @xmcl/core@2.10.1
+#### Bug Fixes
+
+- fix: compatible with unofficial version json ([5cc7e3bdfb7255c3ed6fef6546cf31f054bb69de](https://github.com/voxelum/minecraft-launcher-core-node/commit/5cc7e3bdfb7255c3ed6fef6546cf31f054bb69de))
+- fix(core): correct override lib & extract natives ([c5f742fd3845d3c815c57d69129bb34e3c5cc90a](https://github.com/voxelum/minecraft-launcher-core-node/commit/c5f742fd3845d3c815c57d69129bb34e3c5cc90a))
+- fix(core): new native format ([c3b64dac1ee393027e75212b6a3bb018f4a41034](https://github.com/voxelum/minecraft-launcher-core-node/commit/c3b64dac1ee393027e75212b6a3bb018f4a41034))
+- fix: decorate error ([05bdd84e60fcb40b31951b61dc4ba676c9cb25b5](https://github.com/voxelum/minecraft-launcher-core-node/commit/05bdd84e60fcb40b31951b61dc4ba676c9cb25b5))
+### @xmcl/curseforge@1.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: update curseforge api ([77b2ccdcac3b3b0d2e4a5d8234e97a3d45d46445](https://github.com/voxelum/minecraft-launcher-core-node/commit/77b2ccdcac3b3b0d2e4a5d8234e97a3d45d46445))
+#### Bug Fixes
+
+- fix: adjust curseforge type ([a511a755c4b1500c22dd21c44da2b94b45bd75c8](https://github.com/voxelum/minecraft-launcher-core-node/commit/a511a755c4b1500c22dd21c44da2b94b45bd75c8))
+- fix: correct the curseforge type ([9e5de6eb8cca7ad8f04b0ec7968ffb7b6b75fa49](https://github.com/voxelum/minecraft-launcher-core-node/commit/9e5de6eb8cca7ad8f04b0ec7968ffb7b6b75fa49))
+- fix: the module import of dev ([5b5d34b5bca14ce181a6b298c6c604200f2dfc38](https://github.com/voxelum/minecraft-launcher-core-node/commit/5b5d34b5bca14ce181a6b298c6c604200f2dfc38))
+### @xmcl/mod-parser@3.3.0
+#### Features
+
+- feat: Add quilt mod parser ([242515c2e4ed02e7a79d0c160a4541614f4f2397](https://github.com/voxelum/minecraft-launcher-core-node/commit/242515c2e4ed02e7a79d0c160a4541614f4f2397))
+- feat(mod-parser): add plugin info to the output ([f6c76b3e1d7b179a9c6bba33575900ad99d4b828](https://github.com/voxelum/minecraft-launcher-core-node/commit/f6c76b3e1d7b179a9c6bba33575900ad99d4b828))
+#### Bug Fixes
+
+- fix(mod-parser): ensure parse fabric mod even if the metadata is invalid json ([ea5cea07e1cf10ca1418ad90215693ceb9a59d98](https://github.com/voxelum/minecraft-launcher-core-node/commit/ea5cea07e1cf10ca1418ad90215693ceb9a59d98))
+### @xmcl/model@1.0.22
+#### Bug Fixes
+
+- fix: Fix the wrong UV for irregular cube ([6917a7759731944af08c95b4e39a170fb07f9843](https://github.com/voxelum/minecraft-launcher-core-node/commit/6917a7759731944af08c95b4e39a170fb07f9843))
+### @xmcl/modrinth@1.1.0
+#### Features
+
+- feat(modrinth): update modrinth schema ([4d03fa430c87c467bc50d7724f58f8a26f526687](https://github.com/voxelum/minecraft-launcher-core-node/commit/4d03fa430c87c467bc50d7724f58f8a26f526687))
+- feat(modrinth): add project type field ([2920f7cd778a0ba2c43c6860b4d14166f21eb518](https://github.com/voxelum/minecraft-launcher-core-node/commit/2920f7cd778a0ba2c43c6860b4d14166f21eb518))
+#### Bug Fixes
+
+- fix: the module import of dev ([5b5d34b5bca14ce181a6b298c6c604200f2dfc38](https://github.com/voxelum/minecraft-launcher-core-node/commit/5b5d34b5bca14ce181a6b298c6c604200f2dfc38))
+### @xmcl/world@1.2.0
+#### Features
+
+- feat: Adds 'getEntityData' to WorldReader (#240) ([8bb4b4d978e6a0e799cdc9475bb874268138ca22](https://github.com/voxelum/minecraft-launcher-core-node/commit/8bb4b4d978e6a0e799cdc9475bb874268138ca22))
+### @xmcl/installer@4.4.0
+#### Features
+
+- feat(installer): add quilt ([f832f28b6d6db7b68508e048a5327b94e9067db7](https://github.com/voxelum/minecraft-launcher-core-node/commit/f832f28b6d6db7b68508e048a5327b94e9067db7))
+- feat: support parse patch version ([6889509a08d54f1a23ece1b829cbfb3242da20b1](https://github.com/voxelum/minecraft-launcher-core-node/commit/6889509a08d54f1a23ece1b829cbfb3242da20b1))
+#### Bug Fixes
+
+- fix: Should not return long java version after parse ([1d562f602efa0da7282f3856258121ddeda80d4d](https://github.com/voxelum/minecraft-launcher-core-node/commit/1d562f602efa0da7282f3856258121ddeda80d4d))
+- fix: compatible with unofficial version json ([5cc7e3bdfb7255c3ed6fef6546cf31f054bb69de](https://github.com/voxelum/minecraft-launcher-core-node/commit/5cc7e3bdfb7255c3ed6fef6546cf31f054bb69de))
+- fix: add enoent to common error ([c9ad601a71ec6d696660670bc6819f02e9bcfb4a](https://github.com/voxelum/minecraft-launcher-core-node/commit/c9ad601a71ec6d696660670bc6819f02e9bcfb4a))
+- fix: prevent link failed to cause install failed ([0ff8d0073da1a0cb39fdbda7f38665855bf756d4](https://github.com/voxelum/minecraft-launcher-core-node/commit/0ff8d0073da1a0cb39fdbda7f38665855bf756d4))
+- fix: return java full version ([4a9587c5033ea8fa649afec2e58210781af2b335](https://github.com/voxelum/minecraft-launcher-core-node/commit/4a9587c5033ea8fa649afec2e58210781af2b335))
+- Dependency @xmcl/core bump **patch**
+
+
 ## 6.0.0
 ### @xmcl/asm@0.1.4
 #### Bug Fixes

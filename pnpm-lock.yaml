@@ -130,7 +130,7 @@ importers:
     specifiers:
       '@types/yauzl': ^2.10.0
       '@xmcl/asm': ^0.1.4
-      '@xmcl/core': ^2.10.0
+      '@xmcl/core': ^2.10.1
       '@xmcl/forge-site-parser': ^2.0.8
       '@xmcl/task': ^4.0.3
       '@xmcl/unzip': ^2.0.0
