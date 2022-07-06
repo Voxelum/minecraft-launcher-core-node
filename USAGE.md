@@ -376,7 +376,7 @@ Read the forge mod metadata, including `@Mod` annotation, mcmods.info, and toml 
     const modid = metadata[0].modid; // get modid of first mods
 ```
 
-If you don't want to read that much (as it will transver all the file in jar), you can try to use them separately:
+If you don't want to read that much (as it will transverse all the file in jar), you can try to use them separately:
 
 ```ts
     import { resolveFileSystem } from "@xmcl/system";
@@ -481,39 +481,6 @@ Parse minecraft version as a resolved version, which is used for launching proce
     const resolvedVersion: ResolvedVersion = await Version.parse(minecraftLocation, minecraftVersionId);
 ```
 
-
-### Ping Minecraft Server  
-
-The usage is just like asm library in java:
-
-```ts
-    import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from '@xmcl/asm'
-
-
-    class CustomClassVisitor extends ClassVisitor {
-        public constructor() {
-            super(Opcodes.ASM5);
-        }
-
-        // visit the class 
-        visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
-        }
-
-        // visit method
-        public visitMethod(access: number, name: string, desc: string, signature: string, exceptions: string[]) {
-            return null;
-        }
-
-        // visit field
-        public visitField(access: number, name: string, desc: string, signature: string, value: any) {
-            return null;
-        }
-    }
-
-    const visitor = new CustomClassVisitor();
-    const classData: Buffer = await fs.readFile("path/to/some.class");
-    new ClassReader(classData).accept(visitor);
-```
 
 ### Ping Minecraft Server  
 
@@ -984,6 +951,39 @@ Delete player skin (reset to default):
     });
 ```
 
+
+### Visit java class in jar file
+
+The usage is just like asm library in java:
+
+```ts
+    import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from '@xmcl/asm'
+
+
+    class CustomClassVisitor extends ClassVisitor {
+        public constructor() {
+            super(Opcodes.ASM5);
+        }
+
+        // visit the class 
+        visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
+        }
+
+        // visit method
+        public visitMethod(access: number, name: string, desc: string, signature: string, exceptions: string[]) {
+            return null;
+        }
+
+        // visit field
+        public visitField(access: number, name: string, desc: string, signature: string, value: any) {
+            return null;
+        }
+    }
+
+    const visitor = new CustomClassVisitor();
+    const classData: Buffer = await fs.readFile("path/to/some.class");
+    new ClassReader(classData).accept(visitor);
+```
 
 ## Caching Request
 
