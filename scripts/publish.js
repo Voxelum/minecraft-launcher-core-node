@@ -17,7 +17,7 @@ for (const workspace of workspaces) {
     const published = execSync(`npm show ${packageName} versions`);
     try {
         if (published.indexOf(packageVersion) === -1) {
-            const result = execSync(`pnpm publish --access public`, { cwd });
+            const result = execSync(`pnpm publish --access public  --no-git-checks`, { cwd });
             console.log(result.toString());
         } else {
             console.log(`${packageName}@${packageVersion} is already published. Skip it.`)
