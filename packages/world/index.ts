@@ -117,7 +117,7 @@ export class WorldReader {
         return data;
 
     }
-    
+
     /**
      * Get entity data frame
      * @param chunkX The x value of chunk coord
@@ -128,7 +128,7 @@ export class WorldReader {
         let data = await this.getMCAData("entities", chunkX, chunkZ);
         return data;
     }
-    
+
     /**
      * Get mca data frame
      * @param prefix The folder to load the .mca file from

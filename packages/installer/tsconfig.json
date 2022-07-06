@@ -8,6 +8,7 @@
         "java-runtime.ts",
         "optifine.ts",
         "fabric.ts",
+        "quilt.ts",
         "utils.ts",
         "unzip.ts",
         "java.ts",
