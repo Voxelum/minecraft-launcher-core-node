@@ -4,6 +4,7 @@
         "forgeConfig.ts",
         "fabric.ts",
         "liteloader.ts",
+        "quilt.ts",
         "index.ts"
     ],
     "compilerOptions": {
