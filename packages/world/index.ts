@@ -113,8 +113,31 @@ export class WorldReader {
      * @param chunkZ The z value of chunk coord
      */
     public async getRegionData(chunkX: number, chunkZ: number): Promise<RegionDataFrame> {
+        let data: RegionDataFrame = await this.getMCAData("region", chunkX, chunkZ);
+        return data;
+
+    }
+    
+    /**
+     * Get entity data frame
+     * @param chunkX The x value of chunk coord
+     * @param chunkZ The z value of chunk coord
+     */
+    public async getEntityData(chunkX: number, chunkZ: number): Promise<RegionDataFrame> {
+        /* To do: Add EntityRegionDataFrame to mirror getRegionData */
+        let data = await this.getMCAData("entities", chunkX, chunkZ);
+        return data;
+    }
+    
+    /**
+     * Get mca data frame
+     * @param prefix The folder to load the .mca file from
+     * @param chunkX The x value of chunk coord
+     * @param chunkZ The z value of chunk coord
+     */
+    public async getMCAData(prefix: string, chunkX: number, chunkZ: number): Promise<RegionDataFrame> {
         // The region file coord with chunk is chunk coord shift by 5
-        let path = this.fs.join("region", `r.${chunkX >> 5}.${chunkZ >> 5}.mca`);
+        let path = this.fs.join(prefix, `r.${chunkX >> 5}.${chunkZ >> 5}.mca`);
 
         let buffer = await this.fs.readFile(path);
         let off = getChunkOffset(buffer, chunkX, chunkZ);
@@ -122,11 +145,12 @@ export class WorldReader {
         let lengthBuf = buffer.slice(off, off + 4);
         let length = lengthBuf[0] << 24 | lengthBuf[1] << 16 | lengthBuf[2] << 8 | lengthBuf[3];
         let format = buffer[off + 4];
-        if (format !== 1 && format !== 2) { throw new Error(`Illegal Chunk format ${format} on (${chunkX}, ${chunkZ})!`) }
+        if (format !== 1 && format !== 2) {
+            throw new Error(`Illegal Chunk format ${format} on (${prefix} | ${chunkX}, ${chunkZ})!`)
+        }
         let compressed = format === 1 ? "gzip" as const : "deflate" as const;
         let chunkData = buffer.slice(off + 5, off + 5 + length);
-        let data: RegionDataFrame = await deserialize(chunkData, { compressed });
-        return data;
+        return deserialize(chunkData, { compressed });;
     }
 
     /**
