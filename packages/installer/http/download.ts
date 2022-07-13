@@ -188,7 +188,10 @@ export class Download {
                 abortHandlers.push(abortHandler)
                 // add abort handler to abort signal
                 abortSignal.addEventListener("abort", abortHandler);
-                await pipeline(response, fileStream);
+                await new Promise((resolve, reject) => {
+                    request.on("error", reject);
+                    pipeline(response, fileStream).then(resolve, reject);
+                });
                 abortSignal.removeEventListener("abort", abortHandler);
             } catch (e) {
                 if (e instanceof AbortError || (e as any).message === "aborted") {
@@ -207,6 +210,7 @@ export class Download {
         // as local aborted flag means the request is TRULY aborted
         if (flag) {
             throw new DownloadError(flag === 1 ? "DownloadAborted" : resolveNetworkErrorType(errors[0]) ?? "GeneralDownloadException",
+                url,
                 this.metadata,
                 this.headers,
                 this.destination,
@@ -248,6 +252,7 @@ export class Download {
                 const networkError = resolveNetworkErrorType(e);
                 if (networkError) {
                     throw new DownloadError(networkError,
+                        url,
                         this.metadata,
                         this.headers,
                         this.destination,
