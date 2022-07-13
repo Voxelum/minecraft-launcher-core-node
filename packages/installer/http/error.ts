@@ -9,6 +9,7 @@ export type DownloadFailedReason = "DownloadAborted" | "DownloadValidationFailed
 export class DownloadError extends Error {
     constructor(
         readonly error: DownloadFailedReason,
+        readonly url: string,
         readonly metadata: ResourceMetadata | undefined,
         readonly headers: Record<string, any>,
         readonly destination: string,
