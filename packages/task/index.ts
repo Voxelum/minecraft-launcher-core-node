@@ -4,6 +4,7 @@
 export class CancelledError extends Error {
     constructor() {
         super("Cancelled");
+        this.name = "CancelledError";
     }
 }
 /**
@@ -146,6 +147,7 @@ export abstract class BaseTask<T> implements Task<T> {
     async cancel() {
         if (this.state !== TaskState.Running && this.state !== TaskState.Idle) { return; }
         this._state = TaskState.Cancelled;
+        this.reject(new CancelledError());
         await this.cancelTask().then(() => {
             this.context.onCancelled?.(this);
         });
