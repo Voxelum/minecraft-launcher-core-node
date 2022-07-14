@@ -183,16 +183,18 @@ export class Download {
                 // create abort handler
                 const abortHandler = () => {
                     request.destroy(new AbortError());
-                    response.unpipe();
+                    response.destroy(new AbortError());
                 }
                 abortHandlers.push(abortHandler)
                 // add abort handler to abort signal
                 abortSignal.addEventListener("abort", abortHandler);
                 await new Promise((resolve, reject) => {
                     request.on("error", reject);
+                    response.on("error", reject);
                     pipeline(response, fileStream).then(resolve, reject);
+                }).finally(() => {
+                    abortSignal.removeEventListener("abort", abortHandler);
                 });
-                abortSignal.removeEventListener("abort", abortHandler);
             } catch (e) {
                 if (e instanceof AbortError || (e as any).message === "aborted") {
                     // user abort the operation, or abort by other sibling error
