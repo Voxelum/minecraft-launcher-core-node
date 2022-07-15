@@ -361,6 +361,9 @@ function installByInstallerTask(version: RequiredVersion, minecraft: MinecraftLo
             if (minorVersion >= 7 && minorVersion <= 8) {
                 return `${version.mcversion}-${version.version}-${version.mcversion}`;
             }
+            if (version.version.startsWith(version.mcversion)) {
+                return version.version
+            }
             return `${version.mcversion}-${version.version}`;
         }
         const forgeVersion = getForgeArtifactVersion();
