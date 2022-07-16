@@ -161,7 +161,12 @@ export class DownloadForgeInstallerTask extends DownloadTask {
                 }
             }
         })!;
-        const mavenHost = options.mavenHost ? [...normalizeArray(options.mavenHost), DEFAULT_FORGE_MAVEN] : [DEFAULT_FORGE_MAVEN];
+        const mavenHost = options.mavenHost ? normalizeArray(options.mavenHost) : [];
+
+        if (mavenHost.indexOf(DEFAULT_FORGE_MAVEN) === -1) {
+            mavenHost.push(DEFAULT_FORGE_MAVEN);
+        }
+
         const urls = resolveLibraryDownloadUrls(library, { ...options, mavenHost });
 
         const installJarPath = minecraft.getLibraryByPath(library.path);

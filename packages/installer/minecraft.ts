@@ -146,11 +146,14 @@ export interface AssetsOptions extends DownloadBaseOptions, ParallelTaskOptions 
 export type InstallLibraryVersion = Pick<ResolvedVersion, "libraries" | "minecraftDirectory">;
 
 function resolveDownloadUrls<T>(original: string, version: T, option?: string | string[] | ((version: T) => string | string[])) {
-    let result = [original];
+    let result = [] as string[];
     if (typeof option === "function") {
         result.unshift(...normalizeArray(option(version)));
     } else {
         result.unshift(...normalizeArray(option));
+    }
+    if (result.indexOf(original) === -1) {
+        result.push(original);
     }
     return result;
 }
@@ -489,10 +492,11 @@ export class InstallLibraryTask extends DownloadTask {
 
 export class InstallAssetTask extends DownloadTask {
     constructor(asset: AssetInfo, folder: MinecraftFolder, options: AssetsOptions) {
-        const assetsHosts = [
-            ...normalizeArray(options.assetsHost),
-            DEFAULT_RESOURCE_ROOT_URL,
-        ];
+        const assetsHosts = normalizeArray(options.assetsHost || []) ;
+
+        if (assetsHosts.indexOf(DEFAULT_RESOURCE_ROOT_URL) === -1) {
+            assetsHosts.push(DEFAULT_RESOURCE_ROOT_URL);
+        }
 
         const { hash, size, name } = asset;
 
