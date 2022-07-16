@@ -295,9 +295,9 @@ export async function signout(option: { username: string, password: string }, ap
  *
  * @param username The username you want to have in-game.
  */
-export function offline(username: string): Authentication {
+export function offline(username: string, uuid?: string): Authentication {
     const prof = {
-        id: v3(username, "00000000-0000-0000-0000-000000000000"),
+        id: uuid || v3(username, "00000000-0000-0000-0000-000000000000"),
         name: username,
     };
     return {
@@ -306,7 +306,7 @@ export function offline(username: string): Authentication {
         selectedProfile: prof,
         availableProfiles: [prof],
         user: {
-            id: v3(username, "00000000-0000-0000-0000-000000000000"),
+            id: uuid || v3(username, "00000000-0000-0000-0000-000000000000"),
             username: username,
         },
     };
