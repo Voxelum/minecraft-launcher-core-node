@@ -140,13 +140,23 @@ function normalizeUrls(url: string, fileHost?: string | string[]): string[] {
     if (typeof fileHost === "string") {
         const u = new URL(url);
         u.hostname = fileHost;
-        return [u.toString(), url];
+        const result = u.toString();
+        if (result !== url) {
+            return[result, url];
+        }
+        return [result];
     }
-    return fileHost.map((host) => {
+    const result = fileHost.map((host) => {
         const u = new URL(url);
         u.hostname = host;
         return u.toString();
-    }).concat(url);
+    });
+
+    if (result.indexOf(url) === -1) {
+        result.push(url)
+    }
+
+    return result;
 }
 
 export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
