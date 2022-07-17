@@ -148,6 +148,9 @@ export class Download {
         let flag = 0;
         const abortHandlers: Array<() => void> = [];
         const errors: any[] = []
+        if (metadata.contentLength === 0) {
+            return
+        }
         await Promise.all(this.segments.map(async (segment, index) => {
             if (segment.start > segment.end) {
                 // the segment is finished, just ignore it
