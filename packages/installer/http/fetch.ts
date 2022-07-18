@@ -42,6 +42,7 @@ export async function getIfUpdate(url: string, timestamp?: string, agent: Agents
         throw new Error(`Invalid protocol ${parsed.protocol}`);
     }
     let { message: msg } = await fetch({
+        timeout: 10000,
         method: "GET",
         ...urlToRequestOptions(parsed),
         headers: {
