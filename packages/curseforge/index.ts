@@ -249,7 +249,7 @@ export interface File {
     /**
      * Url to download
      */
-    downloadUrl: string;
+    downloadUrl?: string;
     /**
      * Game version string array, like `["1.12.2"]`
      */
