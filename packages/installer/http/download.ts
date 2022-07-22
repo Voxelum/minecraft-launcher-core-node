@@ -151,6 +151,7 @@ export class Download {
         if (metadata.contentLength === 0) {
             return
         }
+        let attemptTotal = 0;
         await Promise.all(this.segments.map(async (segment, index) => {
             if (segment.start > segment.end) {
                 // the segment is finished, just ignore it
@@ -164,50 +165,63 @@ export class Download {
                     Range: `bytes=${segment.start}-${(segment.end) ?? ""}`,
                 },
             };
-            try {
-                if (abortSignal.aborted || flag) { throw new AbortError(); }
-                const { message: response, request } = await fetch(options, this.agents, abortSignal);
-                if (abortSignal.aborted || flag) {
-                    // ensure we correctly release the message
-                    response.resume();
-                    throw new AbortError();
-                }
-                const fileStream = createWriteStream(this.destination, {
-                    fd: this.fd,
-                    start: segment.start,
-                    // we should not close the file stream, as it will close the fd as the same time!
-                    autoClose: false,
-                });
-                // track the progress
-                response.on("data", (chunk) => {
-                    segment.start += chunk.length;
-                    this.statusController.onProgress(url, chunk.length, this.statusController.progress + chunk.length);
-                });
-                // create abort handler
-                const abortHandler = () => {
-                    request.destroy(new AbortError());
-                    response.destroy(new AbortError());
-                }
-                abortHandlers.push(abortHandler)
-                // add abort handler to abort signal
-                abortSignal.addEventListener("abort", abortHandler);
-                await new Promise((resolve, reject) => {
-                    request.on("error", reject);
-                    response.on("error", reject);
-                    pipeline(response, fileStream).then(resolve, reject);
-                }).finally(() => {
-                    abortSignal.removeEventListener("abort", abortHandler);
-                });
-            } catch (e) {
-                if (e instanceof AbortError || (e as any).message === "aborted") {
-                    // user abort the operation, or abort by other sibling error
-                    if (flag === 0) { flag = 1; }
-                } else {
-                    // true error thrown.
-                    flag = 2;
-                    // all other sibling requests should be aborted
-                    abortHandlers.forEach((f) => f());
-                    errors.push(e);
+            let attempt = 0;
+            while (true) {
+                try {
+                    attempt += 1
+                    if (abortSignal.aborted || flag) { throw new AbortError(); }
+                    const { message: response, request } = await fetch(options, this.agents, abortSignal);
+                    if (abortSignal.aborted || flag) {
+                        // ensure we correctly release the message
+                        response.resume();
+                        throw new AbortError();
+                    }
+                    const fileStream = createWriteStream(this.destination, {
+                        fd: this.fd,
+                        start: segment.start,
+                        // we should not close the file stream, as it will close the fd as the same time!
+                        autoClose: false,
+                    });
+                    // track the progress
+                    response.on("data", (chunk) => {
+                        segment.start += chunk.length;
+                        this.statusController.onProgress(url, chunk.length, this.statusController.progress + chunk.length);
+                    });
+                    // create abort handler
+                    const abortHandler = () => {
+                        request.destroy(new AbortError());
+                        response.destroy(new AbortError());
+                    }
+                    abortHandlers.push(abortHandler)
+                    // add abort handler to abort signal
+                    abortSignal.addEventListener("abort", abortHandler);
+                    await new Promise((resolve, reject) => {
+                        request.on("error", reject);
+                        response.on("error", reject);
+                        pipeline(response, fileStream).then(resolve, reject);
+                    }).finally(() => {
+                        abortSignal.removeEventListener("abort", abortHandler);
+                    });
+                    break
+                } catch (e) {
+                    // some common error we want to retry
+                    if (await this.retryHandler.retry(url, attempt, e)) {
+                        continue;
+                    }
+
+                    attemptTotal += attempt;
+
+                    if (e instanceof AbortError || (e as any).message === "aborted") {
+                        // user abort the operation, or abort by other sibling error
+                        if (flag === 0) { flag = 1; }
+                    } else {
+                        // true error thrown.
+                        flag = 2;
+                        // all other sibling requests should be aborted
+                        abortHandlers.forEach((f) => f());
+                        errors.push(e);
+                    }
+                    break
                 }
             }
         }))
@@ -219,7 +233,7 @@ export class Download {
                 this.metadata,
                 this.headers,
                 this.destination,
-                1,
+                attemptTotal,
                 this.segments,
                 errors,
             );
@@ -227,7 +241,6 @@ export class Download {
     }
 
     protected async downloadUrl(url: string, abortSignal: AbortSignal) {
-        let attempt = 0;
         const parsedUrl = new URL(url);
         if (parsedUrl.protocol === "file:") {
             const filePath = fileURLToPath(url);
@@ -238,38 +251,8 @@ export class Download {
                 return;
             }
         }
-        while (true) {
-            try {
-                attempt += 1;
-                const metadata = await this.updateMetadata(parsedUrl, abortSignal);
-                await this.processDownload(url, metadata, abortSignal);
-                return;
-            } catch (e) {
-                // user abort should throw anyway
-                if (e instanceof DownloadError && e.error === "DownloadAborted") {
-                    throw e;
-                }
-                // some common error we want to retry
-                if (await this.retryHandler.retry(url, attempt, e)) {
-                    continue;
-                }
-
-                const networkError = resolveNetworkErrorType(e);
-                if (networkError) {
-                    throw new DownloadError(networkError,
-                        url,
-                        this.metadata,
-                        this.headers,
-                        this.destination,
-                        attempt,
-                        this.segments,
-                        [e],
-                    );
-                }
-
-                throw e;
-            }
-        }
+        const metadata = await this.updateMetadata(parsedUrl, abortSignal);
+        await this.processDownload(url, metadata, abortSignal);
     }
 
     /**
