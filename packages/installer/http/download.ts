@@ -1,5 +1,5 @@
 import { O_CREAT, O_RDWR } from "constants";
-import { createWriteStream, fdatasync, fstat } from "fs";
+import { createWriteStream, fdatasync, fstat, promises } from "fs";
 import { RequestOptions } from "http";
 import { fileURLToPath, URL } from "url";
 import { promisify } from "util";
@@ -130,7 +130,7 @@ export class Download {
 
     protected async updateMetadata(url: URL, abortSignal: AbortSignal) {
         const metadata = await getMetadata(url, this.headers, this.agents, false, abortSignal);
-        if (!metadata || metadata.eTag != this.metadata?.eTag || metadata.eTag === undefined || metadata.contentLength !== this.metadata?.contentLength) {
+        if (!this.metadata || metadata.eTag != this.metadata?.eTag || metadata.contentLength !== this.metadata?.contentLength) {
             this.metadata = metadata;
             const contentLength = metadata.contentLength;
             this.segments = contentLength && metadata.isAcceptRanges
@@ -177,7 +177,6 @@ export class Download {
                         throw new AbortError();
                     }
                     const fileStream = createWriteStream(this.destination, {
-                        fd: this.fd,
                         start: segment.start,
                         // we should not close the file stream, as it will close the fd as the same time!
                         autoClose: false,
