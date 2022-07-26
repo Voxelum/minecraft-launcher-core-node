@@ -75,7 +75,9 @@ export function spawnProcess(spawnJavaOptions: SpawnJavaOptions, args: string[],
 export function waitProcess(process: ChildProcess) {
     return new Promise<void>((resolve, reject) => {
         let errorMsg: string[] = [];
-        process.on("error", reject);
+        process.on("error", (err) => {
+            reject(err);
+        });
         process.on("close", (code) => {
             if (code !== 0) { reject(errorMsg.join("")); } else { resolve(); }
         });

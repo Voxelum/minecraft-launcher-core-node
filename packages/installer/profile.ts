@@ -2,10 +2,12 @@ import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson
 import { AbortableTask, CancelledError, task } from "@xmcl/task";
 import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
 import type { ChildProcess } from "child_process";
+import { spawn } from "child_process";
 import { delimiter, dirname } from "path";
 import { ZipFile } from "yauzl";
-import { installResolvedLibrariesTask, InstallSideOption, LibraryOptions } from "./minecraft";
-import { checksum, readFile, SpawnJavaOptions, spawnProcess } from "./utils";
+import { withAgents } from './http/agents';
+import { InstallLibraryTask, InstallSideOption, LibraryOptions } from "./minecraft";
+import { checksum, errorToString, readFile, SpawnJavaOptions, spawnProcess, waitProcess } from "./utils";
 
 export interface PostProcessor {
     /**
@@ -165,7 +167,11 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         const versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse);
         const libraries = VersionJson.resolveLibraries([...installProfile.libraries, ...versionJson.libraries]);
 
-        await this.yield(installResolvedLibrariesTask(libraries, minecraft, options));
+        await withAgents(options, (options) => this.all(libraries.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
+            throwErrorImmediately: options.throwErrorImmediately ?? false,
+            getErrorMessage: (errs) => `Errors during install libraries at ${minecraftFolder.root}: ${errs.map(errorToString).join("\n")}`
+        }));
+
         await this.yield(new PostProcessingTask(processor, minecraftFolder, options));
     });
 }
@@ -207,6 +213,8 @@ export class PostProcessingTask extends AbortableTask<void> {
     private pointer: number = 0;
 
     private activeProcess: ChildProcess | undefined
+
+    private currentAbort = () => { }
 
     constructor(private processors: PostProcessor[], private minecraft: MinecraftFolder, private java: SpawnJavaOptions) {
         super();
@@ -256,7 +264,14 @@ export class PostProcessingTask extends AbortableTask<void> {
         let cp = [...proc.classpath, proc.jar].map(LibraryInfo.resolve).map((p) => mc.getLibraryByPath(p.path)).join(delimiter);
         let cmd = ["-cp", cp, mainClass, ...proc.args];
         try {
-            await spawnProcess(javaOptions, cmd);
+            await new Promise((resolve, reject) => {
+                const process = (javaOptions?.spawn ?? spawn)(javaOptions.java ?? "java", cmd);
+                waitProcess(process).then(resolve, reject);
+                this.currentAbort = () => {
+                    reject("PAUSED");
+                    process.kill(1);
+                };
+            })
         } catch (e) {
             if (typeof e === "string") {
                 throw new PostProcessFailedError(proc.jar, [javaOptions.java ?? "java", ...cmd], e);
@@ -293,6 +308,7 @@ export class PostProcessingTask extends AbortableTask<void> {
 
     protected async abort(isCancelled: boolean): Promise<void> {
         // this.activeProcess?.kill()
+        this.currentAbort();
     }
 
     protected isAbortedError(e: any): boolean {
