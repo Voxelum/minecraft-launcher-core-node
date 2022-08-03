@@ -195,6 +195,20 @@ export const enum FileStatus {
     FailedPublishing = 15,
 }
 
+export const enum FileRelationType {
+    EmbeddedLibrary = 1,
+    OptionalDependency = 2,
+    RequiredDependency = 3,
+    Tool = 4,
+    Incompatible = 5,
+    Include = 6,
+}
+
+export interface FileDependency {
+    modId: number
+    relationType: FileRelationType
+}
+
 export interface File {
     /**
      * The fileID
@@ -257,40 +271,14 @@ export interface File {
     /**
      * Metadata used for sorting by game versions
      */
-    sortableGameVersions: string[]
     isAlternate: boolean;
     alternateFileId: number;
-    dependencies: any[];
+    dependencies: FileDependency[];
     /**
      * What files inside?
      */
     modules: Module[];
-    packageFingerprint: number;
-
-    sortableGameVersion?: SortableGameVersion[];
-    installMetadata?: any;
-    changelog?: any;
-    hasInstallScript: boolean;
-    isCompatibleWithClient: boolean;
-    categorySectionPackageType: number;
-    restrictProjectFileAccess: number;
-    projectStatus: number;
-    renderCacheId: number;
-    fileLegacyMappingId?: any;
-    parentProjectFileId?: any;
-    parentFileLegacyMappingId?: any;
-    fileTypeId?: any;
-    exposeAsAlternative?: any;
-    packageFingerprintId: number;
-    gameVersionDateReleased: string;
-    gameVersionMappingId: number;
-    /**
-     * A number represents the game version id from curseforge (Not the same with Minecraft version string id).
-     */
-    gameVersionId: number;
-
-    isServerPack: boolean;
-    serverPackFileId?: any;
+    sortableGameVersions?: SortableGameVersion[];
 }
 
 export interface SortableGameVersion {
