@@ -261,6 +261,7 @@ export class PostProcessingTask extends AbortableTask<void> {
     protected async postProcess(mc: MinecraftFolder, proc: PostProcessor, javaOptions: SpawnJavaOptions) {
         let jarRealPath = mc.getLibraryByPath(LibraryInfo.resolve(proc.jar).path);
         let mainClass = await this.findMainClass(jarRealPath);
+        this._to = proc.jar;
         let cp = [...proc.classpath, proc.jar].map(LibraryInfo.resolve).map((p) => mc.getLibraryByPath(p.path)).join(delimiter);
         let cmd = ["-cp", cp, mainClass, ...proc.args];
         try {
