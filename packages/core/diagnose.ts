@@ -1,6 +1,7 @@
 import { ResolvedLibrary, ResolvedVersion, Version } from "./version";
 import { MinecraftFolder, MinecraftLocation } from "./folder";
 import { checksum, exists, isNotNull, readFile } from "./utils";
+import { stat } from "fs/promises"
 
 /**
  * Represent a issue for your diagnosed minecraft client.
@@ -106,19 +107,25 @@ export interface MinecraftIssueReport {
     issues: MinecraftIssues[];
 }
 
+export interface DiagnoseOptions {
+    checksum?: (file: string, algorithm: string) => Promise<string>
+    strict?: boolean
+}
+
 /**
  * Diagnose a single file by a certain checksum algorithm. By default, this use sha1
  */
-export async function diagnoseFile<T extends string>({ file, expectedChecksum, role, hint, algorithm }: { file: string; expectedChecksum: string; role: T; hint: string; algorithm?: string }) {
+export async function diagnoseFile<T extends string>({ file, expectedChecksum, role, hint, algorithm }: { file: string; expectedChecksum: string; role: T; hint: string; algorithm?: string }, options?: DiagnoseOptions) {
     let issue = false;
     let receivedChecksum = "";
     algorithm = algorithm ?? "sha1";
 
+    const checksumFunc = options?.checksum?? checksum
     const fileExisted = await exists(file);
     if (!fileExisted) {
         issue = true;
     } else if (expectedChecksum !== "") {
-        receivedChecksum = await checksum(file, algorithm);
+        receivedChecksum = await checksumFunc(file, algorithm);
         issue = receivedChecksum !== expectedChecksum;
     }
     const type = fileExisted ? "corrupted" : "missing" as const
@@ -142,7 +149,7 @@ export async function diagnoseFile<T extends string>({ file, expectedChecksum, r
  * @param minecraft The minecraft location
  * @beta
  */
-export async function diagnose(version: string, minecraftLocation: MinecraftLocation): Promise<MinecraftIssueReport> {
+export async function diagnose(version: string, minecraftLocation: MinecraftLocation, options?: DiagnoseOptions): Promise<MinecraftIssueReport> {
     const minecraft = MinecraftFolder.from(minecraftLocation);
     let report: MinecraftIssueReport = {
         minecraftLocation: minecraft,
@@ -176,7 +183,7 @@ export async function diagnose(version: string, minecraftLocation: MinecraftLoca
         report.issues.push(assetIndexIssue);
     }
 
-    const librariesIssues = await diagnoseLibraries(resolvedVersion, minecraft);
+    const librariesIssues = await diagnoseLibraries(resolvedVersion, minecraft, options);
 
     if (librariesIssues.length > 0) {
         report.issues.push(...librariesIssues);
@@ -184,7 +191,7 @@ export async function diagnose(version: string, minecraftLocation: MinecraftLoca
 
     if (!assetIndexIssue) {
         const objects = (await readFile(minecraft.getAssetsIndex(resolvedVersion.assets), "utf-8").then((b) => JSON.parse(b.toString()))).objects;
-        const assetsIssues = await diagnoseAssets(objects, minecraft);
+        const assetsIssues = await diagnoseAssets(objects, minecraft, options);
 
         if (assetsIssues.length > 0) {
             report.issues.push(...assetsIssues);
@@ -200,15 +207,26 @@ export async function diagnose(version: string, minecraftLocation: MinecraftLoca
  * @param minecraft The minecraft location
  * @returns The diagnose report
  */
-export async function diagnoseAssets(assetObjects: Record<string, { hash: string; size: number }>, minecraft: MinecraftFolder): Promise<Array<AssetIssue>> {
+export async function diagnoseAssets(assetObjects: Record<string, { hash: string; size: number }>, minecraft: MinecraftFolder, options?: DiagnoseOptions): Promise<Array<AssetIssue>> {
     const filenames = Object.keys(assetObjects);
     const issues = await Promise.all(filenames.map(async (filename) => {
         const { hash, size } = assetObjects[filename];
         const assetPath = minecraft.getAsset(hash);
 
-        const issue = await diagnoseFile({ file: assetPath, expectedChecksum: hash, role: "asset", hint: "Problem on asset! Please consider to use Installer.installAssets to fix." });
-        if (issue) {
-            return Object.assign(issue, { asset: { name: filename, hash, size } });
+        if (options?.strict) {
+            const issue = await diagnoseFile({ file: assetPath, expectedChecksum: hash, role: "asset", hint: "Problem on asset! Please consider to use Installer.installAssets to fix." }, options);
+            if (issue) {
+                return Object.assign(issue, { asset: { name: filename, hash, size } });
+            }
+        } else {
+            // non-strict mode might be faster
+            const { size: realSize } = await stat(assetPath).catch(() => ({ size: -1 }))
+            if (realSize !== size) {
+                const issue = await diagnoseFile({ file: assetPath, expectedChecksum: hash, role: "asset", hint: "Problem on asset! Please consider to use Installer.installAssets to fix." }, options);
+                if (issue) {
+                    return Object.assign(issue, { asset: { name: filename, hash, size } });
+                }
+            }
         }
 
         return undefined;
@@ -224,10 +242,10 @@ export async function diagnoseAssets(assetObjects: Record<string, { hash: string
  * @returns List of libraries issue
  * @see {@link ResolvedVersion}
  */
-export async function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<Array<LibraryIssue>> {
+export async function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder, options?: DiagnoseOptions): Promise<Array<LibraryIssue>> {
     const issues = await Promise.all(resolvedVersion.libraries.map(async (lib) => {
         const libPath = minecraft.getLibraryByPath(lib.download.path);
-        const issue = await diagnoseFile({ file: libPath, expectedChecksum: lib.download.sha1, role: "library", hint: "Problem on library! Please consider to use Installer.installLibraries to fix." });
+        const issue = await diagnoseFile({ file: libPath, expectedChecksum: lib.download.sha1, role: "library", hint: "Problem on library! Please consider to use Installer.installLibraries to fix." }, options);
         if (issue) {
             return Object.assign(issue, { library: lib });
         }
@@ -246,7 +264,7 @@ export async function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minec
     return undefined;
 }
 
-export async function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder): Promise<MinecraftJarIssue | undefined> {
+export async function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder, options?: DiagnoseOptions): Promise<MinecraftJarIssue | undefined> {
     const jarPath = minecraft.getVersionJar(resolvedVersion.minecraftVersion);
     const issue = await diagnoseFile(
         { file: jarPath, expectedChecksum: resolvedVersion.downloads.client?.sha1 ?? "", role: "minecraftJar", hint: "Problem on Minecraft jar! Please consider to use Installer.instalVersion to fix." });
