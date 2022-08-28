@@ -170,7 +170,7 @@ export class WorldReader {
 
     public async getAdvancementsData(): Promise<AdvancementDataFrame[]> {
         const files = await this.fs.listFiles("advancements");
-        return Promise.all(files
+        return Promise.all(files.filter(f => f.endsWith('.dat'))
             .map((f) => this.fs.readFile(this.fs.join("advancements", f)).then((b) => deserialize<AdvancementDataFrame>(b))));
     }
 }
