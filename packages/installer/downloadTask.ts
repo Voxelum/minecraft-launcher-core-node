@@ -19,6 +19,7 @@ export class DownloadTask extends AbortableTask<void> implements StatusControlle
   reset(progress: number, total: number): void {
       this._progress = progress;
       this._total = total;
+      this.update(0);
   }
 
   onProgress(url: string, chunkSize: number, progress: number): void {
