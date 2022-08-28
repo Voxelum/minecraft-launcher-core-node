@@ -18,7 +18,7 @@ export class UnzipTask extends BaseTask<void> {
     private streams: [Readable, Writable][] = [];
     private _onCancelled = () => { };
 
-    constructor(readonly zipFile: ZipFile, readonly entries: Entry[], destination: string, readonly resolver: EntryResolver = getDefaultEntryResolver()) {
+    constructor(readonly zipFile: ZipFile, readonly entries: Entry[], destination: string, readonly resolver: EntryResolver = getDefaultEntryResolver(), readonly interpreter: (input: Readable, file: string) => void = () => { }) {
         super();
         this._to = destination;
     }
@@ -38,11 +38,13 @@ export class UnzipTask extends BaseTask<void> {
         }
 
         await ensureFile(file);
+        this.interpreter(readStream, file);
         const writeStream = createWriteStream(file);
         readStream.on("data", (buf: Buffer) => {
             this._progress += buf.length;
             this.update(buf.length);
         });
+        this.streams.push([readStream, writeStream]);
         await pipeline(readStream, writeStream);
     }
 
