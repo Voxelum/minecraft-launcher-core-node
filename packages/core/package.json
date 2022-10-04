@@ -4,7 +4,7 @@
   "main": "./index.ts",
   "description": "Minecraft version parsing and game launching.",
   "engines": {
-    "node": ">=10.0"
+    "node": ">=16.0"
   },
   "publishConfig": {
     "access": "public",
@@ -34,6 +34,7 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
+    "@types/node": "~16",
     "@types/yauzl": "^2.10.0"
   }
 }

@@ -1,7 +1,7 @@
 import { ResolvedLibrary, ResolvedVersion, Version } from "./version";
 import { MinecraftFolder, MinecraftLocation } from "./folder";
-import { checksum, exists, isNotNull, readFile } from "./utils";
-import { stat } from "fs/promises"
+import { checksum, exists, isNotNull } from "./utils";
+import { readFile, stat } from "fs/promises"
 
 /**
  * Represent a issue for your diagnosed minecraft client.

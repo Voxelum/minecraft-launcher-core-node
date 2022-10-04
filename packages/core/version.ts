@@ -1,7 +1,7 @@
 import { MinecraftFolder, MinecraftLocation } from "./folder"
 import { Platform, getPlatform } from "./platform";
-import { readFile } from "./utils";
 import { extname } from "path";
+import { readFile } from 'fs/promises';
 
 interface PartialResolvedVersion extends Version {
     libraries: ResolvedLibrary[];

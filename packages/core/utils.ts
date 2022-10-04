@@ -3,30 +3,9 @@
  */
 
 import { createHash } from "crypto";
-import {
-    createReadStream,
-    readFile as freadFile,
-    writeFile as fwriteFile,
-    access as faccess,
-    mkdir as fmkdir,
-    link as flink,
-    constants,
-} from "fs";
-import { promisify } from "util";
-import { pipeline as pip } from "stream";
-
-/** @internal */
-export const pipeline = promisify(pip);
-/** @internal */
-export const access = promisify(faccess);
-/** @internal */
-export const link = promisify(flink);
-/** @internal */
-export const readFile = promisify(freadFile);
-/** @internal */
-export const writeFile = promisify(fwriteFile);
-/** @internal */
-export const mkdir = promisify(fmkdir);
+import { constants, createReadStream } from 'fs';
+import { access } from 'fs/promises';
+import { pipeline } from 'stream/promises';
 
 /** @internal */
 export function exists(file: string) {

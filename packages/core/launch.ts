@@ -9,8 +9,9 @@ import { promisify } from "util";
 import { randomUUID } from "crypto"
 import { MinecraftFolder } from "./folder";
 import { getPlatform, Platform } from "./platform";
-import { checksum, link, mkdir, readFile, validateSha1, writeFile } from "./utils";
+import { checksum, validateSha1 } from "./utils";
 import { ResolvedLibrary, ResolvedNative, ResolvedVersion, Version } from "./version";
+import { link, mkdir, readFile, writeFile } from 'fs/promises';
 
 function format(template: string, args: any) {
     return template.replace(/\$\{(.*?)}/g, (key) => {
