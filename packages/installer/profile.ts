@@ -3,11 +3,11 @@ import { AbortableTask, CancelledError, task } from "@xmcl/task";
 import { open, readEntry, walkEntriesGenerator } from "@xmcl/unzip";
 import type { ChildProcess } from "child_process";
 import { spawn } from "child_process";
+import { readFile } from 'fs/promises';
 import { delimiter, dirname } from "path";
 import { ZipFile } from "yauzl";
-import { withAgents } from './http/agents';
 import { InstallLibraryTask, InstallSideOption, LibraryOptions } from "./minecraft";
-import { checksum, errorToString, readFile, SpawnJavaOptions, spawnProcess, waitProcess } from "./utils";
+import { checksum, errorToString, SpawnJavaOptions, waitProcess } from "./utils";
 
 export interface PostProcessor {
     /**
@@ -167,10 +167,10 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         const versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse);
         const libraries = VersionJson.resolveLibraries([...installProfile.libraries, ...versionJson.libraries]);
 
-        await withAgents(options, (options) => this.all(libraries.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
+        await this.all(libraries.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
             getErrorMessage: (errs) => `Errors during install libraries at ${minecraftFolder.root}: ${errs.map(errorToString).join("\n")}`
-        }));
+        });
 
         await this.yield(new PostProcessingTask(processor, minecraftFolder, options));
     });

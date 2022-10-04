@@ -1,12 +1,12 @@
 import { getPlatform, Platform } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
+import { link } from 'fs/promises';
 import { dirname, join } from "path";
+import { Dispatcher, request } from 'undici';
 import { URL } from "url";
 import { DownloadTask } from "./downloadTask";
-import { Agents, withAgents } from "./http/agents";
-import { DownloadBaseOptions, DownloadOptions } from "./http/download";
-import { fetchJson } from "./http/fetch";
-import { ensureDir, link, ParallelTaskOptions } from "./utils";
+import { DownloadBaseOptions, DownloadOptions } from "./http";
+import { ensureDir, ParallelTaskOptions } from "./utils";
 /**
  * Contain all java runtimes basic info
  */
@@ -142,7 +142,7 @@ function normalizeUrls(url: string, fileHost?: string | string[]): string[] {
         u.hostname = fileHost;
         const result = u.toString();
         if (result !== url) {
-            return[result, url];
+            return [result, url];
         }
         return [result];
     }
@@ -182,6 +182,10 @@ export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
      * The index manifest of the java runtime. If this is not presented, it will fetch by platform and all platform url.
      */
     manifestIndex?: JavaRuntimes;
+    /**
+     * The dispatcher to request API
+     */
+    dispatcher?: Dispatcher
 }
 
 /**
@@ -191,27 +195,32 @@ export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
  * @param options The options of fetch runtime manifest
  */
 export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifestOptions = {}): Promise<JavaRuntimeManifest> {
-    const manifestIndex = options.manifestIndex ?? await fetchJson(normalizeUrls(options.url ?? DEFAULT_RUNTIME_ALL_URL, options.apiHost)[0]) as JavaRuntimes;
+    let manifestIndex = options.manifestIndex;
+    if (!manifestIndex) {
+        const response = await request(normalizeUrls(options.url ?? DEFAULT_RUNTIME_ALL_URL, options.apiHost)[0], {dispatcher: options.dispatcher, throwOnError: true});
+        manifestIndex = await response.body.json() as JavaRuntimes ;
+    }
+    const manifest = manifestIndex
     const platform = options.platform ?? getPlatform();
     const runtimeTarget = options.target ?? JavaRuntimeTargetType.Beta;
     const resolveTarget = () => {
         if (platform.name === "windows") {
             if (platform.arch === "x64") {
-                return manifestIndex["windows-x64"];
+                return manifest["windows-x64"];
             }
             if (platform.arch === "x86" || platform.arch === "x32") {
-                return manifestIndex["windows-x86"];
+                return manifest["windows-x86"];
             }
         }
         if (platform.name === "osx") {
-            return manifestIndex["mac-os"];
+            return manifest["mac-os"];
         }
         if (platform.name === "linux") {
             if (platform.arch === "x86" || platform.arch === "x32") {
-                return manifestIndex["linux-i386"];
+                return manifest["linux-i386"];
             }
             if (platform.arch === "x64") {
-                return manifestIndex.linux;
+                return manifest.linux;
             }
         }
         throw new Error("Cannot resolve platform");
@@ -220,7 +229,8 @@ export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifest
     if (targets && targets.length > 0) {
         const target = targets[0];
         const manifestUrl = normalizeUrls(target.manifest.url, options.apiHost)[0];
-        const manifest = await fetchJson(manifestUrl) as JavaRuntimeManifest;
+        const response = await request(manifestUrl, { dispatcher: options.dispatcher, throwOnError: true });
+        const manifest: JavaRuntimeManifest = await response.body.json();
         const result: JavaRuntimeManifest = {
             files: manifest.files,
             target: runtimeTarget,
@@ -258,7 +268,7 @@ export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, Parallel
  * Install java runtime from java runtime manifest
  * @param options The options to install java runtime
  */
-export function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Task<void> {
+export function installJavaRuntimeTask(options: InstallJavaRuntimeOptions): Task<void> {
     return task("installJavaRuntime", async function () {
         const destination = options.destination;
         const manifest = options.manifest;
@@ -272,13 +282,13 @@ export function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Tas
             async runTask() {
                 const result = await super.runTask()
                 if (this._total === this._progress) {
-                    const dest = this.download.destination.substring(0, this.download.destination.length - 5)
-                    await decompressFunction!(this.download.destination, dest)
+                    const dest = this.options.destination.substring(0, this.options.destination.length - 5)
+                    await decompressFunction!(this.options.destination, dest)
                 }
                 return result
             }
         }
-        await withAgents(options, (options) => this.all(Object.entries(manifest.files)
+        await this.all(Object.entries(manifest.files)
             .filter(([file, entry]) => entry.type === "file")
             .map(([file, entry]) => {
                 const fEntry = entry as FileEntry;
@@ -293,9 +303,8 @@ export function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Tas
                         hash: downloadInfo.sha1,
                     },
                     destination: dest,
-                    segmentPolicy: options.segmentPolicy,
-                    retryHandler: options.retryHandler,
-                    agents: options.agents,
+                    agent: options.agent,
+                    headers: options.headers
                 }
                 return isLzma && decompressFunction
                     ? new DownloadAndDecompressTask(downloadOptions).setName("download")
@@ -303,7 +312,7 @@ export function installJavaRuntimesTask(options: InstallJavaRuntimeOptions): Tas
             }), {
             throwErrorImmediately: options.throwErrorImmediately,
             getErrorMessage: (e) => `Fail to install java runtime ${manifest.version.name} on ${manifest.target}`,
-        }));
+        });
         await Promise.all(Object.entries(manifest.files)
             .filter(([file, entry]) => entry.type !== "file")
             .map(async ([file, entry]) => {

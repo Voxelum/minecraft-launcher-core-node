@@ -1,14 +1,15 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
+import { readFile, writeFile } from 'fs/promises';
 import { join } from "path";
-import { getAndParseIfUpdate, Timestamped } from "./http/fetch";
-import { ensureDir, InstallOptions, missing, readFile, writeFile } from "./utils";
+import { Dispatcher, request } from 'undici';
+import { ensureDir, InstallOptions, missing } from "./utils";
 
 export const DEFAULT_VERSION_MANIFEST = "http://dl.liteloader.com/versions/versions.json";
 /**
  * The liteloader version list. Containing the minecraft version -> liteloader version info mapping.
  */
-export interface LiteloaderVersionList extends Timestamped {
+export interface LiteloaderVersionList {
     meta: {
         description: string,
         authors: string,
@@ -109,20 +110,15 @@ export class MissingVersionJsonError extends Error {
  *
  * This will request liteloader offical json by default. You can replace the request by assigning the remote option.
  */
-export function getLiteloaderVersionList(option: {
+export async function getLiteloaderVersionList(options: {
     /**
-     * If this presents, it will send request with the original list timestamp.
-     *
-     * If the server believes there is no modification after the original one,
-     * it will directly return the orignal one.
+     * The request dispatcher
      */
-    original?: LiteloaderVersionList;
-    /**
-     * The optional requesting version json url.
-     */
-    remote?: string;
+    dispatcher?: Dispatcher;
 } = {}): Promise<LiteloaderVersionList> {
-    return getAndParseIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST, LiteloaderVersionList.parse, option.original);
+    const response = await request(DEFAULT_VERSION_MANIFEST, { dispatcher: options.dispatcher, throwOnError: true });
+    const body = await response.body.text();
+    return LiteloaderVersionList.parse(body);
 }
 
 /**

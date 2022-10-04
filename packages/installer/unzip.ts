@@ -3,8 +3,9 @@ import { openEntryReadStream } from "@xmcl/unzip";
 import { createWriteStream } from "fs";
 import { join } from "path";
 import { Readable, Writable } from "stream";
+import { pipeline } from 'stream/promises';
 import { Entry, ZipFile } from "yauzl";
-import { ensureFile, pipeline } from "./utils";
+import { ensureFile } from "./utils";
 
 export interface EntryResolver {
     (entry: Entry): Promise<string> | string

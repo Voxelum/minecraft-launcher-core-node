@@ -2,7 +2,8 @@ import { ClassReader, ClassVisitor, Opcodes } from "@xmcl/asm";
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
 import { task } from "@xmcl/task";
 import { getEntriesRecord, open, readAllEntries, readEntry } from "@xmcl/unzip";
-import { ensureFile, InstallOptions, SpawnJavaOptions, spawnProcess, writeFile } from "./utils";
+import { writeFile } from 'fs/promises';
+import { ensureFile, InstallOptions, SpawnJavaOptions, spawnProcess } from "./utils";
 
 export interface InstallOptifineOptions extends InstallOptions {
     /**

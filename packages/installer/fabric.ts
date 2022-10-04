@@ -1,25 +1,10 @@
 import { MinecraftFolder, MinecraftLocation, Version } from "@xmcl/core";
-import { fetchJson, getLastModified, Timestamped } from "./http/fetch";
-import { ensureFile, InstallOptions, writeFile } from "./utils";
+import { writeFile } from 'fs/promises';
+import { Dispatcher, request } from 'undici';
+import { ensureFile, InstallOptions } from "./utils";
 
 export const YARN_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml";
 export const LOADER_MAVEN_URL = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml";
-
-/**
- * Fabric Yarn version list
- * @see https://github.com/FabricMC/yarn
- */
-export interface FabricYarnVersionList extends Timestamped {
-    versions: FabricArtifactVersion[];
-}
-
-/**
- * Fabric mod loader version list
- * @see https://fabricmc.net/
- */
-export interface FabricLoaderVersionList extends Timestamped {
-    versions: FabricArtifactVersion[];
-}
 
 export interface FabricArtifactVersion {
     gameVersion?: string; // "20w10a",
@@ -52,23 +37,29 @@ export interface FabricLoaderArtifact {
     };
 }
 
-export const DEFAULT_FABRIC_API = "https://meta.fabricmc.net/v2";
+export interface FabricOptions {
+    dispatcher?: Dispatcher
+}
 
 /**
  * Get all the artifacts provided by fabric
  * @param remote The fabric API host
  * @beta
  */
-export function getFabricArtifacts(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifacts> {
-    return fetchJson(remote + "/versions");
+export async function getFabricArtifacts(options?: FabricOptions): Promise<FabricArtifacts> {
+    const response = await request("https://meta.fabricmc.net/v2/versions", { throwOnError: true, dispatcher: options?.dispatcher });
+    const body = response.body.json();
+    return body;
 }
 /**
  * Get fabric-yarn artifact list
  * @param remote The fabric API host
  * @beta
  */
-export function getYarnArtifactList(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
-    return fetchJson(remote + "/versions/yarn");
+export async function getYarnArtifactList(options?: FabricOptions): Promise<FabricArtifactVersion[]> {
+    const response = await request("https://meta.fabricmc.net/v2/versions/yarn", { throwOnError: true, dispatcher: options?.dispatcher });
+    const body = response.body.json();
+    return body;
 }
 /**
  * Get fabric-yarn artifact list by Minecraft version
@@ -76,16 +67,20 @@ export function getYarnArtifactList(remote: string = DEFAULT_FABRIC_API): Promis
  * @param remote The fabric API host
  * @beta
  */
-export function getYarnArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
-    return fetchJson(remote + "/versions/yarn/" + minecraft);
+export async function getYarnArtifactListFor(minecraft: string, options?: FabricOptions): Promise<FabricArtifactVersion[]> {
+    const response = await request("https://meta.fabricmc.net/v2/versions/yarn/" + minecraft, { throwOnError: true, dispatcher: options?.dispatcher });
+    const body = response.body.json();
+    return body;
 }
 /**
  * Get fabric-loader artifact list
  * @param remote The fabric API host
  * @beta
  */
-export function getLoaderArtifactList(remote: string = DEFAULT_FABRIC_API): Promise<FabricArtifactVersion[]> {
-    return fetchJson(remote + "/versions/loader");
+export async function getLoaderArtifactList(options?: FabricOptions): Promise<FabricArtifactVersion[]> {
+    const response = await request("https://meta.fabricmc.net/v2/versions/loader", { throwOnError: true, dispatcher: options?.dispatcher });
+    const body = response.body.json();
+    return body;
 }
 /**
  * Get fabric-loader artifact list by Minecraft version
@@ -93,8 +88,10 @@ export function getLoaderArtifactList(remote: string = DEFAULT_FABRIC_API): Prom
  * @param remote The fabric API host
  * @beta
  */
-export function getLoaderArtifactListFor(minecraft: string, remote: string = DEFAULT_FABRIC_API): Promise<FabricLoaderArtifact[]> {
-    return fetchJson(remote + "/versions/loader/" + minecraft);
+export async function getLoaderArtifactListFor(minecraft: string, options?: FabricOptions): Promise<FabricLoaderArtifact[]> {
+    const response = await request("https://meta.fabricmc.net/v2/versions/loader/" + minecraft, { throwOnError: true, dispatcher: options?.dispatcher });
+    const body = response.body.json();
+    return body;
 }
 /**
  * Get fabric-loader artifact list by Minecraft version
@@ -103,64 +100,10 @@ export function getLoaderArtifactListFor(minecraft: string, remote: string = DEF
  * @param remote The fabric API host
  * @beta
  */
-export function getFabricLoaderArtifact(minecraft: string, loader: string, remote: string = DEFAULT_FABRIC_API): Promise<FabricLoaderArtifact> {
-    return fetchJson(remote + "/versions/loader/" + minecraft + "/" + loader);
-}
-
-/**
- * Get or refresh the yarn version list.
- * @beta
- */
-export async function getYarnVersionListFromXML(option: {
-    /**
-     * If this presents, it will send request with the original list timestamp.
-     *
-     * If the server believes there is no modification after the original one,
-     * it will directly return the orignal one.
-     */
-    original?: FabricYarnVersionList,
-    /**
-     * remote maven xml url of this request
-     */
-    remote?: string,
-} = {}): Promise<FabricYarnVersionList> {
-    let [modified, timestamp] = await getLastModified(YARN_MAVEN_URL, option.original?.timestamp);
-    if (modified || !option.original) {
-        let versions = await getYarnArtifactList(option.remote);
-        return {
-            versions: versions,
-            timestamp: timestamp ?? "",
-        };
-    }
-    return option.original;
-}
-
-/**
- * Get or refresh the fabric mod loader version list.
- * @beta
- */
-export async function getLoaderVersionListFromXML(option: {
-    /**
-     * If this presents, it will send request with the original list timestamp.
-     *
-     * If the server believes there is no modification after the original one,
-     * it will directly return the orignal one.
-     */
-    original?: FabricLoaderVersionList,
-    /**
-     * remote maven xml url of this request
-     */
-    remote?: string,
-}): Promise<FabricLoaderVersionList> {
-    let [modified, timestamp] = await getLastModified(LOADER_MAVEN_URL, option.original?.timestamp);
-    if (modified || !option.original) {
-        let versions = await getLoaderArtifactList(option.remote);
-        return {
-            versions: versions,
-            timestamp: timestamp ?? "",
-        };
-    }
-    return option.original;
+export async function getFabricLoaderArtifact(minecraft: string, loader: string, options?: FabricOptions): Promise<FabricLoaderArtifact> {
+    const response = await request("https://meta.fabricmc.net/v2/versions/loader/" + minecraft + "/" + loader, { throwOnError: true, dispatcher: options?.dispatcher });
+    const body = response.body.json();
+    return body;
 }
 
 /**
@@ -171,23 +114,25 @@ export async function getLoaderVersionListFromXML(option: {
  * @param minecraft The minecraft location
  * @returns The installed version id
  */
-export async function installFabricYarnAndLoader(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options: InstallOptions = {}) {
-    const folder = MinecraftFolder.from(minecraft);
-    const mcversion = yarnVersion.split("+")[0];
-    const id = options.versionId || `${mcversion}-fabric${yarnVersion}-${loaderVersion}`;
+// export async function installFabricYarnAndLoader(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options: InstallOptions = {}) {
+//     const folder = MinecraftFolder.from(minecraft);
+//     const mcversion = yarnVersion.split("+")[0];
+//     const id = options.versionId || `${mcversion}-fabric${yarnVersion}-${loaderVersion}`;
 
-    const jsonFile = folder.getVersionJson(id);
+//     const jsonFile = folder.getVersionJson(id);
 
-    const body: Version = await fetchJson(`https://fabricmc.net/download/technic/?yarn=${encodeURIComponent(yarnVersion)}&loader=${encodeURIComponent(loaderVersion)}`);
-    body.id = id;
-    if (typeof options.inheritsFrom === "string") {
-        body.inheritsFrom = options.inheritsFrom;
-    }
-    await ensureFile(jsonFile);
-    await writeFile(jsonFile, JSON.stringify(body));
+//     const body: Version = constr esponse = await request(`https://fabricmc.net/download/technic/?yarn=${encodeURIComponent(yarnVersion)}&loader=${encodeURIComponent(loaderVersion)}`, { throwOnError: true, dispatcher: options?.dispatcher });
+//     const body = response.body.json();
+//     return body;
+//     body.id = id;
+//     if (typeof options.inheritsFrom === "string") {
+//         body.inheritsFrom = options.inheritsFrom;
+//     }
+//     await ensureFile(jsonFile);
+//     await writeFile(jsonFile, JSON.stringify(body));
 
-    return id;
-}
+//     return id;
+// }
 
 export interface FabricInstallOptions extends InstallOptions {
     side?: "client" | "server";

@@ -1,17 +1,14 @@
 import { AbortableTask } from "@xmcl/task";
+import { download, DownloadOptions } from "./http";
 import { AbortSignal } from "./http/abort";
-import { createDownload, Download, DownloadOptions } from "./http/download";
-import { DownloadError } from "./http/error";
+import { DownloadAbortError } from "./http/error";
 import { StatusController } from "./http/status";
 
 export class DownloadTask extends AbortableTask<void> implements StatusController {
-  readonly download: Download;
   protected abort: (isCancelled: boolean) => void = () => { };
 
-  constructor(options: DownloadOptions) {
+  constructor(protected options: DownloadOptions) {
       super();
-      options.statusController = this;
-      this.download = createDownload(options);
       this._from = options.url instanceof Array ? options.url[0] : options.url;
       this._to = options.destination;
   }
@@ -22,9 +19,9 @@ export class DownloadTask extends AbortableTask<void> implements StatusControlle
       this.update(0);
   }
 
-  onProgress(url: string, chunkSize: number, progress: number): void {
+  onProgress(url: URL, chunkSize: number, progress: number): void {
       this._progress = progress;
-      this._from = url;
+      this._from = url.toString();
       this.update(chunkSize);
   }
 
@@ -48,12 +45,15 @@ export class DownloadTask extends AbortableTask<void> implements StatusControlle
       this.abort = () => {
           listeners.forEach((l) => l())
       }
-      return this.download.start(signal);
+      return download({ 
+        ...this.options,
+        statusController: this,
+        abortSignal: signal,
+      });
   }
 
   protected isAbortedError(e: any): boolean {
-      if (e instanceof Array) { e = e[0] }
-      if (e instanceof DownloadError && e.error === "DownloadAborted") {
+      if (e instanceof DownloadAbortError) {
           return true;
       }
       return false;

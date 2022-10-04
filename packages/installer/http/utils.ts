@@ -1,10 +1,8 @@
 import { createHash } from "crypto";
-import { Agent as HttpAgent, ClientRequest, IncomingMessage, request, RequestOptions } from "http";
 import { createReadStream } from "fs";
-import { AbortSignal, AbortError } from "./abort";
-import { Agent as HttpsAgent, request as requests } from "https";
+import { RequestOptions } from "http";
+import { pipeline } from 'stream/promises';
 import { URL } from "url";
-import { pipeline } from "../utils";
 
 export function isValidProtocol(protocol: string | undefined | null): protocol is "http:" | "https:" {
     return protocol === "http:" || protocol === "https:";
@@ -22,51 +20,6 @@ export function urlToRequestOptions(url: URL): RequestOptions {
 
 export function format(url: RequestOptions) {
     return `${url.protocol}//${url.host}${url.path}`
-}
-
-function mergeRequestOptions(original: RequestOptions, newOptions: RequestOptions) {
-    let options = { ...original } as any;
-    for (let [key, value] of Object.entries(newOptions)) {
-        if (value !== null) {
-            options[key] = value;
-        }
-    }
-    return options as RequestOptions;
-}
-
-export function fetch(options: RequestOptions, agents: { http?: HttpAgent, https?: HttpsAgent } = {}, abortSignal?: AbortSignal) {
-    return new Promise<{ request: ClientRequest, message: IncomingMessage }>((resolve, reject) => {
-        function follow(options: RequestOptions) {
-            if (abortSignal?.aborted) {
-                reject(new AbortError());
-            }
-            if (!isValidProtocol(options.protocol)) {
-                reject(new Error(`Invalid URL: ${format(options)}`));
-            } else {
-                const [req, agent] = options.protocol === "http:" ? [request, agents.http] : [requests, agents.https];
-                // create abort handler
-                const abortHandler = () => {
-                    clientReq.destroy(new AbortError());
-                };
-                const clientReq = req({ ...options, agent }, (m) => {
-                    if ((m.statusCode === 302 || m.statusCode === 301 || m.statusCode === 303 || m.statusCode === 308) && typeof m.headers.location === "string") {
-                        m.resume();
-                        abortSignal?.removeEventListener("abort", abortHandler);
-                        follow(mergeRequestOptions(options, urlToRequestOptions(new URL(m.headers.location, `${options.protocol}//${options.host}`))));
-                    } else {
-                        m.url = m.url || format(options);
-                        clientReq.removeListener("error", reject);
-                        abortSignal?.removeEventListener("abort", abortHandler);
-                        resolve({ request: clientReq, message: m });
-                    }
-                });
-                abortSignal?.addEventListener("abort", abortHandler);
-                clientReq.addListener("error", reject);
-                clientReq.end();
-            }
-        }
-        follow(options);
-    });
 }
 
 /**

@@ -1,13 +1,14 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version, Version as VersionJson } from "@xmcl/core";
 import { task, Task } from "@xmcl/task";
 import { join } from "path";
-import { withAgents } from "./http/agents";
 import { DownloadTask } from "./downloadTask";
-import { Download, DownloadBaseOptions } from "./http/download";
-import { getAndParseIfUpdate, Timestamped } from "./http/fetch";
+import { DownloadBaseOptions } from "./http";
 import { joinUrl } from "./http/utils";
-import { ensureDir, errorToString, normalizeArray, ParallelTaskOptions, readFile } from "./utils";
-import { JsonValidator, ZipValidator } from "./http/validator";
+import { ensureDir, errorToString, normalizeArray, ParallelTaskOptions } from "./utils";
+import { JsonValidator } from "./http/validator";
+import { readFile } from 'fs/promises';
+import { ZipValidator } from './zipValdiator';
+import { Dispatcher, request } from 'undici';
 
 /**
  * The function to swap library host.
@@ -51,7 +52,7 @@ export interface AssetInfo {
 /**
  * Minecraft version metadata list
  */
-export interface MinecraftVersionList extends Timestamped {
+export interface MinecraftVersionList {
     latest: {
         /**
          * Snapshot version id of the Minecraft
@@ -84,20 +85,14 @@ export const DEFAULT_RESOURCE_ROOT_URL = "https://resources.download.minecraft.n
  *
  * @returns The new list if there is
  */
-export function getVersionList(option: {
+export async function getVersionList(options: {
     /**
-     * If this presents, it will send request with the original list timestamp.
-     *
-     * If the server believes there is no modification after the original one,
-     * it will directly return the orignal one.
+     * Request dispatcher
      */
-    original?: MinecraftVersionList,
-    /**
-     * remote url of this request
-     */
-    remote?: string,
+    dispatcher?: Dispatcher,
 } = {}): Promise<MinecraftVersionList> {
-    return getAndParseIfUpdate(option.remote || DEFAULT_VERSION_MANIFEST_URL, JSON.parse, option.original);
+    const response = await request(DEFAULT_VERSION_MANIFEST_URL, { dispatcher: options.dispatcher, throwOnError: true })
+    return await response.body.json()
 }
 
 /**
@@ -259,13 +254,11 @@ export async function installResolvedLibraries(libraries: ResolvedLibrary[], min
  */
 export function installTask(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options = {}): Task<ResolvedVersion> {
     return task("install", async function () {
-        return withAgents(options, async (options) => {
-            const version = await this.yield(installVersionTask(versionMeta, minecraft, options));
-            if (options.side !== "server") {
-                await this.yield(installDependenciesTask(version, options));
-            }
-            return version;
-        });
+        const version = await this.yield(installVersionTask(versionMeta, minecraft, options));
+        if (options.side !== "server") {
+            await this.yield(installDependenciesTask(version, options));
+        }
+        return version;
     });
 }
 /**
@@ -277,14 +270,12 @@ export function installTask(versionMeta: MinecraftVersionBaseInfo, minecraft: Mi
  */
 export function installVersionTask(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: JarOption = {}): Task<ResolvedVersion> {
     return task("version", async function () {
-        return withAgents(options, async (options) => {
-            await this.yield(new InstallJsonTask(versionMeta, minecraft, options));
-            const version = await VersionJson.parse(minecraft, versionMeta.id);
-            if (version.downloads[options.side ?? "client"]) {
-                await this.yield(new InstallJarTask(version as any, minecraft, options));
-            }
-            return version;
-        });
+        await this.yield(new InstallJsonTask(versionMeta, minecraft, options));
+        const version = await VersionJson.parse(minecraft, versionMeta.id);
+        if (version.downloads[options.side ?? "client"]) {
+            await this.yield(new InstallJarTask(version as any, minecraft, options));
+        }
+        return version;
     }, versionMeta);
 }
 
@@ -296,10 +287,10 @@ export function installVersionTask(versionMeta: MinecraftVersionBaseInfo, minecr
  */
 export function installDependenciesTask(version: ResolvedVersion, options: Options = {}): Task<ResolvedVersion> {
     return task("dependencies", async function () {
-        await withAgents(options, (options) => Promise.all([
+        await Promise.all([
             this.yield(installAssetsTask(version, options)),
             this.yield(installLibrariesTask(version, options)),
-        ]));
+        ])
         return version;
     });
 }
@@ -323,6 +314,8 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
                     hash: file.sha1,
                 },
                 destination: folder.getLogConfig(file.id),
+                agent: options.agent,
+                headers: options.headers,
             }).setName("asset", { name: file.id, hash: file.sha1, size: file.size }))
         }
         const jsonPath = folder.getPath("assets", "indexes", version.assets + ".json");
@@ -344,10 +337,10 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
         const { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex;
         const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }));
         // let sizes = objectArray.map((a) => a.size).map((a, b) => a + b, 0);
-        await withAgents(options, (options) => this.all(objectArray.map((o) => new InstallAssetTask(o, folder, options)), {
+        await this.all(objectArray.map((o) => new InstallAssetTask(o, folder, options)), {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
             getErrorMessage: (errs) => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}: ${errs.map(errorToString).join("\n")}`
-        }));
+        });
 
         return version;
     });
@@ -361,10 +354,10 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
 export function installLibrariesTask(version: InstallLibraryVersion, options: LibraryOptions = {}): Task<void> {
     return task("libraries", async function () {
         const folder = MinecraftFolder.from(version.minecraftDirectory);
-        await withAgents(options, (options) => this.all(version.libraries.map((lib) => new InstallLibraryTask(lib, folder, options)), {
+        await this.all(version.libraries.map((lib) => new InstallLibraryTask(lib, folder, options)), {
             throwErrorImmediately: options.throwErrorImmediately ?? false,
             getErrorMessage: (errs) => `Errors during install libraries at ${version.minecraftDirectory}: ${errs.map(errorToString).join("\n")}`
-        }));
+        });
     });
 }
 
@@ -390,10 +383,10 @@ export function installResolvedAssetsTask(assets: AssetInfo[], folder: Minecraft
 
         // const sizes = assets.map((a) => a.size).map((a, b) => a + b, 0);
 
-        await withAgents(options, (options) => this.all(assets.map((o) => new InstallAssetTask(o, folder, options)), {
+        await this.all(assets.map((o) => new InstallAssetTask(o, folder, options)), {
             throwErrorImmediately: false,
             getErrorMessage: (errs) => `Errors during install assets at ${folder.root}:\n${errs.map(errorToString).join("\n")}`,
-        }));
+        });
     });
 }
 
@@ -406,9 +399,8 @@ export class InstallJsonTask extends DownloadTask {
 
         super({
             url: urls,
-            agents: options.agents,
-            segmentPolicy: options.segmentPolicy,
-            retryHandler: options.retryHandler,
+            headers: options.headers,
+            agent: options.agent,
             validator: expectSha1 ? { algorithm: "sha1", hash: expectSha1 } : new JsonValidator(),
             destination,
         });
@@ -435,9 +427,8 @@ export class InstallJarTask extends DownloadTask {
             url: urls,
             validator: { algorithm: "sha1", hash: expectSha1 },
             destination,
-            agents: options.agents,
-            segmentPolicy: options.segmentPolicy,
-            retryHandler: options.retryHandler,
+            headers: options.headers,
+            agent: options.agent,
         });
 
         this.name = "jar";
@@ -457,9 +448,8 @@ export class InstallAssetIndexTask extends DownloadTask {
                 algorithm: "sha1",
                 hash: version.assetIndex.sha1,
             },
-            agents: options.agents,
-            segmentPolicy: options.segmentPolicy,
-            retryHandler: options.retryHandler,
+            headers: options.headers,
+            agent: options.agent,
         });
 
         this.name = "assetIndex";
@@ -480,9 +470,8 @@ export class InstallLibraryTask extends DownloadTask {
                 hash: lib.download.sha1,
             },
             destination,
-            agents: options.agents,
-            segmentPolicy: options.segmentPolicy,
-            retryHandler: options.retryHandler,
+            headers: options.headers,
+            agent: options.agent,
         });
 
         this.name = "library";
@@ -492,7 +481,7 @@ export class InstallLibraryTask extends DownloadTask {
 
 export class InstallAssetTask extends DownloadTask {
     constructor(asset: AssetInfo, folder: MinecraftFolder, options: AssetsOptions) {
-        const assetsHosts = normalizeArray(options.assetsHost || []) ;
+        const assetsHosts = normalizeArray(options.assetsHost || []);
 
         if (assetsHosts.indexOf(DEFAULT_RESOURCE_ROOT_URL) === -1) {
             assetsHosts.push(DEFAULT_RESOURCE_ROOT_URL);
@@ -509,9 +498,8 @@ export class InstallAssetTask extends DownloadTask {
             url: urls,
             destination: file,
             validator: { hash, algorithm: "sha1", },
-            agents: options.agents,
-            segmentPolicy: options.segmentPolicy,
-            retryHandler: options.retryHandler,
+            headers: options.headers,
+            agent: options.agent,
         })
 
         this._total = size;

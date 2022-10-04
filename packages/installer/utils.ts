@@ -1,24 +1,11 @@
-import { _exists as exists, _mkdir as mkdir, _pipeline as pipeline, _readFile as readFile, _writeFile as writeFile } from "@xmcl/core";
-import { ChildProcess, spawn, ExecOptions, SpawnOptions } from "child_process";
-import { close as fclose, copyFile as fcopyFile, ftruncate, link as fslink, open as fopen, stat as fstat, unlink as funlink } from "fs";
+import { ChildProcess, ExecOptions, spawn, SpawnOptions } from "child_process";
+import { access, mkdir, stat } from 'fs/promises';
 import { dirname } from "path";
-import { promisify } from "util";
-
-export const unlink = promisify(funlink);
-export const stat = promisify(fstat);
-
-export const link = promisify(fslink);
-
-export const open = promisify(fopen);
-export const close = promisify(fclose);
-export const copyFile = promisify(fcopyFile);
-export const truncate = promisify(ftruncate);
 
 export { checksum } from "@xmcl/core";
-export { readFile, writeFile, mkdir, exists, pipeline };
 
 export function missing(target: string) {
-    return exists(target).then((v) => !v);
+    return access(target).then(() => false, () => true);
 }
 
 export async function ensureDir(target: string) {

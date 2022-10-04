@@ -1,13 +1,11 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
-import { task, Task, TaskGroup } from "@xmcl/task";
+import { task, Task } from "@xmcl/task";
 import { open, readAllEntries, readEntry } from "@xmcl/unzip";
 import { Agent as HttpsAgent } from "https";
 import { basename, join } from "path";
 import { Entry, ZipFile } from "yauzl";
 import { DownloadTask } from "./downloadTask";
-import { withAgents } from "./http/agents";
-import { DownloadBaseOptions } from "./http/download";
-import { fetchText } from "./http/fetch";
+import { DownloadBaseOptions } from './http';
 import { UnzipTask } from "./unzip";
 import { errorToString, ParallelTaskOptions } from "./utils";
 
@@ -157,23 +155,20 @@ export function installCurseforgeModpackTask(input: InputType, minecraft: Minecr
         const manifest = options?.manifest ?? (await this.yield(readManifestTask(zip)));
         const requestor = options?.queryFileUrl || createDefaultCurseforgeQuery();
         const resolver = options?.filePathResolver || ((p, f, m, u) => m.getMod(basename(u)));
-        await withAgents(options, async (options) => {
-            const tasks = await Promise.all(manifest.files.map(async (f) => {
-                const from = await requestor(f.projectID, f.fileID);
-                const to = await resolver(f.projectID, f.fileID, folder, from);
+        const tasks = await Promise.all(manifest.files.map(async (f) => {
+            const from = await requestor(f.projectID, f.fileID);
+            const to = await resolver(f.projectID, f.fileID, folder, from);
 
-                return new DownloadTask({
-                    url: from,
-                    destination: to,
-                    agents: options.agents,
-                    segmentPolicy: options.segmentPolicy,
-                    retryHandler: options.retryHandler,
-                }).setName("download");
-            }));
-            await this.all(tasks, {
-                throwErrorImmediately: options.throwErrorImmediately ?? false,
-                getErrorMessage: (errs) => `Fail to install curseforge modpack to ${folder.root}: ${errs.map(errorToString).join("\n")}`
-            });
+            return new DownloadTask({
+                url: from,
+                destination: to,
+                agent: options.agent,
+                headers: options.headers,
+            }).setName("download");
+        }));
+        await this.all(tasks, {
+            throwErrorImmediately: options.throwErrorImmediately ?? false,
+            getErrorMessage: (errs) => `Fail to install curseforge modpack to ${folder.root}: ${errs.map(errorToString).join("\n")}`
         });
         await this.yield(new UnzipTask(
             zip.zip,
@@ -202,9 +197,8 @@ export function installCurseforgeFileTask(file: File, destination: string, optio
         await new DownloadTask({
             url,
             destination: join(destination, basename(url)),
-            agents: options.agents,
-            segmentPolicy: options.segmentPolicy,
-            retryHandler: options.retryHandler,
+            agent: options.agent,
+            headers: options.headers,
         }).startAndWait(this.context, this.parent);
     });
 }

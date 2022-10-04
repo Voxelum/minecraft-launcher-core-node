@@ -1,12 +1,13 @@
 import { getPlatform, Platform } from "@xmcl/core";
 import { Task, task } from "@xmcl/task";
 import { exec } from "child_process";
+import { unlink } from 'fs/promises';
 import { arch, EOL, platform, tmpdir } from "os";
 import { basename, join, resolve } from "path";
+import { Dispatcher, request } from 'undici';
 import { DownloadTask } from "./downloadTask";
-import { DownloadBaseOptions } from "./http/download";
-import { fetchJson } from "./http/fetch";
-import { ensureDir, missing, unlink } from "./utils";
+import { DownloadBaseOptions } from "./http";
+import { ensureDir, missing } from "./utils";
 
 export interface JavaInfo {
     /**
@@ -42,6 +43,10 @@ export interface InstallJavaOptions extends DownloadBaseOptions {
      * Unpack lzma function. It must present, else it will not be able to unpack mojang provided LZMA.
      */
     unpackLZMA: UnpackLZMAFunction;
+    /**
+     * The dispatcher for API
+     */
+    dispatcher?: Dispatcher
 }
 
 export type UnpackLZMAFunction =
@@ -61,9 +66,8 @@ export class DownloadJRETask extends DownloadTask {
                 algorithm: "sha1",
                 hash: sha1,
             },
-            segmentPolicy: options.segmentPolicy,
-            retryHandler: options.retryHandler,
-            agents: options.agents,
+            agent: options.agent,
+            headers: options.headers,
         })
 
         this.name = "downloadJre";
@@ -86,7 +90,10 @@ export function installJreFromMojangTask(options: InstallJavaOptions) {
     } = options;
     return task("installJreFromMojang", async function () {
         const info: { [system: string]: { [arch: string]: { jre: DownloadInfo } } }
-            = await this.yield(task("fetchInfo", () => fetchJson("https://launchermeta.mojang.com/mc/launcher.json")));
+            = await this.yield(task("fetchInfo", async () => {
+                const response = await request("https://launchermeta.mojang.com/mc/launcher.json", { dispatcher: options.dispatcher, throwOnError: true });
+                return response.body.json();
+            }));
         const system = platform.name;
         function resolveArch() {
             switch (platform.arch) {

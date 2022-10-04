@@ -1,54 +1,58 @@
-export interface Segment {
-    start: number;
-    end: number;
-}
+import { FileHandle } from 'fs/promises'
+import { Writable } from 'stream'
+import { Dispatcher, stream } from 'undici'
+import { AbortSignal } from './abort'
+import { Segment } from './segmentPolicy'
+import { StatusController } from './status'
 
-export interface SegmentPolicy {
-    computeSegments(contentLength: number): Segment[]
-}
+export async function * range(
+  url: URL,
+  segment: Segment,
+  headers: Record<string, string>,
+  handle: FileHandle,
+  statusController: StatusController | undefined,
+  abortSignal: AbortSignal | undefined,
+  dispatcher: Dispatcher | undefined,
+): AsyncGenerator<any, void, void> {
+  if (segment.start >= segment.end) {
+    // the segment is finished, just ignore it
+    return
+  }
+  let contentLength = -1
+  const fileStream = new Writable({
+    write(chunk, en, cb) {
+      handle.write(chunk, 0, chunk.length, segment.start).then(({ bytesWritten }) => {
+        // track the progress
+        segment.start += bytesWritten
+        statusController?.onProgress(url, bytesWritten, statusController.progress + bytesWritten)
+        cb()
+      }, cb)
+    },
+  })
 
-export function isSegmentPolicy(segmentOptions?: SegmentPolicy | DefaultSegmentPolicyOptions): segmentOptions is SegmentPolicy {
-    if (!segmentOptions) { return false; }
-    return "computeSegments" in segmentOptions && typeof segmentOptions.computeSegments === "function"
-}
-
-export function resolveSegmentPolicy(segmentOptions?: SegmentPolicy | DefaultSegmentPolicyOptions) {
-    if (isSegmentPolicy(segmentOptions)) {
-        return segmentOptions;
+  while (true) {
+    try {
+      await stream(url, {
+        method: 'GET',
+        dispatcher,
+        headers: {
+          ...headers,
+          Range: segment.end < 0 ? undefined : `bytes=${segment.start}-${(segment.end) ?? ''}`,
+        },
+        throwOnError: true,
+        maxRedirections: 2,
+        signal: abortSignal,
+        opaque: fileStream,
+        onInfo({ headers }) {
+          if (typeof headers['content-length'] === 'string') {
+            contentLength = Number.parseInt(headers['content-length'] ?? '0')
+            segment.end = contentLength
+          }
+        },
+      }, ({ opaque }) => opaque as Writable)
+      return
+    } catch (e) {
+      yield e
     }
-    return new DefaultSegmentPolicy(segmentOptions?.segmentThreshold ?? 2 * 1000000, 4);
-}
-
-export interface DefaultSegmentPolicyOptions {
-    /**
-     * The minimum bytes a segment should have.
-     * @default 2MB
-     */
-    segmentThreshold?: number;
-}
-
-export class DefaultSegmentPolicy implements SegmentPolicy {
-    constructor(readonly segmentThreshold: number, readonly concurrency: number) { }
-
-    computeSegments(total: number): Segment[] {
-        const { segmentThreshold: chunkSize, concurrency } = this;
-        const partSize = Math.max(chunkSize, Math.floor(total / concurrency));
-        const segments: Segment[] = [];
-        for (let cur = 0, chunkSize = 0; cur < total; cur += chunkSize) {
-            const remain = total - cur;
-            if (remain >= partSize) {
-                chunkSize = partSize;
-                segments.push({ start: cur, end: cur + chunkSize - 1 });
-            } else {
-                const last = segments[segments.length - 1];
-                if (!last) {
-                    segments.push({ start: 0, end: remain - 1 });
-                } else {
-                    last.end = last.end + remain;
-                }
-                cur = total;
-            }
-        }
-        return segments;
-    }
+  }
 }
