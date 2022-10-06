@@ -67,16 +67,14 @@ export class DownloadAgent {
       let location = url.toString()
       const response = await request(url, {
         method: 'HEAD',
+        maxRedirections: 2,
         headers,
         signal: abortSignal,
-        maxRedirections: 2,
         dispatcher: this.dispatcher,
-        onInfo(info) {
-          if (typeof info.headers.location === 'string') {
-            location = info.headers.location
-          }
-        },
       })
+
+      const history = (response.context as any)?.history as (URL[] | undefined)
+      location = history?.[history?.length - 1].toString() || location
 
       // Try to revalidate the resource
       const revalidation = policy?.revalidatedPolicy(req, {

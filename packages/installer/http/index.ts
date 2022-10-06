@@ -78,6 +78,7 @@ export async function download(options: DownloadOptions) {
       const error = await validator.validate(fd, destination, urls[0]).catch((e) => e)
       // if the file size is not 0 and checksum matched, we just don't process the file
       if (!error) {
+        await fd?.close().catch(() => { })
         return
       }
     }
@@ -87,28 +88,38 @@ export async function download(options: DownloadOptions) {
   }
 
   // Start to download
+
   try {
-    const aggregated: { url: string }[] = []
-    for (const url of urls) {
-      try {
-        await agent.dispatch(new URL(url), 'GET', headers, destination, fd, statusController, abortSignal)
-        await fd.datasync()
-        await validator.validate(fd, destination, url)
-        break
-      } catch (e) {
-        if (e instanceof DownloadAbortError) {
-          // User abortion should throw anyway
-          throw e
+    // File descriptor scope
+    try {
+      let aggregated: { url: string }[] = []
+      for (const url of urls) {
+        try {
+          await agent.dispatch(new URL(url), 'GET', headers, destination, fd, statusController, abortSignal)
+          await fd.datasync()
+          await validator.validate(fd, destination, url)
+          // Dismiss all errors
+          aggregated = []
+          break
+        } catch (e) {
+          if (e instanceof DownloadAbortError) {
+            // User abortion should throw anyway
+            throw e
+          }
+
+          aggregated.push(Object.assign((e as any), {
+            url,
+          }))
         }
-
-        aggregated.push(Object.assign((e as any), {
-          url,
-        }))
       }
-    }
 
-    if (aggregated.length > 0) {
-      throw aggregated
+      if (aggregated.length > 0) {
+        throw aggregated
+      }
+    } finally {
+      await fd.close().catch(() => {
+        debugger
+      })
     }
   } catch (e) {
     if (e instanceof DownloadAbortError) {
@@ -123,8 +134,6 @@ export async function download(options: DownloadOptions) {
       await unlink(destination).catch(() => { })
     }
 
-    throw new DownloadAggregateError(`Some errors occurred during download process: ${urls.join(', ')}`, urls, headers, destination, e as any)
-  } finally {
-    await fd?.close().catch(() => { })
+    throw new DownloadAggregateError(`Some errors occurred during download process: ${urls.join(', ')}. ${JSON.stringify(e)}`, urls, headers, destination, e as any)
   }
 }

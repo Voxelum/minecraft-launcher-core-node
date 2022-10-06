@@ -48,7 +48,7 @@ export function createDefaultRetryHandler(maxRetryCount = 3) {
       if (attempt < maxRetryCount) {
         if (error instanceof errors.HeadersTimeoutError ||
           error instanceof errors.BodyTimeoutError ||
-          error instanceof errors.SocketTimeoutError ||
+          error instanceof (errors as any).ConnectTimeoutError ||
           error instanceof errors.SocketError) {
           await setTimeout(attempt * 1000)
           return true
