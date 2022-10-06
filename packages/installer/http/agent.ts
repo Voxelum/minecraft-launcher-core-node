@@ -120,7 +120,8 @@ export class DownloadAgent {
       })
     }
 
-    statusController?.reset(segments.map(s => s.start).reduce((a, b) => a + b, 0), total)
+    const starting = segments.map(s => s.end - s.start).reduce((a, b) => a + b, 0)
+    statusController?.reset(starting, total)
     const results = await Promise.all(segments.map(async (segment) => {
       const kernel = range(targetUrl, segment, headers, handle, statusController, abortSignal, this.dispatcher)
 

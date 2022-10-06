@@ -96,6 +96,7 @@ export async function download(options: DownloadOptions) {
       for (const url of urls) {
         try {
           await agent.dispatch(new URL(url), 'GET', headers, destination, fd, statusController, abortSignal)
+          await fd.sync()
           await fd.datasync()
           await validator.validate(fd, destination, url)
           // Dismiss all errors

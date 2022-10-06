@@ -1,4 +1,5 @@
 import { createHash } from 'crypto'
+import { createReadStream } from 'fs'
 import { FileHandle } from 'fs/promises'
 import { pipeline } from 'stream/promises'
 
@@ -19,7 +20,7 @@ export class ChecksumValidator implements Validator {
   async validate(fd: FileHandle, destination: string, url: string): Promise<void> {
     if (this.checksum) {
       const hash = createHash(this.checksum.algorithm)
-      await pipeline(fd.createReadStream({ autoClose: false }), hash)
+      await pipeline(createReadStream(destination), hash)
       const actual = hash.digest('hex')
       const expect = this.checksum.hash
       if (actual !== expect) {
