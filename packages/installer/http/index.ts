@@ -103,6 +103,10 @@ export async function download(options: DownloadOptions) {
           aggregated = []
           break
         } catch (e) {
+          if (e instanceof errors.RequestAbortedError) {
+            // User abortion during HEAD
+            throw new DownloadAbortError(`Download is aborted by user.`, urls, headers, destination, [])
+          }
           if (e instanceof DownloadAbortError) {
             // User abortion should throw anyway
             throw e
