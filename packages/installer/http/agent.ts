@@ -1,7 +1,7 @@
 import { FileHandle } from 'fs/promises'
 import CachePolicy from 'http-cache-semantics'
 import { errors, Dispatcher, getGlobalDispatcher, request } from 'undici'
-import { range } from './segment'
+import { head, range } from './segment'
 import { parseRangeInfo } from './metadata'
 import { createDefaultRetryHandler, RetryPolicy } from './retry'
 import { AbortSignal } from './abort'
@@ -39,6 +39,22 @@ export class DownloadAgent {
 
   }
 
+  private async head(url: URL, headers: Record<string, string>, signal?: AbortSignal) {
+    const kernel = head(url, headers, signal, this.dispatcher)
+
+    let current = await kernel.next()
+    let attempt = 0
+    for (; !current.done; current = await kernel.next(), attempt++) {
+      const error = current.value
+      if (error instanceof RequestAbortedError || !await this.retryHandler.retry(url, attempt, error)) {
+        // won't retry anymore
+        await kernel.throw(error)
+      }
+    }
+
+    return current.value
+  }
+
   async dispatch(url: URL, method: string, headers: Record<string, string>, destination: string, handle: FileHandle, statusController: StatusController | undefined, abortSignal: AbortSignal | undefined) {
     let targetUrl: URL = url
     let segments: Segment[] | undefined
@@ -65,13 +81,7 @@ export class DownloadAgent {
 
     if (!segments) {
       let location = url.toString()
-      const response = await request(url, {
-        method: 'HEAD',
-        maxRedirections: 2,
-        headers,
-        signal: abortSignal,
-        dispatcher: this.dispatcher,
-      })
+      const response = await this.head(url, headers, abortSignal)
 
       const history = (response.context as any)?.history as (URL[] | undefined)
       location = history?.[history?.length - 1].toString() || location
@@ -104,12 +114,12 @@ export class DownloadAgent {
 
       if (revalidation) {
         // Update the checkpoint
-        policy = revalidation.policy
+        policy = revalidation.policy;
       } else {
         policy = new CachePolicy(req, {
           status: response.statusCode,
           headers: response.headers,
-        })
+        });
       }
 
       this.checkpointHandler?.putCheckpoint(url, handle, destination, {
@@ -117,22 +127,27 @@ export class DownloadAgent {
         segments,
         contentLength: total,
         url: url.toString(),
-      })
+      });
     }
 
-    const starting = segments.map(s => s.end - s.start).reduce((a, b) => a + b, 0)
-    statusController?.reset(starting, total)
-    const results = await Promise.all(segments.map(async (segment) => {
+    const ranges = segments
+    const remaining = ranges.map(s => s.end - s.start).reduce((a, b) => a + b, 0)
+    statusController?.reset(total - remaining, total)
+    const results = await Promise.all(ranges.map(async (segment) => {
       const kernel = range(targetUrl, segment, headers, handle, statusController, abortSignal, this.dispatcher)
 
       let attempt = 0
       for (let current = await kernel.next(); !current.done; current = await kernel.next(), attempt++) {
+
         const err = current.value
         if (err instanceof RequestAbortedError || !await this.retryHandler.retry(url, attempt, err)) {
           // won't retry anymore
-          await kernel.return(err)
-          return err
+          await kernel.return(err);
+          return err;
         }
+
+        const remaining = ranges.map(s => s.end - s.start).reduce((a, b) => a + b, 0)
+        statusController?.reset(total - remaining, total);
       }
     }))
 

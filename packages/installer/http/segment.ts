@@ -1,9 +1,31 @@
 import { FileHandle } from 'fs/promises'
 import { Writable } from 'stream'
-import { Dispatcher, stream } from 'undici'
+import { Dispatcher, request, stream } from 'undici'
 import { AbortSignal } from './abort'
 import { Segment } from './segmentPolicy'
 import { StatusController } from './status'
+
+export async function* head(url: URL, headers: Record<string, string>, signal: AbortSignal | undefined, dispatcher: Dispatcher | undefined) {
+  let timeout = 5_000
+  while(true) {
+    try {
+      const response = await request(url, {
+        method: 'HEAD',
+        maxRedirections: 2,
+        // @ts-ignore
+        connectTimeout: timeout,
+        headersTimeout: timeout,
+        headers,
+        signal,
+        dispatcher,
+      })
+      return response
+    } catch (e) {
+      timeout = timeout * 2 > 40_000 ? 40_000 : timeout * 2
+      yield e
+    }
+  }
+}
 
 export async function * range(
   url: URL,
