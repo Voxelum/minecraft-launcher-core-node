@@ -1,8 +1,8 @@
 import { MinecraftFolder, MinecraftLocation } from "@xmcl/core";
 import { task, Task } from "@xmcl/task";
 import { open, readAllEntries, readEntry } from "@xmcl/unzip";
-import { Agent as HttpsAgent } from "https";
 import { basename, join } from "path";
+import { Dispatcher, request } from 'undici';
 import { Entry, ZipFile } from "yauzl";
 import { DownloadTask } from "./downloadTask";
 import { DownloadBaseOptions } from './http';
@@ -114,8 +114,8 @@ export type FilePathResolver = (projectId: number, fileId: number, minecraft: Mi
 export type CurseforgeURLQuery = (projectId: number, fileId: number) => Promise<string>;
 export type CurseforgeFileTypeQuery = (projectId: number) => Promise<"mods" | "resourcepacks">;
 
-export function createDefaultCurseforgeQuery(agent: HttpsAgent = new HttpsAgent()): CurseforgeURLQuery {
-    return (projectId, fileId) => fetchText(`https://addons-ecs.forgesvc.net/api/v2/addon/${projectId}/file/${fileId}/download-url`, { https: agent });
+export function createDefaultCurseforgeQuery(dispatcher?: Dispatcher): CurseforgeURLQuery {
+    return (projectId, fileId) => request(`https://addons-ecs.forgesvc.net/api/v2/addon/${projectId}/file/${fileId}/download-url`, { dispatcher }).then(r => r.body.json());
 }
 /**
  * Install curseforge modpack to a specific Minecraft location.

@@ -441,5 +441,5 @@ export async function getForgeVersionList(options: {
         maxRedirections: 3,
     })
     const body = parseForge(await response.body.text())
-    return body
+    return body as any
 }
