@@ -122,8 +122,7 @@ export async function download(options: DownloadOptions) {
         throw aggregated
       }
     } finally {
-      await fd.close().catch(() => {
-        debugger
+      await fd.close().catch((e) => {
       })
     }
   } catch (e) {
