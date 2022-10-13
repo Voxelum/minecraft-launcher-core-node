@@ -101,7 +101,7 @@ class NodeZipFileSystem extends FileSystem {
             name = name.substring(1);
         }
         if (this.zipRoot !== "") {
-            name = [this.root, name].join("/")
+            name = [this.zipRoot, name].join("/")
         }
         return name;
     }
