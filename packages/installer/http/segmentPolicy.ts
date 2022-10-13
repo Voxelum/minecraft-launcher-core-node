@@ -32,6 +32,9 @@ export class DefaultSegmentPolicy implements SegmentPolicy {
 
   computeSegments(total: number): Segment[] {
     const { segmentThreshold: chunkSize, concurrency } = this
+    if (total <= chunkSize) {
+      return [{ start: 0, end: total }]
+    }
     const partSize = Math.max(chunkSize, Math.floor(total / concurrency))
     const segments: Segment[] = []
     for (let cur = 0, chunkSize = 0; cur < total; cur += chunkSize) {

@@ -50,6 +50,11 @@ export interface DownloadOptions extends DownloadBaseOptions {
    * The user abort signal to abort the download
    */
   abortSignal?: AbortSignal
+  /**
+   * Re-validate the file after download success
+   * @default true
+   */
+  strict?: boolean
 }
 
 /**
@@ -63,6 +68,7 @@ export async function download(options: DownloadOptions) {
   const validator = resolveValidator(options.validator)
   const abortSignal = options.abortSignal
   const agent = resolveAgent(options.agent)
+  const strict = options.strict ?? true
 
   let fd = undefined as FileHandle | undefined
 
@@ -98,7 +104,9 @@ export async function download(options: DownloadOptions) {
           await agent.dispatch(new URL(url), 'GET', headers, destination, fd, statusController, abortSignal)
           await fd.sync()
           await fd.datasync()
-          await validator.validate(fd, destination, url)
+          if (strict) {
+            await validator.validate(fd, destination, url)
+          }
           // Dismiss all errors
           aggregated = []
           break
