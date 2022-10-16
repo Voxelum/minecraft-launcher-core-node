@@ -13,6 +13,7 @@ export class CancelledError extends Error {
 export class MultipleError extends Error {
     constructor(readonly errors: unknown[], message?: string) {
         super(message);
+        this.name = "MultipleError";
     }
 }
 
