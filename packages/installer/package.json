@@ -19,7 +19,7 @@
     "@xmcl/unzip": "^2.0.0",
     "http-cache-semantics": "^4.1.0",
     "@types/http-cache-semantics": "^4.0.1",
-    "undici": "^5.11.0",
+    "undici": "^5.12.0",
     "yauzl": "^2.10.0"
   },
   "repository": {
