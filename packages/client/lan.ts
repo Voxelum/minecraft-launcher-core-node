@@ -44,6 +44,15 @@ export class MinecraftLanDiscover extends EventEmitter {
         this.sock = sock
     }
 
+    broadcast(inf: LanServerInfo) {
+        return new Promise<number>((resolve, reject) => {
+            this.sock.send(`[MOTD]${inf.motd}[/MOTD][AD]${inf.port}[/AD]`, LAN_MULTICAST_PORT, LAN_MULTICAST_ADDR, (err, bytes) => {
+                if (err) reject(err)
+                else resolve(bytes)
+            })
+        })
+    }
+
     bind(): Promise<void> {
         return new Promise((resolve) => {
             this.sock.bind(LAN_MULTICAST_PORT, "0.0.0.0", () => {
