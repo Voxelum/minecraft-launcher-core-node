@@ -12,7 +12,13 @@ export interface MinecraftLanDiscover {
 }
 
 export class MinecraftLanDiscover extends EventEmitter {
-    private sock: Socket
+    readonly socket: Socket
+
+    #ready = false
+
+    get isReady() {
+        return this.#ready
+    }
 
     constructor() {
         super()
@@ -23,6 +29,7 @@ export class MinecraftLanDiscover extends EventEmitter {
             sock.addMembership(LAN_MULTICAST_ADDR, address.address)
             sock.setMulticastTTL(128);
             sock.setBroadcast(true)
+            this.#ready = true
         })
 
         sock.on("message", (buf, remote) => {
@@ -41,12 +48,12 @@ export class MinecraftLanDiscover extends EventEmitter {
             }
         })
 
-        this.sock = sock
+        this.socket = sock
     }
 
     broadcast(inf: LanServerInfo) {
         return new Promise<number>((resolve, reject) => {
-            this.sock.send(`[MOTD]${inf.motd}[/MOTD][AD]${inf.port}[/AD]`, LAN_MULTICAST_PORT, LAN_MULTICAST_ADDR, (err, bytes) => {
+            this.socket.send(`[MOTD]${inf.motd}[/MOTD][AD]${inf.port}[/AD]`, LAN_MULTICAST_PORT, LAN_MULTICAST_ADDR, (err, bytes) => {
                 if (err) reject(err)
                 else resolve(bytes)
             })
@@ -54,16 +61,18 @@ export class MinecraftLanDiscover extends EventEmitter {
     }
 
     bind(): Promise<void> {
-        return new Promise((resolve) => {
-            this.sock.bind(LAN_MULTICAST_PORT, "0.0.0.0", () => {
+        return new Promise((resolve, reject) => {
+            this.socket.bind(LAN_MULTICAST_PORT, "0.0.0.0", () => {
                 resolve()
+            }).once('error', (e) => {
+                reject(e)
             })
         })
     }
 
     destroy(): Promise<void> {
         return new Promise((resolve) => {
-            this.sock.close(resolve)
+            this.socket.close(resolve)
         })
     }
 }
@@ -71,31 +80,4 @@ export class MinecraftLanDiscover extends EventEmitter {
 export interface LanServerInfo {
     motd: string
     port: number
-}
-
-export class MinecraftLanBroadcaster {
-    private sock: Socket
-
-    constructor() {
-        const sock = createSocket({ type: "udp4", reuseAddr: true })
-        sock.addMembership(LAN_MULTICAST_ADDR)
-        sock.setMulticastTTL(120)
-        this.sock = sock
-    }
-
-    broadcast(inf: LanServerInfo) {
-        this.sock.send(`[MOTD]${inf.motd}[/MOTD][AD]${inf.port}[/AD]`, LAN_MULTICAST_PORT, LAN_MULTICAST_ADDR, (err, bytes) => {
-            // todo handle this
-        })
-    }
-
-    bind() {
-        this.sock.bind();
-    }
-
-    destroy() {
-        return new Promise<void>((resolve) => {
-            this.sock.close(resolve)
-        })
-    }
 }
