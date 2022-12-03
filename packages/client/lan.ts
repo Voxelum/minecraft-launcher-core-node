@@ -62,7 +62,7 @@ export class MinecraftLanDiscover extends EventEmitter {
 
     bind(): Promise<void> {
         return new Promise((resolve, reject) => {
-            this.socket.bind(LAN_MULTICAST_PORT, "0.0.0.0", () => {
+            this.socket.bind(LAN_MULTICAST_PORT, () => {
                 resolve()
             }).once('error', (e) => {
                 reject(e)
