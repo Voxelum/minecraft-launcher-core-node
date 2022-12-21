@@ -141,7 +141,7 @@ export class Channel extends EventEmitter {
      */
     send<T>(message: T, skeleton?: Partial<T>) {
         if (!this.connection.writable) { throw new Error("Cannot write if the connection isn't writable!"); }
-        if (skeleton) { Object.assign(message, skeleton); }
+        if (skeleton) { Object.assign((message as any), skeleton); }
         this.outbound.write(message);
         this.emit("send", message);
     }
