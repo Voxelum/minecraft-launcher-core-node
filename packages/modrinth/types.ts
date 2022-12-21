@@ -159,7 +159,7 @@ export interface ProjectVersion {
     /**
      * Whether the version is featured or not
      */
-    featured: string
+    featured: boolean
     /**
      * The name of this version
      */
@@ -251,4 +251,61 @@ export interface DonationLink {
     url: string
 }
 
-
+export interface TeamMember {
+    team_id: string
+    user: {
+        /**
+         * The user's username
+         */
+        username: string
+        /**
+         * The user's display name
+         */
+        name?: string
+        /**
+         * The user's email (only your own is ever displayed)
+         */
+        email?: string
+        /**
+         * A description of the user
+         */
+        bio: string
+        /**
+         * The user's id
+         */
+        id: string
+        /**
+         * The user's github id
+         */
+        github_id?: number
+        /**
+         * The user's avatar url
+         */
+        avatar_url: string
+        /**
+         * The time at which the user was created
+         */
+        created: string
+        /**
+         * The user's role
+         */
+        role: "admin" | "moderator" | "developer"
+    }
+    role: string
+    /**
+     * The user's permissions in bitfield format (requires authorization to view)
+     * 
+     * In order from first to eighth bit, the bits are:
+     * 
+     * - UPLOAD_VERSION
+     * - DELETE_VERSION
+     * - EDIT_DETAILS
+     * - EDIT_BODY
+     * - MANAGE_INVITES
+     * - REMOVE_MEMBER
+     * - EDIT_MEMBER
+     * - DELETE_PROJECT
+     */
+    permissions: number
+    accept: boolean
+}
