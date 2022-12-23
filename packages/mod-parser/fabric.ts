@@ -21,7 +21,7 @@ type Environment = "client" | "server" | "*";
  */
 export interface FabricModMetadata {
     /* Required */
-
+    provides?: string[]
     /**
      * Needed for internal mechanisms. Must always be 1.
      */
