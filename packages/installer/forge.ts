@@ -199,7 +199,7 @@ function extractEntryTo(zip: ZipFile, e: Entry, dest: string) {
 }
 
 async function installLegacyForgeFromZip(zip: ZipFile, entries: ForgeLegacyInstallerEntriesPattern, profile: InstallProfile, mc: MinecraftFolder, options: InstallForgeOptions) {
-    const versionJson = profile.versionInfo!;
+    const versionJson = profile.versionInfo;
 
     // apply override for inheritsFrom
     versionJson.id = options.versionId || versionJson.id;
