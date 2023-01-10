@@ -3,6 +3,8 @@ import { Material } from "three/src/materials/Material";
 import { LinearFilter, NearestFilter } from "three/src/constants";
 import { Object3D } from "three/src/core/Object3D";
 import { TextureLoader } from "three/src/loaders/TextureLoader";
+import { DataTexture } from "three/src/textures/DataTexture";
+import { Texture } from "three/src/textures/Texture";
 import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
 import { MeshLambertMaterial } from "three/src/materials/MeshLambertMaterial";
 import { Mesh } from "three/src/objects/Mesh";
@@ -11,12 +13,14 @@ import { BoxGeometry } from "three/src/geometries/BoxGeometry";
 import { Vector3 } from "three/src/math/Vector3";
 import { Vector2 } from "three/src/math/Vector2";
 import { BufferAttribute } from "three/src/core/BufferAttribute";
+import { decodeImage } from "image-in-browser";
 
-interface Texture {
+interface TextureData {
     url: string;
     animation?: PackMeta.Animation;
+    read?: Function;
 }
-type TextureRegistry = Record<string, Texture>;
+type TextureRegistry = Record<string, TextureData>;
 
 export const DEFAULT_TRANSFORM: BlockModel.Transform = {
     rotation: [0, 0, 0],
@@ -59,6 +63,67 @@ function findRealTexturePath(model: BlockModel.Resolved, variantKey: string) {
         texturePath = next;
     }
     return texturePath;
+}
+
+function loadTexture(textureData: TextureData, textureLoader: TextureLoader) {
+    let texture:Texture | undefined;
+
+    let resolveFn, rejectFn;
+    const progressFn = function() {};
+
+    const promise = new Promise(function(resolve, reject) {
+        resolveFn = resolve;
+        rejectFn = reject;
+    })
+
+    if (textureData.url != undefined && textureData.url.length > 0) {
+        texture = textureLoader.load(textureData.url, resolveFn, progressFn, rejectFn);
+    }
+    else if(textureData.read instanceof Function) {
+        texture = new DataTexture();
+
+        let fileReadPromise = textureData.read();
+        Promise.resolve(fileReadPromise)
+            .then(
+                function(fileContents) {
+                    const decodedContents = decodeImage(fileContents);
+                    if(decodedContents == undefined) {
+                        throw "Error decoding the image";
+                    }
+                    const width = decodedContents?.width;
+                    const height = decodedContents?.height;
+
+                    if(width == undefined || height == undefined) {
+                        throw "Error finding width or height";
+                    }
+
+                    const imageDataArray = decodedContents.getBytes();
+
+                    const imageDataArrayClamped = new Uint8ClampedArray(imageDataArray);
+
+                    const imageData = new ImageData(imageDataArrayClamped, width, height);
+
+                    if(texture != undefined) {
+                        texture.image = imageData;
+                        texture.needsUpdate = true;
+                    }
+
+                    return texture;
+                }
+            )
+            .then(resolveFn)
+            .catch(rejectFn)
+    }
+
+    if(texture == undefined) {
+        texture = new Texture();
+    }
+
+    // Overwrite to true as Texture defaults to true and DataTexture to false
+    texture.flipY = true;
+    texture.userData.hasLoaded = promise;
+
+    return texture;
 }
 
 export class BlockModelObject extends Object3D {
@@ -176,7 +241,7 @@ export class BlockModelFactory {
                 } else if (texPath in textureRegistry) {
                     // build new material
                     const tex = textureRegistry[texPath];
-                    const texture = this.loader.load(tex.url);
+                    const texture = loadTexture(tex, this.loader);
 
                     // sharp pixels and smooth edges
                     texture.magFilter = NearestFilter;
