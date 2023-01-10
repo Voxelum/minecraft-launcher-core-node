@@ -43,7 +43,7 @@ export const enum FileModLoaderType {
 }
 export interface FileIndex {
     gameVersion: string
-    field: number
+    fileId: number
     filename: string
     releaseType: FileReleaseType
 

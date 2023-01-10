@@ -219,6 +219,7 @@ export interface Category {
     icon: string;
     name: string;
     project_type: string;
+    header: string
 }
 
 export function listCategories(agent?: Agent): Promise<Category[]> {
