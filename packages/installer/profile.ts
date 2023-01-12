@@ -5,7 +5,7 @@ import type { ChildProcess } from "child_process";
 import { spawn } from "child_process";
 import { delimiter, dirname } from "path";
 import { ZipFile } from "yauzl";
-import { withAgents } from './http/agents';
+import { withAgents } from "./http/agents";
 import { InstallLibraryTask, InstallSideOption, LibraryOptions } from "./minecraft";
 import { checksum, errorToString, readFile, SpawnJavaOptions, spawnProcess, waitProcess } from "./utils";
 
