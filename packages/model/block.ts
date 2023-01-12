@@ -210,7 +210,11 @@ export class BlockModelFactory {
     /**
      * Get threejs `Object3D` for that block model.
      */
-    getObject(model: BlockModel.Resolved, options?: { uvlock?: boolean; y?: number; x?: number }) {
+    getObject(model: BlockModel.Resolved, options:{ uvlock?: boolean; y?: number; x?: number }={}, fix:number=0.001) {
+        const x_rotation = options.x || 0;
+        const y_rotation = options.y || 0;
+        const uvlock = options.uvlock || false;
+
         const option = this.option;
         const textureRegistry = this.textureRegistry;
 
@@ -274,7 +278,6 @@ export class BlockModelFactory {
                 z: (element.to[2] + element.from[2]) / 2 - 8,
             };
 
-            const fix = 0.001;
             const blockGeometry = new BoxGeometry(width + fix, height + fix, length + fix);
             const blockMesh = new Mesh(blockGeometry, materials);
             blockMesh.name = "block-element";
@@ -334,7 +337,8 @@ export class BlockModelFactory {
             ][i]
 
             for (let i = 0; i < 6; i++) {
-                const face = element.faces[faces[i]];
+                const faceName = faces[i];
+                const face = element.faces[faceName];
                 let materialIndex = 0
                 let uv: number[]
                 if (face) {
@@ -367,15 +371,43 @@ export class BlockModelFactory {
                     new Vector2(x1, y1),
                     new Vector2(x2, y1),
                 ];
+
                 if (face && face.rotation) {
-                    const amount = face.rotation;
+                    let amount = Number(face.rotation);
                     // check property
                     if (!([0, 90, 180, 270].indexOf(amount) >= 0)) {
                         console.error("The \"rotation\" property for \"" + face + "\" face is invalid (got \"" + amount + "\").");
                     }
+
+                    amount = (360 - amount) % 360;
+
                     // rotate map
                     for (let j = 0; j < amount / 90; j++) {
-                        map = [map[1], map[2], map[3], map[0]];
+                        map = [map[1], map[3], map[0], map[2]];
+                    }
+                }
+
+                if (uvlock) {
+                    let rotation = 0;
+                    if (faceName == "up") {
+                        rotation = y_rotation;
+                    }
+                    else if(faceName == "down") {
+                        rotation = (360 - y_rotation) % 360;
+                    } else {
+                        rotation = x_rotation;
+                    }
+
+
+                    for (let j = 0; j < rotation / 90; j++) {
+                        for(let m=0;m<map.length;m++) {
+                            const vector = map[m];
+                            const x = vector.x;
+                            const y = vector.y;
+
+                            vector.x = 1 - y;
+                            vector.y = x;
+                        }
                     }
                 }
 
@@ -423,6 +455,24 @@ export class BlockModelFactory {
                     pivot.rotateZ(angle * Math.PI / 180);
                 }
 
+                const rescale = element.rotation.rescale || false;
+                if(rescale) {
+                    if(angle % 90 == 45) {
+                        if (axis === "x") {
+                            pivot.scale.y *= Math.sqrt(2)
+                            pivot.scale.z *= Math.sqrt(2)
+                        }
+                        if (axis === "y") {
+                            pivot.scale.x *= Math.sqrt(2)
+                            pivot.scale.z *= Math.sqrt(2)
+                        }
+                        if (axis === "z") {
+                            pivot.scale.x *= Math.sqrt(2)
+                            pivot.scale.y *= Math.sqrt(2)
+                        }
+                    }
+                }
+
                 group.add(pivot);
             } else {
                 const pivot = new Group();
@@ -431,6 +481,10 @@ export class BlockModelFactory {
                 group.add(pivot);
             }
         }
+
+        obj.rotateY(-y_rotation * Math.PI / 180);
+        obj.rotateX(-x_rotation * Math.PI / 180);
+
         obj.add(group);
 
         return obj;
