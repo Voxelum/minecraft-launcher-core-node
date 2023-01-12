@@ -137,7 +137,7 @@ describe("ForgeInstaller", () => {
         const resolvedVersion = await Version.parse(tempDir, result);
         // https://github.com/Voxelum/minecraft-launcher-core-node/issues/210
         resolvedVersion.libraries.filter((lib) => lib.groupId === "org.scala-lang.plugins")
-            .forEach((lib) => { (lib.download as any).sha1 = "" });
+            .forEach((lib) => { (lib.download ).sha1 = "" });
         await installDependencies(resolvedVersion);
     });
     test("should install forge 1.12.2-14.23.5.2852", async () => {
@@ -206,7 +206,7 @@ describe("LiteloaderInstaller", () => {
             const resolvedVersion = await Version.parse(tempDir, result);
             // https://github.com/Voxelum/minecraft-launcher-core-node/issues/210
             resolvedVersion.libraries.filter((lib) => lib.groupId === "org.scala-lang.plugins")
-                .forEach((lib) => { (lib.download as any).sha1 = "" });
+                .forEach((lib) => { (lib.download ).sha1 = "" });
             await installDependencies(resolvedVersion);
         });
     });
