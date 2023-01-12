@@ -188,7 +188,7 @@ export namespace RegionReader {
      * Returns the palette, blockStates and bitLength for a section
      * @param section The chunk section
      */
-    function getSectionInformation(section: NewRegionSectionDataFrame) {
+    export function getSectionInformation(section: NewRegionSectionDataFrame) {
         let blockStates = section.BlockStates;
         let palette = section.Palette;
 
