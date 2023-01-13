@@ -37,6 +37,12 @@ export class ModelLoader {
         const path = ResourceLocation.deconstruct(modelPath, folder);
         const resourceLocation = ResourceLocation.ofModelPath(path);
 
+        const cacheName = resourceLocation.toString();
+
+        if(this.models[cacheName] != undefined){
+            return this.models[cacheName];   
+        }
+
         const resource = await this.loader.get(resourceLocation);
         if (!resource) { throw new Error(`Model ${modelPath} (${resourceLocation}) not found`); }
         const baseModel = JSON.parse(await resource.read("utf-8")) as BlockModel;
@@ -60,7 +66,6 @@ export class ModelLoader {
         delete baseModel.parent;
 
         const model: BlockModel.Resolved = baseModel as any;
-        this.models[modelPath] = model;
 
         const reg = this.textures;
         for (const variant of Object.keys(model.textures)) {
@@ -72,6 +77,8 @@ export class ModelLoader {
                 }
             }
         }
+
+        this.models[cacheName] = model;
         return model;
     }
 }
