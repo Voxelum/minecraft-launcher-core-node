@@ -33,30 +33,33 @@ export class ModelLoader {
     /**
      * Load a model by search its parent. It will throw an error if the model is not found.
      */
-    async loadModel(modelPath: string): Promise<BlockModel.Resolved> {
-        const res = await this.loader.get(ResourceLocation.ofBlockModelPath(modelPath));
-        if (!res) { throw new Error(`Model ${modelPath} (${ResourceLocation.ofBlockModelPath(modelPath)}) not found`); }
-        const raw = JSON.parse(await res.read("utf-8")) as BlockModel;
+    async loadModel(modelPath: string, folder:string="block"): Promise<BlockModel.Resolved> {
+        const path = ResourceLocation.deconstruct(modelPath, folder);
+        const resourceLocation = ResourceLocation.ofModelPath(path);
 
-        if (!raw.textures) { raw.textures = {}; }
+        const resource = await this.loader.get(resourceLocation);
+        if (!resource) { throw new Error(`Model ${modelPath} (${resourceLocation}) not found`); }
+        const baseModel = JSON.parse(await resource.read("utf-8")) as BlockModel;
 
-        if (raw.parent) {
-            const parentModel = await this.loadModel(raw.parent);
-            if (!parentModel) { throw new Error(`Missing parent model ${raw.parent} for ${res.location}`); }
-            if (!raw.elements) { raw.elements = parentModel.elements; }
-            if (!raw.ambientocclusion) { raw.ambientocclusion = parentModel.ambientocclusion; }
-            if (!raw.display) { raw.display = parentModel.display; }
-            if (!raw.overrides) { raw.overrides = parentModel.overrides; }
+        if (!baseModel.textures) { baseModel.textures = {}; }
 
-            if (parentModel.textures) { Object.assign(raw.textures, parentModel.textures); }
+        if (baseModel.parent) {
+            const parentModel = await this.loadModel(baseModel.parent, "");
+            if (!parentModel) { throw new Error(`Missing parent model ${baseModel.parent} for ${resource.location}`); }
+            if (!baseModel.elements) { baseModel.elements = parentModel.elements; }
+            if (!baseModel.ambientocclusion) { baseModel.ambientocclusion = parentModel.ambientocclusion; }
+            if (!baseModel.display) { baseModel.display = parentModel.display; }
+            if (!baseModel.overrides) { baseModel.overrides = parentModel.overrides; }
+
+            if (parentModel.textures) { Object.assign(baseModel.textures, parentModel.textures); }
         }
 
-        raw.ambientocclusion = raw.ambientocclusion || false;
-        raw.overrides = raw.overrides || [];
+        baseModel.ambientocclusion = baseModel.ambientocclusion || false;
+        baseModel.overrides = baseModel.overrides || [];
 
-        delete raw.parent;
+        delete baseModel.parent;
 
-        const model: BlockModel.Resolved = raw as any;
+        const model: BlockModel.Resolved = baseModel as any;
         this.models[modelPath] = model;
 
         const reg = this.textures;
