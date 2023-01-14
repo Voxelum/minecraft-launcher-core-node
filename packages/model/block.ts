@@ -11,12 +11,35 @@ import { BoxGeometry } from "three/src/geometries/BoxGeometry";
 import { Vector3 } from "three/src/math/Vector3";
 import { Vector2 } from "three/src/math/Vector2";
 import { BufferAttribute } from "three/src/core/BufferAttribute";
+import type { Texture } from "three/src/textures/Texture";
 
-interface Texture {
+interface TextureData {
     url: string;
     animation?: PackMeta.Animation;
 }
-type TextureRegistry = Record<string, Texture>;
+
+export interface TextureManager {
+    hasTexture(path: string): boolean
+    loadTexture(path: string): Texture
+}
+
+export class BasicTextureManager implements TextureManager {
+    constructor(private textures: Record<string, TextureData> = {}, private loader = new TextureLoader()){}
+
+    hasTexture(path: string): boolean {
+        return !!this.textures[path];
+    }
+
+    loadTexture(path: string): Texture {
+        const texture = this.loader.load(this.textures[path].url);
+
+        // sharp pixels and smooth edges
+        texture.magFilter = NearestFilter;
+        texture.minFilter = LinearFilter;
+        
+        return texture;
+    }
+}
 
 export const DEFAULT_TRANSFORM: BlockModel.Transform = {
     rotation: [0, 0, 0],
@@ -135,12 +158,11 @@ export class BlockModelObject extends Object3D {
 }
 
 export class BlockModelFactory {
-    private static TRANSPARENT_MATERIAL = new MeshBasicMaterial({ transparent: true, opacity: 0, alphaTest: 0.5 });
+    static TRANSPARENT_MATERIAL = new MeshBasicMaterial({ transparent: true, opacity: 0, alphaTest: 0.5 });
 
-    private loader = new TextureLoader();
     private cachedMaterial: Record<string, Material> = {};
 
-    constructor(readonly textureRegistry: TextureRegistry, readonly option: { clipUVs?: boolean, modelOnly?: boolean } = {}) { }
+    constructor(readonly textureManager: TextureManager, readonly option: { clipUVs?: boolean, modelOnly?: boolean } = {}) { }
 
     /**
      * Get threejs `Object3D` for that block model.
@@ -151,7 +173,7 @@ export class BlockModelFactory {
         const uvlock = options.uvlock || false;
 
         const option = this.option;
-        const textureRegistry = this.textureRegistry;
+        const textureManager = this.textureManager;
 
         const clipUVs = option.clipUVs || false;
         const modelOnly = option.modelOnly || false;
@@ -177,20 +199,17 @@ export class BlockModelFactory {
                 } else if (texPath in this.cachedMaterial) {
                     materialPathIndex = materials.length;
                     materials.push(this.cachedMaterial[texPath]);
-                } else if (texPath in textureRegistry) {
+                } else if (textureManager.hasTexture(texPath)) {
                     // build new material
-                    const tex = textureRegistry[texPath];
-                    const texture = this.loader.load(tex.url);
-
-                    // sharp pixels and smooth edges
-                    texture.magFilter = NearestFilter;
-                    texture.minFilter = LinearFilter;
+                    const texture = textureManager.loadTexture(texPath);
 
                     // map texture to material, keep transparency and fix transparent z-fighting
                     const mat = new MeshLambertMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
 
                     materialPathIndex = materials.length;
                     this.cachedMaterial[texPath] = mat;
+
+                    mat.name = texPath;
 
                     materials.push(mat);
                 }

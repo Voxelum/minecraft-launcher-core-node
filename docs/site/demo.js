@@ -7,7 +7,7 @@ import { BufferGeometry } from "three/src/core/BufferGeometry";
 import { AmbientLight } from "three/src/lights/AmbientLight";
 import { LineBasicMaterial } from "three/src/materials/LineBasicMaterial";
 import { LineSegments } from "three/src/objects/LineSegments";
-import { PlayerModel, BlockModelFactory } from "@xmcl/model";
+import { PlayerModel, BlockModelFactory, BasicTextureManager } from "@xmcl/model";
 
 function updateSize(canvas, renderer, lastDimension) {
     let dim = window.innerWidth;
@@ -179,7 +179,8 @@ export function setupBlock() {
 
     scene.add(new AmbientLight(0xffffff, 0.97));
 
-    const factory = new BlockModelFactory(textReg);
+    const textureManager = new BasicTextureManager(textReg);
+    const factory = new BlockModelFactory(textureManager);
     const o = factory.getObject(grassBlock);
     scene.add(o);
 
