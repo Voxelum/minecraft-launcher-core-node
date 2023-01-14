@@ -6,46 +6,33 @@ import { FileSystem, openFileSystem } from "@xmcl/system";
 import Long from "long";
 
 /**
- * Compute the bit length from new region section
- */
-function computeBitLen(palette: NewRegionSectionDataFrame["Palette"], blockStates: Long[]) {
-    let computedBitLen = log2DeBruijn(palette.length);
-    let avgBitLen = blockStates.length * 64 / 4096;
-    return computedBitLen >= 9 ? computedBitLen : avgBitLen;
-}
-
-/**
  * Create bit vector from a long array
  */
 function createBitVector(arr: Long[], bitLen: number): number[] {
     let maxEntryValue = Long.fromNumber(1).shiftLeft(bitLen).sub(1);
     let result = new Array<number>(4096);
     for (let i = 0; i < 4096; ++i) {
-        result[i] = seek(arr, bitLen, i, maxEntryValue);
+        result[i] = Number(seek(arr, bitLen, i, maxEntryValue));
     }
     return result;
 }
 
 /**
  * Seek block id from a long array (new chunk format)
- * @param data The block state id long array
- * @param bitLen The bit length
+ * @param blockstates The block state id long array
+ * @param indexLength The bit length
  * @param index The index (composition of xyz) in chunk
  * @param maxEntryValue The max entry value
+ *
+ * @author Adapted from: Jean-Baptiste Skutnik's <https://github.com/spoutn1k> {@link https://github.com/spoutn1k/mcmap/blob/fec14647c600244bc7808b242b99331e7ee0ec38/src/chunk_format_versions/section_format.cpp| Reference C++ code}
  */
-function seek(data: Long[], bitLen: number, index: number, maxEntryValue = Long.fromNumber(1).shiftLeft(bitLen).sub(1)) {
-    let offset = index * bitLen;
-    let j = offset >> 6;
-    let k = ((index + 1) * bitLen - 1) >>> 6;
-    let l = offset ^ j << 6;
-
-    if (j == k) {
-        return data[j].shiftRightUnsigned(l).and(maxEntryValue).toInt();
-    } else {
-        let shiftLeft = 64 - l;
-        const v = data[j].shiftRightUnsigned(l).or(data[k].shiftLeft(shiftLeft));
-        return v.and(maxEntryValue).toInt();
-    }
+function seek(blockstates: Long[], indexLength: number, index: number, maxEntryValue = Long.fromNumber(1).shiftLeft(indexLength).sub(1)) {
+    const blocksPerLong = Math.floor(64/indexLength);
+    const longIndex = Math.floor(index / blocksPerLong);
+    const padding = Math.floor((index - longIndex * blocksPerLong) * indexLength);
+    const long = blockstates[longIndex];
+    const blockIndex = (long.shiftRightUnsigned(padding)).and(maxEntryValue)
+    return blockIndex;
 }
 
 /**
@@ -62,25 +49,6 @@ function seekLegacy(blocks: number[], data: number[], add: number[] | null, i: n
     }
     let additional = !add ? 0 : getFromNibbleArray(add, i);
     return (additional << 12) | ((blocks[i] & 255) << 4) | getFromNibbleArray(data, i);
-}
-
-const MULTIPLY_DE_BRUIJN_BIT_POSITION = [0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9];
-
-function log2DeBruijn(value: number) {
-    function isPowerOfTwo(v: number) {
-        return v !== 0 && (v & v - 1) === 0;
-    }
-    function smallestEncompassingPowerOfTwo(value: number) {
-        let i = value - 1;
-        i = i | i >> 1;
-        i = i | i >> 2;
-        i = i | i >> 4;
-        i = i | i >> 8;
-        i = i | i >> 16;
-        return i + 1;
-    }
-    value = isPowerOfTwo(value) ? value : smallestEncompassingPowerOfTwo(value);
-    return MULTIPLY_DE_BRUIJN_BIT_POSITION[Long.fromInt(value).multiply(125613361).shiftRight(27).and(31).low];
 }
 
 function getChunkOffset(buffer: Uint8Array, x: number, z: number) {
@@ -217,6 +185,51 @@ export namespace RegionReader {
     }
 
     /**
+     * Returns the palette, blockStates and bitLength for a section
+     * @param section The chunk section
+     */
+    export function getSectionInformation(section: NewRegionSectionDataFrame) {
+        let blockStates = section.BlockStates;
+        let palette = section.Palette;
+
+        if(blockStates == undefined) {
+            blockStates = (section.block_states || {}).data;
+        }
+        if(palette == undefined) {
+            palette = (section.block_states || {}).palette;
+        }
+
+        if(palette == undefined || blockStates == undefined) {
+            palette = [];
+            blockStates = [];
+        }
+
+        let bitLength = Math.ceil(Math.log2(palette.length))
+        if(bitLength < 4) {
+            bitLength = 4;
+        }
+
+        return {
+            palette: palette,
+            blockStates:  blockStates,
+            bitLength: bitLength
+        }
+    }
+
+
+    /**
+     * Create an array of block ids from the chunk section given
+     * @param section The chunk section
+     */
+    export function getSectionBlockIdArray(section: NewRegionSectionDataFrame) {
+        const sectionInformation = getSectionInformation(section);
+
+        const vector = createBitVector(sectionInformation.blockStates, sectionInformation.bitLength);
+
+        return vector;
+    }
+
+    /**
      * Walk through all the position in this chunk and emit all the id in every position.
      * @param section The chunk section
      * @param reader The callback which will receive the position + state id.
@@ -229,8 +242,7 @@ export namespace RegionReader {
             let blocks = section.Blocks;
             seekFunc = (i) => seekLegacy(blocks, data, add, i);
         } else {
-            let blockStates = section.BlockStates;
-            let vector = createBitVector(blockStates, computeBitLen(section.Palette, blockStates));
+            const vector = getSectionBlockIdArray(section);
             seekFunc = (i) => vector[i];
         }
         for (let i = 0; i < 4096; ++i) {
@@ -248,12 +260,12 @@ export namespace RegionReader {
      * @param index The chunk index
      */
     export function seekBlockStateId(section: NewRegionSectionDataFrame | LegacyRegionSectionDataFrame, index: ChunkIndex) {
-        if ("BlockStates" in section) {
-            const blockStates = section.BlockStates;
-            const bitLen = computeBitLen(section.Palette, blockStates);
-            return seek(blockStates, bitLen, index);
+        if ("Blocks" in section) {
+            return seekLegacy(section.Blocks, section.Data, section.Add, index);
         }
-        return seekLegacy(section.Blocks, section.Data, section.Add, index);
+
+        const sectionInformation = getSectionInformation(section);
+        return Number(seek(sectionInformation.blockStates, sectionInformation.bitLength, index));
     }
 
     /**
@@ -262,9 +274,10 @@ export namespace RegionReader {
      * @param index The chunk index, which is a number in range [0, 4096)
      */
     export function seekBlockState(section: NewRegionSectionDataFrame, index: ChunkIndex): BlockStateData {
-        const blockStates = section.BlockStates;
-        const bitLen = computeBitLen(section.Palette, blockStates);
-        return section.Palette[seek(section.BlockStates, bitLen, index)];
+        const sectionInformation = getSectionInformation(section);
+        const blockStateId = seekBlockStateId(section, index);
+
+        return sectionInformation.palette[blockStateId];
     }
 }
 
@@ -517,8 +530,12 @@ export type LegacyRegionSectionDataFrame = {
     Y: number;
 }
 export type NewRegionSectionDataFrame = {
-    BlockStates: Long[],
-    Palette: Array<BlockStateData>;
+    BlockStates?: Long[],
+    Palette?: Array<BlockStateData>;
+    block_states?: {
+        data:Long[],
+        palette:Array<BlockStateData>
+    }
     Data: number[];
     BlockLight: number[];
     SkyLight: number[];
