@@ -144,7 +144,7 @@ describe("RegionReader", () => {
                         if (typeof expected === "undefined") {
                             continue;
                         }
-                        let actualObject = section.Palette[id];
+                        let actualObject = section.Palette![id];
                         let expectedObject = nameToBlockState(expected.name.trim());
                         expect(actualObject).toEqual(expectedObject);
                     }
@@ -191,7 +191,7 @@ describe("RegionReader", () => {
                 if (typeof expectedName === "undefined") {
                     return;
                 }
-                let actualObject = section.Palette[id];
+                let actualObject = section.Palette![id];
                 let expectedObject = nameToBlockState(expectedName.trim());
                 expect(actualObject).toEqual(expectedObject);
             });

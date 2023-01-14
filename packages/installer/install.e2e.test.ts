@@ -117,7 +117,7 @@ describe("ForgeInstaller", () => {
             version: "10.13.4.1614",
             installer: {
                 md5: "8e16eecbe08db1d421532cda746338b3",
-                sha1: "9345b92ac4e27bc4f2e993de094468035702a9c6",
+                sha1: "fccafccf8ad4ce6d9f008e786b48ff53172bf9de",
                 path: "/maven/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/forge-1.7.10-10.13.4.1614-1.7.10-installer.jar",
             },
             universal: {
@@ -137,7 +137,7 @@ describe("ForgeInstaller", () => {
         const resolvedVersion = await Version.parse(tempDir, result);
         // https://github.com/Voxelum/minecraft-launcher-core-node/issues/210
         resolvedVersion.libraries.filter((lib) => lib.groupId === "org.scala-lang.plugins")
-            .forEach((lib) => { (lib.download ).sha1 = "" });
+            .forEach((lib) => { (lib.download as any).sha1 = "" });
         await installDependencies(resolvedVersion);
     });
     test("should install forge 1.12.2-14.23.5.2852", async () => {
@@ -145,7 +145,7 @@ describe("ForgeInstaller", () => {
             mcversion: "1.12.2",
             version: "14.23.5.2852",
             installer: {
-                sha1: "0d833a6c8a1a6b3a0a07ed6d22504b84bcbbb5d7",
+                sha1: "2a940d9441cc87c3c57f69a8bb4915c1a3ba44e6",
                 path: "/maven/net/minecraftforge/forge/1.12.2-14.23.5.2852/forge-1.12.2-14.23.5.2852-installer.jar"
             }
         };
@@ -168,7 +168,7 @@ describe("ForgeInstaller", () => {
             },
             installer: {
                 md5: "a17c1f9ae4ba0bcefc53860a2563ef10",
-                sha1: "7cd1db289412ba5e0cabab23d4f85f1abc4dfe84",
+                sha1: "af051e288113eedf5c621f61cf69c407f8e36e88",
                 path: "/maven/net/minecraftforge/forge/1.14.4-28.0.45/forge-1.14.4-28.0.45-installer.jar",
             },
             type: "common",
@@ -206,7 +206,7 @@ describe("LiteloaderInstaller", () => {
             const resolvedVersion = await Version.parse(tempDir, result);
             // https://github.com/Voxelum/minecraft-launcher-core-node/issues/210
             resolvedVersion.libraries.filter((lib) => lib.groupId === "org.scala-lang.plugins")
-                .forEach((lib) => { (lib.download ).sha1 = "" });
+                .forEach((lib) => { (lib.download as any).sha1 = "" });
             await installDependencies(resolvedVersion);
         });
     });

@@ -200,6 +200,9 @@ function extractEntryTo(zip: ZipFile, e: Entry, dest: string) {
 
 async function installLegacyForgeFromZip(zip: ZipFile, entries: ForgeLegacyInstallerEntriesPattern, profile: InstallProfile, mc: MinecraftFolder, options: InstallForgeOptions) {
     const versionJson = profile.versionInfo;
+    if (!versionJson) {
+        throw new Error(`Malform legacy installer json ${profile.version}`);
+    }
 
     // apply override for inheritsFrom
     versionJson.id = options.versionId || versionJson.id;
