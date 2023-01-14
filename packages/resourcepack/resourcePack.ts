@@ -15,48 +15,67 @@ import { PackMeta } from "./format";
  * The Minecraft used object to map the game resource location.
  */
 export class ResourceLocation {
+    static deconstruct(path:string, appendPath:string="") {
+        const splitPath = path.split(":");
+
+        const domain = (splitPath.length > 1 && splitPath[0]) ? splitPath[0] : "minecraft";
+        let resourcePath = splitPath.length > 1 ? splitPath[1] : splitPath[0];
+
+        if(appendPath.length > 0){
+            if(appendPath.charAt(appendPath.length - 1) != "/"){
+                appendPath = appendPath + "/";   
+            }
+            if (!resourcePath.startsWith(appendPath)) {
+                resourcePath = appendPath + resourcePath;
+            }
+        }
+
+        return new ResourceLocation(domain, resourcePath);
+    }
+    
     /**
      * build from texture path
      */
-    static ofTexturePath(path: string) {
-        const idx = path.indexOf(":");
-        if (idx === -1) { return new ResourceLocation("minecraft", `textures/${path}.png`); }
-        if (idx === 0) { return new ResourceLocation("minecraft", `textures/${path.substring(1, path.length)}.png`); }
-        return new ResourceLocation(path.substring(0, idx), `textures/${path.substring(idx + 1, path.length)}.png`);
-    }
-
-    static ofBlockModelPath(path: string) {
-        const splited = path.split(":");
-        const domain = (splited.length > 1 && splited[0]) ? splited[0] : "minecraft";
-        let blockPath = splited.length > 1 ? splited[1] : splited[0];
-        if (!blockPath.startsWith("block/")) {
-            // 1.12
-            blockPath = `block/${blockPath}`
-        }
-        return new ResourceLocation(domain, `models/${blockPath}.json`);
+    static ofTexturePath(location: string|ResourceLocation) {
+        if(typeof location == "string"){ location = ResourceLocation.deconstruct(location) };
+        return new ResourceLocation(location.domain, `textures/${location.path}.png`);
     }
 
     /**
      * build from model path
      */
-    static ofModelPath(path: string) {
-        const idx = path.indexOf(":");
-        if (idx === -1) { return new ResourceLocation("minecraft", `models/${path}.json`); }
-        if (idx === 0) { return new ResourceLocation("minecraft", `models/${path.substring(1, path.length)}.json`); }
-        return new ResourceLocation(path.substring(0, idx), `models/${path.substring(idx + 1, path.length)}.json`);
+    static ofBlockModelPath(location: string|ResourceLocation) {
+        location = ResourceLocation.deconstruct(location.toString(), "block/");
+        return new ResourceLocation(location.domain, `models/${location.path}.json`);
+    }
+
+    static ofItemModelPath(location: string|ResourceLocation) {
+        location = ResourceLocation.deconstruct(location.toString(), "item/");
+        return new ResourceLocation(location.domain, `models/${location.path}.json`);
+    }
+
+    static ofModelPath(location: string|ResourceLocation) {
+        if(typeof location == "string"){ location = ResourceLocation.deconstruct(location) };
+        return new ResourceLocation(location.domain, `models/${location.path}.json`);
+    }
+
+    /**
+     * build from block state path
+     */
+    static ofBlockStatePath(location: string|ResourceLocation) {
+        if(typeof location == "string"){ location = ResourceLocation.deconstruct(location) };
+        return new ResourceLocation(location.domain, `blockstates/${location.path}.json`);
     }
 
     /**
      * from absoluted path
      */
-    static fromPath(path: string) {
-        const idx = path.indexOf(":");
-        if (idx === -1) { return new ResourceLocation("minecraft", path); }
-        if (idx === 0) { return new ResourceLocation("minecraft", path.substring(1, path.length)); }
-        return new ResourceLocation(path.substring(0, idx), path.substring(idx + 1, path.length));
+    static fromPath(location: string|ResourceLocation) {
+        return ResourceLocation.deconstruct(location.toString());
     }
 
-    static getAssetsPath(location: ResourceLocation) {
+    static getAssetsPath(location: string|ResourceLocation) {
+        if(typeof location == "string"){ location = ResourceLocation.deconstruct(location) };
         return `assets/${location.domain}/${location.path}`;
     }
 
