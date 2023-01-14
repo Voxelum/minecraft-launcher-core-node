@@ -39,8 +39,8 @@ export class ModelLoader {
 
         const cacheName = resourceLocation.toString();
 
-        if(this.models[cacheName] != undefined){
-            return this.models[cacheName];   
+        if(this.models[cacheName] != undefined) {
+            return this.models[cacheName];
         }
 
         const resource = await this.loader.get(resourceLocation);

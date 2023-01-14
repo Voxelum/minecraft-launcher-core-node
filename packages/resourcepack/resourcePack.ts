@@ -21,9 +21,9 @@ export class ResourceLocation {
         const domain = (splitPath.length > 1 && splitPath[0]) ? splitPath[0] : "minecraft";
         let resourcePath = splitPath.length > 1 ? splitPath[1] : splitPath[0];
 
-        if(appendPath.length > 0){
-            if(appendPath.charAt(appendPath.length - 1) != "/"){
-                appendPath = appendPath + "/";   
+        if(appendPath.length > 0) {
+            if(appendPath.charAt(appendPath.length - 1) != "/") {
+                appendPath = appendPath + "/";
             }
             if (!resourcePath.startsWith(appendPath)) {
                 resourcePath = appendPath + resourcePath;
@@ -32,12 +32,12 @@ export class ResourceLocation {
 
         return new ResourceLocation(domain, resourcePath);
     }
-    
+
     /**
      * build from texture path
      */
     static ofTexturePath(location: string|ResourceLocation) {
-        if(typeof location == "string"){ location = ResourceLocation.deconstruct(location) };
+        if(typeof location == "string") { location = ResourceLocation.deconstruct(location) };
         return new ResourceLocation(location.domain, `textures/${location.path}.png`);
     }
 
@@ -55,7 +55,7 @@ export class ResourceLocation {
     }
 
     static ofModelPath(location: string|ResourceLocation) {
-        if(typeof location == "string"){ location = ResourceLocation.deconstruct(location) };
+        if(typeof location == "string") { location = ResourceLocation.deconstruct(location) };
         return new ResourceLocation(location.domain, `models/${location.path}.json`);
     }
 
@@ -63,7 +63,7 @@ export class ResourceLocation {
      * build from block state path
      */
     static ofBlockStatePath(location: string|ResourceLocation) {
-        if(typeof location == "string"){ location = ResourceLocation.deconstruct(location) };
+        if(typeof location == "string") { location = ResourceLocation.deconstruct(location) };
         return new ResourceLocation(location.domain, `blockstates/${location.path}.json`);
     }
 
@@ -75,7 +75,7 @@ export class ResourceLocation {
     }
 
     static getAssetsPath(location: string|ResourceLocation) {
-        if(typeof location == "string"){ location = ResourceLocation.deconstruct(location) };
+        if(typeof location == "string") { location = ResourceLocation.deconstruct(location) };
         return `assets/${location.domain}/${location.path}`;
     }
 
