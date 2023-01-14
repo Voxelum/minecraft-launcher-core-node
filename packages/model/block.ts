@@ -24,7 +24,7 @@ export interface TextureManager {
 }
 
 export class BasicTextureManager implements TextureManager {
-    constructor(private textures: Record<string, TextureData> = {}, private loader = new TextureLoader()){}
+    constructor(private textures: Record<string, TextureData> = {}, private loader = new TextureLoader()) {}
 
     hasTexture(path: string): boolean {
         return !!this.textures[path];
@@ -36,7 +36,7 @@ export class BasicTextureManager implements TextureManager {
         // sharp pixels and smooth edges
         texture.magFilter = NearestFilter;
         texture.minFilter = LinearFilter;
-        
+
         return texture;
     }
 }
