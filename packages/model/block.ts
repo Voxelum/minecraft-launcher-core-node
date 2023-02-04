@@ -168,8 +168,8 @@ export class BlockModelFactory {
      * Get threejs `Object3D` for that block model.
      */
     getObject(model: BlockModel.Resolved, options:{ uvlock?: boolean; y?: number; x?: number }={}, fix:number=0.001) {
-        const x_rotation = options.x || 0;
-        const y_rotation = options.y || 0;
+        const xRotation = options.x || 0;
+        const yRotation = options.y || 0;
         const uvlock = options.uvlock || false;
 
         const option = this.option;
@@ -343,13 +343,26 @@ export class BlockModelFactory {
 
                 if (uvlock) {
                     let rotation = 0;
-                    if (faceName == "up") {
-                        rotation = y_rotation;
-                    }
-                    else if(faceName == "down") {
-                        rotation = (360 - y_rotation) % 360;
-                    } else {
-                        rotation = x_rotation;
+                    if(xRotation >= 180) {
+                        if (faceName == "up") {
+                            rotation = yRotation;
+                        }
+                        else if (faceName == "down") {
+                            rotation = (360 - yRotation) % 360;
+                        }
+                        else {
+                            rotation = xRotation;
+                        }
+                    }else{
+                        if (faceName == "down") {
+                            rotation = yRotation;
+                        }
+                        else if (faceName == "up") {
+                            rotation = (360 - yRotation) % 360;
+                        }
+                        else {
+                            rotation = xRotation;
+                        }
                     }
 
 
@@ -436,8 +449,8 @@ export class BlockModelFactory {
             }
         }
 
-        obj.rotateY(-y_rotation * Math.PI / 180);
-        obj.rotateX(-x_rotation * Math.PI / 180);
+        obj.rotateY(-yRotation * Math.PI / 180);
+        obj.rotateX(-xRotation * Math.PI / 180);
 
         obj.add(group);
 
