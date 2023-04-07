@@ -265,6 +265,7 @@ export interface QuiltLoaderData {
 export async function readQuiltMod(file: FileSystem | string | Uint8Array): Promise<QuiltModMetadata> {
     const fs = await resolveFileSystem(file);
     const content = await fs.readFile("quilt.mod.json", "utf-8");
+    fs.close();
     return JSON.parse(content.replace(/^\uFEFF/g, "").replace(/\n/g, ""));
 }
 
