@@ -7,7 +7,7 @@ import { DefaultTheme } from 'vitepress'
 const renderLink = (fileName: string, line: number) => `<a href="https://github.com/voxelum/minecraft-launcher-core-node/blob/master/${fileName}#L${line}" target="_blank" rel="noreferrer">${fileName}:${line}</a>`
 const renderSourceReferences = (locations: SourceReference[]) =>
   `<p style="font-size: 14px; color: var(--vp-c-text-2)">
-<strong>Defined in:</strong> ${locations.map((l) => renderLink(l.fileName, l.line)).join(' ')}
+<strong>Defined in:</strong> ${locations.map((l) => renderLink(l.fileName, l.line)).join(', ')}
 </p>`
 
 async function generateDocs() {
@@ -76,10 +76,13 @@ async function generateDocs() {
         markdown += `[${s.text}]`
 
         if (typeof s.target === 'string') {
-          console.log(s.target)
           markdown += `(${s.target})`
         } else if (s.target) {
-          markdown += `(${s.target.name})`
+          if (s.target.kindOf([ReflectionKind.ClassOrInterface, ReflectionKind.Namespace, ReflectionKind.Enum])) {
+            markdown += `(${s.target.getAlias()})`
+          } else {
+            markdown += `(#${s.target.getAlias()})`
+          }
         }
       }
     }
@@ -135,6 +138,11 @@ async function generateDocs() {
     markdown += '\n\n'
 
     if (f.signatures) {
+      if (f.comment) {
+        markdown += renderComment(f.comment)
+        markdown += '\n'
+      }
+
       for (const sig of f.signatures) {
         if (sig.parameters) {
           markdown += '```ts\n'
@@ -144,8 +152,8 @@ async function generateDocs() {
           }
           markdown += '\n```\n'
         }
-        if (f.comment) {
-          markdown += renderComment(f.comment)
+        if (sig.comment) {
+          markdown += renderComment(sig.comment)
           markdown += '\n'
         }
         if (sig.parameters && sig.parameters.length > 0) {
@@ -157,6 +165,10 @@ async function generateDocs() {
               markdown += '\n'
             }
           }
+        }
+        if (sig.type) {
+          markdown += '#### Return Type\n\n'
+          markdown += `- \`${sig.type.toString()}\`\n`
         }
         markdown += '\n'
       }
