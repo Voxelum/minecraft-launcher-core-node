@@ -17,8 +17,8 @@
     "module": "./dist/index.mjs"
   },
   "dependencies": {
-    "@xmcl/asm": "workspace:^0.1.4",
-    "@xmcl/system": "workspace:^2.2.3",
+    "@xmcl/asm": "workspace:^*",
+    "@xmcl/system": "workspace:^*",
     "toml": "^3.0.0"
   },
   "repository": {
@@ -41,7 +41,7 @@
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
     "@types/node": "~18.15.11",
-    "@xmcl/eslint-config": "workspace:^0.0.1",
+    "@xmcl/eslint-config": "workspace:^*",
     "esbuild": "^0.17.14",
     "eslint": "^8.37.0",
     "typescript": "^5.0.3"

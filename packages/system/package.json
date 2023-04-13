@@ -22,7 +22,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/unzip": "workspace:^2.0.0",
+    "@xmcl/unzip": "workspace:^*",
     "jszip": "^3.10.1"
   },
   "repository": {
@@ -40,7 +40,7 @@
   "devDependencies": {
     "@types/node": "~18.15.11",
     "@types/yauzl": "^2.10.0",
-    "@xmcl/eslint-config": "workspace:^0.0.1",
+    "@xmcl/eslint-config": "workspace:^*",
     "esbuild": "^0.17.14",
     "eslint": "^8.37.0",
     "typescript": "^5.0.3"

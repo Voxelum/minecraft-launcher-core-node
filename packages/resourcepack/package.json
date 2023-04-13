@@ -18,7 +18,7 @@
     "module": "./dist/index.mjs"
   },
   "dependencies": {
-    "@xmcl/system": "workspace:^2.2.3"
+    "@xmcl/system": "workspace:^*"
   },
   "repository": {
     "type": "git",

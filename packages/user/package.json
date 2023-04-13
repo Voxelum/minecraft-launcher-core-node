@@ -47,6 +47,6 @@
     "esbuild": "^0.17.14",
     "nock": "^13.3.0",
     "typescript": "^5.0.3",
-    "undici-shim": "workspace:*"
+    "undici-shim": "workspace:^*"
   }
 }

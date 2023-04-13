@@ -17,12 +17,12 @@
     "module": "./dist/index.mjs"
   },
   "dependencies": {
-    "@xmcl/asm": "workspace:^0.1.4",
-    "@xmcl/core": "workspace:^2.10.1",
-    "@xmcl/download-core": "workspace:^0.0.1",
-    "@xmcl/forge-site-parser": "workspace:^2.0.8",
-    "@xmcl/task": "workspace:^4.0.3",
-    "@xmcl/unzip": "workspace:^2.0.0",
+    "@xmcl/asm": "workspace:^*",
+    "@xmcl/core": "workspace:^*",
+    "@xmcl/download-core": "workspace:^*",
+    "@xmcl/forge-site-parser": "workspace:^*",
+    "@xmcl/task": "workspace:^*",
+    "@xmcl/unzip": "workspace:^*",
     "undici": "^5.21.0",
     "yauzl": "^2.10.0"
   },
@@ -47,7 +47,7 @@
   "devDependencies": {
     "@types/node": "~18.15.11",
     "@types/yauzl": "^2.10.0",
-    "@xmcl/eslint-config": "workspace:^0.0.1",
+    "@xmcl/eslint-config": "workspace:^*",
     "esbuild": "^0.17.14",
     "eslint": "^8.37.0",
     "nock": "^13.3.0",

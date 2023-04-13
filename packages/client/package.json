@@ -17,9 +17,9 @@
     "build:esm": "esbuild --target=node16 --platform=node --external:long --external:@xmcl/* --external:bytebuffer --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
   },
   "dependencies": {
-    "@xmcl/bytebuffer": "workspace:^0.0.1",
-    "@xmcl/nbt": "workspace:^2.0.3",
-    "@xmcl/text-component": "workspace:^2.1.1"
+    "@xmcl/bytebuffer": "workspace:^*",
+    "@xmcl/nbt": "workspace:^*",
+    "@xmcl/text-component": "workspace:^*"
   },
   "repository": {
     "type": "git",
@@ -41,7 +41,7 @@
   "devDependencies": {
     "@types/bytebuffer": "^5.0.44",
     "@types/node": "~18.15.11",
-    "@xmcl/eslint-config": "workspace:^0.0.1",
+    "@xmcl/eslint-config": "workspace:^*",
     "esbuild": "^0.17.14",
     "eslint": "^8.37.0",
     "tslib": "^2.5.0",
