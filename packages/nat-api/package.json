@@ -1,0 +1,61 @@
+{
+  "version": "0.3.2",
+  "name": "@xmcl/nat-api",
+  "description": "Port mapping with UPnP and NAT-PMP",
+  "main": "./index.ts",
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs"
+  },
+  "scripts": {
+    "build:cjs": "esbuild --bundle --outfile=dist/index.js --format=cjs --platform=node --external:default-gateway --external:fast-xml-parser --target=es2020 index.ts",
+    "build:esm": "esbuild --bundle --outfile=dist/index.mjs --external:default-gateway --external:fast-xml-parser --format=esm --platform=node --target=es2020 index.ts",
+    "build:type": "tsc",
+    "build": "npm run build:cjs && npm run build:esm && npm run build:type"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "default-gateway": "^6.0.3",
+    "fast-xml-parser": "^4.1.3",
+    "undici": "^5.21.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.17.14",
+    "@types/node": "^18.15.11",
+    "typescript": "^5.0.3"
+  },
+  "author": {
+    "name": "Alex",
+    "email": "alxmorais8@msn.com"
+  },
+  "contributors": [
+    {
+      "name": "CI010",
+      "email": "cijhn@hotmail.com"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voxelum/nat-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/voxelum/nat-api/issues"
+  },
+  "homepage": "https://github.com/voxelum/nat-api",
+  "keywords": [
+    "nat",
+    "api",
+    "upnp",
+    "pmp",
+    "nat-pmp",
+    "holepunch",
+    "port",
+    "forwarding",
+    "map",
+    "mapping"
+  ]
+}
