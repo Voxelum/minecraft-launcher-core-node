@@ -1,7 +1,7 @@
 import fs from 'fs';
 import convBump from 'conventional-recommended-bump';
 import semver from 'semver';
-import core from '@actions/core';
+import * as core from '@actions/core';
 import { join } from 'path'
 
 declare interface Package {
