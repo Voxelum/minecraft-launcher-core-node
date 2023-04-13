@@ -708,6 +708,7 @@ export async function readForgeMod(mod: ForgeModInput): Promise<ForgeModMetadata
         modsToml: tomls,
         ...base,
     };
+    fs.close();
     return result;
 }
 
