@@ -50,9 +50,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Build Docs
-      working-directory: "./docs"
       run: |
-        npm run build:docs
+        pnpm build:docs
     - name: Deploy to Github Pages
       uses: crazy-max/ghaction-github-pages@v1
       with:
