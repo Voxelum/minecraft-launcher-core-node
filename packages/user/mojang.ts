@@ -1,4 +1,4 @@
-import { httpRequester as request } from "./util";
+import { Dispatcher, fetch, File, FormData } from 'undici'
 
 /**
  * Users defined question when they register this account
@@ -47,86 +47,366 @@ import { httpRequester as request } from "./util";
  *
  */
 export interface MojangChallenge {
-    readonly answer: { id: number };
-    readonly question: { id: number; question: string; };
+  readonly answer: { id: number }
+  readonly question: { id: number; question: string }
 }
 
 export interface MojangChallengeResponse {
-    id: number;
-    answer: string;
+  id: number
+  answer: string
+}
+export interface MinecraftProfileResponse {
+  id: string // the real uuid of the account, woo
+  name: string // the mc user name of the account
+  skins: [{
+    id: string
+    state: 'ACTIVE' | 'string'
+    url: string
+    variant: 'CLASSIC' | string
+    alias: 'STEVE' | string
+  }]
+  capes: [{
+    id: string
+    state: 'ACTIVE' | string
+    url: string
+  }]
 }
 
-// export enum Status {
-//     GREEN, YELLOW, RED,
-// }
-// /**
-//  * Get the all mojang server statuses
-//  *
-//  * @param provider
-//  */
-// export async function getServiceStatus(): Promise<{ [server: string]: Status }> {
-//     const { body } = await request({
-//         url: "https://status.mojang.com/check", method: "GET",
-//         headers: {}
-//     });
-//     return JSON.parse(body).reduce((a: any, b: any) => Object.assign(a, b), {});
-// }
+export interface MinecraftOwnershipResponse {
+  /**
+       * If the account doesn't own the game, the items array will be empty.
+       */
+  items: Array<{
+    name: 'product_minecraft' | 'game_minecraft'
+    /**
+             * jwt signature
+             */
+    signature: string
+  }>
+  /**
+       * jwt signature
+       */
+  signature: string
+  keyId: string
+}
 
-/**
- * Check if user need to verify its identity. If this return false, should perform such operations:
- * 1. call `getChallenges` get all questions
- * 2. let user response questions
- * 3. call `responseChallenges` to send user responsed questions, if false, redo `2` step.
- *
- * If you don't let user response challenges when this return false. You won't be able to get/set user texture from Mojang server.
- *
- * *(This only work for Mojang account. Third party definitly doesn't have such thing)*
- * @param accessToken You user access token.
- */
-export async function checkLocation(accessToken: string): Promise<boolean> {
-    // "ForbiddenOperationException";
-    // "Current IP is not secured";
-    const { statusCode } = await request({
-        url: "https://api.mojang.com/user/security/location",
-        method: "GET",
-        headers: { Authorization: `Bearer: ${accessToken}` },
-    });
-    return statusCode === 204;
+export interface MinecraftProfileErrorResponse {
+  path: '/minecraft/profile'
+  errorType: 'NOT_FOUND' | string
+  error: string | 'NOT_FOUND'
+  errorMessage: string
+  developerMessage: string
+}
+export interface MojangSkin {
+  id: string
+  state: 'ACTIVE' | 'INACTIVE'
+  url: string
+  variant: 'SLIM' | 'CLASSIC'
+}
+export interface MojangCape {
+  id: string
+  state: 'ACTIVE' | 'INACTIVE'
+  url: string
+  /**
+     * Capes name
+     */
+  alias: string
+}
+
+export interface MicrosoftMinecraftProfile {
+  id: string
+  name: string
+  skins: MojangSkin[]
+  capes: MojangCape[]
+}
+
+export interface NameChangeInformation {
+  changedAt: string
+  createdAt: string
+  nameChangeAllowed: boolean
+}
+
+export enum NameAvailability {
+  DUPLICATE = 'DUPLICATE',
+  AVAILABLE = 'AVAILABLE',
+  NOT_ALLOWED = 'NOT_ALLOWED',
+}
+
+export class SetNameError extends Error {
+  public path: string
+  public errorType: string
+  public error: string
+  public details: object
+  public errorMessage: string
+  public developerMessage: string
+
+  constructor(message: string, err: any) {
+    super(message)
+    this.name = 'SetNameError'
+    this.path = err.path
+    this.errorType = err.errorType
+    this.error = err.error
+    this.details = err.details
+    this.errorMessage = err.errorMessage
+    this.developerMessage = err.developerMessage
+  }
+}
+
+export class SetSkinError extends Error {
+  public path: string
+  public errorType: string
+  public error: string
+  public details: object
+  public errorMessage: string
+  public developerMessage: string
+
+  constructor(message: string, err: any) {
+    super(message)
+    this.name = 'SetSkinError'
+    this.path = err.path
+    this.errorType = err.errorType
+    this.error = err.error
+    this.details = err.details
+    this.errorMessage = err.errorMessage
+    this.developerMessage = err.developerMessage
+  }
+}
+
+export class UnauthorizedError extends Error {
+  public path: string
+  public errorMessage: string
+  public developerMessage: string
+
+  name = 'UnauthorizedError'
+
+  constructor(err: any) {
+    super(err.errorMessage)
+    this.path = err.path
+    this.errorMessage = err.errorMessage
+    this.developerMessage = err.developerMessage
+  }
 }
 
 /**
- * Get the user set challenge to response.
+ * The mojang api client. Please referece https://wiki.vg/Mojang_API.
  *
- * @param accessToken The user access token
- * @returns User pre-defined questions
+ * All the apis need user to authenticate the access token from microsoft.
+ * @see {@link MicrosoftAuthenticator}
  */
-export async function getChallenges(accessToken: string): Promise<MojangChallenge[]> {
-    const { body, statusCode, statusMessage } = await request({
-        url: "https://api.mojang.com/user/security/challenges",
-        method: "GET",
-        headers: { Authorization: `Bearer: ${accessToken}` },
-    });
-    if (statusCode < 200 || statusCode >= 300) {
-        throw { error: "General", statusCode, statusMessage };
+export class MojangClient {
+  constructor(private dispatcher?: Dispatcher) { }
+
+  async setName(name: string, token: string, signal?: AbortSignal) {
+    const resp = await fetch(`https://api.minecraftservices.com/minecraft/profile/name/${name}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      dispatcher: this.dispatcher,
+      signal,
+    })
+    switch (resp.status) {
+      case 200: return await resp.json() as MicrosoftMinecraftProfile
+      case 400: throw new SetNameError('Name is unavailable (Either taken or has not become available)', await resp.json())
+      case 403: throw new SetNameError('Name is unavailable (Either taken or has not become available)', await resp.json())
+      case 401: throw new SetNameError('Unauthorized (Bearer token expired or is not correct)', await resp.json())
+      case 429: throw new SetNameError('Too many requests sent', await resp.json())
+      case 500: throw new SetNameError('Timed out (API lagged out and could not respond)', await resp.json())
     }
-    const challenges = JSON.parse(body);
-    return challenges;
+    throw new SetNameError('Unknown error', await resp.json())
+  }
+
+  async getNameChangeInformation(token: string) {
+    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/namechange', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      dispatcher: this.dispatcher,
+    })
+    return await resp.json() as NameChangeInformation
+  }
+
+  async checkNameAvailability(name: string, token: string, signal?: AbortSignal): Promise<NameAvailability> {
+    const resp = await fetch(`https://api.minecraftservices.com/minecraft/profile/name/${name}/available`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      dispatcher: this.dispatcher,
+      signal,
+    })
+    const result = await resp.json() as any
+    return result.status
+  }
+
+  async getProfile(token: string, signal?: AbortSignal): Promise<MicrosoftMinecraftProfile> {
+    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      dispatcher: this.dispatcher,
+      signal,
+    })
+    return await resp.json() as MicrosoftMinecraftProfile
+  }
+
+  async setSkin(fileName: string, skin: string | Buffer, variant: 'slim' | 'classic', token: string, signal?: AbortSignal) {
+    const body = typeof skin === 'string' ? JSON.stringify({ url: skin, variant }) : getSkinFormData(skin, fileName, variant)
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+    }
+
+    if (typeof body === 'string') {
+      headers['Content-Type'] = 'application/json'
+    }
+
+    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/skins', {
+      method: 'POST',
+      headers,
+      body,
+      signal,
+    })
+
+    const profileResponse: MinecraftProfileResponse | MinecraftProfileErrorResponse = await resp.json() as any
+
+    if (resp.status === 401) {
+      throw new UnauthorizedError(await resp.json())
+    }
+
+    if ('error' in profileResponse || 'errorMessage' in profileResponse) {
+      throw new SetSkinError(`Fail to set skin ${profileResponse.errorMessage}`, profileResponse)
+    }
+
+    return profileResponse
+  }
+
+  async resetSkin(token: string, signal?: AbortSignal) {
+    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/skins/active', {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      dispatcher: this.dispatcher,
+      signal,
+    })
+    if (resp.status === 401) {
+      throw new UnauthorizedError(await resp.json())
+    }
+  }
+
+  async hideCape(token: string, signal?: AbortSignal) {
+    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/capes/active', {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      dispatcher: this.dispatcher,
+      signal,
+    })
+    if (resp.status === 401) {
+      throw new UnauthorizedError(await resp.json())
+    }
+  }
+
+  async showCape(capeId: string, token: string, signal?: AbortSignal) {
+    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/capes/active', {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ capeId }),
+      dispatcher: this.dispatcher,
+      signal,
+    })
+    if (resp.status === 401) {
+      throw new UnauthorizedError(await resp.json())
+    }
+    if (resp.status === 400) {
+      throw new Error()
+    }
+    const profile = await resp.json() as MicrosoftMinecraftProfile
+    return profile
+  }
+
+  async verifySecurityLocation(token: string, signal?: AbortSignal) {
+    const resp = await fetch('https://api.mojang.com/user/security/location', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      dispatcher: this.dispatcher,
+      signal,
+    })
+
+    if (resp.status === 204) {
+      return true
+    }
+    return false
+  }
+
+  async getSecurityChallenges(token: string) {
+    const resp = await fetch('https://api.mojang.com/user/security/challenges', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      dispatcher: this.dispatcher,
+    })
+
+    if (resp.status === 401) {
+      throw new UnauthorizedError(await resp.json())
+    }
+    return await resp.json() as MojangChallenge[]
+  }
+
+  async submitSecurityChallenges(answers: MojangChallengeResponse[], token: string) {
+    const resp = await fetch('https://api.mojang.com/user/security/location', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(answers),
+      dispatcher: this.dispatcher,
+    })
+
+    if (resp.status === 204) {
+      return
+    }
+    if (resp.status === 401) {
+      throw new UnauthorizedError(await resp.json())
+    }
+    throw new Error()
+  }
+
+  /**
+     * Return the owner ship list of the player with those token.
+     */
+  async checkGameOwnership(token: string, signal?: AbortSignal) {
+    const mcResponse = await fetch('https://api.minecraftservices.com/entitlements/mcstore', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      dispatcher: this.dispatcher,
+      signal,
+    })
+
+    if (mcResponse.status === 401) {
+      throw new UnauthorizedError(await mcResponse.json())
+    }
+    const result = await mcResponse.json() as MinecraftOwnershipResponse
+
+    return result
+  }
 }
 
-/**
- * Response the challeges from `getChallenges`.
- *
- * @param accessToken The access token
- * @param responses Your responses
- * @returns True for correctly responsed all questions
- */
-export async function responseChallenges(accessToken: string, responses: MojangChallengeResponse[]): Promise<boolean> {
-    const { statusCode } = await request({
-        url: "https://api.mojang.com/user/security/location",
-        method: "POST",
-        body: responses,
-        bodyType: "json",
-        headers: { Authorization: `Bearer: ${accessToken}` },
-    });
-    return statusCode >= 200 && statusCode < 300;
+function getSkinFormData(buf: Buffer, fileName: string, variant: 'slim' | 'classic') {
+  const form = new FormData()
+  form.append('variant', variant)
+  const file = new File([buf], fileName, { type: 'image/png' })
+  form.append('file', file)
+  return form
 }

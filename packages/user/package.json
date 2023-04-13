@@ -2,19 +2,25 @@
   "name": "@xmcl/user",
   "version": "2.1.8",
   "main": "./index.ts",
-  "browser": "./dist/index.browser.js",
   "description": "Minecraft user related functions, including Yggdrasil authenticator, player skin fetcher, and Mojang security API",
+  "scripts": {
+    "build:type": "tsc",
+    "build:cjs": "esbuild --target=node16 --external:undici --external:uuid --platform=node --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=node16 --external:undici --external:uuid --platform=node --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts",
+    "build:browser": "esbuild --target=es2020 --sourcemap --external:uuid --alias:undici=undici-shim --format=esm --bundle --outfile=dist/index.browser.mjs index.ts"
+  },
   "engines": {
-    "node": ">=10.0"
+    "node": ">=16.4"
   },
   "publishConfig": {
     "main": "./dist/index.js",
-    "module": "./dist/index.esm.js",
+    "module": "./dist/index.mjs",
+    "browser": "./dist/index.browser.mjs",
     "access": "public"
   },
   "dependencies": {
-    "form-data": "^3.0.0",
-    "uuid": "^8.3.2"
+    "undici": "^5.21.0",
+    "uuid": "^9.0.0"
   },
   "sideEffects": false,
   "repository": {
@@ -37,7 +43,10 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
-    "nock": "^12.0.3",
-    "@types/uuid": "^8.3.1"
+    "@types/uuid": "^9.0.1",
+    "esbuild": "^0.17.14",
+    "nock": "^13.3.0",
+    "typescript": "^5.0.3",
+    "undici-shim": "workspace:*"
   }
 }

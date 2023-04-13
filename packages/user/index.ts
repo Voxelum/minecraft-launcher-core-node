@@ -1,8 +1,8 @@
 /**
  * @module @xmcl/user
  */
-export * from "./auth";
-export { GameProfile, GameProfileWithProperties } from "./base";
-export * from "./mojang";
-export * from "./service";
-
+export * from './offline'
+export { GameProfile, GameProfileWithProperties } from './gameProfile'
+export * from './mojang'
+export * from './yggdrasil'
+export * from './microsoft'
