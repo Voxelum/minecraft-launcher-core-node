@@ -2,7 +2,7 @@
   "name": "@xmcl/bytebuffer",
   "version": "0.0.1",
   "main": "./index.ts",
-  "description": "The bytebuffer module port from bytebuffer",
+  "description": "The bytebuffer module port from bytebuffer.js",
   "engines": {
     "node": ">=16"
   },
