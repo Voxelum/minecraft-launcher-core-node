@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/asm",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "main": "./index.ts",
   "description": "Java ASM module transferred into the typescript",
   "engines": {

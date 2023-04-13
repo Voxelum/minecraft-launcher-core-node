@@ -1,8 +1,7 @@
 name: Release
 
 on:
-  pull_request:
-    types: [closed] 
+  push:
     branches:
       - master
 
@@ -10,7 +9,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
-    if: github.event.pull_request.merged && github.head_ref == 'prepare-release' && github.event.pull_request.user.login == 'github-actions[bot]'
+    if: ${{ startsWith(github.event.head_commit.message, 'chore(release)') }}
 
     steps:
     - uses: actions/checkout@v2
@@ -36,7 +35,7 @@ jobs:
         pnpm --parallel build:ems
     - name: Publish
       run: |
-        pnpm -r publish --access public
+        pnpm -r publish --access public --no-git-checks
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
@@ -50,3 +49,14 @@ jobs:
         git push origin tag $(cat tag.log) -f
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build Docs
+      working-directory: "./docs"
+      run: |
+        npm run build:docs
+    - name: Deploy to Github Pages
+      uses: crazy-max/ghaction-github-pages@v1
+      with:
+        target_branch: gh-pages
+        build_dir: docs/
+      env:
+        GITHUB_PAT: ${{ secrets.GITHUB_PAT }}

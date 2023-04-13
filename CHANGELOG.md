@@ -1,5 +1,120 @@
 # Changelog
 
+## 7.1.0
+### @xmcl/asm@1.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: remove the usage of long ([b6c98c552c242d95edac90e248231a873ab380a4](https://github.com/voxelum/minecraft-launcher-core-node/commit/b6c98c552c242d95edac90e248231a873ab380a4))
+### @xmcl/bytebuffer@0.1.0
+#### Features
+
+- feat: Add bytebuffer package ([8d99df59f6bb28d1e1cfb2bdc3a1230b3c6491a2](https://github.com/voxelum/minecraft-launcher-core-node/commit/8d99df59f6bb28d1e1cfb2bdc3a1230b3c6491a2))
+### @xmcl/unzip@2.1.0
+#### Features
+
+- feat: Support filtering entries in a flexiable way ([7e989573442e467e0d2ec1d2f59826e89136ca95](https://github.com/voxelum/minecraft-launcher-core-node/commit/7e989573442e467e0d2ec1d2f59826e89136ca95))
+### @xmcl/curseforge@2.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: New API with undici ([57976a96a431468e691cbf867a36a727127ee143](https://github.com/voxelum/minecraft-launcher-core-node/commit/57976a96a431468e691cbf867a36a727127ee143))
+#### Bug Fixes
+
+- fix: Correct the curseforge typing ([717486d60a2b3e4695c967e2399b8209b7627c0e](https://github.com/voxelum/minecraft-launcher-core-node/commit/717486d60a2b3e4695c967e2399b8209b7627c0e))
+- fix: Correct curseforge downloadUrl ([8542538f1b452f25f840a418013e26183aa261cb](https://github.com/voxelum/minecraft-launcher-core-node/commit/8542538f1b452f25f840a418013e26183aa261cb))
+### @xmcl/download-core@1.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: split package into download-core package ([22ab04785234968d2c99e9e09fbc91621d4ba782](https://github.com/voxelum/minecraft-launcher-core-node/commit/22ab04785234968d2c99e9e09fbc91621d4ba782))
+#### Bug Fixes
+
+- fix: typo ([a7dbd69cbe1683101fb4893d4762bb011f34885f](https://github.com/voxelum/minecraft-launcher-core-node/commit/a7dbd69cbe1683101fb4893d4762bb011f34885f))
+### @xmcl/gamesetting@3.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: Adjust API name and code style ([0061e5a8bc95922c197e5169720c3fdb3714d361](https://github.com/voxelum/minecraft-launcher-core-node/commit/0061e5a8bc95922c197e5169720c3fdb3714d361))
+### @xmcl/task@4.0.4
+#### Bug Fixes
+
+- fix(task): Ensure the task can be cancelled immediately ([9670b5311bc3e21aa6b806aaadd123697c04e473](https://github.com/voxelum/minecraft-launcher-core-node/commit/9670b5311bc3e21aa6b806aaadd123697c04e473))
+### @xmcl/modrinth@2.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: New API with undici ([57976a96a431468e691cbf867a36a727127ee143](https://github.com/voxelum/minecraft-launcher-core-node/commit/57976a96a431468e691cbf867a36a727127ee143))
+### @xmcl/nat-api@0.4.0
+#### Features
+
+- feat: Add nat-api ([22a954e4a716ada01b2a77adda73b4ffeeb7f7d9](https://github.com/voxelum/minecraft-launcher-core-node/commit/22a954e4a716ada01b2a77adda73b4ffeeb7f7d9))
+### @xmcl/user@3.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: use undici and re-design the API ([fad9fc09035b30cd4db9fcd787bb1611b5f84eb1](https://github.com/voxelum/minecraft-launcher-core-node/commit/fad9fc09035b30cd4db9fcd787bb1611b5f84eb1))
+#### Features
+
+- feat: Support setting offline uuid for user ([587a2698d459d277f0ce1223fea8e13ec6de6f94](https://github.com/voxelum/minecraft-launcher-core-node/commit/587a2698d459d277f0ce1223fea8e13ec6de6f94))
+### @xmcl/nbt@3.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: remove the usage of long ([b6c98c552c242d95edac90e248231a873ab380a4](https://github.com/voxelum/minecraft-launcher-core-node/commit/b6c98c552c242d95edac90e248231a873ab380a4))
+- Dependency @xmcl/bytebuffer bump **patch**
+### @xmcl/client@3.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: remove the usage of long ([b6c98c552c242d95edac90e248231a873ab380a4](https://github.com/voxelum/minecraft-launcher-core-node/commit/b6c98c552c242d95edac90e248231a873ab380a4))
+- Dependency @xmcl/bytebuffer bump **patch**
+- Dependency @xmcl/nbt bump **patch**
+### @xmcl/core@2.11.0
+#### Features
+
+- feat: allow to change checksum function ([47fc495ba7518b9a635f3d1c37eda4f91ebb71f8](https://github.com/voxelum/minecraft-launcher-core-node/commit/47fc495ba7518b9a635f3d1c37eda4f91ebb71f8))
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/system@2.2.4
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/game-data@1.2.1
+- Dependency @xmcl/nbt bump **patch**
+- Dependency @xmcl/system bump **patch**
+### @xmcl/installer@5.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: split package into download-core package ([22ab04785234968d2c99e9e09fbc91621d4ba782](https://github.com/voxelum/minecraft-launcher-core-node/commit/22ab04785234968d2c99e9e09fbc91621d4ba782))
+#### Features
+
+- feat: add options to interpret ([88900aa812baccaa1774ffc9a4ec8ba48267d8a9](https://github.com/voxelum/minecraft-launcher-core-node/commit/88900aa812baccaa1774ffc9a4ec8ba48267d8a9))
+#### Bug Fixes
+
+- fix: Cannot parse new legacy forge installer zip ([70dc903aa29865ef16ba080198734077cb6306d5](https://github.com/voxelum/minecraft-launcher-core-node/commit/70dc903aa29865ef16ba080198734077cb6306d5))
+- fix: correctly propagate reset ([5e68e4b8d6de9535c0ac981d7e3dee35206920bb](https://github.com/voxelum/minecraft-launcher-core-node/commit/5e68e4b8d6de9535c0ac981d7e3dee35206920bb))
+- fix: Allow to cancel post processing ([36d705f36ab182e682fe8ddf898f9abddb0a2400](https://github.com/voxelum/minecraft-launcher-core-node/commit/36d705f36ab182e682fe8ddf898f9abddb0a2400))
+- fix: Prevent the http error close the fd ([2d8084dc8781f4f610239ffe57fae624bef04bc1](https://github.com/voxelum/minecraft-launcher-core-node/commit/2d8084dc8781f4f610239ffe57fae624bef04bc1))
+- fix: add 10 sec timeout ([9654f72547817c073bf24238939597f671170b3e](https://github.com/voxelum/minecraft-launcher-core-node/commit/9654f72547817c073bf24238939597f671170b3e))
+- fix: Don't download file if the content is empty ([d48c487b867cd3b7ab4ca118b1db6ec14351f694](https://github.com/voxelum/minecraft-launcher-core-node/commit/d48c487b867cd3b7ab4ca118b1db6ec14351f694))
+- fix: Custom host should allow the reoreder of vanilla host ([a679dbbc8a7684691b56d81fc9eedd7fa522c7dd](https://github.com/voxelum/minecraft-launcher-core-node/commit/a679dbbc8a7684691b56d81fc9eedd7fa522c7dd))
+- fix: Prevent duplicated mc version prefix during install forge ([e1f87bd0e982f1d11dde05e9140ef3bd6b2626ea](https://github.com/voxelum/minecraft-launcher-core-node/commit/e1f87bd0e982f1d11dde05e9140ef3bd6b2626ea))
+- fix: Abort the request in proper way ([7816b8002fada53e665a114958b0d78e3d73674b](https://github.com/voxelum/minecraft-launcher-core-node/commit/7816b8002fada53e665a114958b0d78e3d73674b))
+- fix: Should catpure url from download error ([386705537ae518fab91e9890ff513a24def3d196](https://github.com/voxelum/minecraft-launcher-core-node/commit/386705537ae518fab91e9890ff513a24def3d196))
+- fix: Should capture request error ([1d86856904d244a266404b6b64179c43f4035778](https://github.com/voxelum/minecraft-launcher-core-node/commit/1d86856904d244a266404b6b64179c43f4035778))
+- Dependency @xmcl/asm bump **patch**
+- Dependency @xmcl/unzip bump **patch**
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/download-core bump **patch**
+- Dependency @xmcl/task bump **patch**
+### @xmcl/mod-parser@3.3.1
+- Dependency @xmcl/asm bump **patch**
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.2.0
+#### Features
+
+- feat: @xmcl/resourcepack - New features (including a "minor" breaking change) (#252) ([c23bf872447127759cbdfba8280ecfeebfe22847](https://github.com/voxelum/minecraft-launcher-core-node/commit/c23bf872447127759cbdfba8280ecfeebfe22847))
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@2.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: @xmcl/model - [Breaking change] New TextureManager interface (#251) ([c76559dbc9dcdbb4dfc21906ee21a8bef5db19c9](https://github.com/voxelum/minecraft-launcher-core-node/commit/c76559dbc9dcdbb4dfc21906ee21a8bef5db19c9))
+#### Features
+
+- feat: Expanding BlockModelFactory.getObject() (#248) ([47ad92b40874938e29979feb29a925f7078a3d45](https://github.com/voxelum/minecraft-launcher-core-node/commit/47ad92b40874938e29979feb29a925f7078a3d45))
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 7.0.0
 ### @xmcl/client@2.1.3
 #### Bug Fixes
