@@ -1,0 +1,30 @@
+.definition-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 0.5rem;
+}
+
+.definition-grid.interface > a {
+  color: var(--vp-c-green-lighter);
+}
+
+
+.definition-grid.namespace > a {
+  color: var(--vp-c-yellow-lighter);
+}
+
+.definition-grid.enum > a {
+  color: var(--vp-c-red-lighter);
+}
+
+p:has(a[target="_blank"] img[src]) {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+@media screen and (max-width: 600px) {
+  .definition-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+  }
+}

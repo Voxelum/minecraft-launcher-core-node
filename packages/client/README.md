@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 
-Provide some functions to query Minecraft server status.
+Minecraft socket pipeline utilities. Support Minecraft lan server discovery.
 
 ## Usage
 
@@ -28,3 +28,34 @@ const options: QueryOptions = {
 };
 const rawStatusJson: Status = await fetchStatus(info, options);
 ```
+
+### Detect LAN Minecraft Server
+
+You can detect if player share LAN server.
+
+Or you can fake a LAN server.
+
+```ts
+import { MinecraftLanDiscover, LanServerInfo } from '@xmcl/client'
+const discover = new MinecraftLanDiscover();
+
+await discover.bind(); // start to listen any lan server
+
+discover.on('discover', ({ motd, port }: LanServerInfo) => {
+    console.log(motd); // server motd
+    console.log(port); // server port
+})
+
+const isReady = discover.isReady // a boolean represent whether the discover is ready to use
+
+// you can also fake a lan server
+discover.broadcast({
+    motd: 'your motd',
+    port: 2384 // fake port
+});
+// fake LAN server is useful when you want to implement the P2P connection between two players
+
+dicover.destroy(); // stop listening
+
+```
+

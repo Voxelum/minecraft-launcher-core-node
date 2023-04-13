@@ -12,142 +12,112 @@ Provide Yggdrasil auth and profile service for Minecraft protocol.
 
 ## Usage
 
-### User Login (Official/Offline)
+### Microsoft API
 
-You can do official or offline login:
+Due to the complexity of the Microsoft authentication.
+The library only provide parts of microsoft login process.
+You need to implement the rest of the process by yourself.
+
+Overall, according to the [wiki.vg](https://wiki.vg/Microsoft_Authentication_Scheme), the MS login process can be break into following steps:
+
+1. Aquire Microsoft access token by oauth `(user -> ms token)`
+2. Acquire XBox token by Microsoft access token `(ms token -> xbox token)`
+3. Acquire Minecraft access token by XBox token `(xbox token -> minecraft token)`
+
+The library does not cover the first step.
+
+- For nodejs, you can use [msal-node](https://www.npmjs.com/package/@azure/msal-node) to implement 1st step.
+- For browser, you can use [msal-browser](https://www.npmjs.com/package/@azure/msal-browser) to implement 1st step.
+
+If you want a reference, [this](https://github.com/voxelum/x-minecraft-launcher/blob/master/xmcl-runtime/lib/clients/MicrosoftOAuthClient.ts) is the live example for nodejs/electron using msal-node.
+
+Here we only demo the case you already got the Microsoft access token.
 
 ```ts
-import { login, offline, Authentication } from "@xmcl/user";
+import { MicrosoftAuthenticator } from '@xmcl/user'
+
+const authenticator = new MicrosoftAuthenticator();
+
+const msAccessToken: string; // the access token you got from msal
+
+const { xstsResponse, xboxGameProfile } = await authenticator.acquireXBoxToken(msAccessToken);
+
+// xboxGameProfile contains the xbox user avatar and name.
+
+// you can use the xstsResponse to get the minecraft access token
+const mcResponse = await authenticator.loginMinecraftWithXBox(xstsResponse.DisplayClaims.xui[0].uhs, xstsResponse.Token);
+
+// the accessToken is the common minecraft token we want!
+const accessToken: string = mcResponse.access_token;
+const username = mcResponse.username;
+const expire = mcResponse.expires_in; // in seconds
+```
+
+### Yggdrasil API
+
+Most of third-party authentication service is based on Yggdrasil API.
+See [authlib-injector](https://github.com/yushijinhun/authlib-injector) for more information.
+
+The legacy mojang auth server, `https://authserver.mojang.com` is also a yggdrasil api server,
+but it is not recommended to use it.
+
+```ts
+import { YggdrasilClient, YggrasilAuthentication } from "@xmcl/user";
+
+const client = new YggdrasilClient('http://random.authserver');
 const username: string;
 const password: string;
-const authFromMojang: Authentication = await login({ username, password }); // official login
-const authOffline: Authentication = offline(username); // offline login
+const clientToken: string; // you can use uuid to generate a client token
+// login
+const auth: YggrasilAuthentication = await client.login({ username, password, clientToken });
 
-const accessToken: string = authFromMojang.accessToken;
+// validate access token, you can use this when you restart the program
+const valid: boolean = await client.validate(auth.accessToken, clientToken);
+
+// refresh access token, if token is invalid, you can use this to get a new one
+const newAuth: YggrasilAuthentication = await client.refresh({ accessToken: auth.accessToken, clientToken });
 ```
 
-Validate/Refresh/Invalidate access token. This is majorly used for reduce user login and login again.
+### Third-party Yggdrasil API
+
+The [authlib-injector]() also implements several API for user skin operation.
+
+We also support these API:
 
 ```ts
-import { validate, refresh } from "@xmcl/user";
-const accessToken: string;
-const clientToken: string;
-const valid: boolean = await validate({ accessToken, clientToken });
-if (!valid) {
-    const newAuth: Auth = await refresh({ accessToken, clientToken });
-}
-await invalidate({ accessToken, clientToken });
-```
+import { YggdrasilThirdPartyClient } from "@xmcl/user";
 
-Use third party Yggdrasil API to auth:
+const client = new YggdrasilThirdPartyClient('http://random.authserver');
 
-```ts
-import { login, YggdrasilAuthAPI } from "@xmcl/user";
-const username: string;
-const password: string;
-const yourAPI: YggdrasilAuthAPI;
-const authFromMojang = await login({ username, password }, yourAPI); // official login
-```
+const uuid: string; // user uuid
 
-### User Skin Operation
-
-Or lookup profile by name:
-
-```ts
-import { lookupByName, GameProfile } from "@xmcl/user";
-
-const username: string;
-const gameProfile: GameProfile = await lookupByName(username);
-```
-
-Fetch the user game profile by uuid. (This could also be used for get skin)
-
-
-```ts
-import { lookup, GameProfile } from "@xmcl/user";
-const userUUID: string;
-const gameProfile: GameProfile = await lookup(userUUID);
-```
-
-Get player skin:
-
-```ts
-import { lookup, GameProfile, getTextures } from "@xmcl/user";
-const userUUID: string;
-const gameProfile: GameProfile = await lookup(userUUID);
+// lookup user profile with texture
+const profile = await client.lookup(uuid);
 const infos: GameProfile.TexturesInfo | undefined = getTextures(gameProfile);
 const skin: GameProfile.Texture = infos!.textures.SKIN!;
 const skinUrl: string = skin.url; // use url to display skin
 const isSlim: boolean = GameProfile.Texture.isSlim(skin); // determine if model is slim or not
-```
 
-Set player skin from URL:
-
-```ts
-import { lookup, GameProfile, setTexture } from "@xmcl/user";
-const userUUID: string;
-const userAccessToken: string;
-const userNewSkinUrl: string;
-await setTexture({
-    accessToken: userAccessToken,
-    uuid: userUUID,
-    type: "skin",
-    texture: {
-        url: userNewSkinUrl,
-        metadata: { model: "slim" }, 
-        // suppose this model is a slim model
-        // if this model is a normal model, this should be steve
-    }
-});
-```
-
-Set player skin from binary (read file file):
-
-```ts
-import { lookup, GameProfile, setTexture } from "@xmcl/user";
-const userUUID: string;
-const userAccessToken: string;
-const userNewSkinData: Uint8Array; 
-// in nodejs this can be a `Buffer` from file
-// in browser this can come from a `Blob`
-await setTexture({
-    accessToken: userAccessToken,
-    uuid: userUUID,
-    type: "skin",
-    texture: {
-        data: userNewSkinData,
-        metadata: { model: "steve" }, 
-    }
-});
-```
-
-Delete player skin (reset to default):
-
-```ts
-import { lookup, GameProfile, setTexture } from "@xmcl/user";
-const userUUID: string;
-const userAccessToken: string;
-await setTexture({
-    accessToken: userAccessToken,
-    uuid: userUUID,
-    type: "skin",
-});
-```
-
-### Mojang Security API
-
-Validate if user have a validated IP address, and get & answer challenges to validate player's identity.
-
-```ts
-import { checkLocation, getChallenges, responseChallenges } from "@xmcl/user";
+// set user skin
 const accessToken: string;
-const validIp: boolean = await checkLocation(accessToken);
+const skinUrl: string;
+await client.setTexture({ accessToken, uuid, type: "skin", texture: { url: skinUrl } });
 
-if (!validIp) {
-    const challenges: MojangChallenge[] = await getChallenges(accessToken);
-    // after your answer the challenges
-    const responses: MojangChallengeResponse[];
-    await responseChallenges(accessToken, responses);
-}
+// set user skin via binary
+const skinData: Uint8Array;
+await client.setTexture({ accessToken, uuid, type: "skin", texture: { data: skinData } });
+
 ```
 
+### Offline
+
+```ts
+import { offline } from "@xmcl/user";
+
+// create a offline user
+const offlineUser = offline("username");
+
+// create an offline user with uuid
+const offlineUser1 = offline("username", "uuid");
+```
+```
