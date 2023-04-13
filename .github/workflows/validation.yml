@@ -11,38 +11,34 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [15]
+        node-version: [16]
 
     steps:
     - uses: actions/checkout@v2
+    - uses: pnpm/action-setup@v2.0.1
+      with:
+        version: 7.15.0
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2-beta
+      uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Cache .pnpm-store
-      uses: actions/cache@v1
-      with:
-        path: ~/.pnpm-store
-        key: ${{ runner.os }}-node${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-    - name: Use pnpm
-      run: curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
+        cache: 'pnpm'
     - uses: actions/setup-java@v1
       with:
         java-version: '12.X'
         architecture: x64
     - name: Install
       run: |
-        pnpm install
+        pnpm i
       env:
         CI: true
     - name: Lint and Compile
       run: |
         npm run lint
-        npm run compile:dry
+        npm run build:type
     - name: Test
       run: |
-        npm run build:clean
-        npm run test:full
+        npm run test
       env:
         CI: true
     - name: Upload Coverage
