@@ -54,7 +54,8 @@ jobs:
         pnpm --parallel build:ems
     - name: Prepare Pull Request
       id: vars
-      uses: ./.github/actions/prepare-pr
+      run: |
+        pnpm tsx .github/actions/prepare-pr/index.ts
       env:
         CI: true
     - name: Update lock file

@@ -5,6 +5,8 @@
   },
   "dependencies": {
     "conventional-recommended-bump": "^6.1.0",
-    "semver": "^7.3.8"
+    "conventional-commits-parser": "^3.2.4",
+    "semver": "^7.3.8",
+    "@types/node": "~16"
   }
 }
