@@ -6,43 +6,45 @@
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 
-Provide the modrinth described in https://github.com/modrinth/labrinth/wiki/API-Documentation
-
-Currently only the read mod related APIs are implemented.
+Provide the modrinth described in https://docs.modrinth.com/api-spec
 
 ## Usage
 
-### Search Mod in Modrinth
+This package is depending on undici for HTTP in nodejs, and the browser version will use browser `fetch` instead of undici.
+
+### Search Project in Modrinth
 
 You can use keyword to search
 
 ```ts
-    import { searchMods } from '@xmcl/modrinth'
-    const searchOptions: SearchOptions = {
-        categoryId: 6, // 6 is mod,
-    };
-    const result: SearchModResult = await searchMods(settingString);
-    const totalModsCounts = result.total_hits;
-    for (const mod of result.hits) {
-        console.log(`${mod.mod_id} ${mod.title} ${mod.description}`); // print mod info
-    }
+import { ModrinthV2Client, SearchResult } from '@xmcl/modrinth'
+const client = new ModrinthV2Client()
+const searchOptions: SearchOptions = {
+    query: "shader", // searching shader
+};
+const result: SearchResult = await client.searchProjects(settingString);
+const totalProjectCounts = result.total_hits;
+for (const project of result.hits) {
+    console.log(`${project.project_id} ${project.title} ${project.description}`); // print project info
+}
 ```
 
-### Get Mod in Modrinth
+### Get Project in Modrinth
 
-You can get mod detail info via mod id, including the download url
+You can get project detail info via project id, including the download url
 
 ```ts
-import { getMod, Mod, getModVersion, ModVersionFile, ModVersion } from '@xmcl/modrinth'
+import { ModrinthV2Client, ProjectVersionFile, ProjectVersion } from '@xmcl/modrinth'
 
-const modid: string; // you can get this id from searchMods
-const mod: Mod = await getMod(modid) // mod details
-const modVersions: string[] = mod.versions;
-const oneModVersion: string = modVersions[0];
+const client = new ModrinthV2Client()
+const projectId: string; // you can get this id from searchProjects
+const project: project = await client.getProject(projectId) // project details
+const versions: string[] = project.versions;
+const oneVersion: string = versions[0];
 
-const modVersion: ModVersion = await getModVersion(oneModVersion);
+const modVersion: ModVersion = await getProjectVersion(oneVersion);
 
-const files: ModVersionFile[] = modVersion.files;
+const files: ProjectVersionFile[] = modVersion.files;
 
 const { url, name, hashes } = files[0]; // now you can get file name, file hashes and download url of the file
 ```

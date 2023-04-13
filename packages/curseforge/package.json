@@ -3,16 +3,21 @@
   "version": "1.0.0",
   "main": "./index.ts",
   "module": "./index.ts",
-  "browser": "./browser/index.js",
   "sideEffects": false,
-  "description": "Provide the curseforge (twitch) API in https://twitchappapi.docs.apiary.io/",
+  "description": "Provide the curseforge (official) API in https://docs.curseforge.com/",
+  "scripts": {
+    "build:cjs": "esbuild --target=node16 --external:undici --platform=node --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=node16 --external:undici --platform=node --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts",
+    "build:browser": "esbuild --target=es2020 --sourcemap --alias:undici=undici-shim --format=esm --bundle --outfile=dist/index.browser.mjs index.ts"
+  },
   "engines": {
-    "node": ">=10.0"
+    "node": ">=16.4"
   },
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",
-    "module": "./dist/index.esm.js"
+    "module": "./dist/index.mjs",
+    "browser": "./dist/index.browser.mjs"
   },
   "repository": {
     "type": "git",
@@ -25,16 +30,19 @@
     "minecraft-launcher",
     "nodejs",
     "electron",
-    "curseforge",
-    "twitchappapi"
+    "curseforge"
   ],
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "undici": "^5.21.0"
+  },
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
-    "nock": "^12.0.3"
+    "esbuild": "^0.17.14",
+    "undici-shim": "workspace:^0.0.1",
+    "vitest": "^0.29.8"
   }
 }
