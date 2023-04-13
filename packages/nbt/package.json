@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/nbt",
-  "version": "2.0.3",
+  "version": "3.0.0",
   "main": "./index.ts",
   "browser": "./dist/index.browser.mjs",
   "description": "NBT serialization and deserialization",
