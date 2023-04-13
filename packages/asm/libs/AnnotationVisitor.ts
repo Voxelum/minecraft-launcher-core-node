@@ -37,22 +37,22 @@
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
-import { Opcodes } from "./Opcodes"
+import { Opcodes } from './Opcodes'
 
 export abstract class AnnotationVisitor {
-    /**
+  /**
      * The ASM API version implemented by this visitor. The value of this field
      * must be one of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
      */
-    api: number;
+  api: number
 
-    /**
+  /**
      * The annotation visitor to which this visitor must delegate method calls.
      * May be null.
      */
-    av: AnnotationVisitor | null;
+  av: AnnotationVisitor | null
 
-    /**
+  /**
      * Constructs a new {@link AnnotationVisitor}.
      *
      * @param api
@@ -62,16 +62,16 @@ export abstract class AnnotationVisitor {
      * the annotation visitor to which this visitor must delegate
      * method calls. May be null.
      */
-    public constructor(api: number, av: AnnotationVisitor | null = null) {
-        this.api = 0;
-        if (api !== Opcodes.ASM4 && api !== Opcodes.ASM5) {
-            throw new Error();
-        }
-        this.api = api;
-        this.av = av;
+  public constructor(api: number, av: AnnotationVisitor | null = null) {
+    this.api = 0
+    if (api !== Opcodes.ASM4 && api !== Opcodes.ASM5) {
+      throw new Error()
     }
+    this.api = api
+    this.av = av
+  }
 
-    /**
+  /**
      * Visits a primitive value of the annotation.
      *
      * @param name
@@ -86,13 +86,13 @@ export abstract class AnnotationVisitor {
      * {@link #visitArray visitArray} and visiting each array element
      * in turn, but is more convenient).
      */
-    public visit(name: string, value: any) {
-        if (this.av != null) {
-            this.av.visit(name, value);
-        }
+  public visit(name: string, value: any) {
+    if (this.av != null) {
+      this.av.visit(name, value)
     }
+  }
 
-    /**
+  /**
      * Visits an enumeration value of the annotation.
      *
      * @param name
@@ -102,13 +102,13 @@ export abstract class AnnotationVisitor {
      * @param value
      * the actual enumeration value.
      */
-    public visitEnum(name: string, desc: string | null, value: string | null) {
-        if (this.av != null) {
-            this.av.visitEnum(name, desc, value);
-        }
+  public visitEnum(name: string, desc: string | null, value: string | null) {
+    if (this.av != null) {
+      this.av.visitEnum(name, desc, value)
     }
+  }
 
-    /**
+  /**
      * Visits a nested annotation value of the annotation.
      *
      * @param name
@@ -121,14 +121,14 @@ export abstract class AnnotationVisitor {
      * visited before calling other methods on this annotation
      * visitor</i>.
      */
-    public visitAnnotation(name: string, desc: string): AnnotationVisitor | null {
-        if (this.av != null) {
-            return this.av.visitAnnotation(name, desc);
-        }
-        return null;
+  public visitAnnotation(name: string, desc: string): AnnotationVisitor | null {
+    if (this.av != null) {
+      return this.av.visitAnnotation(name, desc)
     }
+    return null
+  }
 
-    /**
+  /**
      * Visits an array value of the annotation. Note that arrays of primitive
      * types (such as byte, boolean, short, char, int, long, float or double)
      * can be passed as value to {@link #visit visit}. This is what
@@ -142,19 +142,19 @@ export abstract class AnnotationVisitor {
      * visitor are ignored. <i>All the array values must be visited
      * before calling other methods on this annotation visitor</i>.
      */
-    public visitArray(name: string): AnnotationVisitor | null {
-        if (this.av != null) {
-            return this.av.visitArray(name);
-        }
-        return null;
+  public visitArray(name: string): AnnotationVisitor | null {
+    if (this.av != null) {
+      return this.av.visitArray(name)
     }
+    return null
+  }
 
-    /**
+  /**
      * Visits the end of the annotation.
      */
-    public visitEnd() {
-        if (this.av != null) {
-            this.av.visitEnd();
-        }
+  public visitEnd() {
+    if (this.av != null) {
+      this.av.visitEnd()
     }
+  }
 }

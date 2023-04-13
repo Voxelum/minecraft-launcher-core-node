@@ -7,8 +7,8 @@
  * @module @xmcl/client
  */
 
-export * from "./coders";
-export * from "./packet";
-export * from "./channel";
-export * from "./status";
-export * from "./lan";
+export * from './coders'
+export * from './packet'
+export * from './channel'
+export * from './status'
+export * from './lan'

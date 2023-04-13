@@ -33,23 +33,23 @@
  *
  * @author Eric Bruneton
  */
-import { Label } from "./Label"
+import { Label } from './Label'
 export class Edge {
-    /**
+  /**
      * Denotes a normal control flow graph edge.
      */
-    static readonly NORMAL: number = 0;
+  static readonly NORMAL: number = 0
 
-    /**
+  /**
      * Denotes a control flow graph edge corresponding to an exception handler.
      * More precisely any {@link Edge} whose {@link #info} is strictly positive
      * corresponds to an exception handler. The actual value of {@link #info} is
      * the index, in the {@link ClassWriter} type table, of the exception that
      * is catched.
      */
-    static readonly EXCEPTION: number = 2147483647;
+  static readonly EXCEPTION: number = 2147483647
 
-    /**
+  /**
      * Information about this control flow graph edge. If
      * {@link ClassWriter#COMPUTE_MAXS} is used this field is the (relative)
      * stack size in the basic block from which this edge originates. This size
@@ -59,23 +59,20 @@ export class Edge {
      * this field is the kind of this control flow graph edge (i.e. NORMAL or
      * EXCEPTION).
      */
-    info: number = 0;
+  info = 0
 
-    /**
+  /**
      * The successor block of the basic block from which this edge originates.
      */
-    successor!: Label | null;
+  successor!: Label | null
 
-    /**
+  /**
      * The next edge in the list of successors of the originating basic block.
      * See {@link Label#successors successors}.
      */
-    next: Edge | null = null;
+  next: Edge | null = null
 
-    constructor() {
-        this.info = 0;
-    }
+  constructor() {
+    this.info = 0
+  }
 }
-
-
-

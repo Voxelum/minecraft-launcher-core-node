@@ -37,91 +37,91 @@
  *
  * @author Eric Bruneton
  */
-import { Edge } from "./Edge"
-import { MethodWriter } from "./MethodWriter";
-import { Opcodes } from "./Opcodes";
-import { ByteVector } from "./ByteVector";
-import { Frame } from "./Frame";
-import { ClassReader } from "./ClassReader";
-import * as bits from "./bits";
-import { assert } from "./utils";
+import { Edge } from './Edge'
+import { MethodWriter } from './MethodWriter'
+import { Opcodes } from './Opcodes'
+import { ByteVector } from './ByteVector'
+import { Frame } from './Frame'
+import { ClassReader } from './ClassReader'
+import * as bits from './bits'
+import { assert } from './utils'
 export class Label {
-    /**
+  /**
      * Indicates if this label is only used for debug attributes. Such a label
      * is not the start of a basic block, the target of a jump instruction, or
      * an exception handler. It can be safely ignored in control flow graph
      * analysis algorithms (for optimization purposes).
      */
-    static DEBUG: number = 1;
+  static DEBUG = 1
 
-    /**
+  /**
      * Indicates if the position of this label is known.
      */
-    static RESOLVED: number = 2;
+  static RESOLVED = 2
 
-    /**
+  /**
      * Indicates if this label has been updated, after instruction resizing.
      */
-    static RESIZED: number = 4;
+  static RESIZED = 4
 
-    /**
+  /**
      * Indicates if this basic block has been pushed in the basic block stack.
      * See {@link MethodWriter#visitMaxs visitMaxs}.
      */
-    static PUSHED: number = 8;
+  static PUSHED = 8
 
-    /**
+  /**
      * Indicates if this label is the target of a jump instruction, or the start
      * of an exception handler.
      */
-    static TARGET: number = 16;
+  static TARGET = 16
 
-    /**
+  /**
      * Indicates if a stack map frame must be stored for this label.
      */
-    static STORE: number = 32;
+  static STORE = 32
 
-    /**
+  /**
      * Indicates if this label corresponds to a reachable basic block.
      */
-    static REACHABLE: number = 64;
+  static REACHABLE = 64
 
-    /**
+  /**
      * Indicates if this basic block ends with a JSR instruction.
      */
-    static JSR: number = 128;
+  static JSR = 128
 
-    /**
+  /**
      * Indicates if this basic block ends with a RET instruction.
      */
-    static RET: number = 256;
+  static RET = 256
 
-    /**
+  /**
      * Indicates if this basic block is the start of a subroutine.
      */
-    static SUBROUTINE: number = 512;
+  static SUBROUTINE = 512
 
-    /**
+  /**
      * Indicates if this subroutine basic block has been visited by a
      * visitSubroutine(null, ...) call.
      */
-    static VISITED: number = 1024;
+  static VISITED = 1024
 
-    /**
+  /**
      * Indicates if this subroutine basic block has been visited by a
      * visitSubroutine(!null, ...) call.
      */
-    static VISITED2: number = 2048;
+  static VISITED2 = 2048
 
-    /**
+  /**
      * Field used to associate user information to a label. Warning: this field
      * is used by the ASM tree package. In order to use it with the ASM tree
      * package you must override the
      * {@link org.objectweb.asm.tree.MethodNode#getLabelNode} method.
      */
-    public info: any;
+  public info: any
 
-    /**
+  /**
      * Flags that indicate the status of this label.
      *
      * @see #DEBUG
@@ -134,28 +134,28 @@ export class Label {
      * @see #JSR
      * @see #RET
      */
-    status: number;
+  status: number
 
-    /**
+  /**
      * The line number corresponding to this label, if known. If there are
      * several lines, each line is stored in a separate label, all linked via
      * their next field (these links are created in ClassReader and removed just
      * before visitLabel is called, so that this does not impact the rest of the
      * code).
      */
-    line: number;
+  line: number
 
-    /**
+  /**
      * The position of this label in the code, if known.
      */
-    position: number;
+  position: number
 
-    /**
+  /**
      * Number of forward references to this label, times two.
      */
-    private referenceCount: number;
+  private referenceCount: number
 
-    /**
+  /**
      * Informations about forward references. Each forward reference is
      * described by two consecutive integers in this array: the first one is the
      * position of the first byte of the bytecode instruction that contains the
@@ -168,9 +168,9 @@ export class Label {
      * forward references have been resolved. Hence the same array can be used
      * for both purposes without problems.
      */
-    private srcAndRefPositions: number[] | null = null;
+  private srcAndRefPositions: number[] | null = null
 
-    /**
+  /**
      * Start of the output stack relatively to the input stack. The exact
      * semantics of this field depends on the algorithm that is used.
      *
@@ -185,38 +185,38 @@ export class Label {
      * stack elements, and that the other elements must be appended to the input
      * stack.
      */
-    inputStackTop: number;
+  inputStackTop: number
 
-    /**
+  /**
      * Maximum height reached by the output stack, relatively to the top of the
      * input stack. This maximum is always positive or null.
      */
-    outputStackMax: number;
+  outputStackMax: number
 
-    /**
+  /**
      * Information about the input and output stack map frames of this basic
      * block. This field is only used when {@link ClassWriter#COMPUTE_FRAMES}
      * option is used.
      */
-    frame: Frame | null = null;
+  frame: Frame | null = null
 
-    /**
+  /**
      * The successor of this label, in the order they are visited. This linked
      * list does not include labels used for debug info only. If
      * {@link ClassWriter#COMPUTE_FRAMES} option is used then, in addition, it
      * does not contain successive labels that denote the same bytecode position
      * (in this case only the first label appears in this list).
      */
-    successor!: Label;
+  successor!: Label
 
-    /**
+  /**
      * The successors of this node in the control flow graph. These successors
      * are stored in a linked list of {@link Edge Edge} objects, linked to each
      * other by their {@link Edge#next} field.
      */
-    successors!: Edge;
+  successors!: Edge
 
-    /**
+  /**
      * The next basic block in the basic block stack. This stack is used in the
      * main loop of the fix point algorithm used in the second step of the
      * control flow analysis algorithms. It is also used in
@@ -225,21 +225,21 @@ export class Label {
      *
      * @see MethodWriter#visitMaxs
      */
-    next: Label | null = null;
+  next: Label | null = null
 
-    /**
+  /**
      * Constructs a new label.
      */
-    public constructor() {
-        this.status = 0;
-        this.line = 0;
-        this.position = 0;
-        this.referenceCount = 0;
-        this.inputStackTop = 0;
-        this.outputStackMax = 0;
-    }
+  public constructor() {
+    this.status = 0
+    this.line = 0
+    this.position = 0
+    this.referenceCount = 0
+    this.inputStackTop = 0
+    this.outputStackMax = 0
+  }
 
-    /**
+  /**
      * Returns the offset corresponding to this label. This offset is computed
      * from the start of the method's bytecode. <i>This method is intended for
      * {@link Attribute} sub classes, and is normally not needed by class
@@ -249,14 +249,14 @@ export class Label {
      * @throws IllegalStateException
      * if this label is not resolved yet.
      */
-    public getOffset(): number {
-        if ((this.status & Label.RESOLVED) === 0) {
-            throw new Error("Label offset position has not been resolved yet");
-        }
-        return this.position;
+  public getOffset(): number {
+    if ((this.status & Label.RESOLVED) === 0) {
+      throw new Error('Label offset position has not been resolved yet')
     }
+    return this.position
+  }
 
-    /**
+  /**
      * Puts a reference to this label in the bytecode of a method. If the
      * position of the label is known, the offset is computed and written
      * directly. Otherwise, a null offset is written and a new forward reference
@@ -275,25 +275,25 @@ export class Label {
      * @throws IllegalArgumentException
      * if this label has not been created by the given code writer.
      */
-    put(owner: MethodWriter, out: ByteVector, source: number, wideOffset: boolean) {
-        if ((this.status & Label.RESOLVED) === 0) {
-            if (wideOffset) {
-                this.addReference(-1 - source, out.length);
-                out.putInt(-1);
-            } else {
-                this.addReference(source, out.length);
-                out.putShort(-1);
-            }
-        } else {
-            if (wideOffset) {
-                out.putInt(this.position - source);
-            } else {
-                out.putShort(this.position - source);
-            }
-        }
+  put(owner: MethodWriter, out: ByteVector, source: number, wideOffset: boolean) {
+    if ((this.status & Label.RESOLVED) === 0) {
+      if (wideOffset) {
+        this.addReference(-1 - source, out.length)
+        out.putInt(-1)
+      } else {
+        this.addReference(source, out.length)
+        out.putShort(-1)
+      }
+    } else {
+      if (wideOffset) {
+        out.putInt(this.position - source)
+      } else {
+        out.putShort(this.position - source)
+      }
     }
+  }
 
-    /**
+  /**
      * Adds a forward reference to this label. This method must be called only
      * for a true forward reference, i.e. only if this label is not resolved
      * yet. For backward references, the offset of the reference can be, and
@@ -306,21 +306,21 @@ export class Label {
      * the position where the offset for this forward reference must
      * be stored.
      */
-    private addReference(sourcePosition: number, referencePosition: number) {
-        if (this.srcAndRefPositions == null) {
-            this.srcAndRefPositions = new Array(6);
-        }
-        if (this.referenceCount >= this.srcAndRefPositions.length) {
-            let a: number[] = new Array(this.srcAndRefPositions.length + 6);
-            a.concat(this.srcAndRefPositions);
-            // java.lang.System.arraycopy(this.srcAndRefPositions, 0, a, 0, this.srcAndRefPositions.length);
-            this.srcAndRefPositions = a;
-        }
-        this.srcAndRefPositions[this.referenceCount++] = sourcePosition;
-        this.srcAndRefPositions[this.referenceCount++] = referencePosition;
+  private addReference(sourcePosition: number, referencePosition: number) {
+    if (this.srcAndRefPositions == null) {
+      this.srcAndRefPositions = new Array(6)
     }
+    if (this.referenceCount >= this.srcAndRefPositions.length) {
+      const a: number[] = new Array(this.srcAndRefPositions.length + 6)
+      a.concat(this.srcAndRefPositions)
+      // java.lang.System.arraycopy(this.srcAndRefPositions, 0, a, 0, this.srcAndRefPositions.length);
+      this.srcAndRefPositions = a
+    }
+    this.srcAndRefPositions[this.referenceCount++] = sourcePosition
+    this.srcAndRefPositions[this.referenceCount++] = referencePosition
+  }
 
-    /**
+  /**
      * Resolves all forward references to this label. This method must be called
      * when this label is added to the bytecode of the method, i.e. when its
      * position becomes known. This method fills in the blanks that where left
@@ -342,41 +342,41 @@ export class Label {
      * if this label has already been resolved, or if it has not
      * been created by the given code writer.
      */
-    resolve(owner: MethodWriter, position: number, data: Uint8Array): boolean {
-        assert(this.srcAndRefPositions);
-        let needUpdate: boolean = false;
-        this.status |= Label.RESOLVED;
-        this.position = position;
-        let i: number = 0;
-        while ((i < this.referenceCount)) {
-            let source: number = this.srcAndRefPositions[i++];
-            let reference: number = this.srcAndRefPositions[i++];
-            let offset: number;
-            if (source >= 0) {
-                offset = position - source;
-                if (offset < bits.SHORT_MIN || offset > bits.SHORT_MAX) {
-                    let opcode: number = data[reference - 1] & 255;
-                    if (opcode <= Opcodes.JSR) {
-                        data[reference - 1] = ((opcode + 49) | 0);
-                    } else {
-                        data[reference - 1] = ((opcode + 20) | 0);
-                    }
-                    needUpdate = true;
-                }
-                data[reference++] = ((offset >>> 8) | 0);
-                data[reference] = (offset | 0);
-            } else {
-                offset = position + source + 1;
-                data[reference++] = ((offset >>> 24) | 0);
-                data[reference++] = ((offset >>> 16) | 0);
-                data[reference++] = ((offset >>> 8) | 0);
-                data[reference] = (offset | 0);
-            }
-        };
-        return needUpdate;
+  resolve(owner: MethodWriter, position: number, data: Uint8Array): boolean {
+    assert(this.srcAndRefPositions)
+    let needUpdate = false
+    this.status |= Label.RESOLVED
+    this.position = position
+    let i = 0
+    while ((i < this.referenceCount)) {
+      const source: number = this.srcAndRefPositions[i++]
+      let reference: number = this.srcAndRefPositions[i++]
+      let offset: number
+      if (source >= 0) {
+        offset = position - source
+        if (offset < bits.SHORT_MIN || offset > bits.SHORT_MAX) {
+          const opcode: number = data[reference - 1] & 255
+          if (opcode <= Opcodes.JSR) {
+            data[reference - 1] = ((opcode + 49) | 0)
+          } else {
+            data[reference - 1] = ((opcode + 20) | 0)
+          }
+          needUpdate = true
+        }
+        data[reference++] = ((offset >>> 8) | 0)
+        data[reference] = (offset | 0)
+      } else {
+        offset = position + source + 1
+        data[reference++] = ((offset >>> 24) | 0)
+        data[reference++] = ((offset >>> 16) | 0)
+        data[reference++] = ((offset >>> 8) | 0)
+        data[reference] = (offset | 0)
+      }
     }
+    return needUpdate
+  }
 
-    /**
+  /**
      * Returns the first label of the series to which this label belongs. For an
      * isolated label or for the first label in a series of successive labels,
      * this method returns the label itself. For other labels it returns the
@@ -384,26 +384,26 @@ export class Label {
      *
      * @return the first label of the series to which this label belongs.
      */
-    getFirst(): Label {
-        return !ClassReader.FRAMES || this.frame == null ? this : this.frame.owner;
-    }
+  getFirst(): Label {
+    return !ClassReader.FRAMES || this.frame == null ? this : this.frame.owner
+  }
 
-    /**
+  /**
      * Returns true is this basic block belongs to the given subroutine.
      *
      * @param id
      * a subroutine id.
      * @return true is this basic block belongs to the given subroutine.
      */
-    inSubroutine(id: number): boolean {
-        assert(this.srcAndRefPositions);
-        if ((this.status & Label.VISITED) !== 0) {
-            return (this.srcAndRefPositions[((id >>> 32) | 0)] & (id | 0)) !== 0;
-        }
-        return false;
+  inSubroutine(id: number): boolean {
+    assert(this.srcAndRefPositions)
+    if ((this.status & Label.VISITED) !== 0) {
+      return (this.srcAndRefPositions[((id >>> 32) | 0)] & (id | 0)) !== 0
     }
+    return false
+  }
 
-    /**
+  /**
      * Returns true if this basic block and the given one belong to a common
      * subroutine.
      *
@@ -412,21 +412,21 @@ export class Label {
      * @return true if this basic block and the given one belong to a common
      * subroutine.
      */
-    inSameSubroutine(block: Label): boolean {
-        if ((this.status & Label.VISITED) === 0 || (block.status & Label.VISITED) === 0) {
-            return false;
-        }
-        assert(this.srcAndRefPositions);
-        assert(block.srcAndRefPositions);
-        for (let i: number = 0; i < this.srcAndRefPositions.length; ++i) {
-            if ((this.srcAndRefPositions[i] & block.srcAndRefPositions[i]) !== 0) {
-                return true;
-            }
-        }
-        return false;
+  inSameSubroutine(block: Label): boolean {
+    if ((this.status & Label.VISITED) === 0 || (block.status & Label.VISITED) === 0) {
+      return false
     }
+    assert(this.srcAndRefPositions)
+    assert(block.srcAndRefPositions)
+    for (let i = 0; i < this.srcAndRefPositions.length; ++i) {
+      if ((this.srcAndRefPositions[i] & block.srcAndRefPositions[i]) !== 0) {
+        return true
+      }
+    }
+    return false
+  }
 
-    /**
+  /**
      * Marks this basic block as belonging to the given subroutine.
      *
      * @param id
@@ -434,16 +434,16 @@ export class Label {
      * @param nbSubroutines
      * the total number of subroutines in the method.
      */
-    addToSubroutine(id: number, nbSubroutines: number) {
-        assert(this.srcAndRefPositions);
-        if ((this.status & Label.VISITED) === 0) {
-            this.status |= Label.VISITED;
-            this.srcAndRefPositions = new Array((nbSubroutines / 32 | 0) + 1);
-        }
-        this.srcAndRefPositions[((id >>> 32) | 0)] |= (id | 0);
+  addToSubroutine(id: number, nbSubroutines: number) {
+    assert(this.srcAndRefPositions)
+    if ((this.status & Label.VISITED) === 0) {
+      this.status |= Label.VISITED
+      this.srcAndRefPositions = new Array((nbSubroutines / 32 | 0) + 1)
     }
+    this.srcAndRefPositions[((id >>> 32) | 0)] |= (id | 0)
+  }
 
-    /**
+  /**
      * Finds the basic blocks that belong to a given subroutine, and marks these
      * blocks as belonging to this subroutine. This method follows the control
      * flow graph to find all the blocks that are reachable from the current
@@ -458,52 +458,52 @@ export class Label {
      * @param nbSubroutines
      * the total number of subroutines in the method.
      */
-    visitSubroutine(JSR: Label | null, id: number, nbSubroutines: number) {
-        let stack: Label | null = this;
-        while ((stack != null)) {
-            let l: Label = stack;
-            stack = l.next;
-            l.next = null;
-            if (JSR != null) {
-                if ((l.status & Label.VISITED2) !== 0) {
-                    continue;
-                }
-                l.status |= Label.VISITED2;
-                if ((l.status & Label.RET) !== 0) {
-                    if (!l.inSameSubroutine(JSR)) {
-                        let e: Edge = new Edge();
-                        e.info = l.inputStackTop;
-                        e.successor = JSR.successors.successor;
-                        e.next = l.successors;
-                        l.successors = e;
-                    }
-                }
-            } else {
-                if (l.inSubroutine(id)) {
-                    continue;
-                }
-                l.addToSubroutine(id, nbSubroutines);
-            }
-            let e: Edge | null = l.successors;
-            while ((e != null)) {
-                if ((l.status & Label.JSR) === 0 || (l.successors && e !== l.successors.next)) {
-                    if (e.successor && e.successor.next == null) {
-                        e.successor.next = stack;
-                        stack = e.successor;
-                    }
-                }
-                e = e.next;
-            };
-        };
+  visitSubroutine(JSR: Label | null, id: number, nbSubroutines: number) {
+    let stack: Label | null = this
+    while ((stack != null)) {
+      const l: Label = stack
+      stack = l.next
+      l.next = null
+      if (JSR != null) {
+        if ((l.status & Label.VISITED2) !== 0) {
+          continue
+        }
+        l.status |= Label.VISITED2
+        if ((l.status & Label.RET) !== 0) {
+          if (!l.inSameSubroutine(JSR)) {
+            const e: Edge = new Edge()
+            e.info = l.inputStackTop
+            e.successor = JSR.successors.successor
+            e.next = l.successors
+            l.successors = e
+          }
+        }
+      } else {
+        if (l.inSubroutine(id)) {
+          continue
+        }
+        l.addToSubroutine(id, nbSubroutines)
+      }
+      let e: Edge | null = l.successors
+      while ((e != null)) {
+        if ((l.status & Label.JSR) === 0 || (l.successors && e !== l.successors.next)) {
+          if (e.successor && e.successor.next == null) {
+            e.successor.next = stack
+            stack = e.successor
+          }
+        }
+        e = e.next
+      }
     }
+  }
 
-    /**
+  /**
      * Returns a string representation of this label.
      *
      * @return a string representation of this label.
      */
-    public toString(): string {
-        return "Lable"
-        // return "L" + java.lang.System.identityHashCode(this);
-    }
+  public toString(): string {
+    return 'Lable'
+    // return "L" + java.lang.System.identityHashCode(this);
+  }
 }

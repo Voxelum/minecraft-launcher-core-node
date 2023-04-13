@@ -52,26 +52,26 @@
  *
  * @author Eric Bruneton
  */
-import { Opcodes } from "./Opcodes"
-import { Handle } from "./Handle"
-import { Label } from "./Label"
-import { AnnotationVisitor } from "./AnnotationVisitor"
-import { TypePath } from "./TypePath";
-import { Attribute } from "./Attribute";
+import { Opcodes } from './Opcodes'
+import { Handle } from './Handle'
+import { Label } from './Label'
+import { AnnotationVisitor } from './AnnotationVisitor'
+import { TypePath } from './TypePath'
+import { Attribute } from './Attribute'
 export abstract class MethodVisitor {
-    /**
+  /**
      * The ASM API version implemented by this visitor. The value of this field
      * must be one of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
      */
-    api: number;
+  api: number
 
-    /**
+  /**
      * The method visitor to which this visitor must delegate method calls. May
      * be null.
      */
-    mv: MethodVisitor | null;
+  mv: MethodVisitor | null
 
-    /**
+  /**
      * Constructs a new {@link MethodVisitor}.
      *
      * @param api
@@ -81,16 +81,16 @@ export abstract class MethodVisitor {
      * the method visitor to which this visitor must delegate method
      * calls. May be null.
      */
-    public constructor(api: number, mv: MethodVisitor | null = null) {
-        this.api = 0;
-        if (api !== Opcodes.ASM4 && api !== Opcodes.ASM5) {
-            throw new Error();
-        }
-        this.api = api;
-        this.mv = mv;
+  public constructor(api: number, mv: MethodVisitor | null = null) {
+    this.api = 0
+    if (api !== Opcodes.ASM4 && api !== Opcodes.ASM5) {
+      throw new Error()
     }
+    this.api = api
+    this.mv = mv
+  }
 
-    /**
+  /**
      * Visits a parameter of this method.
      *
      * @param name
@@ -100,16 +100,16 @@ export abstract class MethodVisitor {
      * <tt>ACC_SYNTHETIC</tt> or/and <tt>ACC_MANDATED</tt> are
      * allowed (see {@link Opcodes}).
      */
-    public visitParameter(name: string | null, access: number) {
-        if (this.api < Opcodes.ASM5) {
-            throw new Error();
-        }
-        if (this.mv != null) {
-            this.mv.visitParameter(name, access);
-        }
+  public visitParameter(name: string | null, access: number) {
+    if (this.api < Opcodes.ASM5) {
+      throw new Error()
     }
+    if (this.mv != null) {
+      this.mv.visitParameter(name, access)
+    }
+  }
 
-    /**
+  /**
      * Visits the default value of this annotation interface method.
      *
      * @return a visitor to the visit the actual default value of this
@@ -119,14 +119,14 @@ export abstract class MethodVisitor {
      * ignored. Moreover, exacly one visit method must be called on this
      * annotation visitor, followed by visitEnd.
      */
-    public visitAnnotationDefault(): AnnotationVisitor | null {
-        if (this.mv != null) {
-            return this.mv.visitAnnotationDefault();
-        }
-        return null;
+  public visitAnnotationDefault(): AnnotationVisitor | null {
+    if (this.mv != null) {
+      return this.mv.visitAnnotationDefault()
     }
+    return null
+  }
 
-    /**
+  /**
      * Visits an annotation of this method.
      *
      * @param desc
@@ -136,14 +136,14 @@ export abstract class MethodVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitAnnotation(desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.mv != null) {
-            return this.mv.visitAnnotation(desc, visible);
-        }
-        return null;
+  public visitAnnotation(desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.mv != null) {
+      return this.mv.visitAnnotation(desc, visible)
     }
+    return null
+  }
 
-    /**
+  /**
      * Visits an annotation on a type in the method signature.
      *
      * @param typeRef
@@ -168,17 +168,17 @@ export abstract class MethodVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitTypeAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.api < Opcodes.ASM5) {
-            throw new Error();
-        }
-        if (this.mv != null) {
-            return this.mv.visitTypeAnnotation(typeRef, typePath, desc, visible);
-        }
-        return null;
+  public visitTypeAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.api < Opcodes.ASM5) {
+      throw new Error()
     }
+    if (this.mv != null) {
+      return this.mv.visitTypeAnnotation(typeRef, typePath, desc, visible)
+    }
+    return null
+  }
 
-    /**
+  /**
      * Visits an annotation of a parameter this method.
      *
      * @param parameter
@@ -190,35 +190,35 @@ export abstract class MethodVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitParameterAnnotation(parameter: number, desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.mv != null) {
-            return this.mv.visitParameterAnnotation(parameter, desc, visible);
-        }
-        return null;
+  public visitParameterAnnotation(parameter: number, desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.mv != null) {
+      return this.mv.visitParameterAnnotation(parameter, desc, visible)
     }
+    return null
+  }
 
-    /**
+  /**
      * Visits a non standard attribute of this method.
      *
      * @param attr
      * an attribute.
      */
-    public visitAttribute(attr: Attribute) {
-        if (this.mv != null) {
-            this.mv.visitAttribute(attr);
-        }
+  public visitAttribute(attr: Attribute) {
+    if (this.mv != null) {
+      this.mv.visitAttribute(attr)
     }
+  }
 
-    /**
+  /**
      * Starts the visit of the method's code, if any (i.e. non abstract method).
      */
-    public visitCode() {
-        if (this.mv != null) {
-            this.mv.visitCode();
-        }
+  public visitCode() {
+    if (this.mv != null) {
+      this.mv.visitCode()
     }
+  }
 
-    /**
+  /**
      * Visits the current state of the local variables and operand stack
      * elements. This method must(*) be called <i>just before</i> any
      * instruction <b>i</b> that follows an unconditional branch instruction
@@ -293,18 +293,18 @@ export abstract class MethodVisitor {
      * instruction between the two (unless this frame is a
      * Opcodes#F_SAME frame, in which case it is silently ignored).
      */
-    public visitFrame(type?: any, nLocal?: any, local?: any, nStack?: any, stack?: any): any {
-        if (((typeof type === "number") || type === null) && ((typeof nLocal === "number") || nLocal === null) && ((local != null && local instanceof Array) || local === null) && ((typeof nStack === "number") || nStack === null) && ((stack != null && stack instanceof Array) || stack === null)) {
-            let __args = Array.prototype.slice.call(arguments);
-            return <any>(() => {
-                if (this.mv != null) {
-                    this.mv.visitFrame(type, nLocal, local, nStack, stack);
-                }
-            })();
-        } else { throw new Error("invalid overload"); }
-    }
+  public visitFrame(type?: any, nLocal?: any, local?: any, nStack?: any, stack?: any): any {
+    if (((typeof type === 'number') || type === null) && ((typeof nLocal === 'number') || nLocal === null) && ((local != null && local instanceof Array) || local === null) && ((typeof nStack === 'number') || nStack === null) && ((stack != null && stack instanceof Array) || stack === null)) {
+      const __args = Array.prototype.slice.call(arguments)
+      return <any>(() => {
+        if (this.mv != null) {
+          this.mv.visitFrame(type, nLocal, local, nStack, stack)
+        }
+      })()
+    } else { throw new Error('invalid overload') }
+  }
 
-    /**
+  /**
      * Visits a zero operand instruction.
      *
      * @param opcode
@@ -324,13 +324,13 @@ export abstract class MethodVisitor {
      * DRETURN, ARETURN, RETURN, ARRAYLENGTH, ATHROW, MONITORENTER,
      * or MONITOREXIT.
      */
-    public visitInsn(opcode: number) {
-        if (this.mv != null) {
-            this.mv.visitInsn(opcode);
-        }
+  public visitInsn(opcode: number) {
+    if (this.mv != null) {
+      this.mv.visitInsn(opcode)
     }
+  }
 
-    /**
+  /**
      * Visits an instruction with a single int operand.
      *
      * @param opcode
@@ -348,13 +348,13 @@ export abstract class MethodVisitor {
      * {@link Opcodes#T_BYTE}, {@link Opcodes#T_SHORT},
      * {@link Opcodes#T_INT} or {@link Opcodes#T_LONG}.
      */
-    public visitIntInsn(opcode: number, operand: number) {
-        if (this.mv != null) {
-            this.mv.visitIntInsn(opcode, operand);
-        }
+  public visitIntInsn(opcode: number, operand: number) {
+    if (this.mv != null) {
+      this.mv.visitIntInsn(opcode, operand)
     }
+  }
 
-    /**
+  /**
      * Visits a local variable instruction. A local variable instruction is an
      * instruction that loads or stores the value of a local variable.
      *
@@ -366,13 +366,13 @@ export abstract class MethodVisitor {
      * the operand of the instruction to be visited. This operand is
      * the index of a local variable.
      */
-    public visitVarInsn(opcode: number, __var: number) {
-        if (this.mv != null) {
-            this.mv.visitVarInsn(opcode, __var);
-        }
+  public visitVarInsn(opcode: number, __var: number) {
+    if (this.mv != null) {
+      this.mv.visitVarInsn(opcode, __var)
     }
+  }
 
-    /**
+  /**
      * Visits a type instruction. A type instruction is an instruction that
      * takes the internal name of a class as parameter.
      *
@@ -384,13 +384,13 @@ export abstract class MethodVisitor {
      * must be the internal name of an object or array class (see
      * {@link Type#getInternalName() getInternalName}).
      */
-    public visitTypeInsn(opcode: number, type: string) {
-        if (this.mv != null) {
-            this.mv.visitTypeInsn(opcode, type);
-        }
+  public visitTypeInsn(opcode: number, type: string) {
+    if (this.mv != null) {
+      this.mv.visitTypeInsn(opcode, type)
     }
+  }
 
-    /**
+  /**
      * Visits a field instruction. A field instruction is an instruction that
      * loads or stores the value of a field of an object.
      *
@@ -405,13 +405,13 @@ export abstract class MethodVisitor {
      * @param desc
      * the field's descriptor (see {@link Type Type}).
      */
-    public visitFieldInsn(opcode: number, owner: string, name: string | null, desc: string | null) {
-        if (this.mv != null) {
-            this.mv.visitFieldInsn(opcode, owner, name, desc);
-        }
+  public visitFieldInsn(opcode: number, owner: string, name: string | null, desc: string | null) {
+    if (this.mv != null) {
+      this.mv.visitFieldInsn(opcode, owner, name, desc)
     }
+  }
 
-    /**
+  /**
      * Visits a method instruction. A method instruction is an instruction that
      * invokes a method.
      *
@@ -427,18 +427,18 @@ export abstract class MethodVisitor {
      * @param desc
      * the method's descriptor (see {@link Type Type}).
      */
-    public visitMethodInsn$int$java_lang_String$java_lang_String$java_lang_String(opcode: number, owner: string, name: string, desc: string) {
-        if (this.api >= Opcodes.ASM5) {
-            let itf: boolean = opcode === Opcodes.INVOKEINTERFACE;
-            this.visitMethodInsn(opcode, owner, name, desc, itf);
-            return;
-        }
-        if (this.mv != null) {
-            this.mv.visitMethodInsn(opcode, owner, name, desc);
-        }
+  public visitMethodInsn$int$java_lang_String$java_lang_String$java_lang_String(opcode: number, owner: string, name: string, desc: string) {
+    if (this.api >= Opcodes.ASM5) {
+      const itf: boolean = opcode === Opcodes.INVOKEINTERFACE
+      this.visitMethodInsn(opcode, owner, name, desc, itf)
+      return
     }
+    if (this.mv != null) {
+      this.mv.visitMethodInsn(opcode, owner, name, desc)
+    }
+  }
 
-    /**
+  /**
      * Visits a method instruction. A method instruction is an instruction that
      * invokes a method.
      *
@@ -456,27 +456,27 @@ export abstract class MethodVisitor {
      * @param itf
      * if the method's owner class is an interface.
      */
-    public visitMethodInsn(opcode?: any, owner?: any, name?: any, desc?: any, itf?: any): any {
-        if (((typeof opcode === "number") || opcode === null) && ((typeof owner === "string") || owner === null) && ((typeof name === "string") || name === null) && ((typeof desc === "string") || desc === null) && ((typeof itf === "boolean") || itf === null)) {
-            let __args = Array.prototype.slice.call(arguments);
-            return <any>(() => {
-                if (this.api < Opcodes.ASM5) {
-                    if (itf !== (opcode === Opcodes.INVOKEINTERFACE)) {
-                        throw new Error("INVOKESPECIAL/STATIC on interfaces require ASM 5");
-                    }
-                    this.visitMethodInsn(opcode, owner, name, desc);
-                    return;
-                }
-                if (this.mv != null) {
-                    this.mv.visitMethodInsn(opcode, owner, name, desc, itf);
-                }
-            })();
-        } else if (((typeof opcode === "number") || opcode === null) && ((typeof owner === "string") || owner === null) && ((typeof name === "string") || name === null) && ((typeof desc === "string") || desc === null) && itf === undefined) {
-            return <any>this.visitMethodInsn$int$java_lang_String$java_lang_String$java_lang_String(opcode, owner, name, desc);
-        } else { throw new Error("invalid overload"); }
-    }
+  public visitMethodInsn(opcode?: any, owner?: any, name?: any, desc?: any, itf?: any): any {
+    if (((typeof opcode === 'number') || opcode === null) && ((typeof owner === 'string') || owner === null) && ((typeof name === 'string') || name === null) && ((typeof desc === 'string') || desc === null) && ((typeof itf === 'boolean') || itf === null)) {
+      const __args = Array.prototype.slice.call(arguments)
+      return <any>(() => {
+        if (this.api < Opcodes.ASM5) {
+          if (itf !== (opcode === Opcodes.INVOKEINTERFACE)) {
+            throw new Error('INVOKESPECIAL/STATIC on interfaces require ASM 5')
+          }
+          this.visitMethodInsn(opcode, owner, name, desc)
+          return
+        }
+        if (this.mv != null) {
+          this.mv.visitMethodInsn(opcode, owner, name, desc, itf)
+        }
+      })()
+    } else if (((typeof opcode === 'number') || opcode === null) && ((typeof owner === 'string') || owner === null) && ((typeof name === 'string') || name === null) && ((typeof desc === 'string') || desc === null) && itf === undefined) {
+      return <any> this.visitMethodInsn$int$java_lang_String$java_lang_String$java_lang_String(opcode, owner, name, desc)
+    } else { throw new Error('invalid overload') }
+  }
 
-    /**
+  /**
      * Visits an invokedynamic instruction.
      *
      * @param name
@@ -492,13 +492,13 @@ export abstract class MethodVisitor {
      * value. This method is allowed to modify the content of the
      * array so a caller should expect that this array may change.
      */
-    public visitInvokeDynamicInsn(name: string, desc: string, bsm: Handle, ...bsmArgs: any[]) {
-        if (this.mv != null) {
-            this.mv.visitInvokeDynamicInsn(name, desc, bsm, ...bsmArgs);
-        }
+  public visitInvokeDynamicInsn(name: string, desc: string, bsm: Handle, ...bsmArgs: any[]) {
+    if (this.mv != null) {
+      this.mv.visitInvokeDynamicInsn(name, desc, bsm, ...bsmArgs)
     }
+  }
 
-    /**
+  /**
      * Visits a jump instruction. A jump instruction is an instruction that may
      * jump to another instruction.
      *
@@ -512,26 +512,26 @@ export abstract class MethodVisitor {
      * a label that designates the instruction to which the jump
      * instruction may jump.
      */
-    public visitJumpInsn(opcode: number, label: Label) {
-        if (this.mv != null) {
-            this.mv.visitJumpInsn(opcode, label);
-        }
+  public visitJumpInsn(opcode: number, label: Label) {
+    if (this.mv != null) {
+      this.mv.visitJumpInsn(opcode, label)
     }
+  }
 
-    /**
+  /**
      * Visits a label. A label designates the instruction that will be visited
      * just after it.
      *
      * @param label
      * a {@link Label Label} object.
      */
-    public visitLabel(label: Label) {
-        if (this.mv != null) {
-            this.mv.visitLabel(label);
-        }
+  public visitLabel(label: Label) {
+    if (this.mv != null) {
+      this.mv.visitLabel(label)
     }
+  }
 
-    /**
+  /**
      * Visits a LDC instruction. Note that new constant types may be added in
      * future versions of the Java Virtual Machine. To easily detect new
      * constant types, implementations of this method should check for
@@ -575,13 +575,13 @@ export abstract class MethodVisitor {
      * {@link Handle} for MethodType and MethodHandle constants, for
      * classes whose version is 51.0.
      */
-    public visitLdcInsn(cst: any) {
-        if (this.mv != null) {
-            this.mv.visitLdcInsn(cst);
-        }
+  public visitLdcInsn(cst: any) {
+    if (this.mv != null) {
+      this.mv.visitLdcInsn(cst)
     }
+  }
 
-    /**
+  /**
      * Visits an IINC instruction.
      *
      * @param var
@@ -589,13 +589,13 @@ export abstract class MethodVisitor {
      * @param increment
      * amount to increment the local variable by.
      */
-    public visitIincInsn(__var: number, increment: number) {
-        if (this.mv != null) {
-            this.mv.visitIincInsn(__var, increment);
-        }
+  public visitIincInsn(__var: number, increment: number) {
+    if (this.mv != null) {
+      this.mv.visitIincInsn(__var, increment)
     }
+  }
 
-    /**
+  /**
      * Visits a TABLESWITCH instruction.
      *
      * @param min
@@ -608,13 +608,13 @@ export abstract class MethodVisitor {
      * beginnings of the handler blocks. <tt>labels[i]</tt> is the
      * beginning of the handler block for the <tt>min + i</tt> key.
      */
-    public visitTableSwitchInsn(min: number, max: number, dflt: Label, ...labels: Label[]) {
-        if (this.mv != null) {
-            this.mv.visitTableSwitchInsn(min, max, dflt, ...labels);
-        }
+  public visitTableSwitchInsn(min: number, max: number, dflt: Label, ...labels: Label[]) {
+    if (this.mv != null) {
+      this.mv.visitTableSwitchInsn(min, max, dflt, ...labels)
     }
+  }
 
-    /**
+  /**
      * Visits a LOOKUPSWITCH instruction.
      *
      * @param dflt
@@ -625,13 +625,13 @@ export abstract class MethodVisitor {
      * beginnings of the handler blocks. <tt>labels[i]</tt> is the
      * beginning of the handler block for the <tt>keys[i]</tt> key.
      */
-    public visitLookupSwitchInsn(dflt: Label, keys: number[], labels: Label[]) {
-        if (this.mv != null) {
-            this.mv.visitLookupSwitchInsn(dflt, keys, labels);
-        }
+  public visitLookupSwitchInsn(dflt: Label, keys: number[], labels: Label[]) {
+    if (this.mv != null) {
+      this.mv.visitLookupSwitchInsn(dflt, keys, labels)
     }
+  }
 
-    /**
+  /**
      * Visits a MULTIANEWARRAY instruction.
      *
      * @param desc
@@ -639,13 +639,13 @@ export abstract class MethodVisitor {
      * @param dims
      * number of dimensions of the array to allocate.
      */
-    public visitMultiANewArrayInsn(desc: string, dims: number) {
-        if (this.mv != null) {
-            this.mv.visitMultiANewArrayInsn(desc, dims);
-        }
+  public visitMultiANewArrayInsn(desc: string, dims: number) {
+    if (this.mv != null) {
+      this.mv.visitMultiANewArrayInsn(desc, dims)
     }
+  }
 
-    /**
+  /**
      * Visits an annotation on an instruction. This method must be called just
      * <i>after</i> the annotated instruction. It can be called several times
      * for the same instruction.
@@ -676,17 +676,17 @@ export abstract class MethodVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitInsnAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.api < Opcodes.ASM5) {
-            throw new Error();
-        }
-        if (this.mv != null) {
-            return this.mv.visitInsnAnnotation(typeRef, typePath, desc, visible);
-        }
-        return null;
+  public visitInsnAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.api < Opcodes.ASM5) {
+      throw new Error()
     }
+    if (this.mv != null) {
+      return this.mv.visitInsnAnnotation(typeRef, typePath, desc, visible)
+    }
+    return null
+  }
 
-    /**
+  /**
      * Visits a try catch block.
      *
      * @param start
@@ -703,13 +703,13 @@ export abstract class MethodVisitor {
      * if one of the labels has already been visited by this visitor
      * (by the {@link #visitLabel visitLabel} method).
      */
-    public visitTryCatchBlock(start: Label, end: Label, handler: Label, type: string | null) {
-        if (this.mv != null) {
-            this.mv.visitTryCatchBlock(start, end, handler, type);
-        }
+  public visitTryCatchBlock(start: Label, end: Label, handler: Label, type: string | null) {
+    if (this.mv != null) {
+      this.mv.visitTryCatchBlock(start, end, handler, type)
     }
+  }
 
-    /**
+  /**
      * Visits an annotation on an exception handler type. This method must be
      * called <i>after</i> the {@link #visitTryCatchBlock} for the annotated
      * exception handler. It can be called several times for the same exception
@@ -730,17 +730,17 @@ export abstract class MethodVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitTryCatchAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.api < Opcodes.ASM5) {
-            throw new Error();
-        }
-        if (this.mv != null) {
-            return this.mv.visitTryCatchAnnotation(typeRef, typePath, desc, visible);
-        }
-        return null;
+  public visitTryCatchAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.api < Opcodes.ASM5) {
+      throw new Error()
     }
+    if (this.mv != null) {
+      return this.mv.visitTryCatchAnnotation(typeRef, typePath, desc, visible)
+    }
+    return null
+  }
 
-    /**
+  /**
      * Visits a local variable declaration.
      *
      * @param name
@@ -763,13 +763,13 @@ export abstract class MethodVisitor {
      * if one of the labels has not already been visited by this
      * visitor (by the {@link #visitLabel visitLabel} method).
      */
-    public visitLocalVariable(name: string | null, desc: string | null, signature: string | null, start: Label, end: Label, index: number) {
-        if (this.mv != null) {
-            this.mv.visitLocalVariable(name, desc, signature, start, end, index);
-        }
+  public visitLocalVariable(name: string | null, desc: string | null, signature: string | null, start: Label, end: Label, index: number) {
+    if (this.mv != null) {
+      this.mv.visitLocalVariable(name, desc, signature, start, end, index)
     }
+  }
 
-    /**
+  /**
      * Visits an annotation on a local variable type.
      *
      * @param typeRef
@@ -798,17 +798,17 @@ export abstract class MethodVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitLocalVariableAnnotation(typeRef: number, typePath: TypePath | null, start: Label[], end: Label[], index: number[], desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.api < Opcodes.ASM5) {
-            throw new Error();
-        }
-        if (this.mv != null) {
-            return this.mv.visitLocalVariableAnnotation(typeRef, typePath, start, end, index, desc, visible);
-        }
-        return null;
+  public visitLocalVariableAnnotation(typeRef: number, typePath: TypePath | null, start: Label[], end: Label[], index: number[], desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.api < Opcodes.ASM5) {
+      throw new Error()
     }
+    if (this.mv != null) {
+      return this.mv.visitLocalVariableAnnotation(typeRef, typePath, start, end, index, desc, visible)
+    }
+    return null
+  }
 
-    /**
+  /**
      * Visits a line number declaration.
      *
      * @param line
@@ -820,13 +820,13 @@ export abstract class MethodVisitor {
      * if <tt>start</tt> has not already been visited by this
      * visitor (by the {@link #visitLabel visitLabel} method).
      */
-    public visitLineNumber(line: number, start: Label) {
-        if (this.mv != null) {
-            this.mv.visitLineNumber(line, start);
-        }
+  public visitLineNumber(line: number, start: Label) {
+    if (this.mv != null) {
+      this.mv.visitLineNumber(line, start)
     }
+  }
 
-    /**
+  /**
      * Visits the maximum stack size and the maximum number of local variables
      * of the method.
      *
@@ -835,20 +835,20 @@ export abstract class MethodVisitor {
      * @param maxLocals
      * maximum number of local variables for the method.
      */
-    public visitMaxs(maxStack: number, maxLocals: number) {
-        if (this.mv != null) {
-            this.mv.visitMaxs(maxStack, maxLocals);
-        }
+  public visitMaxs(maxStack: number, maxLocals: number) {
+    if (this.mv != null) {
+      this.mv.visitMaxs(maxStack, maxLocals)
     }
+  }
 
-    /**
+  /**
      * Visits the end of the method. This method, which is the last one to be
      * called, is used to inform the visitor that all the annotations and
      * attributes of the method have been visited.
      */
-    public visitEnd() {
-        if (this.mv != null) {
-            this.mv.visitEnd();
-        }
+  public visitEnd() {
+    if (this.mv != null) {
+      this.mv.visitEnd()
     }
+  }
 }

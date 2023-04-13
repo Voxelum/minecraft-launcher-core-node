@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 
-Provide some functions to query Minecraft server status.
+Parse Java bytecode, which port from [java asm package](https://asm.ow2.io/).
 
 ## Usage
 

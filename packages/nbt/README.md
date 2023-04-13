@@ -15,15 +15,15 @@ Provide function to read NBT binary format to json.
 You can simply deserialize/serialize nbt.
 
 ```ts
-    import { serialize, deserialize } from "@xmcl/nbt";
-    const fileData: Buffer;
-    // compressed = undefined will not perform compress algorithm
-    // compressed = true will use gzip algorithm
-    const compressed: true | "gzip" | "deflate" | undefined;
-    const readed: any = await deserialize(fileData, { compressed });
-    // The deserialize return object contain NBTPrototype property which define its nbt type
-    // After you do the modification on it, you can serialize it back to NBT
-    const buf: Buffer = await serialize(readed, { compressed });
+import { serialize, deserialize } from "@xmcl/nbt";
+const fileData: Buffer;
+// compressed = undefined will not perform compress algorithm
+// compressed = true will use gzip algorithm
+const compressed: true | "gzip" | "deflate" | undefined;
+const readed: any = await deserialize(fileData, { compressed });
+// The deserialize return object contain NBTPrototype property which define its nbt type
+// After you do the modification on it, you can serialize it back to NBT
+const buf: Buffer = await serialize(readed, { compressed });
 ```
 
 You can use class with annotation (decorator) to serialize/deserialize the type consistently.

@@ -34,9 +34,9 @@
  * @author Remi Forax
  * @author Eric Bruneton
  */
-import { Opcodes } from "./Opcodes"
+import { Opcodes } from './Opcodes'
 export class Handle {
-    /**
+  /**
      * The kind of field or method designated by this Handle. Should be
      * {@link Opcodes#H_GETFIELD}, {@link Opcodes#H_GETSTATIC},
      * {@link Opcodes#H_PUTFIELD}, {@link Opcodes#H_PUTSTATIC},
@@ -44,30 +44,30 @@ export class Handle {
      * {@link Opcodes#H_INVOKESPECIAL}, {@link Opcodes#H_NEWINVOKESPECIAL} or
      * {@link Opcodes#H_INVOKEINTERFACE}.
      */
-    readonly tag: number;
+  readonly tag: number
 
-    /**
+  /**
      * The internal name of the class that owns the field or method designated
      * by this handle.
      */
-    readonly owner: string;
+  readonly owner: string
 
-    /**
+  /**
      * The name of the field or method designated by this handle.
      */
-    readonly name: string;
+  readonly name: string
 
-    /**
+  /**
      * The descriptor of the field or method designated by this handle.
      */
-    readonly descriptor: string;
+  readonly descriptor: string
 
-    /**
+  /**
      * Indicate if the owner is an interface or not.
      */
-    readonly isInterface: boolean;
+  readonly isInterface: boolean
 
-    /**
+  /**
      * Constructs a new field or method handle.
      *
      * @param tag
@@ -90,30 +90,30 @@ export class Handle {
      * @param itf
      * true if the owner is an interface.
      */
-    public constructor(tag: number, owner: string, name: string, desc: string, itf: boolean = tag == Opcodes.H_INVOKEINTERFACE) {
-        this.tag = tag;
-        this.owner = owner;
-        this.name = name;
-        this.descriptor = desc;
-        this.isInterface = itf;
-    }
+  public constructor(tag: number, owner: string, name: string, desc: string, itf: boolean = tag === Opcodes.H_INVOKEINTERFACE) {
+    this.tag = tag
+    this.owner = owner
+    this.name = name
+    this.descriptor = desc
+    this.isInterface = itf
+  }
 
-    public equals(obj: any): boolean {
-        if (obj === this) {
-            return true;
-        }
-        if (!(obj != null && obj instanceof Handle)) {
-            return false;
-        }
-        let h: Handle = obj;
-        return this.tag === h.tag && this.isInterface === h.isInterface && (this.owner === h.owner) && (this.name === h.name) && (this.descriptor === h.descriptor);
+  public equals(obj: any): boolean {
+    if (obj === this) {
+      return true
     }
-
-    public hashCode(): number {
-        return this.tag + (this.isInterface ? 64 : 0) + (<any>this.owner.toString()) * (<any>this.name.toString()) * (<any>this.descriptor.toString());
+    if (!(obj != null && obj instanceof Handle)) {
+      return false
     }
+    const h: Handle = obj
+    return this.tag === h.tag && this.isInterface === h.isInterface && (this.owner === h.owner) && (this.name === h.name) && (this.descriptor === h.descriptor)
+  }
 
-    /**
+  public hashCode(): number {
+    return this.tag + (this.isInterface ? 64 : 0) + (<any> this.owner.toString()) * (<any> this.name.toString()) * (<any> this.descriptor.toString())
+  }
+
+  /**
      * Returns the textual representation of this handle. The textual
      * representation is:
      *
@@ -126,7 +126,7 @@ export class Handle {
      *
      * . As this format is unambiguous, it can be parsed if necessary.
      */
-    public toString(): string {
-        return this.owner + "." + this.name + this.descriptor + " (" + this.tag + (this.isInterface ? " itf" : "") + ")";
-    }
+  public toString(): string {
+    return this.owner + '.' + this.name + this.descriptor + ' (' + this.tag + (this.isInterface ? ' itf' : '') + ')'
+  }
 }

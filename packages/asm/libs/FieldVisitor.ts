@@ -35,25 +35,25 @@
  *
  * @author Eric Bruneton
  */
-import { Opcodes } from "./Opcodes"
-import { TypePath } from "./TypePath"
-import { AnnotationVisitor } from "./AnnotationVisitor"
-import { Attribute } from "./Attribute"
+import { Opcodes } from './Opcodes'
+import { TypePath } from './TypePath'
+import { AnnotationVisitor } from './AnnotationVisitor'
+import { Attribute } from './Attribute'
 
 export abstract class FieldVisitor {
-    /**
+  /**
      * The ASM API version implemented by this visitor. The value of this field
      * must be one of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
      */
-    api: number;
+  api: number
 
-    /**
+  /**
      * The field visitor to which this visitor must delegate method calls. May
      * be null.
      */
-    fv: FieldVisitor | null;
+  fv: FieldVisitor | null
 
-    /**
+  /**
      * Constructs a new {@link FieldVisitor}.
      *
      * @param api
@@ -63,16 +63,16 @@ export abstract class FieldVisitor {
      * the field visitor to which this visitor must delegate method
      * calls. May be null.
      */
-    public constructor(api: number, fv: FieldVisitor | null = null) {
-        this.api = 0;
-        if (api !== Opcodes.ASM4 && api !== Opcodes.ASM5) {
-            throw new Error();
-        }
-        this.api = api;
-        this.fv = fv;
+  public constructor(api: number, fv: FieldVisitor | null = null) {
+    this.api = 0
+    if (api !== Opcodes.ASM4 && api !== Opcodes.ASM5) {
+      throw new Error()
     }
+    this.api = api
+    this.fv = fv
+  }
 
-    /**
+  /**
      * Visits an annotation of the field.
      *
      * @param desc
@@ -82,14 +82,14 @@ export abstract class FieldVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitAnnotation(desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.fv != null) {
-            return this.fv.visitAnnotation(desc, visible);
-        }
-        return null;
+  public visitAnnotation(desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.fv != null) {
+      return this.fv.visitAnnotation(desc, visible)
     }
+    return null
+  }
 
-    /**
+  /**
      * Visits an annotation on the type of the field.
      *
      * @param typeRef
@@ -107,39 +107,36 @@ export abstract class FieldVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitTypeAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.api < Opcodes.ASM5) {
-            throw new Error();
-        }
-        if (this.fv != null) {
-            return this.fv.visitTypeAnnotation(typeRef, typePath, desc, visible);
-        }
-        return null;
+  public visitTypeAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.api < Opcodes.ASM5) {
+      throw new Error()
     }
+    if (this.fv != null) {
+      return this.fv.visitTypeAnnotation(typeRef, typePath, desc, visible)
+    }
+    return null
+  }
 
-    /**
+  /**
      * Visits a non standard attribute of the field.
      *
      * @param attr
      * an attribute.
      */
-    public visitAttribute(attr: Attribute) {
-        if (this.fv != null) {
-            this.fv.visitAttribute(attr);
-        }
+  public visitAttribute(attr: Attribute) {
+    if (this.fv != null) {
+      this.fv.visitAttribute(attr)
     }
+  }
 
-    /**
+  /**
      * Visits the end of the field. This method, which is the last one to be
      * called, is used to inform the visitor that all the annotations and
      * attributes of the field have been visited.
      */
-    public visitEnd() {
-        if (this.fv != null) {
-            this.fv.visitEnd();
-        }
+  public visitEnd() {
+    if (this.fv != null) {
+      this.fv.visitEnd()
     }
+  }
 }
-
-
-
