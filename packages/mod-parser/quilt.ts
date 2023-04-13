@@ -1,4 +1,4 @@
-import { FileSystem, resolveFileSystem } from "@xmcl/system";
+import { FileSystem, resolveFileSystem } from '@xmcl/system'
 
 export interface QuiltModMetadata {
   /**
@@ -263,10 +263,11 @@ export interface QuiltLoaderData {
  * @param file The jar file or directory path. I can also be the binary content of the jar if you have already read the jar.
  */
 export async function readQuiltMod(file: FileSystem | string | Uint8Array): Promise<QuiltModMetadata> {
-    const fs = await resolveFileSystem(file);
-    const content = await fs.readFile("quilt.mod.json", "utf-8");
-    fs.close();
-    return JSON.parse(content.replace(/^\uFEFF/g, "").replace(/\n/g, ""));
+  const fs = await resolveFileSystem(file)
+  try {
+    const content = await fs.readFile('quilt.mod.json', 'utf-8')
+    return JSON.parse(content.replace(/^\uFEFF/g, '').replace(/\n/g, ''))
+  } finally {
+    fs.close()
+  }
 }
-
-

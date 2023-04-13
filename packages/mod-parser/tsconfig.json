@@ -7,19 +7,8 @@
         "quilt.ts",
         "index.ts"
     ],
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "target": "es2018",
-        "module": "esnext",
-        
-        "lib": [
-            "dom"
-        ],
-        "experimentalDecorators": true,
-        "declaration": true,
-        "downlevelIteration": true,
-        "strict": true,
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true
-    }
+        "outDir": "./dist"
+    },
 }
