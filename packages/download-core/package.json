@@ -1,15 +1,15 @@
 {
-  "name": "@xmcl/installer",
-  "version": "4.4.0",
+  "name": "@xmcl/download-core",
+  "version": "0.0.1",
   "main": "./index.ts",
-  "description": "Provides Minecraft/Forge/Fabric/Liteloader installers",
+  "description": "Provide a high performance downloader based on undici",
   "engines": {
     "node": ">=16.0"
   },
   "scripts": {
     "build:type": "tsc",
-    "build:cjs": "esbuild --target=node16 --platform=node --external:@xmcl/* --external:http-cache-semantics --external:undici --external:yauzl --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
-    "build:esm": "esbuild --target=node16 --platform=node --external:@xmcl/* --external:http-cache-semantics --external:undici --external:yauzl --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
+    "build:cjs": "esbuild --target=node16 --platform=node --external:http-cache-semantics --external:undici --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=node16 --platform=node --external:http-cache-semantics --external:undici --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
   },
   "publishConfig": {
     "access": "public",
@@ -17,14 +17,9 @@
     "module": "./dist/index.mjs"
   },
   "dependencies": {
-    "@xmcl/asm": "workspace:^0.1.4",
-    "@xmcl/core": "workspace:^2.10.1",
-    "@xmcl/download-core": "workspace:^0.0.1",
-    "@xmcl/forge-site-parser": "workspace:^2.0.8",
-    "@xmcl/task": "workspace:^4.0.3",
-    "@xmcl/unzip": "workspace:^2.0.0",
-    "undici": "^5.21.0",
-    "yauzl": "^2.10.0"
+    "@types/http-cache-semantics": "^4.0.1",
+    "http-cache-semantics": "^4.1.1",
+    "undici": "^5.21.0"
   },
   "repository": {
     "type": "git",
@@ -46,11 +41,9 @@
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
     "@types/node": "~18.15.11",
-    "@types/yauzl": "^2.10.0",
     "@xmcl/eslint-config": "workspace:^0.0.1",
     "esbuild": "^0.17.14",
     "eslint": "^8.37.0",
-    "nock": "^13.3.0",
     "typescript": "^5.0.3"
   }
 }

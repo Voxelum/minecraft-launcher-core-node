@@ -15,49 +15,49 @@ Provide functions to install Minecraft client, libraries, and assets.
 Fully install vanilla minecraft client including assets and libs.
 
 ```ts
-    import { getVersionList, MinecraftVersion, install } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/core";
+import { getVersionList, MinecraftVersion, install } from "@xmcl/installer";
+import { MinecraftLocation } from "@xmcl/core";
 
-    const minecraft: MinecraftLocation;
-    const list: MinecraftVersion[] = (await getVersionList()).versions;
-    const aVersion: MinecraftVersion = list[0]; // i just pick the first version in list here
-    await install(aVersion, minecraft);
+const minecraft: MinecraftLocation;
+const list: MinecraftVersion[] = (await getVersionList()).versions;
+const aVersion: MinecraftVersion = list[0]; // i just pick the first version in list here
+await install(aVersion, minecraft);
 ```
 
 Just install libraries:
 
 ```ts
-    import { installLibraries } from "@xmcl/installer";
-    import { ResolvedVersion, MinecraftLocation, Version } from "@xmcl/core";
+import { installLibraries } from "@xmcl/installer";
+import { ResolvedVersion, MinecraftLocation, Version } from "@xmcl/core";
 
-    const minecraft: MinecraftLocation;
-    const version: string; // version string like 1.13
-    const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
-    await installLibraries(resolvedVersion);
+const minecraft: MinecraftLocation;
+const version: string; // version string like 1.13
+const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
+await installLibraries(resolvedVersion);
 ```
 
 Just install assets:
 
 ```ts
-    import { installAssets } from "@xmcl/installer";
-    import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
+import { installAssets } from "@xmcl/installer";
+import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
 
-    const minecraft: MinecraftLocation;
-    const version: string; // version string like 1.13
-    const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
-    await installAssets(resolvedVersion);
+const minecraft: MinecraftLocation;
+const version: string; // version string like 1.13
+const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
+await installAssets(resolvedVersion);
 ```
 
 Just ensure all assets and libraries are installed:
 
 ```ts
-    import { installDependencies } from "@xmcl/installer";
-    import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
+import { installDependencies } from "@xmcl/installer";
+import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
 
-    const minecraft: MinecraftLocation;
-    const version: string; // version string like 1.13
-    const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
-    await installDependencies(resolvedVersion);
+const minecraft: MinecraftLocation;
+const version: string; // version string like 1.13
+const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
+await installDependencies(resolvedVersion);
 ```
 ### Progress Moniting on Installation
 
@@ -171,33 +171,33 @@ To swap the library to your self-host or other customized host, you can assign t
 For example, if you want to download the library `commons-io:commons-io:2.5` from your self hosted server, you can have
 
 ```ts
-    // the example for call `installLibraries`
-    // this option will also work for other functions involving libraries like `install`, `installDependencies`.
-    await installLibraries(resolvedVersion, {
-        libraryHost(library: ResolvedLibrary) {
-            if (library.name === "commons-io:commons-io:2.5") {
-                // the downloader will first try the first url in the array
-                // if this failed, it will try the 2nd.
-                // if it's still failed, it will try original url
-                return ["https://your-host.org/the/path/to/the/jar", "your-sencodary-url"];
-                // if you just have one url
-                // just return a string here...
-            }
-            // return undefined if you don't want to change lib url
-            return undefined;
-        },
-        mavenHost: ['https://www.your-other-maven.org'], // you still can use this to add other maven
-    });
+// the example for call `installLibraries`
+// this option will also work for other functions involving libraries like `install`, `installDependencies`.
+await installLibraries(resolvedVersion, {
+    libraryHost(library: ResolvedLibrary) {
+        if (library.name === "commons-io:commons-io:2.5") {
+            // the downloader will first try the first url in the array
+            // if this failed, it will try the 2nd.
+            // if it's still failed, it will try original url
+            return ["https://your-host.org/the/path/to/the/jar", "your-sencodary-url"];
+            // if you just have one url
+            // just return a string here...
+        }
+        // return undefined if you don't want to change lib url
+        return undefined;
+    },
+    mavenHost: ['https://www.your-other-maven.org'], // you still can use this to add other maven
+});
 
-    // it will first try you libraryHost url and then try mavenHost url.
+// it will first try you libraryHost url and then try mavenHost url.
 ```
 
 To swap the assets host, you can just assign the assets host url to the options
 
 ```ts
-    await installAssets(resolvedVersion, {
-        assetsHost: "https://www.your-url/assets"
-    });
+await installAssets(resolvedVersion, {
+    assetsHost: "https://www.your-url/assets"
+});
 ```
 
 The assets host should accept the get asset request like `GET https://www.your-url/assets/<hash-head>/<hash>`, where `hash-head` is the first two char in `<hash>`. The `<hash>` is the sha1 of the asset. 
@@ -207,23 +207,23 @@ The assets host should accept the get asset request like `GET https://www.your-u
 Get the forge version info and install forge from it. 
 
 ```ts
-    import { installForge, getForgeVersionList, ForgeVersionList, ForgeVersion } from "@xmcl/installer";
-    import { MinecraftLocation } from "@xmcl/core";
-    
-    const list: ForgeVersionList = await getForgeVersionList();
-    const minecraftLocation: MinecraftLocation;
-    const mcversion = page.mcversion; // mc version
-    const firstVersionOnPage: ForgeVersion = page.versions[0];
-    await installForge(firstVersionOnPage, minecraftLocation);
+import { installForge, getForgeVersionList, ForgeVersionList, ForgeVersion } from "@xmcl/installer";
+import { MinecraftLocation } from "@xmcl/core";
+
+const list: ForgeVersionList = await getForgeVersionList();
+const minecraftLocation: MinecraftLocation;
+const mcversion = page.mcversion; // mc version
+const firstVersionOnPage: ForgeVersion = page.versions[0];
+await installForge(firstVersionOnPage, minecraftLocation);
 ```
 
 If you know forge version and minecraft version. You can directly do such:
 
 ```ts
-    import { installForge } from "@xmcl/installer";
- 
-    const forgeVersion = 'a-forge-version'; // like 31.1.27
-    await installForge({ version: forgeVersion, mcversion: '1.15.2' }, minecraftLocation);
+import { installForge } from "@xmcl/installer";
+
+const forgeVersion = 'a-forge-version'; // like 31.1.27
+await installForge({ version: forgeVersion, mcversion: '1.15.2' }, minecraftLocation);
 ```
 
 Notice that this installation doesn't ensure full libraries installation.
@@ -241,16 +241,16 @@ Consider support him to maintains forge.
 Fetch the new fabric version list.
 
 ```ts
-    import { installFabric, FabricArtifactVersion } from "@xmcl/installer";
+import { installFabric, FabricArtifactVersion } from "@xmcl/installer";
 
-    const versionList: FabricArtifactVersion[] = await getFabricArtifactList();
+const versionList: FabricArtifactVersion[] = await getFabricArtifactList();
 ```
 
 Install fabric to the client. This installation process doesn't ensure the minecraft libraries.
 
 ```ts
-    const minecraftLocation: MinecraftLocation;
-    await installFabric(versionList[0], minecraftLocation);
+const minecraftLocation: MinecraftLocation;
+await installFabric(versionList[0], minecraftLocation);
 ```
 
 Please run `Installer.installDependencies` after that to install fully.
@@ -280,15 +280,15 @@ The `installByProfile` will do 2 and 3.
 Scan java installation path from the disk. (Require a lzma unpacker, like [7zip-bin](https://www.npmjs.com/package/7zip-bin) or [lzma-native](https://www.npmjs.com/package/lzma-native))
 
 ```ts
-    import { installJreFromMojang } from "@xmcl/installer";
+import { installJreFromMojang } from "@xmcl/installer";
 
-    // this require a unpackLZMA util to work
-    // you can use `7zip-bin`
-    // or `lzma-native` for this
-    const unpackLZMA: (src: string, dest: string) => Promise<void>;
+// this require a unpackLZMA util to work
+// you can use `7zip-bin`
+// or `lzma-native` for this
+const unpackLZMA: (src: string, dest: string) => Promise<void>;
 
-    await installJreFromMojang({
-        destination: "your/java/home",
-        unpackLZMA,
-    });
+await installJreFromMojang({
+    destination: "your/java/home",
+    unpackLZMA,
+});
 ```

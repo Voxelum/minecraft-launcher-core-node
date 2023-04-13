@@ -4,7 +4,6 @@
         "minecraft.ts",
         "forge.ts",
         "liteloader.ts",
-        "curseforge.ts",
         "java-runtime.ts",
         "optifine.ts",
         "fabric.ts",
@@ -15,27 +14,9 @@
         "diagnose.ts",
         "profile.ts",
         "downloadTask.ts",
-        "http/abort.ts",
-        "http/agents.ts",
-        "http/download.ts",
-        "http/fetch.ts",
-        "http/metadata.ts",
-        "http/error.ts",
-        "http/retry.ts",
-        "http/segment.ts",
-        "http/status.ts",
-        "http/utils.ts",
-        "http/validator.ts"
     ],
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "target": "es2018",
-        "module": "esnext",
-        "experimentalDecorators": true,
-        "declaration": true,
-        "downlevelIteration": true,
-        "strict": true,
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true
-    }
+        "outDir": "./dist"
+    },
 }
