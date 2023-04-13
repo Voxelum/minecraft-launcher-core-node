@@ -1,4 +1,4 @@
-# World Module
+# Game Data
 
 [![npm version](https://img.shields.io/npm/v/@xmcl/world.svg)](https://www.npmjs.com/package/@xmcl/world)
 [![Downloads](https://img.shields.io/npm/dm/@xmcl/world.svg)](https://npmjs.com/@xmcl/world)
@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 
-Provides functions to parse Minecraft saves.
+Provides functions to parse Minecraft game data like level data, server data.
 
 ## Usage
 
@@ -15,21 +15,21 @@ Provides functions to parse Minecraft saves.
 Read the level info from a buffer.
 
 ```ts
-    import { WorldReader, LevelDataFrame } from '@xmcl/world'
-    const worldSaveFolder: string;
-    const reader: WorldReader = await WorldReader.create(worldSaveFolder);
-    const levelData: LevelDataFrame = await reader.getLevelData();
+import { WorldReader, LevelDataFrame } from '@xmcl/game-data'
+const worldSaveFolder: string;
+const reader: WorldReader = await WorldReader.create(worldSaveFolder);
+const levelData: LevelDataFrame = await reader.getLevelData();
 ```
 
 ***Preview*** Read the region data, this feature is not tested yet, but the api will look like this
 
 ```ts
-    import { WorldReader, RegionDataFrame, RegionReader } from "@xmcl/world";
-    const worldSaveFolder: string;
-    const reader: WorldReader = await WorldReader.create(worldSaveFolder);
-    const chunkX: number;
-    const chunkZ: number;
-    const region: RegionDataFrame = await reader.getRegionData(chunkX, chunkZ);
+import { WorldReader, RegionDataFrame, RegionReader } from "@xmcl/game-data";
+const worldSaveFolder: string;
+const reader: WorldReader = await WorldReader.create(worldSaveFolder);
+const chunkX: number;
+const chunkZ: number;
+const region: RegionDataFrame = await reader.getRegionData(chunkX, chunkZ);
 ```
 
 ## Some Important Concepts
@@ -53,3 +53,17 @@ For the Minecraft version >= 1.13, the mca NBT data store the **local** blocksta
 #### In-Chunk Coord
 
 One chunk (section) in region contains 4096 (16x16x16) blockstates, and they are indexed by [0, 4096). The mapping from x, y, z to index is `(x, y, z) -> y << 8 | z << 4 | x`.
+
+
+### Read and Write Server Info
+
+```ts
+import { readInfo, writeInfo, ServerInfo } from "@xmcl/game-data";
+
+const seversDatBuffer: Buffer; // this is the servers.dat under .minecraft folder
+const infos: ServerInfo[] = await readServerInfo(seversDatBuffer);
+const info: ServerInfo = infos[0];
+
+// info.ip -> server ip
+// info.name -> server name
+```
