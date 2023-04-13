@@ -4,17 +4,22 @@
   "main": "./index.ts",
   "description": "Create Three.js model for player and block",
   "engines": {
-    "node": ">=10.0"
+    "node": ">=16"
+  },
+  "scripts": {
+    "build:type": "tsc",
+    "build:cjs": "esbuild --target=node16 --platform=node --external:three --external:@xmcl/* --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=node16 --platform=node --external:three --external:@xmcl/* --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
   },
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",
-    "module": "./dist/index.esm.js"
+    "module": "./dist/index.mjs"
   },
   "dependencies": {
-    "@types/three": "^0.141.0",
-    "three": "^0.142.0",
-    "@xmcl/resourcepack": "^1.1.3"
+    "@types/three": "^0.150.0",
+    "@xmcl/resourcepack": "workspace:^1.1.3",
+    "three": "^0.151.2"
   },
   "repository": {
     "type": "git",
@@ -33,5 +38,12 @@
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
-  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
+  "devDependencies": {
+    "@types/node": "~18.15.11",
+    "@xmcl/eslint-config": "workspace:^0.0.1",
+    "esbuild": "^0.17.14",
+    "eslint": "^8.37.0",
+    "typescript": "^5.0.3"
+  }
 }

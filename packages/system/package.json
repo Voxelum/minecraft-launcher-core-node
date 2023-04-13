@@ -8,17 +8,22 @@
   },
   "description": "An abstract layer for file system on reading zip or plain file",
   "engines": {
-    "node": ">=10.0"
+    "node": ">=16"
+  },
+  "scripts": {
+    "build:type": "tsc",
+    "build:cjs": "esbuild --target=node16 --external:yauzl --external:@xmcl/* --platform=node --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=node16 --external:yauzl --external:@xmcl/* --platform=node --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts",
+    "build:browser": "esbuild --target=es2020 --sourcemap --external:jszip --format=esm --bundle --outfile=dist/index.browser.mjs index.browser.ts"
   },
   "publishConfig": {
     "main": "./dist/index.js",
-    "module": "./dist/index.esm.js",
+    "module": "./dist/index.mjs",
     "access": "public"
   },
   "dependencies": {
-    "@xmcl/unzip": "^2.0.0",
-    "@types/yauzl": "^2.10.0",
-    "jszip": "^3.7.1"
+    "@xmcl/unzip": "workspace:^2.0.0",
+    "jszip": "^3.10.1"
   },
   "repository": {
     "type": "git",
@@ -32,6 +37,14 @@
     "nodejs",
     "electron"
   ],
+  "devDependencies": {
+    "@types/node": "~18.15.11",
+    "@types/yauzl": "^2.10.0",
+    "@xmcl/eslint-config": "workspace:^0.0.1",
+    "esbuild": "^0.17.14",
+    "eslint": "^8.37.0",
+    "typescript": "^5.0.3"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"

@@ -1,13 +1,18 @@
 {
   "name": "@xmcl/task",
+  "version": "4.0.3",
   "main": "./index.ts",
   "author": {
     "name": "cijhn@hotmail.com"
   },
   "description": "A tree structure task definition",
+  "scripts": {
+    "build:cjs": "esbuild --target=es2020 --platform=neutral --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=es2020 --platform=neutral --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
+  },
   "publishConfig": {
     "main": "./dist/index.js",
-    "module": "./dist/index.esm.js",
+    "module": "./dist/index.mjs",
     "access": "public"
   },
   "license": "MIT",
@@ -15,5 +20,11 @@
     "type": "git",
     "url": "git+https://github.com/Voxelum/minecraft-launcher-core-node.git"
   },
-  "version": "4.0.3"
+  "devDependencies": {
+    "@types/node": "~18.15.11",
+    "@xmcl/eslint-config": "workspace:^0.0.1",
+    "esbuild": "^0.17.14",
+    "eslint": "^8.37.0",
+    "typescript": "^5.0.3"
+  }
 }

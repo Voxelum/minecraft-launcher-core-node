@@ -4,15 +4,21 @@
   "main": "./index.ts",
   "description": "Minecraft resource pack parsing",
   "engines": {
-    "node": ">=10.0"
+    "node": ">=16"
+  },
+  "scripts": {
+    "build:type": "tsc",
+    "build:cjs": "esbuild --target=node16 --platform=node --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=node16 --platform=node --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts",
+    "build:browser": "esbuild --target=es2020 --external:pako --sourcemap --format=esm --bundle --outfile=dist/index.browser.mjs index.ts"
   },
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",
-    "module": "./dist/index.esm.js"
+    "module": "./dist/index.mjs"
   },
   "dependencies": {
-    "@xmcl/system": "^2.2.3"
+    "@xmcl/system": "workspace:^2.2.3"
   },
   "repository": {
     "type": "git",
@@ -30,5 +36,8 @@
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
-  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme"
+  "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
+  "devDependencies": {
+    "esbuild": "^0.17.14"
+  }
 }

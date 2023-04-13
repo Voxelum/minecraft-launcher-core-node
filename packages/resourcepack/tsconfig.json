@@ -1,4 +1,8 @@
 {
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "outDir": "./dist"
+    },
     "files": [
         "format.ts",
         "index.ts",
@@ -6,19 +10,4 @@
         "resourceManager.ts",
         "resourcePack.ts"
     ],
-    "compilerOptions": {
-        "target": "es2018",
-        "module": "esnext",
-        
-        "lib": [
-            "dom"
-        ],
-        "experimentalDecorators": true,
-        "declaration": true,
-        "downlevelIteration": true,
-        "strict": true,
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true
-    }
 }
