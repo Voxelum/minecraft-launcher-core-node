@@ -4,12 +4,17 @@
   "main": "./index.ts",
   "description": "Java ASM module transferred into the typescript",
   "engines": {
-    "node": ">=10.0"
+    "node": ">=16"
   },
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",
-    "module": "./dist/index.esm.js"
+    "module": "./dist/index.mjs"
+  },
+  "scripts": {
+    "build:type": "tsc",
+    "build:cjs": "esbuild --target=es2020 --platform=neutral --external:long --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=es2020 --platform=neutral --external:long --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
   },
   "repository": {
     "type": "git",
@@ -28,8 +33,12 @@
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
-  "dependencies": {
-    "long": "~3",
-    "@types/long": "^4.0.2"
+  "devDependencies": {
+    "@types/node": "~18.15.11",
+    "@xmcl/eslint-config": "workspace:^0.0.1",
+    "esbuild": "^0.17.14",
+    "eslint": "^8.37.0",
+    "tslib": "^2.5.0",
+    "typescript": "^5.0.3"
   }
 }

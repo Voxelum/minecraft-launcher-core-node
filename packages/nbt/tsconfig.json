@@ -1,23 +1,11 @@
 {
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "outDir": "./dist"
+    },
     "files": [
         "index.ts",
         "utils.ts",
-        "zlib/index.browser.ts",
-        "zlib/index.ts"
-    ],
-    "compilerOptions": {
-        "target": "es2018",
-        "module": "esnext",
-        
-        "lib": [
-            "dom"
-        ],
-        "experimentalDecorators": true,
-        "declaration": true,
-        "downlevelIteration": true,
-        "strict": true,
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true
-    }
+        "index.test.ts"
+    ]
 }

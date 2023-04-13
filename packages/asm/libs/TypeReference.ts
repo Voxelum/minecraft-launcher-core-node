@@ -38,144 +38,144 @@
  * @author Eric Bruneton
  */
 export class TypeReference {
-    /**
+  /**
      * The sort of type references that target a type parameter of a generic
      * class. See {@link #getSort getSort}.
      */
-    static readonly CLASS_TYPE_PARAMETER: number = 0;
+  static readonly CLASS_TYPE_PARAMETER: number = 0
 
-    /**
+  /**
      * The sort of type references that target a type parameter of a generic
      * method. See {@link #getSort getSort}.
      */
-    static readonly METHOD_TYPE_PARAMETER: number = 1;
+  static readonly METHOD_TYPE_PARAMETER: number = 1
 
-    /**
+  /**
      * The sort of type references that target the super class of a class or one
      * of the interfaces it implements. See {@link #getSort getSort}.
      */
-    static readonly CLASS_EXTENDS: number = 16;
+  static readonly CLASS_EXTENDS: number = 16
 
-    /**
+  /**
      * The sort of type references that target a bound of a type parameter of a
      * generic class. See {@link #getSort getSort}.
      */
-    static readonly CLASS_TYPE_PARAMETER_BOUND: number = 17;
+  static readonly CLASS_TYPE_PARAMETER_BOUND: number = 17
 
-    /**
+  /**
      * The sort of type references that target a bound of a type parameter of a
      * generic method. See {@link #getSort getSort}.
      */
-    static readonly METHOD_TYPE_PARAMETER_BOUND: number = 18;
+  static readonly METHOD_TYPE_PARAMETER_BOUND: number = 18
 
-    /**
+  /**
      * The sort of type references that target the type of a field. See
      * {@link #getSort getSort}.
      */
-    static readonly FIELD: number = 19;
+  static readonly FIELD: number = 19
 
-    /**
+  /**
      * The sort of type references that target the return type of a method. See
      * {@link #getSort getSort}.
      */
-    static readonly METHOD_RETURN: number = 20;
+  static readonly METHOD_RETURN: number = 20
 
-    /**
+  /**
      * The sort of type references that target the receiver type of a method.
      * See {@link #getSort getSort}.
      */
-    static readonly METHOD_RECEIVER: number = 21;
+  static readonly METHOD_RECEIVER: number = 21
 
-    /**
+  /**
      * The sort of type references that target the type of a formal parameter of
      * a method. See {@link #getSort getSort}.
      */
-    static readonly METHOD_FORMAL_PARAMETER: number = 22;
+  static readonly METHOD_FORMAL_PARAMETER: number = 22
 
-    /**
+  /**
      * The sort of type references that target the type of an exception declared
      * in the throws clause of a method. See {@link #getSort getSort}.
      */
-    static readonly THROWS: number = 23;
+  static readonly THROWS: number = 23
 
-    /**
+  /**
      * The sort of type references that target the type of a local variable in a
      * method. See {@link #getSort getSort}.
      */
-    static readonly LOCAL_VARIABLE: number = 64;
+  static readonly LOCAL_VARIABLE: number = 64
 
-    /**
+  /**
      * The sort of type references that target the type of a resource variable
      * in a method. See {@link #getSort getSort}.
      */
-    static readonly RESOURCE_VARIABLE: number = 65;
+  static readonly RESOURCE_VARIABLE: number = 65
 
-    /**
+  /**
      * The sort of type references that target the type of the exception of a
      * 'catch' clause in a method. See {@link #getSort getSort}.
      */
-    static readonly EXCEPTION_PARAMETER: number = 66;
+  static readonly EXCEPTION_PARAMETER: number = 66
 
-    /**
+  /**
      * The sort of type references that target the type declared in an
      * 'instanceof' instruction. See {@link #getSort getSort}.
      */
-    static readonly INSTANCEOF: number = 67;
+  static readonly INSTANCEOF: number = 67
 
-    /**
+  /**
      * The sort of type references that target the type of the object created by
      * a 'new' instruction. See {@link #getSort getSort}.
      */
-    static readonly NEW: number = 68;
+  static readonly NEW: number = 68
 
-    /**
+  /**
      * The sort of type references that target the receiver type of a
      * constructor reference. See {@link #getSort getSort}.
      */
-    static readonly CONSTRUCTOR_REFERENCE: number = 69;
+  static readonly CONSTRUCTOR_REFERENCE: number = 69
 
-    /**
+  /**
      * The sort of type references that target the receiver type of a method
      * reference. See {@link #getSort getSort}.
      */
-    static readonly METHOD_REFERENCE: number = 70;
+  static readonly METHOD_REFERENCE: number = 70
 
-    /**
+  /**
      * The sort of type references that target the type declared in an explicit
      * or implicit cast instruction. See {@link #getSort getSort}.
      */
-    static readonly CAST: number = 71;
+  static readonly CAST: number = 71
 
-    /**
+  /**
      * The sort of type references that target a type parameter of a generic
      * constructor in a constructor call. See {@link #getSort getSort}.
      */
-    static readonly CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT: number = 72;
+  static readonly CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT: number = 72
 
-    /**
+  /**
      * The sort of type references that target a type parameter of a generic
      * method in a method call. See {@link #getSort getSort}.
      */
-    static readonly METHOD_INVOCATION_TYPE_ARGUMENT: number = 73;
+  static readonly METHOD_INVOCATION_TYPE_ARGUMENT: number = 73
 
-    /**
+  /**
      * The sort of type references that target a type parameter of a generic
      * constructor in a constructor reference. See {@link #getSort getSort}.
      */
-    static readonly CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT: number = 74;
+  static readonly CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT: number = 74
 
-    /**
+  /**
      * The sort of type references that target a type parameter of a generic
      * method in a method reference. See {@link #getSort getSort}.
      */
-    static readonly METHOD_REFERENCE_TYPE_ARGUMENT: number = 75;
+  static readonly METHOD_REFERENCE_TYPE_ARGUMENT: number = 75
 
-    /**
+  /**
      * The type reference value in Java class file format.
      */
-    private value: number;
+  private value: number
 
-    /**
+  /**
      * Creates a new TypeReference.
      *
      * @param typeRef
@@ -183,12 +183,12 @@ export class TypeReference {
      * visit method related to type annotations, like
      * visitTypeAnnotation.
      */
-    constructor(typeRef: number) {
-        this.value = 0;
-        this.value = typeRef;
-    }
+  constructor(typeRef: number) {
+    this.value = 0
+    this.value = typeRef
+  }
 
-    /**
+  /**
      * Returns a type reference of the given sort.
      *
      * @param sort
@@ -201,11 +201,11 @@ export class TypeReference {
      * {@link #METHOD_REFERENCE METHOD_REFERENCE}.
      * @return a type reference of the given sort.
      */
-    static newTypeReference(sort: number): TypeReference {
-        return new TypeReference(sort << 24);
-    }
+  static newTypeReference(sort: number): TypeReference {
+    return new TypeReference(sort << 24)
+  }
 
-    /**
+  /**
      * Returns a reference to a type parameter of a generic class or method.
      *
      * @param sort
@@ -215,11 +215,11 @@ export class TypeReference {
      * the type parameter index.
      * @return a reference to the given generic class or method type parameter.
      */
-    static newTypeParameterReference(sort: number, paramIndex: number): TypeReference {
-        return new TypeReference((sort << 24) | (paramIndex << 16));
-    }
+  static newTypeParameterReference(sort: number, paramIndex: number): TypeReference {
+    return new TypeReference((sort << 24) | (paramIndex << 16))
+  }
 
-    /**
+  /**
      * Returns a reference to a type parameter bound of a generic class or
      * method.
      *
@@ -233,11 +233,11 @@ export class TypeReference {
      * @return a reference to the given generic class or method type parameter
      * bound.
      */
-    static newTypeParameterBoundReference(sort: number, paramIndex: number, boundIndex: number): TypeReference {
-        return new TypeReference((sort << 24) | (paramIndex << 16) | (boundIndex << 8));
-    }
+  static newTypeParameterBoundReference(sort: number, paramIndex: number, boundIndex: number): TypeReference {
+    return new TypeReference((sort << 24) | (paramIndex << 16) | (boundIndex << 8))
+  }
 
-    /**
+  /**
      * Returns a reference to the super class or to an interface of the
      * 'implements' clause of a class.
      *
@@ -246,12 +246,12 @@ export class TypeReference {
      * class, or -1 to reference the super class of the class.
      * @return a reference to the given super type of a class.
      */
-    static newSuperTypeReference(itfIndex: number): TypeReference {
-        itfIndex &= 65535;
-        return new TypeReference((TypeReference.CLASS_EXTENDS << 24) | (itfIndex << 8));
-    }
+  static newSuperTypeReference(itfIndex: number): TypeReference {
+    itfIndex &= 65535
+    return new TypeReference((TypeReference.CLASS_EXTENDS << 24) | (itfIndex << 8))
+  }
 
-    /**
+  /**
      * Returns a reference to the type of a formal parameter of a method.
      *
      * @param paramIndex
@@ -259,11 +259,11 @@ export class TypeReference {
      *
      * @return a reference to the type of the given method formal parameter.
      */
-    static newFormalParameterReference(paramIndex: number): TypeReference {
-        return new TypeReference((TypeReference.METHOD_FORMAL_PARAMETER << 24) | (paramIndex << 16));
-    }
+  static newFormalParameterReference(paramIndex: number): TypeReference {
+    return new TypeReference((TypeReference.METHOD_FORMAL_PARAMETER << 24) | (paramIndex << 16))
+  }
 
-    /**
+  /**
      * Returns a reference to the type of an exception, in a 'throws' clause of
      * a method.
      *
@@ -272,11 +272,11 @@ export class TypeReference {
      *
      * @return a reference to the type of the given exception.
      */
-    static newExceptionReference(exceptionIndex: number): TypeReference {
-        return new TypeReference((TypeReference.THROWS << 24) | (exceptionIndex << 8));
-    }
+  static newExceptionReference(exceptionIndex: number): TypeReference {
+    return new TypeReference((TypeReference.THROWS << 24) | (exceptionIndex << 8))
+  }
 
-    /**
+  /**
      * Returns a reference to the type of the exception declared in a 'catch'
      * clause of a method.
      *
@@ -286,11 +286,11 @@ export class TypeReference {
      *
      * @return a reference to the type of the given exception.
      */
-    static newTryCatchReference(tryCatchBlockIndex: number): TypeReference {
-        return new TypeReference((TypeReference.EXCEPTION_PARAMETER << 24) | (tryCatchBlockIndex << 8));
-    }
+  static newTryCatchReference(tryCatchBlockIndex: number): TypeReference {
+    return new TypeReference((TypeReference.EXCEPTION_PARAMETER << 24) | (tryCatchBlockIndex << 8))
+  }
 
-    /**
+  /**
      * Returns a reference to the type of a type argument in a constructor or
      * method call or reference.
      *
@@ -309,11 +309,11 @@ export class TypeReference {
      *
      * @return a reference to the type of the given type argument.
      */
-    static newTypeArgumentReference(sort: number, argIndex: number): TypeReference {
-        return new TypeReference((sort << 24) | argIndex);
-    }
+  static newTypeArgumentReference(sort: number, argIndex: number): TypeReference {
+    return new TypeReference((sort << 24) | argIndex)
+  }
 
-    /**
+  /**
      * Returns the sort of this type reference.
      *
      * @return {@link #CLASS_TYPE_PARAMETER CLASS_TYPE_PARAMETER},
@@ -339,11 +339,11 @@ export class TypeReference {
      * {@link #METHOD_REFERENCE_TYPE_ARGUMENT
      * METHOD_REFERENCE_TYPE_ARGUMENT}.
      */
-    getSort(): number {
-        return this.value >>> 24;
-    }
+  getSort(): number {
+    return this.value >>> 24
+  }
 
-    /**
+  /**
      * Returns the index of the type parameter referenced by this type
      * reference. This method must only be used for type references whose sort
      * is {@link #CLASS_TYPE_PARAMETER CLASS_TYPE_PARAMETER},
@@ -353,11 +353,11 @@ export class TypeReference {
      *
      * @return a type parameter index.
      */
-    getTypeParameterIndex(): number {
-        return (this.value & 16711680) >> 16;
-    }
+  getTypeParameterIndex(): number {
+    return (this.value & 16711680) >> 16
+  }
 
-    /**
+  /**
      * Returns the index of the type parameter bound, within the type parameter
      * {@link #getTypeParameterIndex}, referenced by this type reference. This
      * method must only be used for type references whose sort is
@@ -366,11 +366,11 @@ export class TypeReference {
      *
      * @return a type parameter bound index.
      */
-    getTypeParameterBoundIndex(): number {
-        return (this.value & 65280) >> 8;
-    }
+  getTypeParameterBoundIndex(): number {
+    return (this.value & 65280) >> 8
+  }
 
-    /**
+  /**
      * Returns the index of the "super type" of a class that is referenced by
      * this type reference. This method must only be used for type references
      * whose sort is {@link #CLASS_EXTENDS CLASS_EXTENDS}.
@@ -379,33 +379,33 @@ export class TypeReference {
      * or -1 if this type reference references the type of the super
      * class.
      */
-    getSuperTypeIndex(): number {
-        return (((this.value & 16776960) >> 8) | 0);
-    }
+  getSuperTypeIndex(): number {
+    return (((this.value & 16776960) >> 8) | 0)
+  }
 
-    /**
+  /**
      * Returns the index of the formal parameter whose type is referenced by
      * this type reference. This method must only be used for type references
      * whose sort is {@link #METHOD_FORMAL_PARAMETER METHOD_FORMAL_PARAMETER}.
      *
      * @return a formal parameter index.
      */
-    getFormalParameterIndex(): number {
-        return (this.value & 16711680) >> 16;
-    }
+  getFormalParameterIndex(): number {
+    return (this.value & 16711680) >> 16
+  }
 
-    /**
+  /**
      * Returns the index of the exception, in a 'throws' clause of a method,
      * whose type is referenced by this type reference. This method must only be
      * used for type references whose sort is {@link #THROWS THROWS}.
      *
      * @return the index of an exception in the 'throws' clause of a method.
      */
-    getExceptionIndex(): number {
-        return (this.value & 16776960) >> 8;
-    }
+  getExceptionIndex(): number {
+    return (this.value & 16776960) >> 8
+  }
 
-    /**
+  /**
      * Returns the index of the try catch block (using the order in which they
      * are visited with visitTryCatchBlock), whose 'catch' type is referenced by
      * this type reference. This method must only be used for type references
@@ -413,11 +413,11 @@ export class TypeReference {
      *
      * @return the index of an exception in the 'throws' clause of a method.
      */
-    getTryCatchBlockIndex(): number {
-        return (this.value & 16776960) >> 8;
-    }
+  getTryCatchBlockIndex(): number {
+    return (this.value & 16776960) >> 8
+  }
 
-    /**
+  /**
      * Returns the index of the type argument referenced by this type reference.
      * This method must only be used for type references whose sort is
      * {@link #CAST CAST}, {@link #CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT
@@ -429,17 +429,17 @@ export class TypeReference {
      *
      * @return a type parameter index.
      */
-    getTypeArgumentIndex(): number {
-        return this.value & 255;
-    }
+  getTypeArgumentIndex(): number {
+    return this.value & 255
+  }
 
-    /**
+  /**
      * Returns the int encoded value of this type reference, suitable for use in
      * visit methods related to type annotations, like visitTypeAnnotation.
      *
      * @return the int encoded value of this type reference.
      */
-    getValue(): number {
-        return this.value;
-    }
+  getValue(): number {
+    return this.value
+  }
 }

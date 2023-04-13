@@ -34,16 +34,15 @@
  *
  * @author Eric Bruneton
  */
-import { ClassWriter } from "./ClassWriter";
-import { floatToIntBits, doubleToLongBits } from "./bits";
-import Long from "long";
+import { ClassWriter } from './ClassWriter'
+import { floatToIntBits, doubleToLongBits } from './bits'
 export class Item {
-    /**
+  /**
      * Index of this item in the constant pool.
      */
-    index: number;
+  index: number
 
-    /**
+  /**
      * Type of this constant pool item. A single class is used to represent all
      * constant pool item types, in order to minimize the bytecode size of this
      * package. The value of this field is one of {@link ClassWriter#INT},
@@ -65,48 +64,48 @@ export class Item {
      * {@link ClassWriter#TYPE_NORMAL}, {@link ClassWriter#TYPE_UNINIT} and
      * {@link ClassWriter#TYPE_MERGED}.
      */
-    type!: number;
+  type!: number
 
-    /**
+  /**
      * Value of this item, for an integer item.
      */
-    intVal: number = 0;
+  intVal = 0
 
-    /**
+  /**
      * Value of this item, for a long item.
      */
-    longVal: Long = Long.fromInt(0);
+  longVal = 0n
 
-    /**
+  /**
      * First part of the value of this item, for items that do not hold a
      * primitive value.
      */
-    strVal1: string = "";
+  strVal1 = ''
 
-    /**
+  /**
      * Second part of the value of this item, for items that do not hold a
      * primitive value.
      */
-    strVal2: string = "";
+  strVal2 = ''
 
-    /**
+  /**
      * Third part of the value of this item, for items that do not hold a
      * primitive value.
      */
-    strVal3: string = "";
+  strVal3 = ''
 
-    /**
+  /**
      * The hash code value of this constant pool item.
      */
-    __hashCode!: number;
+  __hashCode!: number
 
-    /**
+  /**
      * Link to another constant pool item, used for collision lists in the
      * constant pool's hash table.
      */
-    next: Item | null = null;
+  next: Item | null = null
 
-    /**
+  /**
      * Constructs a copy of the given item.
      *
      * @param index
@@ -114,69 +113,69 @@ export class Item {
      * @param i
      * the item that must be copied into the item to be constructed.
      */
-    public constructor(index: number, i?: Item) {
-        this.index = index;
-        if (i) {
-            this.index = index;
-            this.type = i.type;
-            this.intVal = i.intVal;
-            this.longVal = i.longVal;
-            this.strVal1 = i.strVal1;
-            this.strVal2 = i.strVal2;
-            this.strVal3 = i.strVal3;
-            this.__hashCode = i.__hashCode;
-        }
+  public constructor(index: number, i?: Item) {
+    this.index = index
+    if (i) {
+      this.index = index
+      this.type = i.type
+      this.intVal = i.intVal
+      this.longVal = i.longVal
+      this.strVal1 = i.strVal1
+      this.strVal2 = i.strVal2
+      this.strVal3 = i.strVal3
+      this.__hashCode = i.__hashCode
     }
+  }
 
-    /**
+  /**
      * Sets this item to an integer item.
      *
      * @param intVal
      * the value of this item.
      */
-    set$int(intVal: number) {
-        this.type = ClassWriter.INT;
-        this.intVal = intVal;
-        this.__hashCode = 2147483647 & (this.type + intVal);
-    }
+  set$int(intVal: number) {
+    this.type = ClassWriter.INT
+    this.intVal = intVal
+    this.__hashCode = 2147483647 & (this.type + intVal)
+  }
 
-    /**
+  /**
      * Sets this item to a long item.
      *
      * @param longVal
      * the value of this item.
      */
-    set$long(longVal: Long) {
-        this.type = ClassWriter.LONG;
-        this.longVal = longVal;
-        this.__hashCode = 2147483647 & (this.type + (longVal.getLowBits()));
-    }
+  set$long(longVal: bigint) {
+    this.type = ClassWriter.LONG
+    this.longVal = longVal
+    this.__hashCode = 2147483647 & (this.type + Number(longVal & 0xffffffffn))
+  }
 
-    /**
+  /**
      * Sets this item to a float item.
      *
      * @param floatVal
      * the value of this item.
      */
-    set$float(floatVal: number) {
-        this.type = ClassWriter.FLOAT;
-        this.intVal = floatToIntBits(floatVal);
-        this.__hashCode = 2147483647 & (this.type + (floatVal | 0));
-    }
+  set$float(floatVal: number) {
+    this.type = ClassWriter.FLOAT
+    this.intVal = floatToIntBits(floatVal)
+    this.__hashCode = 2147483647 & (this.type + (floatVal | 0))
+  }
 
-    /**
+  /**
      * Sets this item to a double item.
      *
      * @param doubleVal
      * the value of this item.
      */
-    set$double(doubleVal: number) {
-        this.type = ClassWriter.DOUBLE;
-        this.longVal = doubleToLongBits(doubleVal);
-        this.__hashCode = 2147483647 & (this.type + (doubleVal | 0));
-    }
+  set$double(doubleVal: number) {
+    this.type = ClassWriter.DOUBLE
+    this.longVal = doubleToLongBits(doubleVal)
+    this.__hashCode = 2147483647 & (this.type + (doubleVal | 0))
+  }
 
-    /**
+  /**
      * Sets this item to an item that do not hold a primitive value.
      *
      * @param type
@@ -188,36 +187,37 @@ export class Item {
      * @param strVal3
      * third part of the value of this item.
      */
-    public set(type: number, strVal1?: string, strVal2?: string, strVal3?: string): any {
-        this.type = type;
-        this.strVal1 = strVal1 ?? "";
-        this.strVal2 = strVal2 ?? "";
-        this.strVal3 = strVal3 ?? "";
-        switch (type) {
-            case ClassWriter.CLASS:
-                this.intVal = 0;     // intVal of a class must be zero, see visitInnerClass
-            case ClassWriter.UTF8:
-            case ClassWriter.STR:
-            case ClassWriter.MTYPE:
-            case ClassWriter.TYPE_NORMAL:
-                this.__hashCode = 0x7FFFFFFF & (type + str_hash(this.strVal1));
-                return;
-            case ClassWriter.NAME_TYPE: {
-                this.__hashCode = 0x7FFFFFFF & (type + str_hash(this.strVal1)
-                    * str_hash(this.strVal2));
-                return;
-            }
-            // ClassWriter.FIELD:
-            // ClassWriter.METH:
-            // ClassWriter.IMETH:
-            // ClassWriter.HANDLE_BASE + 1..9
-            default:
-                this.__hashCode = 0x7FFFFFFF & (type + str_hash(this.strVal1)
-                    * str_hash(this.strVal2) * str_hash(this.strVal3));
-        }
+  public set(type: number, strVal1?: string, strVal2?: string, strVal3?: string): any {
+    this.type = type
+    this.strVal1 = strVal1 ?? ''
+    this.strVal2 = strVal2 ?? ''
+    this.strVal3 = strVal3 ?? ''
+    switch (type) {
+      case ClassWriter.CLASS:
+        this.intVal = 0 // intVal of a class must be zero, see visitInnerClass
+      // eslint-disable-next-line no-fallthrough
+      case ClassWriter.UTF8:
+      case ClassWriter.STR:
+      case ClassWriter.MTYPE:
+      case ClassWriter.TYPE_NORMAL:
+        this.__hashCode = 0x7FFFFFFF & (type + str_hash(this.strVal1))
+        return
+      case ClassWriter.NAME_TYPE: {
+        this.__hashCode = 0x7FFFFFFF & (type + str_hash(this.strVal1) *
+                    str_hash(this.strVal2))
+        return
+      }
+      // ClassWriter.FIELD:
+      // ClassWriter.METH:
+      // ClassWriter.IMETH:
+      // ClassWriter.HANDLE_BASE + 1..9
+      default:
+        this.__hashCode = 0x7FFFFFFF & (type + str_hash(this.strVal1) *
+                    str_hash(this.strVal2) * str_hash(this.strVal3))
     }
+  }
 
-    /**
+  /**
      * Sets the item to an InvokeDynamic item.
      *
      * @param name
@@ -227,15 +227,15 @@ export class Item {
      * @param bsmIndex
      * zero based index into the class attribute BootrapMethods.
      */
-    setInvkDynItem(name: string, desc: string, bsmIndex: number) {
-        this.type = ClassWriter.INDY;
-        this.longVal = Long.fromInt(bsmIndex);
-        this.strVal1 = name;
-        this.strVal2 = desc;
-        this.__hashCode = 2147483647 & (ClassWriter.INDY + bsmIndex * (<any>this.strVal1.toString()) * (<any>this.strVal2.toString()));
-    }
+  setInvkDynItem(name: string, desc: string, bsmIndex: number) {
+    this.type = ClassWriter.INDY
+    this.longVal = BigInt(bsmIndex)
+    this.strVal1 = name
+    this.strVal2 = desc
+    this.__hashCode = 2147483647 & (ClassWriter.INDY + bsmIndex * (<any> this.strVal1.toString()) * (<any> this.strVal2.toString()))
+  }
 
-    /**
+  /**
      * Sets the item to a BootstrapMethod item.
      *
      * @param position
@@ -245,13 +245,13 @@ export class Item {
      * hashcode of the bootstrap method and the hashcode of all
      * bootstrap arguments.
      */
-    setPosHash(position: number, hashCode: number) {
-        this.type = ClassWriter.BSM;
-        this.intVal = position;
-        this.__hashCode = hashCode;
-    }
+  setPosHash(position: number, hashCode: number) {
+    this.type = ClassWriter.BSM
+    this.intVal = position
+    this.__hashCode = hashCode
+  }
 
-    /**
+  /**
      * Indicates if the given item is equal to this one. <i>This method assumes
      * that the two items have the same {@link #type}</i>.
      *
@@ -261,45 +261,44 @@ export class Item {
      * @return <tt>true</tt> if the given item if equal to this one,
      * <tt>false</tt> otherwise.
      */
-    isEqualTo(i: Item): boolean {
-        switch ((this.type)) {
-            case ClassWriter.UTF8:
-            case ClassWriter.STR:
-            case ClassWriter.CLASS:
-            case ClassWriter.MTYPE:
-            case ClassWriter.TYPE_NORMAL:
-                return (i.strVal1 === this.strVal1);
-            case ClassWriter.TYPE_MERGED:
-            case ClassWriter.LONG:
-            case ClassWriter.DOUBLE:
-                return i.longVal === this.longVal;
-            case ClassWriter.INT:
-            case ClassWriter.FLOAT:
-                return i.intVal === this.intVal;
-            case ClassWriter.TYPE_UNINIT:
-                return i.intVal === this.intVal && (i.strVal1 === this.strVal1);
-            case ClassWriter.NAME_TYPE:
-                return (i.strVal1 === this.strVal1) && (i.strVal2 === this.strVal2);
-            case ClassWriter.INDY:
-                {
-                    return i.longVal === this.longVal && (i.strVal1 === this.strVal1) && (i.strVal2 === this.strVal2);
-                };
-            default:
-                return (i.strVal1 === this.strVal1) && (i.strVal2 === this.strVal2) && (i.strVal3 === this.strVal3);
-        }
+  isEqualTo(i: Item): boolean {
+    switch ((this.type)) {
+      case ClassWriter.UTF8:
+      case ClassWriter.STR:
+      case ClassWriter.CLASS:
+      case ClassWriter.MTYPE:
+      case ClassWriter.TYPE_NORMAL:
+        return (i.strVal1 === this.strVal1)
+      case ClassWriter.TYPE_MERGED:
+      case ClassWriter.LONG:
+      case ClassWriter.DOUBLE:
+        return i.longVal === this.longVal
+      case ClassWriter.INT:
+      case ClassWriter.FLOAT:
+        return i.intVal === this.intVal
+      case ClassWriter.TYPE_UNINIT:
+        return i.intVal === this.intVal && (i.strVal1 === this.strVal1)
+      case ClassWriter.NAME_TYPE:
+        return (i.strVal1 === this.strVal1) && (i.strVal2 === this.strVal2)
+      case ClassWriter.INDY:
+      {
+        return i.longVal === this.longVal && (i.strVal1 === this.strVal1) && (i.strVal2 === this.strVal2)
+      }
+      default:
+        return (i.strVal1 === this.strVal1) && (i.strVal2 === this.strVal2) && (i.strVal3 === this.strVal3)
     }
+  }
 }
 
-
 function str_hash(str: string): number {
-    let hash = 0;
-    if (str.length == 0) { return hash; }
-    for (let i = 0; i < str.length; i++) {
-        let char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash;
+  let hash = 0
+  if (str.length === 0) { return hash }
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  return hash
 }
 
 // String.prototype["hashCode"] = function () {
@@ -312,4 +311,3 @@ function str_hash(str: string): number {
 //     }
 //     return hash;
 // }
-

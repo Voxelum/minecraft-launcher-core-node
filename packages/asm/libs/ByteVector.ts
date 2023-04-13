@@ -35,28 +35,28 @@
  * @author Eric Bruneton
  */
 export class ByteVector {
-    /**
+  /**
      * The content of this vector.
      */
-    data: Uint8Array;
+  data: Uint8Array
 
-    /**
+  /**
      * Actual number of bytes in this vector.
      */
-    length: number = 0;
+  length = 0
 
-    /**
+  /**
      * Constructs a new {@link ByteVector ByteVector} with the given initial
      * size.
      *
      * @param initialSize
      * the initial size of the byte vector to be constructed.
      */
-    public constructor(initialSize: number = 64) {
-        this.data = new Uint8Array(initialSize);
-    }
+  public constructor (initialSize = 64) {
+    this.data = new Uint8Array(initialSize)
+  }
 
-    /**
+  /**
      * Puts a byte into this byte vector. The byte vector is automatically
      * enlarged if necessary.
      *
@@ -64,17 +64,17 @@ export class ByteVector {
      * a byte.
      * @return this byte vector.
      */
-    public putByte(b: number): ByteVector {
-        let length: number = this.length;
-        if (length + 1 > this.data.length) {
-            this.enlarge(1);
-        }
-        this.data[length++] = (b | 0);
-        this.length = length;
-        return this;
+  public putByte (b: number): ByteVector {
+    let length: number = this.length
+    if (length + 1 > this.data.length) {
+      this.enlarge(1)
     }
+    this.data[length++] = (b | 0)
+    this.length = length
+    return this
+  }
 
-    /**
+  /**
      * Puts two bytes into this byte vector. The byte vector is automatically
      * enlarged if necessary.
      *
@@ -84,19 +84,19 @@ export class ByteVector {
      * another byte.
      * @return this byte vector.
      */
-    put11(b1: number, b2: number): ByteVector {
-        let length: number = this.length;
-        if (length + 2 > this.data.length) {
-            this.enlarge(2);
-        }
-        let data: Uint8Array = this.data;
-        data[length++] = (b1 | 0);
-        data[length++] = (b2 | 0);
-        this.length = length;
-        return this;
+  put11 (b1: number, b2: number): ByteVector {
+    let length: number = this.length
+    if (length + 2 > this.data.length) {
+      this.enlarge(2)
     }
+    const data: Uint8Array = this.data
+    data[length++] = (b1 | 0)
+    data[length++] = (b2 | 0)
+    this.length = length
+    return this
+  }
 
-    /**
+  /**
      * Puts a short into this byte vector. The byte vector is automatically
      * enlarged if necessary.
      *
@@ -104,19 +104,19 @@ export class ByteVector {
      * a short.
      * @return this byte vector.
      */
-    public putShort(s: number): ByteVector {
-        let length: number = this.length;
-        if (length + 2 > this.data.length) {
-            this.enlarge(2);
-        }
-        let data: Uint8Array = this.data;
-        data[length++] = ((s >>> 8) | 0);
-        data[length++] = (s | 0);
-        this.length = length;
-        return this;
+  public putShort (s: number): ByteVector {
+    let length: number = this.length
+    if (length + 2 > this.data.length) {
+      this.enlarge(2)
     }
+    const data: Uint8Array = this.data
+    data[length++] = ((s >>> 8) | 0)
+    data[length++] = (s | 0)
+    this.length = length
+    return this
+  }
 
-    /**
+  /**
      * Puts a byte and a short into this byte vector. The byte vector is
      * automatically enlarged if necessary.
      *
@@ -124,20 +124,20 @@ export class ByteVector {
      * @param s a short.
      * @return this byte vector.
      */
-    put12(b: number, s: number): ByteVector {
-        let length: number = this.length;
-        if (length + 3 > this.data.length) {
-            this.enlarge(3);
-        }
-        let data: Uint8Array = this.data;
-        data[length++] = (b | 0);
-        data[length++] = ((s >>> 8) | 0);
-        data[length++] = (s | 0);
-        this.length = length;
-        return this;
+  put12 (b: number, s: number): ByteVector {
+    let length: number = this.length
+    if (length + 3 > this.data.length) {
+      this.enlarge(3)
     }
+    const data: Uint8Array = this.data
+    data[length++] = (b | 0)
+    data[length++] = ((s >>> 8) | 0)
+    data[length++] = (s | 0)
+    this.length = length
+    return this
+  }
 
-    /**
+  /**
      * Puts an int into this byte vector. The byte vector is automatically
      * enlarged if necessary.
      *
@@ -145,21 +145,21 @@ export class ByteVector {
      * an int.
      * @return this byte vector.
      */
-    public putInt(i: number): ByteVector {
-        let length: number = this.length;
-        if (length + 4 > this.data.length) {
-            this.enlarge(4);
-        }
-        let data: Uint8Array = this.data;
-        data[length++] = ((i >>> 24) | 0);
-        data[length++] = ((i >>> 16) | 0);
-        data[length++] = ((i >>> 8) | 0);
-        data[length++] = (i | 0);
-        this.length = length;
-        return this;
+  public putInt (i: number): ByteVector {
+    let length: number = this.length
+    if (length + 4 > this.data.length) {
+      this.enlarge(4)
     }
+    const data: Uint8Array = this.data
+    data[length++] = ((i >>> 24) | 0)
+    data[length++] = ((i >>> 16) | 0)
+    data[length++] = ((i >>> 8) | 0)
+    data[length++] = (i | 0)
+    this.length = length
+    return this
+  }
 
-    /**
+  /**
      * Puts a long into this byte vector. The byte vector is automatically
      * enlarged if necessary.
      *
@@ -167,27 +167,27 @@ export class ByteVector {
      * a long.
      * @return this byte vector.
      */
-    public putLong(l: Long): ByteVector {
-        let length: number = this.length;
-        if (length + 8 > this.data.length) {
-            this.enlarge(8);
-        }
-        let data: Uint8Array = this.data;
-        let i: number = l.getHighBits();
-        data[length++] = (i >>> 24) & 256;
-        data[length++] = (i >>> 16) & 256;
-        data[length++] = (i >>> 8) & 256;
-        data[length++] = i & 256;
-        i = l.getLowBits();
-        data[length++] = ((i >>> 24) & 256);
-        data[length++] = ((i >>> 16) & 256);
-        data[length++] = ((i >>> 8) & 256);
-        data[length++] = (i & 256);
-        this.length = length;
-        return this;
+  public putLong (l: bigint): ByteVector {
+    let length: number = this.length
+    if (length + 8 > this.data.length) {
+      this.enlarge(8)
     }
+    const data: Uint8Array = this.data
+    let i = Number((l >> 32n) & 0xffffffffn)
+    data[length++] = (i >>> 24) & 256
+    data[length++] = (i >>> 16) & 256
+    data[length++] = (i >>> 8) & 256
+    data[length++] = i & 256
+    i = Number(l & 0xffffffffn)
+    data[length++] = ((i >>> 24) & 256)
+    data[length++] = ((i >>> 16) & 256)
+    data[length++] = ((i >>> 8) & 256)
+    data[length++] = (i & 256)
+    this.length = length
+    return this
+  }
 
-    /**
+  /**
      * Puts an UTF8 string into this byte vector. The byte vector is
      * automatically enlarged if necessary.
      *
@@ -195,32 +195,32 @@ export class ByteVector {
      * a String whose UTF8 encoded length must be less than 65536.
      * @return this byte vector.
      */
-    public putUTF8(s: string): ByteVector {
-        let charLength: number = s.length;
-        if (charLength > 65535) {
-            throw new Error();
-        }
-        let len: number = this.length;
-        if (len + 2 + charLength > this.data.length) {
-            this.enlarge(2 + charLength);
-        }
-        let data: Uint8Array = this.data;
-        data[len++] = ((charLength >>> 8) | 0);
-        data[len++] = (charLength | 0);
-        for (let i: number = 0; i < charLength; ++i) {
-            let c: string = s.charAt(i);
-            if ((c).charCodeAt(0) >= ("\u0001").charCodeAt(0) && (c).charCodeAt(0) <= ("\u007f").charCodeAt(0)) {
-                data[len++] = (c).charCodeAt(0);
-            } else {
-                this.length = len;
-                return this.encodeUTF8(s, i, 65535);
-            }
-        }
-        this.length = len;
-        return this;
+  public putUTF8 (s: string): ByteVector {
+    const charLength: number = s.length
+    if (charLength > 65535) {
+      throw new Error()
     }
+    let len: number = this.length
+    if (len + 2 + charLength > this.data.length) {
+      this.enlarge(2 + charLength)
+    }
+    const data: Uint8Array = this.data
+    data[len++] = ((charLength >>> 8) | 0)
+    data[len++] = (charLength | 0)
+    for (let i = 0; i < charLength; ++i) {
+      const c: string = s.charAt(i)
+      if ((c).charCodeAt(0) >= ('\u0001').charCodeAt(0) && (c).charCodeAt(0) <= ('\u007f').charCodeAt(0)) {
+        data[len++] = (c).charCodeAt(0)
+      } else {
+        this.length = len
+        return this.encodeUTF8(s, i, 65535)
+      }
+    }
+    this.length = len
+    return this
+  }
 
-    /**
+  /**
      * Puts an UTF8 string into this byte vector. The byte vector is
      * automatically enlarged if necessary. The string length is encoded in two
      * bytes before the encoded characters, if there is space for that (i.e. if
@@ -237,50 +237,50 @@ export class ByteVector {
      * already encoded characters.
      * @return this byte vector.
      */
-    encodeUTF8(s: string, i: number, maxByteLength: number): ByteVector {
-        let charLength: number = s.length;
-        let byteLength: number = i;
-        let c: string;
-        for (let j: number = i; j < charLength; ++j) {
-            c = s.charAt(j);
-            if ((c).charCodeAt(0) >= ("\u0001").charCodeAt(0) && (c).charCodeAt(0) <= ("\u007f").charCodeAt(0)) {
-                byteLength++;
-            } else if ((c).charCodeAt(0) > ("\u07ff").charCodeAt(0)) {
-                byteLength += 3;
-            } else {
-                byteLength += 2;
-            }
-        }
-        if (byteLength > maxByteLength) {
-            throw new Error();
-        }
-        let start: number = this.length - i - 2;
-        if (start >= 0) {
-            this.data[start] = ((byteLength >>> 8) | 0);
-            this.data[start + 1] = (byteLength | 0);
-        }
-        if (this.length + byteLength - i > this.data.length) {
-            this.enlarge(byteLength - i);
-        }
-        let len: number = this.length;
-        for (let j: number = i; j < charLength; ++j) {
-            c = s.charAt(j);
-            if ((c).charCodeAt(0) >= ("\u0001").charCodeAt(0) && (c).charCodeAt(0) <= ("\u007f").charCodeAt(0)) {
-                this.data[len++] = (c).charCodeAt(0);
-            } else if ((c).charCodeAt(0) > ("\u07ff").charCodeAt(0)) {
-                this.data[len++] = ((224 | (c).charCodeAt(0) >> 12 & 15) | 0);
-                this.data[len++] = ((128 | (c).charCodeAt(0) >> 6 & 63) | 0);
-                this.data[len++] = ((128 | (c).charCodeAt(0) & 63) | 0);
-            } else {
-                this.data[len++] = ((192 | (c).charCodeAt(0) >> 6 & 31) | 0);
-                this.data[len++] = ((128 | (c).charCodeAt(0) & 63) | 0);
-            }
-        }
-        this.length = len;
-        return this;
+  encodeUTF8 (s: string, i: number, maxByteLength: number): ByteVector {
+    const charLength: number = s.length
+    let byteLength: number = i
+    let c: string
+    for (let j: number = i; j < charLength; ++j) {
+      c = s.charAt(j)
+      if ((c).charCodeAt(0) >= ('\u0001').charCodeAt(0) && (c).charCodeAt(0) <= ('\u007f').charCodeAt(0)) {
+        byteLength++
+      } else if ((c).charCodeAt(0) > ('\u07ff').charCodeAt(0)) {
+        byteLength += 3
+      } else {
+        byteLength += 2
+      }
     }
+    if (byteLength > maxByteLength) {
+      throw new Error()
+    }
+    const start: number = this.length - i - 2
+    if (start >= 0) {
+      this.data[start] = ((byteLength >>> 8) | 0)
+      this.data[start + 1] = (byteLength | 0)
+    }
+    if (this.length + byteLength - i > this.data.length) {
+      this.enlarge(byteLength - i)
+    }
+    let len: number = this.length
+    for (let j: number = i; j < charLength; ++j) {
+      c = s.charAt(j)
+      if ((c).charCodeAt(0) >= ('\u0001').charCodeAt(0) && (c).charCodeAt(0) <= ('\u007f').charCodeAt(0)) {
+        this.data[len++] = (c).charCodeAt(0)
+      } else if ((c).charCodeAt(0) > ('\u07ff').charCodeAt(0)) {
+        this.data[len++] = ((224 | (c).charCodeAt(0) >> 12 & 15) | 0)
+        this.data[len++] = ((128 | (c).charCodeAt(0) >> 6 & 63) | 0)
+        this.data[len++] = ((128 | (c).charCodeAt(0) & 63) | 0)
+      } else {
+        this.data[len++] = ((192 | (c).charCodeAt(0) >> 6 & 31) | 0)
+        this.data[len++] = ((128 | (c).charCodeAt(0) & 63) | 0)
+      }
+    }
+    this.length = len
+    return this
+  }
 
-    /**
+  /**
      * Puts an array of bytes into this byte vector. The byte vector is
      * automatically enlarged if necessary.
      *
@@ -293,32 +293,32 @@ export class ByteVector {
      * number of bytes of b that must be copied.
      * @return this byte vector.
      */
-    public putByteArray(b: Uint8Array | null, off: number, len: number): ByteVector {
-        if (this.length + len > this.data.length) {
-            this.enlarge(len);
-        }
-        if (b != null) {
-            for (let i = 0; i < len; i++) {
-                this.data[i + this.length] = b[i + off];
-            }
-            // java.lang.System.arraycopy(b, off, this.data, this.length, len);
-        }
-        this.length += len;
-        return this;
+  public putByteArray (b: Uint8Array | null, off: number, len: number): ByteVector {
+    if (this.length + len > this.data.length) {
+      this.enlarge(len)
     }
+    if (b != null) {
+      for (let i = 0; i < len; i++) {
+        this.data[i + this.length] = b[i + off]
+      }
+      // java.lang.System.arraycopy(b, off, this.data, this.length, len);
+    }
+    this.length += len
+    return this
+  }
 
-    /**
+  /**
      * Enlarge this byte vector so that it can receive n more bytes.
      *
      * @param size
      * number of additional bytes that this byte vector should be
      * able to receive.
      */
-    private enlarge(size: number) {
-        let length1: number = 2 * this.data.length;
-        let length2: number = this.length + size;
-        const newArr = new Uint8Array(length1 > length2 ? length1 : length2);
-        newArr.set(this.data);
-        this.data = newArr;
-    }
+  private enlarge (size: number) {
+    const length1: number = 2 * this.data.length
+    const length2: number = this.length + size
+    const newArr = new Uint8Array(length1 > length2 ? length1 : length2)
+    newArr.set(this.data)
+    this.data = newArr
+  }
 }

@@ -26,18 +26,8 @@
         "libs/TypeReference.ts",
         "index.ts"
     ],
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "target": "es2018",
-        "module": "esnext",
-        "sourceMap": true,
-        "experimentalDecorators": true,
-        "declaration": true,
-        "downlevelIteration": true,
-        "strict": true,
-        "strictNullChecks": true,
-        "moduleResolution": "node",
-        "noImplicitAny": false,
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true
-    }
+        "outDir": "./dist"
+    },
 }

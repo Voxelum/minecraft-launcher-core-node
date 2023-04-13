@@ -40,466 +40,463 @@
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
-export namespace Opcodes {
+export enum Opcodes {
 
-    export const ASM4 : number = 4 << 16 | 0 << 8 | 0;
+   ASM4 = 4 << 16 | 0 << 8 | 0,
 
-    export const ASM5 : number = 5 << 16 | 0 << 8 | 0;
+   ASM5 = 5 << 16 | 0 << 8 | 0,
 
-    export const V1_1 : number = 3 << 16 | 45;
+   V1_1 = 3 << 16 | 45,
 
-    export const V1_2 : number = 0 << 16 | 46;
+   V1_2 = 0 << 16 | 46,
 
-    export const V1_3 : number = 0 << 16 | 47;
+   V1_3 = 0 << 16 | 47,
 
-    export const V1_4 : number = 0 << 16 | 48;
+   V1_4 = 0 << 16 | 48,
 
-    export const V1_5 : number = 0 << 16 | 49;
+   V1_5 = 0 << 16 | 49,
 
-    export const V1_6 : number = 0 << 16 | 50;
+   V1_6 = 0 << 16 | 50,
 
-    export const V1_7 : number = 0 << 16 | 51;
+   V1_7 = 0 << 16 | 51,
 
-    export const V1_8 : number = 0 << 16 | 52;
+   V1_8 = 0 << 16 | 52,
 
-    export const ACC_PUBLIC : number = 1;
+   ACC_PUBLIC = 1,
 
-    export const ACC_PRIVATE : number = 2;
+   ACC_PRIVATE = 2,
 
-    export const ACC_PROTECTED : number = 4;
+   ACC_PROTECTED = 4,
 
-    export const ACC_STATIC : number = 8;
+   ACC_STATIC = 8,
 
-    export const ACC_FINAL : number = 16;
+   ACC_FINAL = 16,
 
-    export const ACC_SUPER : number = 32;
+   ACC_SUPER = 32,
 
-    export const ACC_SYNCHRONIZED : number = 32;
+   ACC_SYNCHRONIZED = 32,
 
-    export const ACC_VOLATILE : number = 64;
+   ACC_VOLATILE = 64,
 
-    export const ACC_BRIDGE : number = 64;
+   ACC_BRIDGE = 64,
 
-    export const ACC_VARARGS : number = 128;
+   ACC_VARARGS = 128,
 
-    export const ACC_TRANSIENT : number = 128;
+   ACC_TRANSIENT = 128,
 
-    export const ACC_NATIVE : number = 256;
+   ACC_NATIVE = 256,
 
-    export const ACC_INTERFACE : number = 512;
+   ACC_INTERFACE = 512,
 
-    export const ACC_ABSTRACT : number = 1024;
+   ACC_ABSTRACT = 1024,
 
-    export const ACC_STRICT : number = 2048;
+   ACC_STRICT = 2048,
 
-    export const ACC_SYNTHETIC : number = 4096;
+   ACC_SYNTHETIC = 4096,
 
-    export const ACC_ANNOTATION : number = 8192;
+   ACC_ANNOTATION = 8192,
 
-    export const ACC_ENUM : number = 16384;
+   ACC_ENUM = 16384,
 
-    export const ACC_MANDATED : number = 32768;
+   ACC_MANDATED = 32768,
 
-    export const ACC_DEPRECATED : number = 131072;
+   ACC_DEPRECATED = 131072,
 
-    export const T_BOOLEAN : number = 4;
+   T_BOOLEAN = 4,
 
-    export const T_CHAR : number = 5;
+   T_CHAR = 5,
 
-    export const T_FLOAT : number = 6;
+   T_FLOAT = 6,
 
-    export const T_DOUBLE : number = 7;
+   T_DOUBLE = 7,
 
-    export const T_BYTE : number = 8;
+   T_BYTE = 8,
 
-    export const T_SHORT : number = 9;
+   T_SHORT = 9,
 
-    export const T_INT : number = 10;
+   T_INT = 10,
 
-    export const T_LONG : number = 11;
+   T_LONG = 11,
 
-    export const H_GETFIELD : number = 1;
+   H_GETFIELD = 1,
 
-    export const H_GETSTATIC : number = 2;
+   H_GETSTATIC = 2,
 
-    export const H_PUTFIELD : number = 3;
+   H_PUTFIELD = 3,
 
-    export const H_PUTSTATIC : number = 4;
+   H_PUTSTATIC = 4,
 
-    export const H_INVOKEVIRTUAL : number = 5;
+   H_INVOKEVIRTUAL = 5,
 
-    export const H_INVOKESTATIC : number = 6;
+   H_INVOKESTATIC = 6,
 
-    export const H_INVOKESPECIAL : number = 7;
+   H_INVOKESPECIAL = 7,
 
-    export const H_NEWINVOKESPECIAL : number = 8;
+   H_NEWINVOKESPECIAL = 8,
 
-    export const H_INVOKEINTERFACE : number = 9;
+   H_INVOKEINTERFACE = 9,
 
-    /**
+  /**
      * Represents an expanded frame. See {@link ClassReader#EXPAND_FRAMES}.
      */
-    export const F_NEW : number = -1;
+   F_NEW = -1,
 
-    /**
-     * Represents a compressed frame with compexport conste frame data.
+  /**
+     * Represents a compressed frame with compe frame data.,
      */
-    export const F_FULL : number = 0;
+   F_FULL = 0,
 
-    /**
+  /**
      * Represents a compressed frame where locals are the same as the locals in
      * the previous frame, except that additional 1-3 locals are defined, and
      * with an empty stack.
      */
-    export const F_APPEND : number = 1;
+   F_APPEND = 1,
 
-    /**
+  /**
      * Represents a compressed frame where locals are the same as the locals in
      * the previous frame, except that the last 1-3 locals are absent and with
      * an empty stack.
      */
-    export const F_CHOP : number = 2;
+   F_CHOP = 2,
 
-    /**
+  /**
      * Represents a compressed frame with exactly the same locals as the
      * previous frame and with an empty stack.
      */
-    export const F_SAME : number = 3;
+   F_SAME = 3,
 
-    /**
+  /**
      * Represents a compressed frame with exactly the same locals as the
      * previous frame and with a single value on the stack.
      */
-    export const F_SAME1 : number = 4;
+   F_SAME1 = 4,
 
-    export const TOP : number = <number>new Number(0);
+   TOP = 0,
 
-    export const INTEGER : number = <number>new Number(1);
+   INTEGER = 1,
 
-    export const FLOAT : number = <number>new Number(2);
+   FLOAT = 2,
 
-    export const DOUBLE : number = <number>new Number(3);
+   DOUBLE = 3,
 
-    export const LONG : number = <number>new Number(4);
+   LONG = 4,
 
-    export const NULL : number = <number>new Number(5);
+   NULL = 5,
 
-    export const UNINITIALIZED_THIS : number = <number>new Number(6);
+   UNINITIALIZED_THIS = 6,
 
-    export const NOP : number = 0;
+   NOP = 0,
 
-    export const ACONST_NULL : number = 1;
+   ACONST_NULL = 1,
 
-    export const ICONST_M1 : number = 2;
+   ICONST_M1 = 2,
 
-    export const ICONST_0 : number = 3;
+   ICONST_0 = 3,
 
-    export const ICONST_1 : number = 4;
+   ICONST_1 = 4,
 
-    export const ICONST_2 : number = 5;
+   ICONST_2 = 5,
 
-    export const ICONST_3 : number = 6;
+   ICONST_3 = 6,
 
-    export const ICONST_4 : number = 7;
+   ICONST_4 = 7,
 
-    export const ICONST_5 : number = 8;
+   ICONST_5 = 8,
 
-    export const LCONST_0 : number = 9;
+   LCONST_0 = 9,
 
-    export const LCONST_1 : number = 10;
+   LCONST_1 = 10,
 
-    export const FCONST_0 : number = 11;
+   FCONST_0 = 11,
 
-    export const FCONST_1 : number = 12;
+   FCONST_1 = 12,
 
-    export const FCONST_2 : number = 13;
+   FCONST_2 = 13,
 
-    export const DCONST_0 : number = 14;
+   DCONST_0 = 14,
 
-    export const DCONST_1 : number = 15;
+   DCONST_1 = 15,
 
-    export const BIPUSH : number = 16;
+   BIPUSH = 16,
 
-    export const SIPUSH : number = 17;
+   SIPUSH = 17,
 
-    export const LDC : number = 18;
+   LDC = 18,
 
-    export const ILOAD : number = 21;
+   ILOAD = 21,
 
-    export const LLOAD : number = 22;
+   LLOAD = 22,
 
-    export const FLOAD : number = 23;
+   FLOAD = 23,
 
-    export const DLOAD : number = 24;
+   DLOAD = 24,
 
-    export const ALOAD : number = 25;
+   ALOAD = 25,
 
-    export const IALOAD : number = 46;
+   IALOAD = 46,
 
-    export const LALOAD : number = 47;
+   LALOAD = 47,
 
-    export const FALOAD : number = 48;
+   FALOAD = 48,
 
-    export const DALOAD : number = 49;
+   DALOAD = 49,
 
-    export const AALOAD : number = 50;
+   AALOAD = 50,
 
-    export const BALOAD : number = 51;
+   BALOAD = 51,
 
-    export const CALOAD : number = 52;
+   CALOAD = 52,
 
-    export const SALOAD : number = 53;
+   SALOAD = 53,
 
-    export const ISTORE : number = 54;
+   ISTORE = 54,
 
-    export const LSTORE : number = 55;
+   LSTORE = 55,
 
-    export const FSTORE : number = 56;
+   FSTORE = 56,
 
-    export const DSTORE : number = 57;
+   DSTORE = 57,
 
-    export const ASTORE : number = 58;
+   ASTORE = 58,
 
-    export const IASTORE : number = 79;
+   IASTORE = 79,
 
-    export const LASTORE : number = 80;
+   LASTORE = 80,
 
-    export const FASTORE : number = 81;
+   FASTORE = 81,
 
-    export const DASTORE : number = 82;
+   DASTORE = 82,
 
-    export const AASTORE : number = 83;
+   AASTORE = 83,
 
-    export const BASTORE : number = 84;
+   BASTORE = 84,
 
-    export const CASTORE : number = 85;
+   CASTORE = 85,
 
-    export const SASTORE : number = 86;
+   SASTORE = 86,
 
-    export const POP : number = 87;
+   POP = 87,
 
-    export const POP2 : number = 88;
+   POP2 = 88,
 
-    export const DUP : number = 89;
+   DUP = 89,
 
-    export const DUP_X1 : number = 90;
+   DUP_X1 = 90,
 
-    export const DUP_X2 : number = 91;
+   DUP_X2 = 91,
 
-    export const DUP2 : number = 92;
+   DUP2 = 92,
 
-    export const DUP2_X1 : number = 93;
+   DUP2_X1 = 93,
 
-    export const DUP2_X2 : number = 94;
+   DUP2_X2 = 94,
 
-    export const SWAP : number = 95;
+   SWAP = 95,
 
-    export const IADD : number = 96;
+   IADD = 96,
 
-    export const LADD : number = 97;
+   LADD = 97,
 
-    export const FADD : number = 98;
+   FADD = 98,
 
-    export const DADD : number = 99;
+   DADD = 99,
 
-    export const ISUB : number = 100;
+   ISUB = 100,
 
-    export const LSUB : number = 101;
+   LSUB = 101,
 
-    export const FSUB : number = 102;
+   FSUB = 102,
 
-    export const DSUB : number = 103;
+   DSUB = 103,
 
-    export const IMUL : number = 104;
+   IMUL = 104,
 
-    export const LMUL : number = 105;
+   LMUL = 105,
 
-    export const FMUL : number = 106;
+   FMUL = 106,
 
-    export const DMUL : number = 107;
+   DMUL = 107,
 
-    export const IDIV : number = 108;
+   IDIV = 108,
 
-    export const LDIV : number = 109;
+   LDIV = 109,
 
-    export const FDIV : number = 110;
+   FDIV = 110,
 
-    export const DDIV : number = 111;
+   DDIV = 111,
 
-    export const IREM : number = 112;
+   IREM = 112,
 
-    export const LREM : number = 113;
+   LREM = 113,
 
-    export const FREM : number = 114;
+   FREM = 114,
 
-    export const DREM : number = 115;
+   DREM = 115,
 
-    export const INEG : number = 116;
+   INEG = 116,
 
-    export const LNEG : number = 117;
+   LNEG = 117,
 
-    export const FNEG : number = 118;
+   FNEG = 118,
 
-    export const DNEG : number = 119;
+   DNEG = 119,
 
-    export const ISHL : number = 120;
+   ISHL = 120,
 
-    export const LSHL : number = 121;
+   LSHL = 121,
 
-    export const ISHR : number = 122;
+   ISHR = 122,
 
-    export const LSHR : number = 123;
+   LSHR = 123,
 
-    export const IUSHR : number = 124;
+   IUSHR = 124,
 
-    export const LUSHR : number = 125;
+   LUSHR = 125,
 
-    export const IAND : number = 126;
+   IAND = 126,
 
-    export const LAND : number = 127;
+   LAND = 127,
 
-    export const IOR : number = 128;
+   IOR = 128,
 
-    export const LOR : number = 129;
+   LOR = 129,
 
-    export const IXOR : number = 130;
+   IXOR = 130,
 
-    export const LXOR : number = 131;
+   LXOR = 131,
 
-    export const IINC : number = 132;
+   IINC = 132,
 
-    export const I2L : number = 133;
+   I2L = 133,
 
-    export const I2F : number = 134;
+   I2F = 134,
 
-    export const I2D : number = 135;
+   I2D = 135,
 
-    export const L2I : number = 136;
+   L2I = 136,
 
-    export const L2F : number = 137;
+   L2F = 137,
 
-    export const L2D : number = 138;
+   L2D = 138,
 
-    export const F2I : number = 139;
+   F2I = 139,
 
-    export const F2L : number = 140;
+   F2L = 140,
 
-    export const F2D : number = 141;
+   F2D = 141,
 
-    export const D2I : number = 142;
+   D2I = 142,
 
-    export const D2L : number = 143;
+   D2L = 143,
 
-    export const D2F : number = 144;
+   D2F = 144,
 
-    export const I2B : number = 145;
+   I2B = 145,
 
-    export const I2C : number = 146;
+   I2C = 146,
 
-    export const I2S : number = 147;
+   I2S = 147,
 
-    export const LCMP : number = 148;
+   LCMP = 148,
 
-    export const FCMPL : number = 149;
+   FCMPL = 149,
 
-    export const FCMPG : number = 150;
+   FCMPG = 150,
 
-    export const DCMPL : number = 151;
+   DCMPL = 151,
 
-    export const DCMPG : number = 152;
+   DCMPG = 152,
 
-    export const IFEQ : number = 153;
+   IFEQ = 153,
 
-    export const IFNE : number = 154;
+   IFNE = 154,
 
-    export const IFLT : number = 155;
+   IFLT = 155,
 
-    export const IFGE : number = 156;
+   IFGE = 156,
 
-    export const IFGT : number = 157;
+   IFGT = 157,
 
-    export const IFLE : number = 158;
+   IFLE = 158,
 
-    export const IF_ICMPEQ : number = 159;
+   IF_ICMPEQ = 159,
 
-    export const IF_ICMPNE : number = 160;
+   IF_ICMPNE = 160,
 
-    export const IF_ICMPLT : number = 161;
+   IF_ICMPLT = 161,
 
-    export const IF_ICMPGE : number = 162;
+   IF_ICMPGE = 162,
 
-    export const IF_ICMPGT : number = 163;
+   IF_ICMPGT = 163,
 
-    export const IF_ICMPLE : number = 164;
+   IF_ICMPLE = 164,
 
-    export const IF_ACMPEQ : number = 165;
+   IF_ACMPEQ = 165,
 
-    export const IF_ACMPNE : number = 166;
+   IF_ACMPNE = 166,
 
-    export const GOTO : number = 167;
+   GOTO = 167,
 
-    export const JSR : number = 168;
+   JSR = 168,
 
-    export const RET : number = 169;
+   RET = 169,
 
-    export const TABLESWITCH : number = 170;
+   TABLESWITCH = 170,
 
-    export const LOOKUPSWITCH : number = 171;
+   LOOKUPSWITCH = 171,
 
-    export const IRETURN : number = 172;
+   IRETURN = 172,
 
-    export const LRETURN : number = 173;
+   LRETURN = 173,
 
-    export const FRETURN : number = 174;
+   FRETURN = 174,
 
-    export const DRETURN : number = 175;
+   DRETURN = 175,
 
-    export const ARETURN : number = 176;
+   ARETURN = 176,
 
-    export const RETURN : number = 177;
+   RETURN = 177,
 
-    export const GETSTATIC : number = 178;
+   GETSTATIC = 178,
 
-    export const PUTSTATIC : number = 179;
+   PUTSTATIC = 179,
 
-    export const GETFIELD : number = 180;
+   GETFIELD = 180,
 
-    export const PUTFIELD : number = 181;
+   PUTFIELD = 181,
 
-    export const INVOKEVIRTUAL : number = 182;
+   INVOKEVIRTUAL = 182,
 
-    export const INVOKESPECIAL : number = 183;
+   INVOKESPECIAL = 183,
 
-    export const INVOKESTATIC : number = 184;
+   INVOKESTATIC = 184,
 
-    export const INVOKEINTERFACE : number = 185;
+   INVOKEINTERFACE = 185,
 
-    export const INVOKEDYNAMIC : number = 186;
+   INVOKEDYNAMIC = 186,
 
-    export const NEW : number = 187;
+   NEW = 187,
 
-    export const NEWARRAY : number = 188;
+   NEWARRAY = 188,
 
-    export const ANEWARRAY : number = 189;
+   ANEWARRAY = 189,
 
-    export const ARRAYLENGTH : number = 190;
+   ARRAYLENGTH = 190,
 
-    export const ATHROW : number = 191;
+   ATHROW = 191,
 
-    export const CHECKCAST : number = 192;
+   CHECKCAST = 192,
 
-    export const INSTANCEOF : number = 193;
+   INSTANCEOF = 193,
 
-    export const MONITORENTER : number = 194;
+   MONITORENTER = 194,
 
-    export const MONITOREXIT : number = 195;
+   MONITOREXIT = 195,
 
-    export const MULTIANEWARRAY : number = 197;
+   MULTIANEWARRAY = 197,
 
-    export const IFNULL : number = 198;
+   IFNULL = 198,
 
-    export const IFNONNULL : number = 199;
+   IFNONNULL = 199,
 }
-
-
-

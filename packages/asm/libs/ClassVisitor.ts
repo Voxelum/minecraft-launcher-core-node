@@ -38,26 +38,26 @@
  *
  * @author Eric Bruneton
  */
-import { Opcodes } from "./Opcodes"
-import { Attribute } from "./Attribute"
-import { AnnotationVisitor } from "./AnnotationVisitor"
-import { TypePath } from "./TypePath"
-import { FieldVisitor } from "./FieldVisitor"
-import { MethodVisitor } from "./MethodVisitor"
+import { Opcodes } from './Opcodes'
+import { Attribute } from './Attribute'
+import { AnnotationVisitor } from './AnnotationVisitor'
+import { TypePath } from './TypePath'
+import { FieldVisitor } from './FieldVisitor'
+import { MethodVisitor } from './MethodVisitor'
 export abstract class ClassVisitor {
-    /**
+  /**
      * The ASM API version implemented by this visitor. The value of this field
      * must be one of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
      */
-    api: number;
+  api: number
 
-    /**
+  /**
      * The class visitor to which this visitor must delegate method calls. May
      * be null.
      */
-    cv: ClassVisitor | null;
+  cv: ClassVisitor | null
 
-    /**
+  /**
      * Constructs a new {@link ClassVisitor}.
      *
      * @param api
@@ -67,16 +67,16 @@ export abstract class ClassVisitor {
      * the class visitor to which this visitor must delegate method
      * calls. May be null.
      */
-    public constructor(api: number, cv: ClassVisitor | null = null) {
-        this.api = 0;
-        if (api !== Opcodes.ASM4 && api !== Opcodes.ASM5) {
-            throw new Error();
-        }
-        this.api = api;
-        this.cv = cv;
+  public constructor(api: number, cv: ClassVisitor | null = null) {
+    this.api = 0
+    if (api !== Opcodes.ASM4 && api !== Opcodes.ASM5) {
+      throw new Error()
     }
+    this.api = api
+    this.cv = cv
+  }
 
-    /**
+  /**
      * Visits the header of the class.
      *
      * @param version
@@ -101,13 +101,13 @@ export abstract class ClassVisitor {
      * {@link Type#getInternalName() getInternalName}). May be
      * <tt>null</tt>.
      */
-    public visit(version: number, access: number, name: string, signature: string | null, superName: string | null, interfaces: string[] | null) {
-        if (this.cv != null) {
-            this.cv.visit(version, access, name, signature, superName, interfaces);
-        }
+  public visit(version: number, access: number, name: string, signature: string | null, superName: string | null, interfaces: string[] | null) {
+    if (this.cv != null) {
+      this.cv.visit(version, access, name, signature, superName, interfaces)
     }
+  }
 
-    /**
+  /**
      * Visits the source of the class.
      *
      * @param source
@@ -118,13 +118,13 @@ export abstract class ClassVisitor {
      * between source and compiled elements of the class. May be
      * <tt>null</tt>.
      */
-    public visitSource(source: string | null, debug: string | null) {
-        if (this.cv != null) {
-            this.cv.visitSource(source, debug);
-        }
+  public visitSource(source: string | null, debug: string | null) {
+    if (this.cv != null) {
+      this.cv.visitSource(source, debug)
     }
+  }
 
-    /**
+  /**
      * Visits the enclosing class of the class. This method must be called only
      * if the class has an enclosing class.
      *
@@ -139,13 +139,13 @@ export abstract class ClassVisitor {
      * <tt>null</tt> if the class is not enclosed in a method of its
      * enclosing class.
      */
-    public visitOuterClass(owner: string, name: string | null, desc: string | null) {
-        if (this.cv != null) {
-            this.cv.visitOuterClass(owner, name, desc);
-        }
+  public visitOuterClass(owner: string, name: string | null, desc: string | null) {
+    if (this.cv != null) {
+      this.cv.visitOuterClass(owner, name, desc)
     }
+  }
 
-    /**
+  /**
      * Visits an annotation of the class.
      *
      * @param desc
@@ -155,14 +155,14 @@ export abstract class ClassVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitAnnotation(desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.cv != null) {
-            return this.cv.visitAnnotation(desc, visible);
-        }
-        return null;
+  public visitAnnotation(desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.cv != null) {
+      return this.cv.visitAnnotation(desc, visible)
     }
+    return null
+  }
 
-    /**
+  /**
      * Visits an annotation on a type in the class signature.
      *
      * @param typeRef
@@ -184,29 +184,29 @@ export abstract class ClassVisitor {
      * @return a visitor to visit the annotation values, or <tt>null</tt> if
      * this visitor is not interested in visiting this annotation.
      */
-    public visitTypeAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
-        if (this.api < Opcodes.ASM5) {
-            throw new Error();
-        }
-        if (this.cv != null) {
-            return this.cv.visitTypeAnnotation(typeRef, typePath, desc, visible);
-        }
-        return null;
+  public visitTypeAnnotation(typeRef: number, typePath: TypePath | null, desc: string | null, visible: boolean): AnnotationVisitor | null {
+    if (this.api < Opcodes.ASM5) {
+      throw new Error()
     }
+    if (this.cv != null) {
+      return this.cv.visitTypeAnnotation(typeRef, typePath, desc, visible)
+    }
+    return null
+  }
 
-    /**
+  /**
      * Visits a non standard attribute of the class.
      *
      * @param attr
      * an attribute.
      */
-    public visitAttribute(attr: Attribute) {
-        if (this.cv != null) {
-            this.cv.visitAttribute(attr);
-        }
+  public visitAttribute(attr: Attribute) {
+    if (this.cv != null) {
+      this.cv.visitAttribute(attr)
     }
+  }
 
-    /**
+  /**
      * Visits information about an inner class. This inner class is not
      * necessarily a member of the class being visited.
      *
@@ -224,13 +224,13 @@ export abstract class ClassVisitor {
      * the access flags of the inner class as originally declared in
      * the enclosing class.
      */
-    public visitInnerClass(name: string, outerName: string, innerName: string | null, access: number) {
-        if (this.cv != null) {
-            this.cv.visitInnerClass(name, outerName, innerName, access);
-        }
+  public visitInnerClass(name: string, outerName: string, innerName: string | null, access: number) {
+    if (this.cv != null) {
+      this.cv.visitInnerClass(name, outerName, innerName, access)
     }
+  }
 
-    /**
+  /**
      * Visits a field of the class.
      *
      * @param access
@@ -257,14 +257,14 @@ export abstract class ClassVisitor {
      * <tt>null</tt> if this class visitor is not interested in visiting
      * these annotations and attributes.
      */
-    public visitField(access: number, name: string, desc: string | null, signature: string | null, value: any): FieldVisitor | null {
-        if (this.cv != null) {
-            return this.cv.visitField(access, name, desc, signature, value);
-        }
-        return null;
+  public visitField(access: number, name: string, desc: string | null, signature: string | null, value: any): FieldVisitor | null {
+    if (this.cv != null) {
+      return this.cv.visitField(access, name, desc, signature, value)
     }
+    return null
+  }
 
-    /**
+  /**
      * Visits a method of the class. This method <i>must</i> return a new
      * {@link MethodVisitor} instance (or <tt>null</tt>) each time it is called,
      * i.e., it should not return a previously returned visitor.
@@ -289,21 +289,21 @@ export abstract class ClassVisitor {
      * if this class visitor is not interested in visiting the code of
      * this method.
      */
-    public visitMethod(access: number, name: string, desc: string, signature: string | null, exceptions: string[] | null): MethodVisitor | null {
-        if (this.cv != null) {
-            return this.cv.visitMethod(access, name, desc, signature, exceptions);
-        }
-        return null;
+  public visitMethod(access: number, name: string, desc: string, signature: string | null, exceptions: string[] | null): MethodVisitor | null {
+    if (this.cv != null) {
+      return this.cv.visitMethod(access, name, desc, signature, exceptions)
     }
+    return null
+  }
 
-    /**
+  /**
      * Visits the end of the class. This method, which is the last one to be
      * called, is used to inform the visitor that all the fields and methods of
      * the class have been visited.
      */
-    public visitEnd() {
-        if (this.cv != null) {
-            this.cv.visitEnd();
-        }
+  public visitEnd() {
+    if (this.cv != null) {
+      this.cv.visitEnd()
     }
+  }
 }
