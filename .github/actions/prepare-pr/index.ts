@@ -2,6 +2,7 @@ import fs from 'fs';
 import convBump from 'conventional-recommended-bump';
 import semver from 'semver';
 import core from '@actions/core';
+import { join } from 'path'
 
 declare interface Package {
     name: string;
@@ -75,7 +76,7 @@ function scanPackages() {
     function readPackageJson(packageName: string) {
         let packageJSON;
         try {
-            packageJSON = JSON.parse(fs.readFileSync(`packages/${packageName}/package.json`).toString());
+            packageJSON = JSON.parse(fs.readFileSync(join(process.cwd(), `packages/${packageName}/package.json`)).toString());
             packageJSON.dependencies
         } catch (e) {
             if ((e as any).code === 'ENOTDIR' || (e as any).code === 'ENOENT')
@@ -123,7 +124,7 @@ async function fillPackageBumpInfo(packages: Package[]) {
     async function getBumpSuggestion(pkg: string) {
         const result: BumpSuggestion = await new Promise<BumpSuggestion>((resolve, reject) => {
             convBump({
-                path: `packages/${pkg}`,
+                path: join(process.cwd(), `packages/${pkg}`),
                 whatBump(comments) {
                     const reasons = comments.filter(c => c.type === 'feat' || c.type === 'fix' || c.header?.startsWith('BREAKING CHANGE'));
                     const feats = comments.filter(c => c.type === 'feat');
@@ -260,7 +261,7 @@ function getCommitInfoText(packages: Package[]) {
 function writeChangelog(version: string, packages: Package[]) {
     let body = `\n## ${version}\n`;
 
-    function log(reason) {
+    function log(reason: Commit) {
         return `- ${reason.header} ([${reason.hash}](https://github.com/voxelum/minecraft-launcher-core-node/commit/${reason.hash}))\n`
     }
 
@@ -327,16 +328,21 @@ function getCommitMessage(version: string) {
     return `chore(release): bump version ${version}`
 }
 
-async function main(output) {
+async function main(output: (k: string, v: any) => void) {
     const { reversedDependencies, packages, dependencies } = scanPackages();
+
+    console.log(`Found ${packages.length} packages.`);
+
     await fillPackageBumpInfo(packages);
     const bumpLevel = bumpDependenciesPackage(reversedDependencies, packages);
+    
+    console.log(`Current bump level is: ${bumpLevel}`)
 
+    console.log(`Commit info:`)
     console.log(getCommitInfoText(packages));
 
     const packageJSON = JSON.parse(fs.readFileSync(`package.json`).toString());
 
-    console.log(bumpLevel)
 
     if (bumpLevel < 3) {
         const oldVersion = packageJSON.version;
