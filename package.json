@@ -1,42 +1,22 @@
 {
-    "private": true,
-    "version": "7.0.0",
-    "scripts": {
-        "build": "npm run lint && npm run compile && npm run build:definition && npm run build:readme",
-        "build:clean": "node scripts/clean.js",
-        "build:definition": "node scripts/generate-definition.js",
-        "build:readme": "node scripts/build-readme.js",
-        "compile": "rollup -c rollup.config.js",
-        "compile:watch": "rollup -c rollup.config.js --watch",
-        "compile:dry": "tsc --noEmit",
-        "lint": "eslint packages --ext .ts",
-        "lint:fix": "eslint packages --ext .ts --fix",
-        "test": "jest packages --runInBand",
-        "test:full": "jest packages/installer/install.e2e.test.ts --verbose --runInBand && jest packages --coverage --verbose --runInBand",
-        "dev": "rollup scripts/dev.js",
-        "dev:web": "vite",
-        "publish": "node scripts/publish.js",
-        "publish:beta": "node scripts/publish.js beta"
-    },
-    "devDependencies": {
-        "@rollup/plugin-commonjs": "^11.0.2",
-        "@rollup/plugin-html": "^0.2.0",
-        "@rollup/plugin-json": "^4.0.2",
-        "@rollup/plugin-node-resolve": "^7.1.1",
-        "@rollup/plugin-typescript": "^6.1.0",
-        "@swc-node/jest": "^1.3.3",
-        "@types/jest": "^26.0.15",
-        "@types/node": "^14.14.9",
-        "@typescript-eslint/eslint-plugin": "^4.8.1",
-        "@typescript-eslint/parser": "^4.8.1",
-        "eslint": "^7.13.0",
-        "eslint-plugin-import": "^2.26.0",
-        "jest": "^26.6.3",
-        "rollup": "^2.33.3",
-        "tslib": "^2.3.1",
-        "typescript": "^4.4.4"
-    },
-    "browserslist": [
-        "last 1 Chrome versions"
-    ]
+  "private": true,
+  "version": "7.0.0",
+  "scripts": {
+    "build:docs": "tsx scripts/docs.ts",
+    "preview:docs": "vitepress preview docs",
+    "dev:docs": "vitepress dev docs",
+    "lint": "eslint packages --ext .ts",
+    "lint:fix": "eslint packages --ext .ts --fix",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "publish": "pnpm publish -r"
+  },
+  "packageManager": "pnpm@7.15.0",
+  "devDependencies": {
+    "tsx": "^3.12.6",
+    "vitepress": "^1.0.0-alpha.65",
+    "typedoc": "^0.23.28",
+    "@vitest/coverage-c8": "^0.30.1",
+    "vitest": "^0.29.8"
+  }
 }

@@ -5,6 +5,11 @@
 /mock/assets
 /mock/logs
 
+docs/**/*.md
+/docs/sidebar.json
+
+**/.vitepress/cache/**
+
 *.tsbuildinfo
 
 # Logs

@@ -7,3 +7,4 @@
 /temp
 *.tsbuildinfo
 tslint.json
+**/.vitepress/cache/**
