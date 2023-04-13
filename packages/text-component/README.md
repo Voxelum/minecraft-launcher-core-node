@@ -15,38 +15,38 @@ Provide functions to parse Minecraft text component.
 Create TextComponent from string OR Minecraft's formatted string, like `'§cThis is red'`:
 
 ```ts
-    import { TextComponent, fromFormattedString } from "@xmcl/text-component";
-    const formattedString: string;
-    const fromFormatted: TextComponent = fromFormattedString(formattedString);
+import { TextComponent, fromFormattedString } from "@xmcl/text-component";
+const formattedString: string;
+const fromFormatted: TextComponent = fromFormattedString(formattedString);
 ```
 
 Render the TextComponent to css:
 
 ```ts
-    import { TextComponent, render, RenderNode } from "@xmcl/text-component";
-    const yourComponent: TextComponent;
-    const node: RenderNode = render(yourComponent);
+import { TextComponent, render, RenderNode } from "@xmcl/text-component";
+const yourComponent: TextComponent;
+const node: RenderNode = render(yourComponent);
 
-    node.text; // the text of the node
-    node.style; // style of the node
-    node.children; // children
+node.text; // the text of the node
+node.style; // style of the node
+node.children; // children
 
-    // you can render in dom like this:
+// you can render in dom like this:
 
-    function renderToDom(node: RenderNode) {
-        const span = document.createElement('span');
-        span.style = node.style;
-        span.textContent = node.text;
-        for (const child of node.children) {
-            span.appendChild(renderToDom(child));
-        }
-    } 
+function renderToDom(node: RenderNode) {
+    const span = document.createElement('span');
+    span.style = node.style;
+    span.textContent = node.text;
+    for (const child of node.children) {
+        span.appendChild(renderToDom(child));
+    }
+} 
 ```
 
 Iterate the TextComponent and its children:
 
 ```ts
-    import { TextComponent, flat } from "@xmcl/text-component";
-    const yourComponent: TextComponent;
-    const selfAndAllChildren: Array<TextComponent> = flat(yourComponent);
+import { TextComponent, flat } from "@xmcl/text-component";
+const yourComponent: TextComponent;
+const selfAndAllChildren: Array<TextComponent> = flat(yourComponent);
 ```

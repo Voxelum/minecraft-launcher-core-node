@@ -4,20 +4,25 @@
   "main": "./index.ts",
   "description": "A (hopefully) easy unzip interface based on yauzl",
   "engines": {
-    "node": ">=10.0"
+    "node": ">=16"
+  },
+  "scripts": {
+    "build:type": "tsc",
+    "build:cjs": "esbuild --target=node16 --platform=node --external:yauzl --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=node16 --platform=node --external:yauzl --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
   },
   "publishConfig": {
     "main": "./dist/index.js",
-    "module": "./dist/index.esm.js",
+    "module": "./dist/index.mjs",
     "access": "public"
   },
   "peerDependencies": {
     "yauzl": "^2.10.0"
   },
   "devDependencies": {
-    "@types/yauzl": "^2.10.0",
     "@types/node": "^15.14.9",
-    "@types/uuid": "^8.3.1",
+    "@types/uuid": "^9.0.1",
+    "@types/yauzl": "^2.10.0",
     "yauzl": "^2.10.0"
   },
   "repository": {
@@ -40,5 +45,10 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "dependencies": {
+    "@types/node": "~18.15.11",
+    "@xmcl/eslint-config": "workspace:^0.0.1",
+    "esbuild": "^0.17.14",
+    "eslint": "^8.37.0",
+    "typescript": "^5.0.3"
   }
 }

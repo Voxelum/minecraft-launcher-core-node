@@ -7,12 +7,11 @@
  * @module @xmcl/core
  */
 
-export * from "./launch";
-export * from "./version";
-export * from "./platform";
-export * from "./folder";
-export * from "./diagnose";
+export * from './launch'
+export * from './version'
+export * from './platform'
+export * from './folder'
+export * from './diagnose'
 export {
-    access as _access, exists as _exists, mkdir as _mkdir, readFile as _readFile, writeFile as _writeFile, pipeline as _pipeline,
-    checksum
-} from "./utils";
+  checksum,
+} from './utils'
