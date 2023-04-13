@@ -15,8 +15,8 @@ Provide function to parse Minecraft game settings
 Serialize/Deserialize the minecraft game setting string.
 
 ```ts
-    import { GameSetting } from '@xmcl/gamesetting'
-    const settingString;
-    const setting: GameSetting = GameSetting.parse(settingString);
-    const string: string = GameSetting.stringify(setting);
+import { GameSetting } from '@xmcl/gamesetting'
+const settingString;
+const setting: GameSetting = GameSetting.parse(settingString);
+const string: string = GameSetting.stringify(setting);
 ```
