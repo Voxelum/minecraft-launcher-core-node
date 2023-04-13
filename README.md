@@ -9,20 +9,11 @@ Provide several useful functions to build a Minecraft Launcher.
 
 Most packages are targeting the [Electron](https://electronjs.org) environment. Feel free to report issues related to it.
 
-- [Minecraft Launcher Core](#minecraft-launcher-core)
-    - [Looking for C# Launcher Core?](#looking-for-c-launcher-core)
-    - [Featured Launcher](#featured-launcher)
-  - [Getting Started](#getting-started)
-  - [Active Packages](#active-packages)
-    - [Comsuming the Packages with bundlers](#comsuming-the-packages-with-bundlers)
-  - [Contribute](#contribute)
-  - [Special Thanks](#special-thanks)
-
 ### Looking for C# Launcher Core?
 
 Introduce the awesome .net framework launcher core, [ProjBobcat](https://github.com/Corona-Studio/ProjBobcat).
 
-It's the next generation Minecraft launcher core written in C# providing the freest, fastest and the most complete experience. https://craftmine.fun
+It's the next generation Minecraft launcher core written in C# providing the freest, fastest and the most complete experience. https://corona.studio
 
 ### Featured Launcher
 
@@ -36,7 +27,7 @@ You can see [Active Packages](#active-packages) section to quickly find a packag
 
 Go [our document website](https://docs.xmcl.app/core) to find more detail usage.
 
-## Active Packages
+### Active Packages
 
 | Name                    | Usage                                                        | Version                                                                                                                           | Location                                                  | Runtime Envrionment |
 | ----------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------- |
