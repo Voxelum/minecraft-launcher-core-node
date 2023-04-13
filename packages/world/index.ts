@@ -5,15 +5,64 @@ import { deserialize } from "@xmcl/nbt";
 import { FileSystem, openFileSystem } from "@xmcl/system";
 import Long from "long";
 
+
+
+function findVersion(arr: Long[], bitLen: number): string {
+    let maxEntryValue = Long.fromNumber(1).shiftLeft(bitLen).sub(1);
+    let index = 4096;
+    let offset = index * bitLen;
+    let j = offset >> 6;
+    if(arr[j] != undefined) {
+        return "post116";
+    }
+    return "pre116";
+}
+
 /**
  * Create bit vector from a long array
  */
-function createBitVector(arr: Long[], bitLen: number): number[] {
+function createBitVectorPre116(arr: Long[], bitLen: number): number[] {
     let maxEntryValue = Long.fromNumber(1).shiftLeft(bitLen).sub(1);
     let result = new Array<number>(4096);
     for (let i = 0; i < 4096; ++i) {
-        result[i] = Number(seek(arr, bitLen, i, maxEntryValue));
+        result[i] = Number(seekPre116(arr, bitLen, i, maxEntryValue));
     }
+    return result;
+}
+
+/**
+ * Seek block id from a long array (new chunk format)
+ * @param data The block state id long array
+ * @param bitLen The bit length
+ * @param index The index (composition of xyz) in chunk
+ * @param maxEntryValue The max entry value
+ */
+function seekPre116(data: Long[], bitLen: number, index: number, maxEntryValue = Long.fromNumber(1).shiftLeft(bitLen).sub(1)) {
+    let offset = index * bitLen;
+    let j = offset >> 6;
+    let k = ((index + 1) * bitLen - 1) >>> 6;
+    let l = offset ^ j << 6;
+
+    if (j == k) {
+        return data[j].shiftRightUnsigned(l).and(maxEntryValue).toInt();
+    } else {
+        let shiftLeft = 64 - l;
+        const v = data[j].shiftRightUnsigned(l).or(data[k].shiftLeft(shiftLeft));
+        return v.and(maxEntryValue).toInt();
+    }
+}
+
+
+/**
+ * Create bit vector from a long array
+ */
+function createBitVectorPost116(arr: Long[], bitLen: number): number[] {
+    let maxEntryValue = Long.fromNumber(1).shiftLeft(bitLen).sub(1);
+    let result = new Array<number>(4096);
+    for (let i = 0; i < 4096; ++i) {
+        result[i] = Number(seekPost116(arr, bitLen, i, maxEntryValue));
+    }
+
     return result;
 }
 
@@ -26,7 +75,7 @@ function createBitVector(arr: Long[], bitLen: number): number[] {
  *
  * @author Adapted from: Jean-Baptiste Skutnik's <https://github.com/spoutn1k> {@link https://github.com/spoutn1k/mcmap/blob/fec14647c600244bc7808b242b99331e7ee0ec38/src/chunk_format_versions/section_format.cpp| Reference C++ code}
  */
-function seek(blockstates: Long[], indexLength: number, index: number, maxEntryValue = Long.fromNumber(1).shiftLeft(indexLength).sub(1)) {
+function seekPost116(blockstates: Long[], indexLength: number, index: number, maxEntryValue = Long.fromNumber(1).shiftLeft(indexLength).sub(1)) {
     const blocksPerLong = Math.floor(64/indexLength);
     const longIndex = Math.floor(index / blocksPerLong);
     const padding = Math.floor((index - longIndex * blocksPerLong) * indexLength);
@@ -224,9 +273,12 @@ export namespace RegionReader {
     export function getSectionBlockIdArray(section: NewRegionSectionDataFrame) {
         const sectionInformation = getSectionInformation(section);
 
-        const vector = createBitVector(sectionInformation.blockStates, sectionInformation.bitLength);
-
-        return vector;
+        const version = findVersion(sectionInformation.blockStates, sectionInformation.bitLength);
+        if(version == "pre116") {
+            return createBitVectorPre116(sectionInformation.blockStates, sectionInformation.bitLength);
+        }else{
+            return createBitVectorPost116(sectionInformation.blockStates, sectionInformation.bitLength);
+        }
     }
 
     /**
@@ -265,7 +317,14 @@ export namespace RegionReader {
         }
 
         const sectionInformation = getSectionInformation(section);
-        return Number(seek(sectionInformation.blockStates, sectionInformation.bitLength, index));
+
+        const version = findVersion(sectionInformation.blockStates, sectionInformation.bitLength);
+
+        if(version == "pre116") {
+            return Number(seekPre116(sectionInformation.blockStates, sectionInformation.bitLength, index));
+        } else {
+            return Number(seekPost116(sectionInformation.blockStates, sectionInformation.bitLength, index));
+        }
     }
 
     /**

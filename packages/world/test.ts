@@ -126,7 +126,7 @@ describe("RegionReader", () => {
                 }
             }
         });
-        test.skip("should be able to seek 1.14.4 chunk", async () => {
+        test("should be able to seek 1.14.4 chunk", async () => {
             let reader = await WorldReader.create(`${root}/saves/1.14.4`);
             let region = await reader.getRegionData(0, 0);
             let chunkY = 0;
@@ -180,7 +180,7 @@ describe("RegionReader", () => {
         })
     });
     describe("#seekBlockState", () => {
-        test.skip("should be able to get block state from new version chunk mca", async () => {
+        test("should be able to get block state from new version chunk mca", async () => {
             let mockData = MOCK_144;
             let reader = await WorldReader.create(`${root}/saves/1.14.4`);
             let region = await reader.getRegionData(0, 0);
@@ -205,7 +205,7 @@ describe("RegionReader", () => {
         });
     });
     describe("#readBlockState", () => {
-        test.skip("should be able to read new chunk format", async () => {
+        test("should be able to read new chunk format", async () => {
             let mockData = MOCK_144;
             let reader = await WorldReader.create(`${root}/saves/1.14.4`);
             let region = await reader.getRegionData(0, 0);
@@ -223,7 +223,7 @@ describe("RegionReader", () => {
                 expect(actualObject).toEqual(expectedObject);
             });
         });
-        test.skip("should be able to read legacy chunk format", async () => {
+        test("should be able to read legacy chunk format", async () => {
             let mockData = MOCK_122;
             let reader = await WorldReader.create(`${root}/saves/1.12.2`);
             let region = await reader.getRegionData(0, 0);
