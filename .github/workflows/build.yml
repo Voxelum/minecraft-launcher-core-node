@@ -43,15 +43,15 @@ jobs:
         CI: true
     - name: Lint
       run: |
-        npm run lint
+        pnpm lint
     - name: Test
       run: |
-        npm run test
+        pnpm coverage
     - name: Build
       run: |
-        pnpm build:type --parallel
-        pnpm build:cjs --parallel
-        pnpm build:ems --parallel
+        pnpm --parallel build:type
+        pnpm --parallel build:cjs
+        pnpm --parallel build:ems
     - name: Prepare Pull Request
       id: vars
       uses: ./.github/actions/prepare-pr

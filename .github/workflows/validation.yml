@@ -34,11 +34,11 @@ jobs:
         CI: true
     - name: Lint and Compile
       run: |
-        npm run lint
-        npm run build:type
+        npm lint
+        npm --parallel build:type
     - name: Test
       run: |
-        npm run test
+        npm coverage
       env:
         CI: true
     - name: Upload Coverage

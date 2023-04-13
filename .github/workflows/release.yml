@@ -31,9 +31,9 @@ jobs:
         CI: true
     - name: Build
       run: |
-        pnpm build:type --parallel
-        pnpm build:cjs --parallel
-        pnpm build:ems --parallel
+        pnpm --parallel build:type
+        pnpm --parallel build:cjs
+        pnpm --parallel build:ems
     - name: Publish
       run: |
         pnpm publish -r --access public
