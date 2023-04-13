@@ -31,5 +31,6 @@ export async function readLiteloaderMod(mod: string | Uint8Array | FileSystem) {
     if (!metadata.version) {
         (metadata as any).version = `${metadata.mcversion}:${metadata.revision || 0}`;
     }
+    fs.close();
     return metadata;
 }
