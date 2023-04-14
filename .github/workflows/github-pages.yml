@@ -48,5 +48,5 @@ jobs:
       uses: benc-uk/workflow-dispatch@v1
       with:
         token: ${{ secrets.GITHUB_PAT }}
-        repo: voxelum/xmcl-page
-        workflow: deploy-docs
+        repo: Voxelum/xmcl-page
+        workflow: deploy-docs.yaml
