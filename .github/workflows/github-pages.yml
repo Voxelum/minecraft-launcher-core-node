@@ -6,6 +6,9 @@ on:
       - master
     paths:
       - 'docs/**'
+      - README.md
+      - CONTRIBUTE.md
+      - 'packages/*/README.md'
   workflow_dispatch:
 
 jobs:
@@ -41,3 +44,9 @@ jobs:
         build_dir: docs/
       env:
         GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+    - name: Notify the xmcl-page
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        token: ${{ secrets.GITHUB_PAT }}
+        repo: voxelum/xmcl-page
+        workflow: deploy-docs
