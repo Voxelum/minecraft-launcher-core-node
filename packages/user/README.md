@@ -18,7 +18,7 @@ Due to the complexity of the Microsoft authentication.
 The library only provide parts of microsoft login process.
 You need to implement the rest of the process by yourself.
 
-Overall, according to the [wiki.vg](https://wiki.vg/Microsoft_Authentication_Scheme), the MS login process can be break into following steps:
+Overall, according to the [wiki.vg](https://wiki.vg/Microsoft_Authentication_Scheme), the MS login process can break into following steps:
 
 1. Aquire Microsoft access token by oauth `(user -> ms token)`
 2. Acquire XBox token by Microsoft access token `(ms token -> xbox token)`
@@ -119,5 +119,4 @@ const offlineUser = offline("username");
 
 // create an offline user with uuid
 const offlineUser1 = offline("username", "uuid");
-```
 ```

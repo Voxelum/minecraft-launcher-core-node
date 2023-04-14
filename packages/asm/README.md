@@ -15,30 +15,30 @@ Parse Java bytecode, which port from [java asm package](https://asm.ow2.io/).
 The usage is just like asm library in java:
 
 ```ts
-    import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from '@xmcl/asm'
+import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from '@xmcl/asm'
 
 
-    class CustomClassVisitor extends ClassVisitor {
-        public constructor() {
-            super(Opcodes.ASM5);
-        }
-
-        // visit the class 
-        visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
-        }
-
-        // visit method
-        public visitMethod(access: number, name: string, desc: string, signature: string, exceptions: string[]) {
-            return null;
-        }
-
-        // visit field
-        public visitField(access: number, name: string, desc: string, signature: string, value: any) {
-            return null;
-        }
+class CustomClassVisitor extends ClassVisitor {
+    public constructor() {
+        super(Opcodes.ASM5);
     }
 
-    const visitor = new CustomClassVisitor();
-    const classData: Buffer = await fs.readFile("path/to/some.class");
-    new ClassReader(classData).accept(visitor);
+    // visit the class 
+    visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
+    }
+
+    // visit method
+    public visitMethod(access: number, name: string, desc: string, signature: string, exceptions: string[]) {
+        return null;
+    }
+
+    // visit field
+    public visitField(access: number, name: string, desc: string, signature: string, value: any) {
+        return null;
+    }
+}
+
+const visitor = new CustomClassVisitor();
+const classData: Buffer = await fs.readFile("path/to/some.class");
+new ClassReader(classData).accept(visitor);
 ```
