@@ -6,7 +6,7 @@ import { arch, EOL, platform, tmpdir } from 'os'
 import { basename, join, resolve } from 'path'
 import { Dispatcher, request } from 'undici'
 import { DownloadTask } from './downloadTask'
-import { DownloadBaseOptions } from '@xmcl/download-core'
+import { DownloadBaseOptions } from '@xmcl/file-transfer'
 import { ensureDir, missing } from './utils'
 
 export interface JavaInfo {

@@ -1,8 +1,8 @@
 # Download Core
 
-[![npm version](https://img.shields.io/npm/v/@xmcl/download-core.svg)](https://www.npmjs.com/package/@xmcl/download-core)
-[![Downloads](https://img.shields.io/npm/dm/@xmcl/download-core.svg)](https://npmjs.com/@xmcl/download-core)
-[![Install size](https://packagephobia.now.sh/badge?p=@xmcl/download-core)](https://packagephobia.now.sh/result?p=@xmcl/download-core)
+[![npm version](https://img.shields.io/npm/v/@xmcl/file-transfer.svg)](https://www.npmjs.com/package/@xmcl/file-transfer)
+[![Downloads](https://img.shields.io/npm/dm/@xmcl/file-transfer.svg)](https://npmjs.com/@xmcl/file-transfer)
+[![Install size](https://packagephobia.now.sh/badge?p=@xmcl/file-transfer)](https://packagephobia.now.sh/result?p=@xmcl/file-transfer)
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 
@@ -22,7 +22,7 @@ Provide a high performance download file function based on [undici](https://gith
 Download the file by url
 
 ```ts
-import { download } from '@xmcl/download-core'
+import { download } from '@xmcl/file-transfer'
 
 await download({
   url: 'http://example.com/file.zip', // required
@@ -48,7 +48,7 @@ await download({
 Download with fallback url
 
 ```ts
-import { download } from '@xmcl/download-core'
+import { download } from '@xmcl/file-transfer'
 
 await download({
   // using array to fallback

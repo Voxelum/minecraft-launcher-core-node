@@ -1,5 +1,5 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version, Version as VersionJson } from '@xmcl/core'
-import { ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, Validator } from '@xmcl/download-core'
+import { ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, Validator } from '@xmcl/file-transfer'
 import { task, Task } from '@xmcl/task'
 import { readFile } from 'fs/promises'
 import { join } from 'path'

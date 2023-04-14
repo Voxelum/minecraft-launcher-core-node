@@ -1,4 +1,4 @@
-import { ValidationError, Validator } from '@xmcl/download-core'
+import { ValidationError, Validator } from '@xmcl/file-transfer'
 import { FileHandle } from 'fs/promises'
 import { open } from '@xmcl/unzip'
 

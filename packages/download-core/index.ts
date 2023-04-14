@@ -1,5 +1,5 @@
 /**
- * @module @xmcl/download-core
+ * @module @xmcl/file-transfer
  */
 
 export * from './error'

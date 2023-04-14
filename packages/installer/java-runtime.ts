@@ -1,5 +1,5 @@
 import { getPlatform, Platform } from '@xmcl/core'
-import { ChecksumValidatorOptions, DownloadBaseOptions, DownloadOptions, Validator } from '@xmcl/download-core'
+import { ChecksumValidatorOptions, DownloadBaseOptions, DownloadOptions, Validator } from '@xmcl/file-transfer'
 import { Task, task } from '@xmcl/task'
 import { link } from 'fs/promises'
 import { dirname, join } from 'path'

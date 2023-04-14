@@ -223,10 +223,10 @@ importers:
       '@types/yauzl': ^2.10.0
       '@xmcl/asm': workspace:^*
       '@xmcl/core': workspace:^*
-      '@xmcl/download-core': workspace:^*
       '@xmcl/eslint-config': workspace:^*
       '@xmcl/forge-site-parser': workspace:^*
       '@xmcl/task': workspace:^*
+      '@xmcl/file-transfer': workspace:^*
       '@xmcl/unzip': workspace:^*
       esbuild: ^0.17.14
       eslint: ^8.37.0
@@ -237,9 +237,9 @@ importers:
     dependencies:
       '@xmcl/asm': link:../asm
       '@xmcl/core': link:../core
-      '@xmcl/download-core': link:../download-core
       '@xmcl/forge-site-parser': link:../forge-site-parser
       '@xmcl/task': link:../task
+      '@xmcl/file-transfer': link:../download-core
       '@xmcl/unzip': link:../unzip
       undici: 5.21.2
       yauzl: 2.10.0

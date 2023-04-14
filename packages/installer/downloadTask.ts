@@ -1,4 +1,4 @@
-import { AbortSignal, download, DownloadAbortError, DownloadOptions, ProgressController } from '@xmcl/download-core'
+import { AbortSignal, download, DownloadAbortError, DownloadOptions, ProgressController } from '@xmcl/file-transfer'
 import { AbortableTask } from '@xmcl/task'
 
 export class DownloadTask extends AbortableTask<void> implements ProgressController {

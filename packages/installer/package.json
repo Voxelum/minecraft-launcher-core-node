@@ -19,7 +19,7 @@
   "dependencies": {
     "@xmcl/asm": "workspace:^*",
     "@xmcl/core": "workspace:^*",
-    "@xmcl/download-core": "workspace:^*",
+    "@xmcl/file-transfer": "workspace:^*",
     "@xmcl/forge-site-parser": "workspace:^*",
     "@xmcl/task": "workspace:^*",
     "@xmcl/unzip": "workspace:^*",
