@@ -126,27 +126,6 @@ importers:
       esbuild: 0.17.16
       undici-shim: link:../undici-shim
 
-  packages/download-core:
-    specifiers:
-      '@types/http-cache-semantics': ^4.0.1
-      '@types/node': ~18.15.11
-      '@xmcl/eslint-config': workspace:^*
-      esbuild: ^0.17.14
-      eslint: ^8.37.0
-      http-cache-semantics: ^4.1.1
-      typescript: ^5.0.3
-      undici: ^5.21.0
-    dependencies:
-      '@types/http-cache-semantics': 4.0.1
-      http-cache-semantics: 4.1.1
-      undici: 5.21.2
-    devDependencies:
-      '@types/node': 18.15.11
-      '@xmcl/eslint-config': link:../eslint-config
-      esbuild: 0.17.16
-      eslint: 8.38.0
-      typescript: 5.0.4
-
   packages/eslint-config:
     specifiers:
       '@typescript-eslint/eslint-plugin': ^5.57.0
@@ -165,6 +144,27 @@ importers:
       eslint-plugin-import: 2.27.5_jxoc3dvo7nghy7jji4tzdzgpey
       eslint-plugin-n: 15.7.0_eslint@8.38.0
       eslint-plugin-promise: 6.1.1_eslint@8.38.0
+      typescript: 5.0.4
+
+  packages/file-transfer:
+    specifiers:
+      '@types/http-cache-semantics': ^4.0.1
+      '@types/node': ~18.15.11
+      '@xmcl/eslint-config': workspace:^*
+      esbuild: ^0.17.14
+      eslint: ^8.37.0
+      http-cache-semantics: ^4.1.1
+      typescript: ^5.0.3
+      undici: ^5.21.0
+    dependencies:
+      '@types/http-cache-semantics': 4.0.1
+      http-cache-semantics: 4.1.1
+      undici: 5.21.2
+    devDependencies:
+      '@types/node': 18.15.11
+      '@xmcl/eslint-config': link:../eslint-config
+      esbuild: 0.17.16
+      eslint: 8.38.0
       typescript: 5.0.4
 
   packages/forge-site-parser:
@@ -224,9 +224,9 @@ importers:
       '@xmcl/asm': workspace:^*
       '@xmcl/core': workspace:^*
       '@xmcl/eslint-config': workspace:^*
+      '@xmcl/file-transfer': workspace:^*
       '@xmcl/forge-site-parser': workspace:^*
       '@xmcl/task': workspace:^*
-      '@xmcl/file-transfer': workspace:^*
       '@xmcl/unzip': workspace:^*
       esbuild: ^0.17.14
       eslint: ^8.37.0
@@ -237,9 +237,9 @@ importers:
     dependencies:
       '@xmcl/asm': link:../asm
       '@xmcl/core': link:../core
+      '@xmcl/file-transfer': link:../file-transfer
       '@xmcl/forge-site-parser': link:../forge-site-parser
       '@xmcl/task': link:../task
-      '@xmcl/file-transfer': link:../download-core
       '@xmcl/unzip': link:../unzip
       undici: 5.21.2
       yauzl: 2.10.0
