@@ -1,5 +1,16 @@
 # Changelog
 
+## 7.1.1
+### @xmcl/file-transfer@1.0.1
+#### Bug Fixes
+
+- fix: rename package to correctly publish ([ee1a9d13373e17378192ab33f8ac4af49b1d3a73](https://github.com/voxelum/minecraft-launcher-core-node/commit/ee1a9d13373e17378192ab33f8ac4af49b1d3a73))
+### @xmcl/installer@5.0.1
+#### Bug Fixes
+
+- fix: rename package to correctly publish ([ee1a9d13373e17378192ab33f8ac4af49b1d3a73](https://github.com/voxelum/minecraft-launcher-core-node/commit/ee1a9d13373e17378192ab33f8ac4af49b1d3a73))
+
+
 ## 7.1.0
 ### @xmcl/asm@1.0.0
 #### BREAKING CHANGES
