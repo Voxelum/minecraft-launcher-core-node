@@ -19,9 +19,7 @@
   "peerDependencies": {
     "yauzl": "^2.10.0"
   },
-  "devDependencies": {
-    "@types/node": "^15.14.9",
-    "@types/uuid": "^9.0.1",
+  "dependencies": {
     "@types/yauzl": "^2.10.0",
     "yauzl": "^2.10.0"
   },
@@ -44,8 +42,7 @@
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
-  "dependencies": {
-    "@types/node": "~18.15.11",
+  "devDependencies": {
     "@xmcl/eslint-config": "workspace:^*",
     "esbuild": "^0.17.14",
     "eslint": "^8.37.0",
