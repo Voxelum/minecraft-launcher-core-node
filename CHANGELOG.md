@@ -1,5 +1,27 @@
 # Changelog
 
+## 7.1.2
+### @xmcl/unzip@2.1.1
+#### Bug Fixes
+
+- fix: #259 The messed unzip dependencies ([1225de3114f8dabac63ffbfbb6da0b974a5e41be](https://github.com/voxelum/minecraft-launcher-core-node/commit/1225de3114f8dabac63ffbfbb6da0b974a5e41be))
+### @xmcl/core@2.11.1
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/system@2.2.5
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/game-data@1.2.2
+- Dependency @xmcl/system bump **patch**
+### @xmcl/installer@5.0.2
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/mod-parser@3.3.2
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.2.1
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@2.0.1
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 7.1.1
 ### @xmcl/file-transfer@1.0.1
 #### Bug Fixes

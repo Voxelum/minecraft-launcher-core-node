@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/system",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "main": "./index.ts",
   "browser": {
     "./index.js": "./index.browser.js",
