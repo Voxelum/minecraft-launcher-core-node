@@ -728,4 +728,24 @@ export class CurseforgeV1Client {
     const result = await response.json() as { data: Mod[]; pagination: Pagination }
     return result
   }
+
+  /**
+   * https://docs.curseforge.com/#get-mod-file-changelog
+   */
+  async getModFileChangelog(modId: number, fileId: number, signal?: AbortSignal) {
+    const url = new URL(`/v1/mods/${modId}/files/${fileId}/changelog`, this.baseUrl)
+    const response = await fetch(url, {
+      headers: {
+        ...this.headers,
+        accept: 'application/json',
+      },
+      dispatcher: this.dispatcher,
+      signal,
+    })
+    if (response.status !== 200) {
+      throw new CurseforgeApiError(url.toString(), response.status, await response.text())
+    }
+    const result = await response.json() as { data: string }
+    return result.data
+  }
 }
