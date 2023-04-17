@@ -19,7 +19,7 @@
   "dependencies": {
     "@types/http-cache-semantics": "^4.0.1",
     "http-cache-semantics": "^4.1.1",
-    "undici": "^5.21.0"
+    "undici": "^5.21.2"
   },
   "repository": {
     "type": "git",
@@ -42,8 +42,8 @@
   "devDependencies": {
     "@types/node": "~18.15.11",
     "@xmcl/eslint-config": "workspace:^*",
-    "esbuild": "^0.17.14",
+    "esbuild": "^0.17.16",
     "eslint": "^8.37.0",
-    "typescript": "^5.0.3"
+    "typescript": "^5.0.4"
   }
 }

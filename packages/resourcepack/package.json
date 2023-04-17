@@ -39,6 +39,6 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
-    "esbuild": "^0.17.14"
+    "esbuild": "^0.17.16"
   }
 }
