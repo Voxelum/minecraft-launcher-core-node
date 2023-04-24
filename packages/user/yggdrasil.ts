@@ -94,10 +94,10 @@ export class YggdrasilClient {
   protected headers: Record<string, string>
 
   /**
-     * Create client for official-like api endpoint
-     * @param api The official-like api endpoint
-     */
-  constructor(readonly api: string, options?: YggdrasilClientOptions) {
+   * Create client for official-like api endpoint
+   * @param api The official-like api endpoint
+   */
+  constructor(public api: string, options?: YggdrasilClientOptions) {
     this.headers = options?.headers ?? {}
     this.dispatcher = options?.dispatcher
   }
@@ -220,14 +220,14 @@ export function getTextureType(o: YggdrasilTexture) {
 }
 
 export class YggdrasilThirdPartyClient extends YggdrasilClient {
-  private profileApi: string
-  private textureApi: string
+  public profileApi: string
+  public textureApi: string
   /**
-     * Create thirdparty (authlib-injector) style client
-     * @param api The api url following https://github.com/yushijinhun/authlib-injector/wiki/Yggdrasil-%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8A%80%E6%9C%AF%E8%A7%84%E8%8C%83
-     * @param clientToken
-     * @param dispatcher
-     */
+   * Create thirdparty (authlib-injector) style client
+   * @param api The api url following https://github.com/yushijinhun/authlib-injector/wiki/Yggdrasil-%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%8A%80%E6%9C%AF%E8%A7%84%E8%8C%83
+   * @param clientToken
+   * @param dispatcher
+   */
   constructor(
     api: string,
     options?: YggdrasilClientOptions,
