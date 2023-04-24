@@ -50,20 +50,20 @@ export interface FileIndex {
 
 export interface Mod {
   /**
-     * The addon id. You can use this in many functions required the `addonID`
-     */
+   * The addon id. You can use this in many functions required the `addonID`
+   */
   id: number
   /**
-     * Game id. Minecraft is 432.
-     */
+   * Game id. Minecraft is 432.
+   */
   gameId: number
   /**
-     * The display name of the addon
-     */
+   * The display name of the addon
+   */
   name: string
   /**
-     * The mod slug that would appear in the URL
-     */
+   * The mod slug that would appear in the URL
+   */
   slug: string
   /** Relevant links for the mod such as Issue tracker and Wiki */
   links: {
@@ -73,78 +73,78 @@ export interface Mod {
     sourceYUrl: string
   }
   /**
-     * One line summery
-     */
+   * One line summery
+   */
   summary: string
   /**
-     * Current mod status
-     */
+   * Current mod status
+   */
   status: ModStatus
   /**
-     * Number of downloads for the mod
-     */
+   * Number of downloads for the mod
+   */
   downloadCount: number
   /**
-     * Whether the mod is included in the featured mods list
-     */
+   * Whether the mod is included in the featured mods list
+   */
   isFeatured: boolean
   /**
-     * The main category of the mod as it was chosen by the mod author
-     */
+   * The main category of the mod as it was chosen by the mod author
+   */
   primaryCategoryId: number
   /**
-     * List of categories that this mod is related to
-     */
+   * List of categories that this mod is related to
+   */
   categories: ModCategory[]
   /**
-     * The class id this mod belongs to
-     */
+   * The class id this mod belongs to
+   */
   classId: number | null
   /**
-     * The list of authors
-     */
+   * The list of authors
+   */
   authors: Author[]
 
   logo: ModAsset
 
   screenshots: ModAsset[]
   /**
-     * The id of the main file of the mod
-     */
+   * The id of the main file of the mod
+   */
   mainFileId: number
   latestFiles: File[]
   /**
-     * List of file related details for the latest files of the mod
-     */
+   * List of file related details for the latest files of the mod
+   */
   latestFilesIndexes: FileIndex[]
   /**
-     * The creation date of the mod
-     */
+   * The creation date of the mod
+   */
   dateCreated: string
 
   dateModified: string
   dateReleased: string
 
   /**
-     * Is mod allowed to be distributed
-     */
+   * Is mod allowed to be distributed
+   */
   allowModDistribution: boolean | null
   /**
-     * The mod popularity rank for the game
-     */
+   * The mod popularity rank for the game
+   */
   gamePopularityRank: number
   /**
-     * Is the mod available for search. This can be false when a mod is experimental, in a deleted state or has only alpha files
-     */
+   * Is the mod available for search. This can be false when a mod is experimental, in a deleted state or has only alpha files
+   */
   isAvailable: boolean
 
   /**
-     * The default download file id
-     */
+   * The default download file id
+   */
   defaultFileId: number
   /**
-     * The mod's thumbs up count
-     */
+   * The mod's thumbs up count
+   */
   thumbsUpCount: number
 }
 
@@ -208,28 +208,28 @@ export interface FileDependency {
 
 export interface File {
   /**
-     * The fileID
-     */
+   * The fileID
+   */
   id: number
   /**
-     * The game id related to the mod that this file belongs to
-     */
+   * The game id related to the mod that this file belongs to
+   */
   gameId: number
   /**
-     * The projectId (addonId)
-     */
+   * The projectId (addonId)
+   */
   modId: number
   /**
-     * Whether the file is available to download
-     */
+   * Whether the file is available to download
+   */
   isAvailable: boolean
   /**
-     * Display name
-     */
+   * Display name
+   */
   displayName: string
   /**
-     * File name. Might be the same with `displayName`
-     */
+   * File name. Might be the same with `displayName`
+   */
   fileName: string
   /**
     * Release or type.
@@ -244,36 +244,36 @@ export interface File {
   hashes: FileHash[]
 
   /**
-     * The date of this file uploaded
-     */
+   * The date of this file uploaded
+   */
   fileDate: string
   /**
-     * # bytes of this file.
-     */
+   * # bytes of this file.
+   */
   fileLength: number
 
   /**
-     * Number of downloads for the mod
-     */
+   * Number of downloads for the mod
+   */
   downloadCount: number
 
   /**
-     * Url to download
-     */
+   * Url to download
+   */
   downloadUrl?: string
   /**
-     * Game version string array, like `["1.12.2"]`
-     */
+   * Game version string array, like `["1.12.2"]`
+   */
   gameVersions: string[]
   /**
-     * Metadata used for sorting by game versions
-     */
+   * Metadata used for sorting by game versions
+   */
   isAlternate: boolean
   alternateFileId: number
   dependencies: FileDependency[]
   /**
-     * What files inside?
-     */
+   * What files inside?
+   */
   modules: Module[]
   sortableGameVersions?: SortableGameVersion[]
 }
@@ -290,12 +290,12 @@ export interface SortableGameVersion {
  */
 export interface Module {
   /**
-     * Actually the file name, not the folder
-     */
+   * Actually the file name, not the folder
+   */
   name: string
   /**
-     * A number represent fingerprint
-     */
+   * A number represent fingerprint
+   */
   fingerprint: number
   type: number
 }
@@ -305,23 +305,23 @@ export interface Module {
  */
 export interface Author {
   /**
-     * The project id of this query
-     */
+   * The project id of this query
+   */
   projectId: number
   projectTitleId?: any
   projectTitleTitle?: any
 
   /**
-     * Display name of the author
-     */
+   * Display name of the author
+   */
   name: string
   /**
-     * The full url of author homepage in curseforge
-     */
+   * The full url of author homepage in curseforge
+   */
   url: string
   /**
-     * The id of this author
-     */
+   * The id of this author
+   */
   id: number
   userId: number
   twitchId: number
@@ -329,8 +329,8 @@ export interface Author {
 
 export interface ModCategory {
   /**
-     * The category id
-     */
+   * The category id
+   */
   id: number
   gameId: number
   name: string
@@ -339,12 +339,12 @@ export interface ModCategory {
   iconUrl: string
   dateModified: string
   /**
-     * A top level category for other categories
-     */
+   * A top level category for other categories
+   */
   isClass: boolean | null
   /**
-     * The class id of the category, meaning - the class of which this category is under
-     */
+   * The class id of the category, meaning - the class of which this category is under
+   */
   classId: number | null
   /**
    * The parent category for this category
@@ -363,87 +363,87 @@ export interface ModCategory {
  */
 export interface SearchOptions {
   /**
-     * The category section id, which is also a category id.
-     * You can fetch if from `getCategories`.
-     *
-     * To get available categories, you can:
-     *
-     * ```ts
-     * const cat = await getCategories();
-     * const sectionIds = cat
-     *  .filter(c => c.gameId === 432) // 432 is minecraft game id
-     *  .filter(c => c.rootGameCategoryId === null).map(c => c.id);
-     * // the sectionIds is all normal sections here
-     * ```
-     *
-     * @see {@link getCategories}
-     */
+   * The category section id, which is also a category id.
+   * You can fetch if from `getCategories`.
+   *
+   * To get available categories, you can:
+   *
+   * ```ts
+   * const cat = await getCategories();
+   * const sectionIds = cat
+   *  .filter(c => c.gameId === 432) // 432 is minecraft game id
+   *  .filter(c => c.rootGameCategoryId === null).map(c => c.id);
+   * // the sectionIds is all normal sections here
+   * ```
+   *
+   * @see {@link getCategories}
+   */
   classId?: number
   /**
-     * This is actually the sub category id of the `sectionId`. All the numbers for this should also be fetch by `getCategories`.
-     *
-     * To get available values, you can:
-     *
-     * ```ts
-     * const cat = await getCategories();
-     * const sectionId = 6; // the mods
-     * const categoryIds = cat
-     *  .filter(c => c.gameId === 432) // 432 is minecraft game id
-     *  .filter(c => c.rootGameCategoryId === sectionId) // only under the section id
-     *  .map(c => c.id);
-     * // Use categoryIds' id to search under the corresponding section id.
-     * ```
-     *
-     * @see {@link getCategories}
-     */
+   * This is actually the sub category id of the `sectionId`. All the numbers for this should also be fetch by `getCategories`.
+   *
+   * To get available values, you can:
+   *
+   * ```ts
+   * const cat = await getCategories();
+   * const sectionId = 6; // the mods
+   * const categoryIds = cat
+   *  .filter(c => c.gameId === 432) // 432 is minecraft game id
+   *  .filter(c => c.rootGameCategoryId === sectionId) // only under the section id
+   *  .map(c => c.id);
+   * // Use categoryIds' id to search under the corresponding section id.
+   * ```
+   *
+   * @see {@link getCategories}
+   */
   categoryId?: number
   /**
-     * The game id. The Minecraft is 432.
-     *
-     * @default 432
-     */
+   * The game id. The Minecraft is 432.
+   *
+   * @default 432
+   */
   gameId?: number
   /**
-     * The game version. For Minecraft, it should looks like 1.12.2.
-     */
+   * The game version. For Minecraft, it should looks like 1.12.2.
+   */
   gameVersion?: string
   /**
-     * The index of the addon, NOT the page!
-     *
-     * When your page size is 25, if you want to get next page contents, you should have index = 25 to get 2nd page content.
-     *
-     * @default 0
-     */
+   * The index of the addon, NOT the page!
+   *
+   * When your page size is 25, if you want to get next page contents, you should have index = 25 to get 2nd page content.
+   *
+   * @default 0
+   */
   index?: number
   /**
-     * Filter by ModsSearchSortField enumeration
-     */
+   * Filter by ModsSearchSortField enumeration
+   */
   sortField?: ModsSearchSortField
   /**
-     * 'asc' if sort is in ascending order, 'desc' if sort is in descending order
-     */
+   * 'asc' if sort is in ascending order, 'desc' if sort is in descending order
+   */
   sortOrder?: 'asc' | 'desc'
   /**
-     * Filter only mods associated to a given modloader (Forge, Fabric ...). Must be coupled with gameVersion.
-     */
+   * Filter only mods associated to a given modloader (Forge, Fabric ...). Must be coupled with gameVersion.
+   */
   modLoaderType?: FileModLoaderType
   /**
-     * Filter only mods that contain files tagged with versions of the given gameVersionTypeId
-     */
+   * Filter only mods that contain files tagged with versions of the given gameVersionTypeId
+   */
   gameVersionTypeId?: number
   /**
-     * Filter by slug (coupled with classId will result in a unique result).
-     */
+   * Filter by slug (coupled with classId will result in a unique result).
+   */
   slug?: string
   /**
-     * The page size, or the number of the addons in a page.
-     *
-     * @default 25
-     */
+   * The page size, or the number of the addons in a page.
+   *
+   * @default 25
+   */
   pageSize?: number
   /**
-     * The keyword of search. If this is absent, it just list out the available addons by `sectionId` and `categoryId`.
-     */
+   * The keyword of search. If this is absent, it just list out the available addons by `sectionId` and `categoryId`.
+   */
   searchFilter?: string
 }
 
@@ -463,12 +463,12 @@ export const enum ModsSearchSortField {
  */
 export interface QueryOption {
   /**
-     * Additional header
-     */
+   * Additional header
+   */
   headers?: Record<string, any>
   /**
-     * override the http client
-     */
+   * override the http client
+   */
   client?: (url: string, options: QueryOption, body?: object, text?: boolean) => Promise<object | string>
 }
 
@@ -477,8 +477,8 @@ export interface GetModFilesOptions {
   gameVersion?: string
   modLoaderType?: FileModLoaderType
   /**
-     * Filter only files that are tagged with versions of the given gameVersionTypeId
-     */
+   * Filter only files that are tagged with versions of the given gameVersionTypeId
+   */
   gameVersionTypeId?: number
   index?: number
   pageSize?: number
@@ -486,37 +486,35 @@ export interface GetModFilesOptions {
 
 export interface Pagination {
   /**
-     * A zero based index of the first item that is included in the response
-     */
+   * A zero based index of the first item that is included in the response
+   */
   index: number
   /**
-     * The requested number of items to be included in the response
-     */
+   * The requested number of items to be included in the response
+   */
   pageSize: number
   /**
-     * The actual number of items that were included in the response
-     */
+   * The actual number of items that were included in the response
+   */
   resultCount: number
   /**
-     * const url = new URL(`etch
- `, this.baseUrl)
-     *f items available by the fetch
-     */
+   * The total number of items available by the fetch
+   */
   totalCount: number
 }
 
 export interface CurseforgeClientOptions {
   /**
-     * Extra headers
-     */
+   * Extra headers
+   */
   headers?: Record<string, string>
   /**
-     * The optional undici dispatcher
-     */
+   * The optional undici dispatcher
+   */
   dispatcher?: Dispatcher
   /**
-     * The base url, the default is `https://api.curseforge.com`
-     */
+   * The base url, the default is `https://api.curseforge.com`
+   */
   baseUrl?: string
 }
 
@@ -545,8 +543,8 @@ export class CurseforgeV1Client {
   }
 
   /**
-     * @see https://docs.curseforge.com/#get-categories
-     */
+   * @see https://docs.curseforge.com/#get-categories
+   */
   async getCategories(signal?: AbortSignal) {
     const url = new URL('/v1/categories', this.baseUrl)
     url.searchParams.append('gameId', '432')
@@ -566,11 +564,11 @@ export class CurseforgeV1Client {
   }
 
   /**
-     * Get the mod by mod Id.
-     * @see https://docs.curseforge.com/#get-mod
-     * @param modId The id of mod
-     * @param options The query options
-     */
+   * Get the mod by mod Id.
+   * @see https://docs.curseforge.com/#get-mod
+   * @param modId The id of mod
+   * @param options The query options
+   */
   async getMod(modId: number, signal?: AbortSignal) {
     const url = new URL(`/v1/mods/${modId}`, this.baseUrl)
     const response = await fetch(url, {
@@ -589,8 +587,8 @@ export class CurseforgeV1Client {
   }
 
   /**
-     * @see https://docs.curseforge.com/#get-mod-description
-     */
+   * @see https://docs.curseforge.com/#get-mod-description
+   */
   async getModDescription(modId: number, signal?: AbortSignal) {
     const url = new URL(`/v1/mods/${modId}/description`, this.baseUrl)
     const response = await fetch(url, {
@@ -609,8 +607,8 @@ export class CurseforgeV1Client {
   }
 
   /**
-     * @see https://docs.curseforge.com/#get-mod-files
-     */
+   * @see https://docs.curseforge.com/#get-mod-files
+   */
   async getModFiles(options: GetModFilesOptions, signal?: AbortSignal) {
     const url = new URL(`/v1/mods/${options.modId}/files`, this.baseUrl)
     url.searchParams.append('gameVersion', options.gameVersion ?? '')
@@ -634,8 +632,8 @@ export class CurseforgeV1Client {
   }
 
   /**
-     * @see https://docs.curseforge.com/#curseforge-core-api-files
-     */
+   * @see https://docs.curseforge.com/#curseforge-core-api-files
+   */
   async getModFile(modId: number, fileId: number, signal?: AbortSignal) {
     const url = new URL(`/v1/mods/${modId}/files/${fileId}`, this.baseUrl)
     const response = await fetch(url, {
@@ -654,8 +652,8 @@ export class CurseforgeV1Client {
   }
 
   /**
-     * @see https://docs.curseforge.com/#get-mods
-     */
+   * @see https://docs.curseforge.com/#get-mods
+   */
   async getMods(modIds: number[], signal?: AbortSignal) {
     const url = new URL('/v1/mods', this.baseUrl)
     const response = await fetch(url, {
@@ -677,8 +675,8 @@ export class CurseforgeV1Client {
   }
 
   /**
-     * @see https://docs.curseforge.com/#get-files
-     */
+   * @see https://docs.curseforge.com/#get-files
+   */
   async getFiles(fileIds: number[], signal?: AbortSignal) {
     const url = new URL('/v1/mods/files', this.baseUrl)
     const response = await fetch(url, {
@@ -700,8 +698,8 @@ export class CurseforgeV1Client {
   }
 
   /**
-     * @see https://docs.curseforge.com/#search-mods
-     */
+   * @see https://docs.curseforge.com/#search-mods
+   */
   async searchMods(options: SearchOptions, signal?: AbortSignal) {
     const url = new URL('/v1/mods/search', this.baseUrl)
     url.searchParams.append('gameId', '432')

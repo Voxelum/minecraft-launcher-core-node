@@ -1,3 +1,3 @@
-export const fetch = global.fetch
-export const File = global.File
-export const FormData = global.FormData
+export const fetch = globalThis.fetch
+export const File = globalThis.File
+export const FormData = globalThis.FormData
