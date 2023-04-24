@@ -122,10 +122,10 @@ export interface Resource {
 export class ResourcePack {
   constructor(readonly fs: FileSystem) { }
   /**
-     * Load the resource content
-     * @param location The resource location
-     * @param type The output type of the resource
-     */
+   * Load the resource content
+   * @param location The resource location
+   * @param type The output type of the resource
+   */
   async load(location: ResourceLocation, type?: 'utf-8' | 'base64'): Promise<Uint8Array | string | undefined> {
     const p = this.getPath(location)
     if (await this.fs.existsFile(p)) {
@@ -135,8 +135,8 @@ export class ResourcePack {
   }
 
   /**
-     * Load the resource metadata which is localted at <resource-path>.mcmeta
-     */
+   * Load the resource metadata which is localted at <resource-path>.mcmeta
+   */
   async loadMetadata(location: ResourceLocation) {
     const p = this.getPath(location)
     const name = p.substring(0, p.lastIndexOf('.'))
@@ -145,23 +145,23 @@ export class ResourcePack {
   }
 
   /**
-     * Get the url of the resource location.
-     * Please notice that this is depended on `FileSystem` implementation of the `getUrl`.
-     *
-     * @returns The absolute url like `file://` or `http://` depending on underlaying `FileSystem`.
-     * @see {@link FileSystem}
-     */
+   * Get the url of the resource location.
+   * Please notice that this is depended on `FileSystem` implementation of the `getUrl`.
+   *
+   * @returns The absolute url like `file://` or `http://` depending on underlaying `FileSystem`.
+   * @see {@link FileSystem}
+   */
   getUrl(location: ResourceLocation) {
     const p = this.getPath(location)
     return this.fs.getUrl(p)
   }
 
   /**
-     * Get the resource on the resource location.
-     *
-     * It can be undefined if there is no resource at that location.
-     * @param location THe resource location
-     */
+   * Get the resource on the resource location.
+   *
+   * It can be undefined if there is no resource at that location.
+   * @param location THe resource location
+   */
   async get(location: ResourceLocation): Promise<Resource | undefined> {
     if (await this.has(location)) {
       return {
@@ -174,15 +174,15 @@ export class ResourcePack {
   }
 
   /**
-     * Does the resource pack has the resource
-     */
+   * Does the resource pack has the resource
+   */
   has(location: ResourceLocation): Promise<boolean> {
     return this.fs.existsFile(this.getPath(location))
   }
 
   /**
-     * The owned domain. You can think about the modids.
-     */
+   * The owned domain. You can think about the modids.
+   */
   async domains(): Promise<string[]> {
     const files = await this.fs.listFiles('assets')
     const result: string[] = []
@@ -195,8 +195,8 @@ export class ResourcePack {
   }
 
   /**
-     * The pack info, just like resource pack
-     */
+   * The pack info, just like resource pack
+   */
   async info(): Promise<PackMeta.Pack> {
     const { pack } = await this.fs.readFile('pack.mcmeta', 'utf-8').then(
       (s) => JSON.parse(s.replace(/^\uFEFF/, '')),

@@ -2,26 +2,25 @@ import * as path from 'path'
 import { readForgeMod, readForgeModToml } from './forge'
 import { ForgeConfig } from './forgeConfig'
 import { describe, test, expect } from 'vitest'
+import { openFileSystem } from '@xmcl/system'
 
 describe('Forge', () => {
-  const root = path.normalize(path.join(__dirname, '..', '..', 'mock'))
-
-  test('should identify the package usage', async () => {
-    const { usedForgePackage, usedLegacyFMLPackage, usedMinecraftClientPackage, usedMinecraftPackage } = await readForgeMod(`${root}/mods/sample-mod.jar`)
+  test('should identify the package usage', async ({ mock }) => {
+    const { usedForgePackage, usedLegacyFMLPackage, usedMinecraftClientPackage, usedMinecraftPackage } = await readForgeMod(`${mock}/mods/sample-mod.jar`)
     expect(usedForgePackage).toBeFalsy()
     expect(usedLegacyFMLPackage).toBeTruthy()
     expect(usedMinecraftClientPackage).toBeFalsy()
     expect(usedMinecraftPackage).toBeTruthy()
   })
 
-  test('should not crash if the toml does not have the dependencies', async () => {
-    const metadata = await readForgeModToml(`${root}/mods/sample-mod-1.13-no-deps.jar`)
+  test('should not crash if the toml does not have the dependencies', async ({ mock }) => {
+    const metadata = await readForgeModToml(`${mock}/mods/sample-mod-1.13-no-deps.jar`)
     // eslint-disable-next-line no-template-curly-in-string
     expect(metadata).toEqual([{ authors: 'mezz', credits: '', dependencies: [], description: 'JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n', displayName: 'Just Enough Items', displayURL: 'https://minecraft.curseforge.com/projects/jei', issueTrackerURL: 'https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue', loaderVersion: '[14,)', logoFile: '', modLoader: 'javafml', modid: 'jei', updateJSONURL: '', version: '${file.jarVersion}' }])
   })
 
-  test('should read >1.13 forge mod jar', async () => {
-    const metadata = await readForgeMod(`${root}/mods/sample-mod-1.13.jar`)
+  test('should read >1.13 forge mod jar', async ({ mock }) => {
+    const metadata = await readForgeMod(`${mock}/mods/sample-mod-1.13.jar`)
     expect(metadata).toEqual({
       manifest: {
         'Manifest-Version': '1.0',
@@ -76,30 +75,30 @@ describe('Forge', () => {
     })
   })
 
-  test('should read mcmod.info in jar', async () => {
-    const { mcmodInfo } = await readForgeMod(`${root}/mods/sample-mod.jar`)
+  test('should read mcmod.info in jar', async ({ mock }) => {
+    const { mcmodInfo } = await readForgeMod(`${mock}/mods/sample-mod.jar`)
     expect(mcmodInfo.some((m) =>
       m.modid === 'soundfilters' &&
-            m.name === 'Sound Filters' &&
-            m.description === 'Adds reveb to caves, as well as muted sounds underwater/in lava, and behind walls.' &&
-            m.version === '0.8_for_1,8' &&
-            m.mcversion === '1.8' &&
-            m.credits === 'Made by Tmtravlr.',
+      m.name === 'Sound Filters' &&
+      m.description === 'Adds reveb to caves, as well as muted sounds underwater/in lava, and behind walls.' &&
+      m.version === '0.8_for_1,8' &&
+      m.mcversion === '1.8' &&
+      m.credits === 'Made by Tmtravlr.',
     )).toBeTruthy()
   })
 
-  test('should read ccc mod plugin in jar', async () => {
-    const { mcmodInfo } = await readForgeMod(`${root}/mods/sample-ccc-mod.jar`)
+  test('should read ccc mod plugin in jar', async ({ mock }) => {
+    const { mcmodInfo } = await readForgeMod(`${mock}/mods/sample-ccc-mod.jar`)
     expect(mcmodInfo.length).toEqual(1)
   })
 
-  test('should read nei mod plugin in jar', async () => {
-    const { mcmodInfo } = await readForgeMod(`${root}/mods/sample-nei-mod.jar`)
+  test('should read nei mod plugin in jar', async ({ mock }) => {
+    const { mcmodInfo } = await readForgeMod(`${mock}/mods/sample-nei-mod.jar`)
     expect(mcmodInfo.length).toEqual(1)
   })
 
-  test('should read tweak class in jar', async () => {
-    const { manifestMetadata } = await readForgeMod(`${root}/mods/tweak-class.jar`)
+  test('should read tweak class in jar', async ({ mock }) => {
+    const { manifestMetadata } = await readForgeMod(`${mock}/mods/tweak-class.jar`)
     expect(manifestMetadata).toEqual({
       modid: 'betterfps',
       name: 'BetterFps',
@@ -110,8 +109,8 @@ describe('Forge', () => {
     })
   })
 
-  test('should read dummy mod in jar', async () => {
-    const metadata = await readForgeMod(`${root}/mods/dummy-mod.jar`)
+  test('should read dummy mod in jar', async ({ mock }) => {
+    const metadata = await readForgeMod(`${mock}/mods/dummy-mod.jar`)
     expect(metadata).toEqual({
       manifest: {
         FMLCorePlugin: 'io.prplz.mousedelayfix.FMLLoadingPlugin',
@@ -127,26 +126,32 @@ describe('Forge', () => {
     })
   })
 
-  test('should read @Mod in jar', async () => {
-    const { modAnnotations } = await readForgeMod(`${root}/mods/sample-mod.jar`)
+  test('should read @Mod in jar', async ({ mock }) => {
+    const { modAnnotations } = await readForgeMod(`${mock}/mods/sample-mod.jar`)
     expect(modAnnotations.some((m) => m.modid === 'NuclearCraft' && m.version === '1.9e'))
       .toBeTruthy()
   })
 
-  test('should detect optifine from class in jar', async () => {
-    const { modAnnotations } = await readForgeMod(`${root}/mods/sample-mod.jar`)
+  test('should not close if the fs is the input', async ({ mock }) => {
+    const fs = await openFileSystem(path.join(mock, 'mods', 'sample-mod.jar'))
+    await readForgeMod(fs)
+    expect(fs.isClosed()).toBe(false)
+  })
+
+  test('should detect optifine from class in jar', async ({ mock }) => {
+    const { modAnnotations } = await readForgeMod(`${mock}/mods/sample-mod.jar`)
     expect(modAnnotations.some((m) =>
       m.modid === 'OptiFine' &&
-            m.name === 'OptiFine' &&
-            m.description === 'OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.' &&
-            m.version === 'HD_U_C5' &&
-            m.mcversion === '1.12.1' &&
-            m.url === 'https://optifine.net',
+      m.name === 'OptiFine' &&
+      m.description === 'OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.' &&
+      m.version === 'HD_U_C5' &&
+      m.mcversion === '1.12.1' &&
+      m.url === 'https://optifine.net',
     )).toBeTruthy()
   })
 
-  test('should not read the fabric mod', async () => {
-    await expect(readForgeMod(path.join(root, 'mods', 'fabric-sample-2.jar'))).rejects
+  test('should not read the fabric mod', async ({ mock }) => {
+    await expect(readForgeMod(path.join(mock, 'mods', 'fabric-sample-2.jar'))).rejects
       .toBeTruthy()
   })
 

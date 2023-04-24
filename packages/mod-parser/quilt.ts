@@ -268,6 +268,6 @@ export async function readQuiltMod(file: FileSystem | string | Uint8Array): Prom
     const content = await fs.readFile('quilt.mod.json', 'utf-8')
     return JSON.parse(content.replace(/^\uFEFF/g, '').replace(/\n/g, ''))
   } finally {
-    fs.close()
+    if (fs !== file) fs.close()
   }
 }

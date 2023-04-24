@@ -34,6 +34,6 @@ export async function readLiteloaderMod(mod: string | Uint8Array | FileSystem) {
     }
     return metadata
   } finally {
-    fs.close()
+    if (fs !== mod) fs.close()
   }
 }

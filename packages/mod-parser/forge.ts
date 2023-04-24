@@ -710,7 +710,7 @@ export async function readForgeMod(mod: ForgeModInput): Promise<ForgeModMetadata
     }
     return result
   } finally {
-    fs.close()
+    if (mod !== fs) fs.close()
   }
 }
 

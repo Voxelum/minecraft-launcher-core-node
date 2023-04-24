@@ -196,6 +196,6 @@ export async function readFabricMod(file: FileSystem | string | Uint8Array): Pro
     const content = await fs.readFile('fabric.mod.json', 'utf-8')
     return JSON.parse(content.replace(/^\uFEFF/g, '').replace(/\n/g, ''))
   } finally {
-    fs.close()
+    if (file !== fs) fs.close()
   }
 }

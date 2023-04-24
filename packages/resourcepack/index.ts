@@ -26,14 +26,18 @@ export * from './format'
  */
 export async function readPackMeta(resourcePack: string | Uint8Array | FileSystem): Promise<PackMeta.Pack> {
   const system = await resolveFileSystem(resourcePack)
-  if (!await system.existsFile('pack.mcmeta')) {
-    throw new Error('Illegal Resourcepack: Cannot find pack.mcmeta!')
+  try {
+    if (!await system.existsFile('pack.mcmeta')) {
+      throw new Error('Illegal Resourcepack: Cannot find pack.mcmeta!')
+    }
+    const metadata = JSON.parse((await system.readFile('pack.mcmeta', 'utf-8')).replace(/^\uFEFF/, ''))
+    if (!metadata.pack) {
+      throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!")
+    }
+    return metadata.pack
+  } finally {
+    if (system !== resourcePack) system.close()
   }
-  const metadata = JSON.parse((await system.readFile('pack.mcmeta', 'utf-8')).replace(/^\uFEFF/, ''))
-  if (!metadata.pack) {
-    throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!")
-  }
-  return metadata.pack
 }
 
 /**
@@ -42,7 +46,11 @@ export async function readPackMeta(resourcePack: string | Uint8Array | FileSyste
  */
 export async function readIcon(resourcePack: string | Uint8Array | FileSystem): Promise<Uint8Array> {
   const system = await resolveFileSystem(resourcePack)
-  return system.readFile('pack.png')
+  try {
+    return system.readFile('pack.png')
+  } finally {
+    if (system !== resourcePack) system.close()
+  }
 }
 
 /**
@@ -53,8 +61,13 @@ export async function readIcon(resourcePack: string | Uint8Array | FileSystem): 
  */
 export async function readPackMetaAndIcon(resourcePack: string | Uint8Array | FileSystem) {
   const system = await resolveFileSystem(resourcePack)
-  return {
-    metadata: await readPackMeta(system),
-    icon: await readIcon(system).catch(() => undefined),
+
+  try {
+    return {
+      metadata: await readPackMeta(system),
+      icon: await readIcon(system).catch(() => undefined),
+    }
+  } finally {
+    if (system !== resourcePack) system.close()
   }
 }
