@@ -2,10 +2,7 @@
   "name": "@xmcl/system",
   "version": "2.2.5",
   "main": "./index.ts",
-  "browser": {
-    "./index.js": "./index.browser.js",
-    "./cjs/index.js": "./cjs/index.browser.js"
-  },
+  "browser": "./index.browser.ts",
   "description": "An abstract layer for file system on reading zip or plain dictionary/file",
   "engines": {
     "node": ">=16"

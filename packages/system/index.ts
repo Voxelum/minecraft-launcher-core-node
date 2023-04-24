@@ -91,6 +91,10 @@ class NodeZipFileSystem extends FileSystem {
     this.fileRoot = root
   }
 
+  isClosed(): boolean {
+    return !this.zip.isOpen
+  }
+
   close(): void {
     this.zip.close()
   }

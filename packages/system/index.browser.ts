@@ -6,6 +6,7 @@ class JSZipFS extends FileSystem {
   type: 'zip' | 'path' = 'zip'
   writeable = true
   root = ''
+
   protected normalizePath(path: string): string {
     if (path.startsWith('/')) {
       path = path.substring(1)

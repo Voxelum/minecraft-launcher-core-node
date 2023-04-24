@@ -24,6 +24,7 @@ export abstract class FileSystem {
 
   abstract cd(name: string): void
 
+  isClosed(): boolean { return false }
   close(): void { }
 
   // extension methods
