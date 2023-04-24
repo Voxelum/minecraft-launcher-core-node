@@ -2,7 +2,7 @@
   "name": "@xmcl/resourcepack",
   "version": "1.2.1",
   "main": "./index.ts",
-  "description": "Minecraft resource pack parsing",
+  "description": "A Minecraft resource pack parser",
   "engines": {
     "node": ">=16"
   },
@@ -30,7 +30,8 @@
     "typescript",
     "minecraft-launcher",
     "nodejs",
-    "electron"
+    "electron",
+    "resourcepack"
   ],
   "license": "MIT",
   "bugs": {

@@ -2,14 +2,14 @@
   "name": "@xmcl/installer",
   "version": "5.0.2",
   "main": "./index.ts",
-  "description": "Provides Minecraft/Forge/Fabric/Liteloader installers",
+  "description": "The installers of Minecraft/Forge/Fabric/Liteloader/Quilt",
   "engines": {
     "node": ">=16.0"
   },
   "scripts": {
     "build:type": "tsc",
-    "build:cjs": "esbuild --target=node16 --platform=node --external:@xmcl/* --external:http-cache-semantics --external:undici --external:yauzl --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
-    "build:esm": "esbuild --target=node16 --platform=node --external:@xmcl/* --external:http-cache-semantics --external:undici --external:yauzl --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
+    "build:cjs": "esbuild --target=node16 --platform=node --external:@xmcl/* --external:undici --external:yauzl --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=node16 --platform=node --external:@xmcl/* --external:undici --external:yauzl --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
   },
   "publishConfig": {
     "access": "public",

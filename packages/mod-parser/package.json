@@ -2,7 +2,7 @@
   "name": "@xmcl/mod-parser",
   "version": "3.3.2",
   "main": "./index.ts",
-  "description": "Minecraft Mod parser. Provides the utilities to parse forge/liteloader/fabric mod metadata.",
+  "description": "The utilities to parse Forge/Liteloader/Fabric/Quilt mod metadata.",
   "engines": {
     "node": ">=16"
   },
@@ -32,7 +32,12 @@
     "typescript",
     "minecraft-launcher",
     "nodejs",
-    "electron"
+    "electron",
+    "forge",
+    "minecraftforge",
+    "fabric",
+    "liteloader",
+    "quilt"
   ],
   "license": "MIT",
   "bugs": {

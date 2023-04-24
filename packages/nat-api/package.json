@@ -11,8 +11,7 @@
   "scripts": {
     "build:cjs": "esbuild --bundle --outfile=dist/index.js --format=cjs --platform=node --external:default-gateway --external:fast-xml-parser --target=es2020 index.ts",
     "build:esm": "esbuild --bundle --outfile=dist/index.mjs --external:default-gateway --external:fast-xml-parser --format=esm --platform=node --target=es2020 index.ts",
-    "build:type": "tsc",
-    "build": "npm run build:cjs && npm run build:esm && npm run build:type"
+    "build:type": "tsc"
   },
   "engines": {
     "node": ">=16.0.0"

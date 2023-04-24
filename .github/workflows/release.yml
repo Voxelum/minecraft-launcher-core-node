@@ -32,7 +32,8 @@ jobs:
       run: |
         pnpm --parallel build:type
         pnpm --parallel build:cjs
-        pnpm --parallel build:ems
+        pnpm --parallel build:esm
+        pnpm --parallel build:browser
     - name: Publish
       run: |
         pnpm -r publish --access public --no-git-checks

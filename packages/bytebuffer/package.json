@@ -2,7 +2,7 @@
   "name": "@xmcl/bytebuffer",
   "version": "0.1.0",
   "main": "./index.ts",
-  "description": "The bytebuffer module port from bytebuffer.js",
+  "description": "A bytebuffer module ported from bytebuffer.js",
   "engines": {
     "node": ">=16"
   },
@@ -44,11 +44,10 @@
   },
   "author": "cijhn@hotmail.com",
   "keywords": [
-    "minecraft",
     "typescript",
-    "minecraft-launcher",
     "nodejs",
-    "electron"
+    "electron",
+    "bytebuffer"
   ],
   "license": "MIT",
   "bugs": {

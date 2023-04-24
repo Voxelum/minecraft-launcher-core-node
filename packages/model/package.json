@@ -8,12 +8,10 @@
   },
   "scripts": {
     "build:type": "tsc",
-    "build:cjs": "esbuild --target=node16 --platform=node --external:three --external:@xmcl/* --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
-    "build:esm": "esbuild --target=node16 --platform=node --external:three --external:@xmcl/* --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
+    "build:esm": "esbuild --target=node16 --platform=browser --external:three --external:@xmcl/* --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
   },
   "publishConfig": {
     "access": "public",
-    "main": "./dist/index.js",
     "module": "./dist/index.mjs"
   },
   "dependencies": {

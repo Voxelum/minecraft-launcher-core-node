@@ -2,7 +2,7 @@
   "name": "@xmcl/text-component",
   "version": "2.1.1",
   "main": "./index.ts",
-  "description": "Minecraft text component parsing and rendering.",
+  "description": "Parse Minecraft text component and render it to css.",
   "engines": {
     "node": ">=16"
   },
@@ -27,6 +27,7 @@
     "typescript",
     "minecraft-launcher",
     "nodejs",
+    "text-component",
     "electron"
   ],
   "license": "MIT",

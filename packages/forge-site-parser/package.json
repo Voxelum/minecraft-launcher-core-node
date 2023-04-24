@@ -2,7 +2,7 @@
   "name": "@xmcl/forge-site-parser",
   "version": "2.0.8",
   "main": "./index.ts",
-  "description": "Forge web page parser",
+  "description": "A MinecraftForge web page parser",
   "engines": {
     "node": ">=16"
   },

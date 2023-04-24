@@ -13,8 +13,8 @@
   },
   "scripts": {
     "build:type": "tsc",
-    "build:cjs": "esbuild --target=node16 --platform=node --external:long --external:@xmcl/* --external:bytebuffer --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
-    "build:esm": "esbuild --target=node16 --platform=node --external:long --external:@xmcl/* --external:bytebuffer --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
+    "build:cjs": "esbuild --target=node16 --platform=node --external:long --external:@xmcl/* --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
+    "build:esm": "esbuild --target=node16 --platform=node --external:long --external:@xmcl/* --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"
   },
   "dependencies": {
     "@xmcl/bytebuffer": "workspace:^*",

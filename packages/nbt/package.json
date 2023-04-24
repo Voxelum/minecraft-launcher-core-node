@@ -28,7 +28,8 @@
     "typescript",
     "minecraft-launcher",
     "nodejs",
-    "electron"
+    "electron",
+    "nbt"
   ],
   "license": "MIT",
   "dependencies": {

@@ -30,7 +30,9 @@
     "typescript",
     "minecraft-launcher",
     "nodejs",
-    "electron"
+    "electron",
+    "chunk",
+    "minecraft-level"
   ],
   "license": "MIT",
   "bugs": {

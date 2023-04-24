@@ -4,7 +4,7 @@
   "main": "./index.ts",
   "module": "./index.ts",
   "sideEffects": false,
-  "description": "Provide the modrinth API described in https://docs.modrinth.com/api-spec",
+  "description": "An implementation of modrinth API (https://docs.modrinth.com/api-spec)",
   "scripts": {
     "build:type": "tsc",
     "build:cjs": "esbuild --target=node16 --external:undici --platform=node --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",

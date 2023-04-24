@@ -5,7 +5,7 @@
   "author": {
     "name": "cijhn@hotmail.com"
   },
-  "description": "A tree structure task definition",
+  "description": "A task interface using tree structure.",
   "scripts": {
     "build:cjs": "esbuild --target=es2020 --platform=neutral --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
     "build:esm": "esbuild --target=es2020 --platform=neutral --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts"

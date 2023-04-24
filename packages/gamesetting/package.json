@@ -2,7 +2,7 @@
   "name": "@xmcl/gamesetting",
   "version": "3.0.0",
   "main": "./index.ts",
-  "description": "Minecraft gamesetting (options.txt) parsing.",
+  "description": "Parse Minecraft gamesetting (options.txt) with type.",
   "engines": {
     "node": ">=16"
   },

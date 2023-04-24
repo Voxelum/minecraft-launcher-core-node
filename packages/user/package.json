@@ -35,7 +35,8 @@
     "nodejs",
     "electron",
     "yggdrasil-authentication",
-    "minecraft-skin"
+    "minecraft-skin",
+    "microsoft-authentication"
   ],
   "license": "MIT",
   "bugs": {

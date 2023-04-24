@@ -4,7 +4,7 @@
   "main": "./index.ts",
   "module": "./index.ts",
   "sideEffects": false,
-  "description": "Provide the curseforge (official) API in https://docs.curseforge.com/",
+  "description": "An implementation of curseforge (official) API in https://docs.curseforge.com/",
   "scripts": {
     "build:cjs": "esbuild --target=node16 --external:undici --platform=node --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
     "build:esm": "esbuild --target=node16 --external:undici --platform=node --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts",

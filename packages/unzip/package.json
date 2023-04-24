@@ -2,7 +2,7 @@
   "name": "@xmcl/unzip",
   "version": "2.1.1",
   "main": "./index.ts",
-  "description": "A (hopefully) easy unzip interface based on yauzl",
+  "description": "A easy unzip interface based on yauzl",
   "engines": {
     "node": ">=16"
   },
