@@ -1,5 +1,24 @@
 # Changelog
 
+## 7.1.4
+### @xmcl/curseforge@2.0.2
+#### Bug Fixes
+
+- fix: Try to bump to fix shim ([42e22d1f173126f2ff05f674f926a71670ef894d](https://github.com/voxelum/minecraft-launcher-core-node/commit/42e22d1f173126f2ff05f674f926a71670ef894d))
+### @xmcl/modrinth@2.0.2
+#### Bug Fixes
+
+- fix: correctly handle optional params ([0bf2f7c5734fdecf34bda2363eed2e38616c83f0](https://github.com/voxelum/minecraft-launcher-core-node/commit/0bf2f7c5734fdecf34bda2363eed2e38616c83f0))
+### undici-shim@0.0.2
+#### Bug Fixes
+
+- fix: Try to bump to fix shim ([42e22d1f173126f2ff05f674f926a71670ef894d](https://github.com/voxelum/minecraft-launcher-core-node/commit/42e22d1f173126f2ff05f674f926a71670ef894d))
+### @xmcl/user@3.0.2
+#### Bug Fixes
+
+- fix: make api public for runtime change ([6e3044ef73fab0bcd08b1be9893ed31456e1797c](https://github.com/voxelum/minecraft-launcher-core-node/commit/6e3044ef73fab0bcd08b1be9893ed31456e1797c))
+
+
 ## 7.1.3
 ### @xmcl/asm@1.0.1
 #### Bug Fixes
