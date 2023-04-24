@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/bytebuffer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "./index.ts",
   "description": "A bytebuffer module ported from bytebuffer.js",
   "engines": {

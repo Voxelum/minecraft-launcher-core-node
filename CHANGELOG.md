@@ -1,5 +1,113 @@
 # Changelog
 
+## 7.1.3
+### @xmcl/asm@1.0.1
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/bytebuffer@0.1.1
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/text-component@2.1.2
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/unzip@2.1.2
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/curseforge@2.0.1
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/file-transfer@1.0.2
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/forge-site-parser@2.0.9
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/gamesetting@3.0.1
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/task@4.0.5
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/modrinth@2.0.1
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/nat-api@0.4.1
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/user@3.0.1
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+### @xmcl/nbt@3.0.1
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+- Dependency @xmcl/bytebuffer bump **patch**
+### @xmcl/client@3.0.1
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+- Dependency @xmcl/bytebuffer bump **patch**
+- Dependency @xmcl/nbt bump **patch**
+- Dependency @xmcl/text-component bump **patch**
+### @xmcl/core@2.11.2
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/system@2.2.6
+#### Bug Fixes
+
+- fix: browser build for system ([4e56e4486208e72d550eaebb687b4f558fac1a80](https://github.com/voxelum/minecraft-launcher-core-node/commit/4e56e4486208e72d550eaebb687b4f558fac1a80))
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+- Dependency @xmcl/unzip bump **patch**
+### @xmcl/game-data@1.2.3
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+- Dependency @xmcl/nbt bump **patch**
+- Dependency @xmcl/system bump **patch**
+### @xmcl/installer@5.0.3
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+- Dependency @xmcl/asm bump **patch**
+- Dependency @xmcl/unzip bump **patch**
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/file-transfer bump **patch**
+- Dependency @xmcl/forge-site-parser bump **patch**
+- Dependency @xmcl/task bump **patch**
+### @xmcl/mod-parser@3.3.3
+#### Bug Fixes
+
+- fix: Should not close the fs if it's not created in scope ([d3818ac2df1973f4912cbd076799733ab8aa422c](https://github.com/voxelum/minecraft-launcher-core-node/commit/d3818ac2df1973f4912cbd076799733ab8aa422c))
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+- Dependency @xmcl/asm bump **patch**
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.2.2
+#### Bug Fixes
+
+- fix: Should not close the fs if it's not created in scope ([d3818ac2df1973f4912cbd076799733ab8aa422c](https://github.com/voxelum/minecraft-launcher-core-node/commit/d3818ac2df1973f4912cbd076799733ab8aa422c))
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@2.0.2
+#### Bug Fixes
+
+- fix: adjust package info to bump new esm release ([d09b152d7bf3a8c515a797c8adaa46e98950c642](https://github.com/voxelum/minecraft-launcher-core-node/commit/d09b152d7bf3a8c515a797c8adaa46e98950c642))
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 7.1.2
 ### @xmcl/unzip@2.1.1
 #### Bug Fixes
