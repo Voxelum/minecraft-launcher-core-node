@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/forge-site-parser",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "main": "./index.ts",
   "description": "A MinecraftForge web page parser",
   "engines": {

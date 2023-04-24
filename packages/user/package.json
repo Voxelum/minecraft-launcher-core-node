@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/user",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "main": "./index.ts",
   "description": "Minecraft user related functions, including Yggdrasil authenticator, player skin fetcher, and Mojang security API",
   "scripts": {
