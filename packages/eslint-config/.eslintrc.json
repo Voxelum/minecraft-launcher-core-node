@@ -19,6 +19,7 @@
       "indent": "off",
       "@typescript-eslint/indent": "off",
       "comma-dangle": "off",
+      "n/no-callback-literal": "off",
       "@typescript-eslint/comma-dangle": [
           "error",
           "always-multiline"
