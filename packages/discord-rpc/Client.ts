@@ -143,7 +143,6 @@ export class Client extends (EventEmitter) {
     })
 
     this.transport.on('message', (message) => {
-      console.log(message)
       if (message.cmd === 'DISPATCH' && message.evt === 'READY') {
         if (message.data.user) this.user = new ClientUser(this, message.data.user)
         if (message.data.config && message.data.config.cdn_host) { this.cdnHost = `https://${message.data.config.cdn_host}` }
