@@ -39,6 +39,7 @@ export interface User {
 
 export interface Category {
   icon: string
+  header: string
   name: string
   project_type: string
 }
