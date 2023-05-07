@@ -1,23 +1,22 @@
 import { createHash } from 'crypto'
 import { createReadStream } from 'fs'
-import { FileHandle } from 'fs/promises'
+import { FileHandle, readFile } from 'fs/promises'
 import { pipeline } from 'stream/promises'
 
 export interface Validator {
   /**
      * Validate the download result. It should throw `ValidationError` if validation failed.
      *
-     * @param fd The file desciprtor
      * @param destination The result file
      * @param url The url where the file downloaded from
      */
-  validate(fd: FileHandle, destination: string, url: string): Promise<void>
+  validate(destination: string, url: string): Promise<void>
 }
 
 export class ChecksumValidator implements Validator {
   constructor(protected checksum?: ChecksumValidatorOptions) { }
 
-  async validate(fd: FileHandle, destination: string, url: string): Promise<void> {
+  async validate(destination: string, url: string): Promise<void> {
     if (this.checksum) {
       const hash = createHash(this.checksum.algorithm)
       await pipeline(createReadStream(destination), hash)
@@ -49,8 +48,8 @@ export interface ChecksumValidatorOptions {
 }
 
 export class JsonValidator implements Validator {
-  async validate(fd: FileHandle, destination: string, url: string): Promise<void> {
-    const content = await fd.readFile('utf-8')
+  async validate(destination: string, url: string): Promise<void> {
+    const content = await readFile(destination, 'utf-8')
     JSON.parse(content)
   }
 }
