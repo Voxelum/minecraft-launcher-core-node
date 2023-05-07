@@ -44,9 +44,10 @@ export async function * range(
   let contentLength = -1
   const fileStream = new Writable({
     write(chunk, en, cb) {
-      handle.write(chunk, 0, chunk.length, segment.start).then(({ bytesWritten }) => {
-        // track the progress
-        segment.start += bytesWritten
+      // track the progress
+      const position = segment.start
+      segment.start += chunk.length
+      handle.write(chunk, 0, chunk.length, position).then(({ bytesWritten }) => {
         statusController?.onProgress(url, bytesWritten, statusController.progress + bytesWritten, total)
         cb()
       }, cb)

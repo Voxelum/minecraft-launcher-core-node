@@ -1,5 +1,5 @@
-import { FileHandle, mkdir, open, unlink } from 'fs/promises'
-import { constants } from 'fs'
+import { FileHandle, mkdir, open, rename, stat, unlink } from 'fs/promises'
+import { constants, existsSync, unlinkSync } from 'fs'
 import { dirname } from 'path'
 import { errors } from 'undici'
 import { DownloadAgent, resolveAgent } from './agent'
@@ -31,9 +31,9 @@ export interface DownloadBaseOptions {
 }
 
 export interface DownloadOptions extends DownloadBaseOptions {
-/**
-   * The url or urls (fallback) of the resource
-   */
+  /**
+     * The url or urls (fallback) of the resource
+     */
   url: string | string[]
   /**
    * The header of the request
@@ -55,6 +55,33 @@ export interface DownloadOptions extends DownloadBaseOptions {
    * The user abort signal to abort the download
    */
   abortSignal?: AbortSignal
+  /**
+   * Will first download to pending file and then rename to actual file
+   */
+  pendingFile?: string
+}
+
+async function openFile(destination: string, validator: Validator, url: string, skipPrevalidate: boolean) {
+  let fd = undefined as FileHandle | undefined
+  try {
+    // use O_RDWR for read write which won't be truncated
+    fd = await open(destination, constants.O_RDWR | constants.O_CREAT)
+
+    const size = (await fd.stat()).size
+    // pre-validate the file
+    if (size !== 0 && !skipPrevalidate) {
+      const error = await validator.validate(destination, url).catch((e) => e)
+      // if the file size is not 0 and checksum matched, we just don't process the file
+      if (!error) {
+        await fd?.close().catch(() => { })
+        return undefined
+      }
+    }
+    return fd
+  } catch (e) {
+    await fd?.close().catch(() => { })
+    throw e
+  }
 }
 
 /**
@@ -70,27 +97,35 @@ export async function download(options: DownloadOptions) {
   const agent = resolveAgent(options.agent)
   const skipRevalidate = options.skipRevalidate ?? false
   const skipPrevalidate = options.skipPrevalidate ?? false
+  const pendingFile = options.pendingFile
 
   let fd = undefined as FileHandle | undefined
 
+  await mkdir(dirname(destination), { recursive: true }).catch(() => { })
   // Access file handle
   try {
-    await mkdir(dirname(destination), { recursive: true }).catch(() => { })
-    // use O_RDWR for read write which won't be truncated
-    fd = await open(destination, constants.O_RDWR | constants.O_CREAT)
-
-    const size = (await fd.stat()).size
-    // pre-validate the file
-    if (size !== 0 && !skipPrevalidate) {
-      const error = await validator.validate(fd, destination, urls[0]).catch((e) => e)
-      // if the file size is not 0 and checksum matched, we just don't process the file
+    if (pendingFile) {
+      const error = await validator.validate(destination, urls[0]).catch((e) => e)
       if (!error) {
-        await fd?.close().catch(() => { })
+        // file is already downloaded and validated
+        return
+      }
+      fd = await openFile(pendingFile, validator, urls[0], skipPrevalidate)
+      if (!fd) {
+        // file is already downloaded and validated
+        // we will overwrite destination with pending file
+        await unlink(destination).catch((e) => undefined)
+        await rename(pendingFile, destination)
+        return
+      }
+    } else {
+      fd = await openFile(destination, validator, urls[0], skipPrevalidate)
+      if (!fd) {
+        // file is already downloaded and validated
         return
       }
     }
   } catch (e) {
-    await fd?.close().catch(() => { })
     throw new DownloadFileSystemError(`Fail to get access on ${destination}`, urls, headers, destination, e)
   }
 
@@ -106,7 +141,7 @@ export async function download(options: DownloadOptions) {
           await agent.dispatch(new URL(url), 'GET', headers, destination, fd, progressController, abortSignal)
           await fd.datasync()
           if (!skipRevalidate) {
-            await validator.validate(fd, destination, url)
+            await validator.validate(pendingFile || destination, url)
           }
           // Dismiss all errors
           aggregatedErrors = []
@@ -130,6 +165,13 @@ export async function download(options: DownloadOptions) {
       if (aggregatedErrors.length > 0) {
         throw aggregatedErrors
       }
+
+      // No error, so we are done
+      if (pendingFile) {
+        // If pending file, we need to rename it to destination with overwrite
+        await unlink(destination).catch(() => undefined)
+        await rename(pendingFile, destination).catch(() => -1)
+      }
     } finally {
       await fd.close().catch(() => { })
     }
@@ -139,11 +181,19 @@ export async function download(options: DownloadOptions) {
       throw e
     }
 
+    if (e === -1) {
+      // File already exists
+      throw new DownloadAggregateError(`Some errors occurred during download process: ${urls.join(', ')}. ${JSON.stringify(e)}`, urls, headers, destination, e as any)
+    }
+
     assert(e instanceof Array)
 
     if (e[e.length - 1] instanceof ValidationError) {
       // Last download corrupted...
       await unlink(destination).catch(() => { })
+      if (pendingFile) {
+        await unlink(pendingFile).catch(() => { })
+      }
     }
 
     throw new DownloadAggregateError(`Some errors occurred during download process: ${urls.join(', ')}. ${JSON.stringify(e)}`, urls, headers, destination, e as any)
