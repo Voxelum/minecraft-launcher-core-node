@@ -2,7 +2,7 @@ import { deserialize, deserializeSync, serialize, serializeSync, TagType } from 
 
 export class ServerInfo {
   @TagType(TagType.String)
-  icon = ''
+  icon ?= ''
 
   @TagType(TagType.String)
   ip = ''
