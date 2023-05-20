@@ -151,6 +151,12 @@ export async function resolveJava(path: string): Promise<JavaInfo | undefined> {
   })
 }
 
+export class ParseJavaVersionError extends Error {
+  name = 'ParseJavaVersionError'
+
+  constructor(message: string) { super(message) }
+}
+
 /**
  * Parse version string and major version number from stderr of java process.
  *
@@ -165,7 +171,7 @@ export function parseJavaVersion(versionText: string): { version: string; majorV
       return {
         version: match[0],
         majorVersion: Number.parseInt(match[2]),
-        patch: Number.parseInt(match[4].substring(1)),
+        patch: Number.parseInt(match[4].substring(1) ?? '-1'),
       }
     }
     return {
@@ -174,10 +180,13 @@ export function parseJavaVersion(versionText: string): { version: string; majorV
       patch: Number.parseInt(match[3]),
     }
   }
-  const javaVersion = getVersion(versionText)
-
-  if (!javaVersion) { return undefined }
-  return javaVersion
+  try {
+    const javaVersion = getVersion(versionText)
+    if (!javaVersion) { return undefined }
+    return javaVersion
+  } catch (e) {
+    throw new ParseJavaVersionError(`Fail to parse java version [${versionText}]: ${(e as any).message}`)
+  }
 }
 
 /**
