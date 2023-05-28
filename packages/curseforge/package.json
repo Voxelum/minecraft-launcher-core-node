@@ -6,6 +6,7 @@
   "sideEffects": false,
   "description": "An implementation of curseforge (official) API in https://docs.curseforge.com/",
   "scripts": {
+    "build:type": "tsc",
     "build:cjs": "esbuild --target=node16 --external:undici --platform=node --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
     "build:esm": "esbuild --target=node16 --external:undici --platform=node --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts",
     "build:browser": "esbuild --target=es2020 --sourcemap --alias:undici=undici-shim --format=esm --bundle --outfile=dist/index.browser.mjs index.ts"
