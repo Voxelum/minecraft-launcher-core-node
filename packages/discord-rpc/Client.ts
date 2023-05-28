@@ -355,7 +355,7 @@ export class Client extends (EventEmitter) {
         resolve()
       })
 
-      this.transport.connect()
+      this.transport.connect().then(resolve, reject)
     })
 
     return this.connectionPromise
