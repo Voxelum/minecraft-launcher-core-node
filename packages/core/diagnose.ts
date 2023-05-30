@@ -244,6 +244,9 @@ export async function diagnoseAssets(assetObjects: Record<string, { hash: string
  */
 export async function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder, options?: DiagnoseOptions): Promise<Array<LibraryIssue>> {
   const issues = await Promise.all(resolvedVersion.libraries.map(async (lib) => {
+    if (!lib.download.path) {
+      throw new TypeError(`Cannot diagnose library without path! ${JSON.stringify(lib)}`)
+    }
     const libPath = minecraft.getLibraryByPath(lib.download.path)
     if (!options?.strict) {
       const issue = await diagnoseFile({ file: libPath, expectedChecksum: lib.download.sha1, role: 'library', hint: 'Problem on library! Please consider to use Installer.installLibraries to fix.' }, options)
