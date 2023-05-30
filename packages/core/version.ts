@@ -675,6 +675,9 @@ export namespace Version {
     const info = LibraryInfo.resolve(lib.name)
     // normal library
     if ('downloads' in lib) {
+      if (!lib.downloads.artifact) {
+        throw new Error('Corrupted library: ' + JSON.stringify(lib))
+      }
       if (!lib.downloads.artifact.url) {
         lib.downloads.artifact.url = info.groupId === 'net.minecraftforge'
           ? 'https://files.minecraftforge.net/maven/' + lib.downloads.artifact.path
