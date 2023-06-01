@@ -7,15 +7,6 @@ export class CancelledError extends Error {
     this.name = 'CancelledError'
   }
 }
-/**
- * The collection of errors happened during a parallel process
- */
-export class MultipleError extends Error {
-  constructor(readonly errors: unknown[], message?: string) {
-    super(message)
-    this.name = 'MultipleError'
-  }
-}
 
 export enum TaskState {
   Idle,
@@ -328,7 +319,7 @@ export abstract class TaskGroup<T> extends BaseTask<T> {
       const result = await Promise.all(promises)
       // if not throwErrorImmediately, we still need to check if other task failed
       if (errors.length > 0) {
-        throw new MultipleError(errors, getErrorMessage?.(errors))
+        throw new AggregateError(errors, getErrorMessage?.(errors))
       }
       return result as Z[]
     } catch (e) {
