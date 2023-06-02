@@ -1,17 +1,17 @@
 import { open, openEntryReadStream, walkEntriesGenerator } from '@xmcl/unzip'
 import { ChildProcess, SpawnOptions, spawn } from 'child_process'
+import { randomUUID } from 'crypto'
 import { EventEmitter } from 'events'
 import { createWriteStream, existsSync } from 'fs'
+import { link, mkdir, readFile, writeFile } from 'fs/promises'
 import { EOL } from 'os'
 import { delimiter, dirname, isAbsolute, join, resolve } from 'path'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { randomUUID } from 'crypto'
 import { MinecraftFolder } from './folder'
-import { getPlatform, Platform } from './platform'
+import { Platform, getPlatform } from './platform'
 import { checksum, validateSha1 } from './utils'
-import { ResolvedLibrary, ResolvedNative, ResolvedVersion, Version } from './version'
-import { link, mkdir, readFile, writeFile } from 'fs/promises'
+import { ResolvedLibrary, ResolvedVersion, Version } from './version'
 
 function format(template: string, args: any) {
   return template.replace(/\$\{(.*?)}/g, (key) => {
@@ -301,7 +301,7 @@ export namespace LaunchPrecheck {
     await mkdir(native, { recursive: true }).catch((e) => {
       if (e.code !== 'EEXIST') { throw e }
     })
-    const natives = version.libraries.filter((lib) => lib instanceof ResolvedNative) as ResolvedNative[]
+    const natives = version.libraries.filter((lib) => lib.isNative)
     const checksumFile = join(native, '.json')
     const includedLibs = natives.map((n) => n.name).sort()
 
@@ -320,7 +320,7 @@ export namespace LaunchPrecheck {
     }
 
     const extractedNatives: CheckEntry[] = []
-    async function extractJar(n: ResolvedNative | undefined) {
+    async function extractJar(n: ResolvedLibrary | undefined) {
       if (!n) { return }
       const excluded: string[] = n.extractExclude || []
 
@@ -675,7 +675,7 @@ export async function generateArguments(options: LaunchOption) {
     launcher_name: launcherName,
     launcher_version: launcherBrand,
     classpath: [
-      ...version.libraries.filter((lib) => !(lib instanceof ResolvedNative)).map((lib) => mc.getLibraryByPath(lib.download.path)),
+      ...version.libraries.filter((lib) => !lib.isNative).map((lib) => mc.getLibraryByPath(lib.download.path)),
       mc.getVersionJar(version.minecraftVersion),
       ...(options.extraClassPaths || []),
     ].join(delimiter),

@@ -227,9 +227,11 @@ export class ResolvedLibrary implements LibraryInfo {
     readonly name: string,
     info: LibraryInfo,
     readonly download: Version.Artifact,
+    readonly isNative: boolean = false,
     readonly checksums?: string[],
     readonly serverreq?: boolean,
-    readonly clientreq?: boolean) {
+    readonly clientreq?: boolean,
+    readonly extractExclude?: string[]) {
     const { groupId, artifactId, version, isSnapshot, type, classifier, path } = info
     this.groupId = groupId
     this.artifactId = artifactId
@@ -238,17 +240,6 @@ export class ResolvedLibrary implements LibraryInfo {
     this.type = type
     this.classifier = classifier
     this.path = path
-  }
-}
-/**
- * Represent a native libraries provided by Minecraft
- */
-export class ResolvedNative extends ResolvedLibrary {
-  constructor(name: string,
-    info: LibraryInfo,
-    download: Version.Artifact,
-    readonly extractExclude?: string[]) {
-    super(name, info, download)
   }
 }
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -339,7 +330,7 @@ export namespace Version {
         apply = false
         const osRule = rule.os
         if (platform.name === osRule.name &&
-                    (!osRule.version || platform.version.match(osRule.version))) {
+          (!osRule.version || platform.version.match(osRule.version))) {
           apply = true
         }
       }
@@ -417,7 +408,7 @@ export namespace Version {
 
     const downloadsMap: { [key: string]: Download } = {}
     const librariesMap: { [key: string]: ResolvedLibrary } = {}
-    const nativesMap: { [key: string]: ResolvedNative } = {}
+    const nativesMap: { [key: string]: ResolvedLibrary } = {}
 
     let mainClass = ''
     const args = { jvm: [] as LaunchArgument[], game: [] as LaunchArgument[] }
@@ -461,7 +452,7 @@ export namespace Version {
           if (lib.classifier) {
             libOrgName += `-${lib.classifier};`
           }
-          if (lib instanceof ResolvedNative) {
+          if (lib.isNative) {
             nativesMap[libOrgName] = lib
           } else {
             librariesMap[libOrgName] = lib
@@ -670,7 +661,7 @@ export namespace Version {
           url: 'https://libraries.minecraft.net/' + info.path,
         }
       }
-      return new ResolvedNative(lib.name + ':' + classifier, info, nativeArtifact, lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined)
+      return new ResolvedLibrary(lib.name + ':' + classifier, info, nativeArtifact, true, undefined, undefined, undefined, lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined)
     }
     const info = LibraryInfo.resolve(lib.name)
     // normal library
@@ -685,7 +676,7 @@ export namespace Version {
       }
       if (info.classifier.startsWith('natives')) {
         // new native format introduced by 1.19
-        return new ResolvedNative(info.name, info, lib.downloads.artifact)
+        return new ResolvedLibrary(info.name, info, lib.downloads.artifact, true)
       }
       return new ResolvedLibrary(lib.name, info, lib.downloads.artifact)
     }
@@ -696,7 +687,7 @@ export namespace Version {
       path: info.path,
       url: maven + info.path,
     }
-    return new ResolvedLibrary(lib.name, info, artifact, lib.checksums, lib.serverreq, lib.clientreq)
+    return new ResolvedLibrary(lib.name, info, artifact, false, lib.checksums, lib.serverreq, lib.clientreq)
   }
 
   /**
