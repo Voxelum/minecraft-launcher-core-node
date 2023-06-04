@@ -306,7 +306,7 @@ export namespace Version {
   export type Library = NormalLibrary | NativeLibrary | PlatformSpecificLibrary | LegacyLibrary
 
   export type LaunchArgument = string | {
-    rules: Rule[]
+    rules?: Rule[]
     value: string | string[]
   }
 
@@ -718,7 +718,7 @@ export namespace Version {
       return ar.filter((a) => {
         // only filter out the os only rule.
         // if the features fields presented, we don't process it now
-        if (typeof a === 'object' && a.rules.every((r) => typeof r === 'string' || !('features' in r))) {
+        if (typeof a === 'object' && a.rules?.every((r) => typeof r === 'string' || !('features' in r))) {
           return Version.checkAllowed(a.rules, platform)
         }
         return true
