@@ -773,7 +773,7 @@ function normalizeArguments(args: Version.LaunchArgument[], platform: Platform, 
     if (typeof arg === 'string') {
       return arg
     }
-    if (!Version.checkAllowed(arg.rules, platform, Object.keys(features))) {
+    if (!Version.checkAllowed(arg.rules || [], platform, Object.keys(features))) {
       return ''
     }
     return arg.value
