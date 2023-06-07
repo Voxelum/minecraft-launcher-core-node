@@ -613,7 +613,7 @@ export async function generateArguments(options: LaunchOption) {
   const mc = MinecraftFolder.from(resourcePath)
   const cmd: string[] = []
 
-  const { id = randomUUID().replace(/-/g, ''), name = 'Steve' } = options.gameProfile || {}
+  const { id = randomUUID().replace(/-/g, ''), username = 'Steve' } = options.gameProfile.user || {}
   const accessToken = options.accessToken || randomUUID().replace(/-/g, '')
   const properties = options.properties || {}
   const userType = options.userType || 'Mojang'
@@ -724,7 +724,7 @@ export async function generateArguments(options: LaunchOption) {
     game_assets: join(assetsDir, 'virtual', version.assets),
     assets_index_name: version.assets,
     game_directory: gamePath,
-    auth_player_name: name,
+    auth_player_name: username,
     auth_uuid: id,
     auth_access_token: accessToken,
     user_properties: JSON.stringify(properties),
