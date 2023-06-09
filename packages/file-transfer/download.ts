@@ -170,7 +170,9 @@ export async function download(options: DownloadOptions) {
       if (pendingFile) {
         // If pending file, we need to rename it to destination with overwrite
         await unlink(destination).catch(() => undefined)
-        await rename(pendingFile, destination).catch(() => -1)
+        await rename(pendingFile, destination).catch((e) => {
+          throw new DownloadFileSystemError('Download file destination already existed', urls, headers, destination, e)
+        })
       }
     } finally {
       await fd.close().catch(() => { })
@@ -181,9 +183,8 @@ export async function download(options: DownloadOptions) {
       throw e
     }
 
-    if (e === -1) {
-      // File already exists
-      throw new DownloadAggregateError(`Some errors occurred during download process: ${urls.join(', ')}. ${JSON.stringify(e)}`, urls, headers, destination, e as any)
+    if (e instanceof DownloadFileSystemError) {
+      throw e
     }
 
     assert(e instanceof Array)
@@ -196,6 +197,6 @@ export async function download(options: DownloadOptions) {
       }
     }
 
-    throw new DownloadAggregateError(`Some errors occurred during download process: ${urls.join(', ')}. ${JSON.stringify(e)}`, urls, headers, destination, e as any)
+    throw new DownloadAggregateError(e, 'Multiple errors occurred during download process', urls, headers, destination)
   }
 }

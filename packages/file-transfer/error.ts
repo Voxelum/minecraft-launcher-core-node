@@ -6,8 +6,9 @@ export class DownloadError extends Error {
     public urls: string[],
     readonly headers: Record<string, any>,
     readonly destination: string,
+    options?: ErrorOptions,
   ) {
-    super(message)
+    super(message, options)
     this.name = 'DownloadError'
   }
 }
@@ -19,12 +20,14 @@ export class DownloadAbortError extends DownloadError {
     headers: Record<string, any>,
     destination: string,
     readonly segments: Range[],
+    options?: ErrorOptions,
   ) {
     super(
       message,
       urls,
       headers,
       destination,
+      options,
     )
     this.name = 'DownloadAbortError'
   }
@@ -43,24 +46,25 @@ export class DownloadFileSystemError extends DownloadError {
       urls,
       headers,
       destination,
+      { cause: error },
     )
     this.name = 'DownloadFileSystemError'
   }
 }
 
-export class DownloadAggregateError extends DownloadError {
+export class DownloadAggregateError extends AggregateError {
   constructor(
+    errors: any[],
     message: string,
-    urls: string[],
-    headers: Record<string, any>,
-    destination: string,
-    readonly errors: unknown & { url: string },
+    readonly urls: string[],
+    readonly headers: Record<string, any>,
+    readonly destination: string,
+    options?: ErrorOptions,
   ) {
     super(
+      errors,
       message,
-      urls,
-      headers,
-      destination,
+      options,
     )
     this.name = 'DownloadAggregateError'
   }
