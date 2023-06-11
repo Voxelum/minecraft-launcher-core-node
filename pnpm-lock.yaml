@@ -174,9 +174,21 @@ importers:
       '@types/node':
         specifier: ~18
         version: 18.15.11
+      '@xmcl/eslint-config':
+        specifier: workspace:^*
+        version: link:../eslint-config
+      esbuild:
+        specifier: ^0.17.16
+        version: 0.17.16
+      eslint:
+        specifier: ^8.37.0
+        version: 8.38.0
       tsx:
         specifier: ^3.12.1
         version: 3.12.6
+      typescript:
+        specifier: ^5.0.4
+        version: 5.0.4
 
   packages/eslint-config:
     dependencies:
@@ -1969,17 +1981,6 @@ packages:
       ms: 2.1.2
     dev: false
 
-  /debug@4.3.2:
-    resolution: {integrity: sha512-mOp8wKcvj7XxC78zLgw/ZA+6TSgkoE2C/ienthhRD298T7UNwAg9diBpLRxC0mOezLl4B0xV7M0cCO6P/O0Xhw==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.2
-
   /debug@4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
     engines: {node: '>=6.0'}
@@ -2595,7 +2596,7 @@ packages:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.3
-      debug: 4.3.2
+      debug: 4.3.4
       doctrine: 3.0.0
       escape-string-regexp: 4.0.0
       eslint-scope: 7.1.1

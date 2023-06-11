@@ -39,6 +39,10 @@
   },
   "devDependencies": {
     "@types/node": "~18",
+    "eslint": "^8.37.0",
+    "@xmcl/eslint-config": "workspace:^*",
+    "esbuild": "^0.17.16",
+    "typescript": "^5.0.4",
     "tsx": "^3.12.1"
   },
   "engines": {
