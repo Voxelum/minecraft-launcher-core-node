@@ -1,5 +1,56 @@
 # Changelog
 
+## 7.2.0
+### @xmcl/core@2.12.0
+#### Features
+
+- feat: Add abort signal to diagnose ([167eb5efc74edfb23dcfa4116838a70b577e1c23](https://github.com/voxelum/minecraft-launcher-core-node/commit/167eb5efc74edfb23dcfa4116838a70b577e1c23))
+#### Bug Fixes
+
+- fix: Handle the case that the rules are undefined ([aec6c21ddcfa71be49a9a9d270b2ad619b4b3731](https://github.com/voxelum/minecraft-launcher-core-node/commit/aec6c21ddcfa71be49a9a9d270b2ad619b4b3731))
+- fix: Raise error before the path.join ([5430dd914825ed457599d0a48e480b47ddded14f](https://github.com/voxelum/minecraft-launcher-core-node/commit/5430dd914825ed457599d0a48e480b47ddded14f))
+### @xmcl/curseforge@2.0.3
+#### Bug Fixes
+
+- fix: Fix the curseforge url concat ([3e5ca1adfdc5c53db77fe3e1195aa52f6cc5dfe3](https://github.com/voxelum/minecraft-launcher-core-node/commit/3e5ca1adfdc5c53db77fe3e1195aa52f6cc5dfe3))
+- fix: build modrinth types, close #266 ([567cc16844b39996687623dd093f4af425386f9e](https://github.com/voxelum/minecraft-launcher-core-node/commit/567cc16844b39996687623dd093f4af425386f9e))
+### @xmcl/discord-rpc@1.1.0
+#### Features
+
+- feat: Add discord rpc ([c89b71faacee23396097e702a2a8fb2c9a3e17ba](https://github.com/voxelum/minecraft-launcher-core-node/commit/c89b71faacee23396097e702a2a8fb2c9a3e17ba))
+#### Bug Fixes
+
+- fix: Uncaught discord exception ([4ec7f7ed57bf526865a7d33d7e04c5f2be5a09c5](https://github.com/voxelum/minecraft-launcher-core-node/commit/4ec7f7ed57bf526865a7d33d7e04c5f2be5a09c5))
+### @xmcl/file-transfer@1.0.3
+#### Bug Fixes
+
+- fix: Try to truncate the file accordingly ([616b5ddbd3754da8a273d8bb239796eaf17321e0](https://github.com/voxelum/minecraft-launcher-core-node/commit/616b5ddbd3754da8a273d8bb239796eaf17321e0))
+- fix: wrong checksum when data is not synced ([aa3c64ecd0e90cc27133c3354289dedaecd63f75](https://github.com/voxelum/minecraft-launcher-core-node/commit/aa3c64ecd0e90cc27133c3354289dedaecd63f75))
+### @xmcl/task@4.0.6
+#### Bug Fixes
+
+- fix: Use AggregateError ([a89b28cdbcc7a7f971ad40f7f952a1b22329ed33](https://github.com/voxelum/minecraft-launcher-core-node/commit/a89b28cdbcc7a7f971ad40f7f952a1b22329ed33))
+### @xmcl/modrinth@2.1.0
+#### Features
+
+- feat: Add the new header field to modrinth category ([eb2794eea5423e1aa539c843c05b1cfe8b9f3b7d](https://github.com/voxelum/minecraft-launcher-core-node/commit/eb2794eea5423e1aa539c843c05b1cfe8b9f3b7d))
+### @xmcl/user@3.0.3
+#### Bug Fixes
+
+- fix: Wrong api for validate and get game profile ([7107cad830d8de513ce282d6c0552c170d183e89](https://github.com/voxelum/minecraft-launcher-core-node/commit/7107cad830d8de513ce282d6c0552c170d183e89))
+### @xmcl/installer@5.1.0
+#### Features
+
+- feat: Throw error if parse failed ([99ff29b98926afc1a5afb8fabe6580c29e9192a5](https://github.com/voxelum/minecraft-launcher-core-node/commit/99ff29b98926afc1a5afb8fabe6580c29e9192a5))
+#### Bug Fixes
+
+- fix: Add fallback to download asset index ([752863120d94b38b11b95d407ceea0ad7099683e](https://github.com/voxelum/minecraft-launcher-core-node/commit/752863120d94b38b11b95d407ceea0ad7099683e))
+- fix: The validator is missed for validator refactor ([a05d427de6e7f5647215f2957894c5f1fa16a286](https://github.com/voxelum/minecraft-launcher-core-node/commit/a05d427de6e7f5647215f2957894c5f1fa16a286))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/file-transfer bump **patch**
+- Dependency @xmcl/task bump **patch**
+
+
 ## 7.1.4
 ### @xmcl/curseforge@2.0.2
 #### Bug Fixes
