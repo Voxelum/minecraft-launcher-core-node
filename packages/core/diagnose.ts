@@ -110,6 +110,7 @@ export interface MinecraftIssueReport {
 export interface DiagnoseOptions {
   checksum?: (file: string, algorithm: string) => Promise<string>
   strict?: boolean
+  signal?: AbortSignal
 }
 
 /**
@@ -121,11 +122,14 @@ export async function diagnoseFile<T extends string>({ file, expectedChecksum, r
   algorithm = algorithm ?? 'sha1'
 
   const checksumFunc = options?.checksum ?? checksum
+  const signal = options?.signal
   const fileExisted = await exists(file)
+  if (signal?.aborted) return
   if (!fileExisted) {
     issue = true
   } else if (expectedChecksum !== '') {
     receivedChecksum = await checksumFunc(file, algorithm)
+    if (signal?.aborted) return
     issue = receivedChecksum !== expectedChecksum
   }
   const type = fileExisted ? 'corrupted' : 'missing' as const
@@ -208,6 +212,7 @@ export async function diagnose(version: string, minecraftLocation: MinecraftLoca
  * @returns The diagnose report
  */
 export async function diagnoseAssets(assetObjects: Record<string, { hash: string; size: number }>, minecraft: MinecraftFolder, options?: DiagnoseOptions): Promise<Array<AssetIssue>> {
+  const signal = options?.signal
   const filenames = Object.keys(assetObjects)
   const issues = await Promise.all(filenames.map(async (filename) => {
     const { hash, size } = assetObjects[filename]
@@ -221,6 +226,7 @@ export async function diagnoseAssets(assetObjects: Record<string, { hash: string
     } else {
       // non-strict mode might be faster
       const { size: realSize } = await stat(assetPath).catch(() => ({ size: -1 }))
+      if (signal?.aborted) return
       if (realSize !== size) {
         const issue = await diagnoseFile({ file: assetPath, expectedChecksum: hash, role: 'asset', hint: 'Problem on asset! Please consider to use Installer.installAssets to fix.' }, options)
         if (issue) {
@@ -243,7 +249,11 @@ export async function diagnoseAssets(assetObjects: Record<string, { hash: string
  * @see {@link ResolvedVersion}
  */
 export async function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder, options?: DiagnoseOptions): Promise<Array<LibraryIssue>> {
+  const signal = options?.signal
   const issues = await Promise.all(resolvedVersion.libraries.map(async (lib) => {
+    if (!lib.download.path) {
+      throw new TypeError(`Cannot diagnose library without path! ${JSON.stringify(lib)}`)
+    }
     const libPath = minecraft.getLibraryByPath(lib.download.path)
     if (!options?.strict) {
       const issue = await diagnoseFile({ file: libPath, expectedChecksum: lib.download.sha1, role: 'library', hint: 'Problem on library! Please consider to use Installer.installLibraries to fix.' }, options)
@@ -254,6 +264,7 @@ export async function diagnoseLibraries(resolvedVersion: ResolvedVersion, minecr
       // non-strict mode might be faster
       const size = lib.download.size
       const { size: realSize } = await stat(libPath).catch(() => ({ size: -1 }))
+      if (signal?.aborted) return
       if (size !== -1 && realSize !== size) {
         const issue = await diagnoseFile({ file: libPath, expectedChecksum: lib.download.sha1, role: 'library', hint: 'Problem on library! Please consider to use Installer.installLibraries to fix.' }, options)
         if (issue) {

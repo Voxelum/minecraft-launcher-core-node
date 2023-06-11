@@ -1,6 +1,6 @@
 {
     "private": true,
-    "version": "7.1.4",
+    "version": "7.2.0",
     "scripts": {
         "build:docs": "tsx scripts/docs.ts",
         "preview:docs": "vitepress preview docs",
@@ -13,10 +13,10 @@
     "packageManager": "pnpm@8.2.0",
     "devDependencies": {
         "tsx": "^3.12.6",
-        "vitepress": "^1.0.0-alpha.65",
+        "vitepress": "^1.0.0-beta.2",
         "typedoc": "^0.23.28",
         "typescript": "^5.0.3",
         "@vitest/coverage-c8": "^0.30.1",
-        "vitest": "^0.30.1"
+        "vitest": "^0.32.0"
     }
 }

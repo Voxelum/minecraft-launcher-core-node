@@ -1,7 +1,7 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version, Version as VersionJson } from '@xmcl/core'
 import { ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, Validator } from '@xmcl/file-transfer'
 import { task, Task } from '@xmcl/task'
-import { readFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { Dispatcher, request } from 'undici'
 import { DownloadTask } from './downloadTask'
@@ -337,9 +337,31 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
       }
     }
 
-    const { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex
-    const objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
-    // let sizes = objectArray.map((a) => a.size).map((a, b) => a + b, 0);
+    const getAssetIndexFallback = async () => {
+      const urls = resolveDownloadUrls(version.assetIndex!.url, version, options.assetsIndexUrl)
+      for (const url of urls) {
+        try {
+          const response = await request(url, { dispatcher: options.agent?.dispatcher })
+          const json = await response.body.json()
+          await writeFile(jsonPath, JSON.stringify(json))
+          return json
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    let objectArray: any[]
+    try {
+      const { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex
+      objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
+    } catch (e) {
+      if ((e instanceof SyntaxError)) {
+        throw e
+      }
+      const { objects } = await getAssetIndexFallback()
+      objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
+    }
     await this.all(objectArray.map((o) => new InstallAssetTask(o, folder, options)), {
       throwErrorImmediately: options.throwErrorImmediately ?? false,
       getErrorMessage: (errs) => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}: ${errs.map(errorToString).join('\n')}`,

@@ -1,11 +1,12 @@
 {
   "name": "@xmcl/curseforge",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "main": "./index.ts",
   "module": "./index.ts",
   "sideEffects": false,
   "description": "An implementation of curseforge (official) API in https://docs.curseforge.com/",
   "scripts": {
+    "build:type": "tsc",
     "build:cjs": "esbuild --target=node16 --external:undici --platform=node --sourcemap --format=cjs --bundle --outfile=dist/index.js index.ts",
     "build:esm": "esbuild --target=node16 --external:undici --platform=node --sourcemap --format=esm --bundle --outfile=dist/index.mjs index.ts",
     "build:browser": "esbuild --target=es2020 --sourcemap --alias:undici=undici-shim --format=esm --bundle --outfile=dist/index.browser.mjs index.ts"
@@ -34,14 +35,14 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "undici": "^5.21.0"
+    "undici": "^5.21.2"
   },
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
-    "esbuild": "^0.17.14",
+    "esbuild": "^0.17.16",
     "undici-shim": "workspace:^*"
   }
 }

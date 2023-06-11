@@ -103,7 +103,7 @@ export class YggdrasilClient {
   }
 
   async validate(accessToken: string, clientToken: string, signal?: AbortSignal) {
-    const response = await fetch(new URL('/validate', this.api), {
+    const response = await fetch(this.api + '/validate', {
       method: 'POST',
       body: JSON.stringify({ accessToken, clientToken }),
       headers: {
@@ -234,7 +234,8 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
   ) {
     super(api + '/authserver', options)
     // eslint-disable-next-line no-template-curly-in-string
-    this.profileApi = api + '/yggdrasil/sessionserver/session/minecraft/profile/${uuid}'
+    this.profileApi = api + '/sessionserver/session/minecraft/profile/${uuid}'
+    // this.profileApi = api + '/yggdrasil/sessionserver/session/minecraft/profile/${uuid}'
     // eslint-disable-next-line no-template-curly-in-string
     this.textureApi = api + '/api/user/profile/${uuid}/${type}'
   }

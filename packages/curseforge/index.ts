@@ -546,7 +546,7 @@ export class CurseforgeV1Client {
    * @see https://docs.curseforge.com/#get-categories
    */
   async getCategories(signal?: AbortSignal) {
-    const url = new URL('/v1/categories', this.baseUrl)
+    const url = new URL(this.baseUrl + '/v1/categories')
     url.searchParams.append('gameId', '432')
     const response = await fetch(url, {
       headers: {
@@ -570,7 +570,7 @@ export class CurseforgeV1Client {
    * @param options The query options
    */
   async getMod(modId: number, signal?: AbortSignal) {
-    const url = new URL(`/v1/mods/${modId}`, this.baseUrl)
+    const url = new URL(this.baseUrl + `/v1/mods/${modId}`)
     const response = await fetch(url, {
       dispatcher: this.dispatcher,
       headers: {
@@ -590,7 +590,7 @@ export class CurseforgeV1Client {
    * @see https://docs.curseforge.com/#get-mod-description
    */
   async getModDescription(modId: number, signal?: AbortSignal) {
-    const url = new URL(`/v1/mods/${modId}/description`, this.baseUrl)
+    const url = new URL(this.baseUrl + `/v1/mods/${modId}/description`)
     const response = await fetch(url, {
       dispatcher: this.dispatcher,
       headers: {
@@ -610,7 +610,7 @@ export class CurseforgeV1Client {
    * @see https://docs.curseforge.com/#get-mod-files
    */
   async getModFiles(options: GetModFilesOptions, signal?: AbortSignal) {
-    const url = new URL(`/v1/mods/${options.modId}/files`, this.baseUrl)
+    const url = new URL(this.baseUrl + `/v1/mods/${options.modId}/files`)
     url.searchParams.append('gameVersion', options.gameVersion ?? '')
     url.searchParams.append('modLoaderType', options.modLoaderType?.toString() ?? '')
     url.searchParams.append('gameVersionTypeId', options.gameVersionTypeId?.toString() ?? '')
@@ -635,7 +635,7 @@ export class CurseforgeV1Client {
    * @see https://docs.curseforge.com/#curseforge-core-api-files
    */
   async getModFile(modId: number, fileId: number, signal?: AbortSignal) {
-    const url = new URL(`/v1/mods/${modId}/files/${fileId}`, this.baseUrl)
+    const url = new URL(this.baseUrl + `/v1/mods/${modId}/files/${fileId}`)
     const response = await fetch(url, {
       headers: {
         ...this.headers,
@@ -655,7 +655,7 @@ export class CurseforgeV1Client {
    * @see https://docs.curseforge.com/#get-mods
    */
   async getMods(modIds: number[], signal?: AbortSignal) {
-    const url = new URL('/v1/mods', this.baseUrl)
+    const url = new URL(this.baseUrl + '/v1/mods')
     const response = await fetch(url, {
       method: 'POST',
       body: JSON.stringify({ modIds }),
@@ -678,7 +678,7 @@ export class CurseforgeV1Client {
    * @see https://docs.curseforge.com/#get-files
    */
   async getFiles(fileIds: number[], signal?: AbortSignal) {
-    const url = new URL('/v1/mods/files', this.baseUrl)
+    const url = new URL(this.baseUrl + '/v1/mods/files')
     const response = await fetch(url, {
       method: 'POST',
       body: JSON.stringify({ fileIds }),
@@ -701,7 +701,7 @@ export class CurseforgeV1Client {
    * @see https://docs.curseforge.com/#search-mods
    */
   async searchMods(options: SearchOptions, signal?: AbortSignal) {
-    const url = new URL('/v1/mods/search', this.baseUrl)
+    const url = new URL(this.baseUrl + '/v1/mods/search')
     url.searchParams.append('gameId', '432')
     if (options.classId) { url.searchParams.append('classId', options.classId.toString()) }
     if (options.categoryId) { url.searchParams.append('categoryId', options.categoryId.toString()) }
@@ -727,5 +727,25 @@ export class CurseforgeV1Client {
     }
     const result = await response.json() as { data: Mod[]; pagination: Pagination }
     return result
+  }
+
+  /**
+   * https://docs.curseforge.com/#get-mod-file-changelog
+   */
+  async getModFileChangelog(modId: number, fileId: number, signal?: AbortSignal) {
+    const url = new URL(this.baseUrl + `/v1/mods/${modId}/files/${fileId}/changelog`)
+    const response = await fetch(url, {
+      headers: {
+        ...this.headers,
+        accept: 'application/json',
+      },
+      dispatcher: this.dispatcher,
+      signal,
+    })
+    if (response.status !== 200) {
+      throw new CurseforgeApiError(url.toString(), response.status, await response.text())
+    }
+    const result = await response.json() as { data: string }
+    return result.data
   }
 }

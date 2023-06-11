@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/modrinth",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "main": "./index.ts",
   "module": "./index.ts",
   "sideEffects": false,
@@ -35,14 +35,14 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "undici": "^5.21.0"
+    "undici": "^5.21.2"
   },
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
-    "esbuild": "^0.17.14",
+    "esbuild": "^0.17.16",
     "undici-shim": "workspace:^*"
   }
 }

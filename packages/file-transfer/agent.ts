@@ -107,9 +107,11 @@ export class DownloadAgent {
           : [{ start: 0, end: contentLength }]
         targetUrl = new URL(location)
         total = contentLength
+        await handle.truncate(total)
       } else if (response.statusCode === 405) {
         // Do not support HEAD request, we just download without range
         ranges = [{ start: 0, end: -1 }]
+        await handle.truncate()
       } else {
         // @ts-ignore
         throw new ResponseStatusCodeError(`Fail to check metadata of ${url}`, response.statusCode, response.headers, response.body)

@@ -7,6 +7,9 @@
     "browser": true,
     "node": true
   },
+  "globals": {
+    "ErrorOptions": true
+  },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
       "ecmaVersion": 2020,
@@ -19,6 +22,7 @@
       "indent": "off",
       "@typescript-eslint/indent": "off",
       "comma-dangle": "off",
+      "n/no-callback-literal": "off",
       "@typescript-eslint/comma-dangle": [
           "error",
           "always-multiline"

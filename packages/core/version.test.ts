@@ -1,7 +1,7 @@
-import { join, normalize } from 'path'
+import { join } from 'path'
+import { describe, expect, test } from 'vitest'
 import { getPlatform } from './platform'
-import { LibraryInfo, ResolvedNative, Version } from './version'
-import { describe, test, expect } from 'vitest'
+import { LibraryInfo, ResolvedLibrary, Version } from './version'
 
 describe('Version', () => {
   describe('#resolveFromPath', () => {
@@ -194,7 +194,8 @@ describe('Version', () => {
       const [onWin] = Version.resolveLibraries([selectionNative], { name: 'windows', version: '', arch: '64' })
       const [onLinux] = Version.resolveLibraries([selectionNative], { name: 'linux', version: '', arch: '64' })
       expect(onOsx).toBeUndefined()
-      expect(onWin).toBeInstanceOf(ResolvedNative)
+      expect(onWin).toBeInstanceOf(ResolvedLibrary)
+      expect(onWin.isNative).toBeTruthy()
       expect(onLinux).toBeUndefined()
     })
     test('should be able to select correct native library by system', () => {
@@ -235,9 +236,9 @@ describe('Version', () => {
       const [onOsx] = Version.resolveLibraries([selectionNative], { name: 'osx', version: '', arch: '64' })
       const [onWin] = Version.resolveLibraries([selectionNative], { name: 'windows', version: '', arch: '64' })
       const [onLinux] = Version.resolveLibraries([selectionNative], { name: 'linux', version: '', arch: '64' })
-      expect(onOsx).toBeInstanceOf(ResolvedNative)
-      expect(onWin).toBeInstanceOf(ResolvedNative)
-      expect(onLinux).toBeInstanceOf(ResolvedNative)
+      expect(onWin.isNative).toBeTruthy()
+      expect(onOsx.isNative).toBeTruthy()
+      expect(onLinux.isNative).toBeTruthy()
 
       expect(onOsx.download).toEqual(selectionNative.downloads.classifiers['natives-osx'])
       expect(onWin.download).toEqual(selectionNative.downloads.classifiers['natives-windows'])
@@ -281,7 +282,7 @@ describe('Version', () => {
       const [onOsx] = Version.resolveLibraries([lib], { name: 'osx', version: '', arch: '64' })
       const [onWin] = Version.resolveLibraries([lib], { name: 'windows', version: '', arch: '64' })
       const [onLinux] = Version.resolveLibraries([lib], { name: 'linux', version: '', arch: '64' })
-      expect(onOsx).toBeInstanceOf(ResolvedNative)
+      expect(onOsx.isNative).toBeTruthy()
       expect(onWin).toBeUndefined()
       expect(onLinux).toBeUndefined()
 
@@ -328,8 +329,8 @@ describe('Version', () => {
       const [onWin32] = Version.resolveLibraries([lib], { name: 'windows', version: '', arch: 'x32' })
       const [onLinux] = Version.resolveLibraries([lib], { name: 'linux', version: '', arch: 'x64' })
       expect(onOsx).toBeUndefined()
-      expect(onWin).toBeInstanceOf(ResolvedNative)
-      expect(onWin32).toBeInstanceOf(ResolvedNative)
+      expect(onWin.isNative).toBeTruthy()
+      expect(onWin32.isNative).toBeTruthy()
       expect(onLinux).toBeUndefined()
 
       expect(onWin.download).toEqual(lib.downloads.classifiers['natives-windows-64'])
