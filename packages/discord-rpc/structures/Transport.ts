@@ -269,6 +269,7 @@ export abstract class Transport extends (EventEmitter as new () => TypedEmitter<
   }
 
   constructor(options: TransportOptions) {
+    // eslint-disable-next-line constructor-super
     super()
     this.client = options.client
   }
