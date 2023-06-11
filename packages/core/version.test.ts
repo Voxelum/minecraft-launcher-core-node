@@ -1,8 +1,7 @@
-import { join, normalize } from 'path'
+import { join } from 'path'
+import { describe, expect, test } from 'vitest'
 import { getPlatform } from './platform'
-import { LibraryInfo, Version } from './version'
-import { describe, test, expect } from 'vitest'
-import { ResolvedLibrary } from './version'
+import { LibraryInfo, ResolvedLibrary, Version } from './version'
 
 describe('Version', () => {
   describe('#resolveFromPath', () => {

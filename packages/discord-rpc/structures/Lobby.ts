@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import type { GatewayVoiceState } from 'discord-api-types/v10'
 import type { Client } from '../Client'
 import { type User } from './User'
