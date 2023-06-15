@@ -53,6 +53,10 @@ async function generateDocs() {
       }
     }),
   )
+
+  app.once('error', (error: any) => {
+    console.log(error)
+  })
   const project = app.convert()
 
   if (!project) throw new Error('Cannot convert project!')
@@ -77,7 +81,7 @@ async function generateDocs() {
 
         if (typeof s.target === 'string') {
           markdown += `(${s.target})`
-        } else if (s.target) {
+        } else if (s.target && 'kindOf' in s.target) {
           if (s.target.kindOf([ReflectionKind.ClassOrInterface, ReflectionKind.Namespace, ReflectionKind.Enum])) {
             markdown += `(${s.target.getAlias()})`
           } else {
@@ -105,7 +109,7 @@ async function generateDocs() {
   }
 
   const renderDeclarationReflection = (f: DeclarationReflection, depth: number) => {
-    let markdown = depth === 1 ? `# ${f.kindString} ${f.name}` : `${'#'.repeat(depth)} ${f.name}`
+    let markdown = depth === 1 ? `# ${ReflectionKind[f.kind]} ${f.name}` : `${'#'.repeat(depth)} ${f.name}`
 
     if (f.flags.isStatic) {
       markdown += ' <Badge type="warning" text="static" />'
@@ -199,7 +203,7 @@ async function generateDocs() {
   }
 
   const renderNamespaceReflection = (f: DeclarationReflection, namepsace: string) => {
-    let markdown = `# ${f.kindString} ${f.name}\n\n`
+    let markdown = `# ${ReflectionKind[f.kind]} ${f.name}\n\n`
 
     if (f.comment) {
       markdown += renderComment(f.comment)
@@ -316,11 +320,11 @@ async function generateDocs() {
 
       const simpleName = refl.name.startsWith('@xmcl') ? refl.name.substring(6) : refl.name
 
-      const sidebarItem: DefaultTheme.SidebarItem = {
+      const sidebarItem = {
         text: '📦 ' + refl.name,
         link: simpleName,
-        items: [],
-        collapsed: true,
+        items: [] as DefaultTheme.SidebarItem[],
+        collapsed: true as boolean | undefined,
       }
 
       sidebar.push(sidebarItem)
