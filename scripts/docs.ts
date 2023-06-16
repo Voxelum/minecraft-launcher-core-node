@@ -190,7 +190,7 @@ async function generateDocs() {
     }
 
     if (f.inheritedFrom) {
-      markdown += `*Inherited from: ${f.inheritedFrom.qualifiedName}*\n\n`
+      markdown += `*Inherited from: \`${f.inheritedFrom.qualifiedName}\`*\n\n`
     }
 
     if (f.sources) {
