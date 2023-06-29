@@ -95,7 +95,7 @@ await installAllTask.startAndWait({
         // on a task fail
         setTaskToFail(task);
     },
-    onSuccessed(task: Task<any>, result: any) {
+    onSucceed(task: Task<any>, result: any) {
         // on task success
         setTaskToSuccess(task);
     },
