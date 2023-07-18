@@ -46,7 +46,7 @@ This module implements a basic object model for task with progress. The task can
         onFailed(task: Task<any>, error: any) {
             // on a task fail
         },
-        onSuccessed(task: Task<any>, result: any) {
+        onSucceed(task: Task<any>, result: any) {
             // on task success
             const path = task.path;
             console.log(`${path} ended!`);
