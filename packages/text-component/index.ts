@@ -271,7 +271,7 @@ class TextFormat<T extends keyof Style> {
 
   static readonly BLACK = new TextFormat('color', 'black', 'BLACK', '0', { color: '#000000' }, { color: '#000000' })
   static readonly DARK_BLUE = new TextFormat('color', 'dark_blue', 'DARK_BLUE', '1', { color: '#0000AA' }, { color: '#00002A' })
-  static readonly DARK_GREEN = new TextFormat('color', 'DARK_GREEN', 'DARK_GREEN', '2', { color: '#00AA00' }, { color: '#002A00' })
+  static readonly DARK_GREEN = new TextFormat('color', 'dark_green', 'DARK_GREEN', '2', { color: '#00AA00' }, { color: '#002A00' })
   static readonly DARK_AQUA = new TextFormat('color', 'dark_aqua', 'DARK_AQUA', '3', { color: '#00AAAA' }, { color: '#002A2A' })
   static readonly DARK_RED = new TextFormat('color', 'dark_red', 'DARK_RED', '4', { color: '#AA0000' }, { color: '#2A0000' })
   static readonly DARK_PURPLE = new TextFormat('color', 'dark_purple', 'DARK_PURPLE', '5', { color: '#AA00AA' }, { color: '#2A002A' })
