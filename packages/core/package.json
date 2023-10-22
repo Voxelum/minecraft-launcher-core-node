@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/core",
-  "version": "2.12.0",
+  "version": "2.12.1",
   "main": "./index.ts",
   "description": "Minecraft version.json parsing and game launching.",
   "engines": {

@@ -1,5 +1,82 @@
 # Changelog
 
+## 7.3.0
+### @xmcl/text-component@2.1.3
+#### Bug Fixes
+
+- fix: fix dark_green casing color (#280) ([02bd1995a25266b52e9390203bc153e17250ecb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/02bd1995a25266b52e9390203bc153e17250ecb5))
+### @xmcl/core@2.12.1
+#### Bug Fixes
+
+- fix: Should also parse non-standard minecraft version ([698df29ede3916f5b45008a735cfdcae19d2b754](https://github.com/voxelum/minecraft-launcher-core-node/commit/698df29ede3916f5b45008a735cfdcae19d2b754))
+### @xmcl/curseforge@2.1.0
+#### Features
+
+- feat: Add support for searching mods by multiple mod loaders ([ef8ca12b39db179075dbad9735014c7d3c911123](https://github.com/voxelum/minecraft-launcher-core-node/commit/ef8ca12b39db179075dbad9735014c7d3c911123))
+#### Bug Fixes
+
+- fix: Make modLoaderType option for getModfiles ([a807e8c2850faa2682cde1496c4f40e3a33bcbf9](https://github.com/voxelum/minecraft-launcher-core-node/commit/a807e8c2850faa2682cde1496c4f40e3a33bcbf9))
+- fix: modrinth & curseforge json structure ([2abafd59100e085a7224e174706c48462285f374](https://github.com/voxelum/minecraft-launcher-core-node/commit/2abafd59100e085a7224e174706c48462285f374))
+- fix: Update undici ([a9f7034d867746b531b485fb100be380f9752189](https://github.com/voxelum/minecraft-launcher-core-node/commit/a9f7034d867746b531b485fb100be380f9752189))
+### @xmcl/discord-rpc@1.1.1
+#### Bug Fixes
+
+- fix: Update undici ([a9f7034d867746b531b485fb100be380f9752189](https://github.com/voxelum/minecraft-launcher-core-node/commit/a9f7034d867746b531b485fb100be380f9752189))
+### @xmcl/file-transfer@1.0.4
+#### Bug Fixes
+
+- fix: Update undici ([a9f7034d867746b531b485fb100be380f9752189](https://github.com/voxelum/minecraft-launcher-core-node/commit/a9f7034d867746b531b485fb100be380f9752189))
+### @xmcl/task@4.1.0
+#### Features
+
+- feat: Add cancel timeout option ([14167e9186af8df83bd5e82f75889b0f2f92148e](https://github.com/voxelum/minecraft-launcher-core-node/commit/14167e9186af8df83bd5e82f75889b0f2f92148e))
+#### Bug Fixes
+
+- fix: fix the map type ([5dbe564977932f8292a7b1537a0dd419c2a2698f](https://github.com/voxelum/minecraft-launcher-core-node/commit/5dbe564977932f8292a7b1537a0dd419c2a2698f))
+### @xmcl/mod-parser@3.3.4
+#### Bug Fixes
+
+- fix: Align fabric mod metadata ([dbb0167e555221bc52055b713bfee874662a0e0a](https://github.com/voxelum/minecraft-launcher-core-node/commit/dbb0167e555221bc52055b713bfee874662a0e0a))
+### @xmcl/modrinth@2.2.0
+#### Features
+
+- feat: Add get versions from hash and version file primary type ([18cdd57e6520abd0b3228bd8bdfe4f039cb33378](https://github.com/voxelum/minecraft-launcher-core-node/commit/18cdd57e6520abd0b3228bd8bdfe4f039cb33378))
+#### Bug Fixes
+
+- fix: modrinth & curseforge json structure ([2abafd59100e085a7224e174706c48462285f374](https://github.com/voxelum/minecraft-launcher-core-node/commit/2abafd59100e085a7224e174706c48462285f374))
+- fix: Add loaders to modrinth project ([a9510ba70f1b38c3ba95721786aad03dcaf8c324](https://github.com/voxelum/minecraft-launcher-core-node/commit/a9510ba70f1b38c3ba95721786aad03dcaf8c324))
+- fix: Update undici ([a9f7034d867746b531b485fb100be380f9752189](https://github.com/voxelum/minecraft-launcher-core-node/commit/a9f7034d867746b531b485fb100be380f9752189))
+### @xmcl/nat-api@0.4.2
+#### Bug Fixes
+
+- fix: Add nat error capture ([90548218dcea4fb10ae229036de22a5f4b28e28d](https://github.com/voxelum/minecraft-launcher-core-node/commit/90548218dcea4fb10ae229036de22a5f4b28e28d))
+- fix: Update undici ([a9f7034d867746b531b485fb100be380f9752189](https://github.com/voxelum/minecraft-launcher-core-node/commit/a9f7034d867746b531b485fb100be380f9752189))
+### @xmcl/user@4.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: Change the acquireXboxToken API interface to make the api call more reasonable ([0e397ba20715ef3031c1ec5d60ce0dd073381545](https://github.com/voxelum/minecraft-launcher-core-node/commit/0e397ba20715ef3031c1ec5d60ce0dd073381545))
+#### Bug Fixes
+
+- fix: Update undici ([a9f7034d867746b531b485fb100be380f9752189](https://github.com/voxelum/minecraft-launcher-core-node/commit/a9f7034d867746b531b485fb100be380f9752189))
+### @xmcl/client@3.0.2
+- Dependency @xmcl/text-component bump **patch**
+### @xmcl/installer@5.2.0
+#### Features
+
+- feat: Support labymod ([6b9eb45a2b52aed06c07d92e3adc03f46fd91a89](https://github.com/voxelum/minecraft-launcher-core-node/commit/6b9eb45a2b52aed06c07d92e3adc03f46fd91a89))
+- feat: support option to skip asset hash ([d3f32c31a56d16baf7cb203e27376c87f2102665](https://github.com/voxelum/minecraft-launcher-core-node/commit/d3f32c31a56d16baf7cb203e27376c87f2102665))
+- feat: support neoforge ([a48bcd469c78b73398b87d84386e716d3ab29bc6](https://github.com/voxelum/minecraft-launcher-core-node/commit/a48bcd469c78b73398b87d84386e716d3ab29bc6))
+#### Bug Fixes
+
+- fix: Correctly install labymod libraries ([dd661752a02e9c77b30d6ee8154eee741de47f4b](https://github.com/voxelum/minecraft-launcher-core-node/commit/dd661752a02e9c77b30d6ee8154eee741de47f4b))
+- fix: Fix the type ambiguity ([8c913c42502f0ed314daf69673ab1a9cc1b6e0a5](https://github.com/voxelum/minecraft-launcher-core-node/commit/8c913c42502f0ed314daf69673ab1a9cc1b6e0a5))
+- fix: Support new legacy forge jar format ([55c77b2151ed3eb337d433c2b49c3e170a77af12](https://github.com/voxelum/minecraft-launcher-core-node/commit/55c77b2151ed3eb337d433c2b49c3e170a77af12))
+- fix: Update undici ([a9f7034d867746b531b485fb100be380f9752189](https://github.com/voxelum/minecraft-launcher-core-node/commit/a9f7034d867746b531b485fb100be380f9752189))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/file-transfer bump **patch**
+- Dependency @xmcl/task bump **patch**
+
+
 ## 7.2.0
 ### @xmcl/core@2.12.0
 #### Features
