@@ -59,6 +59,28 @@ const version: string; // version string like 1.13
 const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
 await installDependencies(resolvedVersion);
 ```
+
+### Limit the concurrency of installation
+
+The library is using undici as the backbone of http request. It's a very fast http client. But it's also very aggressive. It will create a lot of connections to the server. If you want to limit the concurrency of the installation, you want to create your own undici `Dispatcher` to handle the request.
+
+```ts
+import { Dispatcher, Agent } from "undici";
+
+const agent = new Agent({
+    connection: 16 // only 16 connection (socket) we should create at most
+    // you can have other control here.
+});
+
+await installAssets(resolvedVersion, { 
+  agent: { // notice this is the DownloadAgent from `@xmcl/file-transfer`
+    dispatcher: agent // this is the undici Dispatcher option
+  }
+});
+```
+
+There are other type of `Dispatcher`, like `Pool`, `Client`, `ProxyAgent`. You can read undici document for more information.
+
 ### Progress Moniting on Installation
 
 Most install function has a corresponding task function. For example, `install` function has the function name `installTask` which is the task version monitor the progress of install.
