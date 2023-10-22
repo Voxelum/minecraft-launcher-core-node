@@ -1,5 +1,3 @@
-import { setTimeout } from 'timers/promises'
-
 /**
  * @module @xmcl/task
  */
@@ -149,7 +147,7 @@ export abstract class BaseTask<T> implements Task<T> {
     this.reject(new CancelledError())
     try {
       if (timeout) {
-        await Promise.race([this.cancelTask(), setTimeout(timeout)])
+        await Promise.race([this.cancelTask(), new Promise((resolve) => setTimeout(resolve, timeout))])
       } else {
         await this.cancelTask()
       }
