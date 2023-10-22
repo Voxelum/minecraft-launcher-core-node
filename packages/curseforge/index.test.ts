@@ -98,7 +98,6 @@ describe('CurseforgeV1Client', () => {
       headers: { 'x-api-key': 'key' },
       query: {
         gameVersion: '',
-        modLoaderType: '',
         gameVersionTypeId: '',
         index: '',
         pageSize: '',
