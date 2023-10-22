@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/text-component",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "main": "./index.ts",
   "description": "Parse Minecraft text component and render it to css.",
   "engines": {
