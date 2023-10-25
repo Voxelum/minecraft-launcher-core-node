@@ -2,6 +2,7 @@ import { Socket, createSocket, RemoteInfo } from 'dgram'
 import { EventEmitter } from 'events'
 
 export const LAN_MULTICAST_ADDR = '224.0.2.60'
+export const LAN_MULTICAST_ADDR_V6 = 'FF75:230::60'
 export const LAN_MULTICAST_PORT = 4445
 
 export interface MinecraftLanDiscover {
@@ -15,18 +16,21 @@ export class MinecraftLanDiscover extends EventEmitter {
   readonly socket: Socket
 
   #ready = false
+  #group: string
 
   get isReady() {
     return this.#ready
   }
 
-  constructor() {
+  constructor(type: 'udp4' | 'udp6' = 'udp4') {
     super()
-    const sock = createSocket({ type: 'udp4', reuseAddr: true })
+    const sock = createSocket({ type, reuseAddr: true })
+
+    this.#group = type === 'udp4' ? LAN_MULTICAST_ADDR : LAN_MULTICAST_ADDR_V6
 
     sock.on('listening', () => {
       const address = sock.address()
-      sock.addMembership(LAN_MULTICAST_ADDR, address.address)
+      sock.addMembership(this.#group, address.address)
       sock.setMulticastTTL(128)
       sock.setBroadcast(true)
       this.#ready = true
@@ -53,7 +57,7 @@ export class MinecraftLanDiscover extends EventEmitter {
 
   broadcast(inf: LanServerInfo) {
     return new Promise<number>((resolve, reject) => {
-      this.socket.send(`[MOTD]${inf.motd}[/MOTD][AD]${inf.port}[/AD]`, LAN_MULTICAST_PORT, LAN_MULTICAST_ADDR, (err, bytes) => {
+      this.socket.send(`[MOTD]${inf.motd}[/MOTD][AD]${inf.port}[/AD]`, LAN_MULTICAST_PORT, this.#group, (err, bytes) => {
         if (err) reject(err)
         else resolve(bytes)
       })
