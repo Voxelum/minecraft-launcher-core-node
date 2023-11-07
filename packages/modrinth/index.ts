@@ -224,6 +224,24 @@ export class ModrinthV2Client {
   }
 
   /**
+   * @see https://docs.modrinth.com/api-spec/#tag/projects/operation/getProject
+   */
+  async getProjects(projectIds: string[], signal?: AbortSignal): Promise<Project[]> {
+    const url = new URL('/v2/projects', this.baseUrl)
+    url.searchParams.append('ids', JSON.stringify(projectIds))
+    const response = await fetch(url, {
+      dispatcher: this.dispatcher,
+      signal,
+      headers: this.headers,
+    })
+    if (response.status !== 200) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+    const project = await response.json() as Project[]
+    return project
+  }
+
+  /**
    * @see https://docs.modrinth.com/api-spec/#tag/versions/operation/getProjectVersions
    */
   async getProjectVersions(projectId: string, { loaders, gameVersions, featured }: { loaders?: string[]; gameVersions?: string[]; featured?: boolean } = {}, signal?: AbortSignal): Promise<ProjectVersion[]> {
