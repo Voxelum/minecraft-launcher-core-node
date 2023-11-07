@@ -531,7 +531,7 @@ export class CurseforgeApiError extends Error {
  * Reference the https://docs.curseforge.com/#curseforge-core-api-mods
  */
 export class CurseforgeV1Client {
-  private headers: Record<string, string>
+  headers: Record<string, string>
   private dispatcher?: Dispatcher
   private baseUrl: string
 
