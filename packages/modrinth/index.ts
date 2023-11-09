@@ -80,6 +80,12 @@ export interface SearchResultHit {
   /**
      * The host that this project is from, always modrinth */
   host: string
+
+  gallery: string[]
+
+  featured_gallery: string
+
+  monetization_status: string
 }
 
 export interface SearchProjectOptions {
