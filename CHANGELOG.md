@@ -1,5 +1,21 @@
 # Changelog
 
+## 7.4.0
+### @xmcl/client@3.1.0
+#### Features
+
+- feat: Add udp6 support ([98075aad7af9ef0e41de0c4ce35bd1be9d727197](https://github.com/voxelum/minecraft-launcher-core-node/commit/98075aad7af9ef0e41de0c4ce35bd1be9d727197))
+### @xmcl/modrinth@2.3.0
+#### Features
+
+- feat: Update search result ([d62330472071db1d06ce42dbb723efb132430246](https://github.com/voxelum/minecraft-launcher-core-node/commit/d62330472071db1d06ce42dbb723efb132430246))
+- feat: Add getProjects for modrinth ([33950d1612279108ff39b6cc1a00ff512c52e82f](https://github.com/voxelum/minecraft-launcher-core-node/commit/33950d1612279108ff39b6cc1a00ff512c52e82f))
+### @xmcl/user@4.0.1
+#### Bug Fixes
+
+- fix: Throw error if the request is failed ([89d0d11d1f7b5b455ddf7e864a47a5cad496910c](https://github.com/voxelum/minecraft-launcher-core-node/commit/89d0d11d1f7b5b455ddf7e864a47a5cad496910c))
+
+
 ## 7.3.0
 ### @xmcl/text-component@2.1.3
 #### Bug Fixes
