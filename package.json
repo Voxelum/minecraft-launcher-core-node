@@ -1,6 +1,6 @@
 {
     "private": true,
-    "version": "7.3.0",
+    "version": "7.4.0",
     "scripts": {
         "build:docs": "tsx scripts/docs.ts",
         "preview:docs": "vitepress preview docs",
