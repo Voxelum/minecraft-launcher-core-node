@@ -25,7 +25,7 @@ It's the next generation Minecraft launcher core written in C# providing the fre
 
 You can see [Active Packages](#active-packages) section to quickly find a package you need.
 
-Go [our document website](https://docs.xmcl.app/core) to find more detail usage.
+Go [our document website](https://docs.xmcl.app/en/core) to find more detail usage.
 
 ### Active Packages
 
