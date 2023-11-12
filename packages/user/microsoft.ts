@@ -74,6 +74,10 @@ export class MicrosoftAuthenticator {
       signal,
     })
 
+    if (xblResponse.status !== 200) {
+      throw new Error(`Failed to authenticate with xbox live, status code: ${xblResponse.status}: ${await xblResponse.text()}}`)
+    }
+
     const result = await xblResponse.json() as XBoxResponse
 
     return result
@@ -100,6 +104,10 @@ export class MicrosoftAuthenticator {
       dispatcher: this.dispatcher,
       signal,
     })
+
+    if (xstsResponse.status !== 200) {
+      throw new Error(`Failed to authorize with xbox live, status code: ${xstsResponse.status}: ${await xstsResponse.text()}}`)
+    }
 
     const result = await xstsResponse.json() as XBoxResponse
 
@@ -128,6 +136,10 @@ export class MicrosoftAuthenticator {
       dispatcher: this.dispatcher,
       signal,
     })
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to get xbox game profile, status code: ${response.status}: ${await response.text()}}`)
+    }
 
     const result = await response.json() as XBoxGameProfileResponse
     return result
@@ -177,6 +189,10 @@ export class MicrosoftAuthenticator {
       dispatcher: this.dispatcher,
       signal,
     })
+
+    if (mcResponse.status !== 200) {
+      throw new Error(`Failed to login minecraft with xbox, status code: ${mcResponse.status}: ${await mcResponse.text()}}`)
+    }
 
     const result = await mcResponse.json() as MinecraftAuthResponse
 
