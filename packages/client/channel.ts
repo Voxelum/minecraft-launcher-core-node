@@ -52,10 +52,10 @@ export class Channel extends EventEmitter {
     this.inbound
       .pipe(new PacketDecompress({
         get enableCompression() {
-          return this.enableCompression
+          return false
         },
         get compressionThreshold() {
-          return this.compressionThreshold
+          return -1
         },
       }))
       .pipe(new MinecraftPacketDecoder(this))
@@ -293,7 +293,8 @@ export abstract class PacketEncoder extends Transform {
       this.writePacketId(buf, id)
       coder.encode(buf, message, this.client)
       buf.flip()
-      this.push(buf.buffer.slice(0, buf.limit))
+      const arr = buf.buffer.slice(0, buf.limit)
+      this.push(Buffer.from(arr))
       callback()
     } else {
       callback(new Error(`Cannot find coder for message. ${JSON.stringify(message)}`))
@@ -317,7 +318,7 @@ export abstract class PacketOutbound extends Transform {
     buffer.append(packet)
     buffer.flip()
 
-    this.push(buffer.buffer.slice(0, buffer.limit))
+    this.push(Buffer.from(buffer.buffer.slice(0, buffer.limit)))
     callback()
   }
 }
