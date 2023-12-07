@@ -714,6 +714,7 @@ export class CurseforgeV1Client {
     url.searchParams.append('sortField', options.sortField?.toString() ?? ModsSearchSortField.Popularity.toString())
     url.searchParams.append('sortOrder', options.sortOrder ?? 'desc')
     if (options.modLoaderType) { url.searchParams.append('modLoaderType', options.modLoaderType.toString()) }
+    if (options.modLoaderTypes) { url.searchParams.append('modLoaderTypes', '[' + options.modLoaderTypes.join(',') + ']') }
     if (options.gameVersionTypeId) { url.searchParams.append('gameVersionTypeId', options.gameVersionTypeId.toString()) }
     url.searchParams.append('index', options.index?.toString() ?? '0')
     url.searchParams.append('pageSize', options.pageSize?.toString() ?? '25')

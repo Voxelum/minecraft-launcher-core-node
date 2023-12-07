@@ -314,19 +314,19 @@ export interface TeamMember {
   }
   role: string
   /**
-     * The user's permissions in bitfield format (requires authorization to view)
-     *
-     * In order from first to eighth bit, the bits are:
-     *
-     * - UPLOAD_VERSION
-     * - DELETE_VERSION
-     * - EDIT_DETAILS
-     * - EDIT_BODY
-     * - MANAGE_INVITES
-     * - REMOVE_MEMBER
-     * - EDIT_MEMBER
-     * - DELETE_PROJECT
-     */
+    * The user's permissions in bitfield format (requires authorization to view)
+    *
+    * In order from first to eighth bit, the bits are:
+    *
+    * - UPLOAD_VERSION
+    * - DELETE_VERSION
+    * - EDIT_DETAILS
+    * - EDIT_BODY
+    * - MANAGE_INVITES
+    * - REMOVE_MEMBER
+    * - EDIT_MEMBER
+    * - DELETE_PROJECT
+    */
   permissions: number
   accept: boolean
 }
