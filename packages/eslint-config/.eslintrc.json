@@ -37,6 +37,7 @@
       "@typescript-eslint/no-redeclare": [
           "error"
       ],
+      "@typescript-eslint/no-unsafe-declaration-merging": "off",
       "@typescript-eslint/member-delimiter-style": [
           "error",
           {
