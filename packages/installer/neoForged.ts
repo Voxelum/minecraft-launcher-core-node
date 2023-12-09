@@ -11,15 +11,15 @@ import { Task, task } from '@xmcl/task'
 export class DownloadNeoForgedInstallerTask extends DownloadTask {
   readonly installJarPath: string
 
-  constructor(version: string, minecraft: MinecraftFolder, options: InstallForgeOptions) {
-    const url = `https://maven.neoforged.net/releases/net/neoforged/forge/${version}/forge-${version}-installer.jar`
+  constructor(project: 'forge' | 'neoforge', version: string, minecraft: MinecraftFolder, options: InstallForgeOptions) {
+    const url = `https://maven.neoforged.net/releases/net/neoforged/${project}/${version}/${project}-${version}-installer.jar`
 
     const library = VersionJson.resolveLibrary({
-      name: `net.neoforged:forge:${version}:installer`,
+      name: `net.neoforged:${project}:${version}:installer`,
       downloads: {
         artifact: {
           url,
-          path: `net/neoforged/forge/${version}/forge-${version}-installer.jar`,
+          path: `net/neoforged/${project}/${version}/${project}-${version}-installer.jar`,
           size: -1,
           sha1: '',
         },
@@ -46,15 +46,15 @@ export class DownloadNeoForgedInstallerTask extends DownloadTask {
   }
 }
 
-export async function installNeoForged(version: string, minecraft: MinecraftLocation, options: InstallForgeOptions): Promise<string> {
-  return installNeoForgedTask(version, minecraft, options).startAndWait()
+export async function installNeoForged(project: 'forge' | 'neoforge', version: string, minecraft: MinecraftLocation, options: InstallForgeOptions): Promise<string> {
+  return installNeoForgedTask(project, version, minecraft, options).startAndWait()
 }
 
-export function installNeoForgedTask(version: string, minecraft: MinecraftLocation, options: InstallForgeOptions): Task<string> {
+export function installNeoForgedTask(project: 'forge' | 'neoforge', version: string, minecraft: MinecraftLocation, options: InstallForgeOptions): Task<string> {
   return task('installForge', async function () {
     const [_, forgeVersion] = version.split('-')
     const mc = MinecraftFolder.from(minecraft)
-    const jarPath = await this.yield(new DownloadNeoForgedInstallerTask(version, mc, options)
+    const jarPath = await this.yield(new DownloadNeoForgedInstallerTask(project, version, mc, options)
       .map(function () { return this.installJarPath }))
 
     const zip = await open(jarPath, { lazyEntries: true, autoClose: false })
