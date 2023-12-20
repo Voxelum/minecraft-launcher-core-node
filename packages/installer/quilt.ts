@@ -1,6 +1,6 @@
 import { MinecraftFolder, MinecraftLocation, Version } from '@xmcl/core'
 import { writeFile } from 'fs/promises'
-import { Dispatcher, request } from 'undici'
+import { Dispatcher, request, CacheStorage } from 'undici'
 import { ensureFile } from './utils'
 
 export const DEFAULT_META_URL = 'https://meta.quiltmc.org'
@@ -16,7 +16,7 @@ export interface InstallQuiltVersionOptions {
 export async function installQuiltVersion(options: InstallQuiltVersionOptions) {
   const url = `${DEFAULT_META_URL}/v3/versions/loader/${options.minecraftVersion}/${options.version}/profile/json`
   const response = await request(url, { dispatcher: options.dispatcher })
-  const content: Version = await response.body.json()
+  const content: Version = await response.body.json() as any
 
   const minecraft = MinecraftFolder.from(options.minecraft)
   const versionName = content.id
@@ -53,6 +53,6 @@ export interface QuiltArtifactVersion {
 
 export async function getQuiltVersionsList(options?: GetQuiltOptions): Promise<QuiltArtifactVersion[]> {
   const response = await request(`${DEFAULT_META_URL}/v3/versions/loader`, { dispatcher: options?.dispatcher, throwOnError: true })
-  const content: QuiltArtifactVersion[] = await response.body.json()
+  const content: QuiltArtifactVersion[] = await response.body.json() as any
   return content
 }

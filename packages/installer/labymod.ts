@@ -41,7 +41,7 @@ interface MinecraftVersion {
 export async function getLabyModManifest(env = 'production', options?: { dispatcher?: Dispatcher }): Promise<LabyModManifest> {
   const url = `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/manifest/${env}/latest.json`
   const res = await request(url, options)
-  return await res.body.json()
+  return await res.body.json() as any
 }
 
 export interface InstallLabyModOptions extends DownloadBaseOptions {
@@ -74,10 +74,10 @@ class JsonTask extends AbortableTask<string> {
     }
     // Get version json and merge with libraries
     const libraries: LibInfo[] = await request(librariesUrl, { dispatcher: this.dispatcher, signal: this.controller.signal })
-      .then((res) => res.body.json())
+      .then((res) => res.body.json() as any)
       .then((res) => res.libraries as LibInfo[])
       .then((libs) => libs.filter(lib => lib.minecraftVersion === 'all' || lib.minecraftVersion === this.tag))
-    const versionJson = await request(versionInfo.customManifestUrl, { dispatcher: this.dispatcher, signal: this.controller.signal }).then((res) => res.body.json())
+    const versionJson = await request(versionInfo.customManifestUrl, { dispatcher: this.dispatcher, signal: this.controller.signal }).then((res) => res.body.json() as any)
 
     versionJson.libraries.push(...libraries.map((l) => ({
       name: l.name,

@@ -152,8 +152,8 @@ importers:
   packages/curseforge:
     dependencies:
       undici:
-        specifier: 5.22.1
-        version: 5.22.1
+        specifier: 6.0.1
+        version: 6.0.1
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -168,8 +168,8 @@ importers:
         specifier: ^0.37.39
         version: 0.37.39
       undici:
-        specifier: 5.22.1
-        version: 5.22.1
+        specifier: 6.0.1
+        version: 6.0.1
     devDependencies:
       '@types/node':
         specifier: ~18
@@ -226,8 +226,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       undici:
-        specifier: 5.22.1
-        version: 5.22.1
+        specifier: 6.0.1
+        version: 6.0.1
     devDependencies:
       '@types/node':
         specifier: ~18.15.11
@@ -334,8 +334,8 @@ importers:
         specifier: workspace:^*
         version: link:../unzip
       undici:
-        specifier: 5.22.1
-        version: 5.22.1
+        specifier: 6.0.1
+        version: 6.0.1
       yauzl:
         specifier: ^2.10.0
         version: 2.10.0
@@ -418,8 +418,8 @@ importers:
   packages/modrinth:
     dependencies:
       undici:
-        specifier: 5.22.1
-        version: 5.22.1
+        specifier: 6.0.1
+        version: 6.0.1
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -437,8 +437,8 @@ importers:
         specifier: ^4.3.2
         version: 4.3.2
       undici:
-        specifier: 5.22.1
-        version: 5.22.1
+        specifier: 6.0.1
+        version: 6.0.1
     devDependencies:
       '@types/node':
         specifier: ^18.15.11
@@ -586,8 +586,8 @@ importers:
   packages/user:
     dependencies:
       undici:
-        specifier: 5.22.1
-        version: 5.22.1
+        specifier: 6.0.1
+        version: 6.0.1
       uuid:
         specifier: ^9.0.0
         version: 9.0.0
@@ -1074,6 +1074,11 @@ packages:
   /@eslint/js@8.38.0:
     resolution: {integrity: sha512-IoD2MfUnOV58ghIHCiil01PcohxjbYR/qCxsoC+xNgUwh1EY8jOOrYmu3d3a71+tJJ23uscEV4X2HJWMsPJu4g==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+
+  /@fastify/busboy@2.1.0:
+    resolution: {integrity: sha512-+KpH+QxZU7O4675t3mnkQKcZZg56u+K/Ct2K+N2AZYNVK8kyeo/bI18tI8aPm3tvNNRyTWfj6s5tnGNlcbQRsA==}
+    engines: {node: '>=14'}
+    dev: false
 
   /@humanwhocodes/config-array@0.11.8:
     resolution: {integrity: sha512-UybHIJzJnR5Qc/MsD9Kr+RpO2h+/P1GhOwdiLPXK5TWk5sgTdu88bTD9UP+CKbPPh5Rni1u0GjAdYQLemG8g+g==}
@@ -1745,13 +1750,6 @@ packages:
     resolution: {integrity: sha512-qwVpFEHNfhYJIzNRBvd2C1kyo6jz3ZSMPyyuR47OPdiKWlbYnZNyDWuyR175qDnAJLiCo5fBBqPb3RiXgWlkOQ==}
     dependencies:
       semver: 7.5.4
-    dev: false
-
-  /busboy@1.6.0:
-    resolution: {integrity: sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==}
-    engines: {node: '>=10.16.0'}
-    dependencies:
-      streamsearch: 1.1.0
     dev: false
 
   /bytebuffer@5.0.1:
@@ -4006,11 +4004,6 @@ packages:
     resolution: {integrity: sha512-uUZI65yrV2Qva5gqE0+A7uVAvO40iPo6jGhs7s8keRfHCmtg+uB2X6EiLGCI9IgL1J17xGhvoOqSz79lzICPTA==}
     dev: true
 
-  /streamsearch@1.1.0:
-    resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
-    engines: {node: '>=10.0.0'}
-    dev: false
-
   /string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
     engines: {node: '>=8'}
@@ -4285,11 +4278,11 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: false
 
-  /undici@5.22.1:
-    resolution: {integrity: sha512-Ji2IJhFXZY0x/0tVBXeQwgPlLWw13GVzpsWPQ3rV50IFMMof2I55PZZxtm4P6iNq+L5znYN9nSTAq0ZyE6lSJw==}
-    engines: {node: '>=14.0'}
+  /undici@6.0.1:
+    resolution: {integrity: sha512-eZFYQLeS9BiXpsU0cuFhCwfeda2MnC48EVmmOz/eCjsTgmyTdaHdVsPSC/kwC2GtW2e0uH0HIPbadf3/bRWSxw==}
+    engines: {node: '>=18.0'}
     dependencies:
-      busboy: 1.6.0
+      '@fastify/busboy': 2.1.0
     dev: false
 
   /uri-js@4.4.1:

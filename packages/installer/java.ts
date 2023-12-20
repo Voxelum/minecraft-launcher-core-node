@@ -92,7 +92,7 @@ export function installJreFromMojangTask(options: InstallJavaOptions) {
     const info: { [system: string]: { [arch: string]: { jre: DownloadInfo } } } =
             await this.yield(task('fetchInfo', async () => {
               const response = await request('https://launchermeta.mojang.com/mc/launcher.json', { dispatcher: options.dispatcher, throwOnError: true })
-              return response.body.json()
+              return response.body.json() as any
             }))
     const system = platform.name
     function resolveArch() {
