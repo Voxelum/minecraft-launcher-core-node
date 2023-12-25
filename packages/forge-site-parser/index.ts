@@ -92,7 +92,7 @@ export function parse(content: string): ForgeWebPage {
       } else if (icon.classNames.indexOf('fa-bug') !== -1) {
         type = 'buggy'
       }
-      version = downloadVersionElem?.firstChild.text.trim() ?? ''
+      version = downloadVersionElem?.firstChild?.text.trim() ?? ''
     } else {
       version = downloadVersionElem?.text.trim() ?? ''
     }
