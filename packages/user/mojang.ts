@@ -172,18 +172,32 @@ export class SetSkinError extends Error {
   }
 }
 
-export class UnauthorizedError extends Error {
+export class MojangError extends Error {
   public path: string
   public errorMessage: string
   public developerMessage: string
-
-  name = 'UnauthorizedError'
 
   constructor(err: any) {
     super(err.errorMessage)
     this.path = err.path
     this.errorMessage = err.errorMessage
     this.developerMessage = err.developerMessage
+    Object.assign(this, err)
+  }
+}
+
+export class UnauthorizedError extends MojangError {
+  name = 'UnauthorizedError'
+  constructor(err: any) {
+    super(err)
+  }
+}
+
+export class ProfileNotFoundError extends MojangError {
+  name = 'ProfileNotFoundError'
+
+  constructor(err: any) {
+    super(err)
   }
 }
 
@@ -249,7 +263,18 @@ export class MojangClient {
       dispatcher: this.dispatcher,
       signal,
     })
-    return await resp.json() as MicrosoftMinecraftProfile
+    if (resp.headers.get('content-type')?.toLocaleLowerCase() !== 'application/json') {
+      throw new Error(await resp.text())
+    }
+    const json = await resp.json() as any
+    if (resp.ok) {
+      return json as MicrosoftMinecraftProfile
+    } else if (json.error === 'NOT_FOUND') {
+      throw new ProfileNotFoundError(json)
+    } else if (resp.status === 401) {
+      throw new UnauthorizedError(json)
+    }
+    throw Object.assign(new Error('Unknown Error'), json)
   }
 
   async setSkin(fileName: string, skin: string | Buffer, variant: 'slim' | 'classic', token: string, signal?: AbortSignal) {
