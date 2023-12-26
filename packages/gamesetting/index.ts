@@ -351,7 +351,8 @@ export function parse(str: string, strict?: boolean): GameSetting | Frame {
   if (!lines || lines.length === 0) {
     return strict ? getDefaultFrame() : {}
   }
-  const setting = lines.map(l => {
+  const setting = lines
+    .map(l => {
       const i = l.indexOf(':')
       if (i !== -1) {
         return [l.slice(0, i), l.slice(i + 1)]
@@ -371,12 +372,17 @@ export function parse(str: string, strict?: boolean): GameSetting | Frame {
       } else if (booleanPattern.test(value)) {
         newValue = value === 'true'
       } else if (value.startsWith('[') && value.endsWith(']')) {
-        newValue = value.slice(1, -1).split(',').map(s => {
-          let trimmed = s.trim()
-          if (trimmed.startsWith('"')) trimmed = trimmed.slice(1)
-          if (trimmed.endsWith('"')) trimmed = trimmed.slice(0, -1)
-          return trimmed
-        })
+        const raw = value.slice(1, -1)
+        if (raw.length === 0) {
+          newValue = []
+        } else {
+          newValue = raw.split(',').map(s => {
+            let trimmed = s.trim()
+            if (trimmed.startsWith('"')) trimmed = trimmed.slice(1)
+            if (trimmed.endsWith('"')) trimmed = trimmed.slice(0, -1)
+            return trimmed
+          })
+        }
       } else {
         try {
           newValue = JSON.parse(value)
