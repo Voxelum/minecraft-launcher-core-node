@@ -283,59 +283,59 @@ export function getDefaultFrame(): FullFrame {
 }
 
 export type ModelPart =
-    'cape' |
-    'jacket' |
-    'left_sleeve' |
-    'right_sleeve' |
-    'left_pants_leg' |
-    'right_pants_leg' |
-    'hat'
+  'cape' |
+  'jacket' |
+  'left_sleeve' |
+  'right_sleeve' |
+  'left_pants_leg' |
+  'right_pants_leg' |
+  'hat'
 
 export type SoundCategories =
-    'master' |
-    'music' |
-    'record' |
-    'weather' |
-    'block' |
-    'hostile' |
-    'neutral' |
-    'player' |
-    'ambient' |
-    'voice'
+  'master' |
+  'music' |
+  'record' |
+  'weather' |
+  'block' |
+  'hostile' |
+  'neutral' |
+  'player' |
+  'ambient' |
+  'voice'
 
 export type HotKeys = 'attack' |
-'use' |
-'forward' |
-'left' |
-'back' |
-'right' |
-'jump' |
-'sneak' |
-'sprint' |
-'drop' |
-'inventory' |
-'chat' |
-'playerlist' |
-'pickItem' |
-'command' |
-'screenshot' |
-'togglePerspective' |
-'smoothCamera' |
-'fullscreen' |
-'spectatorOutlines' |
-'swapHands' |
-'saveToolbarActivator' |
-'loadToolbarActivator' |
-'advancements' |
-'hotbar.1' |
-'hotbar.2' |
-'hotbar.3' |
-'hotbar.4' |
-'hotbar.5' |
-'hotbar.6' |
-'hotbar.7' |
-'hotbar.8' |
-'hotbar.9'
+  'use' |
+  'forward' |
+  'left' |
+  'back' |
+  'right' |
+  'jump' |
+  'sneak' |
+  'sprint' |
+  'drop' |
+  'inventory' |
+  'chat' |
+  'playerlist' |
+  'pickItem' |
+  'command' |
+  'screenshot' |
+  'togglePerspective' |
+  'smoothCamera' |
+  'fullscreen' |
+  'spectatorOutlines' |
+  'swapHands' |
+  'saveToolbarActivator' |
+  'loadToolbarActivator' |
+  'advancements' |
+  'hotbar.1' |
+  'hotbar.2' |
+  'hotbar.3' |
+  'hotbar.4' |
+  'hotbar.5' |
+  'hotbar.6' |
+  'hotbar.7' |
+  'hotbar.8' |
+  'hotbar.9'
 
 /**
  * Parse raw game setting options.txt content
@@ -344,30 +344,46 @@ export type HotKeys = 'attack' |
  * @param strict strictly follow the current version of options format (outdate version might cause problem. If your options.txt is new one with new fields, don't turn on this)
  */
 export function parse(str: string, strict?: boolean): GameSetting | Frame {
-  const lines = str.split('\n')
   const intPattern = /^\d+$/
   const floatPattern = /^[-+]?[0-9]*\.[0-9]+$/
   const booleanPattern = /^(true)|(false)$/
+  const lines = str.split('\n')
   if (!lines || lines.length === 0) {
     return strict ? getDefaultFrame() : {}
   }
-  const setting = lines.map((line) => line.trim().split(':'))
+  const setting = lines.map(l => {
+      const i = l.indexOf(':')
+      if (i !== -1) {
+        return [l.slice(0, i), l.slice(i + 1)]
+      } else {
+        // drop the line
+        return ['', l]
+      }
+    })
     .filter((pair) => pair[0].length !== 0)
-    .map((pair) => {
-      let value: any = pair[1]
+    .map(([key, value]) => {
+      value = value.trim()
+      let newValue = undefined as any
       if (intPattern.test(value)) {
-        value = Number.parseInt(value, 10)
+        newValue = Number.parseInt(value, 10)
       } else if (floatPattern.test(value)) {
-        value = Number.parseFloat(value)
+        newValue = Number.parseFloat(value)
       } else if (booleanPattern.test(value)) {
-        value = value === 'true'
+        newValue = value === 'true'
+      } else if (value.startsWith('[') && value.endsWith(']')) {
+        newValue = value.slice(1, -1).split(',').map(s => {
+          let trimmed = s.trim()
+          if (trimmed.startsWith('"')) trimmed = trimmed.slice(1)
+          if (trimmed.endsWith('"')) trimmed = trimmed.slice(0, -1)
+          return trimmed
+        })
       } else {
         try {
-          value = JSON.parse(value)
+          newValue = JSON.parse(value)
         } catch (e) { }
       }
 
-      return { [pair[0]]: value }
+      return { [key]: newValue }
     })
     .reduce((prev, current) => Object.assign(prev, current), {})
   if (!strict) { return setting as Frame }
