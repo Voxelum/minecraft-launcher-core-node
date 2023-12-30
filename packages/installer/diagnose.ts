@@ -53,11 +53,11 @@ export async function diagnoseInstall(installProfile: InstallProfile, minecraftL
   }))
   for (const proc of processors) {
     if (proc.outputs) {
-      for (const file in proc.outputs) {
+      for (const [file, checksum] of Object.entries(proc.outputs)) {
         const issue = await diagnoseFile({
           role: 'processor',
           file,
-          expectedChecksum: proc.outputs[file].replace(/'/g, ''),
+          expectedChecksum: checksum.replace(/'/g, ''),
           hint: 'Re-install this installer profile!',
         })
         if (issue) {

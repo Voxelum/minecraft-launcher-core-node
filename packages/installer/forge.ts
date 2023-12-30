@@ -119,17 +119,17 @@ type RequiredVersion = {
   installer?: {
     sha1?: string
     /**
-         * The url path to concat with forge maven
-         */
+     * The url path to concat with forge maven
+     */
     path: string
   }
   /**
-     * The minecraft version
-     */
+   * The minecraft version
+   */
   mcversion: string
   /**
-     * The forge version (without minecraft version)
-     */
+   * The forge version (without minecraft version)
+   */
   version: string
 }
 

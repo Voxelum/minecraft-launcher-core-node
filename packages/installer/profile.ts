@@ -115,13 +115,29 @@ export function resolveProcessors(side: 'client' | 'server', installProfile: Ins
       server: dirname(variables.INSTALLER.server),
     }
   }
-  const processors = (installProfile.processors || []).map((proc) => ({
-    ...proc,
-    args: proc.args.map(normalizePath).map(normalizeVariable),
-    outputs: proc.outputs
+
+  const resolveOutputs = (proc: PostProcessor, args: string[]) => {
+    const original = proc.outputs
       ? Object.entries(proc.outputs).map(([k, v]) => ({ [normalizeVariable(k)]: normalizeVariable(v) })).reduce((a, b) => Object.assign(a, b), {})
-      : undefined,
-  })).filter((proc) => proc.sides ? proc.sides.indexOf(side) !== -1 : true)
+      : {}
+    for (const [key, val] of Object.entries(original)) {
+      original[key] = val.replace(/'/g, '')
+    }
+    const outputIndex = args.indexOf('--output') === -1 ? args.indexOf('--out-jar') : args.indexOf('--output')
+    const outputFile = outputIndex !== -1 ? args[outputIndex + 1] : undefined
+    if (outputFile && !original[outputFile]) {
+      original[outputFile] = ''
+    }
+    return original
+  }
+  const processors = (installProfile.processors || []).map((proc) => {
+    const args = proc.args.map(normalizePath).map(normalizeVariable)
+    return {
+      ...proc,
+      args,
+      outputs: resolveOutputs(proc, args),
+    }
+  }).filter((proc) => proc.sides ? proc.sides.indexOf(side) !== -1 : true)
   return processors
 }
 
@@ -248,6 +264,8 @@ export class PostProcessingTask extends AbortableTask<void> {
   protected async isInvalid(outputs: Required<PostProcessor>['outputs']) {
     for (const [file, expect] of Object.entries(outputs)) {
       const sha1 = await checksum(file, 'sha1').catch((e) => '')
+      if (!sha1) return true // if file not exist, the file is not generated
+      if (!expect) return false // if expect is empty, we just need file exists
       const expected = expect.replace(/'/g, '')
       if (expected !== sha1) {
         return true
