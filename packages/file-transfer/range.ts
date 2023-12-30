@@ -56,7 +56,7 @@ export async function * range(
 
   while (true) {
     try {
-      await stream(url, {
+      const { opaque } = await stream(url, {
         method: 'GET',
         dispatcher,
         headers: {
@@ -66,14 +66,25 @@ export async function * range(
         throwOnError: true,
         maxRedirections: 2,
         signal: abortSignal,
-        opaque: fileStream,
-        onInfo({ headers }) {
-          if (typeof headers['content-length'] === 'string') {
-            contentLength = Number.parseInt(headers['content-length'] ?? '0')
-            segment.end = contentLength
-          }
-        },
-      }, ({ opaque }) => opaque as Writable)
+        opaque: { fileStream },
+      }, ({ opaque, headers, statusCode }) => {
+        if (statusCode >= 300) {
+          (opaque as any).error = Object.assign(new Error(`Unexpected status code ${statusCode} from ${url}`), {
+            name: 'UnexpectedStatusCodeError',
+            range: segment.end < 0 ? undefined : `bytes=${segment.start}-${(segment.end) ?? ''}`,
+          })
+          // return a run-away writable
+          return new Writable({ write(chunk, en, cb) { cb() } })
+        }
+        if (typeof headers['content-length'] === 'string') {
+          contentLength = Number.parseInt(headers['content-length'] ?? '0')
+          segment.end = contentLength
+        }
+        return (opaque as any).fileStream as Writable
+      })
+      if ((opaque as any).error) {
+        throw (opaque as any).error
+      }
       return
     } catch (e) {
       yield e
