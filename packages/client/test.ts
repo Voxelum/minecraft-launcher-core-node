@@ -1,4 +1,3 @@
-
 import * as path from 'path'
 import { queryStatus, Status } from './index'
 import { describe, test, expect } from 'vitest'

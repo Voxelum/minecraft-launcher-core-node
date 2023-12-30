@@ -1,4 +1,3 @@
-
 import { open } from './index'
 import { describe, test, expect, vi } from 'vitest'
 import { open as yopen, fromBuffer, fromFd } from 'yauzl'

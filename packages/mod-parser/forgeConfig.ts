@@ -1,4 +1,3 @@
-
 /**
  * Represent the forge config file
  */
