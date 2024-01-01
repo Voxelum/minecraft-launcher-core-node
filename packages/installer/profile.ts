@@ -180,13 +180,12 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
 
     const versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse)
     const libraries = VersionJson.resolveLibraries([...installProfile.libraries, ...versionJson.libraries])
+    await this.yield(new PostProcessingTask(processor, minecraftFolder, options))
 
     await this.all(libraries.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
       throwErrorImmediately: options.throwErrorImmediately ?? false,
       getErrorMessage: (errs) => `Errors during install libraries at ${minecraftFolder.root}: ${errs.map(errorToString).join('\n')}`,
     })
-
-    await this.yield(new PostProcessingTask(processor, minecraftFolder, options))
   })
 }
 
