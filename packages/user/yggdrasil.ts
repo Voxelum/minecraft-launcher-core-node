@@ -70,22 +70,23 @@ export interface SetTextureOption {
   type: 'skin' | 'cape' | 'elytra'
   texture?: {
     url: string
-    metadata?: { model?: 'slim' | 'steve'; [key: string]: any }
+    metadata?: { model?: 'slim' | 'steve';[key: string]: any }
   } | {
     data: Uint8Array
-    metadata?: { model?: 'slim' | 'steve'; [key: string]: any }
+    metadata?: { model?: 'slim' | 'steve';[key: string]: any }
   }
 }
 
-export class YggdrasilError {
+export class YggdrasilError extends Error {
   error: string
   errorMessage: string
   cause?: string
 
-  constructor(o: any, readonly statusCode: number) {
-    this.error = o.error
-    this.errorMessage = o.errorMessage
-    this.cause = o.cause
+  constructor(readonly statusCode: number, message: string, o?: any) {
+    super(message)
+    this.error = o?.error
+    this.errorMessage = o?.errorMessage
+    this.cause = o?.cause
   }
 }
 
@@ -148,7 +149,8 @@ export class YggdrasilClient {
     })
 
     if (response.status >= 400) {
-      throw new YggdrasilError(await response.json(), response.status)
+      const body = await response.text()
+      throw new YggdrasilError(response.status, response.status + ':' + body, response.headers.get('content-type')?.startsWith('application/json') ? JSON.parse(body) : undefined)
     }
 
     const authentication: YggrasilAuthentication = await response.json() as YggrasilAuthentication
@@ -156,7 +158,7 @@ export class YggdrasilClient {
   }
 
   async refresh({ accessToken, requestUser, clientToken }: { accessToken: string; clientToken: string; requestUser?: boolean }, signal?: AbortSignal) {
-  const response = await fetch(this.api + '/refresh', {
+    const response = await fetch(this.api + '/refresh', {
       method: 'POST',
       body: JSON.stringify({
         accessToken,
@@ -172,7 +174,8 @@ export class YggdrasilClient {
     })
 
     if (response.status >= 400) {
-      throw new YggdrasilError(await response.json(), response.status)
+      const body = await response.text()
+      throw new YggdrasilError(response.status, response.status + ':' + body, response.headers.get('content-type')?.startsWith('application/json') ? JSON.parse(body) : undefined)
     }
 
     const authentication = await response.json() as YggrasilAuthentication
@@ -208,7 +211,7 @@ export interface YggdrasilTexturesInfo {
  */
 export interface YggdrasilTexture {
   url: string
-  metadata?: { model?: 'slim' | 'steve'; [key: string]: any }
+  metadata?: { model?: 'slim' | 'steve';[key: string]: any }
 }
 
 export function isTextureSlim(o: YggdrasilTexture) {
@@ -251,7 +254,8 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
       signal,
     })
     if (response.status !== 200) {
-      throw new YggdrasilError(await response.json(), response.status)
+      const body = await response.text()
+      throw new YggdrasilError(response.status, response.status + ':' + body, response.headers.get('content-type')?.startsWith('application/json') ? JSON.parse(body) : undefined)
     }
     const o = await response.json() as any
     if (o.properties && o.properties instanceof Array) {
@@ -304,24 +308,24 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
     if (response.status === 401) {
       if (response.headers.get('content-type') === 'application/json') {
         const body = await response.json() as any
-        throw new YggdrasilError({
+        throw new YggdrasilError(response.status, response.status.toString(), {
           error: body.error ?? 'Unauthorized',
           errorMessage: body.errorMessage ?? 'Unauthorized',
-        }, response.status)
+        })
       } else {
         const body = await response.text()
-        throw new YggdrasilError({
+        throw new YggdrasilError(response.status, response.status + ':' + body, {
           error: 'Unauthorized',
           errorMessage: 'Unauthorized: ' + body,
-        }, response.status)
+        })
       }
     }
     if (response.status >= 400) {
       const body = await response.text()
-      throw new YggdrasilError({
+      throw new YggdrasilError(response.status, response.status + ':' + body, {
         error: 'SetSkinFailed',
         errorMessage: 'Fail to set skin ' + body,
-      }, response.status)
+      })
     }
   }
 }
