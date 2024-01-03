@@ -207,13 +207,15 @@ export async function getPotentialJavaLocations(): Promise<string[]> {
 
   const which = () => new Promise<string>((resolve) => {
     exec('which java', (_error, stdout) => {
-      resolve(stdout.replace('\n', ''))
-    })
+      if (!_error) resolve(stdout.replace('\n', ''))
+      else resolve('')
+    }).once('error', () => resolve(''))
   })
   const where = () => new Promise<string[]>((resolve) => {
     exec('where java', (_error, stdout) => {
-      resolve(stdout.split('\r\n'))
-    })
+      if (!_error) resolve(stdout.split('\r\n'))
+      else resolve([])
+    }).once('error', () => resolve([]))
   })
 
   if (currentPlatform === 'win32') {
