@@ -54,9 +54,10 @@ export async function * range(
     },
   })
 
+  let nextUrl = url
   while (true) {
     try {
-      const { opaque } = await stream(url, {
+      const { opaque } = await stream(nextUrl, {
         method: 'GET',
         dispatcher,
         headers: {
@@ -67,21 +68,29 @@ export async function * range(
         maxRedirections: 2,
         signal: abortSignal,
         opaque: { fileStream },
-      }, ({ opaque, headers, statusCode }) => {
+      }, ({ opaque, headers: responseHeaders, statusCode }) => {
         if (statusCode >= 300) {
-          (opaque as any).error = Object.assign(new Error(`Unexpected status code ${statusCode} from ${url}`), {
-            name: 'UnexpectedStatusCodeError',
-            range: segment.end < 0 ? undefined : `bytes=${segment.start}-${(segment.end) ?? ''}`,
-          })
-          // return a run-away writable
-          return new Writable({ write(chunk, en, cb) { cb() } })
+          if (typeof responseHeaders.location === 'string') {
+            nextUrl = new URL(responseHeaders.location)
+            Object.assign(opaque as any, { continue: true })
+          } else {
+            (opaque as any).error = Object.assign(new Error(`Unexpected status code ${statusCode} from ${url}`), {
+              name: 'UnexpectedStatusCodeError',
+              range: segment.end < 0 ? undefined : `bytes=${segment.start}-${(segment.end) ?? ''}`,
+            })
+            // return a run-away writable
+            return new Writable({ write(chunk, en, cb) { cb() } })
+          }
         }
-        if (typeof headers['content-length'] === 'string') {
-          contentLength = Number.parseInt(headers['content-length'] ?? '0')
+        if (typeof responseHeaders['content-length'] === 'string') {
+          contentLength = Number.parseInt(responseHeaders['content-length'] ?? '0')
           segment.end = contentLength
         }
         return (opaque as any).fileStream as Writable
       })
+      if ((opaque as any).continue) {
+        continue
+      }
       if ((opaque as any).error) {
         throw (opaque as any).error
       }

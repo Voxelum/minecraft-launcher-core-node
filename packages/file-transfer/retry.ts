@@ -42,15 +42,22 @@ export function resolveRetryHandler(options?: DefaultRetryPolicyOptions | RetryP
   return createDefaultRetryHandler(options?.maxRetryCount ?? 3)
 }
 
+const kHandled = Symbol('Handled')
 export function createDefaultRetryHandler(maxRetryCount = 3) {
   const handler: RetryPolicy = {
     async retry(url, attempt, error) {
+      if (error[kHandled]) {
+        await setTimeout(error[kHandled])
+        return true
+      }
       if (attempt < maxRetryCount) {
         if (error instanceof errors.HeadersTimeoutError ||
           error instanceof errors.BodyTimeoutError ||
           error instanceof (errors as any).ConnectTimeoutError ||
           error instanceof errors.SocketError) {
-          await setTimeout(attempt * 1000)
+          const timeout = (attempt + 1) * 1000
+          Object.defineProperty(error, kHandled, { value: timeout, enumerable: false })
+          await setTimeout(timeout)
           return true
         }
       }
