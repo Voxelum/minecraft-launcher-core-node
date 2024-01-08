@@ -1,5 +1,80 @@
 # Changelog
 
+## 7.5.0
+### @xmcl/nbt@3.0.2
+#### Bug Fixes
+
+- fix: correct the build ([12a1b6cc5cb7b47581d6a3b5156edae6031b6823](https://github.com/voxelum/minecraft-launcher-core-node/commit/12a1b6cc5cb7b47581d6a3b5156edae6031b6823))
+### @xmcl/curseforge@2.1.1
+#### Bug Fixes
+
+- fix: Update undici version ([f78e1b3fe5e24c2dccf910129ef8e25d7f164e83](https://github.com/voxelum/minecraft-launcher-core-node/commit/f78e1b3fe5e24c2dccf910129ef8e25d7f164e83))
+- fix: Curseforge should respect the modLoaderTypes ([6759abf611f1a5475a72a90110c8fa2c12c592c9](https://github.com/voxelum/minecraft-launcher-core-node/commit/6759abf611f1a5475a72a90110c8fa2c12c592c9))
+### @xmcl/discord-rpc@1.1.2
+#### Bug Fixes
+
+- fix: Update undici version ([f78e1b3fe5e24c2dccf910129ef8e25d7f164e83](https://github.com/voxelum/minecraft-launcher-core-node/commit/f78e1b3fe5e24c2dccf910129ef8e25d7f164e83))
+### @xmcl/file-transfer@1.0.5
+#### Bug Fixes
+
+- fix: Correctly retry and handle the redirect in range ([1565e64b7c83f50867d1ba9663f035ade475875b](https://github.com/voxelum/minecraft-launcher-core-node/commit/1565e64b7c83f50867d1ba9663f035ade475875b))
+- fix: Should failed if the request is failed ([524c044ac4c27cdbaa7fa06b2b94e4e08ddb8b51](https://github.com/voxelum/minecraft-launcher-core-node/commit/524c044ac4c27cdbaa7fa06b2b94e4e08ddb8b51))
+- fix: Update undici version ([f78e1b3fe5e24c2dccf910129ef8e25d7f164e83](https://github.com/voxelum/minecraft-launcher-core-node/commit/f78e1b3fe5e24c2dccf910129ef8e25d7f164e83))
+### @xmcl/system@2.2.7
+#### Bug Fixes
+
+- fix: correct the build ([12a1b6cc5cb7b47581d6a3b5156edae6031b6823](https://github.com/voxelum/minecraft-launcher-core-node/commit/12a1b6cc5cb7b47581d6a3b5156edae6031b6823))
+### @xmcl/gamesetting@3.0.2
+#### Bug Fixes
+
+- fix(gamesetting): correctly parse string ([0522ddff5ccde139cd77621275b2d0238b0c2550](https://github.com/voxelum/minecraft-launcher-core-node/commit/0522ddff5ccde139cd77621275b2d0238b0c2550))
+- fix: Correctly parse resourcepacks ([d3490a2c93a5389808c4670c2a825de5bc558758](https://github.com/voxelum/minecraft-launcher-core-node/commit/d3490a2c93a5389808c4670c2a825de5bc558758))
+- fix: Should correct parse with resourcepack with : ([87a5aebde47c547e0be5abc23683dd4bf1a60a68](https://github.com/voxelum/minecraft-launcher-core-node/commit/87a5aebde47c547e0be5abc23683dd4bf1a60a68))
+### @xmcl/modrinth@2.3.1
+#### Bug Fixes
+
+- fix: Update undici version ([f78e1b3fe5e24c2dccf910129ef8e25d7f164e83](https://github.com/voxelum/minecraft-launcher-core-node/commit/f78e1b3fe5e24c2dccf910129ef8e25d7f164e83))
+- fix: Curseforge should respect the modLoaderTypes ([6759abf611f1a5475a72a90110c8fa2c12c592c9](https://github.com/voxelum/minecraft-launcher-core-node/commit/6759abf611f1a5475a72a90110c8fa2c12c592c9))
+### @xmcl/nat-api@0.4.3
+#### Bug Fixes
+
+- fix: Update undici version ([f78e1b3fe5e24c2dccf910129ef8e25d7f164e83](https://github.com/voxelum/minecraft-launcher-core-node/commit/f78e1b3fe5e24c2dccf910129ef8e25d7f164e83))
+### @xmcl/user@4.1.0
+#### Features
+
+- feat: Add more exception to getProfile ([c74c353483d7d67a53281fa6cdf979c4e6dcd286](https://github.com/voxelum/minecraft-launcher-core-node/commit/c74c353483d7d67a53281fa6cdf979c4e6dcd286))
+#### Bug Fixes
+
+- fix: Correctly handle yggdrasil error ([dc77fb3f4ec17c785262c553ba48ce867000dfb2](https://github.com/voxelum/minecraft-launcher-core-node/commit/dc77fb3f4ec17c785262c553ba48ce867000dfb2))
+- fix: Update undici version ([f78e1b3fe5e24c2dccf910129ef8e25d7f164e83](https://github.com/voxelum/minecraft-launcher-core-node/commit/f78e1b3fe5e24c2dccf910129ef8e25d7f164e83))
+### @xmcl/client@3.1.1
+- Dependency @xmcl/nbt bump **patch**
+### @xmcl/game-data@1.2.4
+- Dependency @xmcl/nbt bump **patch**
+- Dependency @xmcl/system bump **patch**
+### @xmcl/installer@5.3.0
+#### Features
+
+- feat: Support new neoforge download ([14261148672c8434a0b9aa5ab2b5c2f5b4febc15](https://github.com/voxelum/minecraft-launcher-core-node/commit/14261148672c8434a0b9aa5ab2b5c2f5b4febc15))
+#### Bug Fixes
+
+- fix: Avoid uncaught excpetion on detecting java ([9d47f43f5be79deca4524e339ea81c26df22ab51](https://github.com/voxelum/minecraft-launcher-core-node/commit/9d47f43f5be79deca4524e339ea81c26df22ab51))
+- fix: Install new forge by 2 steps ([2cab21159fc95b17448e25180cdc17f28228db1f](https://github.com/voxelum/minecraft-launcher-core-node/commit/2cab21159fc95b17448e25180cdc17f28228db1f))
+- fix: Cannot install 1.20.4 forge ([efaf4ecf0cf82ea1dd09a2639f3528f519ef5210](https://github.com/voxelum/minecraft-launcher-core-node/commit/efaf4ecf0cf82ea1dd09a2639f3528f519ef5210))
+- fix: Should also verify non sha1 output ([b4acbd3f819cd177f36ae729ba7292e20564b5f5](https://github.com/voxelum/minecraft-launcher-core-node/commit/b4acbd3f819cd177f36ae729ba7292e20564b5f5))
+- fix: Update undici version ([f78e1b3fe5e24c2dccf910129ef8e25d7f164e83](https://github.com/voxelum/minecraft-launcher-core-node/commit/f78e1b3fe5e24c2dccf910129ef8e25d7f164e83))
+- Dependency @xmcl/file-transfer bump **patch**
+### @xmcl/mod-parser@3.3.5
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.2.3
+#### Bug Fixes
+
+- fix: correct the build ([12a1b6cc5cb7b47581d6a3b5156edae6031b6823](https://github.com/voxelum/minecraft-launcher-core-node/commit/12a1b6cc5cb7b47581d6a3b5156edae6031b6823))
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@2.0.3
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 7.4.0
 ### @xmcl/client@3.1.0
 #### Features
