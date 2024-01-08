@@ -153,12 +153,12 @@ describe('YggdrasilClient', () => {
         username: 'username',
         password: 'password',
         clientToken,
-      })).rejects.toEqual({
+      })).rejects.toEqual(new YggdrasilError(400, '400:{"error":"InvalidArguments"}', {
         error: 'InvalidArguments',
         statusCode: 400,
         cause: undefined,
         errorMessage: undefined,
-      })
+      }))
     })
   })
 
@@ -203,11 +203,11 @@ describe('YggdrasilClient', () => {
       await expect(client.refresh({
         accessToken: 'accessToken',
         clientToken,
-      })).rejects.toEqual(new YggdrasilError({
+      })).rejects.toEqual(new YggdrasilError(400, '400:{"error":"InvalidArguments"}', {
         error: 'InvalidArguments',
         cause: undefined,
         errorMessage: undefined,
-      }, 400))
+      }))
     })
   })
 })
