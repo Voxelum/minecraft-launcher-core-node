@@ -384,9 +384,7 @@ export function parse(str: string, strict?: boolean): GameSetting | Frame {
           })
         }
       } else {
-        try {
-          newValue = JSON.parse(value)
-        } catch (e) { }
+        newValue = value
       }
 
       return { [key]: newValue }

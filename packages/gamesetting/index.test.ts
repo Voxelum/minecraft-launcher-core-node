@@ -21,7 +21,7 @@ difficulty:1
 fancyGraphics:false
 ao:1
 renderClouds:false
-resourcePacks:["Xray Ultimate 1.12 v2.2.1.zip"]
+resourcePacks:["Xray Ultimate 1.12 v2.2.1.zip","fabric:abc"]
 incompatibleResourcePacks:[]
 lastServer:play.mcndsj.com
 lang:en_US
@@ -115,7 +115,7 @@ modelPart_hat:true
     expect(set.fancyGraphics).toEqual(GameSetting.Graphics.Fast)
     expect(set.lastServer).toEqual('play.mcndsj.com')
     expect(set.particles).toEqual(GameSetting.Particles.Decreased)
-    expect(set.resourcePacks).toStrictEqual(['Xray Ultimate 1.12 v2.2.1.zip'])
+    expect(set.resourcePacks).toStrictEqual(['Xray Ultimate 1.12 v2.2.1.zip', 'fabric:abc'])
     expect(set.lang).toEqual('en_US')
     expect(set.modelPart_hat).toEqual(true)
   })
