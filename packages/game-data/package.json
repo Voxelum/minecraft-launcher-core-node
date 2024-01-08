@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/game-data",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "main": "./index.ts",
   "description": "Parse minecraft game related data like level.dat, server.dat",
   "engines": {

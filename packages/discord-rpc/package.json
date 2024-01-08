@@ -1,6 +1,6 @@
 {
   "name": "@xmcl/discord-rpc",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "a fork of discordjs/RPC",
   "main": "./index.ts",
   "author": "xhayper",
