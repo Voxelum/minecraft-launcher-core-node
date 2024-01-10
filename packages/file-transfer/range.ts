@@ -56,6 +56,10 @@ export async function * range(
 
   let nextUrl = url
   while (true) {
+    if (segment.start >= segment.end) {
+      // the segment is finished, just ignore it
+      return
+    }
     try {
       const { opaque } = await stream(nextUrl, {
         method: 'GET',
@@ -84,7 +88,10 @@ export async function * range(
         }
         if (typeof responseHeaders['content-length'] === 'string') {
           contentLength = Number.parseInt(responseHeaders['content-length'] ?? '0')
-          segment.end = contentLength
+          const end = segment.start + contentLength - 1
+          if (end !== segment.end) {
+            segment.end = segment.start + contentLength
+          }
         }
         return (opaque as any).fileStream as Writable
       })

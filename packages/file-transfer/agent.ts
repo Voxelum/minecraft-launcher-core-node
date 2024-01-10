@@ -104,7 +104,7 @@ export class DownloadAgent {
         const { contentLength, isAcceptRanges } = parseRangeInfo(response.headers)
         ranges = contentLength && isAcceptRanges
           ? this.rangePolicy.computeRanges(contentLength)
-          : [{ start: 0, end: contentLength }]
+          : [{ start: 0, end: contentLength - 1 }]
         targetUrl = new URL(location)
         total = contentLength
         await handle.truncate(total)
