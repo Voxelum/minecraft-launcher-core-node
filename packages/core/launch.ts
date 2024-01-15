@@ -674,6 +674,7 @@ export async function generateArguments(options: LaunchOption) {
     natives_directory: nativeRoot,
     launcher_name: launcherName,
     launcher_version: launcherBrand,
+    game_directory: gamePath,
     classpath: [
       ...version.libraries.filter((lib) => !lib.isNative).map((lib) => mc.getLibraryByPath(lib.download.path)),
       mc.getVersionJar(version.minecraftVersion),
@@ -723,6 +724,7 @@ export async function generateArguments(options: LaunchOption) {
     assets_root: assetsDir,
     game_assets: join(assetsDir, 'virtual', version.assets),
     assets_index_name: version.assets,
+    auth_session: accessToken,
     game_directory: gamePath,
     auth_player_name: name,
     auth_uuid: id,

@@ -24,6 +24,7 @@
     "@xmcl/task": "workspace:^*",
     "@xmcl/unzip": "workspace:^*",
     "undici": "6.0.1",
+    "yazl": "^2.5.1",
     "yauzl": "^2.10.0"
   },
   "repository": {
@@ -46,6 +47,7 @@
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
     "@types/node": "~18.15.11",
+    "@types/yazl": "^2.4.5",
     "@types/yauzl": "^2.10.0",
     "@xmcl/eslint-config": "workspace:^*",
     "esbuild": "^0.17.16",

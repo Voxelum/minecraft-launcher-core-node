@@ -569,9 +569,9 @@ export function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOpti
   return [...new Set([
     // user defined alternative host to download
     ...normalizeArray(libraryHosts),
-    ...normalizeArray(libraryOptions.mavenHost).map((m) => joinUrl(m, url.pathname)),
-    library.download.url,
     ...normalizeArray(libraryOptions.mavenHost).map((m) => joinUrl(m, library.download.path)),
+    library.download.url,
+    ...normalizeArray(libraryOptions.mavenHost).map((m) => joinUrl(m, url.pathname).replace('/maven/maven', '/maven')),
     ...DEFAULT_MAVENS.map((m) => joinUrl(m, library.download.path)),
   ])]
 }

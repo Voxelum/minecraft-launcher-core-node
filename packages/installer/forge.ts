@@ -1,17 +1,18 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from '@xmcl/core'
 import { parse as parseForge } from '@xmcl/forge-site-parser'
 import { Task, task } from '@xmcl/task'
-import { filterEntries, open, openEntryReadStream, readEntry } from '@xmcl/unzip'
+import { filterEntries, open, openEntryReadStream, readAllEntries, readEntry } from '@xmcl/unzip'
 import { createWriteStream } from 'fs'
 import { writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
 import { pipeline } from 'stream/promises'
 import { Dispatcher, request } from 'undici'
 import { Entry, ZipFile } from 'yauzl'
+import { ZipFile as WriteableZipFile } from 'yazl'
 import { DownloadTask } from './downloadTask'
 import { LibraryOptions, resolveLibraryDownloadUrls } from './minecraft'
-import { installByProfileTask, InstallProfile, InstallProfileOption } from './profile'
-import { ensureFile, InstallOptions as InstallOptionsBase, joinUrl, normalizeArray } from './utils'
+import { InstallProfile, InstallProfileOption, installByProfileTask } from './profile'
+import { InstallOptions as InstallOptionsBase, ensureDir, ensureFile, joinUrl, normalizeArray } from './utils'
 import { ZipValidator } from './zipValdiator'
 
 export interface ForgeVersionList {
@@ -144,8 +145,12 @@ export interface InstallForgeOptions extends LibraryOptions, InstallOptionsBase,
 export class DownloadForgeInstallerTask extends DownloadTask {
   readonly installJarPath: string
 
-  constructor(forgeVersion: string, installer: RequiredVersion['installer'], minecraft: MinecraftFolder, options: InstallForgeOptions) {
-    const path = installer ? installer.path : `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`
+  constructor(forgeVersion: string, installer: RequiredVersion['installer'], minecraft: MinecraftFolder, options: InstallForgeOptions, legacy?: boolean) {
+    const classifier = legacy ? 'universal' : 'installer'
+    const ext = legacy ? 'zip' : 'jar'
+    const path = installer
+      ? installer.path
+      : `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-${classifier}.${ext}`
     let url: string
     if (installer) {
       try {
@@ -161,11 +166,11 @@ export class DownloadForgeInstallerTask extends DownloadTask {
     }
 
     const library = VersionJson.resolveLibrary({
-      name: `net.minecraftforge:forge:${forgeVersion}:installer`,
+      name: `net.minecraftforge:forge:${forgeVersion}:${classifier}`,
       downloads: {
         artifact: {
           url,
-          path: `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-installer.jar`,
+          path: `net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-${classifier}.${ext}`,
           size: -1,
           sha1: installer?.sha1 || '',
         },
@@ -204,6 +209,96 @@ function getLibraryPathWithoutMaven(mc: MinecraftFolder, name: string) {
 }
 function extractEntryTo(zip: ZipFile, e: Entry, dest: string) {
   return openEntryReadStream(zip, e).then((stream) => pipeline(stream, createWriteStream(dest)))
+}
+
+async function installLegacyForgeFromUniversalZip(forgeZip: ZipFile, mc: MinecraftFolder, forgeVersion: string, mcVersion: string) {
+  const minecraftZip = await open(mc.getVersionJar(mcVersion), { lazyEntries: true, autoClose: false })
+  const forgeEntries = await readAllEntries(forgeZip)
+  const mcEntries = await readAllEntries(minecraftZip)
+  const finalZipEntries: Record<string, [Entry, ZipFile]> = {}
+  // forge entries overwrite mc entries
+  for (const e of mcEntries) {
+    if (e.fileName.startsWith('META-INF')) continue
+    finalZipEntries[e.fileName] = [e, minecraftZip]
+  }
+  for (const e of forgeEntries) {
+    if (e.fileName.startsWith('META-INF')) continue
+    finalZipEntries[e.fileName] = [e, forgeZip]
+  }
+  const finalZip = new WriteableZipFile()
+  for (const [k, [e, zip]] of Object.entries(finalZipEntries)) {
+    finalZip.addReadStream(await openEntryReadStream(zip, e), e.fileName)
+  }
+  finalZip.end()
+  const dest = mc.getLibraryByPath(`net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`)
+  await ensureDir(dirname(dest))
+  await pipeline(finalZip.outputStream, createWriteStream(dest))
+  const versionId = `${mcVersion}-forge-${forgeVersion}`
+  await ensureDir(mc.getVersionRoot(versionId))
+  const versionJson: VersionJson = {
+    id: versionId,
+    inheritsFrom: mcVersion,
+    time: new Date().toUTCString(),
+    type: 'release',
+    releaseTime: new Date().toUTCString(),
+    minimumLauncherVersion: 4,
+    arguments: {
+      game: [
+      ],
+      // eslint-disable-next-line no-template-curly-in-string
+      jvm: ['-Dminecraft.applet.TargetDirectory=${game_directory}'],
+    },
+    mainClass: 'net.minecraft.launchwrapper.Launch',
+    libraries: [
+      { name: `net.minecraftforge:forge:${forgeVersion}` },
+      {
+        downloads: {
+          artifact: {
+            path: 'guava-12.0.1.jar',
+            sha1: 'b8e78b9af7bf45900e14c6f958486b6ca682195f',
+            size: -1,
+            url: 'https://files.minecraftforge.net/maven/com/google/guava/guava/12.0.1/guava-12.0.1.jar',
+          },
+        },
+        name: 'com.google.guava:guava:12.0.1',
+      },
+      {
+        downloads: {
+          artifact: {
+            path: 'argo-2.25.jar',
+            sha1: 'bb672829fde76cb163004752b86b0484bd0a7f4b',
+            size: -1,
+            url: 'https://files.minecraftforge.net/maven/net/sourceforge/argo/argo/2.25/argo-2.25.jar',
+          },
+        },
+        name: 'net.sourceforge.argo:argo:2.25',
+      },
+      {
+        downloads: {
+          artifact: {
+            path: 'asm-all-4.0.jar',
+            sha1: '98308890597acb64047f7e896638e0d98753ae82',
+            size: -1,
+            url: 'https://files.multimc.org/fmllibs/asm-all-4.0.jar',
+          },
+        },
+        name: 'org.ow2.asm:asm-all:4.0',
+      },
+      {
+        downloads: {
+          artifact: {
+            path: 'bcprov-jdk15on-147.jar',
+            sha1: 'b6f5d9926b0afbde9f4dbe3db88c5247be7794bb',
+            size: -1,
+            url: 'https://files.multimc.org/fmllibs/bcprov-jdk15on-147.jar',
+          },
+        },
+        name: 'org.bouncycastle:bcprov-jdk15on:1.47',
+      },
+    ],
+  }
+  await writeFile(mc.getVersionJson(versionId), JSON.stringify(versionJson, null, 4))
+  return versionId
 }
 
 async function installLegacyForgeFromZip(zip: ZipFile, entries: ForgeLegacyInstallerEntriesPattern, profile: InstallProfile, mc: MinecraftFolder, jarFilePath: string, options: InstallForgeOptions) {
@@ -393,9 +488,16 @@ export function installByInstallerTask(version: RequiredVersion, minecraft: Mine
       return `${version.mcversion}-${version.version}`
     }
     const forgeVersion = getForgeArtifactVersion()
+    const isLegacy = version.mcversion.startsWith('1.4.')
     const mc = MinecraftFolder.from(minecraft)
-    const jarPath = await this.yield(new DownloadForgeInstallerTask(forgeVersion, version.installer, mc, options)
+    const jarPath = await this.yield(new DownloadForgeInstallerTask(forgeVersion, version.installer, mc, options, isLegacy)
       .map(function () { return this.installJarPath }))
+
+    if (isLegacy) {
+      const forgeZip = await open(jarPath, { lazyEntries: true, autoClose: false })
+      const versionId = await installLegacyForgeFromUniversalZip(forgeZip, mc, forgeVersion, version.mcversion)
+      return versionId
+    }
 
     const zip = await open(jarPath, { lazyEntries: true, autoClose: false })
     const entries = await walkForgeInstallerEntries(zip, forgeVersion)
