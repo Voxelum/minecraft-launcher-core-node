@@ -287,10 +287,11 @@ export async function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minec
   return undefined
 }
 
-export async function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder, options?: DiagnoseOptions): Promise<MinecraftJarIssue | undefined> {
-  const jarPath = minecraft.getVersionJar(resolvedVersion.minecraftVersion)
+export async function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder, options?: DiagnoseOptions & { side?: 'client' | 'server' }): Promise<MinecraftJarIssue | undefined> {
+  const side = options?.side ?? 'client'
+  const jarPath = minecraft.getVersionJar(resolvedVersion.minecraftVersion, side)
   const issue = await diagnoseFile(
-    { file: jarPath, expectedChecksum: resolvedVersion.downloads.client?.sha1 ?? '', role: 'minecraftJar', hint: 'Problem on Minecraft jar! Please consider to use Installer.instalVersion to fix.' })
+    { file: jarPath, expectedChecksum: resolvedVersion.downloads[side]?.sha1 ?? '', role: 'minecraftJar', hint: 'Problem on Minecraft jar! Please consider to use Installer.instalVersion to fix.' })
   if (issue) {
     return Object.assign(issue, { version: resolvedVersion.minecraftVersion })
   }

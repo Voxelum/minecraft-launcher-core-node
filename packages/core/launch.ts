@@ -44,8 +44,8 @@ export interface EnabledFeatures {
  */
 export interface LaunchOption {
   /**
-     * User selected game profile. For game display name &
-     */
+   * User selected game profile. For game display name &
+   */
   gameProfile?: {
     name: string
     id: string
@@ -57,134 +57,134 @@ export interface LaunchOption {
   launcherName?: string
   launcherBrand?: string
   /**
-     * Overwrite the version name of the current version.
-     * If this is absent, it will use version name from resolved version.
-     */
+   * Overwrite the version name of the current version.
+   * If this is absent, it will use version name from resolved version.
+    */
   versionName?: string
   /**
-     * Overwrite the version type of the current version.
-     * If this is absent, it will use version type from resolved version.
-     *
-     * Some people use this to show fantastic message on the welcome screen.
-     */
+   * Overwrite the version type of the current version.
+   * If this is absent, it will use version type from resolved version.
+   *
+   * Some people use this to show fantastic message on the welcome screen.
+   */
   versionType?: string
   /**
-     * The full path of launched game icon
-     * Currently, this only supported on MacOS
-     */
+   * The full path of launched game icon
+   * Currently, this only supported on MacOS
+   */
   gameIcon?: string
   /**
-     * The launched game name
-     * Currently, this only supported on MacOS
-     */
+   * The launched game name
+   * Currently, this only supported on MacOS
+   */
   gameName?: string
   /**
-     * The path of parent directory of saves/logs/configs/mods/resourcepacks
-     */
+   * The path of parent directory of saves/logs/configs/mods/resourcepacks
+   */
   gamePath: string
   /**
-     * The path of parent directory of assets/libraries
-     */
+   * The path of parent directory of assets/libraries
+   */
   resourcePath?: string
   /**
-     * The java executable file path. (Not the java home directory!)
-     */
+   * The java executable file path. (Not the java home directory!)
+   */
   javaPath: string
   /**
-     * Min memory, this will add a jvm flag -Xms to the command result
-     */
+   * Min memory, this will add a jvm flag -Xms to the command result
+   */
   minMemory?: number
   /**
-     * Min memory, this will add a jvm flag -Xmx to the command result
-     */
+   * Min memory, this will add a jvm flag -Xmx to the command result
+   */
   maxMemory?: number
   /**
-     * The version of launched Minecraft. Can be either resolved version or version string
-     */
+   * The version of launched Minecraft. Can be either resolved version or version string
+   */
   version: string | ResolvedVersion
   /**
-     * Directly launch to a server
-     */
+   * Directly launch to a server
+   */
   server?: { ip: string; port?: number }
   /**
-     * Resolution. This will add --height & --width or --fullscreen to the java arguments
-     */
+   * Resolution. This will add --height & --width or --fullscreen to the java arguments
+   */
   resolution?: { width?: number; height?: number; fullscreen?: true }
   /**
-     * Extra jvm options. This will append after to generated options.
-     * If this is empty, the `DEFAULT_EXTRA_JVM_ARGS` will be used.
-     */
+   * Extra jvm options. This will append after to generated options.
+   * If this is empty, the `DEFAULT_EXTRA_JVM_ARGS` will be used.
+   */
   extraJVMArgs?: string[]
   /**
-     * Extra program arguments. This will append after to generated options.
-     */
+   * Extra program arguments. This will append after to generated options.
+   */
   extraMCArgs?: string[]
   /**
-     * Assign the spawn options to the process.
-     *
-     * If you try to set `{ shell: true }`, you might want to make all argument rounded with "".
-     * The `launch` function will do it for you, but if you want to spawn process by yourself, remember to do that.
-     */
+   * Assign the spawn options to the process.
+   *
+   * If you try to set `{ shell: true }`, you might want to make all argument rounded with "".
+   * The `launch` function will do it for you, but if you want to spawn process by yourself, remember to do that.
+   */
   extraExecOption?: SpawnOptions
   isDemo?: boolean
 
   /**
-     * Native directory. It's .minecraft/versions/<version>/<version>-natives by default.
-     * You can replace this by your self.
-     */
+   * Native directory. It's .minecraft/versions/<version>/<version>-natives by default.
+   * You can replace this by your self.
+   */
   nativeRoot?: string
   /**
-     * Enable features. Not really in used...
-     */
+   * Enable features. Not really in used...
+   */
   features?: EnabledFeatures
   /**
-     * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
-     */
+   * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
+   */
   yggdrasilAgent?: {
     /**
-         * The jar file path of the authlib-injector
-         */
+     * The jar file path of the authlib-injector
+     */
     jar: string
     /**
-         * The auth server host
-         */
+     * The auth server host
+     */
     server: string
     /**
-         * The prefetched base64
-         */
+     * The prefetched base64
+     */
     prefetched?: string
   }
   /**
-     * Add `-Dfml.ignoreInvalidMinecraftCertificates=true` to jvm argument
-     */
+   * Add `-Dfml.ignoreInvalidMinecraftCertificates=true` to jvm argument
+   */
   ignoreInvalidMinecraftCertificates?: boolean
   /**
-     * Add `-Dfml.ignorePatchDiscrepancies=true` to jvm argument
-     */
+   * Add `-Dfml.ignorePatchDiscrepancies=true` to jvm argument
+   */
   ignorePatchDiscrepancies?: boolean
   /**
-     * Add extra classpaths
-     */
+   * Add extra classpaths
+   */
   extraClassPaths?: string[]
   /**
-     * The platform of this launch will run. By default, it will fetch the current machine info if this is absent.
-     */
+   * The platform of this launch will run. By default, it will fetch the current machine info if this is absent.
+   */
   platform?: Platform
 
   /**
-     * The launcher precheck functions. These will run before it run.
-     *
-     * This property is only used for `launch` function. The `generateArguments` function won't use this!
-     * @see {@link launch}
-     * @see {@link generateArguments}
-     */
+   * The launcher precheck functions. These will run before it run.
+   *
+   * This property is only used for `launch` function. The `generateArguments` function won't use this!
+   * @see {@link launch}
+   * @see {@link generateArguments}
+   */
   prechecks?: LaunchPrecheck[]
 
   /**
-     * The spawn process function. Used for spawn the java process at the end.
-     *
-     * By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
-     */
+   * The spawn process function. Used for spawn the java process at the end.
+   *
+   * By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
+   */
   spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess
 }
 
@@ -217,18 +217,18 @@ export interface MissingLibrariesError {
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace LaunchPrecheck {
   /**
-     * The default launch precheck. It will check version jar, libraries and natives.
-     */
+   * The default launch precheck. It will check version jar, libraries and natives.
+   */
   export const DEFAULT_PRECHECKS: readonly LaunchPrecheck[] = Object.freeze([checkVersion, checkLibraries, checkNatives, linkAssets])
 
   /**
-     * @deprecated
-     */
+   * @deprecated
+   */
   export const Default = LaunchPrecheck.DEFAULT_PRECHECKS
 
   /**
-     * Link assets to the assets/virtual/legacy.
-     */
+   * Link assets to the assets/virtual/legacy.
+   */
   export async function linkAssets(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
     if (version.assets !== 'legacy') {
       return
@@ -254,9 +254,9 @@ export namespace LaunchPrecheck {
   }
 
   /**
-     * Quick check if Minecraft version jar is corrupted
-     * @throws {@link CorruptedVersionJarError}
-     */
+   * Quick check if Minecraft version jar is corrupted
+   * @throws {@link CorruptedVersionJarError}
+   */
   export async function checkVersion(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
     const jarPath = resource.getVersionJar(version.minecraftVersion)
     if (version.downloads.client?.sha1) {
@@ -269,9 +269,9 @@ export namespace LaunchPrecheck {
     }
   }
   /**
-     * Quick check if there are missed libraries.
-     * @throws {@link MissingLibrariesError}
-     */
+   * Quick check if there are missed libraries.
+   * @throws {@link MissingLibrariesError}
+   */
   export async function checkLibraries(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
     const validMask = await Promise.all(version.libraries
       .map((lib) => validateSha1(resource.getLibraryByPath(lib.download.path), lib.download.sha1)))
@@ -286,16 +286,16 @@ export namespace LaunchPrecheck {
     }
   }
   /**
-     * Ensure the native are correctly extracted in place.
-     *
-     * It will check native root located in {@link LaunchOption.nativeRoot} if it's presented.
-     * Or, it will use the `<version-id>-native` under version folder as native root to check.
-     *
-     * This will automatically extract native if there is not native extracted.
-     *
-     * @param resource The minecraft directory to extract native
-     * @param option If the native root presented here, it will use the root here.
-     */
+   * Ensure the native are correctly extracted in place.
+   *
+   * It will check native root located in {@link LaunchOption.nativeRoot} if it's presented.
+   * Or, it will use the `<version-id>-native` under version folder as native root to check.
+   *
+   * This will automatically extract native if there is not native extracted.
+   *
+   * @param resource The minecraft directory to extract native
+   * @param option If the native root presented here, it will use the root here.
+   */
   export async function checkNatives(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
     const native: string = option.nativeRoot || resource.getNativesRoot(version.id)
     await mkdir(native, { recursive: true }).catch((e) => {
@@ -379,16 +379,16 @@ export namespace LaunchPrecheck {
 
 export interface BaseServerOptions {
   /**
-     * Java executable.
-     */
+   * Java executable.
+   */
   javaPath: string
   /**
-     * Current working directory. Default is the same with the path.
-     */
+   * Current working directory. Default is the same with the path.
+   */
   cwd?: string
   /**
-     * No gui for the server launch
-     */
+   * No gui for the server launch
+   */
   nogui?: boolean
   minMemory?: number
   maxMemory?: number
@@ -397,19 +397,19 @@ export interface BaseServerOptions {
   extraExecOption?: SpawnOptions
 
   /**
-     * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
-     */
+   * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
+   */
   spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess
 }
 
 export interface MinecraftServerOptions extends BaseServerOptions {
   /**
-     * Minecraft location.
-     */
+   * Minecraft location.
+   */
   path: string
   /**
-     * The version id.
-     */
+   * The version id.
+   */
   version: string | ResolvedVersion
 }
 /**
@@ -417,10 +417,10 @@ export interface MinecraftServerOptions extends BaseServerOptions {
  */
 export interface ServerOptions extends BaseServerOptions {
   /**
-     * The minecraft server exectuable jar file.
-     *
-     * This is the case like you are launching forge server.
-     */
+   * The minecraft server exectuable jar file.
+   *
+   * This is the case like you are launching forge server.
+   */
   serverExectuableJarPath: string
 }
 
@@ -447,37 +447,37 @@ export async function launchServer(options: MinecraftServerOptions | ServerOptio
  */
 export interface MinecraftProcessWatcher extends EventEmitter {
   /**
-     * Fire when the process DOESN'T start at all, like "java not found".
-     *
-     * The minecraft-kill or minecraft-exit will NOT fire after this fired.
-     */
+   * Fire when the process DOESN'T start at all, like "java not found".
+   *
+   * The minecraft-kill or minecraft-exit will NOT fire after this fired.
+   */
   on(event: 'error', listener: (error: any) => void): this
   /**
-     * Fire after Minecraft process exit.
-     */
+   * Fire after Minecraft process exit.
+   */
   on(event: 'minecraft-exit', listener: (event: {
     /**
-         * The code of the process exit. This is the nodejs child process "exit" event arg.
-         */
+     * The code of the process exit. This is the nodejs child process "exit" event arg.
+     */
     code: number
     /**
-         * The signal of the process exit. This is the nodejs child process "exit" event arg.
-         */
+     * The signal of the process exit. This is the nodejs child process "exit" event arg.
+     */
     signal: string
     /**
-         * The crash report content
-         */
+     * The crash report content
+     */
     crashReport: string
     /**
-         * The location of the crash report
-         */
+     * The location of the crash report
+     */
     crashReportLocation: string
   }) => void): this
   /**
-     * Fire around the time when Minecraft window appeared in screen.
-     *
-     * Since the Minecraft window will take time to init, this event fire when it capture some keywords from stdout.
-     */
+   * Fire around the time when Minecraft window appeared in screen.
+   *
+   * Since the Minecraft window will take time to init, this event fire when it capture some keywords from stdout.
+   */
   on(event: 'minecraft-window-ready', listener: () => void): this
 }
 

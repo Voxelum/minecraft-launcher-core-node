@@ -21,21 +21,21 @@ interface PartialResolvedVersion extends Version {
  */
 export interface ResolvedVersion {
   /**
-     * The id of the version, should be identical to the version folder.
-     */
+   * The id of the version, should be identical to the version folder.
+   */
   id: string
   arguments: {
     game: Version.LaunchArgument[]
     jvm: Version.LaunchArgument[]
   }
   /**
-     * The main class full qualified name
-     */
+   * The main class full qualified name
+   */
   mainClass: string
   assetIndex?: Version.AssetIndex
   /**
-     * The asset index id of this version. Should be something like `1.14`, `1.12`
-     */
+   * The asset index id of this version. Should be something like `1.14`, `1.12`
+   */
   assets: string
   downloads: {
     client?: Version.Download
@@ -56,31 +56,31 @@ export interface ResolvedVersion {
     }
   }
   /**
-     * Recommended java version
-     */
+   * Recommended java version
+   */
   javaVersion: JavaVersion
   /**
-     * The minecraft version of this version
-     */
+   * The minecraft version of this version
+   */
   minecraftVersion: string
   /**
-     * The minecraft directory of this version
-     */
+   * The minecraft directory of this version
+   */
   minecraftDirectory: string
   /**
-     * The version inheritances of this whole resolved version.
-     *
-     * The first element is this version, and the last element is the root Minecraft version.
-     * The dependencies of [<a>, <b>, <c>] should be <a> -> <b> -> <c>, where c is a Minecraft version.
-     */
+   * The version inheritances of this whole resolved version.
+   *
+   * The first element is this version, and the last element is the root Minecraft version.
+   * The dependencies of `[a, b, c]` should be `a -> b -> c`, where c is a Minecraft version.
+   */
   inheritances: string[]
 
   /**
-     * All array of json file paths.
-     *
-     * It's the chain of inherits json path. The root json will be the last element of the array.
-     * The first element is the user provided version.
-     */
+   * All array of json file paths.
+   *
+   * It's the chain of inherits json path. The root json will be the last element of the array.
+   * The first element is the user provided version.
+   */
   pathChain: string[]
 }
 
@@ -95,20 +95,20 @@ export interface LibraryInfo {
   readonly version: string
   readonly isSnapshot: boolean
   /**
-     * The file extension. Default is `jar`. Some files in forge are `zip`.
-     */
+   * The file extension. Default is `jar`. Some files in forge are `zip`.
+   */
   readonly type: string
   /**
-     * The classifier. Normally, this is empty. For forge, it can be like `universal`, `installer`.
-     */
+   * The classifier. Normally, this is empty. For forge, it can be like `universal`, `installer`.
+   */
   readonly classifier: string
   /**
-     * The maven path.
-     */
+   * The maven path.
+   */
   readonly path: string
   /**
-     * The original maven name of this library
-     */
+   * The original maven name of this library
+   */
   readonly name: string
 }
 
@@ -130,8 +130,8 @@ export interface MissingVersionJsonError {
 export interface CircularDependenciesError {
   error: 'CircularDependencies'
   /**
-     * The version has circular dependencies
-     */
+   * The version has circular dependencies
+   */
   version: string
 
   chain: string[]
@@ -142,9 +142,9 @@ export type VersionParseError = ((BadVersionJsonError | CorruptedVersionJsonErro
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace LibraryInfo {
   /**
-     * Resolve the library info from the maven path.
-     * @param path The library path. It should look like `net/minecraftforge/forge/1.0/forge-1.0.jar`
-     */
+   * Resolve the library info from the maven path.
+   * @param path The library path. It should look like `net/minecraftforge/forge/1.0/forge-1.0.jar`
+   */
   export function resolveFromPath(path: string): LibraryInfo {
     const parts = path.split('/')
     const file = parts[parts.length - 1]
@@ -184,10 +184,10 @@ export namespace LibraryInfo {
     }
   }
   /**
-     * Get the base info of the library from its name
-     *
-     * @param lib The name of library or the library itself
-     */
+   * Get the base info of the library from its name
+   *
+   * @param lib The name of library or the library itself
+   */
   export function resolve(lib: string | Version.Library | ResolvedLibrary): LibraryInfo {
     const name: string = typeof lib === 'string' ? lib : lib.name
     const [body, type = 'jar'] = name.split('@')
@@ -311,11 +311,11 @@ export namespace Version {
   }
 
   /**
-      * Check if all the rules in `Rule[]` are acceptable in certain OS `platform` and features.
-      * @param rules The rules usually comes from `Library` or `LaunchArgument`
-      * @param platform The platform, leave it absent will use the `currentPlatform`
-      * @param features The features, used by game launch argument `arguments.game`
-      */
+    * Check if all the rules in `Rule[]` are acceptable in certain OS `platform` and features.
+    * @param rules The rules usually comes from `Library` or `LaunchArgument`
+    * @param platform The platform, leave it absent will use the `currentPlatform`
+    * @param features The features, used by game launch argument `arguments.game`
+    */
   export function checkAllowed(rules: Rule[], platform: Platform = getPlatform(), features: string[] = []): boolean {
     // by default it's allowed
     if (!rules || rules.length === 0) { return true }
@@ -347,36 +347,36 @@ export namespace Version {
     return allow
   }
   /**
-     * Recursively parse the version JSON.
-     *
-     * This function requires that the id in version.json is identical to the directory name of that version.
-     *
-     * e.g. .minecraft/<version-a>/<version-a.json> and in <version-a.json>:
-     *```
-     * { "id": "<version-a>", ... }
-     * ```
-     * The function might throw multiple parsing errors. You can handle them with type by this:
-     * ```ts
-     * try {
-     *   await Version.parse(mcPath, version);
-     * } catch (e) {
-     *   let err = e as VersionParseError;
-     *   switch (err.error) {
-     *     case "BadVersionJson": // do things...
-     *     // handle other cases
-     *     default: // this means this is not a VersionParseError, handle error normally.
-     *   }
-     * }
-     * ```
-     *
-     * @param minecraftPath The .minecraft path
-     * @param version The vesion id.
-     * @return The final resolved version detail
-     * @throws {@link CorruptedVersionJsonError}
-     * @throws {@link MissingVersionJsonError}
-     * @throws {@link BadVersionJsonError}
-     * @see {@link VersionParseError}
-     */
+   * Recursively parse the version JSON.
+   *
+   * This function requires that the id in version.json is identical to the directory name of that version.
+   *
+   * e.g. .minecraft/<version-a>/<version-a.json> and in <version-a.json>:
+   *```
+   * { "id": "<version-a>", ... }
+   * ```
+   * The function might throw multiple parsing errors. You can handle them with type by this:
+   * ```ts
+   * try {
+   *   await Version.parse(mcPath, version);
+   * } catch (e) {
+   *   let err = e as VersionParseError;
+   *   switch (err.error) {
+   *     case "BadVersionJson": // do things...
+   *     // handle other cases
+   *     default: // this means this is not a VersionParseError, handle error normally.
+   *   }
+   * }
+   * ```
+   *
+   * @param minecraftPath The .minecraft path
+   * @param version The vesion id.
+   * @return The final resolved version detail
+   * @throws {@link CorruptedVersionJsonError}
+   * @throws {@link MissingVersionJsonError}
+   * @throws {@link BadVersionJsonError}
+   * @see {@link VersionParseError}
+   */
   export async function parse(minecraftPath: MinecraftLocation, version: string, platofrm: Platform = getPlatform()): Promise<ResolvedVersion> {
     const folder = MinecraftFolder.from(minecraftPath)
     // the hierarchy is outer version to dep version
@@ -386,18 +386,18 @@ export namespace Version {
   }
 
   /**
-     * Resolve the given version hierarchy into `ResolvedVersion`.
-     *
-     * Some launcher has non-standard version json format to handle hierarchy,
-     * and if you want to handle them, you can use this function to parse.
-     *
-     * @param minecraftPath The path of the Minecraft folder
-     * @param hierarchy The version hierarchy, which can be produced by `normalizeVersionJson`
-     * @throws {@link BadVersionJsonError}
-     * @see {@link VersionParseError}
-     * @see {@link normalizeVersionJson}
-     * @see {@link parse}
-     */
+   * Resolve the given version hierarchy into `ResolvedVersion`.
+   *
+   * Some launcher has non-standard version json format to handle hierarchy,
+   * and if you want to handle them, you can use this function to parse.
+   *
+   * @param minecraftPath The path of the Minecraft folder
+   * @param hierarchy The version hierarchy, which can be produced by `normalizeVersionJson`
+   * @throws {@link BadVersionJsonError}
+   * @see {@link VersionParseError}
+   * @see {@link normalizeVersionJson}
+   * @see {@link parse}
+   */
   export function resolve(minecraftPath: MinecraftLocation, hierarchy: PartialResolvedVersion[]) {
     const folder = MinecraftFolder.from(minecraftPath)
 
@@ -497,21 +497,21 @@ export namespace Version {
   }
 
   /**
-     * Simply extends the version (actaully mixin)
-     *
-     * The result version will have the union of two version's libs. If one lib in two versions has different version, it will take the extra version one.
-     * It will also mixin the launchArgument if it could.
-     *
-     * This function can be used for mixin forge and liteloader version.
-     *
-     * This function will throw an Error if two version have different assets. It doesn't care about the detail version though.
-     *
-     * @beta
-     * @param id The new version id
-     * @param parent The parent version will be inherited
-     * @param version The version info which will overlap some parent information
-     * @return The raw version json could be save to the version json file
-     */
+   * Simply extends the version (actaully mixin)
+   *
+   * The result version will have the union of two version's libs. If one lib in two versions has different version, it will take the extra version one.
+   * It will also mixin the launchArgument if it could.
+   *
+   * This function can be used for mixin forge and liteloader version.
+   *
+   * This function will throw an Error if two version have different assets. It doesn't care about the detail version though.
+   *
+   * @beta
+   * @param id The new version id
+   * @param parent The parent version will be inherited
+   * @param version The version info which will overlap some parent information
+   * @return The raw version json could be save to the version json file
+   */
   export function inherits(id: string, parent: Version, version: Version): Version {
     const launcherVersion = Math.max(parent.minimumLauncherVersion, version.minimumLauncherVersion)
 
@@ -547,11 +547,11 @@ export namespace Version {
   }
 
   /**
-     * Mixin the string arguments
-     * @beta
-     * @param hi Higher priority argument
-     * @param lo Lower priority argument
-     */
+   * Mixin the string arguments
+   * @beta
+   * @param hi Higher priority argument
+   * @param lo Lower priority argument
+   */
   export function mixinArgumentString(hi: string, lo: string): string {
     const arrA = hi.split(' ')
     const arrB = lo.split(' ')
@@ -584,13 +584,13 @@ export namespace Version {
   }
 
   /**
-     * Resolve the dependencies of a minecraft version
-     * @param path The path of minecraft
-     * @param version The version id
-     * @returns All the version required to run this version, including this version
-     * @throws {@link CorruptedVersionJsonError}
-     * @throws {@link MissingVersionJsonError}
-     */
+   * Resolve the dependencies of a minecraft version
+   * @param path The path of minecraft
+   * @param version The version id
+   * @returns All the version required to run this version, including this version
+   * @throws {@link CorruptedVersionJsonError}
+   * @throws {@link MissingVersionJsonError}
+   */
   export async function resolveDependency(path: MinecraftLocation, version: string, platform: Platform = getPlatform()): Promise<PartialResolvedVersion[]> {
     const folder = MinecraftFolder.from(path)
     const stack: PartialResolvedVersion[] = []
@@ -691,28 +691,28 @@ export namespace Version {
   }
 
   /**
-     * Resolve all these library and filter out os specific libs
-     * @param libs All raw lib
-     * @param platform The platform
-     */
+   * Resolve all these library and filter out os specific libs
+   * @param libs All raw lib
+   * @param platform The platform
+   */
   export function resolveLibraries(libs: Library[], platform: Platform = getPlatform()): ResolvedLibrary[] {
     return libs.map((lib) => resolveLibrary(lib, platform)).filter((l) => l !== undefined) as ResolvedLibrary[]
   }
 
   /**
-     * Normalize a single version json.
-     *
-     * This function will force legacy version format into new format.
-     * It will convert `minecraftArguments` into `arguments.game` and generate a default `arguments.jvm`
-     *
-     * This will pre-process the libraries according to the rules fields and current platform.
-     * Non-matched libraries will be filtered out.
-     *
-     * This will also pre-process the jvm arguments according to the platform (os) info it provided.
-     *
-     * @param versionString The version json string
-     * @param root The root of the version
-     */
+   * Normalize a single version json.
+   *
+   * This function will force legacy version format into new format.
+   * It will convert `minecraftArguments` into `arguments.game` and generate a default `arguments.jvm`
+   *
+   * This will pre-process the libraries according to the rules fields and current platform.
+   * Non-matched libraries will be filtered out.
+   *
+   * This will also pre-process the jvm arguments according to the platform (os) info it provided.
+   *
+   * @param versionString The version json string
+   * @param root The root of the version
+   */
   export function normalizeVersionJson(versionString: string, root: string, platform: Platform = getPlatform()): PartialResolvedVersion {
     function processArguments(ar: Version.LaunchArgument[]) {
       return ar.filter((a) => {
@@ -793,9 +793,9 @@ export namespace Version {
 
 export interface JavaVersion {
   /**
-     * Corresponding with java manifest json.
-     * @example "jre-legacy"
-     */
+   * Corresponding with java manifest json.
+   * @example "jre-legacy"
+   */
   component: string
   majorVersion: number
 }
