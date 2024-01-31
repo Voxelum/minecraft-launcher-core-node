@@ -35,13 +35,13 @@ export interface Status {
      */
   version: {
     /**
-         * The name of the version, might be standard version, like 1.14.4.
-         * Or it can be modified content, just be any string the server hoster like.
-         */
+     * The name of the version, might be standard version, like 1.14.4.
+     * Or it can be modified content, just be any string the server hoster like.
+     */
     name: string
     /**
-         * The protocol version
-         */
+     * The protocol version
+     */
     protocol: number
   }
   /**

@@ -39,6 +39,7 @@ export class Channel extends EventEmitter {
 
   private outbound: Writable
   private inbound: Writable
+  private listened = false
 
   private enableCompression = false
   private compressionThreshold = -1
@@ -65,10 +66,10 @@ export class Channel extends EventEmitter {
   }
 
   /**
-     * Is the connection ready to read and write
-     */
+   * Is the connection ready to read and write
+   */
   get ready() {
-    return this.connection.readable && this.connection.writable
+    return this.connection.readable && this.connection.writable && this.listened
   }
 
   findCoderById(packetId: number, side: Side): Coder<any> {
@@ -117,12 +118,14 @@ export class Channel extends EventEmitter {
     this.connection.on('error', (e) => { this.emit('error', e) })
 
     this.emit('listen')
+    this.listened = true
   }
 
   disconnect() {
-    if (!this.ready) {
+    if (!this.listened || !this.ready) {
       return Promise.resolve()
     }
+    this.listened = false
     return new Promise<void>((resolve, reject) => {
       this.connection.once('close', (err) => {
         if (err) {
@@ -141,8 +144,16 @@ export class Channel extends EventEmitter {
   send<T>(message: T, skeleton?: Partial<T>) {
     if (!this.connection.writable) { throw new Error("Cannot write if the connection isn't writable!") }
     if (skeleton) { Object.assign((message as any), skeleton) }
-    this.outbound.write(message)
-    this.emit('send', message)
+    return new Promise<void>((resolve, reject) => {
+      this.outbound.write(message, (err) => {
+        if (err) {
+          reject(err)
+        } else {
+          this.emit('send', message)
+          resolve()
+        }
+      })
+    })
   }
 
   /**
