@@ -726,7 +726,7 @@ export namespace Version {
     }
     const parsed: Version = JSON.parse(versionString)
     // if we legacy version json don't have argument, but have minecraftArugments
-    const legacyVersionJson = !parsed.arguments
+    const legacyVersionJson = !parsed.arguments && !!parsed.minecraftArguments
     const libraries = Version.resolveLibraries(parsed.libraries || [], platform)
     const args = {
       jvm: [] as Version.LaunchArgument[],
