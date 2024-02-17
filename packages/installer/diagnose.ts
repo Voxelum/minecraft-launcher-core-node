@@ -30,7 +30,7 @@ export interface InstallProfileIssueReport {
  * @param installProfile The install profile.
  * @param minecraftLocation The minecraft location
  */
-export async function diagnoseInstall(installProfile: InstallProfile, minecraftLocation: MinecraftLocation) {
+export async function diagnoseInstall(installProfile: InstallProfile, minecraftLocation: MinecraftLocation, side: 'client' | 'server' = 'client'): Promise<InstallProfileIssueReport> {
   const mc = MinecraftFolder.from(minecraftLocation)
   const report: InstallProfileIssueReport = {
     minecraftLocation: mc,
@@ -38,7 +38,7 @@ export async function diagnoseInstall(installProfile: InstallProfile, minecraftL
     issues: [],
   }
   const issues = report.issues
-  const processors: PostProcessor[] = resolveProcessors('client', installProfile, mc)
+  const processors: PostProcessor[] = resolveProcessors(side, installProfile, mc)
   await Promise.all(Version.resolveLibraries(installProfile.libraries).map(async (lib) => {
     const libPath = mc.getLibraryByPath(lib.download.path)
     const issue = await diagnoseFile({

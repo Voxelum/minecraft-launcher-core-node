@@ -83,28 +83,28 @@ export interface ForgeInstallerEntries {
      */
   versionJson?: Entry
   /**
-     * forge-${forgeVersion}-universal.jar
-     */
+   * forge-${forgeVersion}-universal.jar
+   */
   legacyUniversalJar?: Entry
   /**
-     * data/run.sh
-     */
+   * data/run.sh
+   */
   runSh?: Entry
   /**
-     * data/run.bat
-     */
+   * data/run.bat
+   */
   runBat?: Entry
   /**
      * data/unix_args.txt
      */
   unixArgs?: Entry
   /**
-     * data/user_jvm_args.txt
-     */
+   * data/user_jvm_args.txt
+   */
   userJvmArgs?: Entry
   /**
-     * data/win_args.txt
-     */
+   * data/win_args.txt
+   */
   winArgs?: Entry
 }
 
@@ -140,6 +140,7 @@ export const DEFAULT_FORGE_MAVEN = 'http://files.minecraftforge.net/maven'
  * The options to install forge.
  */
 export interface InstallForgeOptions extends LibraryOptions, InstallOptionsBase, InstallProfileOption {
+  side?: 'client' | 'server'
 }
 
 export class DownloadForgeInstallerTask extends DownloadTask {

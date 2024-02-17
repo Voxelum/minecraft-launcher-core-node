@@ -6,7 +6,7 @@ import { readFile } from 'fs/promises'
 import { delimiter, dirname } from 'path'
 import { ZipFile } from 'yauzl'
 import { InstallLibraryTask, InstallSideOption, LibraryOptions } from './minecraft'
-import { checksum, errorToString, SpawnJavaOptions, waitProcess } from './utils'
+import { checksum, errorToString, missing, SpawnJavaOptions, waitProcess } from './utils'
 
 export interface PostProcessor {
   /**
@@ -82,13 +82,17 @@ export function resolveProcessors(side: 'client' | 'server', installProfile: Ins
     }
     return val
   }
-  function normalizeVariable(val: string) {
-    if (val && val.match(/^{.+}$/g)) { // match sth like {MAPPINGS}
-      const key = val.substring(1, val.length - 1)
-      return variables[key][side]
-    }
-    return val
+
+  const normalizeVariable = (val: string) => {
+    if (!val) return val
+    // replace "{A}/{B}, which the value of A and B are from varaiables
+    // for example, variables = { A: "a", B: "b" }
+    // "{A}/{B}" => "a/b"
+    // The key variable name can be any alphabet characters and number other special characters
+    // Another example, "{A}" => "a"
+    return val.replace(/{([A-Za-z0-9_-]+)}/g, (_, key) => variables[key]?.[side] ?? '')
   }
+
   // store the mapping of {VARIABLE_NAME} -> real path in disk
   const variables: Record<string, { client: string; server: string }> = {
     SIDE: {
@@ -99,6 +103,18 @@ export function resolveProcessors(side: 'client' | 'server', installProfile: Ins
       client: minecraft.getVersionJar(installProfile.minecraft),
       server: minecraft.getVersionJar(installProfile.minecraft, 'server'),
     },
+    ROOT: {
+      client: minecraft.root,
+      server: minecraft.root,
+    },
+    MINECRAFT_VERSION: {
+      client: installProfile.minecraft,
+      server: installProfile.minecraft,
+    },
+    LIBRARY_DIR: {
+      client: minecraft.libraries,
+      server: minecraft.libraries,
+    },
   }
   if (installProfile.data) {
     for (const key in installProfile.data) {
@@ -107,12 +123,6 @@ export function resolveProcessors(side: 'client' | 'server', installProfile: Ins
         client: normalizePath(client),
         server: normalizePath(server),
       }
-    }
-  }
-  if (variables.INSTALLER) {
-    variables.ROOT = {
-      client: dirname(variables.INSTALLER.client),
-      server: dirname(variables.INSTALLER.server),
     }
   }
 
@@ -269,6 +279,9 @@ export class PostProcessingTask extends AbortableTask<void> {
 
   protected async isInvalid(outputs: Required<PostProcessor>['outputs']) {
     for (const [file, expect] of Object.entries(outputs)) {
+      if (!expect) {
+        return missing(file)
+      }
       const sha1 = await checksum(file, 'sha1').catch((e) => '')
       if (!sha1) return true // if file not exist, the file is not generated
       if (!expect) return false // if expect is empty, we just need file exists
