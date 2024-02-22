@@ -35,7 +35,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "undici": "6.0.1"
+    "undici": "5.28.3"
   },
   "bugs": {
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node/issues"
