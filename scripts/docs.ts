@@ -2,7 +2,6 @@ import { existsSync } from 'fs'
 import { link, mkdir, readFile, readdir, writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
 import { Application, Comment, ContainerReflection, DeclarationReflection, ParameterReflection, ReflectionKind, SourceReference, TSConfigReader, TypeDocReader } from 'typedoc'
-import { DefaultTheme } from 'vitepress'
 
 const renderLink = (fileName: string, line: number) => `<a href="https://github.com/voxelum/minecraft-launcher-core-node/blob/master/${fileName}#L${line}" target="_blank" rel="noreferrer">${fileName}:${line}</a>`
 const renderSourceReferences = (locations: SourceReference[]) =>
@@ -61,12 +60,14 @@ async function generateDocs() {
 
   if (!project) throw new Error('Cannot convert project!')
 
+  interface SidebarItem { text: string; link: string }
+
   /**
    * File path to readme text dict
    */
   const outputs: Record<string, string> = {}
 
-  const sidebar: DefaultTheme.SidebarItem[] = []
+  const sidebar: SidebarItem[] = []
 
   const renderComment = (c: Comment) => {
     let markdown = ''
@@ -323,7 +324,7 @@ async function generateDocs() {
       const sidebarItem = {
         text: '📦 ' + refl.name,
         link: simpleName,
-        items: [] as DefaultTheme.SidebarItem[],
+        items: [] as SidebarItem[],
         collapsed: true as boolean | undefined,
       }
 

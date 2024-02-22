@@ -3,8 +3,6 @@
     "version": "7.5.0",
     "scripts": {
         "build:docs": "tsx scripts/docs.ts",
-        "preview:docs": "vitepress preview docs",
-        "dev:docs": "vitepress dev docs",
         "lint": "eslint packages --ext .ts",
         "lint:fix": "eslint packages --ext .ts --fix",
         "test": "vitest",
@@ -13,7 +11,6 @@
     "packageManager": "pnpm@8.2.0",
     "devDependencies": {
         "tsx": "^3.12.6",
-        "vitepress": "^1.0.0-beta.2",
         "typedoc": "^0.24.8",
         "typescript": "^5.0.3",
         "@vitest/coverage-c8": "^0.30.1",
