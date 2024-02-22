@@ -149,8 +149,8 @@ importers:
   packages/curseforge:
     dependencies:
       undici:
-        specifier: 6.0.1
-        version: 6.0.1
+        specifier: 6.6.1
+        version: 6.6.1
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -165,8 +165,8 @@ importers:
         specifier: ^0.37.39
         version: 0.37.39
       undici:
-        specifier: 6.0.1
-        version: 6.0.1
+        specifier: 6.6.1
+        version: 6.6.1
     devDependencies:
       '@types/node':
         specifier: ~18
@@ -223,8 +223,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       undici:
-        specifier: 6.0.1
-        version: 6.0.1
+        specifier: 6.6.1
+        version: 6.6.1
     devDependencies:
       '@types/node':
         specifier: ~18.15.11
@@ -331,8 +331,8 @@ importers:
         specifier: workspace:^*
         version: link:../unzip
       undici:
-        specifier: 6.0.1
-        version: 6.0.1
+        specifier: 6.6.1
+        version: 6.6.1
       yauzl:
         specifier: ^2.10.0
         version: 2.10.0
@@ -421,8 +421,8 @@ importers:
   packages/modrinth:
     dependencies:
       undici:
-        specifier: 6.0.1
-        version: 6.0.1
+        specifier: 6.6.1
+        version: 6.6.1
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -440,8 +440,8 @@ importers:
         specifier: ^4.3.2
         version: 4.3.2
       undici:
-        specifier: 6.0.1
-        version: 6.0.1
+        specifier: 6.6.1
+        version: 6.6.1
     devDependencies:
       '@types/node':
         specifier: ^18.15.11
@@ -589,8 +589,8 @@ importers:
   packages/user:
     dependencies:
       undici:
-        specifier: 6.0.1
-        version: 6.0.1
+        specifier: 6.6.1
+        version: 6.6.1
       uuid:
         specifier: ^9.0.0
         version: 9.0.0
@@ -3698,8 +3698,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: false
 
-  /undici@6.0.1:
-    resolution: {integrity: sha512-eZFYQLeS9BiXpsU0cuFhCwfeda2MnC48EVmmOz/eCjsTgmyTdaHdVsPSC/kwC2GtW2e0uH0HIPbadf3/bRWSxw==}
+  /undici@6.6.1:
+    resolution: {integrity: sha512-J0GaEp0ztu/grIE2Uq57AbK6TRb+bWbOlxu0POCzhFKA6LKbwSAev+hDQaQcgUUA9CPs8Ky+cauzTHnQrtAQEA==}
     engines: {node: '>=18.0'}
     dependencies:
       '@fastify/busboy': 2.1.0
