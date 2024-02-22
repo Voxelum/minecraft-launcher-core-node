@@ -1,6 +1,6 @@
 {
     "private": true,
-    "version": "7.5.0",
+    "version": "7.6.0",
     "scripts": {
         "build:docs": "tsx scripts/docs.ts",
         "lint": "eslint packages --ext .ts",

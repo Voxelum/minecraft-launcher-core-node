@@ -1,5 +1,38 @@
 # Changelog
 
+## 7.6.0
+### @xmcl/core@2.13.0
+#### Features
+
+- feat: Support diagnose server jar ([11c4d4572026b419cd22e6f7032a93f47801218a](https://github.com/voxelum/minecraft-launcher-core-node/commit/11c4d4572026b419cd22e6f7032a93f47801218a))
+#### Bug Fixes
+
+- fix: Should not replace the arugments if no minecraftArguments provided ([ddcfe62a0d194d518eb812170688e2c37def09c0](https://github.com/voxelum/minecraft-launcher-core-node/commit/ddcfe62a0d194d518eb812170688e2c37def09c0))
+- fix: Support 1.4.7 forge installation ([4fc4eb76d41da5122db6f748dbdd4cb9d8732544](https://github.com/voxelum/minecraft-launcher-core-node/commit/4fc4eb76d41da5122db6f748dbdd4cb9d8732544))
+### @xmcl/file-transfer@1.0.6
+#### Bug Fixes
+
+- fix: Should correctly handle range download n+1 issue ([333b7183fbfe65c19a050ed1739f7f8de1f3a1c7](https://github.com/voxelum/minecraft-launcher-core-node/commit/333b7183fbfe65c19a050ed1739f7f8de1f3a1c7))
+### @xmcl/user@4.2.0
+#### Features
+
+- feat: Support commom offline player algorithm ([53255fad6c6d1e1511616e6c8ba2cc849d73dfc6](https://github.com/voxelum/minecraft-launcher-core-node/commit/53255fad6c6d1e1511616e6c8ba2cc849d73dfc6))
+### user-offline-uuid@0.1.0
+#### Features
+
+- feat: Support commom offline player algorithm ([53255fad6c6d1e1511616e6c8ba2cc849d73dfc6](https://github.com/voxelum/minecraft-launcher-core-node/commit/53255fad6c6d1e1511616e6c8ba2cc849d73dfc6))
+### @xmcl/installer@5.4.0
+#### Features
+
+- feat: Support side for forge install & diagnose ([6f6ea268bce06a75906310e5ae9bc6a04b6a0a61](https://github.com/voxelum/minecraft-launcher-core-node/commit/6f6ea268bce06a75906310e5ae9bc6a04b6a0a61))
+#### Bug Fixes
+
+- fix: forge profile installation post processing failed ([eeed4a2cbd55f8b290e11a4340d6ce29b58273f4](https://github.com/voxelum/minecraft-launcher-core-node/commit/eeed4a2cbd55f8b290e11a4340d6ce29b58273f4))
+- fix: Support 1.4.7 forge installation ([4fc4eb76d41da5122db6f748dbdd4cb9d8732544](https://github.com/voxelum/minecraft-launcher-core-node/commit/4fc4eb76d41da5122db6f748dbdd4cb9d8732544))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/file-transfer bump **patch**
+
+
 ## 7.5.0
 ### @xmcl/nbt@3.0.2
 #### Bug Fixes
