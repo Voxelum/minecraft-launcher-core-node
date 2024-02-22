@@ -49,4 +49,4 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_PAT }}
         repo: Voxelum/xmcl-page
-        workflow: deploy-docs.yaml
+        workflow: deploy.yaml
