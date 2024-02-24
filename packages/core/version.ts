@@ -332,6 +332,10 @@ export namespace Version {
         if (platform.name === osRule.name &&
           (!osRule.version || platform.version.match(osRule.version))) {
           apply = true
+          if (osRule.arch) {
+            const ruleArch = osRule.arch === 'x86' ? 'ia32' : osRule.arch
+            apply = ruleArch === platform.arch
+          }
         }
       }
       if (apply) {
@@ -673,10 +677,6 @@ export namespace Version {
         lib.downloads.artifact.url = info.groupId === 'net.minecraftforge'
           ? 'https://files.minecraftforge.net/maven/' + lib.downloads.artifact.path
           : 'https://libraries.minecraft.net/' + lib.downloads.artifact.path
-      }
-      if (info.classifier.startsWith('natives')) {
-        // new native format introduced by 1.19
-        return new ResolvedLibrary(info.name, info, lib.downloads.artifact, true)
       }
       return new ResolvedLibrary(lib.name, info, lib.downloads.artifact)
     }
