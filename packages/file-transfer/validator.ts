@@ -39,7 +39,7 @@ export function resolveValidator(options?: ChecksumValidatorOptions | Validator)
   if (options) {
     return new ChecksumValidator({ hash: options.hash, algorithm: options.algorithm })
   }
-  return { validate() { return Promise.resolve() } }
+  return { validate() { return Promise.reject(new Error()) } }
 }
 
 export interface ChecksumValidatorOptions {

@@ -5,7 +5,7 @@ import { URL } from 'url'
  */
 export interface ProgressController {
   readonly progress: number
-  onProgress(url: URL, chunkSize: number, progress: number, total: number): void
+  onProgress(url: URL, chunkSize: number, written: number, total: number): void
 }
 
 export function createProgressController(onProgress?: ProgressController['onProgress']): ProgressController {

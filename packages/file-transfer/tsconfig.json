@@ -6,6 +6,7 @@
         "error.ts",
         "index.ts",
         "metadata.ts",
+        "download.ts",
         "retry.ts",
         "range.ts",
         "rangePolicy.ts",
