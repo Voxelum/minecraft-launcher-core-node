@@ -5,7 +5,7 @@ import { EventEmitter } from 'events'
 import { createWriteStream, existsSync } from 'fs'
 import { link, mkdir, readFile, writeFile } from 'fs/promises'
 import { EOL } from 'os'
-import { delimiter, dirname, isAbsolute, join, resolve } from 'path'
+import { basename, delimiter, dirname, isAbsolute, join, resolve } from 'path'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
 import { MinecraftFolder } from './folder'
@@ -301,7 +301,7 @@ export namespace LaunchPrecheck {
     await mkdir(native, { recursive: true }).catch((e) => {
       if (e.code !== 'EEXIST') { throw e }
     })
-    const natives = version.libraries.filter((lib) => lib.isNative)
+    const natives = version.libraries.filter((lib) => lib.isNative || lib.classifier.startsWith('natives'))
     const checksumFile = join(native, '.json')
     const includedLibs = natives.map((n) => n.name).sort()
 
@@ -324,25 +324,36 @@ export namespace LaunchPrecheck {
       if (!n) { return }
       const excluded: string[] = n.extractExclude || []
 
+      const platform = option.platform || getPlatform()
       const containsExcludes = (p: string) => excluded.filter((s) => p.startsWith(s)).length === 0
       const notInMetaInf = (p: string) => p.indexOf('META-INF/') === -1
       const notSha1AndNotGit = (p: string) => !(p.endsWith('.sha1') || p.endsWith('.git'))
+      const isSatisfyPlaform = (p: string) => {
+        if (p.indexOf('/') === -1) { return true }
+        const [os, arch] = p.split('/')
+        const platformArch = arch === 'ia32' ? 'x86' : arch
+        return os === platform.name && platformArch === platform.arch
+      }
 
       const from = resource.getLibraryByPath(n.download.path)
       const promises: Promise<void>[] = []
       const zip = await open(from, { lazyEntries: true, autoClose: false })
       for await (const entry of walkEntriesGenerator(zip)) {
-        if (containsExcludes(entry.fileName) && notInMetaInf(entry.fileName) && notSha1AndNotGit(entry.fileName)) {
-          if (entry.fileName.endsWith('/')) {
-            continue
-          }
-          const dest = join(native, entry.fileName)
-          if (entry.fileName.indexOf('/') !== -1) {
+        if (
+          containsExcludes(entry.fileName) &&
+          notInMetaInf(entry.fileName) &&
+          notSha1AndNotGit(entry.fileName) &&
+          !entry.fileName.endsWith('/') &&
+          isSatisfyPlaform(entry.fileName)
+        ) {
+          const fileName = basename(entry.fileName)
+          const dest = join(native, fileName)
+          if (fileName.indexOf('/') !== -1) {
             await mkdir(dirname(dest), {
               recursive: true,
             }).catch((e) => {})
           }
-          extractedNatives.push({ file: entry.fileName, name: n.name, sha1: '' })
+          extractedNatives.push({ file: fileName, name: n.name, sha1: '' })
           promises.push(promisify(pipeline)(await openEntryReadStream(zip, entry), createWriteStream(dest)))
         }
       }
@@ -669,6 +680,8 @@ export async function generateArguments(options: LaunchOption) {
       cmd.push(`-Dauthlibinjector.yggdrasil.prefetched=${options.yggdrasilAgent.prefetched}`)
     }
   }
+
+  cmd.push('-DlibraryDirectory=' + mc.getPath('libraries'))
 
   const jvmOptions = {
     natives_directory: nativeRoot,
