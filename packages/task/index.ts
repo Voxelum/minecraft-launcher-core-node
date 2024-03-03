@@ -266,7 +266,7 @@ export abstract class AbortableTask<T> extends BaseTask<T> {
         const result = await this.process()
         return result
       } catch (e) {
-        if (this._state === TaskState.Paused && this.isAbortedError(e)) {
+        if (this.isAbortedError(e)) {
           // notify pauseTask method
           this._onAborted()
           continue
@@ -325,7 +325,22 @@ export abstract class TaskGroup<T> extends BaseTask<T> {
       const result = await Promise.all(promises)
       // if not throwErrorImmediately, we still need to check if other task failed
       if (errors.length > 0) {
-        throw new AggregateError(errors, getErrorMessage?.(errors))
+        if (errors.length === 1) {
+          throw errors[0]
+        }
+        const flatten = [] as Error[]
+        const flatError = (e: any) => {
+          if (e instanceof AggregateError) {
+            for (const err of e.errors) {
+              flatError(err)
+            }
+          }
+          flatten.push(e)
+        }
+        for (const e of errors) {
+          flatError(e)
+        }
+        throw new AggregateError(flatten, getErrorMessage?.(errors))
       }
       return result
     } catch (e) {
