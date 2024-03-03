@@ -1,5 +1,6 @@
-import { AbortSignal, download, DownloadAbortError, DownloadOptions, ProgressController } from '@xmcl/file-transfer'
+import { AbortSignal, download, DownloadOptions, ProgressController } from '@xmcl/file-transfer'
 import { AbortableTask } from '@xmcl/task'
+import { errors } from 'undici'
 
 export class DownloadTask extends AbortableTask<void> implements ProgressController {
   protected abort: (isCancelled: boolean) => void = () => { }
@@ -45,7 +46,7 @@ export class DownloadTask extends AbortableTask<void> implements ProgressControl
   }
 
   protected isAbortedError(e: any): boolean {
-    if (e instanceof DownloadAbortError) {
+    if (e instanceof errors.RequestAbortedError || e.code === 'UND_ERR_ABORTED') {
       return true
     }
     return false
