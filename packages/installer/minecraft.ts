@@ -321,7 +321,9 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
           hash: file.sha1,
         },
         destination: folder.getLogConfig(file.id),
-        agent: options.agent,
+        dispatcher: options.dispatcher,
+        rangePolicy: options.rangePolicy,
+        checkpointHandler: options.checkpointHandler,
         headers: options.headers,
       }).setName('asset', { name: file.id, hash: file.sha1, size: file.size }))
     }
@@ -345,7 +347,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
       const urls = resolveDownloadUrls(version.assetIndex!.url, version, options.assetsIndexUrl)
       for (const url of urls) {
         try {
-          const response = await request(url, { dispatcher: options.agent?.dispatcher })
+          const response = await request(url, { dispatcher: options?.dispatcher })
           const json = await response.body.json() as any
           await writeFile(jsonPath, JSON.stringify(json))
           return json
@@ -429,7 +431,9 @@ export class InstallJsonTask extends DownloadTask {
     super({
       url: urls,
       headers: options.headers,
-      agent: options.agent,
+      dispatcher: options.dispatcher,
+      rangePolicy: options.rangePolicy,
+      checkpointHandler: options.checkpointHandler,
       validator: expectSha1 ? options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 } : new JsonValidator(),
       destination,
       skipPrevalidate: options.skipPrevalidate,
@@ -459,7 +463,9 @@ export class InstallJarTask extends DownloadTask {
       validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
       destination,
       headers: options.headers,
-      agent: options.agent,
+      dispatcher: options.dispatcher,
+      rangePolicy: options.rangePolicy,
+      checkpointHandler: options.checkpointHandler,
       skipPrevalidate: options.skipPrevalidate,
       skipRevalidate: options.skipRevalidate,
     })
@@ -480,7 +486,9 @@ export class InstallAssetIndexTask extends DownloadTask {
       destination: jsonPath,
       validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
       headers: options.headers,
-      agent: options.agent,
+      dispatcher: options.dispatcher,
+      rangePolicy: options.rangePolicy,
+      checkpointHandler: options.checkpointHandler,
       skipPrevalidate: options.skipPrevalidate,
       skipRevalidate: options.skipRevalidate,
     })
@@ -504,9 +512,12 @@ export class InstallLibraryTask extends DownloadTask {
         : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
       destination,
       headers: options.headers,
-      agent: options.agent,
+      dispatcher: options.dispatcher,
+      rangePolicy: options.rangePolicy,
+      checkpointHandler: options.checkpointHandler,
       skipPrevalidate: options.skipPrevalidate,
       skipRevalidate: options.skipRevalidate,
+      skipHead: lib.download.size < 2 * 1024 * 1024,
     })
 
     this.name = 'library'
@@ -543,9 +554,12 @@ export class InstallAssetTask extends DownloadTask {
         }
         : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
       headers: options.headers,
-      agent: options.agent,
+      dispatcher: options.dispatcher,
+      rangePolicy: options.rangePolicy,
+      checkpointHandler: options.checkpointHandler,
       skipPrevalidate: options.skipPrevalidate,
       skipRevalidate: options.skipRevalidate,
+      skipHead: asset.size < 2 * 1024 * 1024,
     })
 
     this._total = size
