@@ -681,8 +681,6 @@ export async function generateArguments(options: LaunchOption) {
     }
   }
 
-  cmd.push('-DlibraryDirectory=' + mc.getPath('libraries'))
-
   const jvmOptions = {
     natives_directory: nativeRoot,
     launcher_name: launcherName,
@@ -710,6 +708,10 @@ export async function generateArguments(options: LaunchOption) {
   }
 
   cmd.push(...jvmArguments.map((arg) => format(arg, jvmOptions)))
+
+  if (!cmd.some(v => v.startsWith('-DlibraryDirectory'))) {
+    cmd.push('-DlibraryDirectory=' + mc.getPath('libraries'))
+  }
 
   // add extra jvm args
   if (options.extraJVMArgs instanceof Array) {
