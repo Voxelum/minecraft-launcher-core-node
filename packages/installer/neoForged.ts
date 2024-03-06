@@ -1,4 +1,6 @@
 import { MinecraftFolder, MinecraftLocation, Version as VersionJson } from '@xmcl/core'
+import { getDownloadBaseOptions } from '@xmcl/file-transfer'
+import { Task, task } from '@xmcl/task'
 import { open, readEntry } from '@xmcl/unzip'
 import { DownloadTask } from './downloadTask'
 import { BadForgeInstallerJarError, InstallForgeOptions, isForgeInstallerEntries, unpackForgeInstaller, walkForgeInstallerEntries } from './forge'
@@ -6,7 +8,6 @@ import { resolveLibraryDownloadUrls } from './minecraft'
 import { InstallProfile, installByProfileTask } from './profile'
 import { normalizeArray } from './utils'
 import { ZipValidator } from './zipValdiator'
-import { Task, task } from '@xmcl/task'
 
 export class DownloadNeoForgedInstallerTask extends DownloadTask {
   readonly installJarPath: string
@@ -35,9 +36,7 @@ export class DownloadNeoForgedInstallerTask extends DownloadTask {
       url: urls,
       destination: installJarPath,
       validator: new ZipValidator(),
-      agent: options.agent,
-      skipPrevalidate: options.skipPrevalidate,
-      skipRevalidate: options.skipRevalidate,
+      ...getDownloadBaseOptions(options),
     })
 
     this.installJarPath = installJarPath

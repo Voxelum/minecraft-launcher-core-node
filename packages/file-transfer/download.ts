@@ -12,6 +12,19 @@ import { ProgressController, resolveProgressController } from './progress'
 import { DefaultRangePolicy, Range, RangePolicy } from './rangePolicy'
 import { ChecksumValidatorOptions, Validator, resolveValidator } from './validator'
 
+export function getDownloadBaseOptions<T extends DownloadBaseOptions>(options?: T): DownloadBaseOptions {
+  if (!options) return {}
+  return {
+    headers: options.headers,
+    rangePolicy: options.rangePolicy,
+    dispatcher: options.dispatcher,
+    checkpointHandler: options.checkpointHandler,
+    skipHead: options.skipHead,
+    skipRevalidate: options.skipRevalidate,
+    skipPrevalidate: options.skipPrevalidate,
+  }
+}
+
 export interface DownloadBaseOptions {
   /**
    * The header of the request

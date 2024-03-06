@@ -1,5 +1,5 @@
 import { getPlatform, Platform } from '@xmcl/core'
-import { ChecksumValidatorOptions, DownloadBaseOptions, DownloadOptions, Validator } from '@xmcl/file-transfer'
+import { ChecksumValidatorOptions, DownloadBaseOptions, DownloadOptions, getDownloadBaseOptions, Validator } from '@xmcl/file-transfer'
 import { Task, task } from '@xmcl/task'
 import { link } from 'fs/promises'
 import { dirname, join } from 'path'
@@ -301,8 +301,7 @@ export function installJavaRuntimeTask(options: InstallJavaRuntimeOptions): Task
           url: urls,
           validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
           destination: dest,
-          agent: options.agent,
-          headers: options.headers,
+          ...getDownloadBaseOptions(options),
         }
         return isLzma && decompressFunction
           ? new DownloadAndDecompressTask(downloadOptions).setName('download')

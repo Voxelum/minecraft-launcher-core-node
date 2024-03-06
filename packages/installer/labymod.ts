@@ -1,6 +1,6 @@
-import { MinecraftFolder, MinecraftLocation, LibraryInfo } from '@xmcl/core'
-import { DownloadBaseOptions } from '@xmcl/file-transfer'
-import { Task, task, AbortableTask, CancelledError } from '@xmcl/task'
+import { LibraryInfo, MinecraftFolder, MinecraftLocation } from '@xmcl/core'
+import { DownloadBaseOptions, getDownloadBaseOptions } from '@xmcl/file-transfer'
+import { AbortableTask, CancelledError, Task, task } from '@xmcl/task'
 import { writeFile } from 'fs/promises'
 import { dirname } from 'path'
 import { Dispatcher, request } from 'undici'
@@ -134,8 +134,7 @@ export function installLabyMod4Task(manifest: LabyModManifest, tag: string, mine
         url,
         destination,
         validator: { algorithm: 'sha1', hash },
-        agent: options?.agent,
-        headers: options?.headers,
+        ...getDownloadBaseOptions(options),
       }).setName('asset', { name }))
     }
 
