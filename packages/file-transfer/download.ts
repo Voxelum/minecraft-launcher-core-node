@@ -1,5 +1,6 @@
-import { createWriteStream } from 'fs'
-import { mkdir, rename, unlink } from 'fs/promises'
+import { createWriteStream, rename as srename, unlink as sunlink, stat as sstat } from 'fs'
+import { promisify } from 'util'
+import { mkdir } from 'fs/promises'
 import { dirname } from 'path'
 import { PassThrough, Writable } from 'stream'
 import { Agent, Dispatcher, errors, stream } from 'undici'
@@ -11,6 +12,10 @@ import { CheckpointHandler } from './checkpoint'
 import { ProgressController, resolveProgressController } from './progress'
 import { DefaultRangePolicy, Range, RangePolicy } from './rangePolicy'
 import { ChecksumValidatorOptions, Validator, resolveValidator } from './validator'
+
+const rename = promisify(srename)
+const unlink = promisify(sunlink)
+const stat = promisify(sstat)
 
 export function getDownloadBaseOptions<T extends DownloadBaseOptions>(options?: T): DownloadBaseOptions {
   if (!options) return {}
@@ -210,6 +215,7 @@ export async function download(options: DownloadOptions) {
   const abortSignal = options.abortSignal
   const pendingFile = options.pendingFile
   const skipPrevalidate = options.skipPrevalidate
+  const skipRevalidate = options.skipRevalidate
   const rangePolicy = options?.rangePolicy ?? new DefaultRangePolicy(2 * 1024 * 1024, 4)
   const dispatcher = options?.dispatcher ?? new Agent(getDefaultAgentOptions())
 
@@ -242,6 +248,7 @@ export async function download(options: DownloadOptions) {
       url,
       headers,
       destination,
+      pendingFile,
     })
     const metadataOrMetadata = !options.skipHead
       ? await head(url, headers, dispatcher, abortSignal).catch((e) => {
@@ -258,8 +265,9 @@ export async function download(options: DownloadOptions) {
     const redirectedUrl = getUrl(metadata, url)
     const writtens = ranges.map(() => 0)
     const totals = ranges.map(() => 0)
+    const output = pendingFile || destination
     const results = await Promise.all(ranges.map(
-      (range, index) => get(redirectedUrl, destination, headers, range, dispatcher, (url, chunk, written, partLength, totalLength) => {
+      (range, index) => get(redirectedUrl, output, headers, range, dispatcher, (url, chunk, written, partLength, totalLength) => {
         writtens[index] = written
         totals[index] = partLength
         const writtenTotal = writtens.reduce((a, b) => a + b, 0)
@@ -276,17 +284,29 @@ export async function download(options: DownloadOptions) {
       aggregate.push(decorate(e, 'get'))
     }
 
-    if (noErrors) {
-      if (pendingFile) {
-        await unlink(destination).catch(() => undefined)
-        try {
-          await rename(pendingFile, destination)
-        } catch (e) {
-          throw decorate(e, 'rename')
-        }
+    if (!skipRevalidate) {
+      const error = await validator.validate(output, urls[0]).catch((e) => e)
+      if (error) {
+        noErrors = false
+        aggregate.push(decorate(error, 'validate'))
       }
-      return
     }
+
+    // if we have any errors, we will continue to next url
+    if (!noErrors) continue
+
+    // if we are not download to a pending file, we are good
+    if (!pendingFile) return
+
+    await unlink(destination).catch(() => undefined)
+    const fStat = await stat(pendingFile).catch(() => undefined)
+    const err = await rename(pendingFile, destination).catch(e => decorate(e, 'rename'))
+    if (err && fStat?.ino !== (await stat(destination).catch(() => undefined))?.ino) {
+      err.stack = new Error().stack
+      throw err
+    }
+
+    return
   }
 
   if (aggregate.length > 1) {
