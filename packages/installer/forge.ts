@@ -1,4 +1,5 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from '@xmcl/core'
+import { getDownloadBaseOptions } from '@xmcl/file-transfer'
 import { parse as parseForge } from '@xmcl/forge-site-parser'
 import { Task, task } from '@xmcl/task'
 import { filterEntries, open, openEntryReadStream, readAllEntries, readEntry } from '@xmcl/unzip'
@@ -193,9 +194,7 @@ export class DownloadForgeInstallerTask extends DownloadTask {
       validator: installer?.sha1
         ? options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: installer?.sha1 }) || { algorithm: 'sha1', hash: installer?.sha1 }
         : new ZipValidator(),
-      agent: options.agent,
-      skipPrevalidate: options.skipPrevalidate,
-      skipRevalidate: options.skipRevalidate,
+      ...getDownloadBaseOptions(options),
     })
 
     this.installJarPath = installJarPath

@@ -1,4 +1,5 @@
 import { getPlatform, Platform } from '@xmcl/core'
+import { DownloadBaseOptions, getDownloadBaseOptions } from '@xmcl/file-transfer'
 import { Task, task } from '@xmcl/task'
 import { exec } from 'child_process'
 import { unlink } from 'fs/promises'
@@ -6,7 +7,6 @@ import { arch, EOL, platform, tmpdir } from 'os'
 import { basename, join, resolve } from 'path'
 import { Dispatcher, request } from 'undici'
 import { DownloadTask } from './downloadTask'
-import { DownloadBaseOptions } from '@xmcl/file-transfer'
 import { ensureDir, missing } from './utils'
 
 export interface JavaInfo {
@@ -66,8 +66,7 @@ export class DownloadJRETask extends DownloadTask {
         algorithm: 'sha1',
         hash: sha1,
       },
-      agent: options.agent,
-      headers: options.headers,
+      ...getDownloadBaseOptions(options),
     })
 
     this.name = 'downloadJre'
