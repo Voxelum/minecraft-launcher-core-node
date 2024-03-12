@@ -1,8 +1,8 @@
-import { createWriteStream, rename as srename, unlink as sunlink, stat as sstat } from 'fs'
+import { createWriteStream, rename as srename, unlink as sunlink, stat as sstat, open as sopen, close as sclose } from 'fs'
 import { promisify } from 'util'
 import { mkdir } from 'fs/promises'
 import { dirname } from 'path'
-import { PassThrough, Writable } from 'stream'
+import { PassThrough, Transform, Writable, finished as sfinished } from 'stream'
 import { Agent, Dispatcher, errors, stream } from 'undici'
 // @ts-ignore
 import { parseRangeHeader } from 'undici/lib/core/util'
@@ -16,6 +16,9 @@ import { ChecksumValidatorOptions, Validator, resolveValidator } from './validat
 const rename = promisify(srename)
 const unlink = promisify(sunlink)
 const stat = promisify(sstat)
+const open = promisify(sopen)
+const close = promisify(sclose)
+const finished = promisify(sfinished)
 
 export function getDownloadBaseOptions<T extends DownloadBaseOptions>(options?: T): DownloadBaseOptions {
   if (!options) return {}
@@ -140,12 +143,11 @@ async function head(url: string, headers: Record<string, string>, dispatcher: Di
   }
 }
 
-async function get(url: string, destination: string, headers: Record<string, string>, range: Range | undefined,
+async function get(url: string, fd: number, destination: string, headers: Record<string, string>, range: Range | undefined,
   dispatcher: Dispatcher, progress: (url: URL, chunkSize: number, written: number, partLength: number, totalLength: number) => void, signal?: AbortSignal) {
   const parsedUrl = new URL(url)
 
   let writable: Writable | undefined
-
   try {
     const requestHeader = { ...headers }
     if (range) {
@@ -168,22 +170,37 @@ async function get(url: string, destination: string, headers: Record<string, str
       const rangeHeader = parseRangeHeader(headers['content-range'])
       const offset = rangeHeader?.start ?? range?.start
       const totalLength = rangeHeader?.size ?? 0
+
       let written = 0
+      const transform = new Transform({
+        transform(chunk, encoding, callback) {
+          this.push(chunk)
+          written += chunk.length
+          progress(parsedUrl, chunk.length, written, length, totalLength)
+          callback()
+        },
+        highWaterMark: 1024 * 1024,
+        emitClose: false,
+      })
 
       writable = createWriteStream(destination, {
+        fd,
+        autoClose: false,
+        emitClose: false,
+        flags: 'r+',
         start: offset,
         highWaterMark: 1024 * 1024,
       })
-      const write = writable.write.bind(writable)
-      writable.write = (chunk, ...rest) => {
-        written += chunk.length
-        progress(parsedUrl, chunk.length, written, length, totalLength)
-        return write(chunk, ...rest as any)
-      }
+
+      transform.pipe(writable)
       progress(parsedUrl, 0, written, length, totalLength)
 
-      return writable
+      return transform
     })
+
+    if (writable && !writable.closed && !writable.destroyed && !writable.writableFinished) {
+      await finished(writable)
+    }
   } catch (e) {
     return e
   }
@@ -240,90 +257,106 @@ export async function download(options: DownloadOptions) {
     }
   }
 
-  const aggregate: Error[] = []
-  for (const url of urls) {
-    const decorate = (e: any, phase: string) => Object.assign(e, {
-      phase,
+  const output = pendingFile || destination
+  const fd = await open(output, 'w').catch((e) => {
+    e.stack = new Error().stack
+    Object.assign(e, {
+      phase: 'open',
       urls,
-      url,
       headers,
       destination,
       pendingFile,
     })
-    const metadataOrMetadata = !options.skipHead
-      ? await head(url, headers, dispatcher, abortSignal).catch((e) => {
-        return decorate(e, 'head') as Error
+    throw e
+  })
+
+  try {
+    const aggregate: Error[] = []
+    for (const url of urls) {
+      const decorate = (e: any, phase: string) => Object.assign(e, {
+        phase,
+        urls,
+        url,
+        headers,
+        destination,
+        pendingFile,
       })
-      : undefined
-    if (metadataOrMetadata instanceof Error) {
-      if (metadataOrMetadata instanceof errors.RequestAbortedError) throw metadataOrMetadata
-      aggregate.push(metadataOrMetadata)
-      continue
-    }
-    const metadata = metadataOrMetadata
-    const ranges = metadata?.acceptRange ? computeRanges(metadata, rangePolicy) : [undefined]
-    const redirectedUrl = getUrl(metadata, url)
-    const writtens = ranges.map(() => 0)
-    const totals = ranges.map(() => 0)
-    const output = pendingFile || destination
-    const results = await Promise.all(ranges.map(
-      (range, index) => get(redirectedUrl, output, headers, range, dispatcher, (url, chunk, written, partLength, totalLength) => {
-        writtens[index] = written
-        totals[index] = partLength
-        const writtenTotal = writtens.reduce((a, b) => a + b, 0)
-        const totalTotal = metadata?.total || totalLength || totals.reduce((a, b) => a + b, 0)
-        progressController.onProgress(url, chunk, writtenTotal, totalTotal)
-      }, abortSignal)),
-    )
-
-    let noErrors = true
-    for (const e of results) {
-      if (!e) continue
-      if (e instanceof errors.RequestAbortedError) throw e
-      noErrors = false
-      aggregate.push(decorate(e, 'get'))
-    }
-
-    if (!skipRevalidate) {
-      const error = await validator.validate(output, urls[0]).catch((e) => e)
-      if (error) {
-        noErrors = false
-        aggregate.push(decorate(error, 'validate'))
+      const metadataOrMetadata = !options.skipHead
+        ? await head(url, headers, dispatcher, abortSignal).catch((e) => {
+          return decorate(e, 'head') as Error
+        })
+        : undefined
+      if (metadataOrMetadata instanceof Error) {
+        if (metadataOrMetadata instanceof errors.RequestAbortedError) throw metadataOrMetadata
+        aggregate.push(metadataOrMetadata)
+        continue
       }
-    }
+      const metadata = metadataOrMetadata
+      const ranges = metadata?.acceptRange ? computeRanges(metadata, rangePolicy) : [undefined]
+      const redirectedUrl = getUrl(metadata, url)
+      const writtens = ranges.map(() => 0)
+      const totals = ranges.map(() => 0)
+      const results = await Promise.all(ranges.map(
+        (range, index) => get(redirectedUrl, fd, output, headers, range, dispatcher, (url, chunk, written, partLength, totalLength) => {
+          writtens[index] = written
+          totals[index] = partLength
+          const writtenTotal = writtens.reduce((a, b) => a + b, 0)
+          const totalTotal = metadata?.total || totalLength || totals.reduce((a, b) => a + b, 0)
+          progressController.onProgress(url, chunk, writtenTotal, totalTotal)
+        }, abortSignal)),
+      )
 
-    // if we have any errors, we will continue to next url
-    if (!noErrors) continue
+      let noErrors = true
+      for (const e of results) {
+        if (!e) continue
+        if (e instanceof errors.RequestAbortedError) throw e
+        noErrors = false
+        aggregate.push(decorate(e, 'get'))
+      }
 
-    // if we are not download to a pending file, we are good
-    if (!pendingFile) return
-
-    await unlink(destination).catch(() => undefined)
-    const fStat = await stat(pendingFile).catch(() => undefined)
-    const err = await rename(pendingFile, destination).catch(e => decorate(e, 'rename'))
-    if (err && fStat?.ino !== (await stat(destination).catch(() => undefined))?.ino) {
-      err.stack = new Error().stack
-      throw err
-    }
-
-    return
-  }
-
-  if (aggregate.length > 1) {
-    const flatten = [] as Error[]
-    const flatError = (e: any) => {
-      if (e instanceof AggregateError) {
-        for (const err of e.errors) {
-          flatError(err)
+      if (!skipRevalidate) {
+        const error = await validator.validate(output, urls[0]).catch((e) => e)
+        if (error) {
+          noErrors = false
+          aggregate.push(decorate(error, 'validate'))
         }
       }
-      flatten.push(e)
-    }
-    for (const e of aggregate) {
-      flatError(e)
-    }
-    throw new AggregateError(flatten)
-  }
 
-  throw aggregate[0]
+      // if we have any errors, we will continue to next url
+      if (!noErrors) continue
+
+      // if we are not download to a pending file, we are good
+      if (!pendingFile) return
+
+      await unlink(destination).catch(() => undefined)
+      const fStat = await stat(pendingFile).catch(() => undefined)
+      const err = await rename(pendingFile, destination).catch(e => decorate(e, 'rename'))
+      if (err && fStat?.ino !== (await stat(destination).catch(() => undefined))?.ino) {
+        err.stack = new Error().stack
+        throw err
+      }
+
+      return
+    }
+
+    if (aggregate.length > 1) {
+      const flatten = [] as Error[]
+      const flatError = (e: any) => {
+        if (e instanceof AggregateError) {
+          for (const err of e.errors) {
+            flatError(err)
+          }
+        }
+        flatten.push(e)
+      }
+      for (const e of aggregate) {
+        flatError(e)
+      }
+      throw new AggregateError(flatten)
+    }
+
+    throw aggregate[0]
+  } finally {
+    await close(fd).catch(() => undefined)
+  }
 }
