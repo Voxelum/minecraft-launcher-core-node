@@ -198,20 +198,20 @@ export function parseJavaVersion(versionText: string): { version: string; majorV
 export async function getPotentialJavaLocations(): Promise<string[]> {
   const unchecked = new Set<string>()
   const currentPlatform = platform()
-  const javaFile = currentPlatform === 'win32' ? 'javaw.exe' : 'java'
+  const javaFile = currentPlatform === 'win32' ? 'javaw.exe' : 'javaw'
 
   if (process.env.JAVA_HOME) {
     unchecked.add(join(process.env.JAVA_HOME, 'bin', javaFile))
   }
 
   const which = () => new Promise<string>((resolve) => {
-    exec('which java', (_error, stdout) => {
+    exec('which javaw', (_error, stdout) => {
       if (!_error) resolve(stdout.replace('\n', ''))
       else resolve('')
     }).once('error', () => resolve(''))
   })
   const where = () => new Promise<string[]>((resolve) => {
-    exec('where java', (_error, stdout) => {
+    exec('where javaw', (_error, stdout) => {
       if (!_error) resolve(stdout.split('\r\n'))
       else resolve([])
     }).once('error', () => resolve([]))
@@ -230,11 +230,8 @@ export async function getPotentialJavaLocations(): Promise<string[]> {
     for (const o of [...out, ...await where()]) {
       unchecked.add(o)
     }
-    const currentArch = arch()
-    unchecked.add('C:\\Program Files (x86)\\Minecraft Launcher\\runtime\\jre-x64/X86')
-    unchecked.add(`C:\\Program Files (x86)\\Minecraft Launcher\\runtime\\jre-legacy\\windows-${currentArch}\\jre-legacy`)
   } else if (currentPlatform === 'darwin') {
-    unchecked.add('/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java')
+    unchecked.add('/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/javaw')
     unchecked.add(await which())
   } else {
     unchecked.add(await which())
