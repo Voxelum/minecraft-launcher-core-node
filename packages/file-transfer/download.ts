@@ -112,7 +112,7 @@ async function head(url: string, headers: Record<string, string>, dispatcher: Di
       headersTimeout: 5000,
       bodyTimeout: 5000,
       throwOnError: true,
-    }, ({ opaque, headers, context }) => {
+    }, ({ opaque, headers, context, statusCode }) => {
       const length = headers['content-length'] ? parseInt(headers['content-length'] as string) : 0
       const rangeHeader = parseRangeHeader(headers['content-range'])
       const offset = rangeHeader?.start ?? 0
@@ -129,7 +129,13 @@ async function head(url: string, headers: Record<string, string>, dispatcher: Di
         metadata.origin = ctx.opts.origin as string
       }
 
-      return new PassThrough()
+      const pass = new PassThrough()
+
+      if (statusCode === 203) {
+        setImmediate(() => pass.emit('error', new errors.ResponseStatusCodeError('', statusCode, headers, '')))
+      }
+
+      return pass
     })
 
     return opaque as Metadata
@@ -164,6 +170,16 @@ async function get(url: string, fd: number, destination: string, headers: Record
       if (statusCode >= 300) {
         // unreachable
         return new PassThrough()
+      }
+
+      if (statusCode === 203) {
+        const pass = new PassThrough()
+
+        if (statusCode === 203) {
+          setImmediate(() => pass.emit('error', new errors.ResponseStatusCodeError('', statusCode, headers, '')))
+        }
+
+        return pass
       }
 
       const length = headers['content-length'] ? parseInt(headers['content-length'] as string) : 0
