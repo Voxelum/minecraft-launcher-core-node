@@ -34,12 +34,12 @@ export function isValidator(options?: Validator | ChecksumValidatorOptions): opt
   return 'validate' in options && typeof options.validate === 'function'
 }
 
-export function resolveValidator(options?: ChecksumValidatorOptions | Validator): Validator {
+export function resolveValidator(options?: ChecksumValidatorOptions | Validator): Validator | undefined {
   if (isValidator(options)) { return options }
   if (options) {
     return new ChecksumValidator({ hash: options.hash, algorithm: options.algorithm })
   }
-  return { validate() { return Promise.reject(new Error()) } }
+  return undefined
 }
 
 export interface ChecksumValidatorOptions {

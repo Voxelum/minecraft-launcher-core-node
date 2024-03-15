@@ -254,7 +254,7 @@ export async function download(options: DownloadOptions) {
 
   await mkdir(dirname(destination), { recursive: true }).catch(() => { })
 
-  if (!skipPrevalidate) {
+  if (!skipPrevalidate && validator) {
     const error = await validator.validate(destination, urls[0]).catch((e) => e)
     if (!error) {
       // file is already downloaded and validated
@@ -330,7 +330,7 @@ export async function download(options: DownloadOptions) {
         aggregate.push(decorate(e, 'get'))
       }
 
-      if (!skipRevalidate) {
+      if (!skipRevalidate && validator) {
         const error = await validator.validate(output, urls[0]).catch((e) => e)
         if (error) {
           noErrors = false
