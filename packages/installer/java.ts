@@ -198,20 +198,20 @@ export function parseJavaVersion(versionText: string): { version: string; majorV
 export async function getPotentialJavaLocations(): Promise<string[]> {
   const unchecked = new Set<string>()
   const currentPlatform = platform()
-  const javaFile = currentPlatform === 'win32' ? 'javaw.exe' : 'javaw'
+  const javaFile = currentPlatform === 'win32' ? 'java.exe' : 'java'
 
   if (process.env.JAVA_HOME) {
     unchecked.add(join(process.env.JAVA_HOME, 'bin', javaFile))
   }
 
   const which = () => new Promise<string>((resolve) => {
-    exec('which javaw', (_error, stdout) => {
+    exec('which java', (_error, stdout) => {
       if (!_error) resolve(stdout.replace('\n', ''))
       else resolve('')
     }).once('error', () => resolve(''))
   })
   const where = () => new Promise<string[]>((resolve) => {
-    exec('where javaw', (_error, stdout) => {
+    exec('where java', (_error, stdout) => {
       if (!_error) resolve(stdout.split('\r\n'))
       else resolve([])
     }).once('error', () => resolve([]))
@@ -224,14 +224,14 @@ export async function getPotentialJavaLocations(): Promise<string[]> {
         resolve(stdout.split(EOL).map((item) => item.replace(/[\r\n]/g, ''))
           .filter((item) => item != null && item !== undefined)
           .filter((item) => item[0] === ' ')
-          .map((item) => `${item.split('    ')[3]}\\bin\\javaw.exe`))
+          .map((item) => `${item.split('    ')[3]}\\bin\\java.exe`))
       })
     })
     for (const o of [...out, ...await where()]) {
       unchecked.add(o)
     }
   } else if (currentPlatform === 'darwin') {
-    unchecked.add('/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/javaw')
+    unchecked.add('/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java')
     unchecked.add(await which())
   } else {
     unchecked.add(await which())
