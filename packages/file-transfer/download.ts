@@ -1,4 +1,4 @@
-import { createWriteStream, rename as srename, unlink as sunlink, stat as sstat, open as sopen, close as sclose } from 'fs'
+import { createWriteStream, rename as srename, unlink as sunlink, stat as sstat, open as sopen, close as sclose, fdatasync } from 'fs'
 import { promisify } from 'util'
 import { mkdir } from 'fs/promises'
 import { dirname } from 'path'
@@ -19,6 +19,7 @@ const stat = promisify(sstat)
 const open = promisify(sopen)
 const close = promisify(sclose)
 const finished = promisify(sfinished)
+const datasync = promisify(fdatasync)
 
 export function getDownloadBaseOptions<T extends DownloadBaseOptions>(options?: T): DownloadBaseOptions {
   if (!options) return {}
@@ -328,6 +329,13 @@ export async function download(options: DownloadOptions) {
         if (e instanceof errors.RequestAbortedError) throw e
         noErrors = false
         aggregate.push(decorate(e, 'get'))
+      }
+
+      try {
+        await datasync(fd)
+      } catch (e) {
+        noErrors = false
+        aggregate.push(decorate(e, 'datasync'))
       }
 
       if (!skipRevalidate && validator) {
