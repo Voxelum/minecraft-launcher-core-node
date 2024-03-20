@@ -168,17 +168,10 @@ async function get(url: string, fd: number, destination: string, headers: Record
       dispatcher,
       signal,
     }, ({ statusCode, headers }) => {
-      if (statusCode >= 300) {
-        // unreachable
-        return new PassThrough()
-      }
-
-      if (statusCode === 203) {
+      if (statusCode === 203 || statusCode >= 300) {
         const pass = new PassThrough()
 
-        if (statusCode === 203) {
-          setImmediate(() => pass.emit('error', new errors.ResponseStatusCodeError('', statusCode, headers, '')))
-        }
+        setImmediate(() => pass.emit('error', new errors.ResponseStatusCodeError('', statusCode, headers, '')))
 
         return pass
       }
@@ -197,7 +190,6 @@ async function get(url: string, fd: number, destination: string, headers: Record
           callback()
         },
         highWaterMark: 1024 * 1024,
-        emitClose: false,
       })
 
       writable = createWriteStream(destination, {
@@ -215,7 +207,7 @@ async function get(url: string, fd: number, destination: string, headers: Record
       return transform
     })
 
-    if (writable && !writable.closed && !writable.destroyed && !writable.writableFinished) {
+    if (writable && !writable.writableFinished) {
       await finished(writable)
     }
   } catch (e) {

@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
-import { createReadStream } from 'fs'
-import { FileHandle, readFile } from 'fs/promises'
+import { readFile, createReadStream, exists } from 'fs'
+import { promisify } from 'util'
 import { pipeline } from 'stream/promises'
 
 export interface Validator {
@@ -18,6 +18,9 @@ export class ChecksumValidator implements Validator {
 
   async validate(destination: string, url: string): Promise<void> {
     if (this.checksum) {
+      if (!await promisify(exists)(destination)) {
+        throw new ChecksumNotMatchError(this.checksum.algorithm, this.checksum.hash, '', destination, url)
+      }
       const hash = createHash(this.checksum.algorithm)
       await pipeline(createReadStream(destination), hash)
       const actual = hash.digest('hex')
@@ -49,7 +52,7 @@ export interface ChecksumValidatorOptions {
 
 export class JsonValidator implements Validator {
   async validate(destination: string, url: string): Promise<void> {
-    const content = await readFile(destination, 'utf-8')
+    const content = await promisify(readFile)(destination, 'utf-8')
     JSON.parse(content)
   }
 }
