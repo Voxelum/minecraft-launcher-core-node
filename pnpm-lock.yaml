@@ -149,8 +149,8 @@ importers:
   packages/curseforge:
     dependencies:
       undici:
-        specifier: 6.6.2
-        version: 6.6.2
+        specifier: 6.10.2
+        version: 6.10.2
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -165,8 +165,8 @@ importers:
         specifier: ^0.37.39
         version: 0.37.39
       undici:
-        specifier: 6.6.2
-        version: 6.6.2
+        specifier: 6.10.2
+        version: 6.10.2
     devDependencies:
       '@types/node':
         specifier: ~18
@@ -223,8 +223,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       undici:
-        specifier: 6.6.2
-        version: 6.6.2
+        specifier: 6.10.2
+        version: 6.10.2
     devDependencies:
       '@types/node':
         specifier: ~18.15.11
@@ -331,8 +331,8 @@ importers:
         specifier: workspace:^*
         version: link:../unzip
       undici:
-        specifier: 6.6.2
-        version: 6.6.2
+        specifier: 6.10.2
+        version: 6.10.2
       yauzl:
         specifier: ^2.10.0
         version: 2.10.0
@@ -399,8 +399,8 @@ importers:
         specifier: workspace:^*
         version: link:../resourcepack
       three:
-        specifier: ^0.151.3
-        version: 0.151.3
+        specifier: 0.156.1
+        version: 0.156.1
     devDependencies:
       '@types/node':
         specifier: ~18.15.11
@@ -421,8 +421,8 @@ importers:
   packages/modrinth:
     dependencies:
       undici:
-        specifier: 6.6.2
-        version: 6.6.2
+        specifier: 6.10.2
+        version: 6.10.2
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -440,8 +440,8 @@ importers:
         specifier: ^4.3.2
         version: 4.3.2
       undici:
-        specifier: 6.6.2
-        version: 6.6.2
+        specifier: 6.10.2
+        version: 6.10.2
     devDependencies:
       '@types/node':
         specifier: ^18.15.11
@@ -589,8 +589,8 @@ importers:
   packages/user:
     dependencies:
       undici:
-        specifier: 6.6.2
-        version: 6.6.2
+        specifier: 6.10.2
+        version: 6.10.2
       uuid:
         specifier: ^9.0.0
         version: 9.0.0
@@ -617,8 +617,8 @@ importers:
         specifier: ~18.15.11
         version: 18.15.11
       undici:
-        specifier: ^4.0.1
-        version: 4.1.0
+        specifier: 6.10.2
+        version: 6.10.2
 
 packages:
 
@@ -1123,11 +1123,6 @@ packages:
   /@eslint/js@8.38.0:
     resolution: {integrity: sha512-IoD2MfUnOV58ghIHCiil01PcohxjbYR/qCxsoC+xNgUwh1EY8jOOrYmu3d3a71+tJJ23uscEV4X2HJWMsPJu4g==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-
-  /@fastify/busboy@2.1.0:
-    resolution: {integrity: sha512-+KpH+QxZU7O4675t3mnkQKcZZg56u+K/Ct2K+N2AZYNVK8kyeo/bI18tI8aPm3tvNNRyTWfj6s5tnGNlcbQRsA==}
-    engines: {node: '>=14'}
-    dev: false
 
   /@humanwhocodes/config-array@0.11.8:
     resolution: {integrity: sha512-UybHIJzJnR5Qc/MsD9Kr+RpO2h+/P1GhOwdiLPXK5TWk5sgTdu88bTD9UP+CKbPPh5Rni1u0GjAdYQLemG8g+g==}
@@ -2484,14 +2479,6 @@ packages:
   /fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
-  /fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
-    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
-    os: [darwin]
-    requiresBuild: true
-    dev: true
-    optional: true
-
   /fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -3789,8 +3776,8 @@ packages:
   /text-table@0.2.0:
     resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
 
-  /three@0.151.3:
-    resolution: {integrity: sha512-+vbuqxFy8kzLeO5MgpBHUvP/EAiecaDwDuOPPDe6SbrZr96kccF0ktLngXc7xA7bzyd3N0t2f6mw3Z9y6JCojQ==}
+  /three@0.156.1:
+    resolution: {integrity: sha512-kP7H0FK9d/k6t/XvQ9FO6i+QrePoDcNhwl0I02+wmUJRNSLCUIDMcfObnzQvxb37/0Uc9TDT0T1HgsRRrO6SYQ==}
     dev: false
 
   /through2@4.0.2:
@@ -3868,7 +3855,7 @@ packages:
       '@esbuild-kit/core-utils': 3.1.0
       '@esbuild-kit/esm-loader': 2.5.5
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /tsx@4.7.1:
@@ -3961,16 +3948,9 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: false
 
-  /undici@4.1.0:
-    resolution: {integrity: sha512-Y1e/pSDLtNT4nXSQc4C7eiqoiV7pq8QmsvD7/6cbUuUER0MewR3xwBswYiHYWqVI4FcUptjHixrdqW4xrmo4uA==}
-    engines: {node: '>=12.18'}
-    dev: false
-
-  /undici@6.6.2:
-    resolution: {integrity: sha512-vSqvUE5skSxQJ5sztTZ/CdeJb1Wq0Hf44hlYMciqHghvz+K88U0l7D6u1VsndoFgskDcnU+nG3gYmMzJVzd9Qg==}
+  /undici@6.10.2:
+    resolution: {integrity: sha512-HcVuBy7ACaDejIMdwCzAvO22OsiE6ir6ziTIr9kAE0vB+PheVe29ZvRN8p7FXCO2uZHTjEoUs5bPiFpuc/hwwQ==}
     engines: {node: '>=18.0'}
-    dependencies:
-      '@fastify/busboy': 2.1.0
     dev: false
 
   /uri-js@4.4.1:
