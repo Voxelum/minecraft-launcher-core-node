@@ -49,7 +49,7 @@ export interface YggrasilAuthentication {
 
 export interface YggdrasilClientOptions {
   headers?: Record<string, string>
-  dispatcher: Dispatcher
+  dispatcher?: Dispatcher
 }
 
 export interface ProfileLookupException {
