@@ -553,7 +553,7 @@ export function resolveLibraryDownloadUrls(library: ResolvedLibrary, libraryOpti
     ...normalizeArray(libraryOptions.mavenHost).map((m) => joinUrl(m, library.download.path)),
     library.download.url,
     ...DEFAULT_MAVENS.map((m) => joinUrl(m, library.download.path)),
-  ].map(u => u.replace('/maven/maven', '/maven'))
+  ]
 
   return [...new Set(normalizeArray(urls))]
 }
