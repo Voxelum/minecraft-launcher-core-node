@@ -303,9 +303,9 @@ export async function download(options: DownloadOptions) {
       const metadata = metadataOrMetadata
       const ranges = metadata?.acceptRange ? computeRanges(metadata, rangePolicy) : [undefined]
       const redirectedUrl = getUrl(metadata, url)
-      const writtens = ranges.map(() => 0)
-      const totals = ranges.map(() => 0)
-      const results = await Promise.all(ranges.map(
+      let writtens = ranges.map(() => 0)
+      let totals = ranges.map(() => 0)
+      let results = await Promise.all(ranges.map(
         (range, index) => get(redirectedUrl, fd, output, headers, range, dispatcher, (url, chunk, written, partLength, totalLength) => {
           writtens[index] = written
           totals[index] = partLength
@@ -314,6 +314,21 @@ export async function download(options: DownloadOptions) {
           progressController.onProgress(url, chunk, writtenTotal, totalTotal)
         }, abortSignal)),
       )
+
+      if (metadataOrMetadata && results.some(e => e instanceof errors.ResponseStatusCodeError)) {
+        // Invalid range, we will retry without range
+        writtens = [0]
+        totals = [0]
+        results = [
+          await get(redirectedUrl, fd, output, headers, undefined, dispatcher, (url, chunk, written, partLength, totalLength) => {
+            writtens[0] = written
+            totals[0] = partLength
+            const writtenTotal = writtens.reduce((a, b) => a + b, 0)
+            const totalTotal = metadata?.total || totalLength || totals.reduce((a, b) => a + b, 0)
+            progressController.onProgress(url, chunk, writtenTotal, totalTotal)
+          }, abortSignal),
+        ]
+      }
 
       let noErrors = true
       for (const e of results) {
