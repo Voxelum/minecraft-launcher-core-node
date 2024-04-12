@@ -189,7 +189,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/projects/operation/searchProjects
+   * @see https://docs.modrinth.com/#tag/projects/operation/searchProjects
    */
   async searchProjects(options: SearchProjectOptions, signal?: AbortSignal): Promise<SearchResult> {
     const url = new URL(this.baseUrl + '/v2/search')
@@ -212,7 +212,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/projects/operation/getProject
+   * @see https://docs.modrinth.com/#tag/projects/operation/getProject
    */
   async getProject(projectId: string, signal?: AbortSignal): Promise<Project> {
     if (projectId.startsWith('local-')) { projectId = projectId.slice('local-'.length) }
@@ -230,7 +230,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/projects/operation/getProject
+   * @see https://docs.modrinth.com/#tag/projects/operation/getProject
    */
   async getProjects(projectIds: string[], signal?: AbortSignal): Promise<Project[]> {
     const url = new URL(this.baseUrl + '/v2/projects')
@@ -248,7 +248,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/versions/operation/getProjectVersions
+   * @see https://docs.modrinth.com/#tag/versions/operation/getProjectVersions
    */
   async getProjectVersions(projectId: string, { loaders, gameVersions, featured }: { loaders?: string[]; gameVersions?: string[]; featured?: boolean } = {}, signal?: AbortSignal): Promise<ProjectVersion[]> {
     const url = new URL(this.baseUrl + `/v2/project/${projectId}/version`)
@@ -268,7 +268,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/versions/operation/getVersion
+   * @see https://docs.modrinth.com/#tag/versions/operation/getVersion
    */
   async getProjectVersion(versionId: string, signal?: AbortSignal): Promise<ProjectVersion> {
     const url = new URL(this.baseUrl + `/v2/version/${versionId}`)
@@ -285,7 +285,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/versions/operation/getVersions
+   * @see https://docs.modrinth.com/#tag/versions/operation/getVersions
    */
   async getProjectVersionsById(ids: string[], signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/versions')
@@ -303,7 +303,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/version-files/operation/versionsFromHashes
+   * @see https://docs.modrinth.com/#tag/version-files/operation/versionsFromHashes
    */
   async getProjectVersionsByHash(hashes: string[], algorithm = 'sha1', signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/version_files')
@@ -352,7 +352,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/version-files/operation/getLatestVersionFromHash
+   * @see https://docs.modrinth.com/#tag/version-files/operation/getLatestVersionFromHash
    */
   async getLatestProjectVersion(sha1: string, { algorithm, loaders = [], gameVersions = [] }: { algorithm?: string; loaders?: string[]; gameVersions?: string[] } = {}, signal?: AbortSignal): Promise<ProjectVersion> {
     const url = new URL(this.baseUrl + `/v2/version_file/${sha1}/update`)
@@ -375,7 +375,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/tags/operation/licenseList
+   * @see https://docs.modrinth.com/#tag/tags/operation/licenseList
    */
   async getLicenseTags(signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/tag/license')
@@ -392,7 +392,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/tags/operation/categoryList
+   * @see https://docs.modrinth.com/#tag/tags/operation/categoryList
    */
   async getCategoryTags(signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/tag/category')
@@ -409,7 +409,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/tags/operation/versionList
+   * @see https://docs.modrinth.com/#tag/tags/operation/versionList
    */
   async getGameVersionTags(signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/tag/game_version')
@@ -426,7 +426,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/tags/operation/loaderList
+   * @see https://docs.modrinth.com/#tag/tags/operation/loaderList
    */
   async getLoaderTags(signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/tag/loader')
@@ -443,7 +443,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/teams/operation/getProjectTeamMembers
+   * @see https://docs.modrinth.com/#tag/teams/operation/getProjectTeamMembers
    */
   async getProjectTeamMembers(projectId: string, signal?: AbortSignal) {
     const url = new URL(this.baseUrl + `/v2/project/${projectId}/members`)
@@ -460,7 +460,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/users/operation/getUser
+   * @see https://docs.modrinth.com/#tag/users/operation/getUser
    */
   async getUser(id: string, signal?: AbortSignal) {
     const url = new URL(this.baseUrl + `/v2/user/${id}`)
@@ -477,7 +477,7 @@ export class ModrinthV2Client {
   }
 
   /**
-   * @see https://docs.modrinth.com/api-spec/#tag/users/operation/getUserProjects
+   * @see https://docs.modrinth.com/#tag/users/operation/getUserProjects
    */
   async getUserProjects(id: string, signal?: AbortSignal) {
     const url = new URL(this.baseUrl + `/v2/user/${id}/projects`)
