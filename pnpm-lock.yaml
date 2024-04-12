@@ -149,8 +149,8 @@ importers:
   packages/curseforge:
     dependencies:
       undici:
-        specifier: 6.10.2
-        version: 6.10.2
+        specifier: 6.11.1
+        version: 6.11.1
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -165,8 +165,8 @@ importers:
         specifier: ^0.37.39
         version: 0.37.39
       undici:
-        specifier: 6.10.2
-        version: 6.10.2
+        specifier: 6.11.1
+        version: 6.11.1
     devDependencies:
       '@types/node':
         specifier: ~18
@@ -223,8 +223,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       undici:
-        specifier: 6.10.2
-        version: 6.10.2
+        specifier: 6.11.1
+        version: 6.11.1
     devDependencies:
       '@types/node':
         specifier: ~18.15.11
@@ -331,8 +331,8 @@ importers:
         specifier: workspace:^*
         version: link:../unzip
       undici:
-        specifier: 6.10.2
-        version: 6.10.2
+        specifier: 6.11.1
+        version: 6.11.1
       yauzl:
         specifier: ^2.10.0
         version: 2.10.0
@@ -421,8 +421,8 @@ importers:
   packages/modrinth:
     dependencies:
       undici:
-        specifier: 6.10.2
-        version: 6.10.2
+        specifier: 6.11.1
+        version: 6.11.1
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -430,6 +430,12 @@ importers:
       undici-shim:
         specifier: workspace:^*
         version: link:../undici-shim
+
+  packages/murmurhash2:
+    devDependencies:
+      assemblyscript:
+        specifier: ^0.27.27
+        version: 0.27.27
 
   packages/nat-api:
     dependencies:
@@ -440,8 +446,8 @@ importers:
         specifier: ^4.3.2
         version: 4.3.2
       undici:
-        specifier: 6.10.2
-        version: 6.10.2
+        specifier: 6.11.1
+        version: 6.11.1
     devDependencies:
       '@types/node':
         specifier: ^18.15.11
@@ -589,8 +595,8 @@ importers:
   packages/user:
     dependencies:
       undici:
-        specifier: 6.10.2
-        version: 6.10.2
+        specifier: 6.11.1
+        version: 6.11.1
       uuid:
         specifier: ^9.0.0
         version: 9.0.0
@@ -617,8 +623,8 @@ importers:
         specifier: ~18.15.11
         version: 18.15.11
       undici:
-        specifier: 6.10.2
-        version: 6.10.2
+        specifier: 6.11.1
+        version: 6.11.1
 
 packages:
 
@@ -1587,6 +1593,15 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
+  /assemblyscript@0.27.27:
+    resolution: {integrity: sha512-z4ijXsjjk3uespEeCWpO1K2GQySc6bn+LL5dL0tsC2VXNYKFnKDmAh3wefcKazxXHFVhYlxqNfyv96ajaQyINQ==}
+    engines: {node: '>=16', npm: '>=7'}
+    hasBin: true
+    dependencies:
+      binaryen: 116.0.0-nightly.20240114
+      long: 5.2.3
+    dev: true
+
   /assertion-error@1.1.0:
     resolution: {integrity: sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==}
     dev: true
@@ -1598,6 +1613,11 @@ packages:
 
   /balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
+
+  /binaryen@116.0.0-nightly.20240114:
+    resolution: {integrity: sha512-0GZrojJnuhoe+hiwji7QFaL3tBlJoA+KFUN7ouYSDGZLSo9CKM8swQX8n/UcbR0d1VuZKU+nhogNzv423JEu5A==}
+    hasBin: true
+    dev: true
 
   /blueimp-md5@2.19.0:
     resolution: {integrity: sha512-DRQrD6gJyy8FbiE4s+bDoXS9hiW3Vbx5uCdwvcCf3zLHL+Iv7LtGHLpr+GZV8rHG8tK766FGYBwRbu8pELTt+w==}
@@ -3045,6 +3065,10 @@ packages:
     engines: {node: '>=0.6'}
     dev: true
 
+  /long@5.2.3:
+    resolution: {integrity: sha512-lcHwpNoggQTObv5apGNCTdJrO69eHOZMi4BNC+rTLER8iHAqGrUVeLh/irVIM7zTw2bOXA8T6uNPeujwOLg/2Q==}
+    dev: true
+
   /loupe@2.3.6:
     resolution: {integrity: sha512-RaPMZKiMy8/JruncMU5Bt6na1eftNoo++R4Y+N2FrxkDVTrGvcyzFTsaGif4QTeKESheMGegbhw6iUAq+5A8zA==}
     dependencies:
@@ -3948,8 +3972,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: false
 
-  /undici@6.10.2:
-    resolution: {integrity: sha512-HcVuBy7ACaDejIMdwCzAvO22OsiE6ir6ziTIr9kAE0vB+PheVe29ZvRN8p7FXCO2uZHTjEoUs5bPiFpuc/hwwQ==}
+  /undici@6.11.1:
+    resolution: {integrity: sha512-KyhzaLJnV1qa3BSHdj4AZ2ndqI0QWPxYzaIOio0WzcEJB9gvuysprJSLtpvc2D9mhR9jPDUk7xlJlZbH2KR5iw==}
     engines: {node: '>=18.0'}
     dev: false
 
