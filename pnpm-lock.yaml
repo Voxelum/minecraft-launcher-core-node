@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -436,6 +440,9 @@ importers:
       assemblyscript:
         specifier: ^0.27.27
         version: 0.27.27
+      wabt:
+        specifier: ^1.0.32
+        version: 1.0.32
 
   packages/nat-api:
     dependencies:
@@ -4138,6 +4145,11 @@ packages:
 
   /vscode-textmate@8.0.0:
     resolution: {integrity: sha512-AFbieoL7a5LMqcnOF04ji+rpXadgOXnZsxQr//r83kLPr7biP7am3g9zbaZIaBGwBRWeSvoMD4mgPdX3e4NWBg==}
+    dev: true
+
+  /wabt@1.0.32:
+    resolution: {integrity: sha512-1aHvkKaSrrl7qFtAbQ1RWVHLuJApRh7PtUdYvRtiUEKEhk0MOV0sTuz5cLF6jL5jPLRyifLbZcR65AEga/xBhQ==}
+    hasBin: true
     dev: true
 
   /well-known-symbols@2.0.0:

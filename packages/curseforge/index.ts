@@ -243,6 +243,8 @@ export interface File {
 
   hashes: FileHash[]
 
+  fileFingerprint: number
+
   /**
    * The date of this file uploaded
    */
@@ -521,6 +523,9 @@ export interface CurseforgeClientOptions {
 }
 
 export interface FingerprintMatch {
+  /**
+   * The mod id
+   */
   id: number
   file: File
   latestFiles: File[]
@@ -783,11 +788,11 @@ export class CurseforgeV1Client {
     return result.data
   }
 
-  async getFingerprintsMatchesByGameId(gameId: number, fingerprints: bigint[], signal?: AbortSignal) {
+  async getFingerprintsMatchesByGameId(gameId: number, fingerprints: number[], signal?: AbortSignal) {
     const url = new URL(this.baseUrl + `/v1/fingerprints/${gameId}`)
     const response = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify({ fingerprints }, (_, v) => typeof v === 'bigint' ? v.toString() : v),
+      body: JSON.stringify({ fingerprints }),
       headers: {
         ...this.headers,
         'content-type': 'application/json',
@@ -803,11 +808,11 @@ export class CurseforgeV1Client {
     return result.data
   }
 
-  async getFingerprintsFuzzyMatchesByGameId(gameId: number, fingerprints: bigint[], signal?: AbortSignal) {
+  async getFingerprintsFuzzyMatchesByGameId(gameId: number, fingerprints: number[], signal?: AbortSignal) {
     const url = new URL(this.baseUrl + `/v1/fingerprints/fuzzy/${gameId}`)
     const response = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify({ fingerprints }, (_, v) => typeof v === 'bigint' ? v.toString() : v),
+      body: JSON.stringify({ fingerprints }),
       headers: {
         ...this.headers,
         'content-type': 'application/json',
