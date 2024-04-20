@@ -165,7 +165,17 @@ export function parseJavaVersion(versionText: string): { version: string; majorV
   const getVersion = (str?: string) => {
     if (!str) { return undefined }
     const match = /(\d+)\.(\d)+\.(\d+)(_\d+)?/.exec(str)
-    if (match === null) { return undefined }
+    if (match === null) {
+      const openjdkMatch = /openjdk version "(\d+)"/.exec(str)
+      if (openjdkMatch) {
+        return {
+          version: openjdkMatch[1],
+          majorVersion: Number.parseInt(openjdkMatch[1]),
+          patch: -1,
+        }
+      }
+      return undefined
+    }
     if (match[1] === '1') {
       return {
         version: match[0],
