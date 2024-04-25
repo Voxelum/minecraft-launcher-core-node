@@ -17,7 +17,7 @@ Introduce how to setup environment, modify code and submit PR.
 
 ### Pre-requirements
 
-- Node.js 16+
+- Node.js >=18.17.0
 - pnpm (can be setup by node [corepack](https://nodejs.org/api/corepack.html))
 
 ### Setup Dev Workspace
