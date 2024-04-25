@@ -15,6 +15,7 @@
   },
   "publishConfig": {
     "main": "./dist/index.js",
+    "browser": "./dist/index.browser.mjs",
     "module": "./dist/index.mjs",
     "access": "public"
   },
