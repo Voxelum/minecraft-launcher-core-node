@@ -224,9 +224,12 @@ function computeRanges(metadata: Metadata | undefined, rangePolicy: RangePolicy)
 
 function getUrl(metadata: Metadata | undefined, original: string) {
   if (!metadata || !metadata.pathname || !metadata.origin) return original
-  const url = new URL(metadata.origin)
-  url.pathname = metadata.pathname
-  return url.toString()
+  try {
+    const url = new URL(metadata.pathname, metadata.origin)
+    return url.toString()
+  } catch {
+    return original
+  }
 }
 
 /**
