@@ -152,6 +152,8 @@ export interface Project {
 
   project_type: string
 
+  game_versions: string[]
+
   gallery: ProjectGallery[]
 }
 
