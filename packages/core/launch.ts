@@ -521,7 +521,7 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
     } else if (string.indexOf('Crash report saved to:') !== -1) {
       crashReportLocation = string.substring(string.indexOf('Crash report saved to:') + 'Crash report saved to: #@!@# '.length)
       crashReportLocation = crashReportLocation.replace(EOL, '').trim()
-    } else if (waitForReady && (string.indexOf('Reloading ResourceManager') !== -1 || string.indexOf('LWJGL Version: ') !== -1 || string.indexOf('OpenAL initialized.') !== -1)) {
+    } else if (waitForReady && (string.indexOf('Missing metadata in pack') !== -1 || string.indexOf('Registering resource reload listener') !== -1 || string.indexOf('Reloading ResourceManager') !== -1 || string.indexOf('LWJGL Version: ') !== -1 || string.indexOf('OpenAL initialized.') !== -1)) {
       waitForReady = false
       emitter.emit('minecraft-window-ready')
     }
