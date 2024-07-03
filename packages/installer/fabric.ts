@@ -1,7 +1,8 @@
 import { MinecraftFolder, MinecraftLocation, Version } from '@xmcl/core'
 import { writeFile } from 'fs/promises'
+import { join } from 'path'
 import { Dispatcher, request } from 'undici'
-import { ensureFile, InstallOptions } from './utils'
+import { InstallOptions, ensureFile } from './utils'
 
 export const YARN_MAVEN_URL = 'https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml'
 export const LOADER_MAVEN_URL = 'https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml'
@@ -137,6 +138,7 @@ export async function getFabricLoaderArtifact(minecraft: string, loader: string,
 export interface FabricInstallOptions extends InstallOptions {
   side?: 'client' | 'server'
   yarnVersion?: string | FabricArtifactVersion
+  dispatcher?: Dispatcher
 }
 
 /**
@@ -188,21 +190,41 @@ export async function installFabric(loader: FabricLoaderArtifact, minecraft: Min
   const mainClass = loader.launcherMeta.mainClass[side]
   const inheritsFrom = options.inheritsFrom || mcversion
 
-  const jsonFile = folder.getVersionJson(id)
-
-  await ensureFile(jsonFile)
-  await writeFile(jsonFile, JSON.stringify({
-    id,
-    inheritsFrom,
-    mainClass,
-    libraries,
-    arguments: {
-      game: [],
-      jvm: [],
-    },
-    releaseTime: new Date().toJSON(),
-    time: new Date().toJSON(),
-  }))
+  if (side === 'client') {
+    const jsonFile = folder.getVersionJson(id)
+    await ensureFile(jsonFile)
+    await writeFile(jsonFile, JSON.stringify({
+      id,
+      inheritsFrom,
+      mainClass,
+      libraries,
+      arguments: {
+        game: [],
+        jvm: [],
+      },
+      releaseTime: new Date().toJSON(),
+      time: new Date().toJSON(),
+    }))
+  } else {
+    const installProfile: Version = {
+      id,
+      libraries: [
+        ...libraries,
+      ],
+      type: 'release',
+      arguments: {
+        game: [],
+        jvm: [],
+      },
+      releaseTime: new Date().toJSON(),
+      time: new Date().toJSON(),
+      minimumLauncherVersion: 13,
+      mainClass,
+      _minecraftVersion: mcversion,
+      _fabricLoaderVersion: loader.loader.version,
+    }
+    await writeFile(join(folder.getVersionRoot(id), 'server.json'), JSON.stringify(installProfile))
+  }
 
   return id
 }

@@ -1,9 +1,9 @@
-import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version as VersionJson } from '@xmcl/core'
+import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version, Version as VersionJson } from '@xmcl/core'
 import { AbortableTask, CancelledError, task } from '@xmcl/task'
-import { open, readEntry, walkEntriesGenerator } from '@xmcl/unzip'
+import { filterEntries, open, readEntry, walkEntriesGenerator } from '@xmcl/unzip'
 import { spawn } from 'child_process'
-import { readFile } from 'fs/promises'
-import { delimiter, dirname } from 'path'
+import { readFile, writeFile } from 'fs/promises'
+import { basename, delimiter, dirname, join, relative, sep } from 'path'
 import { ZipFile } from 'yauzl'
 import { InstallLibraryTask, InstallSideOption, LibraryOptions } from './minecraft'
 import { checksum, errorToString, missing, SpawnJavaOptions, waitProcess } from './utils'
@@ -37,7 +37,7 @@ export interface InstallProfile {
    */
   json: string
   /**
-   * The maven artifact name: <org>:<artifact-id>:<version>
+   * The maven artifact name: `<org>:<artifact-id>:<version>`
    */
   path: string
   /**
@@ -188,7 +188,6 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
 
     const processor = resolveProcessors(options.side || 'client', installProfile, minecraftFolder)
 
-    const versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse)
     const installRequiredLibs = VersionJson.resolveLibraries(installProfile.libraries)
 
     await this.all(installRequiredLibs.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
@@ -198,11 +197,78 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
 
     await this.yield(new PostProcessingTask(processor, minecraftFolder, options))
 
-    const libraries = VersionJson.resolveLibraries(versionJson.libraries)
-    await this.all(libraries.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
-      throwErrorImmediately: options.throwErrorImmediately ?? false,
-      getErrorMessage: (errs) => `Errors during install libraries at ${minecraftFolder.root}: ${errs.map(errorToString).join('\n')}`,
-    })
+    if (options.side === 'client') {
+      const versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse)
+      const libraries = VersionJson.resolveLibraries(versionJson.libraries)
+      await this.all(libraries.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
+        throwErrorImmediately: options.throwErrorImmediately ?? false,
+        getErrorMessage: (errs) => `Errors during install libraries at ${minecraftFolder.root}: ${errs.map(errorToString).join('\n')}`,
+      })
+    } else {
+      const argsText = process.platform === 'win32' ? 'win_args.txt' : 'unix_args.txt'
+
+      if (!installProfile.processors) { return }
+
+      let txtPath: string | undefined
+      for (const p of installProfile.processors) {
+        txtPath = p.args.find(a => a.startsWith('{ROOT}') && a.endsWith(argsText))
+        if (txtPath) break
+      }
+      if (!txtPath) { return }
+      txtPath = txtPath.replace('{ROOT}', minecraftFolder.root)
+
+      if (await missing(txtPath)) {
+        throw new Error(`No ${argsText} found in the forge jar`)
+      }
+
+      const content = await readFile(txtPath, 'utf-8')
+      const args = content.split('\n').map(v => v.trim().split(' ')).flatMap(v => v).filter(v => v)
+      // find the Main class or -jar
+      let mainClass: string = ''
+      let jar: string | undefined
+      const game = [] as string[]
+      const jvm = [] as string[]
+      let found = false
+      for (let i = 0; i < args.length; i++) {
+        if (args[i].startsWith('-')) {
+          if (args[i] === '-jar') {
+            jar = join(dirname(txtPath), args[i + 1])
+            found = true
+            i++
+            continue
+          }
+        } else {
+          mainClass = args[i]
+          found = true
+          continue
+        }
+        if (!found) {
+          jvm.push(args[i])
+        } else {
+          game.push(args[i])
+        }
+      }
+
+      const libraries: Version.Library[] = [...installProfile.libraries]
+      const forgeVersion = basename(dirname(txtPath)).substring(installProfile.minecraft.length + 1)
+      const serverProfile: Version = {
+        id: installProfile.version,
+        libraries,
+        type: 'release',
+        arguments: {
+          game,
+          jvm,
+        },
+        jar: jar ? relative(minecraftFolder.libraries, jar).replaceAll(sep, '/') : jar,
+        releaseTime: new Date().toJSON(),
+        time: new Date().toJSON(),
+        minimumLauncherVersion: 13,
+        mainClass,
+        _minecraftVersion: installProfile.minecraft,
+        _forgeVersion: forgeVersion,
+      }
+      await writeFile(join(minecraftFolder.getVersionRoot(serverProfile.id), 'server.json'), JSON.stringify(serverProfile, null, 4))
+    }
   })
 }
 
@@ -280,7 +346,7 @@ export class PostProcessingTask extends AbortableTask<void> {
   protected async isInvalid(outputs: Required<PostProcessor>['outputs']) {
     for (const [file, expect] of Object.entries(outputs)) {
       if (!expect) {
-        return missing(file)
+        return false
       }
       const sha1 = await checksum(file, 'sha1').catch((e) => '')
       if (!sha1) return true // if file not exist, the file is not generated

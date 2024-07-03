@@ -413,16 +413,6 @@ export interface BaseServerOptions {
   spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess
 }
 
-export interface MinecraftServerOptions extends BaseServerOptions {
-  /**
-   * Minecraft location.
-   */
-  path: string
-  /**
-   * The version id.
-   */
-  version: string | ResolvedVersion
-}
 /**
  * This is the case you provide the server jar execution path.
  */
@@ -432,17 +422,16 @@ export interface ServerOptions extends BaseServerOptions {
    *
    * This is the case like you are launching forge server.
    */
-  serverExectuableJarPath: string
+  serverExectuableJarPath?: string
+
+  mainClass?: string
+
+  classPath?: string[]
 }
 
-export async function launchServer(options: MinecraftServerOptions | ServerOptions) {
+export async function launchServer(options: ServerOptions) {
   const args = await generateArgumentsServer(options)
-  let cwd = options.cwd
-  if ('path' in options) {
-    cwd = options.path
-  } else {
-    cwd = dirname(options.serverExectuableJarPath)
-  }
+  const cwd = options.cwd
   const spawnOption = { cwd, env: process.env, ...(options.extraExecOption || {}) }
   return (options.spawn ?? spawn)(args[0], args.slice(1), spawnOption)
 }
@@ -577,7 +566,7 @@ export async function launch(options: LaunchOption): Promise<ChildProcess> {
 /**
  * Generate the argument for server
  */
-export async function generateArgumentsServer(options: MinecraftServerOptions | ServerOptions) {
+export async function generateArgumentsServer(options: ServerOptions) {
   const { javaPath, minMemory = 1024, maxMemory = 1024, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options
   const cmd = [
     javaPath,
@@ -585,13 +574,15 @@ export async function generateArgumentsServer(options: MinecraftServerOptions | 
     `-Xmx${(maxMemory)}M`,
     ...extraJVMArgs,
   ]
-  if ('path' in options) {
-    const mc = MinecraftFolder.from(options.path)
-    const version = options.version
-    const resolvedVersion = typeof version === 'string' ? await Version.parse(mc, version) : version
-    cmd.push('-jar', mc.getVersionJar(resolvedVersion.minecraftVersion, 'server'))
-  } else {
+
+  if (options.classPath) {
+    cmd.push('-cp', options.classPath.join(delimiter))
+  }
+
+  if (options.serverExectuableJarPath) {
     cmd.push('-jar', options.serverExectuableJarPath)
+  } else if (options.mainClass) {
+    cmd.push(options.mainClass)
   }
 
   cmd.push(...extraMCArgs)
