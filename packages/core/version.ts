@@ -856,4 +856,12 @@ export interface Version {
    * NON CONVERSION! This only present in some third party launcher like Labymod to mark the real minecraft version
    */
   _minecraftVersion?: string
+  /**
+   * NON CONVERSION! This only present in some third party launcher like Forge to mark the forge version
+   */
+  _forgeVersion?: string
+  /**
+   * NON CONVERSION! This only present in some third party launcher like Fabric to mark the fabric version
+   */
+  _fabricLoaderVersion?: string
 }

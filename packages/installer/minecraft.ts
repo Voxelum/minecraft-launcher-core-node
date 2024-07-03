@@ -2,7 +2,7 @@ import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, V
 import { ChecksumNotMatchError, ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, Validator, getDownloadBaseOptions } from '@xmcl/file-transfer'
 import { Task, task } from '@xmcl/task'
 import { readFile, stat, writeFile } from 'fs/promises'
-import { join } from 'path'
+import { join, relative, sep } from 'path'
 import { Dispatcher, request } from 'undici'
 import { DownloadTask } from './downloadTask'
 import { ParallelTaskOptions, ensureDir, errorToString, joinUrl, normalizeArray } from './utils'
@@ -277,10 +277,30 @@ export function installTask(versionMeta: MinecraftVersionBaseInfo, minecraft: Mi
  */
 export function installVersionTask(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: JarOption = {}): Task<ResolvedVersion> {
   return task('version', async function () {
-    await this.yield(new InstallJsonTask(versionMeta, minecraft, options))
-    const version = await VersionJson.parse(minecraft, versionMeta.id)
-    if (version.downloads[options.side ?? 'client']) {
-      await this.yield(new InstallJarTask(version as any, minecraft, options))
+    const folder = MinecraftFolder.from(minecraft)
+    await this.yield(new InstallJsonTask(versionMeta, folder, options))
+    const version = await VersionJson.parse(folder, versionMeta.id)
+    const side = options.side ?? 'client'
+    if (version.downloads[side]) {
+      await this.yield(new InstallJarTask(version as any, folder, options))
+    }
+    if (side === 'server') {
+      const jarPath = folder.getVersionJar(versionMeta.id, 'server')
+      const server: Version = {
+        id: versionMeta.id,
+        type: 'release',
+        time: version.time,
+        releaseTime: version.releaseTime,
+        jar: relative(folder.libraries, jarPath).replaceAll(sep, '/'),
+        arguments: {
+          game: [],
+          jvm: [],
+        },
+        mainClass: '',
+        minimumLauncherVersion: 13,
+        libraries: [],
+      }
+      await writeFile(join(folder.getVersionRoot(versionMeta.id), 'server.json'), JSON.stringify(server, null, 2))
     }
     return version
   }, versionMeta)
@@ -321,7 +341,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
           hash: file.sha1,
         },
         destination: folder.getLogConfig(file.id),
-      ...getDownloadBaseOptions(options),
+        ...getDownloadBaseOptions(options),
       }).setName('asset', { name: file.id, hash: file.sha1, size: file.size }))
     }
     const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
@@ -442,7 +462,7 @@ export class InstallJarTask extends DownloadTask {
     const folder = MinecraftFolder.from(minecraft)
     const type = options.side ?? 'client'
     const destination = join(folder.getVersionRoot(version.id),
-      type === 'client' ? version.id + '.jar' : version.id + '-' + type + '.jar')
+      type === 'client' ? version.id + '.jar' : version.id + '-' + type + '-launch.jar')
     const download = version.downloads[type]
     if (!download) {
       throw new Error(`Cannot find downloadable jar in ${type}`)

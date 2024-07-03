@@ -490,7 +490,7 @@ export function installByInstallerTask(version: RequiredVersion, minecraft: Mine
     const forgeVersion = getForgeArtifactVersion()
     const isLegacy = version.mcversion.startsWith('1.4.')
     const mc = MinecraftFolder.from(minecraft)
-    const jarPath = await this.yield(new DownloadForgeInstallerTask(forgeVersion, version.installer, mc, options, isLegacy)
+    const jarPath: string = await this.yield(new DownloadForgeInstallerTask(forgeVersion, version.installer, mc, options, isLegacy)
       .map(function () { return this.installJarPath }))
 
     if (isLegacy) {
