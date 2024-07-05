@@ -394,10 +394,6 @@ export interface BaseServerOptions {
    */
   javaPath: string
   /**
-   * Current working directory. Default is the same with the path.
-   */
-  cwd?: string
-  /**
    * No gui for the server launch
    */
   nogui?: boolean
@@ -431,8 +427,7 @@ export interface ServerOptions extends BaseServerOptions {
 
 export async function launchServer(options: ServerOptions) {
   const args = await generateArgumentsServer(options)
-  const cwd = options.cwd
-  const spawnOption = { cwd, env: process.env, ...(options.extraExecOption || {}) }
+  const spawnOption = { env: process.env, ...(options.extraExecOption || {}) }
   return (options.spawn ?? spawn)(args[0], args.slice(1), spawnOption)
 }
 
@@ -575,7 +570,7 @@ export async function generateArgumentsServer(options: ServerOptions) {
     ...extraJVMArgs,
   ]
 
-  if (options.classPath) {
+  if (options.classPath && options.classPath.length > 0) {
     cmd.push('-cp', options.classPath.join(delimiter))
   }
 

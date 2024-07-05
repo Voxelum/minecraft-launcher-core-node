@@ -37,6 +37,7 @@ export class MinecraftFolder {
   getNativesRoot(version: string) { return join(this.getVersionRoot(version), version + '-natives') }
   getVersionRoot(version: string) { return join(this.versions, version) }
   getVersionJson(version: string) { return join(this.getVersionRoot(version), version + '.json') }
+  getVersionServerJson(version: string) { return join(this.getVersionRoot(version), 'server.json') }
   getVersionJar(version: string, type?: string) {
     if (type === 'client' || !type) return join(this.getVersionRoot(version), version + '.jar')
     if (type === 'server') return this.getPath('libraries', 'net', 'minecraft', 'server', version, `server-${version}-bundled.jar`)
