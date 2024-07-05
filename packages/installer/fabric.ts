@@ -1,5 +1,5 @@
 import { MinecraftFolder, MinecraftLocation, Version } from '@xmcl/core'
-import { writeFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { Dispatcher, request } from 'undici'
 import { InstallOptions, ensureFile } from './utils'
@@ -142,13 +142,12 @@ export interface FabricInstallOptions extends InstallOptions {
 }
 
 /**
- * Generate fabric version json to the disk according to yarn and loader
- * @param side Client or server
- * @param yarnVersion The yarn version string or artifact
- * @param loader The loader artifact
- * @param minecraft The Minecraft Location
- * @param options The options
+ * Generate fabric version json to the disk according to yarn and loader.
+ *
+ * If side is `server`, it requires the Minecraft version json to be installed.
+ *
  * @beta
+ * @returns The installed version id
  */
 export async function installFabric(loader: FabricLoaderArtifact, minecraft: MinecraftLocation, options: FabricInstallOptions = {}) {
   const folder = MinecraftFolder.from(minecraft)
@@ -223,6 +222,18 @@ export async function installFabric(loader: FabricLoaderArtifact, minecraft: Min
       _minecraftVersion: mcversion,
       _fabricLoaderVersion: loader.loader.version,
     }
+
+    const mcVer = JSON.parse(await readFile(folder.getVersionJson(mcversion), 'utf-8'))
+    installProfile.libraries.push({
+      name: `net.minecraft:server:${mcversion}:server-${mcversion}:bundled`,
+      downloads: {
+        artifact: {
+          ...mcVer.downloads.server!,
+          path: `net/minecraft/server/${mcversion}/server-${mcversion}.jar`,
+        },
+      },
+    })
+
     await writeFile(join(folder.getVersionRoot(id), 'server.json'), JSON.stringify(installProfile))
   }
 

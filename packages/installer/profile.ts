@@ -7,6 +7,7 @@ import { basename, delimiter, dirname, join, relative, sep } from 'path'
 import { ZipFile } from 'yauzl'
 import { InstallLibraryTask, InstallSideOption, LibraryOptions } from './minecraft'
 import { checksum, errorToString, missing, SpawnJavaOptions, waitProcess } from './utils'
+import { convertClasspathToMaven, parseManifest } from './manifest'
 
 export interface PostProcessor {
   /**
@@ -249,7 +250,27 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         }
       }
 
-      const libraries: Version.Library[] = [...installProfile.libraries]
+      const libraries: Version.Library[] = []
+      if (jar) {
+        // Open the jar and find the main class
+        let zip: ZipFile | undefined
+        try {
+          zip = await open(jar, { lazyEntries: true, autoClose: false })
+          const [entry] = await filterEntries(zip, ['META-INF/MANIFEST.MF'])
+          if (entry) {
+            const manifestContent = await readEntry(zip, entry).then((b) => b.toString())
+            const result = parseManifest(manifestContent)
+            mainClass = result.mainClass
+            const cp = [...result.classPath, relative(minecraftFolder.libraries, jar).replaceAll(sep, '/')]
+            libraries.push(...convertClasspathToMaven(cp).map(v => ({ name: v })))
+          }
+        } catch (e) {
+          throw new PostProcessBadJarError(jar, e as any)
+        } finally {
+          zip?.close()
+        }
+      }
+
       const forgeVersion = basename(dirname(txtPath)).substring(installProfile.minecraft.length + 1)
       const serverProfile: Version = {
         id: installProfile.version,
@@ -259,7 +280,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
           game,
           jvm,
         },
-        jar: jar ? relative(minecraftFolder.libraries, jar).replaceAll(sep, '/') : jar,
+        jar: jar && !mainClass ? relative(minecraftFolder.libraries, jar).replaceAll(sep, '/') : undefined,
         releaseTime: new Date().toJSON(),
         time: new Date().toJSON(),
         minimumLauncherVersion: 13,

@@ -14,6 +14,7 @@
         "diagnose.ts",
         "profile.ts",
         "labymod.ts",
+        "manifest.ts",
         "downloadTask.ts"
     ],
     "extends": "../../tsconfig.json",
