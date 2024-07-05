@@ -180,7 +180,7 @@ export function parseJavaVersion(versionText: string): { version: string; majorV
       return {
         version: match[0],
         majorVersion: Number.parseInt(match[2]),
-        patch: Number.parseInt(match[4].substring(1) ?? '-1'),
+        patch: Number.parseInt(match[4]?.substring(1) ?? '-1'),
       }
     }
     return {
