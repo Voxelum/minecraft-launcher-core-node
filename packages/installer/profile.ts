@@ -67,8 +67,8 @@ export interface InstallProfile {
 
 export interface InstallProfileOption extends LibraryOptions, InstallSideOption, SpawnJavaOptions {
   /**
-     * New forge (>=1.13) require java to install. Can be a executor or java executable path.
-     */
+   * New forge (>=1.13) require java to install. Can be a executor or java executable path.
+   */
   java?: string
 }
 
@@ -255,6 +255,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         // Open the jar and find the main class
         let zip: ZipFile | undefined
         try {
+          const jsonContent: Version = JSON.parse(await readFile(minecraftFolder.getVersionJson(installProfile.version), 'utf-8'))
           zip = await open(jar, { lazyEntries: true, autoClose: false })
           const [entry] = await filterEntries(zip, ['META-INF/MANIFEST.MF'])
           if (entry) {
@@ -262,7 +263,11 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
             const result = parseManifest(manifestContent)
             mainClass = result.mainClass
             const cp = [...result.classPath, relative(minecraftFolder.libraries, jar).replaceAll(sep, '/')]
-            libraries.push(...convertClasspathToMaven(cp).map(v => ({ name: v })))
+            libraries.push(...jsonContent.libraries.filter(l => !l.name.endsWith(':client')))
+            for (const name of convertClasspathToMaven(cp)) {
+              if (libraries.find(l => l.name === name)) continue
+              libraries.push({ name })
+            }
           }
         } catch (e) {
           throw new PostProcessBadJarError(jar, e as any)
@@ -271,7 +276,6 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         }
       }
 
-      const forgeVersion = basename(dirname(txtPath)).substring(installProfile.minecraft.length + 1)
       const serverProfile: Version = {
         id: installProfile.version,
         libraries,
@@ -285,10 +289,15 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         time: new Date().toJSON(),
         minimumLauncherVersion: 13,
         mainClass,
-        _minecraftVersion: installProfile.minecraft,
-        _forgeVersion: forgeVersion,
+        inheritsFrom: installProfile.minecraft,
       }
       await writeFile(join(minecraftFolder.getVersionRoot(serverProfile.id), 'server.json'), JSON.stringify(serverProfile, null, 4))
+
+      const resolvedLibraries = VersionJson.resolveLibraries(serverProfile.libraries)
+      await this.all(resolvedLibraries.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
+        throwErrorImmediately: options.throwErrorImmediately ?? false,
+        getErrorMessage: (errs) => `Errors during install libraries at ${minecraftFolder.root}: ${errs.map(errorToString).join('\n')}`,
+      })
     }
   })
 }

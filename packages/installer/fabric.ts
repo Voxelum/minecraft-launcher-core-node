@@ -219,22 +219,12 @@ export async function installFabric(loader: FabricLoaderArtifact, minecraft: Min
       time: new Date().toJSON(),
       minimumLauncherVersion: 13,
       mainClass,
-      _minecraftVersion: mcversion,
-      _fabricLoaderVersion: loader.loader.version,
+      inheritsFrom: mcversion,
     }
 
-    const mcVer = JSON.parse(await readFile(folder.getVersionJson(mcversion), 'utf-8'))
-    installProfile.libraries.push({
-      name: `net.minecraft:server:${mcversion}:server-${mcversion}:bundled`,
-      downloads: {
-        artifact: {
-          ...mcVer.downloads.server!,
-          path: `net/minecraft/server/${mcversion}/server-${mcversion}.jar`,
-        },
-      },
-    })
-
-    await writeFile(join(folder.getVersionRoot(id), 'server.json'), JSON.stringify(installProfile))
+    const jsonFile = folder.getVersionServerJson(id)
+    await ensureFile(jsonFile)
+    await writeFile(jsonFile, JSON.stringify(installProfile, null, 4))
   }
 
   return id
