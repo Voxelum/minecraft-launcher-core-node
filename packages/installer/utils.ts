@@ -34,17 +34,17 @@ export async function ensureDir(target: string) {
 
 export interface SpawnJavaOptions {
   /**
-     * The java exectable path. It will use `java` by default.
-     *
-     * @defaults "java"
-     */
+   * The java exectable path. It will use `java` by default.
+   *
+   * @defaults "java"
+   */
   java?: string
 
   /**
-     * The spawn process function. Used for spawn the java process at the end.
-     *
-     * By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
-     */
+   * The spawn process function. Used for spawn the java process at the end.
+   *
+   * By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
+   */
   spawn?: (command: string, args?: ReadonlyArray<string>, options?: SpawnOptions) => ChildProcess
 }
 

@@ -31,7 +31,7 @@ export function convertClasspathToMaven(paths: string[]): string[] {
 }
 
 export function parseManifest(manifestContent: string): { mainClass: string; classPath: string[] } {
-  const lines = manifestContent.split('\n')
+  const lines = manifestContent.split('\r\n')
   let mainClass = ''
   let classPath = [] as string[]
 
@@ -43,7 +43,7 @@ export function parseManifest(manifestContent: string): { mainClass: string; cla
       let classPathLine = line.substring('Class-Path:'.length).trim()
       while (i + 1 < lines.length && lines[i + 1].startsWith(' ')) {
         i++
-        classPathLine += lines[i].slice(1).trim()
+        classPathLine += lines[i].slice(1)
       }
       classPath = classPathLine.split(' ').filter(path => path.length > 0)
     }

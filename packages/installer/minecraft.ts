@@ -461,8 +461,7 @@ export class InstallJarTask extends DownloadTask {
   constructor(version: ResolvedVersion & { downloads: Required<ResolvedVersion>['downloads'] }, minecraft: MinecraftLocation, options: Options) {
     const folder = MinecraftFolder.from(minecraft)
     const type = options.side ?? 'client'
-    const destination = join(folder.getVersionRoot(version.id),
-      type === 'client' ? version.id + '.jar' : version.id + '-' + type + '-launch.jar')
+    const destination = folder.getVersionJar(version.id, type)
     const download = version.downloads[type]
     if (!download) {
       throw new Error(`Cannot find downloadable jar in ${type}`)
