@@ -424,9 +424,7 @@ export class PostProcessingTask extends AbortableTask<void> {
       if (this.isPaused) {
         throw PAUSEED
       }
-      if (!proc.outputs || Object.keys(proc.outputs).length === 0 || await this.isInvalid(proc.outputs)) {
-        await this.postProcess(this.minecraft, proc, this.java)
-      }
+      await this.postProcess(this.minecraft, proc, this.java)
       if (this.isCancelled) {
         throw new CancelledError()
       }
