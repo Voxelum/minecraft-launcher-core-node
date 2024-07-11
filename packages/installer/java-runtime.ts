@@ -14,8 +14,10 @@ export interface JavaRuntimes {
   linux: JavaRuntimeTargets
   'linux-i386': JavaRuntimeTargets
   'mac-os': JavaRuntimeTargets
+  'mac-os-arm64': JavaRuntimeTargets
   'windows-x64': JavaRuntimeTargets
   'windows-x86': JavaRuntimeTargets
+  'windows-arm64': JavaRuntimeTargets
 }
 
 export interface JavaRuntimeTargets {
@@ -28,14 +30,16 @@ export interface JavaRuntimeTargets {
 
 export enum JavaRuntimeTargetType {
   /**
-     * The legacy java version
-     */
+   * The legacy java version
+   */
   Legacy = 'jre-legacy',
   /**
-     * The new java environment, which is the java 16
-     */
+   * The new java environment, which is the java 16
+   */
   Alpha = 'java-runtime-alpha',
   Beta = 'java-runtime-beta',
+  Delta = 'java-runtime-delta',
+  Gamma = 'java-runtime-gamma',
   JavaExe = 'minecraft-java-exe',
 }
 
@@ -51,20 +55,20 @@ export interface JavaRuntimeTarget {
     progress: number
   }
   /**
-     * The manifest detail of the resource
-     */
+   * The manifest detail of the resource
+   */
   manifest: DownloadInfo
   /**
-     * The basic version info of the manifest
-     */
+   * The basic version info of the manifest
+   */
   version: {
     /**
-         * The name of the version. e.g. `8u51`, `12`, `16.0.1.9.1`
-         */
+     * The name of the version. e.g. `8u51`, `12`, `16.0.1.9.1`
+     */
     name: string
     /**
-         * The date string (UTC)
-         */
+     * The date string (UTC)
+     */
     released: string
   }
 }
@@ -76,8 +80,8 @@ export interface Entry {
 export interface LinkEntry extends Entry {
   type: 'link'
   /**
-     * The link target
-     */
+   * The link target
+   */
   target: string
 }
 
@@ -87,16 +91,16 @@ export interface DirectoryEntry extends Entry {
 
 export interface DownloadInfo {
   /**
-     * The sha info of the resource
-     */
+   * The sha info of the resource
+   */
   sha1: string
   /**
-     * The size of the resource
-     */
+   * The size of the resource
+   */
   size: number
   /**
-     * The url to download resource
-     */
+   * The url to download resource
+   */
   url: string
 }
 
@@ -105,12 +109,12 @@ export interface FileEntry extends Entry {
   executable: boolean
   downloads: {
     /**
-         * The raw format of the file
-         */
+     * The raw format of the file
+     */
     raw: DownloadInfo
     /**
-         * The lzma format of the file
-         */
+     * The lzma format of the file
+     */
     lzma?: DownloadInfo
   }
 }
@@ -123,8 +127,8 @@ export type AnyEntry = FileEntry | DirectoryEntry | LinkEntry
 export interface JavaRuntimeManifest {
   target: JavaRuntimeTargetType | string
   /**
-     * The files of the java runtime
-     */
+   * The files of the java runtime
+   */
   files: Record<string, AnyEntry>
 
   version: JavaRuntimeTarget['version']
@@ -160,30 +164,30 @@ function normalizeUrls(url: string, fileHost?: string | string[]): string[] {
 
 export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
   /**
-     * The alternative download host for the file
-     */
+   * The alternative download host for the file
+   */
   apiHost?: string | string[]
   /**
-     * The url of the all runtime json
-     */
+   * The url of the all runtime json
+   */
   url?: string
   /**
-     * The platform to install. It will be auto-resolved by default.
-     * @default getPlatform()
-     */
+   * The platform to install. It will be auto-resolved by default.
+   * @default getPlatform()
+   */
   platform?: Platform
   /**
-     * The install java runtime type
-     * @default InstallJavaRuntimeTarget.Next
-     */
+   * The install java runtime type
+   * @default InstallJavaRuntimeTarget.Next
+   */
   target?: JavaRuntimeTargetType | string
   /**
-     * The index manifest of the java runtime. If this is not presented, it will fetch by platform and all platform url.
-     */
+   * The index manifest of the java runtime. If this is not presented, it will fetch by platform and all platform url.
+   */
   manifestIndex?: JavaRuntimes
   /**
-     * The dispatcher to request API
-     */
+   * The dispatcher to request API
+   */
   dispatcher?: Dispatcher
 }
 
@@ -210,8 +214,15 @@ export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifest
       if (platform.arch === 'x86' || platform.arch === 'x32') {
         return manifest['windows-x86']
       }
+      if (platform.arch === 'arm64') {
+        return manifest['windows-arm64']
+      }
+      return manifest['windows-x64']
     }
     if (platform.name === 'osx') {
+      if (platform.arch === 'arm64') {
+        return manifest['mac-os-arm64']
+      }
       return manifest['mac-os']
     }
     if (platform.name === 'linux') {
@@ -221,6 +232,7 @@ export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifest
       if (platform.arch === 'x64') {
         return manifest.linux
       }
+      return manifest.linux
     }
     throw new Error('Cannot resolve platform')
   }
