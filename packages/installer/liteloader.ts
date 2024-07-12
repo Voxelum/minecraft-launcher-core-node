@@ -1,8 +1,6 @@
 import { MinecraftFolder, MinecraftLocation } from '@xmcl/core'
-import { Task, task } from '@xmcl/task'
 import { readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
-import { Dispatcher, request } from 'undici'
 import { ensureDir, InstallOptions, missing } from './utils'
 
 export const DEFAULT_VERSION_MANIFEST = 'http://dl.liteloader.com/versions/versions.json'
@@ -34,7 +32,7 @@ export namespace LiteloaderVersionList {
     const metalist = { meta: result.meta, versions: {} }
     for (const mcversion in result.versions) {
       const versions: { release?: LiteloaderVersion; snapshot?: LiteloaderVersion } =
-                (metalist.versions as any)[mcversion] = {}
+        (metalist.versions as any)[mcversion] = {}
       const snapshots = result.versions[mcversion].snapshots
       const artifacts = result.versions[mcversion].artefacts // that's right, artefact
       const url = result.versions[mcversion].repo.url
@@ -132,8 +130,27 @@ export async function getLiteloaderVersionList(options: {
  * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
  * @throws {@link MissingVersionJsonError}
  */
-export function installLiteloader(versionMeta: LiteloaderVersion, location: MinecraftLocation, options?: InstallOptions) {
-  return installLiteloaderTask(versionMeta, location, options).startAndWait()
+export async function installLiteloader(versionMeta: LiteloaderVersion, location: MinecraftLocation, options: InstallOptions = {}) {
+  const mc: MinecraftFolder = MinecraftFolder.from(location)
+
+  const mountVersion = options.inheritsFrom || versionMeta.mcversion
+
+  if (await missing(mc.getVersionJson(mountVersion))) {
+    throw new MissingVersionJsonError(mountVersion, mc.getVersionJson(mountVersion))
+  }
+  const mountedJSON: any = await readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse)
+
+  const inf = buildVersionInfo(versionMeta, mountedJSON)
+
+  inf.id = options.versionId || inf.id
+  inf.inheritsFrom = options.inheritsFrom || inf.inheritsFrom
+
+  const versionPath = mc.getVersionRoot(inf.id)
+
+  await ensureDir(versionPath)
+  await writeFile(join(versionPath, inf.id + '.json'), JSON.stringify(inf, undefined, 4))
+
+  return inf.id as string
 }
 
 function buildVersionInfo(versionMeta: LiteloaderVersion, mountedJSON: any) {
@@ -165,47 +182,4 @@ function buildVersionInfo(versionMeta: LiteloaderVersion, mountedJSON: any) {
     info.minecraftArguments = `--tweakClass ${versionMeta.tweakClass} ` + mountedJSON.minecraftArguments
   }
   return info
-}
-
-/**
- * Install the liteloader to specific minecraft location.
- *
- * This will install the liteloader amount on the corresponded Minecraft version by default.
- * If you want to install over the forge. You should first install forge and pass the installed forge version id to the third param,
- * like `1.12-forge-xxxx`
- *
- * @tasks installLiteloader, installLiteloader.resolveVersionJson installLiteloader.generateLiteloaderJson
- *
- * @param versionMeta The liteloader version metadata.
- * @param location The minecraft location you want to install
- * @param version The real existed version id (under the the provided minecraft location) you want to installed liteloader inherit
- */
-export function installLiteloaderTask(versionMeta: LiteloaderVersion, location: MinecraftLocation, options: InstallOptions = {}): Task<string> {
-  return task('installLiteloader', async function installLiteloader() {
-    const mc: MinecraftFolder = MinecraftFolder.from(location)
-
-    const mountVersion = options.inheritsFrom || versionMeta.mcversion
-
-    const mountedJSON: any = await this.yield(task('resolveVersionJson', async function resolveVersionJson() {
-      if (await missing(mc.getVersionJson(mountVersion))) {
-        throw new MissingVersionJsonError(mountVersion, mc.getVersionJson(mountVersion))
-      }
-      return readFile(mc.getVersionJson(mountVersion)).then((b) => b.toString()).then(JSON.parse)
-    }))
-
-    const versionInf = await this.yield(task('generateLiteloaderJson', async function generateLiteloaderJson() {
-      const inf = buildVersionInfo(versionMeta, mountedJSON)
-
-      inf.id = options.versionId || inf.id
-      inf.inheritsFrom = options.inheritsFrom || inf.inheritsFrom
-
-      const versionPath = mc.getVersionRoot(inf.id)
-
-      await ensureDir(versionPath)
-      await writeFile(join(versionPath, inf.id + '.json'), JSON.stringify(inf, undefined, 4))
-
-      return inf
-    }))
-    return versionInf.id as string
-  })
 }

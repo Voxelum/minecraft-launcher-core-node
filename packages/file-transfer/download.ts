@@ -6,7 +6,6 @@ import { PassThrough, Transform, Writable, finished as sfinished } from 'stream'
 import { Agent, Dispatcher, errors, stream } from 'undici'
 // @ts-ignore
 import { parseRangeHeader } from 'undici/lib/core/util'
-import { AbortSignal } from './abort'
 import { getDefaultAgentOptions } from './agent'
 import { CheckpointHandler } from './checkpoint'
 import { ProgressController, resolveProgressController } from './progress'
@@ -51,11 +50,17 @@ export interface DownloadBaseOptions {
    * The checkpoint handler to save & restore the download progress
    */
   checkpointHandler?: CheckpointHandler
-
+  /**
+   * Skip pre-head request to get the file size and range support
+   */
   skipHead?: boolean
-
+  /**
+   * Skip revalidate the file checksum after download
+   */
   skipRevalidate?: boolean
-
+  /**
+   * Skip prevalidate the file checksum before download
+   */
   skipPrevalidate?: boolean
 }
 
@@ -83,7 +88,7 @@ export interface DownloadOptions extends DownloadBaseOptions {
   /**
    * The user abort signal to abort the download
    */
-  abortSignal?: AbortSignal
+  signal?: AbortSignal
   /**
    * Will first download to pending file and then rename to actual file
    */
@@ -245,7 +250,7 @@ export async function download(options: DownloadOptions) {
   const destination = options.destination
   const progressController = resolveProgressController(options.progressController)
   const validator = resolveValidator(options.validator)
-  const abortSignal = options.abortSignal
+  const abortSignal = options.signal
   const pendingFile = options.pendingFile
   const skipPrevalidate = options.skipPrevalidate
   const skipRevalidate = options.skipRevalidate
@@ -318,7 +323,7 @@ export async function download(options: DownloadOptions) {
           totals[index] = partLength
           const writtenTotal = writtens.reduce((a, b) => a + b, 0)
           const totalTotal = metadata?.total || totalLength || totals.reduce((a, b) => a + b, 0)
-          progressController.onProgress(url, chunk, writtenTotal, totalTotal)
+          progressController(url, chunk, writtenTotal, totalTotal)
         }, abortSignal)),
       )
 
@@ -332,7 +337,7 @@ export async function download(options: DownloadOptions) {
             totals[0] = partLength
             const writtenTotal = writtens.reduce((a, b) => a + b, 0)
             const totalTotal = metadata?.total || totalLength || totals.reduce((a, b) => a + b, 0)
-            progressController.onProgress(url, chunk, writtenTotal, totalTotal)
+            progressController(url, chunk, writtenTotal, totalTotal)
           }, abortSignal),
         ]
       }

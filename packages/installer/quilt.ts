@@ -1,35 +1,31 @@
 import { MinecraftFolder, MinecraftLocation, Version } from '@xmcl/core'
 import { writeFile } from 'fs/promises'
-import { Dispatcher, request, CacheStorage } from 'undici'
-import { ensureFile } from './utils'
+import { FetchOptions, doFetch, ensureFile } from './utils'
 
 export const DEFAULT_META_URL = 'https://meta.quiltmc.org'
 
-export interface InstallQuiltVersionOptions {
+export interface InstallQuiltVersionOptions extends FetchOptions {
   minecraftVersion: string
   version: string
   minecraft: MinecraftLocation
-
-  dispatcher?: Dispatcher
+  side?: 'client' | 'server'
 }
 
+/**
+ * Install quilt version via profile API
+ */
 export async function installQuiltVersion(options: InstallQuiltVersionOptions) {
-  const url = `${DEFAULT_META_URL}/v3/versions/loader/${options.minecraftVersion}/${options.version}/profile/json`
-  const response = await request(url, { dispatcher: options.dispatcher })
-  const content: Version = await response.body.json() as any
+  const side = options.side ?? 'client'
+  const url = side === 'client'
+    ? `${DEFAULT_META_URL}/v3/versions/loader/${options.minecraftVersion}/${options.version}/profile/json`
+    : `${DEFAULT_META_URL}/v3/versions/loader/${options.minecraftVersion}/${options.version}/server/json`
+  const response = await doFetch(options, url)
+  const content: Version = await response.json() as any
 
   const minecraft = MinecraftFolder.from(options.minecraft)
   const versionName = content.id
 
-  const jsonPath = minecraft.getVersionJson(versionName)
-
-  const hashed = content.libraries.find((l) => l.name.startsWith('org.quiltmc:hashed'))
-  if (hashed) {
-    hashed.name = hashed.name.replace('org.quiltmc:hashed', 'net.fabricmc:intermediary')
-    if ('url' in hashed) {
-      hashed.url = 'https://maven.fabricmc.net/'
-    }
-  }
+  const jsonPath = side === 'client' ? minecraft.getVersionJson(versionName) : minecraft.getVersionServerJson(versionName)
 
   await ensureFile(jsonPath)
   await writeFile(jsonPath, JSON.stringify(content))
@@ -37,9 +33,6 @@ export async function installQuiltVersion(options: InstallQuiltVersionOptions) {
   return versionName
 }
 
-export interface GetQuiltOptions {
-  dispatcher?: Dispatcher
-}
 
 export interface QuiltArtifactVersion {
   separator: string
@@ -51,8 +44,25 @@ export interface QuiltArtifactVersion {
   version: string
 }
 
-export async function getQuiltVersionsList(options?: GetQuiltOptions): Promise<QuiltArtifactVersion[]> {
-  const response = await request(`${DEFAULT_META_URL}/v3/versions/loader`, { dispatcher: options?.dispatcher, throwOnError: true })
-  const content: QuiltArtifactVersion[] = await response.body.json() as any
+/**
+ * Get quilt loader versions list
+ */
+export async function getQuiltLoaderVersions(options?: FetchOptions): Promise<QuiltArtifactVersion[]> {
+  const response = await doFetch(options, `${DEFAULT_META_URL}/v3/versions/loader`)
+  const content: QuiltArtifactVersion[] = await response.json() as any
+  return content
+}
+
+
+export interface GetQuiltOptions extends FetchOptions {
+  minecraftVersion: string
+}
+
+/**
+ * Get quilt loader versions list for a specific minecraft version
+ */
+export async function getQuiltLoaderVersionsByMinecraft(options: GetQuiltOptions): Promise<QuiltArtifactVersion[]> {
+  const response = await doFetch(options, `${DEFAULT_META_URL}/v3/versions/loader/${options.minecraftVersion}`)
+  const content: QuiltArtifactVersion[] = await response.json() as any
   return content
 }

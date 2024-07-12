@@ -21,7 +21,6 @@
     "@xmcl/core": "workspace:^*",
     "@xmcl/file-transfer": "workspace:^*",
     "@xmcl/forge-site-parser": "workspace:^*",
-    "@xmcl/task": "workspace:^*",
     "@xmcl/unzip": "workspace:^*",
     "undici": "6.14.0",
     "yazl": "^2.5.1",

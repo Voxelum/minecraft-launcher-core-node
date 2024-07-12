@@ -6,9 +6,3 @@ export function resolveAbortSignal(signal?: AbortSignal) {
     removeEventListener() { return this },
   }
 }
-
-export interface AbortSignal {
-  readonly aborted: boolean
-  addEventListener(event: string, handler: () => void): this
-  removeEventListener(event: string, handler: () => void): this
-}

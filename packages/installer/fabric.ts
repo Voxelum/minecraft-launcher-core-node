@@ -1,11 +1,6 @@
-import { MinecraftFolder, MinecraftLocation, Version } from '@xmcl/core'
-import { readFile, writeFile } from 'fs/promises'
-import { join } from 'path'
-import { Dispatcher, request } from 'undici'
-import { InstallOptions, ensureFile } from './utils'
-
-export const YARN_MAVEN_URL = 'https://maven.fabricmc.net/net/fabricmc/yarn/maven-metadata.xml'
-export const LOADER_MAVEN_URL = 'https://maven.fabricmc.net/net/fabricmc/fabric-loader/maven-metadata.xml'
+import { MinecraftFolder, MinecraftLocation } from '@xmcl/core'
+import { writeFile } from 'fs/promises'
+import { FetchOptions, InstallOptions, doFetch, ensureFile } from './utils'
 
 export interface FabricArtifactVersion {
   gameVersion?: string // "20w10a",
@@ -38,8 +33,7 @@ export interface FabricLoaderArtifact {
   }
 }
 
-export interface FabricOptions {
-  dispatcher?: Dispatcher
+export interface FabricOptions extends FetchOptions {
 }
 
 /**
@@ -48,8 +42,8 @@ export interface FabricOptions {
  * @beta
  */
 export async function getFabricArtifacts(options?: FabricOptions): Promise<FabricArtifacts> {
-  const response = await request('https://meta.fabricmc.net/v2/versions', { throwOnError: true, dispatcher: options?.dispatcher })
-  const body = response.body.json() as any
+  const response = await doFetch(options, 'https://meta.fabricmc.net/v2/versions')
+  const body = response.json()
   return body
 }
 /**
@@ -58,8 +52,8 @@ export async function getFabricArtifacts(options?: FabricOptions): Promise<Fabri
  * @beta
  */
 export async function getYarnArtifactList(options?: FabricOptions): Promise<FabricArtifactVersion[]> {
-  const response = await request('https://meta.fabricmc.net/v2/versions/yarn', { throwOnError: true, dispatcher: options?.dispatcher })
-  const body = response.body.json() as any
+  const response = await doFetch(options, 'https://meta.fabricmc.net/v2/versions/yarn')
+  const body = response.json()
   return body
 }
 /**
@@ -69,8 +63,8 @@ export async function getYarnArtifactList(options?: FabricOptions): Promise<Fabr
  * @beta
  */
 export async function getYarnArtifactListFor(minecraft: string, options?: FabricOptions): Promise<FabricArtifactVersion[]> {
-  const response = await request('https://meta.fabricmc.net/v2/versions/yarn/' + minecraft, { throwOnError: true, dispatcher: options?.dispatcher })
-  const body = response.body.json() as any
+  const response = await doFetch(options, 'https://meta.fabricmc.net/v2/versions/yarn/' + minecraft)
+  const body = response.json()
   return body
 }
 /**
@@ -79,8 +73,8 @@ export async function getYarnArtifactListFor(minecraft: string, options?: Fabric
  * @beta
  */
 export async function getLoaderArtifactList(options?: FabricOptions): Promise<FabricArtifactVersion[]> {
-  const response = await request('https://meta.fabricmc.net/v2/versions/loader', { throwOnError: true, dispatcher: options?.dispatcher })
-  const body = response.body.json() as any
+  const response = await doFetch(options, 'https://meta.fabricmc.net/v2/versions/loader')
+  const body = response.json()
   return body
 }
 /**
@@ -90,8 +84,8 @@ export async function getLoaderArtifactList(options?: FabricOptions): Promise<Fa
  * @beta
  */
 export async function getLoaderArtifactListFor(minecraft: string, options?: FabricOptions): Promise<FabricLoaderArtifact[]> {
-  const response = await request('https://meta.fabricmc.net/v2/versions/loader/' + minecraft, { throwOnError: true, dispatcher: options?.dispatcher })
-  const body = response.body.json() as any
+  const response = await doFetch(options, 'https://meta.fabricmc.net/v2/versions/loader/' + minecraft)
+  const body = response.json()
   return body
 }
 /**
@@ -102,130 +96,65 @@ export async function getLoaderArtifactListFor(minecraft: string, options?: Fabr
  * @beta
  */
 export async function getFabricLoaderArtifact(minecraft: string, loader: string, options?: FabricOptions): Promise<FabricLoaderArtifact> {
-  const response = await request('https://meta.fabricmc.net/v2/versions/loader/' + minecraft + '/' + loader, { throwOnError: true, dispatcher: options?.dispatcher })
-  const body = response.body.json() as any
+  const response = await doFetch(options, 'https://meta.fabricmc.net/v2/versions/loader/' + minecraft + '/' + loader)
+  const body = response.json()
   return body
 }
-
-/**
- * Install the fabric to the client. Notice that this will only install the json.
- * You need to call `Installer.installDependencies` to get a full client.
- * @param yarnVersion The yarn version
- * @param loaderVersion The fabric loader version
- * @param minecraft The minecraft location
- * @returns The installed version id
- */
-// export async function installFabricYarnAndLoader(yarnVersion: string, loaderVersion: string, minecraft: MinecraftLocation, options: InstallOptions = {}) {
-//     const folder = MinecraftFolder.from(minecraft);
-//     const mcversion = yarnVersion.split("+")[0];
-//     const id = options.versionId || `${mcversion}-fabric${yarnVersion}-${loaderVersion}`;
-
-//     const jsonFile = folder.getVersionJson(id);
-
-//     const body: Version = constr esponse = await request(`https://fabricmc.net/download/technic/?yarn=${encodeURIComponent(yarnVersion)}&loader=${encodeURIComponent(loaderVersion)}`, { throwOnError: true, dispatcher: options?.dispatcher });
-//     const body = response.body.json() as any;
-//     return body;
-//     body.id = id;
-//     if (typeof options.inheritsFrom === "string") {
-//         body.inheritsFrom = options.inheritsFrom;
-//     }
-//     await ensureFile(jsonFile);
-//     await writeFile(jsonFile, JSON.stringify(body));
-
-//     return id;
-// }
 
 export interface FabricInstallOptions extends InstallOptions {
   side?: 'client' | 'server'
   yarnVersion?: string | FabricArtifactVersion
-  dispatcher?: Dispatcher
 }
 
 /**
- * Generate fabric version json to the disk according to yarn and loader.
- *
- * If side is `server`, it requires the Minecraft version json to be installed.
- *
- * @beta
- * @returns The installed version id
+ * Generate fabric version json from loader artifact.
+ * @param loader The fabric loader artifact
+ * @param side The side of the fabric
+ * @param options 
+ * @returns The generated version json
  */
-export async function installFabric(loader: FabricLoaderArtifact, minecraft: MinecraftLocation, options: FabricInstallOptions = {}) {
-  const folder = MinecraftFolder.from(minecraft)
-
-  let yarn: string | undefined
-  const side = options.side ?? 'client'
-  let id = options.versionId
-  let mcversion: string
-  if (options.yarnVersion) {
-    const yarnVersion = options.yarnVersion
-    if (typeof yarnVersion === 'string') {
-      yarn = yarnVersion
-      mcversion = yarn.split('+')[0]
-    } else {
-      yarn = yarnVersion.version
-      mcversion = yarnVersion.gameVersion || yarn.split('+')[0]
-    }
-  } else {
-    mcversion = loader.intermediary.version
-  }
-
-  if (!id) {
-    id = mcversion
-    if (yarn) {
-      id += `-fabric${yarn}-loader${loader.loader.version}`
-    } else {
-      id += `-fabric${loader.loader.version}`
-    }
-  }
+export function getVersionJsonFromLoaderArtifact(loader: FabricLoaderArtifact, side: 'client' | 'server', options: FabricInstallOptions = {}) {
+  const mcversion = loader.intermediary.version
+  const id = `${mcversion}-fabric${loader.loader.version}`
   const libraries = [
     { name: loader.loader.maven, url: 'https://maven.fabricmc.net/' },
     { name: loader.intermediary.maven, url: 'https://maven.fabricmc.net/' },
-    ...(options.yarnVersion
-      ? [{ name: `net.fabricmc:yarn:${yarn}`, url: 'https://maven.fabricmc.net/' }]
-      : []),
     ...loader.launcherMeta.libraries.common,
     ...loader.launcherMeta.libraries[side],
   ]
   const mainClass = loader.launcherMeta.mainClass[side]
   const inheritsFrom = options.inheritsFrom || mcversion
 
-  if (side === 'client') {
-    const jsonFile = folder.getVersionJson(id)
-    await ensureFile(jsonFile)
-    await writeFile(jsonFile, JSON.stringify({
-      id,
-      inheritsFrom,
-      mainClass,
-      libraries,
-      arguments: {
-        game: [],
-        jvm: [],
-      },
-      releaseTime: new Date().toJSON(),
-      time: new Date().toJSON(),
-    }))
-  } else {
-    const installProfile: Version = {
-      id,
-      libraries: [
-        ...libraries,
-      ],
-      type: 'release',
-      arguments: {
-        game: [],
-        jvm: [],
-      },
-      releaseTime: new Date().toJSON(),
-      time: new Date().toJSON(),
-      minimumLauncherVersion: 13,
-      mainClass,
-      inheritsFrom: mcversion,
-    }
-
-    const jsonFile = folder.getVersionServerJson(id)
-    await ensureFile(jsonFile)
-    await writeFile(jsonFile, JSON.stringify(installProfile, null, 4))
+  return {
+    id,
+    inheritsFrom,
+    mainClass,
+    libraries,
+    arguments: {
+      game: [],
+      jvm: [],
+    },
+    releaseTime: new Date().toJSON(),
+    time: new Date().toJSON(),
   }
+}
 
-  return id
+/**
+ * Install fabric version json.
+ *
+ * If side is `server`, it requires the Minecraft version json to be installed.
+ *
+ * @returns The installed version id
+ */
+export async function installFabricByLoaderArtifact(loader: FabricLoaderArtifact, minecraft: MinecraftLocation, options: FabricInstallOptions = {}) {
+  const folder = MinecraftFolder.from(minecraft)
+
+  const side = options.side || 'client'
+  const version = getVersionJsonFromLoaderArtifact(loader, side, options)
+
+  const jsonFile = side === 'client' ? folder.getVersionJson(version.id) : folder.getVersionServerJson(version.id)
+  await ensureFile(jsonFile)
+  await writeFile(jsonFile, JSON.stringify(version, null, 4))
+
+  return version.id
 }

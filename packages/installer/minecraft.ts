@@ -1,11 +1,10 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version, Version as VersionJson } from '@xmcl/core'
-import { ChecksumNotMatchError, ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, Validator, getDownloadBaseOptions } from '@xmcl/file-transfer'
-import { Task, task } from '@xmcl/task'
+import { ChecksumNotMatchError, DownloadBaseOptions, JsonValidator, download, getDownloadBaseOptions } from '@xmcl/file-transfer'
+import type { Abortable } from 'events'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { join, relative, sep } from 'path'
-import { Dispatcher, request } from 'undici'
-import { DownloadTask } from './downloadTask'
-import { ParallelTaskOptions, ensureDir, errorToString, joinUrl, normalizeArray } from './utils'
+import { DownloadProgressPayload } from './DownloadProgressPayload'
+import { ChecksumOptions, FetchOptions, doFetch, ensureDir, joinUrl, normalizeArray, settled } from './utils'
 import { ZipValidator } from './zipValdiator'
 
 /**
@@ -83,20 +82,15 @@ export const DEFAULT_RESOURCE_ROOT_URL = 'https://resources.download.minecraft.n
  *
  * @returns The new list if there is
  */
-export async function getVersionList(options: {
-  /**
-     * Request dispatcher
-     */
-  dispatcher?: Dispatcher
-} = {}): Promise<MinecraftVersionList> {
-  const response = await request(DEFAULT_VERSION_MANIFEST_URL, { dispatcher: options.dispatcher, throwOnError: true })
-  return await response.body.json() as any
+export async function getVersionList(options: FetchOptions = {}): Promise<MinecraftVersionList> {
+  const response = await doFetch(options, DEFAULT_VERSION_MANIFEST_URL)
+  return await response.json() as MinecraftVersionList
 }
 
 /**
  * Change the library host url
  */
-export interface LibraryOptions extends DownloadBaseOptions, ParallelTaskOptions {
+export interface LibraryOptions extends DownloadBaseOptions, ChecksumOptions, Abortable {
   /**
    * A more flexiable way to control library download url.
    * @see mavenHost
@@ -106,42 +100,32 @@ export interface LibraryOptions extends DownloadBaseOptions, ParallelTaskOptions
    * The alterative maven host to download library. It will try to use these host from the `[0]` to the `[maven.length - 1]`
    */
   mavenHost?: string | string[]
-  /**
-   * Control how many libraries download task should run at the same time.
-   * It will override the `maxConcurrencyOption` if this is presented.
-   *
-   * This will be ignored if you have your own downloader assigned.
-   */
-  librariesDownloadConcurrency?: number
 
-  checksumValidatorResolver?: (checksum: ChecksumValidatorOptions) => Validator
+  onLibraryDownloadUpdate?: (library: ResolvedLibrary, progress: DownloadProgressPayload) => void
 }
 /**
  * Change the host url of assets download
  */
-export interface AssetsOptions extends DownloadBaseOptions, ParallelTaskOptions {
+export interface AssetsOptions extends DownloadBaseOptions, ChecksumOptions, FetchOptions {
   /**
-     * The alternative assets host to download asset. It will try to use these host from the `[0]` to the `[assetsHost.length - 1]`
-     */
+   * The alternative assets host to download asset. It will try to use these host from the `[0]` to the `[assetsHost.length - 1]`
+   */
   assetsHost?: string | string[]
-  /**
-     * Control how many assets download task should run at the same time.
-     * It will override the `maxConcurrencyOption` if this is presented.
-     *
-     * This will be ignored if you have your own downloader assigned.
-     */
-  assetsDownloadConcurrency?: number
-
   /**
    * The assets index download or url replacement
    */
   assetsIndexUrl?: string | string[] | ((version: ResolvedVersion) => string | string[])
 
-  checksumValidatorResolver?: (checksum: ChecksumValidatorOptions) => Validator
   /**
    * Only precheck the size of the assets. Do not check the hash.
    */
   prevalidSizeOnly?: boolean
+
+  onLogFileDownloadUpdate?: (progress: DownloadProgressPayload) => void
+
+  onAssetDownloadUpdate?: (asset: AssetInfo, progress: DownloadProgressPayload) => void
+
+  onAssetIndexDownloadUpdate?: (index: Version.AssetIndex, progress: DownloadProgressPayload) => void
 }
 
 export type InstallLibraryVersion = Pick<ResolvedVersion, 'libraries' | 'minecraftDirectory'>
@@ -161,7 +145,7 @@ function resolveDownloadUrls<T>(original: string, version: T, option?: string | 
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions, InstallSideOption {
+export interface JarOption extends DownloadBaseOptions, ChecksumOptions, InstallSideOption {
   /**
    * The version json url replacement
    */
@@ -175,7 +159,9 @@ export interface JarOption extends DownloadBaseOptions, ParallelTaskOptions, Ins
    */
   server?: string | string[] | ((version: ResolvedVersion) => string | string[])
 
-  checksumValidatorResolver?: (checksum: ChecksumValidatorOptions) => Validator
+  onJarDownloadUpdate?: (version: ResolvedVersion, progress: DownloadProgressPayload) => void
+
+  onJsonDownloadUpdate?: (version: MinecraftVersionBaseInfo, progress: DownloadProgressPayload) => void
 }
 
 export interface InstallSideOption {
@@ -185,7 +171,7 @@ export interface InstallSideOption {
   side?: 'client' | 'server'
 }
 
-export type Options = DownloadBaseOptions & ParallelTaskOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption
+export type Options = DownloadBaseOptions & ChecksumOptions & AssetsOptions & JarOption & LibraryOptions & InstallSideOption
 
 /**
  * Install the Minecraft game to a location by version metadata.
@@ -196,8 +182,12 @@ export type Options = DownloadBaseOptions & ParallelTaskOptions & AssetsOptions 
  * @param minecraft The Minecraft location
  * @param option
  */
-export async function install(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, option: Options = {}): Promise<ResolvedVersion> {
-  return installTask(versionMeta, minecraft, option).startAndWait()
+export async function install(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options = {}): Promise<ResolvedVersion> {
+  const version = await installVersion(versionMeta, minecraft, options)
+  if (options.side !== 'server') {
+    await installDependencies(version, options)
+  }
+  return version
 }
 
 /**
@@ -206,8 +196,33 @@ export async function install(versionMeta: MinecraftVersionBaseInfo, minecraft: 
  * @param versionMeta the version metadata; get from updateVersionMeta
  * @param minecraft minecraft location
  */
-export function installVersion(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: JarOption = {}): Promise<ResolvedVersion> {
-  return installVersionTask(versionMeta, minecraft, options).startAndWait()
+export async function installVersion(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: JarOption = {}): Promise<ResolvedVersion> {
+  const folder = MinecraftFolder.from(minecraft)
+  await installJson(versionMeta, folder, options)
+  const version = await VersionJson.parse(folder, versionMeta.id)
+  const side = options.side ?? 'client'
+  if (version.downloads[side]) {
+    await installJar(version as any, folder, options)
+  }
+  if (side === 'server') {
+    const jarPath = folder.getVersionJar(versionMeta.id, 'server')
+    const server: Version = {
+      id: versionMeta.id,
+      type: 'release',
+      time: version.time,
+      releaseTime: version.releaseTime,
+      jar: relative(folder.libraries, jarPath).replaceAll(sep, '/'),
+      arguments: {
+        game: [],
+        jvm: [],
+      },
+      mainClass: '',
+      minimumLauncherVersion: 13,
+      libraries: [],
+    }
+    await writeFile(join(folder.getVersionRoot(versionMeta.id), 'server.json'), JSON.stringify(server, null, 2))
+  }
+  return version
 }
 
 /**
@@ -216,8 +231,12 @@ export function installVersion(versionMeta: MinecraftVersionBaseInfo, minecraft:
  * @param version The resolved version produced by Version.parse
  * @param minecraft The minecraft location
  */
-export function installDependencies(version: ResolvedVersion, options?: Options): Promise<ResolvedVersion> {
-  return installDependenciesTask(version, options).startAndWait()
+export async function installDependencies(version: ResolvedVersion, options?: Options): Promise<ResolvedVersion> {
+  await settled([
+    installAssets(version, options),
+    installLibraries(version, options),
+  ])
+  return version
 }
 
 /**
@@ -226,8 +245,75 @@ export function installDependencies(version: ResolvedVersion, options?: Options)
  * @param version The target version
  * @param options The option to replace assets host url
  */
-export function installAssets(version: ResolvedVersion, options: AssetsOptions = {}): Promise<ResolvedVersion> {
-  return installAssetsTask(version, options).startAndWait()
+export async function installAssets(version: ResolvedVersion, options: AssetsOptions = {}): Promise<ResolvedVersion> {
+  const folder = MinecraftFolder.from(version.minecraftDirectory)
+  if (version.logging?.client?.file) {
+    const file = version.logging.client.file
+
+    await download({
+      url: file.url,
+      validator: {
+        algorithm: 'sha1',
+        hash: file.sha1,
+      },
+      destination: folder.getLogConfig(file.id),
+      signal: options.signal,
+      progressController: (url, chunkSize, progress, total) => {
+        options.onLogFileDownloadUpdate?.({
+          url,
+          chunkSize,
+          progress,
+          total,
+        })
+      },
+      ...getDownloadBaseOptions(options),
+    })
+  }
+  const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
+
+  if (version.assetIndex) {
+    await installAssetIndex(version as any, options)
+  }
+
+  await ensureDir(folder.getPath('assets', 'objects'))
+  interface AssetIndex {
+    objects: {
+      [key: string]: {
+        hash: string
+        size: number
+      }
+    }
+  }
+
+  const getAssetIndexFallback = async () => {
+    const urls = resolveDownloadUrls(version.assetIndex!.url, version, options.assetsIndexUrl)
+    for (const url of urls) {
+      try {
+        const response = await doFetch(options, url)
+        const json = await response.json() as any
+        await writeFile(jsonPath, JSON.stringify(json))
+        return json
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  let objectArray: any[]
+  try {
+    const { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex
+    objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
+  } catch (e) {
+    if ((e instanceof SyntaxError)) {
+      throw e
+    }
+    const { objects } = await getAssetIndexFallback()
+    objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
+  }
+
+  await settled(objectArray.map((o) => installAsset(o, folder, options)))
+
+  return version
 }
 
 /**
@@ -235,8 +321,9 @@ export function installAssets(version: ResolvedVersion, options: AssetsOptions =
  * @param version The target version
  * @param options The library host swap option
  */
-export function installLibraries(version: ResolvedVersion, options: LibraryOptions = {}): Promise<void> {
-  return installLibrariesTask(version, options).startAndWait()
+export async function installLibraries(version: InstallLibraryVersion, options: LibraryOptions = {}): Promise<void> {
+  const folder = MinecraftFolder.from(version.minecraftDirectory)
+  await settled(version.libraries.map((lib) => installLibrary(lib, folder, options)))
 }
 
 /**
@@ -245,178 +332,8 @@ export function installLibraries(version: ResolvedVersion, options: LibraryOptio
  * @param minecraft The minecraft location
  * @param option The install option
  */
-export async function installResolvedLibraries(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOptions): Promise<void> {
-  await installLibrariesTask({ libraries, minecraftDirectory: typeof minecraft === 'string' ? minecraft : minecraft.root }, option).startAndWait()
-}
-
-/**
- * Install the Minecraft game to a location by version metadata.
- *
- * This will install version json, version jar, and all dependencies (assets, libraries)
- *
- * @param type The type of game, client or server
- * @param versionMeta The version metadata
- * @param minecraft The Minecraft location
- * @param options
- */
-export function installTask(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options = {}): Task<ResolvedVersion> {
-  return task('install', async function () {
-    const version = await this.yield(installVersionTask(versionMeta, minecraft, options))
-    if (options.side !== 'server') {
-      await this.yield(installDependenciesTask(version, options))
-    }
-    return version
-  })
-}
-/**
- * Only install the json/jar. Do not install dependencies.
- *
- * @param type client or server
- * @param versionMeta the version metadata; get from updateVersionMeta
- * @param minecraft minecraft location
- */
-export function installVersionTask(versionMeta: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: JarOption = {}): Task<ResolvedVersion> {
-  return task('version', async function () {
-    const folder = MinecraftFolder.from(minecraft)
-    await this.yield(new InstallJsonTask(versionMeta, folder, options))
-    const version = await VersionJson.parse(folder, versionMeta.id)
-    const side = options.side ?? 'client'
-    if (version.downloads[side]) {
-      await this.yield(new InstallJarTask(version as any, folder, options))
-    }
-    if (side === 'server') {
-      const jarPath = folder.getVersionJar(versionMeta.id, 'server')
-      const server: Version = {
-        id: versionMeta.id,
-        type: 'release',
-        time: version.time,
-        releaseTime: version.releaseTime,
-        jar: relative(folder.libraries, jarPath).replaceAll(sep, '/'),
-        arguments: {
-          game: [],
-          jvm: [],
-        },
-        mainClass: '',
-        minimumLauncherVersion: 13,
-        libraries: [],
-      }
-      await writeFile(join(folder.getVersionRoot(versionMeta.id), 'server.json'), JSON.stringify(server, null, 2))
-    }
-    return version
-  }, versionMeta)
-}
-
-/**
- * Install the completeness of the Minecraft game assets and libraries on a existed version.
- *
- * @param version The resolved version produced by Version.parse
- * @param minecraft The minecraft location
- */
-export function installDependenciesTask(version: ResolvedVersion, options: Options = {}): Task<ResolvedVersion> {
-  return task('dependencies', async function () {
-    await Promise.all([
-      this.yield(installAssetsTask(version, options)),
-      this.yield(installLibrariesTask(version, options)),
-    ])
-    return version
-  })
-}
-
-/**
- * Install or check the assets to resolved version
- *
- * @param version The target version
- * @param options The option to replace assets host url
- */
-export function installAssetsTask(version: ResolvedVersion, options: AssetsOptions = {}): Task<ResolvedVersion> {
-  return task('assets', async function () {
-    const folder = MinecraftFolder.from(version.minecraftDirectory)
-    if (version.logging?.client?.file) {
-      const file = version.logging.client.file
-
-      await this.yield(new DownloadTask({
-        url: file.url,
-        validator: {
-          algorithm: 'sha1',
-          hash: file.sha1,
-        },
-        destination: folder.getLogConfig(file.id),
-        ...getDownloadBaseOptions(options),
-      }).setName('asset', { name: file.id, hash: file.sha1, size: file.size }))
-    }
-    const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
-
-    if (version.assetIndex) {
-      await this.yield(new InstallAssetIndexTask(version as any, options))
-    }
-
-    await ensureDir(folder.getPath('assets', 'objects'))
-    interface AssetIndex {
-      objects: {
-        [key: string]: {
-          hash: string
-          size: number
-        }
-      }
-    }
-
-    const getAssetIndexFallback = async () => {
-      const urls = resolveDownloadUrls(version.assetIndex!.url, version, options.assetsIndexUrl)
-      for (const url of urls) {
-        try {
-          const response = await request(url, { dispatcher: options?.dispatcher })
-          const json = await response.body.json() as any
-          await writeFile(jsonPath, JSON.stringify(json))
-          return json
-        } catch {
-          // ignore
-        }
-      }
-    }
-
-    let objectArray: any[]
-    try {
-      const { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex
-      objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
-    } catch (e) {
-      if ((e instanceof SyntaxError)) {
-        throw e
-      }
-      const { objects } = await getAssetIndexFallback()
-      objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
-    }
-    await this.all(objectArray.map((o) => new InstallAssetTask(o, folder, options)), {
-      throwErrorImmediately: options.throwErrorImmediately ?? false,
-      getErrorMessage: (errs) => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}: ${errs.map(errorToString).join('\n')}`,
-    })
-
-    return version
-  })
-}
-
-/**
- * Install all the libraries of providing version
- * @param version The target version
- * @param options The library host swap option
- */
-export function installLibrariesTask(version: InstallLibraryVersion, options: LibraryOptions = {}): Task<void> {
-  return task('libraries', async function () {
-    const folder = MinecraftFolder.from(version.minecraftDirectory)
-    await this.all(version.libraries.map((lib) => new InstallLibraryTask(lib, folder, options)), {
-      throwErrorImmediately: options.throwErrorImmediately ?? false,
-      getErrorMessage: (errs) => `Errors during install libraries at ${version.minecraftDirectory}: ${errs.map(errorToString).join('\n')}`,
-    })
-  })
-}
-
-/**
- * Only install several resolved libraries
- * @param libraries The resolved libraries
- * @param minecraft The minecraft location
- * @param option The install option
- */
-export function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOptions) {
-  return installLibrariesTask({ libraries, minecraftDirectory: typeof minecraft === 'string' ? minecraft : minecraft.root }, option)
+export function installResolvedLibraries(libraries: ResolvedLibrary[], minecraft: MinecraftLocation, option?: LibraryOptions) {
+  return installLibraries({ libraries, minecraftDirectory: typeof minecraft === 'string' ? minecraft : minecraft.root }, option)
 }
 
 /**
@@ -425,138 +342,152 @@ export function installResolvedLibrariesTask(libraries: ResolvedLibrary[], minec
  * @param folder The minecraft folder
  * @param options The asset option
  */
-export function installResolvedAssetsTask(assets: AssetInfo[], folder: MinecraftFolder, options: AssetsOptions = {}) {
-  return task('assets', async function () {
-    await ensureDir(folder.getPath('assets', 'objects'))
+export async function installResolvedAssets(assets: AssetInfo[], folder: MinecraftFolder, options: AssetsOptions = {}) {
+  await ensureDir(folder.getPath('assets', 'objects'))
 
-    // const sizes = assets.map((a) => a.size).map((a, b) => a + b, 0);
+  // const sizes = assets.map((a) => a.size).map((a, b) => a + b, 0);
 
-    await this.all(assets.map((o) => new InstallAssetTask(o, folder, options)), {
-      throwErrorImmediately: false,
-      getErrorMessage: (errs) => `Errors during install assets at ${folder.root}:\n${errs.map(errorToString).join('\n')}`,
-    })
+  await settled(assets.map((o) => installAsset(o, folder, options)))
+}
+
+async function installJson(version: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options) {
+  const folder = MinecraftFolder.from(minecraft)
+  const destination = folder.getVersionJson(version.id)
+  const expectSha1 = version.url.split('/')[5]
+  const urls = resolveDownloadUrls(version.url, version, options.json)
+
+  return download({
+    url: urls,
+    validator: expectSha1 ? options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 } : new JsonValidator(),
+    destination,
+    ...getDownloadBaseOptions(options),
+    signal: options.signal,
+    progressController: (url, chunkSize, progress, total) => {
+      options.onJsonDownloadUpdate?.(version, {
+        chunkSize,
+        progress,
+        total,
+        url,
+      })
+    },
   })
 }
 
-export class InstallJsonTask extends DownloadTask {
-  constructor(version: MinecraftVersionBaseInfo, minecraft: MinecraftLocation, options: Options) {
-    const folder = MinecraftFolder.from(minecraft)
-    const destination = folder.getVersionJson(version.id)
-    const expectSha1 = version.url.split('/')[5]
-    const urls = resolveDownloadUrls(version.url, version, options.json)
-
-    super({
-      url: urls,
-      validator: expectSha1 ? options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 } : new JsonValidator(),
-      destination,
-      ...getDownloadBaseOptions(options),
-    })
-
-    this.name = 'json'
-    this.param = version
+async function installJar(version: ResolvedVersion & { downloads: Required<ResolvedVersion>['downloads'] }, minecraft: MinecraftLocation, options: Options) {
+  const folder = MinecraftFolder.from(minecraft)
+  const type = options.side ?? 'client'
+  const destination = folder.getVersionJar(version.id, type)
+  const _download = version.downloads[type]
+  if (!_download) {
+    throw new Error(`Cannot find downloadable jar in ${type}`)
   }
+  const urls = resolveDownloadUrls(_download.url, version, options[type])
+  const expectSha1 = _download.sha1
+
+  return download({
+    url: urls,
+    validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
+    destination,
+    ...getDownloadBaseOptions(options),
+    signal: options.signal,
+    progressController: (url, chunkSize, progress, total) => {
+      options.onJarDownloadUpdate?.(version, {
+        chunkSize,
+        progress,
+        total,
+        url,
+      })
+    },
+  })
 }
 
-export class InstallJarTask extends DownloadTask {
-  constructor(version: ResolvedVersion & { downloads: Required<ResolvedVersion>['downloads'] }, minecraft: MinecraftLocation, options: Options) {
-    const folder = MinecraftFolder.from(minecraft)
-    const type = options.side ?? 'client'
-    const destination = folder.getVersionJar(version.id, type)
-    const download = version.downloads[type]
-    if (!download) {
-      throw new Error(`Cannot find downloadable jar in ${type}`)
-    }
-    const urls = resolveDownloadUrls(download.url, version, options[type])
-    const expectSha1 = download.sha1
+export async function installAssetIndex(version: ResolvedVersion & { assetIndex: Version.AssetIndex }, options: AssetsOptions = {}) {
+  const folder = MinecraftFolder.from(version.minecraftDirectory)
+  const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
+  const expectSha1 = version.assetIndex.sha1
 
-    super({
-      url: urls,
-      validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
-      destination,
-      ...getDownloadBaseOptions(options),
-    })
-
-    this.name = 'jar'
-    this.param = version
-  }
+  return download({
+    url: resolveDownloadUrls(version.assetIndex.url, version, options.assetsIndexUrl),
+    destination: jsonPath,
+    validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
+    ...getDownloadBaseOptions(options),
+    signal: options.signal,
+    progressController: (url, chunkSize, progress, total) => {
+      options.onAssetIndexDownloadUpdate?.(version.assetIndex, {
+        chunkSize,
+        progress,
+        total,
+        url,
+      })
+    },
+  })
 }
 
-export class InstallAssetIndexTask extends DownloadTask {
-  constructor(version: ResolvedVersion & { assetIndex: Version.AssetIndex }, options: AssetsOptions = {}) {
-    const folder = MinecraftFolder.from(version.minecraftDirectory)
-    const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
-    const expectSha1 = version.assetIndex.sha1
+export async function installLibrary(lib: ResolvedLibrary, folder: MinecraftFolder, options: LibraryOptions) {
+  const libraryPath = lib.download.path
+  const destination = join(folder.libraries, libraryPath)
+  const urls: string[] = resolveLibraryDownloadUrls(lib, options)
+  const expectSha1 = lib.download.sha1
 
-    super({
-      url: resolveDownloadUrls(version.assetIndex.url, version, options.assetsIndexUrl),
-      destination: jsonPath,
-      validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
-      ...getDownloadBaseOptions(options),
-    })
-
-    this.name = 'assetIndex'
-    this.param = version
-  }
+  return download({
+    url: urls,
+    validator: lib.download.sha1 === ''
+      ? new ZipValidator()
+      : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
+    destination,
+    ...getDownloadBaseOptions(options),
+    skipHead: lib.download.size < 2 * 1024 * 1024,
+    signal: options.signal,
+    progressController: (url, chunkSize, progress, total) => {
+      options.onLibraryDownloadUpdate?.(lib, {
+        chunkSize,
+        progress,
+        total,
+        url,
+      })
+    },
+  })
 }
 
-export class InstallLibraryTask extends DownloadTask {
-  constructor(lib: ResolvedLibrary, folder: MinecraftFolder, options: LibraryOptions) {
-    const libraryPath = lib.download.path
-    const destination = join(folder.libraries, libraryPath)
-    const urls: string[] = resolveLibraryDownloadUrls(lib, options)
-    const expectSha1 = lib.download.sha1
+async function installAsset(asset: AssetInfo, folder: MinecraftFolder, options: AssetsOptions) {
+  const assetsHosts = normalizeArray(options.assetsHost || [])
 
-    super({
-      url: urls,
-      validator: lib.download.sha1 === ''
-        ? new ZipValidator()
-        : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
-      destination,
-      ...getDownloadBaseOptions(options),
-      skipHead: lib.download.size < 2 * 1024 * 1024,
-    })
-
-    this.name = 'library'
-    this.param = lib
+  if (assetsHosts.indexOf(DEFAULT_RESOURCE_ROOT_URL) === -1) {
+    assetsHosts.push(DEFAULT_RESOURCE_ROOT_URL)
   }
-}
 
-export class InstallAssetTask extends DownloadTask {
-  constructor(asset: AssetInfo, folder: MinecraftFolder, options: AssetsOptions) {
-    const assetsHosts = normalizeArray(options.assetsHost || [])
+  const { hash, size, name } = asset
 
-    if (assetsHosts.indexOf(DEFAULT_RESOURCE_ROOT_URL) === -1) {
-      assetsHosts.push(DEFAULT_RESOURCE_ROOT_URL)
-    }
+  const head = hash.substring(0, 2)
+  const dir = folder.getPath('assets', 'objects', head)
+  const file = join(dir, hash)
+  const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`)
 
-    const { hash, size, name } = asset
-
-    const head = hash.substring(0, 2)
-    const dir = folder.getPath('assets', 'objects', head)
-    const file = join(dir, hash)
-    const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`)
-
-    super({
-      url: urls,
-      destination: file,
-      validator: options.prevalidSizeOnly
-        ? {
-          async validate(destination, url) {
-            const fstat = await stat(destination).catch(() => ({ size: -1 }))
-            if (fstat.size !== size) {
-              throw new ChecksumNotMatchError('size', size.toString(), fstat.size.toString(), destination, url)
-            }
-          },
-        }
-        : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
-      ...getDownloadBaseOptions(options),
-      skipHead: asset.size < 2 * 1024 * 1024,
-    })
-
-    this._total = size
-    this.name = 'asset'
-    this.param = asset
-  }
+  return download({
+    url: urls,
+    destination: file,
+    validator: options.prevalidSizeOnly
+      ? {
+        async validate(destination, url) {
+          const fstat = await stat(destination).catch(() => ({ size: -1 }))
+          if (fstat.size !== size) {
+            throw new ChecksumNotMatchError('size', size.toString(), fstat.size.toString(), destination, url)
+          }
+        },
+      }
+      : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
+    ...getDownloadBaseOptions(options),
+    skipHead: asset.size < 2 * 1024 * 1024,
+    signal: options.signal,
+    progressController: (url, chunkSize, progress, total) => {
+      options.onAssetDownloadUpdate?.(asset, {
+        chunkSize,
+        progress,
+        total,
+        url,
+      })
+    },
+  })
 }
 
 const DEFAULT_MAVENS = ['https://repo1.maven.org/maven2/']

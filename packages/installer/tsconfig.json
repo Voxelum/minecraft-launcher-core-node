@@ -9,13 +9,12 @@
         "fabric.ts",
         "quilt.ts",
         "utils.ts",
-        "unzip.ts",
         "java.ts",
         "diagnose.ts",
         "profile.ts",
         "labymod.ts",
         "manifest.ts",
-        "downloadTask.ts"
+        "DownloadProgressPayload.ts"
     ],
     "extends": "../../tsconfig.json",
     "compilerOptions": {

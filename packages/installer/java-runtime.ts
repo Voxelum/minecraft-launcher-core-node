@@ -1,12 +1,10 @@
 import { getPlatform, Platform } from '@xmcl/core'
-import { ChecksumValidatorOptions, DownloadBaseOptions, DownloadOptions, getDownloadBaseOptions, Validator } from '@xmcl/file-transfer'
-import { Task, task } from '@xmcl/task'
+import { ChecksumValidatorOptions, download, DownloadBaseOptions, DownloadOptions, getDownloadBaseOptions, Validator } from '@xmcl/file-transfer'
 import { link } from 'fs/promises'
 import { dirname, join } from 'path'
-import { Dispatcher, request } from 'undici'
 import { URL } from 'url'
-import { DownloadTask } from './downloadTask'
-import { ensureDir, ParallelTaskOptions } from './utils'
+import { DownloadProgressPayload } from './DownloadProgressPayload'
+import { ensureDir, settled, ChecksumOptions, FetchOptions, doFetch } from './utils'
 /**
  * Contain all java runtimes basic info
  */
@@ -158,33 +156,29 @@ function normalizeUrls(url: string, fileHost?: string | string[]): string[] {
   return result
 }
 
-export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
+export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions, FetchOptions {
   /**
-     * The alternative download host for the file
-     */
+   * The alternative download host for the file
+   */
   apiHost?: string | string[]
   /**
-     * The url of the all runtime json
-     */
+   * The url of the all runtime json
+   */
   url?: string
   /**
-     * The platform to install. It will be auto-resolved by default.
-     * @default getPlatform()
-     */
+   * The platform to install. It will be auto-resolved by default.
+   * @default getPlatform()
+   */
   platform?: Platform
   /**
-     * The install java runtime type
-     * @default InstallJavaRuntimeTarget.Next
-     */
+   * The install java runtime type
+   * @default InstallJavaRuntimeTarget.Next
+   */
   target?: JavaRuntimeTargetType | string
   /**
-     * The index manifest of the java runtime. If this is not presented, it will fetch by platform and all platform url.
-     */
+   * The index manifest of the java runtime. If this is not presented, it will fetch by platform and all platform url.
+   */
   manifestIndex?: JavaRuntimes
-  /**
-     * The dispatcher to request API
-     */
-  dispatcher?: Dispatcher
 }
 
 /**
@@ -196,8 +190,8 @@ export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
 export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifestOptions = {}): Promise<JavaRuntimeManifest> {
   let manifestIndex = options.manifestIndex
   if (!manifestIndex) {
-    const response = await request(normalizeUrls(options.url ?? DEFAULT_RUNTIME_ALL_URL, options.apiHost)[0], { dispatcher: options.dispatcher, throwOnError: true })
-    manifestIndex = await response.body.json() as JavaRuntimes
+    const response = await doFetch(options, normalizeUrls(options.url ?? DEFAULT_RUNTIME_ALL_URL, options.apiHost)[0])
+    manifestIndex = await response.json() as JavaRuntimes
   }
   const manifest = manifestIndex
   const platform = options.platform ?? getPlatform()
@@ -228,8 +222,8 @@ export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifest
   if (targets && targets.length > 0) {
     const target = targets[0]
     const manifestUrl = normalizeUrls(target.manifest.url, options.apiHost)[0]
-    const response = await request(manifestUrl, { dispatcher: options.dispatcher, throwOnError: true })
-    const manifest: JavaRuntimeManifest = await response.body.json() as any
+    const response = await doFetch(options, manifestUrl)
+    const manifest: JavaRuntimeManifest = await response.json() as any
     const result: JavaRuntimeManifest = {
       files: manifest.files,
       target: runtimeTarget,
@@ -241,7 +235,7 @@ export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifest
   }
 }
 
-export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, ParallelTaskOptions {
+export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, ChecksumOptions {
   /**
      * The alternative download host for the file
      */
@@ -262,63 +256,59 @@ export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, Parallel
   lzma?: boolean | ((compressedFilePath: string, targetPath: string) => Promise<void>)
 
   checksumValidatorResolver?: (checksum: ChecksumValidatorOptions) => Validator
+
+  signal?: AbortSignal
+
+  onJavaRuntimeFileDownloadUpdate?: (entry: FileEntry, progress: DownloadProgressPayload) => void
 }
 
 /**
  * Install java runtime from java runtime manifest
  * @param options The options to install java runtime
  */
-export function installJavaRuntimeTask(options: InstallJavaRuntimeOptions): Task<void> {
-  return task('installJavaRuntime', async function () {
-    const destination = options.destination
-    const manifest = options.manifest
-    const decompressFunction = typeof options.lzma === 'function' ? options.lzma : undefined
-    const downloadLzma = !!options.lzma
-    class DownloadAndDecompressTask extends DownloadTask {
-      constructor(options: DownloadOptions) {
-        super(options)
+export async function installJavaRuntime(options: InstallJavaRuntimeOptions): Promise<void> {
+  const destination = options.destination
+  const manifest = options.manifest
+  const decompressFunction = typeof options.lzma === 'function' ? options.lzma : undefined
+  const downloadLzma = !!options.lzma
+  await settled(Object.entries(manifest.files)
+    .filter(([file, entry]) => entry.type === 'file')
+    .map(async ([file, entry]) => {
+      const fEntry = entry as FileEntry
+      const downloadInfo = (downloadLzma && fEntry.downloads.lzma) ? fEntry.downloads.lzma : fEntry.downloads.raw
+      const isLzma = downloadInfo === fEntry.downloads.lzma
+      const dest = isLzma ? (join(destination, file) + '.lzma') : join(destination, file)
+      const urls = normalizeUrls(downloadInfo.url, options.apiHost)
+      const hash = downloadInfo.sha1
+      const downloadOptions: DownloadOptions = {
+        url: urls,
+        validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
+        destination: dest,
+        ...getDownloadBaseOptions(options),
+        signal: options.signal,
+        progressController: (url, chunkSize, progress, total) => {
+          options.onJavaRuntimeFileDownloadUpdate?.(fEntry, {
+            url,
+            chunkSize,
+            progress,
+            total,
+          })
+        },
       }
-
-      async runTask() {
-        const result = await super.runTask()
-        if (this._total === this._progress) {
-          const dest = this.options.destination.substring(0, this.options.destination.length - 5)
-          await decompressFunction!(this.options.destination, dest)
-        }
-        return result
+      await download(downloadOptions)
+      if (isLzma && decompressFunction) {
+        await decompressFunction!(dest, dest.substring(0, dest.length - 5))
       }
-    }
-    await this.all(Object.entries(manifest.files)
-      .filter(([file, entry]) => entry.type === 'file')
-      .map(([file, entry]) => {
-        const fEntry = entry as FileEntry
-        const downloadInfo = (downloadLzma && fEntry.downloads.lzma) ? fEntry.downloads.lzma : fEntry.downloads.raw
-        const isLzma = downloadInfo === fEntry.downloads.lzma
-        const dest = isLzma ? (join(destination, file) + '.lzma') : join(destination, file)
-        const urls = normalizeUrls(downloadInfo.url, options.apiHost)
-        const hash = downloadInfo.sha1
-        const downloadOptions: DownloadOptions = {
-          url: urls,
-          validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
-          destination: dest,
-          ...getDownloadBaseOptions(options),
-        }
-        return isLzma && decompressFunction
-          ? new DownloadAndDecompressTask(downloadOptions).setName('download')
-          : new DownloadTask(downloadOptions).setName('download')
-      }), {
-      throwErrorImmediately: options.throwErrorImmediately,
-      getErrorMessage: (e) => `Fail to install java runtime ${manifest.version.name} on ${manifest.target}`,
-    })
-    await Promise.all(Object.entries(manifest.files)
-      .filter(([file, entry]) => entry.type !== 'file')
-      .map(async ([file, entry]) => {
-        const dest = join(destination, file)
-        if (entry.type === 'directory') {
-          await ensureDir(dest)
-        } else if (entry.type === 'link') {
-          await link(dest, join(dirname(dest), entry.target)).catch(() => { })
-        }
-      }))
-  })
+    }),
+  )
+  await settled(Object.entries(manifest.files)
+    .filter(([file, entry]) => entry.type !== 'file')
+    .map(async ([file, entry]) => {
+      const dest = join(destination, file)
+      if (entry.type === 'directory') {
+        await ensureDir(dest)
+      } else if (entry.type === 'link') {
+        await link(dest, join(dirname(dest), entry.target)).catch(() => { })
+      }
+    }))
 }

@@ -1,7 +1,8 @@
-import { ChildProcess, ExecOptions, spawn, SpawnOptions } from 'child_process'
+import { ChecksumValidatorOptions, Validator } from '@xmcl/file-transfer'
+import { ChildProcess, ExecOptions, SpawnOptions, spawn } from 'child_process'
+import type { Abortable } from 'events'
 import { access, mkdir, stat } from 'fs/promises'
 import { dirname } from 'path'
-
 export { checksum } from '@xmcl/core'
 
 export function missing(target: string) {
@@ -91,8 +92,8 @@ export function joinUrl(a: string, b: string) {
   return a + b
 }
 
-export interface ParallelTaskOptions {
-  throwErrorImmediately?: boolean
+export interface ChecksumOptions {
+  checksumValidatorResolver?: (checksum: ChecksumValidatorOptions) => Validator
 }
 /**
  * Shared install options
@@ -119,4 +120,21 @@ export function errorToString(e: any) {
     return e.stack ? e.stack : e.message
   }
   return e.toString()
+}
+
+export async function settled<T extends readonly unknown[] | []>(promises: T) {
+  const promiesResults = await Promise.allSettled(promises)
+  const errored = promiesResults.filter((result) => result.status === 'rejected')
+  if (errored.length > 0) {
+    throw new AggregateError(errored.map((result) => (result as PromiseRejectedResult).reason))
+  }
+}
+
+export interface FetchOptions extends Abortable {
+  fetch?: typeof fetch
+}
+
+export function doFetch(o: FetchOptions | undefined, ...args: Parameters<typeof fetch>) {
+  const init = args[1] ? { ...args[1], signal: o?.signal } : { signal: o?.signal }
+  return o?.fetch ? o.fetch(args[0], init) : fetch(args[0], init)
 }
