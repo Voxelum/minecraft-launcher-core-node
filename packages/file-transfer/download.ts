@@ -1,9 +1,9 @@
-import { createWriteStream, rename as srename, unlink as sunlink, stat as sstat, open as sopen, close as sclose, fdatasync } from 'fs'
-import { promisify } from 'util'
+import { fdatasync, close as sclose, open as sopen, rename as srename, stat as sstat, unlink as sunlink, write } from 'fs'
 import { mkdir } from 'fs/promises'
 import { dirname } from 'path'
-import { PassThrough, Transform, Writable, finished as sfinished } from 'stream'
+import { PassThrough, Writable, finished as sfinished } from 'stream'
 import { Agent, Dispatcher, errors, stream } from 'undici'
+import { promisify } from 'util'
 // @ts-ignore
 import { parseRangeHeader } from 'undici/lib/core/util'
 import { getDefaultAgentOptions } from './agent'
@@ -155,8 +155,15 @@ async function head(url: string, headers: Record<string, string>, dispatcher: Di
   }
 }
 
-async function get(url: string, fd: number, destination: string, headers: Record<string, string>, range: Range | undefined,
-  dispatcher: Dispatcher, progress: (url: URL, chunkSize: number, written: number, partLength: number, totalLength: number) => void, signal?: AbortSignal) {
+async function get(
+  url: string,
+  fd: number,
+  headers: Record<string, string>,
+  range: Range | undefined,
+  dispatcher: Dispatcher,
+  progress: (url: URL, chunkSize: number, written: number, partLength: number, totalLength: number) => void,
+  signal?: AbortSignal,
+) {
   const parsedUrl = new URL(url)
 
   let writable: Writable | undefined
@@ -181,35 +188,59 @@ async function get(url: string, fd: number, destination: string, headers: Record
         return pass
       }
 
+      /**
+       * The length of the part
+       */
       const length = headers['content-length'] ? parseInt(headers['content-length'] as string) : 0
       const rangeHeader = parseRangeHeader(headers['content-range'])
-      const offset = rangeHeader?.start ?? range?.start
-      const totalLength = rangeHeader?.size ?? 0
+      const offset: number = rangeHeader?.start ?? range?.start ?? 0
+      /**
+       * The length of the total file
+       */
+      const totalLength: number = rangeHeader?.size ?? 0
 
       let written = 0
-      const transform = new Transform({
-        transform(chunk, encoding, callback) {
-          this.push(chunk)
-          written += chunk.length
-          progress(parsedUrl, chunk.length, written, length, totalLength)
+      const writable = new Writable({
+        write(chunk, encoding, callback) {
+          write(fd, chunk, offset + written, (err) => {
+            if (err) {
+              if (!err.stack) {
+                err.stack = new Error().stack
+              }
+              callback(err)
+              return
+            }
+            written += chunk.length
+            progress(parsedUrl, chunk.length, written, length, totalLength)
+            callback()
+          })
+        },
+        writev(chunks, callback) {
+          const buffer = Buffer.concat(chunks.map((c) => c.chunk))
+          write(fd, buffer, offset + written, (err) => {
+            if (err) {
+              if (!err.stack) {
+                err.stack = new Error().stack
+              }
+              callback(err)
+              return
+            }
+            written += buffer.length
+            progress(parsedUrl, buffer.length, written, length, totalLength)
+            callback()
+          })
+        },
+        final(callback) {
+          progress(parsedUrl, 0, written, length, totalLength)
           callback()
         },
         highWaterMark: 1024 * 1024,
+        signal,
       })
 
-      writable = createWriteStream(destination, {
-        fd,
-        autoClose: false,
-        emitClose: false,
-        flags: 'r+',
-        start: offset,
-        highWaterMark: 1024 * 1024,
-      })
-
-      transform.pipe(writable)
       progress(parsedUrl, 0, written, length, totalLength)
 
-      return transform
+      return writable
     })
 
     if (writable && !writable.writableFinished) {
@@ -317,8 +348,11 @@ export async function download(options: DownloadOptions) {
       const redirectedUrl = getUrl(metadata, url)
       let writtens = ranges.map(() => 0)
       let totals = ranges.map(() => 0)
+
+      progressController(new URL(url), 'start', 0, metadata?.total || 0)
+
       let results = await Promise.all(ranges.map(
-        (range, index) => get(redirectedUrl, fd, output, headers, range, dispatcher, (url, chunk, written, partLength, totalLength) => {
+        (range, index) => get(redirectedUrl, fd, headers, range, dispatcher, (url, chunk, written, partLength, totalLength) => {
           writtens[index] = written
           totals[index] = partLength
           const writtenTotal = writtens.reduce((a, b) => a + b, 0)
@@ -332,7 +366,7 @@ export async function download(options: DownloadOptions) {
         writtens = [0]
         totals = [0]
         results = [
-          await get(redirectedUrl, fd, output, headers, undefined, dispatcher, (url, chunk, written, partLength, totalLength) => {
+          await get(redirectedUrl, fd, headers, undefined, dispatcher, (url, chunk, written, partLength, totalLength) => {
             writtens[0] = written
             totals[0] = partLength
             const writtenTotal = writtens.reduce((a, b) => a + b, 0)
@@ -341,6 +375,10 @@ export async function download(options: DownloadOptions) {
           }, abortSignal),
         ]
       }
+
+      const writtenTotal = writtens.reduce((a, b) => a + b, 0)
+      const totalTotal = metadata?.total || totals.reduce((a, b) => a + b, 0)
+      progressController(new URL(url), 'end', writtenTotal, totalTotal)
 
       let noErrors = true
       for (const e of results) {

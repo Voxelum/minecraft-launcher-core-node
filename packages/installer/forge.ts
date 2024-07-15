@@ -126,7 +126,7 @@ type RequiredVersion = {
   /**
    * The minecraft version
    */
-  mcversion: string
+  minecraft: string
   /**
    * The forge version (without minecraft version)
    */
@@ -194,7 +194,7 @@ async function downloadForgeInstaller(forgeVersion: string, installer: RequiredV
     ...getDownloadBaseOptions(options),
     signal: options.signal,
     progressController: (url, chunkSize, progress, total) => {
-      options.onForgeInstallerDownloadUpdate?.(forgeVersion, { url, chunkSize, progress, total })
+      options.onForgeInstallerDownloadUpdate?.(forgeVersion, { url, chunkSizeOrStatus: chunkSize, progress, total })
     },
   })
 
@@ -479,26 +479,26 @@ export class BadForgeInstallerJarError extends Error {
  * @returns The installed version name.
  * @throws {@link BadForgeInstallerJarError}
  */
-export async function installForge(version: RequiredVersion, minecraft: MinecraftLocation, options: InstallForgeOptions = {}) {
+export async function installForge(version: RequiredVersion, minecraft: MinecraftLocation, options: InstallForgeOptions = {}): Promise<string> {
   function getForgeArtifactVersion() {
-    const [_, minor] = version.mcversion.split('.')
+    const [_, minor] = version.minecraft.split('.')
     const minorVersion = Number.parseInt(minor)
     if (minorVersion >= 7 && minorVersion <= 8) {
-      return `${version.mcversion}-${version.version}-${version.mcversion}`
+      return `${version.minecraft}-${version.version}-${version.minecraft}`
     }
-    if (version.version.startsWith(version.mcversion)) {
+    if (version.version.startsWith(version.minecraft)) {
       return version.version
     }
-    return `${version.mcversion}-${version.version}`
+    return `${version.minecraft}-${version.version}`
   }
   const forgeVersion = getForgeArtifactVersion()
-  const isLegacy = version.mcversion.startsWith('1.4.')
+  const isLegacy = version.minecraft.startsWith('1.4.')
   const mc = MinecraftFolder.from(minecraft)
   const jarPath: string = await downloadForgeInstaller(forgeVersion, version.installer, mc, options, isLegacy)
 
   if (isLegacy) {
     const forgeZip = await open(jarPath, { lazyEntries: true, autoClose: false })
-    const versionId = await installLegacyForgeFromUniversalZip(forgeZip, mc, forgeVersion, version.mcversion)
+    const versionId = await installLegacyForgeFromUniversalZip(forgeZip, mc, forgeVersion, version.minecraft)
     return versionId
   }
 

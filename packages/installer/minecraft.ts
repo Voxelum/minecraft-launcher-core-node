@@ -145,7 +145,7 @@ function resolveDownloadUrls<T>(original: string, version: T, option?: string | 
 /**
  * Replace the minecraft client or server jar download
  */
-export interface JarOption extends DownloadBaseOptions, ChecksumOptions, InstallSideOption {
+export interface JarOption extends DownloadBaseOptions, ChecksumOptions, InstallSideOption, Abortable {
   /**
    * The version json url replacement
    */
@@ -261,7 +261,7 @@ export async function installAssets(version: ResolvedVersion, options: AssetsOpt
       progressController: (url, chunkSize, progress, total) => {
         options.onLogFileDownloadUpdate?.({
           url,
-          chunkSize,
+          chunkSizeOrStatus: chunkSize,
           progress,
           total,
         })
@@ -364,7 +364,7 @@ async function installJson(version: MinecraftVersionBaseInfo, minecraft: Minecra
     signal: options.signal,
     progressController: (url, chunkSize, progress, total) => {
       options.onJsonDownloadUpdate?.(version, {
-        chunkSize,
+        chunkSizeOrStatus: chunkSize,
         progress,
         total,
         url,
@@ -373,7 +373,7 @@ async function installJson(version: MinecraftVersionBaseInfo, minecraft: Minecra
   })
 }
 
-async function installJar(version: ResolvedVersion & { downloads: Required<ResolvedVersion>['downloads'] }, minecraft: MinecraftLocation, options: Options) {
+export async function installJar(version: ResolvedVersion & { downloads: Required<ResolvedVersion>['downloads'] }, minecraft: MinecraftLocation, options: Options) {
   const folder = MinecraftFolder.from(minecraft)
   const type = options.side ?? 'client'
   const destination = folder.getVersionJar(version.id, type)
@@ -392,7 +392,7 @@ async function installJar(version: ResolvedVersion & { downloads: Required<Resol
     signal: options.signal,
     progressController: (url, chunkSize, progress, total) => {
       options.onJarDownloadUpdate?.(version, {
-        chunkSize,
+        chunkSizeOrStatus: chunkSize,
         progress,
         total,
         url,
@@ -414,7 +414,7 @@ export async function installAssetIndex(version: ResolvedVersion & { assetIndex:
     signal: options.signal,
     progressController: (url, chunkSize, progress, total) => {
       options.onAssetIndexDownloadUpdate?.(version.assetIndex, {
-        chunkSize,
+        chunkSizeOrStatus: chunkSize,
         progress,
         total,
         url,
@@ -440,7 +440,7 @@ export async function installLibrary(lib: ResolvedLibrary, folder: MinecraftFold
     signal: options.signal,
     progressController: (url, chunkSize, progress, total) => {
       options.onLibraryDownloadUpdate?.(lib, {
-        chunkSize,
+        chunkSizeOrStatus: chunkSize,
         progress,
         total,
         url,
@@ -481,7 +481,7 @@ async function installAsset(asset: AssetInfo, folder: MinecraftFolder, options: 
     signal: options.signal,
     progressController: (url, chunkSize, progress, total) => {
       options.onAssetDownloadUpdate?.(asset, {
-        chunkSize,
+        chunkSizeOrStatus: chunkSize,
         progress,
         total,
         url,

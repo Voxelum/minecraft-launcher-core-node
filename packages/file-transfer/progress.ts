@@ -1,10 +1,8 @@
-import { URL } from 'url'
-
 /**
  * The controller that maintain the download status
  */
 export interface ProgressController {
-  (url: URL, chunkSize: number, written: number, total: number): void
+  (url: URL, chunkSizeOrStatus: number | 'start' | 'end', written: number, total: number): void
 }
 
 export function createProgressController(onProgress?: ProgressController): ProgressController {

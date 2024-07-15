@@ -100,18 +100,18 @@ export interface ChecksumOptions {
  */
 export interface InstallOptions {
   /**
-     * When you want to install a version over another one.
-     *
-     * Like, you want to install liteloader over a forge version.
-     * You should fill this with that forge version id.
-     */
+   * When you want to install a version over another one.
+   *
+   * Like, you want to install liteloader over a forge version.
+   * You should fill this with that forge version id.
+   */
   inheritsFrom?: string
 
   /**
-     * Override the newly installed version id.
-     *
-     * If this is absent, the installed version id will be either generated or provided by installer.
-     */
+   * Override the newly installed version id.
+   *
+   * If this is absent, the installed version id will be either generated or provided by installer.
+   */
   versionId?: string
 }
 
@@ -130,11 +130,13 @@ export async function settled<T extends readonly unknown[] | []>(promises: T) {
   }
 }
 
+type FetchParameters = Parameters<typeof fetch>
+
 export interface FetchOptions extends Abortable {
-  fetch?: typeof fetch
+  fetch?: (input: string | URL, init?: FetchParameters[1]) => Promise<Response>
 }
 
-export function doFetch(o: FetchOptions | undefined, ...args: Parameters<typeof fetch>) {
-  const init = args[1] ? { ...args[1], signal: o?.signal } : { signal: o?.signal }
-  return o?.fetch ? o.fetch(args[0], init) : fetch(args[0], init)
+export function doFetch(o: FetchOptions | undefined, input: string | URL, init: FetchParameters[1] = {}) {
+  init.signal = init.signal ?? o?.signal
+  return o?.fetch ? o.fetch(input, init) : fetch(input, init)
 }

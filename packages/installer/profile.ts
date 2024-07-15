@@ -1,14 +1,13 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version, Version as VersionJson } from '@xmcl/core'
 import { filterEntries, open, readEntry, walkEntriesGenerator } from '@xmcl/unzip'
 import { spawn } from 'child_process'
+import { Abortable } from 'events'
 import { readFile, writeFile } from 'fs/promises'
 import { delimiter, dirname, join, relative, sep } from 'path'
 import { ZipFile } from 'yauzl'
 import { convertClasspathToMaven, parseManifest } from './manifest'
 import { InstallSideOption, LibraryOptions, installLibrary } from './minecraft'
 import { SpawnJavaOptions, checksum, missing, settled, waitProcess } from './utils'
-import { Abortable } from 'events'
-
 
 export interface PostProcessor {
   /**

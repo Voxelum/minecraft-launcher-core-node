@@ -37,7 +37,7 @@ export async function downloadNeoForgedInstaller(project: 'forge' | 'neoforge', 
     progressController: (url, chunkSize, progress, total) => {
       options.onForgeInstallerDownloadUpdate?.(version, {
         url,
-        chunkSize,
+        chunkSizeOrStatus: chunkSize,
         progress,
         total,
       })
@@ -47,7 +47,7 @@ export async function downloadNeoForgedInstaller(project: 'forge' | 'neoforge', 
   return installJarPath
 }
 
-export async function installNeoForgedTask(project: 'forge' | 'neoforge', version: string, minecraft: MinecraftLocation, options: InstallForgeOptions): Promise<string> {
+export async function installNeoForged(project: 'forge' | 'neoforge', version: string, minecraft: MinecraftLocation, options: InstallForgeOptions): Promise<string> {
   const [_, forgeVersion] = version.split('-')
   const mc = MinecraftFolder.from(minecraft)
   const jarPath = await downloadNeoForgedInstaller(project, version, mc, options)

@@ -1,8 +1,7 @@
-import { URL } from "url"
-
 export interface DownloadProgressPayload {
-  url: URL
-  chunkSize: number
+  url?: URL
+  file?: string
+  chunkSizeOrStatus: number | 'start' | 'end'
   progress: number
   total: number
 }

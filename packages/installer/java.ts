@@ -63,7 +63,7 @@ export async function downloadJRE(jre: DownloadInfo, dir: string, options: Insta
     ...getDownloadBaseOptions(options),
     signal: options.signal,
     progressController: (url, chunkSize, progress, total) => {
-      options.onJavaAssetDownloadUpdate?.(filename, { url, chunkSize, progress, total })
+      options.onJavaAssetDownloadUpdate?.(filename, { url, chunkSizeOrStatus: chunkSize, progress, total })
     },
   })
   return downloadDestination

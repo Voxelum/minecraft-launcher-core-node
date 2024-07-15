@@ -116,7 +116,7 @@ export async function installLabyMod4(manifest: LabyModManifest, tag: string, mi
       ...getDownloadBaseOptions(options),
       signal: options?.signal,
       progressController: (url, chunkSize, progress, total) => {
-        options?.onLabyModAssetDownloadUpdate?.(name, { url, chunkSize, progress, total })
+        options?.onLabyModAssetDownloadUpdate?.(name, { url, chunkSizeOrStatus: chunkSize, progress, total })
       },
     })
   }

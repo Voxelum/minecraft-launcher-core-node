@@ -289,7 +289,7 @@ export async function installJavaRuntime(options: InstallJavaRuntimeOptions): Pr
         progressController: (url, chunkSize, progress, total) => {
           options.onJavaRuntimeFileDownloadUpdate?.(fEntry, {
             url,
-            chunkSize,
+            chunkSizeOrStatus: chunkSize,
             progress,
             total,
           })

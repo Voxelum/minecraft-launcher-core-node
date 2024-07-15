@@ -303,7 +303,14 @@ export namespace Version {
     checksums?: string[]
   }
 
-  export type Library = NormalLibrary | NativeLibrary | PlatformSpecificLibrary | LegacyLibrary
+  export interface FlatLibrary {
+    name: string
+    url: string
+    sha1: string
+    size: number
+  }
+
+  export type Library = NormalLibrary | NativeLibrary | PlatformSpecificLibrary | LegacyLibrary | FlatLibrary
 
   export type LaunchArgument = string | {
     rules?: Rule[]
@@ -680,6 +687,19 @@ export namespace Version {
       }
       return new ResolvedLibrary(lib.name, info, lib.downloads.artifact)
     }
+    // flat library
+    if ('url' in lib && 'sha1' in lib && 'size' in lib) {
+      if (!lib.url) {
+        throw new Error('Corrupted library: ' + JSON.stringify(lib))
+      }
+      return new ResolvedLibrary(lib.name, info, {
+        size: lib.size,
+        sha1: lib.sha1,
+        url: lib.url,
+        path: info.path,
+      })
+    }
+
     const maven = lib.url || 'https://libraries.minecraft.net/'
     const artifact: Artifact = {
       size: -1,
