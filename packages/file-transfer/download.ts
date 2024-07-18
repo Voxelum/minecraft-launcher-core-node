@@ -1,4 +1,4 @@
-import { createWriteStream, rename as srename, unlink as sunlink, stat as sstat, open as sopen, close as sclose, fdatasync } from 'fs'
+import { createWriteStream, rename as srename, unlink as sunlink, stat as sstat, open as sopen, close as sclose, fdatasync, write } from 'fs'
 import { promisify } from 'util'
 import { mkdir } from 'fs/promises'
 import { dirname } from 'path'
@@ -178,33 +178,31 @@ async function get(url: string, fd: number, destination: string, headers: Record
 
       const length = headers['content-length'] ? parseInt(headers['content-length'] as string) : 0
       const rangeHeader = parseRangeHeader(headers['content-range'])
-      const offset = rangeHeader?.start ?? range?.start
+      const offset = rangeHeader?.start ?? range?.start ?? 0
       const totalLength = rangeHeader?.size ?? 0
 
       let written = 0
-      const transform = new Transform({
-        transform(chunk, encoding, callback) {
-          this.push(chunk)
-          written += chunk.length
+      const writable = new Writable({
+        write(chunk, encoding, callback) {
           progress(parsedUrl, chunk.length, written, length, totalLength)
+          write(fd, chunk, 0, chunk.length, offset + written, callback)
+        },
+        writev(chunks, callback) {
+          const buffer = Buffer.concat(chunks.map((c) => c.chunk))
+          progress(parsedUrl, buffer.length, written, length, totalLength)
+          write(fd, buffer, 0, buffer.length, offset + written, callback)
+        },
+        final(callback) {
+          progress(parsedUrl, 0, written, length, totalLength)
           callback()
         },
         highWaterMark: 1024 * 1024,
-      })
-
-      writable = createWriteStream(destination, {
-        fd,
-        autoClose: false,
         emitClose: false,
-        flags: 'r+',
-        start: offset,
-        highWaterMark: 1024 * 1024,
       })
 
-      transform.pipe(writable)
       progress(parsedUrl, 0, written, length, totalLength)
 
-      return transform
+      return writable
     })
 
     if (writable && !writable.writableFinished) {

@@ -1,4 +1,5 @@
 import { ChildProcess, ExecOptions, spawn, SpawnOptions } from 'child_process'
+import { Abortable } from 'events'
 import { access, mkdir, stat } from 'fs/promises'
 import { dirname } from 'path'
 
@@ -119,4 +120,17 @@ export function errorToString(e: any) {
     return e.stack ? e.stack : e.message
   }
   return e.toString()
+}
+
+export interface FetchOptions extends Abortable {
+  fetch?: (url: string, init?: RequestInit) => Promise<Response>
+}
+
+export function doFetch(o: FetchOptions | undefined, url: string, init?: RequestInit) {
+  if (init) {
+    init.signal = o?.signal
+  } else {
+    init = { signal: o?.signal }
+  }
+  return o?.fetch ? o.fetch(url, init) : fetch(url, init)
 }
