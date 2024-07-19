@@ -59,7 +59,7 @@ export async function installQuiltVersion(options: InstallQuiltVersionOptions) {
   const content: Version = await response.json() as any
 
   const minecraft = MinecraftFolder.from(options.minecraft)
-  const versionName = content.id
+  const versionName = `${options.minecraftVersion}-quilt${options.version}`
 
   const jsonPath = side === 'client' ? minecraft.getVersionJson(versionName) : minecraft.getVersionServerJson(versionName)
 
