@@ -184,13 +184,15 @@ async function get(url: string, fd: number, destination: string, headers: Record
       let written = 0
       const writable = new Writable({
         write(chunk, encoding, callback) {
-          progress(parsedUrl, chunk.length, written, length, totalLength)
           write(fd, chunk, 0, chunk.length, offset + written, callback)
+          written += chunk.length
+          progress(parsedUrl, chunk.length, written, length, totalLength)
         },
         writev(chunks, callback) {
           const buffer = Buffer.concat(chunks.map((c) => c.chunk))
-          progress(parsedUrl, buffer.length, written, length, totalLength)
           write(fd, buffer, 0, buffer.length, offset + written, callback)
+          written += buffer.length
+          progress(parsedUrl, buffer.length, written, length, totalLength)
         },
         final(callback) {
           progress(parsedUrl, 0, written, length, totalLength)

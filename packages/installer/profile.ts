@@ -238,13 +238,18 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
             i++
             continue
           }
-        } else {
+        } else if (!mainClass) {
           mainClass = args[i]
           found = true
           continue
         }
         if (!found) {
-          jvm.push(args[i])
+          if (!args[i].startsWith('-D')) {
+            jvm.push(args[i], args[i + 1])
+            i++
+          } else {
+            jvm.push(args[i])
+          }
         } else {
           game.push(args[i])
         }
