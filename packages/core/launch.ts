@@ -508,9 +508,11 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
     } else if (waitForReady && (string.indexOf('Missing metadata in pack') !== -1 || string.indexOf('Registering resource reload listener') !== -1 || string.indexOf('Reloading ResourceManager') !== -1 || string.indexOf('LWJGL Version: ') !== -1 || string.indexOf('OpenAL initialized.') !== -1)) {
       waitForReady = false
       emitter.emit('minecraft-window-ready')
-    } else if (waitForReady && (string.indexOf('minecraft/DedicatedServer]: Preparing level') !== -1)) {
+    } else if (waitForReady && (string.indexOf(' Preparing level ') !== -1)) {
       waitForReady = false
       emitter.emit('minecraft-window-ready')
+    } else if (string.indexOf('Failed to start the minecraft server') !== -1) {
+      crashReport = string
     }
   })
   return emitter
