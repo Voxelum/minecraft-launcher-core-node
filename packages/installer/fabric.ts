@@ -148,6 +148,7 @@ export async function installFabric(options: InstallFabricVersionOptions) {
 
   const minecraft = MinecraftFolder.from(options.minecraft)
   const versionName = `${options.minecraftVersion}-fabric${options.version}`
+  content.id = versionName
 
   const jsonPath = side === 'client' ? minecraft.getVersionJson(versionName) : minecraft.getVersionServerJson(versionName)
 
