@@ -2,7 +2,6 @@
  * @module @xmcl/modrinth
  */
 
-import { Dispatcher, fetch } from 'undici'
 import { Category, GameVersion, License, Loader, Project, ProjectVersion, TeamMember, User } from './types'
 
 export * from './types'
@@ -169,9 +168,9 @@ export interface ModrinthClientOptions {
    */
   headers?: Record<string, string>
   /**
-   * The dispatcher for undici
+   * The fetch function to use
    */
-  dispatcher?: Dispatcher
+  fetch?: typeof fetch
 }
 
 /**
@@ -179,13 +178,13 @@ export interface ModrinthClientOptions {
  */
 export class ModrinthV2Client {
   private baseUrl: string
-  private dispatcher?: Dispatcher
+  private fetch: typeof fetch
   headers: Record<string, string>
 
   constructor(options?: ModrinthClientOptions) {
     this.baseUrl = options?.baseUrl ?? 'https://api.modrinth.com'
-    this.dispatcher = options?.dispatcher
     this.headers = options?.headers || {}
+    this.fetch = options?.fetch || ((...args) => fetch(...args))
   }
 
   /**
@@ -199,8 +198,7 @@ export class ModrinthV2Client {
     url.searchParams.append('offset', options.offset?.toString() ?? '0')
     url.searchParams.append('limit', options.limit?.toString() ?? '10')
     if (options.facets) { url.searchParams.append('facets', options.facets) }
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       signal,
       headers: this.headers,
     })
@@ -217,8 +215,7 @@ export class ModrinthV2Client {
   async getProject(projectId: string, signal?: AbortSignal): Promise<Project> {
     if (projectId.startsWith('local-')) { projectId = projectId.slice('local-'.length) }
     const url = new URL(this.baseUrl + `/v2/project/${projectId}`)
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       signal,
       headers: this.headers,
     })
@@ -235,8 +232,7 @@ export class ModrinthV2Client {
   async getProjects(projectIds: string[], signal?: AbortSignal): Promise<Project[]> {
     const url = new URL(this.baseUrl + '/v2/projects')
     url.searchParams.append('ids', JSON.stringify(projectIds))
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       signal,
       headers: this.headers,
     })
@@ -255,8 +251,7 @@ export class ModrinthV2Client {
     if (loaders) { url.searchParams.append('loaders', JSON.stringify(loaders)) }
     if (gameVersions) { url.searchParams.append('game_versions', JSON.stringify(gameVersions)) }
     if (featured !== undefined) { url.searchParams.append('featured', featured ? 'true' : 'false') }
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       signal,
       headers: this.headers,
     })
@@ -272,8 +267,7 @@ export class ModrinthV2Client {
    */
   async getProjectVersion(versionId: string, signal?: AbortSignal): Promise<ProjectVersion> {
     const url = new URL(this.baseUrl + `/v2/version/${versionId}`)
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       signal,
       headers: this.headers,
     })
@@ -290,8 +284,7 @@ export class ModrinthV2Client {
   async getProjectVersionsById(ids: string[], signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/versions')
     url.searchParams.append('ids', JSON.stringify(ids))
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       signal,
       headers: this.headers,
     })
@@ -307,9 +300,8 @@ export class ModrinthV2Client {
    */
   async getProjectVersionsByHash(hashes: string[], algorithm = 'sha1', signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/version_files')
-    const response = await fetch(url, {
+    const response = await this.fetch(url, {
       method: 'POST',
-      dispatcher: this.dispatcher,
       body: JSON.stringify({
         hashes,
         algorithm,
@@ -332,7 +324,7 @@ export class ModrinthV2Client {
    */
   async getLatestVersionsFromHashes(hashes: string[], { algorithm, loaders = [], gameVersions = [] }: { algorithm?: string; loaders?: string[]; gameVersions?: string[] } = {}, signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/version_files/update')
-    const response = await fetch(url, {
+    const response = await this.fetch(url, {
       method: 'POST',
       body: JSON.stringify({
         hashes,
@@ -341,7 +333,6 @@ export class ModrinthV2Client {
         game_versions: gameVersions,
       }),
       headers: { ...this.headers, 'content-type': 'application/json' },
-      dispatcher: this.dispatcher,
       signal,
     })
     if (response.status !== 200) {
@@ -357,14 +348,13 @@ export class ModrinthV2Client {
   async getLatestProjectVersion(sha1: string, { algorithm, loaders = [], gameVersions = [] }: { algorithm?: string; loaders?: string[]; gameVersions?: string[] } = {}, signal?: AbortSignal): Promise<ProjectVersion> {
     const url = new URL(this.baseUrl + `/v2/version_file/${sha1}/update`)
     url.searchParams.append('algorithm', algorithm ?? 'sha1')
-    const response = await fetch(url, {
+    const response = await this.fetch(url, {
       method: 'POST',
       body: JSON.stringify({
         loaders,
         game_versions: gameVersions,
       }),
       headers: { ...this.headers, 'content-type': 'application/json' },
-      dispatcher: this.dispatcher,
       signal,
     })
     if (response.status !== 200) {
@@ -379,8 +369,7 @@ export class ModrinthV2Client {
    */
   async getLicenseTags(signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/tag/license')
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       headers: this.headers,
       signal,
     })
@@ -396,8 +385,7 @@ export class ModrinthV2Client {
    */
   async getCategoryTags(signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/tag/category')
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       headers: this.headers,
       signal,
     })
@@ -413,8 +401,7 @@ export class ModrinthV2Client {
    */
   async getGameVersionTags(signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/tag/game_version')
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       headers: this.headers,
       signal,
     })
@@ -430,8 +417,7 @@ export class ModrinthV2Client {
    */
   async getLoaderTags(signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v2/tag/loader')
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       headers: this.headers,
       signal,
     })
@@ -447,8 +433,7 @@ export class ModrinthV2Client {
    */
   async getProjectTeamMembers(projectId: string, signal?: AbortSignal) {
     const url = new URL(this.baseUrl + `/v2/project/${projectId}/members`)
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       headers: this.headers,
       signal,
     })
@@ -464,8 +449,7 @@ export class ModrinthV2Client {
    */
   async getUser(id: string, signal?: AbortSignal) {
     const url = new URL(this.baseUrl + `/v2/user/${id}`)
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       headers: this.headers,
       signal,
     })
@@ -481,8 +465,7 @@ export class ModrinthV2Client {
    */
   async getUserProjects(id: string, signal?: AbortSignal) {
     const url = new URL(this.baseUrl + `/v2/user/${id}/projects`)
-    const response = await fetch(url, {
-      dispatcher: this.dispatcher,
+    const response = await this.fetch(url, {
       headers: this.headers,
       signal,
     })

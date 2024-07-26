@@ -1,4 +1,3 @@
-import { fetch, Dispatcher, RequestInit, FormData, File } from 'undici'
 import { GameProfile, GameProfileWithProperties } from './gameProfile'
 
 /**
@@ -49,7 +48,9 @@ export interface YggrasilAuthentication {
 
 export interface YggdrasilClientOptions {
   headers?: Record<string, string>
-  dispatcher?: Dispatcher
+  fetch?: typeof fetch
+  FormData?: typeof FormData
+  File?: typeof File
 }
 
 export interface ProfileLookupException {
@@ -91,8 +92,10 @@ export class YggdrasilError extends Error {
 }
 
 export class YggdrasilClient {
-  protected dispatcher?: Dispatcher
   protected headers: Record<string, string>
+  protected fetch: typeof fetch
+  protected FormData: typeof FormData
+  protected File: typeof File
 
   /**
    * Create client for official-like api endpoint
@@ -100,38 +103,38 @@ export class YggdrasilClient {
    */
   constructor(public api: string, options?: YggdrasilClientOptions) {
     this.headers = options?.headers ?? {}
-    this.dispatcher = options?.dispatcher
+    this.fetch = options?.fetch || fetch
+    this.FormData = options?.FormData || FormData
+    this.File = options?.File || File
   }
 
   async validate(accessToken: string, clientToken: string, signal?: AbortSignal) {
-    const response = await fetch(this.api + '/validate', {
+    const response = await this.fetch(this.api + '/validate', {
       method: 'POST',
       body: JSON.stringify({ accessToken, clientToken }),
       headers: {
         ...this.headers,
         'content-type': 'application/json; charset=utf-8',
       },
-      dispatcher: this.dispatcher,
       signal,
     })
     return response.ok
   }
 
   async invalidate(accessToken: string, clientToken: string, signal?: AbortSignal) {
-    return await fetch(this.api + '/invalidate', {
+    return await this.fetch(this.api + '/invalidate', {
       method: 'POST',
       body: JSON.stringify({ accessToken, clientToken }),
       headers: {
         ...this.headers,
         'content-type': 'application/json; charset=utf-8',
       },
-      dispatcher: this.dispatcher,
       signal,
     }).then((s) => s.ok)
   }
 
   async login({ username, password, clientToken, requestUser }: { username: string; password: string; clientToken: string; requestUser?: boolean }, signal?: AbortSignal) {
-    const response = await fetch(this.api + '/authenticate', {
+    const response = await this.fetch(this.api + '/authenticate', {
       method: 'POST',
       body: JSON.stringify({
         agent: { name: 'Minecraft', version: 1 },
@@ -144,7 +147,6 @@ export class YggdrasilClient {
         ...this.headers,
         'content-type': 'application/json; charset=utf-8',
       },
-      dispatcher: this.dispatcher,
       signal,
     })
 
@@ -158,7 +160,7 @@ export class YggdrasilClient {
   }
 
   async refresh({ accessToken, requestUser, clientToken }: { accessToken: string; clientToken: string; requestUser?: boolean }, signal?: AbortSignal) {
-    const response = await fetch(this.api + '/refresh', {
+    const response = await this.fetch(this.api + '/refresh', {
       method: 'POST',
       body: JSON.stringify({
         accessToken,
@@ -169,7 +171,6 @@ export class YggdrasilClient {
         ...this.headers,
         'content-type': 'application/json; charset=utf-8',
       },
-      dispatcher: this.dispatcher,
       signal,
     })
 
@@ -247,10 +248,9 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
     // eslint-disable-next-line no-template-curly-in-string
     const url = new URL(this.profileApi.replace('${uuid}', uuid))
     url.searchParams.append('unsigned', unsigned ? 'true' : 'false')
-    const response = await fetch(url, {
+    const response = await this.fetch(url, {
       method: 'GET',
       headers: this.headers,
-      dispatcher: this.dispatcher,
       signal,
     })
     if (response.status !== 200) {
@@ -282,7 +282,6 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
         ...this.headers,
         Authorization: `Bearer ${options.accessToken}`,
       },
-      dispatcher: this.dispatcher,
       signal,
     }
     if (!options.texture) {
@@ -291,9 +290,9 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
     } else if ('data' in options.texture) {
       requestOptions.method = 'PUT'
       // upload texture
-      const form = new FormData()
+      const form = new this.FormData()
       form.append('model', options.texture.metadata?.model || 'steve')
-      form.append('file', new File([options.texture.data], 'Steve.png', { type: 'image/png' }))
+      form.append('file', new this.File([options.texture.data], 'Steve.png', { type: 'image/png' }))
       requestOptions.body = form
     } else if ('url' in options.texture) {
       // set texture
@@ -304,7 +303,7 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
       throw new TypeError('Illegal Option Format!')
     }
 
-    const response = await fetch(url, requestOptions)
+    const response = await this.fetch(url, requestOptions)
     if (response.status === 401) {
       if (response.headers.get('content-type') === 'application/json') {
         const body = await response.json() as any
