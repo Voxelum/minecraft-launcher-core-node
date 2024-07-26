@@ -194,7 +194,7 @@ export class ModrinthV2Client {
     const url = new URL(this.baseUrl + '/v2/search')
     url.searchParams.append('query', options.query || '')
     url.searchParams.append('filter', options.filter || '')
-    url.searchParams.append('index', options.index || 'relevance')
+    url.searchParams.append('index', options.index || (options.query ? 'relevance' : 'downloads'))
     url.searchParams.append('offset', options.offset?.toString() ?? '0')
     url.searchParams.append('limit', options.limit?.toString() ?? '10')
     if (options.facets) { url.searchParams.append('facets', options.facets) }
