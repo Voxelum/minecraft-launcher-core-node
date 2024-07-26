@@ -30,7 +30,7 @@ export class MinecraftLanDiscover extends EventEmitter {
 
     sock.on('listening', () => {
       const address = sock.address()
-      sock.addMembership(this.#group, address.address)
+      sock.addMembership(this.#group, type === 'udp4' ? address.address : undefined)
       sock.setMulticastTTL(128)
       sock.setBroadcast(true)
       this.#ready = true
