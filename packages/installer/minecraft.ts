@@ -1,9 +1,9 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version, Version as VersionJson } from '@xmcl/core'
-import { ChecksumNotMatchError, ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, Validator, getDownloadBaseOptions } from '@xmcl/file-transfer'
-import { Task, task } from '@xmcl/task'
+import { AbortSignal, ChecksumNotMatchError, ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, ProgressController, Validator, download, getDownloadBaseOptions } from '@xmcl/file-transfer'
+import { AbortableTask, Task, task } from '@xmcl/task'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { join, relative, sep } from 'path'
-import { Dispatcher, request } from 'undici'
+import { Dispatcher, errors, request } from 'undici'
 import { DownloadTask } from './downloadTask'
 import { ParallelTaskOptions, ensureDir, errorToString, joinUrl, normalizeArray } from './utils'
 import { ZipValidator } from './zipValdiator'
@@ -385,10 +385,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
       const { objects } = await getAssetIndexFallback()
       objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
     }
-    await this.all(objectArray.map((o) => new InstallAssetTask(o, folder, options)), {
-      throwErrorImmediately: options.throwErrorImmediately ?? false,
-      getErrorMessage: (errs) => `Errors during install Minecraft ${version.id}'s assets at ${version.minecraftDirectory}: ${errs.map(errorToString).join('\n')}`,
-    })
+    await this.yield(new InstallAssetTask(objectArray, folder, options))
 
     return version
   })
@@ -429,12 +426,7 @@ export function installResolvedAssetsTask(assets: AssetInfo[], folder: Minecraft
   return task('assets', async function () {
     await ensureDir(folder.getPath('assets', 'objects'))
 
-    // const sizes = assets.map((a) => a.size).map((a, b) => a + b, 0);
-
-    await this.all(assets.map((o) => new InstallAssetTask(o, folder, options)), {
-      throwErrorImmediately: false,
-      getErrorMessage: (errs) => `Errors during install assets at ${folder.root}:\n${errs.map(errorToString).join('\n')}`,
-    })
+    await this.yield(new InstallAssetTask(assets, folder, options))
   })
 }
 
@@ -521,41 +513,88 @@ export class InstallLibraryTask extends DownloadTask {
   }
 }
 
-export class InstallAssetTask extends DownloadTask {
-  constructor(asset: AssetInfo, folder: MinecraftFolder, options: AssetsOptions) {
-    const assetsHosts = normalizeArray(options.assetsHost || [])
+export class InstallAssetTask extends AbortableTask<void> {
+  constructor(private assets: AssetInfo[], private folder: MinecraftFolder, private options: AssetsOptions) {
+    super()
+
+    this._total = assets.reduce((a, b) => a + b.size, 0)
+    this.name = 'asset'
+    this.param = { count: assets.length }
+  }
+
+  protected abort: (isCancelled: boolean) => void = () => { }
+
+  protected async process(): Promise<void> {
+    const assetsHosts = normalizeArray(this.options.assetsHost || [])
 
     if (assetsHosts.indexOf(DEFAULT_RESOURCE_ROOT_URL) === -1) {
       assetsHosts.push(DEFAULT_RESOURCE_ROOT_URL)
     }
 
-    const { hash, size, name } = asset
-
-    const head = hash.substring(0, 2)
-    const dir = folder.getPath('assets', 'objects', head)
-    const file = join(dir, hash)
-    const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`)
-
-    super({
-      url: urls,
-      destination: file,
-      validator: options.prevalidSizeOnly
-        ? {
-          async validate(destination, url) {
-            const fstat = await stat(destination).catch(() => ({ size: -1 }))
-            if (fstat.size !== size) {
-              throw new ChecksumNotMatchError('size', size.toString(), fstat.size.toString(), destination, url)
-            }
-          },
+    const listeners: Array<() => void> = []
+    const aborted = () => this.isCancelled || this.isPaused
+    const signal: AbortSignal = {
+      get aborted() { return aborted() },
+      addEventListener(event, listener) {
+        if (event !== 'abort') {
+          return this
         }
-        : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
-      ...getDownloadBaseOptions(options),
-      skipHead: asset.size < 2 * 1024 * 1024,
-    })
+        listeners.push(listener)
+        return this
+      },
+      removeEventListener(event, listener) {
+        // noop as this will be auto gc
+        return this
+      },
+    }
+    this.abort = () => {
+      listeners.forEach((l) => l())
+    }
 
-    this._total = size
-    this.name = 'asset'
-    this.param = asset
+    const progresses = new Array(this.assets.length).fill(0)
+    await Promise.allSettled(this.assets.map(async (asset, i) => {
+      const { hash, size, name } = asset
+      const head = hash.substring(0, 2)
+      const dir = this.folder.getPath('assets', 'objects', head)
+      const file = join(dir, hash)
+      const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`)
+      await download({
+        url: urls,
+        destination: file,
+        validator: this.options.prevalidSizeOnly
+          ? {
+            async validate(destination, url) {
+              const fstat = await stat(destination).catch(() => ({ size: -1 }))
+              if (fstat.size !== size) {
+                throw new ChecksumNotMatchError('size', size.toString(), fstat.size.toString(), destination, url)
+              }
+            },
+          }
+          : this.options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
+        ...getDownloadBaseOptions(this.options),
+        skipHead: asset.size < 2 * 1024 * 1024,
+        progressController: {
+          progress: 0,
+          onProgress: (url, chunkSize, written, total) => {
+            progresses[i] = written
+            this._progress = progresses.reduce((a, b) => a + b, 0)
+            this.update(chunkSize)
+            this._from = url.toString()
+          },
+        },
+        abortSignal: signal,
+      })
+      progresses[i] = size
+      this._progress = progresses.reduce((a, b) => a + b, 0)
+      this.update(0)
+    }))
+  }
+
+  protected isAbortedError(e: any): boolean {
+    if (e instanceof errors.RequestAbortedError || e.code === 'UND_ERR_ABORTED') {
+      return true
+    }
+    return false
   }
 }
 
