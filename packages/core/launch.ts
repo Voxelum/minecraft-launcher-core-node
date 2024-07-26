@@ -618,7 +618,7 @@ export async function generateArguments(options: LaunchOption) {
   const { id = randomUUID().replace(/-/g, ''), name = 'Steve' } = options.gameProfile || {}
   const accessToken = options.accessToken || randomUUID().replace(/-/g, '')
   const properties = options.properties || {}
-  const userType = options.userType || 'Mojang'
+  const userType = options.userType || 'msa'
   const features = options.features || {}
   const jvmArguments = normalizeArguments(version.arguments.jvm, currentPlatform, features)
   const gameArguments = normalizeArguments(version.arguments.game, currentPlatform, features)
