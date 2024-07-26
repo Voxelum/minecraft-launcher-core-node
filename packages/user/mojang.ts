@@ -201,6 +201,10 @@ export class ProfileNotFoundError extends MojangError {
   }
 }
 
+export interface MojangClientOptions {
+  fetch?: typeof fetch
+}
+
 /**
  * The mojang api client. Please referece https://wiki.vg/Mojang_API.
  *
@@ -208,15 +212,18 @@ export class ProfileNotFoundError extends MojangError {
  * @see {@link MicrosoftAuthenticator}
  */
 export class MojangClient {
-  constructor(private dispatcher?: Dispatcher) { }
+  private fetch: typeof fetch
+
+  constructor(options?: MojangClientOptions) { 
+    this.fetch = options?.fetch || fetch
+  }
 
   async setName(name: string, token: string, signal?: AbortSignal) {
-    const resp = await fetch(`https://api.minecraftservices.com/minecraft/profile/name/${name}`, {
+    const resp = await this.fetch(`https://api.minecraftservices.com/minecraft/profile/name/${name}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      dispatcher: this.dispatcher,
       signal,
     })
     switch (resp.status) {
@@ -231,23 +238,21 @@ export class MojangClient {
   }
 
   async getNameChangeInformation(token: string) {
-    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/namechange', {
+    const resp = await this.fetch('https://api.minecraftservices.com/minecraft/profile/namechange', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      dispatcher: this.dispatcher,
     })
     return await resp.json() as NameChangeInformation
   }
 
   async checkNameAvailability(name: string, token: string, signal?: AbortSignal): Promise<NameAvailability> {
-    const resp = await fetch(`https://api.minecraftservices.com/minecraft/profile/name/${name}/available`, {
+    const resp = await this.fetch(`https://api.minecraftservices.com/minecraft/profile/name/${name}/available`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      dispatcher: this.dispatcher,
       signal,
     })
     const result = await resp.json() as any
@@ -255,12 +260,11 @@ export class MojangClient {
   }
 
   async getProfile(token: string, signal?: AbortSignal): Promise<MicrosoftMinecraftProfile> {
-    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile', {
+    const resp = await this.fetch('https://api.minecraftservices.com/minecraft/profile', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      dispatcher: this.dispatcher,
       signal,
     })
     if (resp.headers.get('content-type')?.toLocaleLowerCase() !== 'application/json') {
@@ -287,7 +291,7 @@ export class MojangClient {
       headers['Content-Type'] = 'application/json'
     }
 
-    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/skins', {
+    const resp = await this.fetch('https://api.minecraftservices.com/minecraft/profile/skins', {
       method: 'POST',
       headers,
       body,
@@ -308,12 +312,11 @@ export class MojangClient {
   }
 
   async resetSkin(token: string, signal?: AbortSignal) {
-    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/skins/active', {
+    const resp = await this.fetch('https://api.minecraftservices.com/minecraft/profile/skins/active', {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      dispatcher: this.dispatcher,
       signal,
     })
     if (resp.status === 401) {
@@ -322,12 +325,11 @@ export class MojangClient {
   }
 
   async hideCape(token: string, signal?: AbortSignal) {
-    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/capes/active', {
+    const resp = await this.fetch('https://api.minecraftservices.com/minecraft/profile/capes/active', {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      dispatcher: this.dispatcher,
       signal,
     })
     if (resp.status === 401) {
@@ -336,14 +338,13 @@ export class MojangClient {
   }
 
   async showCape(capeId: string, token: string, signal?: AbortSignal) {
-    const resp = await fetch('https://api.minecraftservices.com/minecraft/profile/capes/active', {
+    const resp = await this.fetch('https://api.minecraftservices.com/minecraft/profile/capes/active', {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ capeId }),
-      dispatcher: this.dispatcher,
       signal,
     })
     if (resp.status === 401) {
@@ -357,12 +358,11 @@ export class MojangClient {
   }
 
   async verifySecurityLocation(token: string, signal?: AbortSignal) {
-    const resp = await fetch('https://api.mojang.com/user/security/location', {
+    const resp = await this.fetch('https://api.mojang.com/user/security/location', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      dispatcher: this.dispatcher,
       signal,
     })
 
@@ -373,12 +373,11 @@ export class MojangClient {
   }
 
   async getSecurityChallenges(token: string) {
-    const resp = await fetch('https://api.mojang.com/user/security/challenges', {
+    const resp = await this.fetch('https://api.mojang.com/user/security/challenges', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      dispatcher: this.dispatcher,
     })
 
     if (resp.status === 401) {
@@ -388,14 +387,13 @@ export class MojangClient {
   }
 
   async submitSecurityChallenges(answers: MojangChallengeResponse[], token: string) {
-    const resp = await fetch('https://api.mojang.com/user/security/location', {
+    const resp = await this.fetch('https://api.mojang.com/user/security/location', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(answers),
-      dispatcher: this.dispatcher,
     })
 
     if (resp.status === 204) {
@@ -411,11 +409,10 @@ export class MojangClient {
      * Return the owner ship list of the player with those token.
      */
   async checkGameOwnership(token: string, signal?: AbortSignal) {
-    const mcResponse = await fetch('https://api.minecraftservices.com/entitlements/mcstore', {
+    const mcResponse = await this.fetch('https://api.minecraftservices.com/entitlements/mcstore', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      dispatcher: this.dispatcher,
       signal,
     })
 

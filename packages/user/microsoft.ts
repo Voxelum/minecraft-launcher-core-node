@@ -1,6 +1,4 @@
 /* eslint-disable camelcase */
-import { Dispatcher, fetch } from 'undici'
-
 export interface XBoxResponse {
   IssueInstant: string
   NotAfter: string
@@ -9,12 +7,12 @@ export interface XBoxResponse {
     xui: [
       {
         /**
-                 * gamer tag
-                 */
+         * gamer tag
+         */
         gtg: string
         /**
-                 * user id
-                 */
+         * user id
+         */
         xid: string
         uhs: string
       },
@@ -45,18 +43,26 @@ export interface MinecraftAuthResponse {
   expires_in: number
 }
 
+export interface MicrosoftAuthenticatorOptions {
+  fetch?: typeof fetch
+}
+
 /**
  * The microsoft authenticator for Minecraft (Xbox) account.
  */
 export class MicrosoftAuthenticator {
-  constructor(private dispatcher?: Dispatcher) { }
+  fetch: typeof fetch
+
+  constructor(options: MicrosoftAuthenticatorOptions) { 
+    this.fetch = options.fetch || fetch
+  }
 
   /**
    * Authenticate with xbox live by ms oauth access token
    * @param oauthAccessToken The oauth access token
    */
   async authenticateXboxLive(oauthAccessToken: string, signal?: AbortSignal) {
-    const xblResponse = await fetch('https://user.auth.xboxlive.com/user/authenticate', {
+    const xblResponse = await this.fetch('https://user.auth.xboxlive.com/user/authenticate', {
       method: 'POST',
       body: JSON.stringify({
         Properties: {
@@ -70,7 +76,6 @@ export class MicrosoftAuthenticator {
       headers: {
         'Content-Type': 'application/json',
       },
-      dispatcher: this.dispatcher,
       signal,
     })
 
@@ -88,7 +93,7 @@ export class MicrosoftAuthenticator {
      * @param xblResponseToken The {@link XBoxResponse.Token}
      */
   async authorizeXboxLive(xblResponseToken: string, relyingParty: 'rp://api.minecraftservices.com/' | 'http://xboxlive.com' = 'rp://api.minecraftservices.com/', signal?: AbortSignal) {
-    const xstsResponse = await fetch('https://xsts.auth.xboxlive.com/xsts/authorize', {
+    const xstsResponse = await this.fetch('https://xsts.auth.xboxlive.com/xsts/authorize', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -101,7 +106,6 @@ export class MicrosoftAuthenticator {
         RelyingParty: relyingParty,
         TokenType: 'JWT',
       }),
-      dispatcher: this.dispatcher,
       signal,
     })
 
@@ -127,13 +131,12 @@ export class MicrosoftAuthenticator {
   async getXboxGameProfile(xuid: string, uhs: string, xstsToken: string, signal?: AbortSignal) {
     const url = new URL(`https://profile.xboxlive.com/users/xuid(${xuid})/profile/settings`)
     url.searchParams.append('settings', ['PublicGamerpic', 'Gamertag'].join(','))
-    const response = await fetch(url, {
+    const response = await this.fetch(url, {
       headers: {
         'x-xbl-contract-version': '2',
         'content-type': 'application/json',
         Authorization: `XBL3.0 x=${uhs};${xstsToken}`,
       },
-      dispatcher: this.dispatcher,
       signal,
     })
 
@@ -178,7 +181,7 @@ export class MicrosoftAuthenticator {
      * @param xstsToken You need to get this token from {@link acquireXBoxToken}
      */
   async loginMinecraftWithXBox(uhs: string, xstsToken: string, signal?: AbortSignal) {
-    const mcResponse = await fetch('https://api.minecraftservices.com/authentication/login_with_xbox', {
+    const mcResponse = await this.fetch('https://api.minecraftservices.com/authentication/login_with_xbox', {
       method: 'POST',
       body: JSON.stringify({
         identityToken: `XBL3.0 x=${uhs};${xstsToken}`,
@@ -186,7 +189,6 @@ export class MicrosoftAuthenticator {
       headers: {
         'content-type': 'application/json',
       },
-      dispatcher: this.dispatcher,
       signal,
     })
 
