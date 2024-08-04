@@ -120,6 +120,10 @@ export interface LaunchOption {
    */
   extraMCArgs?: string[]
   /**
+   * Prepend command before java command.
+   */
+  prependCommand?: string
+  /**
    * Assign the spawn options to the process.
    *
    * If you try to set `{ shell: true }`, you might want to make all argument rounded with "".
@@ -403,6 +407,8 @@ export interface BaseServerOptions {
   extraMCArgs?: string[]
   extraExecOption?: SpawnOptions
 
+  prependCommand?: string
+
   /**
    * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
    */
@@ -591,6 +597,10 @@ export async function generateArgumentsServer(options: ServerOptions) {
     cmd.push('nogui')
   }
 
+  if (options.prependCommand && options.prependCommand.trim().length > 0) {
+    cmd.unshift(options.prependCommand.trim())
+  }
+
   return cmd
 }
 
@@ -770,6 +780,11 @@ export async function generateArguments(options: LaunchOption) {
       }
     }
   }
+
+  if (options.prependCommand && options.prependCommand.trim().length > 0) {
+    cmd.unshift(options.prependCommand.trim())
+  }
+
   return cmd
 }
 
