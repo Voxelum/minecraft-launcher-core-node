@@ -11,12 +11,12 @@ import { convertClasspathToMaven, parseManifest } from './manifest'
 
 export interface PostProcessor {
   /**
-     * The executable jar path
-     */
+   * The executable jar path
+   */
   jar: string
   /**
-     * The classpath to run
-     */
+   * The classpath to run
+   */
   classpath: string[]
   args: string[]
   outputs?: { [key: string]: string }
@@ -52,8 +52,8 @@ export interface InstallProfile {
    */
   data?: { [key: string]: { client: string; server: string } }
   /**
-     * The post processor. Which require java to run.
-     */
+   * The post processor. Which require java to run.
+   */
   processors?: Array<PostProcessor>
   /**
    * The required install profile libraries
@@ -65,7 +65,14 @@ export interface InstallProfile {
   versionInfo?: VersionJson
 }
 
-export interface InstallProfileOption extends LibraryOptions, InstallSideOption, SpawnJavaOptions {
+export interface PostProcessOptions extends SpawnJavaOptions {
+  /**
+   * Custom handlers to handle the post processor
+   */
+  handler?: (postProcessor: PostProcessor) => Promise<boolean>
+}
+
+export interface InstallProfileOption extends LibraryOptions, InstallSideOption, PostProcessOptions {
   /**
    * New forge (>=1.13) require java to install. Can be a executor or java executable path.
    */
@@ -160,8 +167,8 @@ export function resolveProcessors(side: 'client' | 'server', installProfile: Ins
  * @param java The java executable path
  * @throws {@link PostProcessError}
  */
-export function postProcess(processors: PostProcessor[], minecraft: MinecraftFolder, javaOptions: SpawnJavaOptions) {
-  return new PostProcessingTask(processors, minecraft, javaOptions).startAndWait()
+export function postProcess(processors: PostProcessor[], minecraft: MinecraftFolder, options: PostProcessOptions) {
+  return new PostProcessingTask(processors, minecraft, options).startAndWait()
 }
 
 /**
@@ -347,7 +354,7 @@ export class PostProcessingTask extends AbortableTask<void> {
 
   private _abort = () => { }
 
-  constructor(private processors: PostProcessor[], private minecraft: MinecraftFolder, private java: SpawnJavaOptions) {
+  constructor(private processors: PostProcessor[], private minecraft: MinecraftFolder, private options: PostProcessOptions) {
     super()
     this.param = processors
     this._total = processors.length
@@ -394,7 +401,10 @@ export class PostProcessingTask extends AbortableTask<void> {
     return false
   }
 
-  protected async postProcess(mc: MinecraftFolder, proc: PostProcessor, javaOptions: SpawnJavaOptions) {
+  protected async postProcess(mc: MinecraftFolder, proc: PostProcessor, options: PostProcessOptions) {
+    if (await options.handler?.(proc)) {
+      return
+    }
     const jarRealPath = mc.getLibraryByPath(LibraryInfo.resolve(proc.jar).path)
     const mainClass = await this.findMainClass(jarRealPath)
     this._to = proc.jar
@@ -402,7 +412,7 @@ export class PostProcessingTask extends AbortableTask<void> {
     const cmd = ['-cp', cp, mainClass, ...proc.args]
     try {
       await new Promise((resolve, reject) => {
-        const process = (javaOptions?.spawn ?? spawn)(javaOptions.java ?? 'java', cmd)
+        const process = (options?.spawn ?? spawn)(options.java ?? 'java', cmd)
         waitProcess(process).then(resolve, reject)
         this._abort = () => {
           reject(PAUSEED)
@@ -411,12 +421,12 @@ export class PostProcessingTask extends AbortableTask<void> {
       })
     } catch (e) {
       if (typeof e === 'string') {
-        throw new PostProcessFailedError(proc.jar, [javaOptions.java ?? 'java', ...cmd], e)
+        throw new PostProcessFailedError(proc.jar, [options.java ?? 'java', ...cmd], e)
       }
       throw e
     }
     if (proc.outputs && await this.isInvalid(proc.outputs)) {
-      throw new PostProcessFailedError(proc.jar, [javaOptions.java ?? 'java', ...cmd], 'Validate the output of process failed!')
+      throw new PostProcessFailedError(proc.jar, [options.java ?? 'java', ...cmd], 'Validate the output of process failed!')
     }
   }
 
@@ -429,7 +439,7 @@ export class PostProcessingTask extends AbortableTask<void> {
       if (this.isPaused) {
         throw PAUSEED
       }
-      await this.postProcess(this.minecraft, proc, this.java)
+      await this.postProcess(this.minecraft, proc, this.options)
       if (this.isCancelled) {
         throw new CancelledError()
       }
