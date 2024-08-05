@@ -402,7 +402,7 @@ export class PostProcessingTask extends AbortableTask<void> {
   }
 
   protected async postProcess(mc: MinecraftFolder, proc: PostProcessor, options: PostProcessOptions) {
-    if (await options.handler?.(proc)) {
+    if (await options.handler?.(proc).catch(() => false)) {
       return
     }
     const jarRealPath = mc.getLibraryByPath(LibraryInfo.resolve(proc.jar).path)
