@@ -248,7 +248,7 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
     // eslint-disable-next-line no-template-curly-in-string
     const url = new URL(this.profileApi.replace('${uuid}', uuid))
     url.searchParams.append('unsigned', unsigned ? 'true' : 'false')
-    const response = await this.fetch(url, {
+    const response = await this.fetch(url.toString(), {
       method: 'GET',
       headers: this.headers,
       signal,
@@ -277,6 +277,7 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
     // eslint-disable-next-line no-template-curly-in-string
     const url = new URL(this.textureApi.replace('${uuid}', options.uuid).replace('${type}', options.type))
 
+    // eslint-disable-next-line no-undef
     const requestOptions: RequestInit = {
       headers: {
         ...this.headers,
@@ -303,7 +304,7 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
       throw new TypeError('Illegal Option Format!')
     }
 
-    const response = await this.fetch(url, requestOptions)
+    const response = await this.fetch(url.toString(), requestOptions)
     if (response.status === 401) {
       if (response.headers.get('content-type') === 'application/json') {
         const body = await response.json() as any
