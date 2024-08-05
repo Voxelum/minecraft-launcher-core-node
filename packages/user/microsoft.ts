@@ -53,7 +53,7 @@ export interface MicrosoftAuthenticatorOptions {
 export class MicrosoftAuthenticator {
   fetch: typeof fetch
 
-  constructor(options: MicrosoftAuthenticatorOptions) { 
+  constructor(options: MicrosoftAuthenticatorOptions) {
     this.fetch = options.fetch || fetch
   }
 
@@ -131,7 +131,7 @@ export class MicrosoftAuthenticator {
   async getXboxGameProfile(xuid: string, uhs: string, xstsToken: string, signal?: AbortSignal) {
     const url = new URL(`https://profile.xboxlive.com/users/xuid(${xuid})/profile/settings`)
     url.searchParams.append('settings', ['PublicGamerpic', 'Gamertag'].join(','))
-    const response = await this.fetch(url, {
+    const response = await this.fetch(url.toString(), {
       headers: {
         'x-xbl-contract-version': '2',
         'content-type': 'application/json',
