@@ -1,5 +1,4 @@
-import { fdatasync, close as sclose, open as sopen, rename as srename, stat as sstat, unlink as sunlink, write } from 'fs'
-import { mkdir } from 'fs/promises'
+import { fdatasync, close as sclose, open as sopen, rename as srename, stat as sstat, unlink as sunlink, write, mkdir as smkdir } from 'fs'
 import { dirname } from 'path'
 import { PassThrough, Writable, finished as sfinished } from 'stream'
 import { Agent, Dispatcher, errors, stream } from 'undici'
@@ -19,6 +18,7 @@ const open = promisify(sopen)
 const close = promisify(sclose)
 const finished = promisify(sfinished)
 const datasync = promisify(fdatasync)
+const mkdir = promisify(smkdir)
 
 export function getDownloadBaseOptions<T extends DownloadBaseOptions>(options?: T): DownloadBaseOptions {
   if (!options) return {}
