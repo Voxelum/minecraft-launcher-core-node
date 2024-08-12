@@ -1,6 +1,5 @@
 {
     "files": [
-        "abort.ts",
         "agent.ts",
         "checkpoint.ts",
         "error.ts",
@@ -8,7 +7,6 @@
         "metadata.ts",
         "download.ts",
         "retry.ts",
-        "range.ts",
         "rangePolicy.ts",
         "progress.ts",
         "validator.ts"

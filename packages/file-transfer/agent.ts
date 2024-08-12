@@ -1,4 +1,4 @@
-import { Agent, Dispatcher, RedirectHandler, RetryHandler } from 'undici'
+import { Dispatcher, RedirectHandler, RetryHandler } from 'undici'
 
 class NeoRedirectHandler extends RedirectHandler {
   constructor(dispatch: Dispatcher['dispatch'], maxRedirections: number, opts: Dispatcher.RequestOptions, handler: Dispatcher.DispatchHandlers, follow: boolean) {
