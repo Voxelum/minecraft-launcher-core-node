@@ -5,7 +5,7 @@ import { link } from 'fs/promises'
 import { dirname, join } from 'path'
 import { Dispatcher, request } from 'undici'
 import { URL } from 'url'
-import { DownloadTask } from './downloadTask'
+import { DownloadMultipleTask } from './downloadTask'
 import { ensureDir, ParallelTaskOptions } from './utils'
 /**
  * Contain all java runtimes basic info
@@ -284,23 +284,8 @@ export function installJavaRuntimeTask(options: InstallJavaRuntimeOptions): Task
   return task('installJavaRuntime', async function () {
     const destination = options.destination
     const manifest = options.manifest
-    const decompressFunction = typeof options.lzma === 'function' ? options.lzma : undefined
-    const downloadLzma = !!options.lzma
-    class DownloadAndDecompressTask extends DownloadTask {
-      constructor(options: DownloadOptions) {
-        super(options)
-      }
-
-      async runTask() {
-        const result = await super.runTask()
-        if (this._total === this._progress) {
-          const dest = this.options.destination.substring(0, this.options.destination.length - 5)
-          await decompressFunction!(this.options.destination, dest)
-        }
-        return result
-      }
-    }
-    await this.all(Object.entries(manifest.files)
+    const downloadLzma = false
+    await this.yield(new DownloadMultipleTask(Object.entries(manifest.files)
       .filter(([file, entry]) => entry.type === 'file')
       .map(([file, entry]) => {
         const fEntry = entry as FileEntry
@@ -315,13 +300,9 @@ export function installJavaRuntimeTask(options: InstallJavaRuntimeOptions): Task
           destination: dest,
           ...getDownloadBaseOptions(options),
         }
-        return isLzma && decompressFunction
-          ? new DownloadAndDecompressTask(downloadOptions).setName('download')
-          : new DownloadTask(downloadOptions).setName('download')
-      }), {
-      throwErrorImmediately: options.throwErrorImmediately,
-      getErrorMessage: (e) => `Fail to install java runtime ${manifest.version.name} on ${manifest.target}`,
-    })
+        return downloadOptions
+      })
+    ).setName('download'))
     await Promise.all(Object.entries(manifest.files)
       .filter(([file, entry]) => entry.type !== 'file')
       .map(async ([file, entry]) => {

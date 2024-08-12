@@ -1,10 +1,10 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version, Version as VersionJson } from '@xmcl/core'
-import { AbortSignal, ChecksumNotMatchError, ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, ProgressController, Validator, download, getDownloadBaseOptions } from '@xmcl/file-transfer'
-import { AbortableTask, Task, task } from '@xmcl/task'
+import { ChecksumNotMatchError, ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, Validator, getDownloadBaseOptions } from '@xmcl/file-transfer'
+import { Task, task } from '@xmcl/task'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { join, relative, sep } from 'path'
-import { Dispatcher, errors, request } from 'undici'
-import { DownloadTask } from './downloadTask'
+import { Dispatcher, request } from 'undici'
+import { DownloadMultipleTask, DownloadTask } from './downloadTask'
 import { ParallelTaskOptions, ensureDir, errorToString, joinUrl, normalizeArray } from './utils'
 import { ZipValidator } from './zipValdiator'
 
@@ -513,55 +513,24 @@ export class InstallLibraryTask extends DownloadTask {
   }
 }
 
-export class InstallAssetTask extends AbortableTask<void> {
-  constructor(private assets: AssetInfo[], private folder: MinecraftFolder, private options: AssetsOptions) {
-    super()
-
-    this._total = assets.reduce((a, b) => a + b.size, 0)
-    this.name = 'asset'
-    this.param = { count: assets.length }
-  }
-
-  protected abort: (isCancelled: boolean) => void = () => { }
-
-  protected async process(): Promise<void> {
-    const assetsHosts = normalizeArray(this.options.assetsHost || [])
+export class InstallAssetTask extends DownloadMultipleTask {
+  constructor(assets: AssetInfo[], folder: MinecraftFolder, options: AssetsOptions) {
+    const assetsHosts = normalizeArray(options.assetsHost || [])
 
     if (assetsHosts.indexOf(DEFAULT_RESOURCE_ROOT_URL) === -1) {
       assetsHosts.push(DEFAULT_RESOURCE_ROOT_URL)
     }
 
-    const listeners: Array<() => void> = []
-    const aborted = () => this.isCancelled || this.isPaused
-    const signal: AbortSignal = {
-      get aborted() { return aborted() },
-      addEventListener(event, listener) {
-        if (event !== 'abort') {
-          return this
-        }
-        listeners.push(listener)
-        return this
-      },
-      removeEventListener(event, listener) {
-        // noop as this will be auto gc
-        return this
-      },
-    }
-    this.abort = () => {
-      listeners.forEach((l) => l())
-    }
-
-    const progresses = new Array(this.assets.length).fill(0)
-    await Promise.allSettled(this.assets.map(async (asset, i) => {
+    super(assets.map((asset) => {
       const { hash, size, name } = asset
       const head = hash.substring(0, 2)
-      const dir = this.folder.getPath('assets', 'objects', head)
+      const dir = folder.getPath('assets', 'objects', head)
       const file = join(dir, hash)
       const urls = assetsHosts.map((h) => `${h}/${head}/${hash}`)
-      await download({
+      return {
         url: urls,
         destination: file,
-        validator: this.options.prevalidSizeOnly
+        validator: options.prevalidSizeOnly
           ? {
             async validate(destination, url) {
               const fstat = await stat(destination).catch(() => ({ size: -1 }))
@@ -570,31 +539,15 @@ export class InstallAssetTask extends AbortableTask<void> {
               }
             },
           }
-          : this.options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
-        ...getDownloadBaseOptions(this.options),
+          : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
+        ...getDownloadBaseOptions(options),
         skipHead: asset.size < 2 * 1024 * 1024,
-        progressController: {
-          progress: 0,
-          onProgress: (url, chunkSize, written, total) => {
-            progresses[i] = written
-            this._progress = progresses.reduce((a, b) => a + b, 0)
-            this.update(chunkSize)
-            this._from = url.toString()
-          },
-        },
-        abortSignal: signal,
-      })
-      progresses[i] = size
-      this._progress = progresses.reduce((a, b) => a + b, 0)
-      this.update(0)
+      }
     }))
-  }
 
-  protected isAbortedError(e: any): boolean {
-    if (e instanceof errors.RequestAbortedError || e.code === 'UND_ERR_ABORTED') {
-      return true
-    }
-    return false
+    this._total = assets.reduce((a, b) => a + b.size, 0)
+    this.name = 'asset'
+    this.param = { count: assets.length }
   }
 }
 
