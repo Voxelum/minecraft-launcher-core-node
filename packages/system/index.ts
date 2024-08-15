@@ -2,10 +2,17 @@
  * @module @xmcl/system
  */
 import { open, readEntry, readAllEntries } from '@xmcl/unzip'
-import { access, stat, writeFile, readFile, readdir } from 'fs/promises'
+import { access as saccess, stat as sstat, writeFile as swriteFile, readFile as sreadFile, readdir as sreaddir } from 'fs'
+import { promisify } from 'util'
 import { join, sep } from 'path'
 import { FileSystem } from './system'
 import { ZipFile, Entry } from 'yauzl'
+
+const access = promisify(saccess)
+const stat = promisify(sstat)
+const writeFile = promisify(swriteFile)
+const readFile = promisify(sreadFile)
+const readdir = promisify(sreaddir)
 
 export async function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem> {
   if (typeof basePath === 'string') {
