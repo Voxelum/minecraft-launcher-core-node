@@ -2,8 +2,8 @@ import { getPlatform, Platform } from '@xmcl/core'
 import { DownloadBaseOptions, getDownloadBaseOptions } from '@xmcl/file-transfer'
 import { Task, task } from '@xmcl/task'
 import { exec } from 'child_process'
-import { unlink } from 'fs/promises'
-import { arch, EOL, platform, tmpdir } from 'os'
+import { stat, unlink } from 'fs/promises'
+import { EOL, platform, tmpdir } from 'os'
 import { basename, join, resolve } from 'path'
 import { Dispatcher, request } from 'undici'
 import { DownloadTask } from './downloadTask'
@@ -252,6 +252,21 @@ export async function getPotentialJavaLocations(): Promise<string[]> {
   return checkingList
 }
 
+async function dedupJreExecutables(files: Iterable<string>) {
+  // some file might shared same ino
+  const inos = new Set<number>()
+  const result: string[] = []
+  for (const file of files) {
+    const fstat = await stat(file)
+    if (inos.has(fstat.ino)) {
+      continue
+    }
+    inos.add(fstat.ino)
+    result.push(file)
+  }
+  return result
+}
+
 /**
  * Scan local java version on the disk.
  *
@@ -268,7 +283,7 @@ export async function scanLocalJava(locations: string[]): Promise<JavaInfo[]> {
   const potential = await getPotentialJavaLocations()
   potential.forEach((p) => unchecked.add(p))
 
-  const checkingList = [...unchecked].filter((jPath) => typeof jPath === 'string').filter((p) => p !== '')
+  const checkingList = await dedupJreExecutables([...unchecked].filter((jPath) => typeof jPath === 'string').filter((p) => p !== ''))
 
   const javas = await Promise.all(checkingList.map((jPath) => resolveJava(jPath)))
   return javas.filter(((j) => j !== undefined) as (j?: JavaInfo) => j is JavaInfo)
