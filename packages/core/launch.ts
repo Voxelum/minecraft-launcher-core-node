@@ -355,7 +355,7 @@ export namespace LaunchPrecheck {
           if (fileName.indexOf('/') !== -1) {
             await mkdir(dirname(dest), {
               recursive: true,
-            }).catch((e) => {})
+            }).catch((e) => { })
           }
           extractedNatives.push({ file: fileName, name: n.name, sha1: '' })
           promises.push(promisify(pipeline)(await openEntryReadStream(zip, entry), createWriteStream(dest)))
@@ -573,13 +573,19 @@ export async function launch(options: LaunchOption): Promise<ChildProcess> {
  * Generate the argument for server
  */
 export async function generateArgumentsServer(options: ServerOptions) {
-  const { javaPath, minMemory = 1024, maxMemory = 1024, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options
+  const { javaPath, minMemory, maxMemory, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options
   const cmd = [
     javaPath,
-    `-Xms${(minMemory)}M`,
-    `-Xmx${(maxMemory)}M`,
-    ...extraJVMArgs,
   ]
+  if (minMemory) {
+    cmd.push(`-Xms${(minMemory)}M`)
+  }
+  if (maxMemory) {
+    cmd.push(`-Xmx${(maxMemory)}M`)
+  }
+  cmd.push(
+    ...extraJVMArgs,
+  )
 
   if (options.classPath && options.classPath.length > 0) {
     cmd.push('-cp', options.classPath.join(delimiter))
