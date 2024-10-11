@@ -174,7 +174,10 @@ export interface LaunchOption {
    * The platform of this launch will run. By default, it will fetch the current machine info if this is absent.
    */
   platform?: Platform
-
+  /**
+   * Use hash assets index. This will use the assets index hash as the assets index name.
+   */
+  useHashAssetsIndex?: boolean
   /**
    * The launcher precheck functions. These will run before it run.
    *
@@ -745,7 +748,7 @@ export async function generateArguments(options: LaunchOption) {
     version_type: versionType,
     assets_root: assetsDir,
     game_assets: join(assetsDir, 'virtual', version.assets),
-    assets_index_name: version.assets,
+    assets_index_name: options.useHashAssetsIndex ? version.assetIndex?.sha1 ?? version.assets : version.assets,
     auth_session: accessToken,
     game_directory: gamePath,
     auth_player_name: name,

@@ -1,9 +1,11 @@
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version, Version as VersionJson } from '@xmcl/core'
 import { ChecksumNotMatchError, ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, Validator, getDownloadBaseOptions } from '@xmcl/file-transfer'
 import { Task, task } from '@xmcl/task'
+import { link } from 'fs'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { join, relative, sep } from 'path'
 import { Dispatcher, request } from 'undici'
+import { promisify } from 'util'
 import { DownloadMultipleTask, DownloadTask } from './downloadTask'
 import { ParallelTaskOptions, ensureDir, errorToString, joinUrl, normalizeArray } from './utils'
 import { ZipValidator } from './zipValdiator'
@@ -121,17 +123,20 @@ export interface LibraryOptions extends DownloadBaseOptions, ParallelTaskOptions
  */
 export interface AssetsOptions extends DownloadBaseOptions, ParallelTaskOptions {
   /**
-     * The alternative assets host to download asset. It will try to use these host from the `[0]` to the `[assetsHost.length - 1]`
-     */
+   * The alternative assets host to download asset. It will try to use these host from the `[0]` to the `[assetsHost.length - 1]`
+   */
   assetsHost?: string | string[]
   /**
-     * Control how many assets download task should run at the same time.
-     * It will override the `maxConcurrencyOption` if this is presented.
-     *
-     * This will be ignored if you have your own downloader assigned.
-     */
+   * Control how many assets download task should run at the same time.
+   * It will override the `maxConcurrencyOption` if this is presented.
+   *
+   * This will be ignored if you have your own downloader assigned.
+   */
   assetsDownloadConcurrency?: number
-
+  /**
+   * Use hash as the assets index file name. Default is `false`
+   */
+  useHashForAssetsIndex?: boolean
   /**
    * The assets index download or url replacement
    */
@@ -344,10 +349,14 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
         ...getDownloadBaseOptions(options),
       }).setName('asset', { name: file.id, hash: file.sha1, size: file.size }))
     }
-    const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
+    const jsonPath = folder.getPath('assets', 'indexes', version.assetIndex?.sha1 ?? version.assets + '.json')
 
     if (version.assetIndex) {
       await this.yield(new InstallAssetIndexTask(version as any, options))
+      await promisify(link)(
+        folder.getPath('assets', 'indexes', version.assetIndex.sha1 + '.json'),
+        folder.getPath('assets', 'indexes', version.assets + '.json'),
+      ).catch(() => { })
     }
 
     await ensureDir(folder.getPath('assets', 'objects'))
@@ -476,8 +485,8 @@ export class InstallJarTask extends DownloadTask {
 export class InstallAssetIndexTask extends DownloadTask {
   constructor(version: ResolvedVersion & { assetIndex: Version.AssetIndex }, options: AssetsOptions = {}) {
     const folder = MinecraftFolder.from(version.minecraftDirectory)
-    const jsonPath = folder.getPath('assets', 'indexes', version.assets + '.json')
     const expectSha1 = version.assetIndex.sha1
+    const jsonPath = folder.getPath('assets', 'indexes', options.useHashForAssetsIndex ? expectSha1 : version.assets + '.json')
 
     super({
       url: resolveDownloadUrls(version.assetIndex.url, version, options.assetsIndexUrl),
