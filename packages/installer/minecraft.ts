@@ -486,7 +486,7 @@ export class InstallAssetIndexTask extends DownloadTask {
   constructor(version: ResolvedVersion & { assetIndex: Version.AssetIndex }, options: AssetsOptions = {}) {
     const folder = MinecraftFolder.from(version.minecraftDirectory)
     const expectSha1 = version.assetIndex.sha1
-    const jsonPath = folder.getPath('assets', 'indexes', options.useHashForAssetsIndex ? expectSha1 : version.assets + '.json')
+    const jsonPath = folder.getPath('assets', 'indexes', (options.useHashForAssetsIndex ? expectSha1 : version.assets) + '.json')
 
     super({
       url: resolveDownloadUrls(version.assetIndex.url, version, options.assetsIndexUrl),
