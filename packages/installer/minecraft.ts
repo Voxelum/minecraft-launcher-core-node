@@ -4,7 +4,7 @@ import { Task, task } from '@xmcl/task'
 import { link } from 'fs'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { join, relative, sep } from 'path'
-import { Dispatcher, request } from 'undici'
+import { Dispatcher, fetch } from 'undici'
 import { promisify } from 'util'
 import { DownloadMultipleTask, DownloadTask } from './downloadTask'
 import { ParallelTaskOptions, ensureDir, errorToString, joinUrl, normalizeArray } from './utils'
@@ -141,6 +141,8 @@ export interface AssetsOptions extends DownloadBaseOptions, ParallelTaskOptions 
    * The assets index download or url replacement
    */
   assetsIndexUrl?: string | string[] | ((version: ResolvedVersion) => string | string[])
+
+  fetch?: typeof fetch
 
   checksumValidatorResolver?: (checksum: ChecksumValidatorOptions) => Validator
   /**
@@ -349,7 +351,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
         ...getDownloadBaseOptions(options),
       }).setName('asset', { name: file.id, hash: file.sha1, size: file.size }))
     }
-    const jsonPath = folder.getPath('assets', 'indexes', version.assetIndex?.sha1 ?? version.assets + '.json')
+    const jsonPath = folder.getPath('assets', 'indexes', (version.assetIndex?.sha1 ?? version.assets) + '.json')
 
     if (version.assetIndex) {
       await this.yield(new InstallAssetIndexTask(version as any, options))
@@ -373,8 +375,8 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
       const urls = resolveDownloadUrls(version.assetIndex!.url, version, options.assetsIndexUrl)
       for (const url of urls) {
         try {
-          const response = await request(url, { dispatcher: options?.dispatcher })
-          const json = await response.body.json() as any
+          const response = await (options.fetch || fetch)(url, { dispatcher: options?.dispatcher })
+          const json = await response.json() as any
           await writeFile(jsonPath, JSON.stringify(json))
           return json
         } catch {
@@ -388,9 +390,6 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
       const { objects } = JSON.parse(await readFile(jsonPath).then((b) => b.toString())) as AssetIndex
       objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
     } catch (e) {
-      if ((e instanceof SyntaxError)) {
-        throw e
-      }
       const { objects } = await getAssetIndexFallback()
       objectArray = Object.keys(objects).map((k) => ({ name: k, ...objects[k] }))
     }
