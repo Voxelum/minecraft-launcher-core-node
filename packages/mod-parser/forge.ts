@@ -469,12 +469,12 @@ export async function readForgeModManifest(mod: ForgeModInput, manifestStore: Re
 /**
  * Read mod metadata from new toml metadata file.
  */
-export async function readForgeModToml(mod: ForgeModInput, manifest?: Record<string, string>) {
+export async function readForgeModToml(mod: ForgeModInput, manifest?: Record<string, string>, fileName = 'mods.toml') {
   const fs = await resolveFileSystem(mod)
-  const existed = await fs.existsFile('META-INF/mods.toml')
+  const existed = await fs.existsFile('META-INF/' + fileName)
   const all: ForgeModTOMLData[] = []
   if (existed) {
-    const str = await fs.readFile('META-INF/mods.toml', 'utf-8')
+    const str = await fs.readFile('META-INF/' + fileName, 'utf-8')
     const root = parseToml(str)
     if (root.mods instanceof Array) {
       for (const mod of root.mods) {
