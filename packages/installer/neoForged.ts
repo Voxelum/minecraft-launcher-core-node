@@ -51,7 +51,7 @@ export async function installNeoForged(project: 'forge' | 'neoforge', version: s
 
 export function installNeoForgedTask(project: 'forge' | 'neoforge', version: string, minecraft: MinecraftLocation, options: InstallForgeOptions): Task<string> {
   return task('installForge', async function () {
-    const [_, forgeVersion] = version.split('-')
+    const [_, forgeVersion = version] = version.split('-')
     const mc = MinecraftFolder.from(minecraft)
     const jarPath = await this.yield(new DownloadNeoForgedInstallerTask(project, version, mc, options)
       .map(function () { return this.installJarPath }))
@@ -65,7 +65,7 @@ export function installNeoForgedTask(project: 'forge' | 'neoforge', version: str
     const profile: InstallProfile = await readEntry(zip, entries.installProfileJson).then((b) => b.toString()).then(JSON.parse)
     if (isForgeInstallerEntries(entries)) {
       // new forge
-      const versionId = await unpackForgeInstaller(zip, entries, forgeVersion, profile, mc, jarPath, options)
+      const versionId = await unpackForgeInstaller(zip, entries, profile, mc, jarPath, options)
       await this.concat(installByProfileTask(profile, minecraft, options))
       return versionId
     } else {

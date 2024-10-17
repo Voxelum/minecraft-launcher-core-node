@@ -5,7 +5,7 @@ import { Task, task } from '@xmcl/task'
 import { filterEntries, open, openEntryReadStream, readAllEntries, readEntry } from '@xmcl/unzip'
 import { createWriteStream } from 'fs'
 import { writeFile } from 'fs/promises'
-import { dirname, join } from 'path'
+import { basename, dirname, join, relative, sep } from 'path'
 import { pipeline } from 'stream/promises'
 import { Dispatcher, request } from 'undici'
 import { Entry, ZipFile } from 'yauzl'
@@ -335,12 +335,11 @@ async function installLegacyForgeFromZip(zip: ZipFile, entries: ForgeLegacyInsta
  * Unpack forge installer jar file content to the version library artifact directory.
  * @param zip The forge jar file
  * @param entries The entries
- * @param forgeVersion The expected version of forge
  * @param profile The forge install profile
  * @param mc The minecraft location
  * @returns The installed version id
  */
-export async function unpackForgeInstaller(zip: ZipFile, entries: ForgeInstallerEntriesPattern, forgeVersion: string, profile: InstallProfile, mc: MinecraftFolder, jarPath: string, options: InstallForgeOptions) {
+export async function unpackForgeInstaller(zip: ZipFile, entries: ForgeInstallerEntriesPattern, profile: InstallProfile, mc: MinecraftFolder, jarPath: string, options: InstallForgeOptions) {
   const versionJson: VersionJson = await readEntry(zip, entries.versionJson).then((b) => b.toString()).then(JSON.parse)
 
   // apply override for inheritsFrom
@@ -353,10 +352,10 @@ export async function unpackForgeInstaller(zip: ZipFile, entries: ForgeInstaller
   const versionJsonPath = join(rootPath, `${versionJson.id}.json`)
   const installJsonPath = join(rootPath, 'install_profile.json')
 
-  const dataRoot = dirname(jarPath)
+  const mavenLibVersionPath = dirname(jarPath)
 
   const unpackData = (entry: Entry) => {
-    promises.push(extractEntryTo(zip, entry, join(dataRoot, entry.fileName.substring('data/'.length))))
+    promises.push(extractEntryTo(zip, entry, join(mavenLibVersionPath, entry.fileName.substring('data/'.length))))
   }
 
   await ensureFile(versionJsonPath)
@@ -370,7 +369,13 @@ export async function unpackForgeInstaller(zip: ZipFile, entries: ForgeInstaller
     profile.data = {}
   }
 
-  const installerMaven = `net.minecraftforge:forge:${forgeVersion}:installer`
+  const mavenPaths = relative(mc.libraries, mavenLibVersionPath).split(sep)
+  const mavenVersion = mavenPaths.pop()
+  const mavenArtifact = mavenPaths.pop()
+  const mavenGroup = mavenPaths.join('.')
+  const mavenPath = `${mavenGroup}:${mavenArtifact}:${mavenVersion}`
+
+  const installerMaven = `${mavenPath}:installer`
   profile.data.INSTALLER = {
     client: `[${installerMaven}]`,
     server: `[${installerMaven}]`,
@@ -378,7 +383,7 @@ export async function unpackForgeInstaller(zip: ZipFile, entries: ForgeInstaller
 
   if (entries.serverLzma) {
     // forge version and mavens, compatible with twitch api
-    const serverMaven = `net.minecraftforge:forge:${forgeVersion}:serverdata@lzma`
+    const serverMaven = `${mavenPath}:serverdata@lzma`
     // override forge bin patch location
     profile.data.BINPATCH.server = `[${serverMaven}]`
 
@@ -389,7 +394,7 @@ export async function unpackForgeInstaller(zip: ZipFile, entries: ForgeInstaller
 
   if (entries.clientLzma) {
     // forge version and mavens, compatible with twitch api
-    const clientMaven = `net.minecraftforge:forge:${forgeVersion}:clientdata@lzma`
+    const clientMaven = `${mavenPath}:clientdata@lzma`
     // override forge bin patch location
     profile.data.BINPATCH.client = `[${clientMaven}]`
 
@@ -508,7 +513,7 @@ export function installByInstallerTask(version: RequiredVersion, minecraft: Mine
     const profile: InstallProfile = await readEntry(zip, entries.installProfileJson).then((b) => b.toString()).then(JSON.parse)
     if (isForgeInstallerEntries(entries)) {
       // new forge
-      const versionId = await unpackForgeInstaller(zip, entries, forgeVersion, profile, mc, jarPath, options)
+      const versionId = await unpackForgeInstaller(zip, entries, profile, mc, jarPath, options)
       await this.concat(installByProfileTask(profile, minecraft, options))
       return versionId
     } else if (isLegacyForgeInstallerEntries(entries)) {
