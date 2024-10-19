@@ -376,12 +376,25 @@ export function parse(str: string, strict?: boolean): GameSetting | Frame {
         if (raw.length === 0) {
           newValue = []
         } else {
-          newValue = raw.split(',').map(s => {
-            let trimmed = s.trim()
-            if (trimmed.startsWith('"')) trimmed = trimmed.slice(1)
-            if (trimmed.endsWith('"')) trimmed = trimmed.slice(0, -1)
-            return trimmed
-          })
+          // parse the sequence of string might wrapped by "", but it could contain space inside the ""
+          const result = [] as string[]
+          let buffer = ''
+          let inQuote = false
+          for (let i = 0; i < raw.length; i++) {
+            const char = raw[i]
+            if (char === '"') {
+              inQuote = !inQuote
+            } else if (char === ',' && !inQuote) {
+              result.push(buffer)
+              buffer = ''
+            } else {
+              buffer += char
+            }
+          }
+          if (buffer.length > 0) {
+            result.push(buffer)
+          }
+          newValue = result
         }
       } else {
         newValue = value
