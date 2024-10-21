@@ -678,6 +678,12 @@ export namespace Version {
           ? 'https://files.minecraftforge.net/maven/' + lib.downloads.artifact.path
           : 'https://libraries.minecraft.net/' + lib.downloads.artifact.path
       }
+      if (!lib.downloads.artifact.path) {
+        lib.downloads.artifact = {
+          ...lib.downloads.artifact,
+          path: info.path,
+        }
+      }
       return new ResolvedLibrary(lib.name, info, lib.downloads.artifact)
     }
     const maven = lib.url || 'https://libraries.minecraft.net/'
