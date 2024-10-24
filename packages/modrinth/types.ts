@@ -163,6 +163,7 @@ export interface ProjectGallery {
   featured: boolean
   title: string
   url: string
+  raw_url: string
 }
 
 export interface ProjectVersion {
