@@ -6,6 +6,8 @@ declare module './index' {
     readVarint32(): number
     readVarint32(offset?: number): number | { value: number; length: number }
     writeVarint32ZigZag(value: number, offset?: number): ByteBuffer | number
+    readVarint32ZigZag(): number
+    readVarint32ZigZag(offset: number): { value: number; length: number }
     readVarint32ZigZag(offset?: number): number | { value: number; length: number }
   }
 }
@@ -153,6 +155,7 @@ ByteBuffer.prototype.readVarint32 = function (offset?: number): number | { value
  * @throws {Error} If it's not a valid varint
  * @expose
  */
+// @ts-ignore
 ByteBuffer.prototype.readVarint32ZigZag = function (offset?: number): number | { value: number; length: number } {
   let val = this.readVarint32(offset)
   if (typeof val === 'object') { val.value = zigZagDecode32(val.value) } else { val = zigZagDecode32(val) }
