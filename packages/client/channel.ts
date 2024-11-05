@@ -1,7 +1,7 @@
 import { ByteBuffer } from '@xmcl/bytebuffer'
 import { EventEmitter } from 'events'
 import { NetConnectOpts, Socket } from 'net'
-import { Transform, TransformCallback, Writable } from 'stream'
+import { Transform, TransformCallback, TransformOptions, Writable } from 'stream'
 import { unzip } from 'zlib'
 import { Coder } from './coders'
 import { PacketRegistryEntry, Side, PacketMetadata } from './packet'
@@ -322,6 +322,10 @@ class MinecraftPacketEncoder extends PacketEncoder {
 export abstract class PacketOutbound extends Transform {
   protected abstract writePacketLength(bb: ByteBuffer, len: number): void
 
+  constructor(private channelWidth = Number.MAX_SAFE_INTEGER, opts?: TransformOptions) {
+    super(opts)
+  }
+
   _transform(packet: Buffer, encoding: string, callback: TransformCallback) {
     const buffer = new ByteBuffer()
 
@@ -329,7 +333,14 @@ export abstract class PacketOutbound extends Transform {
     buffer.append(packet)
     buffer.flip()
 
-    this.push(Buffer.from(buffer.buffer.slice(0, buffer.limit)))
+    let bytesToSend = buffer.remaining()
+    while (bytesToSend > 0) {
+      const toSend = Math.min(bytesToSend, this.channelWidth)
+      const chunk = buffer.readBytes(toSend)
+      this.push(Buffer.from(chunk.toBuffer()))
+      bytesToSend -= toSend
+    }
+
     callback()
   }
 }
