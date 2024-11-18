@@ -198,20 +198,14 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
 
     const installRequiredLibs = VersionJson.resolveLibraries(installProfile.libraries)
 
-    await this.all(installRequiredLibs.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
-      throwErrorImmediately: options.throwErrorImmediately ?? false,
-      getErrorMessage: (errs) => `Errors during install libraries at ${minecraftFolder.root}: ${errs.map(errorToString).join('\n')}`,
-    })
+    await this.yield(new InstallLibraryTask(installRequiredLibs, minecraftFolder, options))
 
     await this.yield(new PostProcessingTask(processor, minecraftFolder, options))
 
     if (options.side === 'client') {
       const versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse)
       const libraries = VersionJson.resolveLibraries(versionJson.libraries)
-      await this.all(libraries.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
-        throwErrorImmediately: options.throwErrorImmediately ?? false,
-        getErrorMessage: (errs) => `Errors during install libraries at ${minecraftFolder.root}: ${errs.map(errorToString).join('\n')}`,
-      })
+      await this.yield(new InstallLibraryTask(libraries, minecraftFolder, options))
     } else {
       const argsText = process.platform === 'win32' ? 'win_args.txt' : 'unix_args.txt'
 
@@ -306,10 +300,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
       await writeFile(join(minecraftFolder.getVersionRoot(serverProfile.id), 'server.json'), JSON.stringify(serverProfile, null, 4))
 
       const resolvedLibraries = VersionJson.resolveLibraries(serverProfile.libraries)
-      await this.all(resolvedLibraries.map((lib) => new InstallLibraryTask(lib, minecraftFolder, options)), {
-        throwErrorImmediately: options.throwErrorImmediately ?? false,
-        getErrorMessage: (errs) => `Errors during install libraries at ${minecraftFolder.root}: ${errs.map(errorToString).join('\n')}`,
-      })
+      await this.yield(new InstallLibraryTask(resolvedLibraries, minecraftFolder, options))
     }
   })
 }
