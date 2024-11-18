@@ -405,13 +405,8 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
  * @param options The library host swap option
  */
 export function installLibrariesTask(version: InstallLibraryVersion, options: LibraryOptions = {}): Task<void> {
-  return task('libraries', async function () {
-    const folder = MinecraftFolder.from(version.minecraftDirectory)
-    await this.all(version.libraries.map((lib) => new InstallLibraryTask(lib, folder, options)), {
-      throwErrorImmediately: options.throwErrorImmediately ?? false,
-      getErrorMessage: (errs) => `Errors during install libraries at ${version.minecraftDirectory}: ${errs.map(errorToString).join('\n')}`,
-    })
-  })
+  return new InstallLibraryTask(version.libraries, MinecraftFolder.from(version.minecraftDirectory), options)
+    .setName('libraries', { count: version.libraries.length })
 }
 
 /**
@@ -499,25 +494,27 @@ export class InstallAssetIndexTask extends DownloadTask {
   }
 }
 
-export class InstallLibraryTask extends DownloadTask {
-  constructor(lib: ResolvedLibrary, folder: MinecraftFolder, options: LibraryOptions) {
-    const libraryPath = lib.download.path
-    const destination = join(folder.libraries, libraryPath)
-    const urls: string[] = resolveLibraryDownloadUrls(lib, options)
-    const expectSha1 = lib.download.sha1
-
-    super({
-      url: urls,
-      validator: lib.download.sha1 === ''
-        ? new ZipValidator()
-        : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
-      destination,
-      ...getDownloadBaseOptions(options),
-      skipHead: lib.download.size < 2 * 1024 * 1024,
-    })
+export class InstallLibraryTask extends DownloadMultipleTask {
+  constructor(libs: ResolvedLibrary[], folder: MinecraftFolder, options: LibraryOptions) {
+    super(libs.map(lib => {
+      const libraryPath = lib.download.path
+      const destination = join(folder.libraries, libraryPath)
+      const urls: string[] = resolveLibraryDownloadUrls(lib, options)
+      const expectSha1 = lib.download.sha1
+      return {
+        url: urls,
+        validator: lib.download.sha1 === ''
+          ? new ZipValidator()
+          : options.checksumValidatorResolver?.({ algorithm: 'sha1', hash: expectSha1 }) || { algorithm: 'sha1', hash: expectSha1 },
+        destination,
+        ...getDownloadBaseOptions(options),
+        skipHead: lib.download.size < 2 * 1024 * 1024,
+      }
+    }))
 
     this.name = 'library'
-    this.param = lib
+    this._total = libs.reduce((a, b) => a + (b.download?.size ?? 0), 0)
+    this.param = { count: libs.length }
   }
 }
 
