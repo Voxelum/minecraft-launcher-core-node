@@ -47,12 +47,13 @@ export async function getLabyModManifest(env = 'production', options?: { dispatc
 export interface InstallLabyModOptions extends DownloadBaseOptions {
   dispatcher?: Dispatcher
   environment?: string
+  fetch?: typeof fetch
 }
 
 class JsonTask extends AbortableTask<string> {
   private controller = new AbortController()
 
-  constructor(private manifest: LabyModManifest, private tag: string, private folder: MinecraftFolder, private environment: string, private dispatcher?: Dispatcher) {
+  constructor(private manifest: LabyModManifest, private tag: string, private folder: MinecraftFolder, private environment: string, private fetch?: typeof globalThis.fetch) {
     super()
     this.name = 'json'
     this.param = { version: tag }
@@ -72,12 +73,29 @@ class JsonTask extends AbortableTask<string> {
       natives: any[]
       resolvedAt: number
     }
+
+    const fetch = this.fetch ?? globalThis.fetch
+
+    const metadataResponse = await fetch(librariesUrl, { signal: this.controller.signal })
+
+    if (!metadataResponse.ok) {
+      throw Object.assign(new Error(`Failed to fetch libraries metadata: ${metadataResponse.statusText}: ${await metadataResponse.text()}`), {
+        name: 'FetchLabyModMetadataError',
+      })
+    }
     // Get version json and merge with libraries
-    const libraries: LibInfo[] = await request(librariesUrl, { dispatcher: this.dispatcher, signal: this.controller.signal })
-      .then((res) => res.body.json() as any)
+    const libraries: LibInfo[] = await metadataResponse.json()
       .then((res) => res.libraries as LibInfo[])
       .then((libs) => libs.filter(lib => lib.minecraftVersion === 'all' || lib.minecraftVersion === this.tag))
-    const versionJson = await request(versionInfo.customManifestUrl, { dispatcher: this.dispatcher, signal: this.controller.signal }).then((res) => res.body.json() as any)
+
+    const versionJsonResponse = await fetch(versionInfo.customManifestUrl, { signal: this.controller.signal })
+
+    if (!versionJsonResponse.ok) {
+      throw Object.assign(new Error(`Failed to fetch version json: ${versionJsonResponse.statusText}: ${await versionJsonResponse.text()}`), {
+        name: 'FetchLabyModVersionJsonError',
+      })
+    }
+    const versionJson = await versionJsonResponse.json()
 
     versionJson.libraries.push(...libraries.map((l) => ({
       name: l.name,
@@ -124,7 +142,7 @@ export function installLabyMod4Task(manifest: LabyModManifest, tag: string, mine
     const folder = MinecraftFolder.from(minecraft)
     const environment = options?.environment ?? 'production'
 
-    const versionId = await this.yield(new JsonTask(manifest, tag, folder, environment, options?.dispatcher))
+    const versionId = await this.yield(new JsonTask(manifest, tag, folder, environment, options?.fetch))
 
     // Download assets
     for (const [name, hash] of Object.entries(manifest.assets)) {
