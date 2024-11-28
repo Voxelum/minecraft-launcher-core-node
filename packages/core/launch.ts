@@ -237,7 +237,7 @@ export namespace LaunchPrecheck {
    * Link assets to the assets/virtual/legacy.
    */
   export async function linkAssets(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
-    if (version.assets !== 'legacy') {
+    if (version.assets !== 'legacy' && !version.assets.startsWith('pre-')) {
       return
     }
     const assetsIndexPath = resource.getAssetsIndex(version.assets)
