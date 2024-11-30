@@ -12,22 +12,32 @@ export type OpenTarget = string | Buffer | number
  * @param options The option to open
  */
 export async function open(target: OpenTarget, options: Options = { lazyEntries: true, autoClose: false }) {
-  return new Promise<ZipFile>((resolve, reject) => {
-    function handleZip(err: Error | null, zipfile: ZipFile | null) {
-      if (err || !zipfile) {
-        reject(err ?? new Error('Cannot open zip!'))
-      } else {
-        resolve(zipfile)
+  try {
+    return await new Promise<ZipFile>((resolve, reject) => {
+      function handleZip(err: Error | null, zipfile: ZipFile | null) {
+        if (err || !zipfile) {
+          reject(err)
+        } else {
+          resolve(zipfile)
+        }
       }
+      if (typeof target === 'string') {
+        yopen(target, options, handleZip)
+      } else if (target instanceof Buffer) {
+        fromBuffer(target, options, handleZip)
+      } else {
+        fromFd(target, options, handleZip)
+      }
+    })
+  } catch (e) {
+    if (!e) {
+      throw Object.assign(new Error('Fail to open zip file'), { name: 'InvalidZipFile' })
     }
-    if (typeof target === 'string') {
-      yopen(target, options, handleZip)
-    } else if (target instanceof Buffer) {
-      fromBuffer(target, options, handleZip)
-    } else {
-      fromFd(target, options, handleZip)
+    if ((e as any).message === 'end of central directory record signature not found') {
+      throw Object.assign(new Error('Invalid zip file'), { name: 'InvalidZipFile' })
     }
-  })
+    throw e
+  }
 }
 
 /**
@@ -66,7 +76,7 @@ export async function readEntry(zip: ZipFile, entry: Entry, options?: ZipFileOpt
  * Get the async entry generator for the zip file
  * @param zip The zip file
  */
-export async function * walkEntriesGenerator(zip: ZipFile): AsyncGenerator<Entry, void, boolean | undefined> {
+export async function* walkEntriesGenerator(zip: ZipFile): AsyncGenerator<Entry, void, boolean | undefined> {
   let ended = false
   let error: any
   let resume: (v?: any) => void = () => { }
