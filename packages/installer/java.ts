@@ -257,7 +257,7 @@ async function dedupJreExecutables(files: Iterable<string>) {
   const inos = new Set<number>()
   const result: string[] = []
   for (const file of files) {
-    const fstat = await stat(file)
+    const fstat = await stat(file).catch(() => ({ ino: -1 }))
     if (inos.has(fstat.ino)) {
       continue
     }

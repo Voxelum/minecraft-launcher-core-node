@@ -27,7 +27,13 @@ export async function validateSha1(target: string, hash?: string, strict = false
  */
 export async function checksum(target: string, algorithm: string) {
   const hash = createHash(algorithm).setEncoding('hex')
-  await pipeline(createReadStream(target), hash)
+  try {
+    await pipeline(createReadStream(target), hash)
+  } catch (e) {
+    if ((e as any).code === 'ENOENT') {
+      return undefined
+    }
+  }
   return hash.read()
 }
 /**
