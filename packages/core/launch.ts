@@ -791,7 +791,7 @@ export async function generateArguments(options: LaunchOption) {
   }
 
   if (options.prependCommand && options.prependCommand.trim().length > 0) {
-    cmd.unshift(options.prependCommand.trim())
+    cmd.unshift(...options.prependCommand.trim().split(' '))
   }
 
   return cmd
