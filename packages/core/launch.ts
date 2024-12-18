@@ -122,7 +122,7 @@ export interface LaunchOption {
   /**
    * Prepend command before java command.
    */
-  prependCommand?: string
+  prependCommand?: string | string[]
   /**
    * Assign the spawn options to the process.
    *
@@ -410,7 +410,7 @@ export interface BaseServerOptions {
   extraMCArgs?: string[]
   extraExecOption?: SpawnOptions
 
-  prependCommand?: string
+  prependCommand?: string | string[]
 
   /**
    * The spawn process function. Used for spawn the java process at the end. By default, it will be the spawn function from "child_process" module. You can use this option to change the 3rd party spawn like [cross-spawn](https://www.npmjs.com/package/cross-spawn)
@@ -572,6 +572,23 @@ export async function launch(options: LaunchOption): Promise<ChildProcess> {
   return (options.spawn ?? spawn)(args[0], args.slice(1), spawnOption)
 }
 
+function unshiftPrependCommand(cmd: string[], prependCommand?: string[] | string) {
+  if (prependCommand) {
+    if (typeof prependCommand === 'string') {
+      if (prependCommand.trim().length > 0) {
+        cmd.push(prependCommand.trim())
+      }
+    } else {
+      for (const c of prependCommand) {
+        const trimmed = c.trim()
+        if (trimmed.length > 0) {
+          cmd.unshift(trimmed)
+        }
+      }
+    }
+  }
+}
+
 /**
  * Generate the argument for server
  */
@@ -606,9 +623,7 @@ export async function generateArgumentsServer(options: ServerOptions) {
     cmd.push('nogui')
   }
 
-  if (options.prependCommand && options.prependCommand.trim().length > 0) {
-    cmd.unshift(options.prependCommand.trim())
-  }
+  unshiftPrependCommand(cmd, options.prependCommand)
 
   return cmd
 }
@@ -790,9 +805,7 @@ export async function generateArguments(options: LaunchOption) {
     }
   }
 
-  if (options.prependCommand && options.prependCommand.trim().length > 0) {
-    cmd.unshift(options.prependCommand.trim())
-  }
+  unshiftPrependCommand(cmd, options.prependCommand)
 
   return cmd
 }
