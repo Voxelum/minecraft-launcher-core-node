@@ -23,7 +23,7 @@
     "@xmcl/forge-site-parser": "workspace:^*",
     "@xmcl/task": "workspace:^*",
     "@xmcl/unzip": "workspace:^*",
-    "undici": "6.19.4",
+    "undici": "7.1.1",
     "yazl": "^2.5.1",
     "yauzl": "^2.10.0"
   },
