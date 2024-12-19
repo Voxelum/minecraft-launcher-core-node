@@ -1,7 +1,7 @@
 import { Dispatcher, RedirectHandler, RetryHandler } from 'undici'
 
 class NeoRedirectHandler extends RedirectHandler {
-  constructor(dispatch: Dispatcher['dispatch'], maxRedirections: number, opts: Dispatcher.RequestOptions, handler: Dispatcher.DispatchHandlers, follow: boolean) {
+  constructor(dispatch: Dispatcher['dispatch'], maxRedirections: number, opts: Dispatcher.RequestOptions, handler: Dispatcher.DispatchHandler, follow: boolean) {
     super(dispatch as any, maxRedirections, opts, handler, follow)
   }
 
