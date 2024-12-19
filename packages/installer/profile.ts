@@ -194,7 +194,9 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
   return task('installByProfile', async function () {
     const minecraftFolder = MinecraftFolder.from(minecraft)
 
-    const processor = resolveProcessors(options.side || 'client', installProfile, minecraftFolder)
+    const side = options.side === 'server' ? 'server' : 'client'
+
+    const processor = resolveProcessors(side, installProfile, minecraftFolder)
 
     const installRequiredLibs = VersionJson.resolveLibraries(installProfile.libraries)
 
@@ -202,7 +204,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
 
     await this.yield(new PostProcessingTask(processor, minecraftFolder, options))
 
-    if (options.side === 'client') {
+    if (side === 'client') {
       const versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse)
       const libraries = VersionJson.resolveLibraries(versionJson.libraries)
       await this.yield(new InstallLibraryTask(libraries, minecraftFolder, options))
