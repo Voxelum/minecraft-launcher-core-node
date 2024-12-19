@@ -111,7 +111,6 @@ async function head(url: string, headers: Record<string, string>, dispatcher: Di
       opaque: {},
       headersTimeout: 5000,
       bodyTimeout: 5000,
-      throwOnError: true,
     }, ({ opaque, headers, context, statusCode }) => {
       const length = headers['content-length'] ? parseInt(headers['content-length'] as string) : 0
       const rangeHeader = parseRangeHeader(headers['content-range'])
@@ -163,7 +162,6 @@ async function get(url: string, fd: number, destination: string, headers: Record
       method: 'GET',
       maxRedirections: 5,
       headers: requestHeader,
-      throwOnError: true,
       dispatcher,
       signal,
     }, ({ statusCode, headers }) => {
