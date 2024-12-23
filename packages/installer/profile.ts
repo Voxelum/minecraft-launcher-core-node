@@ -3,11 +3,11 @@ import { AbortableTask, CancelledError, task } from '@xmcl/task'
 import { filterEntries, open, readEntry, walkEntriesGenerator } from '@xmcl/unzip'
 import { spawn } from 'child_process'
 import { readFile, writeFile } from 'fs/promises'
-import { basename, delimiter, dirname, join, relative, sep } from 'path'
+import { delimiter, dirname, join, relative, sep } from 'path'
 import { ZipFile } from 'yauzl'
-import { InstallLibraryTask, InstallSideOption, LibraryOptions } from './minecraft'
-import { checksum, errorToString, missing, SpawnJavaOptions, waitProcess } from './utils'
 import { convertClasspathToMaven, parseManifest } from './manifest'
+import { InstallLibraryTask, InstallSideOption, LibraryOptions } from './minecraft'
+import { checksum, missing, SpawnJavaOptions, waitProcess } from './utils'
 
 export interface PostProcessor {
   /**
@@ -413,8 +413,8 @@ export class PostProcessingTask extends AbortableTask<void> {
         }
       })
     } catch (e) {
-      if (typeof e === 'string') {
-        throw new PostProcessFailedError(proc.jar, [options.java ?? 'java', ...cmd], e)
+      if (e instanceof Error && e.name === 'Error') {
+        throw new PostProcessFailedError(proc.jar, [options.java ?? 'java', ...cmd], e.message)
       }
       throw e
     }
@@ -445,7 +445,6 @@ export class PostProcessingTask extends AbortableTask<void> {
   }
 
   protected async abort(isCancelled: boolean): Promise<void> {
-    // this.activeProcess?.kill()
     this._abort()
   }
 
