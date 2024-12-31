@@ -5,7 +5,7 @@ import { EventEmitter } from 'events'
 import { createWriteStream, existsSync } from 'fs'
 import { link, mkdir, readFile, writeFile } from 'fs/promises'
 import { EOL } from 'os'
-import { basename, delimiter, dirname, isAbsolute, join, resolve } from 'path'
+import { basename, delimiter, dirname, isAbsolute, join, resolve, sep } from 'path'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
 import { MinecraftFolder } from './folder'
@@ -592,7 +592,7 @@ function unshiftPrependCommand(cmd: string[], prependCommand?: string[] | string
 /**
  * Generate the argument for server
  */
-export async function generateArgumentsServer(options: ServerOptions) {
+export function generateArgumentsServer(options: ServerOptions, _delimiter: string = delimiter, _sep: string = sep) {
   const { javaPath, minMemory, maxMemory, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options
   const cmd = [
     javaPath,
@@ -608,11 +608,11 @@ export async function generateArgumentsServer(options: ServerOptions) {
   )
 
   if (options.classPath && options.classPath.length > 0) {
-    cmd.push('-cp', options.classPath.join(delimiter))
+    cmd.push('-cp', options.classPath.map(v => v.replaceAll(sep, _sep)).join(_delimiter))
   }
 
   if (options.serverExectuableJarPath) {
-    cmd.push('-jar', options.serverExectuableJarPath)
+    cmd.push('-jar', options.serverExectuableJarPath.replaceAll(sep, _sep))
   } else if (options.mainClass) {
     cmd.push(options.mainClass)
   }
