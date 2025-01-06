@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { MockAgent } from 'undici'
+import { MockAgent, fetch as _fetch, Request } from 'undici'
 import { YggdrasilClient, YggdrasilError } from './yggdrasil'
+
 
 describe('YggdrasilClient', () => {
   const agent = new MockAgent()
@@ -13,6 +14,12 @@ describe('YggdrasilClient', () => {
     signout: '/signout',
   }
   const clientToken = 'clientToken'
+  const fetch: typeof globalThis.fetch = (input, init) => {
+    init = Object.assign(init || {}, { 
+      dispatcher: agent,
+    })
+    return _fetch(input as any, init as any) as any
+  }
 
   describe('#validate', () => {
     it('should be able to valid accessToken with response 200', async () => {
@@ -27,7 +34,7 @@ describe('YggdrasilClient', () => {
           'content-type': 'application/json; charset=utf-8',
         },
       }).reply(200)
-      const client = new YggdrasilClient(API.hostName, { dispatcher: agent })
+      const client = new YggdrasilClient(API.hostName, { fetch })
       await expect(client.validate('accessToken', clientToken))
         .resolves
         .toBeTruthy()
@@ -42,7 +49,7 @@ describe('YggdrasilClient', () => {
           clientToken,
         }),
       }).reply(400)
-      const client = new YggdrasilClient(API.hostName, { dispatcher: agent })
+      const client = new YggdrasilClient(API.hostName, { fetch })
       await expect(client.validate('accessToken', clientToken))
         .resolves
         .toBeFalsy()
@@ -60,7 +67,7 @@ describe('YggdrasilClient', () => {
           clientToken,
         }),
       }).reply(200)
-      const client = new YggdrasilClient(API.hostName, { dispatcher: agent })
+      const client = new YggdrasilClient(API.hostName, { fetch })
 
       expect(await client.invalidate('accessToken', clientToken))
         .toBeTruthy()
@@ -75,7 +82,7 @@ describe('YggdrasilClient', () => {
           clientToken,
         }),
       }).reply(400)
-      const client = new YggdrasilClient(API.hostName, { dispatcher: agent })
+      const client = new YggdrasilClient(API.hostName, { fetch })
       await expect(client.invalidate('accessToken', clientToken))
         .resolves
         .toBeFalsy()
@@ -99,7 +106,7 @@ describe('YggdrasilClient', () => {
           'content-type': 'application/json; charset=utf-8',
         },
       }).reply(200, '{}')
-      const client = new YggdrasilClient(API.hostName, { dispatcher: agent })
+      const client = new YggdrasilClient(API.hostName, { fetch })
       await expect(client.login({
         username: 'username',
         password: 'password',
@@ -122,7 +129,7 @@ describe('YggdrasilClient', () => {
           'content-type': 'application/json; charset=utf-8',
         },
       }).reply(200, '{}')
-      const client = new YggdrasilClient(API.hostName, { dispatcher: agent })
+      const client = new YggdrasilClient(API.hostName, { fetch })
       await expect(client.login({
         username: 'username',
         password: 'password',
@@ -148,7 +155,7 @@ describe('YggdrasilClient', () => {
       }).reply(400, JSON.stringify({
         error: 'InvalidArguments',
       }))
-      const client = new YggdrasilClient(API.hostName, { dispatcher: agent })
+      const client = new YggdrasilClient(API.hostName, { fetch })
       await expect(client.login({
         username: 'username',
         password: 'password',
@@ -177,7 +184,7 @@ describe('YggdrasilClient', () => {
           'content-type': 'application/json; charset=utf-8',
         },
       }).reply(200, '{}')
-      const client = new YggdrasilClient(API.hostName, { dispatcher: agent })
+      const client = new YggdrasilClient(API.hostName, { fetch })
       await expect(client.refresh({
         accessToken: 'accessToken',
         clientToken,
@@ -199,7 +206,7 @@ describe('YggdrasilClient', () => {
       }).reply(400, JSON.stringify({
         error: 'InvalidArguments',
       }))
-      const client = new YggdrasilClient(API.hostName, { dispatcher: agent })
+      const client = new YggdrasilClient(API.hostName, { fetch })
       await expect(client.refresh({
         accessToken: 'accessToken',
         clientToken,

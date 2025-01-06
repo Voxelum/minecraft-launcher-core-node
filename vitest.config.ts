@@ -7,8 +7,9 @@ export default defineConfig({
     sequence: {
 
     },
+    globals: true,
     coverage: {
-      provider: 'c8',
+      provider: 'v8',
     },
   },
 })

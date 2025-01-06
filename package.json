@@ -10,10 +10,10 @@
     },
     "packageManager": "pnpm@8.2.0",
     "devDependencies": {
-        "tsx": "^4.7.1",
-        "typedoc": "^0.25.8",
+        "tsx": "^4.19.2",
+        "typedoc": "^0.27.6",
         "typescript": "^5.3.3",
-        "@vitest/coverage-c8": "^0.30.1",
-        "vitest": "^0.32.0"
+        "@vitest/coverage-v8": "^2.1.8",
+        "vitest": "^2.1.8"
     }
 }

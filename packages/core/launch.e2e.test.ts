@@ -56,7 +56,11 @@ describe('Launcher', () => {
 
   if (process.env.JAVA_HOME) {
     javaPath = `${process.env.JAVA_HOME}/bin/java`
-    javaVersion = getJavaVersion(javaPath)
+    try {
+      javaVersion = getJavaVersion(javaPath)
+    } catch {
+      javaPath = ''
+    }
   } else {
     javaPath = 'java'
     try {
@@ -126,10 +130,10 @@ describe('Launcher', () => {
   describe.skip('#launchServer', () => {
     test('should launch 1.12.2', async ({ temp }) => {
       const process = await launchServer({
-        version: '1.12.2',
-        path: temp,
+        // version: '1.12.2',
+        // path: temp,
         javaPath,
-        cwd: path.resolve('.'),
+        // cwd: path.resolve('.'),
       })
       await waitGameProcess(process, 'You need to agree to the EULA in order to run the server. Go to eula.txt for more info.')
     })

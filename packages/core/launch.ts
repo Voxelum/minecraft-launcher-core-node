@@ -435,7 +435,7 @@ export interface ServerOptions extends BaseServerOptions {
 }
 
 export async function launchServer(options: ServerOptions) {
-  const args = await generateArgumentsServer(options)
+  const args = generateArgumentsServer(options)
   const spawnOption = { env: process.env, ...(options.extraExecOption || {}) }
   return (options.spawn ?? spawn)(args[0], args.slice(1), spawnOption)
 }

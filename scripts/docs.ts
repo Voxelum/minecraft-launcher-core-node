@@ -1,7 +1,7 @@
 import { existsSync } from 'fs'
 import { link, mkdir, readFile, readdir, writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
-import { Application, Comment, ContainerReflection, DeclarationReflection, ParameterReflection, ReflectionKind, SourceReference, TSConfigReader, TypeDocReader } from 'typedoc'
+import { Application, Comment, ContainerReflection, DeclarationReflection, ParameterReflection, ReflectionFlag, ReflectionFlags, ReflectionKind, SourceReference, TSConfigReader, TypeDocReader } from 'typedoc'
 
 const renderLink = (fileName: string, line: number) => `<a href="https://github.com/voxelum/minecraft-launcher-core-node/blob/master/${fileName}#L${line}" target="_blank" rel="noreferrer">${fileName}:${line}</a>`
 const renderSourceReferences = (locations: SourceReference[]) =>
@@ -10,11 +10,6 @@ const renderSourceReferences = (locations: SourceReference[]) =>
 </p>`
 
 async function generateDocs() {
-  const app = new Application()
-  // If you want TypeDoc to load tsconfig.json / typedoc.json files
-  app.options.addReader(new TSConfigReader())
-  app.options.addReader(new TypeDocReader())
-  // app.converter.addComponent("group-module", GroupModuleComponent);
   const projectRoot = join(__dirname, '..')
   const packagesRoot = join(projectRoot, 'packages')
   const docsDir = join(projectRoot, 'docs')
@@ -28,7 +23,7 @@ async function generateDocs() {
   )
   const publicModules = modules.filter((f, i) => !packages[i].private)
 
-  app.bootstrap({
+  const app = await Application.bootstrap({
     entryPoints: publicModules.map((m) => join(packagesRoot, m)),
     plugin: [],
     entryPointStrategy: 'resolve',
@@ -36,11 +31,14 @@ async function generateDocs() {
     hideGenerator: true,
     name: 'minecraft-launcher-core-node',
     includeVersion: true,
-    includes: '.',
+    // includes: '.',
     excludeInternal: true,
     excludeExternals: true,
     githubPages: true,
-  })
+  }, [
+    new TSConfigReader(),
+    new TypeDocReader()
+  ])
 
   const readmes = await Promise.all(
     modules.map(async (f) => {
@@ -53,10 +51,10 @@ async function generateDocs() {
     }),
   )
 
-  app.once('error', (error: any) => {
-    console.log(error)
-  })
-  const project = app.convert()
+  // app.once('error', (error: any) => {
+  //   console.log(error)
+  // })
+  const project = await app.convert()
 
   if (!project) throw new Error('Cannot convert project!')
 
@@ -84,9 +82,9 @@ async function generateDocs() {
           markdown += `(${s.target})`
         } else if (s.target && 'kindOf' in s.target) {
           if (s.target.kindOf([ReflectionKind.ClassOrInterface, ReflectionKind.Namespace, ReflectionKind.Enum])) {
-            markdown += `(${s.target.getAlias()})`
+            markdown += `(${s.target.getFriendlyFullName()})`
           } else {
-            markdown += `(#${s.target.getAlias()})`
+            markdown += `(#${s.target.getFriendlyFullName()})`
           }
         }
       }
@@ -130,7 +128,7 @@ async function generateDocs() {
     if (f.flags.isConst) {
       markdown += ' <Badge type="tip" text="const" />'
     }
-    if (f.flags.hasExportAssignment) {
+    if (f.flags.hasFlag(ReflectionFlag.External)) {
       markdown += ' <Badge type="tip" text="export" />'
     }
     if (f.flags.isPublic) {
@@ -227,7 +225,7 @@ async function generateDocs() {
     if (classes.length > 0) {
       markdown += '## 🧾 Classes\n\n'
       for (const c of classes) {
-        outputs[`${namepsace + '/' + c.getAlias()}.md`] = renderNamespaceReflection(c, namepsace + '/' + c.getAlias())
+        outputs[`${namepsace + '/' + c.getFriendlyFullName()}.md`] = renderNamespaceReflection(c, namepsace + '/' + c.getFriendlyFullName())
       }
       markdown += generateDefinitionTable(classes, namepsace, 'class')
     }
@@ -235,7 +233,7 @@ async function generateDocs() {
     if (interfaces.length > 0) {
       markdown += '## 🤝 Interfaces\n\n'
       for (const i of interfaces) {
-        outputs[`${namepsace + '/' + i.getAlias()}.md`] = renderNamespaceReflection(i, namepsace + '/' + i.getAlias())
+        outputs[`${namepsace + '/' + i.getFriendlyFullName()}.md`] = renderNamespaceReflection(i, namepsace + '/' + i.getFriendlyFullName())
       }
       markdown += generateDefinitionTable(interfaces, namepsace, 'interface')
     }
@@ -243,7 +241,7 @@ async function generateDocs() {
     if (namespaces.length > 0) {
       markdown += '## 🗃️ Namespaces\n\n'
       for (const n of namespaces) {
-        outputs[`${namepsace + '/' + n.getAlias()}.md`] = renderNamespaceReflection(n, namepsace + '/' + n.getAlias())
+        outputs[`${namepsace + '/' + n.getFriendlyFullName()}.md`] = renderNamespaceReflection(n, namepsace + '/' + n.getFriendlyFullName())
       }
       markdown += generateDefinitionTable(namespaces, namepsace, 'namespace')
     }
@@ -251,7 +249,7 @@ async function generateDocs() {
     if (enums.length > 0) {
       markdown += '## 🏳️ Enums\n\n'
       for (const e of enums) {
-        outputs[`${namepsace + '/' + e.getAlias()}.md`] = renderNamespaceReflection(e, namepsace + '/' + e.getAlias())
+        outputs[`${namepsace + '/' + e.getFriendlyFullName()}.md`] = renderNamespaceReflection(e, namepsace + '/' + e.getFriendlyFullName())
       }
       markdown += generateDefinitionTable(enums, namepsace, 'enum')
     }
@@ -352,7 +350,7 @@ async function generateDocs() {
       if (classes.length > 0) {
         markdown += '## 🧾 Classes\n\n'
         for (const c of classes) {
-          const name = `${simpleName}/${c.getAlias()}`
+          const name = `${simpleName}/${c.getFriendlyFullName()}`
 
           sidebarItem.items!.push({
             text: c.name,
@@ -368,7 +366,7 @@ async function generateDocs() {
       if (interfaces.length > 0) {
         markdown += '## 🤝 Interfaces\n\n'
         for (const c of interfaces) {
-          const name = `${simpleName}/${c.getAlias()}`
+          const name = `${simpleName}/${c.getFriendlyFullName()}`
 
           outputs[`${name}.md`] = renderNamespaceReflection(c, name)
         }
@@ -379,7 +377,7 @@ async function generateDocs() {
       if (namespaces.length > 0) {
         markdown += '## 🗃️ Namespaces\n\n'
         for (const c of namespaces) {
-          const name = `${simpleName}/${c.getAlias()}`
+          const name = `${simpleName}/${c.getFriendlyFullName()}`
 
           sidebarItem.items!.push({
             text: c.name,
@@ -395,7 +393,7 @@ async function generateDocs() {
       if (enums.length > 0) {
         markdown += '## 🏳️ Enums\n\n'
         for (const c of enums) {
-          const name = `${simpleName}/${c.getAlias()}`
+          const name = `${simpleName}/${c.getFriendlyFullName()}`
 
           outputs[`${name}.md`] = renderNamespaceReflection(c, name)
         }
@@ -437,7 +435,7 @@ async function generateDocs() {
 
   function generateDefinitionTable(namespaces: DeclarationReflection[], namespace: string, type: string) {
     return `<div class="definition-grid ${type}">` +
-      namespaces.map(c => `<a href="${namespace}/${c.getAlias()}">${c.name}</a>`).join('') +
+      namespaces.map(c => `<a href="${namespace}/${c.getFriendlyFullName()}">${c.name}</a>`).join('') +
       '</div>\n\n'
   }
 
