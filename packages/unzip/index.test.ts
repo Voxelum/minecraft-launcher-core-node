@@ -67,7 +67,7 @@ describe('Unzip', () => {
       vi.mocked(yopen).mockImplementationOnce((_target: any, _options: any, cb: any) => {
         cb(undefined)
       })
-      await expect(open('test.zip')).rejects.toEqual(new Error('Cannot open zip!'))
+      await expect(open('test.zip')).rejects.toEqual(Object.assign(new Error('Fail to open zip file'), { name: 'InvalidZipFile' }))
     })
   })
 })

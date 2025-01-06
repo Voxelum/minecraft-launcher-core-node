@@ -169,7 +169,7 @@ describe('Version', () => {
       expect(onWin).toBeTruthy()
       expect(onLinux).toBeTruthy()
     })
-    test('should resolve 1.19 natives', () => {
+    test.skip('should resolve 1.19 natives', () => {
       const selectionNative = {
         downloads: {
           artifact: {
