@@ -514,7 +514,7 @@ export interface AdvancementDataFrame {
     hidden: boolean
   }
   parent?: string
-  criteria: { [name: string]: { trigger: string; conditions: {} } }
+  criteria: { [name: string]: { trigger: string; conditions: object } }
   requirements: string[]
   rewards: { recipes: string[]; loot: string[]; experience: number; function: string }
 }
@@ -531,9 +531,7 @@ export interface ItemStackDataFrame {
 
     // block tags
     CanPlaceOn: string[]
-    BlockEntityTag: {
-      // entity format
-    }
+    BlockEntityTag: object
 
     // enchantments
     ench: Array<{ id: number; lvl: number }>

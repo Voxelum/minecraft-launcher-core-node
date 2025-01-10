@@ -4,7 +4,7 @@
   "main": "./index.ts",
   "description": "A bytebuffer module ported from bytebuffer.js",
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "publishConfig": {
     "access": "public",
@@ -35,8 +35,7 @@
   },
   "scripts": {
     "build:type": "tsc",
-    "build:esm": "tsx build.ts",
-    "lint": "eslint --ext .ts"
+    "build:esm": "tsx build.ts"
   },
   "repository": {
     "type": "git",
@@ -56,10 +55,10 @@
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
     "@types/node": "~18.15.11",
-    "@xmcl/eslint-config": "workspace:^*",
+    "@xmcl/oxlint-config": "workspace:^*",
     "bytebuffer": "^5.0.1",
     "esbuild": "^0.17.16",
-    "eslint": "^8.37.0",
+    "oxlint": "^0.15.5",
     "tslib": "^2.5.0",
     "typescript": "^5.3.3"
   }

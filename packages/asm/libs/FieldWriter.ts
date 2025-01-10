@@ -37,8 +37,9 @@ import { AnnotationVisitor } from './AnnotationVisitor'
 import { AnnotationWriter } from './AnnotationWriter'
 import { Attribute } from './Attribute'
 import { ByteVector } from './ByteVector'
-import { ClassReader } from './ClassReader'
-import { ClassWriter } from './ClassWriter'
+import { ANNOTATIONS, SIGNATURES } from './ClassReaderConstant'
+import type { ClassWriter } from './ClassWriter'
+import * as ClassWriterConstant from './ClassWriterConstant'
 import { FieldVisitor } from './FieldVisitor'
 import { Opcodes } from './Opcodes'
 import { TypePath } from './TypePath'
@@ -137,7 +138,7 @@ export class FieldWriter extends FieldVisitor {
     this.access = access
     this.name = cw.newUTF8(name)
     this.desc = cw.newUTF8(desc)
-    if (ClassReader.SIGNATURES && signature != null) {
+    if (SIGNATURES && signature != null) {
       this.signature = cw.newUTF8(signature)
     }
     if (value != null) {
@@ -146,7 +147,7 @@ export class FieldWriter extends FieldVisitor {
   }
 
   public visitAnnotation(desc: string, visible: boolean): AnnotationVisitor | null {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -163,7 +164,7 @@ export class FieldWriter extends FieldVisitor {
   }
 
   public visitTypeAnnotation(typeRef: number, typePath: TypePath, desc: string, visible: boolean): AnnotationVisitor | null {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -200,7 +201,7 @@ export class FieldWriter extends FieldVisitor {
       size += 8
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
         this.cw.newUTF8('Synthetic')
         size += 6
       }
@@ -209,23 +210,23 @@ export class FieldWriter extends FieldVisitor {
       this.cw.newUTF8('Deprecated')
       size += 6
     }
-    if (ClassReader.SIGNATURES && this.signature !== 0) {
+    if (SIGNATURES && this.signature !== 0) {
       this.cw.newUTF8('Signature')
       size += 8
     }
-    if (ClassReader.ANNOTATIONS && this.anns != null) {
+    if (ANNOTATIONS && this.anns != null) {
       this.cw.newUTF8('RuntimeVisibleAnnotations')
       size += 8 + this.anns.getSize()
     }
-    if (ClassReader.ANNOTATIONS && this.ianns != null) {
+    if (ANNOTATIONS && this.ianns != null) {
       this.cw.newUTF8('RuntimeInvisibleAnnotations')
       size += 8 + this.ianns.getSize()
     }
-    if (ClassReader.ANNOTATIONS && this.tanns != null) {
+    if (ANNOTATIONS && this.tanns != null) {
       this.cw.newUTF8('RuntimeVisibleTypeAnnotations')
       size += 8 + this.tanns.getSize()
     }
-    if (ClassReader.ANNOTATIONS && this.itanns != null) {
+    if (ANNOTATIONS && this.itanns != null) {
       this.cw.newUTF8('RuntimeInvisibleTypeAnnotations')
       size += 8 + this.itanns.getSize()
     }
@@ -242,34 +243,34 @@ export class FieldWriter extends FieldVisitor {
      * where the content of this field must be put.
      */
   put(out: ByteVector) {
-    const FACTOR: number = ClassWriter.TO_ACC_SYNTHETIC_$LI$()
-    const mask: number = Opcodes.ACC_DEPRECATED | ClassWriter.ACC_SYNTHETIC_ATTRIBUTE | (((this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) / FACTOR | 0))
+    const FACTOR: number = ClassWriterConstant.TO_ACC_SYNTHETIC_$LI$()
+    const mask: number = Opcodes.ACC_DEPRECATED | ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE | (((this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) / FACTOR | 0))
     out.putShort(this.access & ~mask).putShort(this.name).putShort(this.desc)
     let attributeCount = 0
     if (this.value !== 0) {
       ++attributeCount
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
         ++attributeCount
       }
     }
     if ((this.access & Opcodes.ACC_DEPRECATED) !== 0) {
       ++attributeCount
     }
-    if (ClassReader.SIGNATURES && this.signature !== 0) {
+    if (SIGNATURES && this.signature !== 0) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.anns != null) {
+    if (ANNOTATIONS && this.anns != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.ianns != null) {
+    if (ANNOTATIONS && this.ianns != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.tanns != null) {
+    if (ANNOTATIONS && this.tanns != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.itanns != null) {
+    if (ANNOTATIONS && this.itanns != null) {
       ++attributeCount
     }
     if (this.attrs != null) {
@@ -281,30 +282,30 @@ export class FieldWriter extends FieldVisitor {
       out.putInt(2).putShort(this.value)
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
         out.putShort(this.cw.newUTF8('Synthetic')).putInt(0)
       }
     }
     if ((this.access & Opcodes.ACC_DEPRECATED) !== 0) {
       out.putShort(this.cw.newUTF8('Deprecated')).putInt(0)
     }
-    if (ClassReader.SIGNATURES && this.signature !== 0) {
+    if (SIGNATURES && this.signature !== 0) {
       out.putShort(this.cw.newUTF8('Signature'))
       out.putInt(2).putShort(this.signature)
     }
-    if (ClassReader.ANNOTATIONS && this.anns != null) {
+    if (ANNOTATIONS && this.anns != null) {
       out.putShort(this.cw.newUTF8('RuntimeVisibleAnnotations'))
       this.anns.put(out)
     }
-    if (ClassReader.ANNOTATIONS && this.ianns != null) {
+    if (ANNOTATIONS && this.ianns != null) {
       out.putShort(this.cw.newUTF8('RuntimeInvisibleAnnotations'))
       this.ianns.put(out)
     }
-    if (ClassReader.ANNOTATIONS && this.tanns != null) {
+    if (ANNOTATIONS && this.tanns != null) {
       out.putShort(this.cw.newUTF8('RuntimeVisibleTypeAnnotations'))
       this.tanns.put(out)
     }
-    if (ClassReader.ANNOTATIONS && this.itanns != null) {
+    if (ANNOTATIONS && this.itanns != null) {
       out.putShort(this.cw.newUTF8('RuntimeInvisibleTypeAnnotations'))
       this.itanns.put(out)
     }

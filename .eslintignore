@@ -1,4 +1,0 @@
-**/*.js
-**/*.d.ts
-node_modules
-**/asm/**/*.ts

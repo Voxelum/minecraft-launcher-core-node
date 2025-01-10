@@ -1,5 +1,4 @@
-import { afterEach, describe, expect, test } from 'vitest'
-import { } from 'undici'
+import { describe } from 'vitest'
 
 describe.skip('MojangService', () => {
   // describe("#setName", () => {

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { MockAgent, fetch as _fetch, Request } from 'undici'
+import { MockAgent, fetch as _fetch } from 'undici'
 import { YggdrasilClient, YggdrasilError } from './yggdrasil'
-
 
 describe('YggdrasilClient', () => {
   const agent = new MockAgent()
@@ -15,7 +14,7 @@ describe('YggdrasilClient', () => {
   }
   const clientToken = 'clientToken'
   const fetch: typeof globalThis.fetch = (input, init) => {
-    init = Object.assign(init || {}, { 
+    init = Object.assign(init || {}, {
       dispatcher: agent,
     })
     return _fetch(input as any, init as any) as any

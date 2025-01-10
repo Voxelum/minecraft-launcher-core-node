@@ -1,4 +1,4 @@
-import { State } from './channel'
+import type { State } from './channel'
 import { Coder } from './coders'
 
 interface FieldRecord { name: string; type: Coder<any> }
@@ -14,7 +14,7 @@ export interface PacketRegistryEntry {
 }
 
 export type FieldType<T> = (type: Coder<T>) => (target: any, key: string) => void
-export type PacketType = (side: Side, id: number, state: State) => (constructor: Function) => void
+export type PacketType = (side: Side, id: number, state: State) => (constructor: (...args: any[]) => any) => void
 
 export const PacketMetadata = Symbol('PacketMetadata')
 export const PacketFieldsMetadata = Symbol('PacketFieldsMetadata')
@@ -52,7 +52,7 @@ export function Field<T>(type: Coder<T>) {
  * @param state The state of you packet should be
  */
 export function Packet(side: Side, id: number, state: State, name = '') {
-  return (constructor: Function) => {
+  return (constructor: new (...args: any[]) => any) => {
     const container = constructor.prototype
     const fields: FieldRecord[] = container[PacketFieldsMetadata] || []
     container[PacketMetadata] = {

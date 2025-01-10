@@ -4,7 +4,7 @@
   "main": "./index.ts",
   "description": "Minecraft socket pipeline utilities. Support Minecraft lan server discovery.",
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "publishConfig": {
     "access": "public",
@@ -40,9 +40,9 @@
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
     "@types/node": "~18.15.11",
-    "@xmcl/eslint-config": "workspace:^*",
+    "@xmcl/oxlint-config": "workspace:^*",
     "esbuild": "^0.17.16",
-    "eslint": "^8.37.0",
+    "oxlint": "^0.15.5",
     "tslib": "^2.5.0",
     "typescript": "^5.3.3"
   }

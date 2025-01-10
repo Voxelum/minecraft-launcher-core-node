@@ -1,6 +1,6 @@
 import { CUSTOM_RPC_ERROR_CODE, Transport, type TransportOptions } from '../structures/Transport'
 import { RPCError } from '../utils/RPCError'
-import crypto from 'crypto'
+import { randomUUID } from 'crypto'
 import path from 'path'
 import net from 'net'
 import fs from 'fs'
@@ -230,7 +230,7 @@ export class IPCTransport extends Transport {
   }
 
   ping(): void {
-    this.send(crypto.randomUUID(), IPC_OPCODE.PING)
+    this.send(randomUUID(), IPC_OPCODE.PING)
   }
 
   close(): Promise<void> {

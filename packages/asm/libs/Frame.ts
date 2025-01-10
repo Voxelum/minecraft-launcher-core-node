@@ -33,17 +33,21 @@
  *
  * @author Eric Bruneton
  */
+import type { ClassWriter } from './ClassWriter'
+import * as ClassWriterConstant from './ClassWriterConstant'
+import type { Item } from './Item'
+import type { Label } from './Label'
+import { ACC_CONSTRUCTOR } from './MethodWriterConstant'
 import { Opcodes } from './Opcodes'
-import { ClassWriter } from './ClassWriter'
-import { MethodWriter } from './MethodWriter'
 import { Type } from './Type'
-import { Label } from './Label'
-import { Item } from './Item'
 import { assert } from './utils'
-export class Frame {
-  static __static_initialized = false
-  static __static_initialize() { if (!Frame.__static_initialized) { Frame.__static_initialized = true; Frame.__static_initializer_0() } }
 
+function isClassWriter(cw: unknown): cw is ClassWriter {
+  return cw != null && cw instanceof Object && 'addType' in cw && 'addUninitializedType' in cw
+}
+
+
+export class Frame {
   /**
      * Mask to get the dimension of a frame type. This dimension is a signed
      * integer between -8 and 7.
@@ -102,18 +106,22 @@ export class Frame {
      * Base kind of the base reference types. The BASE_VALUE of such types is an
      * index into the type table.
      */
-  static OBJECT: number
+  static OBJECT: number = Frame.BASE | 7340032
 
-  public static OBJECT_$LI$(): number { Frame.__static_initialize(); if (Frame.OBJECT == null) { Frame.OBJECT = Frame.BASE | 7340032 } return Frame.OBJECT }
+  public static OBJECT_$LI$(): number {
+    return Frame.OBJECT
+  }
 
   /**
      * Base kind of the uninitialized base types. The BASE_VALUE of such types
      * in an index into the type table (the Item at that index contains both an
      * instruction offset and an internal class name).
      */
-  static UNINITIALIZED: number
+  static UNINITIALIZED: number = Frame.BASE | 8388608
 
-  public static UNINITIALIZED_$LI$(): number { Frame.__static_initialize(); if (Frame.UNINITIALIZED == null) { Frame.UNINITIALIZED = Frame.BASE | 8388608 } return Frame.UNINITIALIZED }
+  public static UNINITIALIZED_$LI$(): number {
+    return Frame.UNINITIALIZED
+  }
 
   /**
      * Kind of the types that are relative to the local variable types of an
@@ -133,70 +141,70 @@ export class Frame {
      */
   static TOP: number
 
-  public static TOP_$LI$(): number { Frame.__static_initialize(); if (Frame.TOP == null) { Frame.TOP = Frame.BASE | 0 } return Frame.TOP }
+  public static TOP_$LI$(): number { if (Frame.TOP == null) { Frame.TOP = Frame.BASE | 0 } return Frame.TOP }
 
   /**
      * The BOOLEAN type. This is a BASE type mainly used for array types.
      */
   static BOOLEAN: number
 
-  public static BOOLEAN_$LI$(): number { Frame.__static_initialize(); if (Frame.BOOLEAN == null) { Frame.BOOLEAN = Frame.BASE | 9 } return Frame.BOOLEAN }
+  public static BOOLEAN_$LI$(): number { if (Frame.BOOLEAN == null) { Frame.BOOLEAN = Frame.BASE | 9 } return Frame.BOOLEAN }
 
   /**
      * The BYTE type. This is a BASE type mainly used for array types.
      */
   static BYTE: number
 
-  public static BYTE_$LI$(): number { Frame.__static_initialize(); if (Frame.BYTE == null) { Frame.BYTE = Frame.BASE | 10 } return Frame.BYTE }
+  public static BYTE_$LI$(): number { if (Frame.BYTE == null) { Frame.BYTE = Frame.BASE | 10 } return Frame.BYTE }
 
   /**
      * The CHAR type. This is a BASE type mainly used for array types.
      */
   static CHAR: number
 
-  public static CHAR_$LI$(): number { Frame.__static_initialize(); if (Frame.CHAR == null) { Frame.CHAR = Frame.BASE | 11 } return Frame.CHAR }
+  public static CHAR_$LI$(): number { if (Frame.CHAR == null) { Frame.CHAR = Frame.BASE | 11 } return Frame.CHAR }
 
   /**
      * The SHORT type. This is a BASE type mainly used for array types.
      */
   static SHORT: number
 
-  public static SHORT_$LI$(): number { Frame.__static_initialize(); if (Frame.SHORT == null) { Frame.SHORT = Frame.BASE | 12 } return Frame.SHORT }
+  public static SHORT_$LI$(): number { if (Frame.SHORT == null) { Frame.SHORT = Frame.BASE | 12 } return Frame.SHORT }
 
   /**
      * The INTEGER type. This is a BASE type.
      */
   static INTEGER: number
 
-  public static INTEGER_$LI$(): number { Frame.__static_initialize(); if (Frame.INTEGER == null) { Frame.INTEGER = Frame.BASE | 1 } return Frame.INTEGER }
+  public static INTEGER_$LI$(): number { if (Frame.INTEGER == null) { Frame.INTEGER = Frame.BASE | 1 } return Frame.INTEGER }
 
   /**
      * The FLOAT type. This is a BASE type.
      */
   static FLOAT: number
 
-  public static FLOAT_$LI$(): number { Frame.__static_initialize(); if (Frame.FLOAT == null) { Frame.FLOAT = Frame.BASE | 2 } return Frame.FLOAT }
+  public static FLOAT_$LI$(): number { if (Frame.FLOAT == null) { Frame.FLOAT = Frame.BASE | 2 } return Frame.FLOAT }
 
   /**
      * The DOUBLE type. This is a BASE type.
      */
   static DOUBLE: number
 
-  public static DOUBLE_$LI$(): number { Frame.__static_initialize(); if (Frame.DOUBLE == null) { Frame.DOUBLE = Frame.BASE | 3 } return Frame.DOUBLE }
+  public static DOUBLE_$LI$(): number { if (Frame.DOUBLE == null) { Frame.DOUBLE = Frame.BASE | 3 } return Frame.DOUBLE }
 
   /**
      * The LONG type. This is a BASE type.
      */
   static LONG: number
 
-  public static LONG_$LI$(): number { Frame.__static_initialize(); if (Frame.LONG == null) { Frame.LONG = Frame.BASE | 4 } return Frame.LONG }
+  public static LONG_$LI$(): number { if (Frame.LONG == null) { Frame.LONG = Frame.BASE | 4 } return Frame.LONG }
 
   /**
      * The NULL type. This is a BASE type.
      */
   static NULL: number
 
-  public static NULL_$LI$(): number { Frame.__static_initialize(); if (Frame.NULL == null) { Frame.NULL = Frame.BASE | 5 } return Frame.NULL }
+  public static NULL_$LI$(): number { if (Frame.NULL == null) { Frame.NULL = Frame.BASE | 5 } return Frame.NULL }
 
   /**
      * The UNINITIALIZED_THIS type. This is a BASE type.
@@ -204,7 +212,6 @@ export class Frame {
   static UNINITIALIZED_THIS: number
 
   public static UNINITIALIZED_THIS_$LI$(): number {
-    Frame.__static_initialize()
     if (Frame.UNINITIALIZED_THIS == null) {
       Frame.UNINITIALIZED_THIS = Frame.BASE | 6
     } return Frame.UNINITIALIZED_THIS
@@ -215,10 +222,17 @@ export class Frame {
      * stack variation is equal to the size of the values produced by an
      * instruction, minus the size of the values consumed by this instruction.
      */
-  static SIZE: number[]
+  static SIZE: number[] = (() => {
+    let i: number
+    const b: number[] = new Array(202)
+    const s = 'EFFFFFFFFGGFFFGGFFFEEFGFGFEEEEEEEEEEEEEEEEEEEEDEDEDDDDDCDCDEEEEEEEEEEEEEEEEEEEEBABABBBBDCFFFGGGEDCDCDCDCDCDCDCDCDCDCEEEEDDDDDDDCDCDCEFEFDDEEFFDEDEEEBDDBBDDDDDDCCCCCCCCEFEDDDCDCDEEEEEEEEEEFEEEEEEDDEEDDEE'
+    for (i = 0; i < b.length; ++i) {
+      b[i] = (s.charAt(i)).charCodeAt(0) - ('E').charCodeAt(0)
+    }
+    return b
+  })()
 
   public static SIZE_$LI$(): number[] {
-    Frame.__static_initialize()
     return Frame.SIZE
   }
 
@@ -316,7 +330,7 @@ export class Frame {
      * the operand stack types (same format as the "local" array).
      */
   public set(cw?: any, nLocal?: any, local?: any, nStack?: any, stack?: any): any {
-    if (((cw != null && cw instanceof ClassWriter) || cw === null) && ((typeof nLocal === 'number') || nLocal === null) && ((local != null && local instanceof Array) || local === null) && ((typeof nStack === 'number') || nStack === null) && ((stack != null && stack instanceof Array) || stack === null)) {
+    if (((cw != null && cw instanceof Object && 'addType' in cw && 'addUninitializedType' in cw) || cw === null) && ((typeof nLocal === 'number') || nLocal === null) && ((local != null && local instanceof Array) || local === null) && ((typeof nStack === 'number') || nStack === null) && ((stack != null && stack instanceof Array) || stack === null)) {
       const __args = Array.prototype.slice.call(arguments)
       return <any>(() => {
         let i: number = Frame.convert(cw, nLocal, local, this.inputLocals)
@@ -335,9 +349,9 @@ export class Frame {
         this.initializationCount = 0
       })()
     } else if (((typeof cw === 'number') || cw === null) && ((typeof nLocal === 'number') || nLocal === null) && local === undefined && nStack === undefined && stack === undefined) {
-      return <any> this.set$int$int(cw, nLocal)
+      return <any>this.set$int$int(cw, nLocal)
     } else if (((cw != null && cw instanceof Frame) || cw === null) && nLocal === undefined && local === undefined && nStack === undefined && stack === undefined) {
-      return <any> this.set$Frame(cw)
+      return <any>this.set$Frame(cw)
     } else { throw new Error('invalid overload') }
   }
 
@@ -481,7 +495,7 @@ export class Frame {
      * onto the output frame stack).
      */
   public push(cw?: any, desc?: any): any {
-    if (((cw != null && cw instanceof ClassWriter) || cw === null) && ((typeof desc === 'string') || desc === null)) {
+    if ((isClassWriter(cw) || cw === null) && ((typeof desc === 'string') || desc === null)) {
       const __args = Array.prototype.slice.call(arguments)
       return <any>(() => {
         const type: number = Frame.type(cw, desc)
@@ -493,7 +507,7 @@ export class Frame {
         }
       })()
     } else if (((typeof cw === 'number') || cw === null) && desc === undefined) {
-      return <any> this.push$int(cw)
+      return <any>this.push$int(cw)
     } else { throw new Error('invalid overload') }
   }
 
@@ -657,7 +671,7 @@ export class Frame {
      * in the basic block, the type corresponding to this constructor.
      */
   public init(cw?: any, t?: any): any {
-    if (((cw != null && cw instanceof ClassWriter) || cw === null) && ((typeof t === 'number') || t === null)) {
+    if ((isClassWriter(cw != null) || cw === null) && ((typeof t === 'number') || t === null)) {
       const __args = Array.prototype.slice.call(arguments)
       return (() => {
         let s: number
@@ -685,7 +699,7 @@ export class Frame {
         return t
       })()
     } else if (((typeof cw === 'number') || cw === null) && t === undefined) {
-      return <any> this.init$int(cw)
+      return <any>this.init$int(cw)
     } else { throw new Error('invalid overload') }
   }
 
@@ -707,7 +721,7 @@ export class Frame {
     this.inputStack = new Array(0)
     let i = 0
     if ((access & Opcodes.ACC_STATIC) === 0) {
-      if ((access & MethodWriter.ACC_CONSTRUCTOR) === 0) {
+      if ((access & ACC_CONSTRUCTOR) === 0) {
         this.inputLocals[i++] = Frame.OBJECT_$LI$() | cw.addType(cw.thisName)
       } else {
         this.inputLocals[i++] = Frame.UNINITIALIZED_THIS_$LI$()
@@ -791,27 +805,27 @@ export class Frame {
         assert(cw)
         assert(item)
         switch ((item.type)) {
-          case ClassWriter.INT:
+          case ClassWriterConstant.INT:
             this.push(Frame.INTEGER_$LI$())
             break
-          case ClassWriter.LONG:
+          case ClassWriterConstant.LONG:
             this.push(Frame.LONG_$LI$())
             this.push(Frame.TOP_$LI$())
             break
-          case ClassWriter.FLOAT:
+          case ClassWriterConstant.FLOAT:
             this.push(Frame.FLOAT_$LI$())
             break
-          case ClassWriter.DOUBLE:
+          case ClassWriterConstant.DOUBLE:
             this.push(Frame.DOUBLE_$LI$())
             this.push(Frame.TOP_$LI$())
             break
-          case ClassWriter.CLASS:
+          case ClassWriterConstant.CLASS:
             this.push(Frame.OBJECT_$LI$() | cw.addType('java/lang/Class'))
             break
-          case ClassWriter.STR:
+          case ClassWriterConstant.STR:
             this.push(Frame.OBJECT_$LI$() | cw.addType('java/lang/String'))
             break
-          case ClassWriter.MTYPE:
+          case ClassWriterConstant.MTYPE:
             this.push(Frame.OBJECT_$LI$() | cw.addType('java/lang/invoke/MethodType'))
             break
           default:
@@ -1370,5 +1384,3 @@ Frame.TOP_$LI$()
 Frame.UNINITIALIZED_$LI$()
 
 Frame.OBJECT_$LI$()
-
-Frame.__static_initialize()

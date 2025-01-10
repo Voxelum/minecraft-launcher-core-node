@@ -1,13 +1,13 @@
+/* eslint-disable n/no-unsupported-features/node-builtins */
 import { MinecraftFolder, MinecraftLocation, ResolvedLibrary, ResolvedVersion, Version, Version as VersionJson } from '@xmcl/core'
 import { ChecksumNotMatchError, ChecksumValidatorOptions, DownloadBaseOptions, JsonValidator, Validator, getDownloadBaseOptions } from '@xmcl/file-transfer'
 import { Task, task } from '@xmcl/task'
 import { link } from 'fs'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { join, relative, sep } from 'path'
-import { Dispatcher, fetch, request } from 'undici'
 import { promisify } from 'util'
 import { DownloadMultipleTask, DownloadTask } from './downloadTask'
-import { ParallelTaskOptions, ensureDir, errorToString, joinUrl, normalizeArray } from './utils'
+import { ParallelTaskOptions, ensureDir, joinUrl, normalizeArray } from './utils'
 import { ZipValidator } from './zipValdiator'
 
 /**
@@ -87,12 +87,12 @@ export const DEFAULT_RESOURCE_ROOT_URL = 'https://resources.download.minecraft.n
  */
 export async function getVersionList(options: {
   /**
-     * Request dispatcher
-     */
-  dispatcher?: Dispatcher
+   * Request dispatcher
+   */
+  fetch?: typeof fetch
 } = {}): Promise<MinecraftVersionList> {
-  const response = await request(DEFAULT_VERSION_MANIFEST_URL, { dispatcher: options.dispatcher, throwOnError: true })
-  return await response.body.json() as any
+  const response = await (options.fetch ?? fetch)(DEFAULT_VERSION_MANIFEST_URL)
+  return await response.json() as any
 }
 
 /**
@@ -375,7 +375,7 @@ export function installAssetsTask(version: ResolvedVersion, options: AssetsOptio
       const urls = resolveDownloadUrls(version.assetIndex!.url, version, options.assetsIndexUrl)
       for (const url of urls) {
         try {
-          const response = await (options.fetch || fetch)(url, { dispatcher: options?.dispatcher })
+          const response = await (options.fetch || fetch)(url, { })
           const json = await response.json() as any
           await writeFile(jsonPath, JSON.stringify(json))
           return json

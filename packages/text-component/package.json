@@ -4,7 +4,7 @@
   "main": "./index.ts",
   "description": "Parse Minecraft text component and render it to css.",
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "scripts": {
     "build:type": "tsc",
@@ -37,9 +37,9 @@
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
     "@types/node": "~18.15.11",
-    "@xmcl/eslint-config": "workspace:^*",
+    "@xmcl/oxlint-config": "workspace:^*",
     "esbuild": "^0.17.16",
-    "eslint": "^8.37.0",
+    "oxlint": "^0.15.5",
     "typescript": "^5.3.3"
   }
 }

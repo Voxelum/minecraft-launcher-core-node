@@ -76,7 +76,7 @@ export async function readEntry(zip: ZipFile, entry: Entry, options?: ZipFileOpt
  * Get the async entry generator for the zip file
  * @param zip The zip file
  */
-export async function* walkEntriesGenerator(zip: ZipFile): AsyncGenerator<Entry, void, boolean | undefined> {
+export async function * walkEntriesGenerator(zip: ZipFile): AsyncGenerator<Entry, void, boolean | undefined> {
   let ended = false
   let error: any
   let resume: (v?: any) => void = () => { }

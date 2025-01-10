@@ -232,7 +232,7 @@ export async function getPotentialJavaLocations(): Promise<string[]> {
       exec('REG QUERY HKEY_LOCAL_MACHINE\\Software\\JavaSoft\\ /s /v JavaHome', (_error, stdout) => {
         if (!stdout) { resolve([]) }
         resolve(stdout.split(EOL).map((item) => item.replace(/[\r\n]/g, ''))
-          .filter((item) => item != null && item !== undefined)
+          .filter((item) => item !== null && item !== undefined)
           .filter((item) => item[0] === ' ')
           .map((item) => `${item.split('    ')[3]}\\bin\\java.exe`))
       })

@@ -36,29 +36,28 @@
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
-import { MethodVisitor } from './MethodVisitor'
-import { ByteVector } from './ByteVector'
-import { Attribute } from './Attribute'
-import { AnnotationWriter } from './AnnotationWriter'
 import { AnnotationVisitor } from './AnnotationVisitor'
-import { ClassReader } from './ClassReader'
-import { Opcodes } from './Opcodes'
-import { Frame } from './Frame'
-import { Type } from './Type'
-import { Edge } from './Edge'
-import { Label } from './Label'
-import { TypePath } from './TypePath'
-import { Item } from './Item'
-import { ClassWriter } from './ClassWriter'
-import { Handle } from './Handle'
+import { AnnotationWriter } from './AnnotationWriter'
+import { Attribute } from './Attribute'
+import { ByteVector } from './ByteVector'
+import { ANNOTATIONS, FRAMES, SIGNATURES } from './ClassReaderConstant'
+import type { ClassWriter } from './ClassWriter'
+import * as ClassWriterConstant from './ClassWriterConstant'
 import { CurrentFrame } from './CurrentFrame'
+import { Edge } from './Edge'
+import { Frame } from './Frame'
+import { Handle } from './Handle'
+import { Item } from './Item'
+import { Label } from './Label'
+import { MethodVisitor } from './MethodVisitor'
+import { ACC_CONSTRUCTOR } from './MethodWriterConstant'
+import { Opcodes } from './Opcodes'
+import { Type } from './Type'
+import { TypePath } from './TypePath'
 import * as bits from './bits'
 import { assert } from './utils'
+
 export class MethodWriter extends MethodVisitor {
-  /**
-     * Pseudo access flag used to denote constructors.
-     */
-  static ACC_CONSTRUCTOR = 524288
 
   /**
      * Frame has exactly the same locals as the previous stack map frame and
@@ -486,12 +485,12 @@ export class MethodWriter extends MethodVisitor {
     this.cw = cw
     this.access = access
     if ((name === '<init>')) {
-      this.access |= MethodWriter.ACC_CONSTRUCTOR
+      this.access |= ACC_CONSTRUCTOR
     }
     this.name = cw.newUTF8(name)
     this.desc = cw.newUTF8(desc)
     this.descriptor = desc
-    if (ClassReader.SIGNATURES) {
+    if (SIGNATURES) {
       this.signature = signature
     }
     if (exceptions != null && exceptions.length > 0) {
@@ -524,7 +523,7 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitAnnotationDefault(): AnnotationVisitor | null {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     this.annd = new ByteVector()
@@ -532,7 +531,7 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitAnnotation(desc: string, visible: boolean): AnnotationVisitor | null {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -549,7 +548,7 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitTypeAnnotation(typeRef: number, typePath: TypePath, desc: string, visible: boolean): AnnotationVisitor | null {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -567,7 +566,7 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitParameterAnnotation(parameter: number, desc: string, visible: boolean): AnnotationVisitor | null {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -611,7 +610,7 @@ export class MethodWriter extends MethodVisitor {
     if (((typeof type === 'number') || type === null) && ((typeof nLocal === 'number') || nLocal === null) && ((local != null && local instanceof Array) || local === null) && ((typeof nStack === 'number') || nStack === null) && ((stack != null && stack instanceof Array) || stack === null)) {
       const __args = Array.prototype.slice.call(arguments)
       return <any>(() => {
-        if (!ClassReader.FRAMES || this.compute === MethodWriter.FRAMES) {
+        if (!FRAMES || this.compute === MethodWriter.FRAMES) {
           return
         }
         if (this.compute === MethodWriter.INSERTED_FRAMES) {
@@ -1046,7 +1045,7 @@ export class MethodWriter extends MethodVisitor {
         this.currentBlock.frame!.execute(Opcodes.LDC, 0, this.cw, i)
       } else {
         let size: number
-        if (i.type === ClassWriter.LONG || i.type === ClassWriter.DOUBLE) {
+        if (i.type === ClassWriterConstant.LONG || i.type === ClassWriterConstant.DOUBLE) {
           size = this.stackSize + 2
         } else {
           size = this.stackSize + 1
@@ -1058,7 +1057,7 @@ export class MethodWriter extends MethodVisitor {
       }
     }
     const index: number = i.index
-    if (i.type === ClassWriter.LONG || i.type === ClassWriter.DOUBLE) {
+    if (i.type === ClassWriterConstant.LONG || i.type === ClassWriterConstant.DOUBLE) {
       this.code.put12(20, index)
     } else if (index >= 256) {
       this.code.put12(19, index)
@@ -1151,7 +1150,7 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitInsnAnnotation(typeRef: number, typePath: TypePath, desc: string, visible: boolean): AnnotationVisitor | null {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -1186,7 +1185,7 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitTryCatchAnnotation(typeRef: number, typePath: TypePath, desc: string, visible: boolean): AnnotationVisitor | null {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -1226,7 +1225,7 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitLocalVariableAnnotation(typeRef: number, typePath: TypePath, start: Label[], end: Label[], index: number[], desc: string, visible: boolean): AnnotationVisitor | null {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -1262,7 +1261,7 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitMaxs(maxStack: number, maxLocals: number) {
-    if (ClassReader.FRAMES && this.compute === MethodWriter.FRAMES) {
+    if (FRAMES && this.compute === MethodWriter.FRAMES) {
       let handler: Handler | null = this.firstHandler
       while ((handler != null)) {
         assert(handler.start)
@@ -1531,7 +1530,7 @@ export class MethodWriter extends MethodVisitor {
     assert(this.frame)
     let frameIndex: number = this.startFrame(0, this.descriptor.length + 1, 0)
     if ((this.access & Opcodes.ACC_STATIC) === 0) {
-      if ((this.access & MethodWriter.ACC_CONSTRUCTOR) === 0) {
+      if ((this.access & ACC_CONSTRUCTOR) === 0) {
         this.frame[frameIndex++] = Frame.OBJECT_$LI$() | this.cw.addType(this.cw.thisName)
       } else {
         this.frame[frameIndex++] = 6
@@ -1825,11 +1824,11 @@ export class MethodWriter extends MethodVisitor {
         this.cw.newUTF8(zip ? 'StackMapTable' : 'StackMap')
         size += 8 + this.stackMap.length
       }
-      if (ClassReader.ANNOTATIONS && this.ctanns != null) {
+      if (ANNOTATIONS && this.ctanns != null) {
         this.cw.newUTF8('RuntimeVisibleTypeAnnotations')
         size += 8 + this.ctanns.getSize()
       }
-      if (ClassReader.ANNOTATIONS && this.ictanns != null) {
+      if (ANNOTATIONS && this.ictanns != null) {
         this.cw.newUTF8('RuntimeInvisibleTypeAnnotations')
         size += 8 + this.ictanns.getSize()
       }
@@ -1842,7 +1841,7 @@ export class MethodWriter extends MethodVisitor {
       size += 8 + 2 * this.exceptionCount
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
         this.cw.newUTF8('Synthetic')
         size += 6
       }
@@ -1851,7 +1850,7 @@ export class MethodWriter extends MethodVisitor {
       this.cw.newUTF8('Deprecated')
       size += 6
     }
-    if (ClassReader.SIGNATURES && this.signature != null) {
+    if (SIGNATURES && this.signature != null) {
       this.cw.newUTF8('Signature')
       this.cw.newUTF8(this.signature)
       size += 8
@@ -1860,34 +1859,34 @@ export class MethodWriter extends MethodVisitor {
       this.cw.newUTF8('MethodParameters')
       size += 7 + this.methodParameters.length
     }
-    if (ClassReader.ANNOTATIONS && this.annd != null) {
+    if (ANNOTATIONS && this.annd != null) {
       this.cw.newUTF8('AnnotationDefault')
       size += 6 + this.annd.length
     }
-    if (ClassReader.ANNOTATIONS && this.anns != null) {
+    if (ANNOTATIONS && this.anns != null) {
       this.cw.newUTF8('RuntimeVisibleAnnotations')
       size += 8 + this.anns.getSize()
     }
-    if (ClassReader.ANNOTATIONS && this.ianns != null) {
+    if (ANNOTATIONS && this.ianns != null) {
       this.cw.newUTF8('RuntimeInvisibleAnnotations')
       size += 8 + this.ianns.getSize()
     }
-    if (ClassReader.ANNOTATIONS && this.tanns != null) {
+    if (ANNOTATIONS && this.tanns != null) {
       this.cw.newUTF8('RuntimeVisibleTypeAnnotations')
       size += 8 + this.tanns.getSize()
     }
-    if (ClassReader.ANNOTATIONS && this.itanns != null) {
+    if (ANNOTATIONS && this.itanns != null) {
       this.cw.newUTF8('RuntimeInvisibleTypeAnnotations')
       size += 8 + this.itanns.getSize()
     }
-    if (ClassReader.ANNOTATIONS && this.panns != null) {
+    if (ANNOTATIONS && this.panns != null) {
       this.cw.newUTF8('RuntimeVisibleParameterAnnotations')
       size += 7 + 2 * (this.panns.length - this.synthetics)
       for (let i: number = this.panns.length - 1; i >= this.synthetics; --i) {
         size += this.panns[i] == null ? 0 : this.panns[i].getSize()
       }
     }
-    if (ClassReader.ANNOTATIONS && this.ipanns != null) {
+    if (ANNOTATIONS && this.ipanns != null) {
       this.cw.newUTF8('RuntimeInvisibleParameterAnnotations')
       size += 7 + 2 * (this.ipanns.length - this.synthetics)
       for (let i: number = this.ipanns.length - 1; i >= this.synthetics; --i) {
@@ -1908,8 +1907,8 @@ export class MethodWriter extends MethodVisitor {
      * copied.
      */
   put(out: ByteVector) {
-    const FACTOR: number = ClassWriter.TO_ACC_SYNTHETIC_$LI$()
-    const mask: number = MethodWriter.ACC_CONSTRUCTOR | Opcodes.ACC_DEPRECATED | ClassWriter.ACC_SYNTHETIC_ATTRIBUTE | (((this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) / FACTOR | 0))
+    const FACTOR: number = ClassWriterConstant.TO_ACC_SYNTHETIC_$LI$()
+    const mask: number = ACC_CONSTRUCTOR | Opcodes.ACC_DEPRECATED | ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE | (((this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) / FACTOR | 0))
     out.putShort(this.access & ~mask).putShort(this.name).putShort(this.desc)
     if (this.classReaderOffset !== 0) {
       out.putByteArray(this.cw.cr.buf, this.classReaderOffset, this.classReaderLength)
@@ -1923,38 +1922,38 @@ export class MethodWriter extends MethodVisitor {
       ++attributeCount
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
         ++attributeCount
       }
     }
     if ((this.access & Opcodes.ACC_DEPRECATED) !== 0) {
       ++attributeCount
     }
-    if (ClassReader.SIGNATURES && this.signature != null) {
+    if (SIGNATURES && this.signature != null) {
       ++attributeCount
     }
     if (this.methodParameters != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.annd != null) {
+    if (ANNOTATIONS && this.annd != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.anns != null) {
+    if (ANNOTATIONS && this.anns != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.ianns != null) {
+    if (ANNOTATIONS && this.ianns != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.tanns != null) {
+    if (ANNOTATIONS && this.tanns != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.itanns != null) {
+    if (ANNOTATIONS && this.itanns != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.panns != null) {
+    if (ANNOTATIONS && this.panns != null) {
       ++attributeCount
     }
-    if (ClassReader.ANNOTATIONS && this.ipanns != null) {
+    if (ANNOTATIONS && this.ipanns != null) {
       ++attributeCount
     }
     if (this.attrs != null) {
@@ -1975,10 +1974,10 @@ export class MethodWriter extends MethodVisitor {
       if (this.stackMap != null) {
         size += 8 + this.stackMap.length
       }
-      if (ClassReader.ANNOTATIONS && this.ctanns != null) {
+      if (ANNOTATIONS && this.ctanns != null) {
         size += 8 + this.ctanns.getSize()
       }
-      if (ClassReader.ANNOTATIONS && this.ictanns != null) {
+      if (ANNOTATIONS && this.ictanns != null) {
         size += 8 + this.ictanns.getSize()
       }
       if (this.cattrs != null) {
@@ -2008,10 +2007,10 @@ export class MethodWriter extends MethodVisitor {
       if (this.stackMap != null) {
         ++attributeCount
       }
-      if (ClassReader.ANNOTATIONS && this.ctanns != null) {
+      if (ANNOTATIONS && this.ctanns != null) {
         ++attributeCount
       }
-      if (ClassReader.ANNOTATIONS && this.ictanns != null) {
+      if (ANNOTATIONS && this.ictanns != null) {
         ++attributeCount
       }
       if (this.cattrs != null) {
@@ -2039,11 +2038,11 @@ export class MethodWriter extends MethodVisitor {
         out.putInt(this.stackMap.length + 2).putShort(this.frameCount)
         out.putByteArray(this.stackMap.data, 0, this.stackMap.length)
       }
-      if (ClassReader.ANNOTATIONS && this.ctanns != null) {
+      if (ANNOTATIONS && this.ctanns != null) {
         out.putShort(this.cw.newUTF8('RuntimeVisibleTypeAnnotations'))
         this.ctanns.put(out)
       }
-      if (ClassReader.ANNOTATIONS && this.ictanns != null) {
+      if (ANNOTATIONS && this.ictanns != null) {
         out.putShort(this.cw.newUTF8('RuntimeInvisibleTypeAnnotations'))
         this.ictanns.put(out)
       }
@@ -2060,14 +2059,14 @@ export class MethodWriter extends MethodVisitor {
       }
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
         out.putShort(this.cw.newUTF8('Synthetic')).putInt(0)
       }
     }
     if ((this.access & Opcodes.ACC_DEPRECATED) !== 0) {
       out.putShort(this.cw.newUTF8('Deprecated')).putInt(0)
     }
-    if (ClassReader.SIGNATURES && this.signature != null) {
+    if (SIGNATURES && this.signature != null) {
       out.putShort(this.cw.newUTF8('Signature')).putInt(2).putShort(this.cw.newUTF8(this.signature))
     }
     if (this.methodParameters != null) {
@@ -2075,32 +2074,32 @@ export class MethodWriter extends MethodVisitor {
       out.putInt(this.methodParameters.length + 1).putByte(this.methodParametersCount)
       out.putByteArray(this.methodParameters.data, 0, this.methodParameters.length)
     }
-    if (ClassReader.ANNOTATIONS && this.annd != null) {
+    if (ANNOTATIONS && this.annd != null) {
       out.putShort(this.cw.newUTF8('AnnotationDefault'))
       out.putInt(this.annd.length)
       out.putByteArray(this.annd.data, 0, this.annd.length)
     }
-    if (ClassReader.ANNOTATIONS && this.anns != null) {
+    if (ANNOTATIONS && this.anns != null) {
       out.putShort(this.cw.newUTF8('RuntimeVisibleAnnotations'))
       this.anns.put(out)
     }
-    if (ClassReader.ANNOTATIONS && this.ianns != null) {
+    if (ANNOTATIONS && this.ianns != null) {
       out.putShort(this.cw.newUTF8('RuntimeInvisibleAnnotations'))
       this.ianns.put(out)
     }
-    if (ClassReader.ANNOTATIONS && this.tanns != null) {
+    if (ANNOTATIONS && this.tanns != null) {
       out.putShort(this.cw.newUTF8('RuntimeVisibleTypeAnnotations'))
       this.tanns.put(out)
     }
-    if (ClassReader.ANNOTATIONS && this.itanns != null) {
+    if (ANNOTATIONS && this.itanns != null) {
       out.putShort(this.cw.newUTF8('RuntimeInvisibleTypeAnnotations'))
       this.itanns.put(out)
     }
-    if (ClassReader.ANNOTATIONS && this.panns != null) {
+    if (ANNOTATIONS && this.panns != null) {
       out.putShort(this.cw.newUTF8('RuntimeVisibleParameterAnnotations'))
       AnnotationWriter.put(this.panns, this.synthetics, out)
     }
-    if (ClassReader.ANNOTATIONS && this.ipanns != null) {
+    if (ANNOTATIONS && this.ipanns != null) {
       out.putShort(this.cw.newUTF8('RuntimeInvisibleParameterAnnotations'))
       AnnotationWriter.put(this.ipanns, this.synthetics, out)
     }

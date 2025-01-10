@@ -5,7 +5,7 @@
   "browser": "./index.browser.ts",
   "description": "An abstract layer for file system on reading zip or plain dictionary/file",
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "scripts": {
     "build:type": "tsc",
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@xmcl/unzip": "workspace:^*",
+    "yauzl": "^2.10.0",
     "jszip": "^3.10.1"
   },
   "repository": {
@@ -39,9 +40,9 @@
   "devDependencies": {
     "@types/node": "~18.15.11",
     "@types/yauzl": "^2.10.0",
-    "@xmcl/eslint-config": "workspace:^*",
+    "@xmcl/oxlint-config": "workspace:^*",
     "esbuild": "^0.17.16",
-    "eslint": "^8.37.0",
+    "oxlint": "^0.15.5",
     "typescript": "^5.3.3"
   },
   "license": "MIT",

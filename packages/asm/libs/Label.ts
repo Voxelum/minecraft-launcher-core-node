@@ -38,13 +38,13 @@
  * @author Eric Bruneton
  */
 import { Edge } from './Edge'
-import { MethodWriter } from './MethodWriter'
+import type { MethodWriter } from './MethodWriter'
 import { Opcodes } from './Opcodes'
 import { ByteVector } from './ByteVector'
-import { Frame } from './Frame'
-import { ClassReader } from './ClassReader'
+import type { Frame } from './Frame'
 import * as bits from './bits'
 import { assert } from './utils'
+import { FRAMES } from './ClassReaderConstant'
 export class Label {
   /**
      * Indicates if this label is only used for debug attributes. Such a label
@@ -385,7 +385,7 @@ export class Label {
      * @return the first label of the series to which this label belongs.
      */
   getFirst(): Label {
-    return !ClassReader.FRAMES || this.frame == null ? this : this.frame.owner
+    return !FRAMES || this.frame == null ? this : this.frame.owner
   }
 
   /**

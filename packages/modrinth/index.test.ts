@@ -6,7 +6,7 @@ describe('ModrinthV2Client', () => {
   const agent = new MockAgent()
   agent.disableNetConnect()
   const fetch: typeof globalThis.fetch = (input, init) => {
-    init = Object.assign(init || {}, { 
+    init = Object.assign(init || {}, {
       dispatcher: agent,
     })
     return _fetch(input as any, init as any) as any

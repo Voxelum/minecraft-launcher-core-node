@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-redeclare */
 import { setTimeout } from 'timers/promises'
 import { errors } from 'undici'
-import { URL } from 'url'
 import { DownloadError } from './error'
 import { ValidationError } from './validator'
 

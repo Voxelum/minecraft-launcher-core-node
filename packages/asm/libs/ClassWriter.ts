@@ -40,7 +40,8 @@
  */
 import { AnnotationWriter } from './AnnotationWriter'
 import { AnnotationVisitor } from './AnnotationVisitor'
-import { Attribute } from './Attribute'
+import type { Attribute } from './Attribute'
+import * as ClassWriterConstant from './ClassWriterConstant'
 import { ByteVector } from './ByteVector'
 import { ClassReader } from './ClassReader'
 import { ClassVisitor } from './ClassVisitor'
@@ -48,267 +49,13 @@ import { FieldVisitor } from './FieldVisitor'
 import { FieldWriter } from './FieldWriter'
 import { Handle } from './Handle'
 import { Item } from './Item'
-import { MethodVisitor } from './MethodVisitor'
+import type { MethodVisitor } from './MethodVisitor'
 import { MethodWriter } from './MethodWriter'
 import { Opcodes } from './Opcodes'
 import { TypePath } from './TypePath'
+import { SIGNATURES } from './ClassReaderConstant'
 
 export class ClassWriter extends ClassVisitor {
-  static __static_initialized = false
-  static __static_initialize() { if (!ClassWriter.__static_initialized) { ClassWriter.__static_initialized = true; ClassWriter.__static_initializer_0() } }
-
-  /**
-     * Flag to automatically compute the maximum stack size and the maximum
-     * number of local variables of methods. If this flag is set, then the
-     * arguments of the {@link MethodVisitor#visitMaxs visitMaxs} method of the
-     * {@link MethodVisitor} returned by the {@link #visitMethod visitMethod}
-     * method will be ignored, and computed automatically from the signature and
-     * the bytecode of each method.
-     *
-     * @see #ClassWriter(int)
-     */
-  public static COMPUTE_MAXS = 1
-
-  /**
-     * Flag to automatically compute the stack map frames of methods from
-     * scratch. If this flag is set, then the calls to the
-     * {@link MethodVisitor#visitFrame} method are ignored, and the stack map
-     * frames are recomputed from the methods bytecode. The arguments of the
-     * {@link MethodVisitor#visitMaxs visitMaxs} method are also ignored and
-     * recomputed from the bytecode. In other words, COMPUTE_FRAMES implies
-     * COMPUTE_MAXS.
-     *
-     * @see #ClassWriter(int)
-     */
-  public static COMPUTE_FRAMES = 2
-
-  /**
-     * Pseudo access flag to distinguish between the synthetic attribute and the
-     * synthetic access flag.
-     */
-  static ACC_SYNTHETIC_ATTRIBUTE = 262144
-
-  /**
-     * Factor to convert from ACC_SYNTHETIC_ATTRIBUTE to Opcode.ACC_SYNTHETIC.
-     */
-  static TO_ACC_SYNTHETIC: number; public static TO_ACC_SYNTHETIC_$LI$(): number { ClassWriter.__static_initialize(); if (ClassWriter.TO_ACC_SYNTHETIC == null) { ClassWriter.TO_ACC_SYNTHETIC = (ClassWriter.ACC_SYNTHETIC_ATTRIBUTE / Opcodes.ACC_SYNTHETIC | 0) } return ClassWriter.TO_ACC_SYNTHETIC }
-
-  /**
-     * The type of instructions without any argument.
-     */
-  static NOARG_INSN = 0
-
-  /**
-     * The type of instructions with an signed byte argument.
-     */
-  static SBYTE_INSN = 1
-
-  /**
-     * The type of instructions with an signed short argument.
-     */
-  static SHORT_INSN = 2
-
-  /**
-     * The type of instructions with a local variable index argument.
-     */
-  static VAR_INSN = 3
-
-  /**
-     * The type of instructions with an implicit local variable index argument.
-     */
-  static IMPLVAR_INSN = 4
-
-  /**
-     * The type of instructions with a type descriptor argument.
-     */
-  static TYPE_INSN = 5
-
-  /**
-     * The type of field and method invocations instructions.
-     */
-  static FIELDORMETH_INSN = 6
-
-  /**
-     * The type of the INVOKEINTERFACE/INVOKEDYNAMIC instruction.
-     */
-  static ITFMETH_INSN = 7
-
-  /**
-     * The type of the INVOKEDYNAMIC instruction.
-     */
-  static INDYMETH_INSN = 8
-
-  /**
-     * The type of instructions with a 2 bytes bytecode offset label.
-     */
-  static LABEL_INSN = 9
-
-  /**
-     * The type of instructions with a 4 bytes bytecode offset label.
-     */
-  static LABELW_INSN = 10
-
-  /**
-     * The type of the LDC instruction.
-     */
-  static LDC_INSN = 11
-
-  /**
-     * The type of the LDC_W and LDC2_W instructions.
-     */
-  static LDCW_INSN = 12
-
-  /**
-     * The type of the IINC instruction.
-     */
-  static IINC_INSN = 13
-
-  /**
-     * The type of the TABLESWITCH instruction.
-     */
-  static TABL_INSN = 14
-
-  /**
-     * The type of the LOOKUPSWITCH instruction.
-     */
-  static LOOK_INSN = 15
-
-  /**
-     * The type of the MULTIANEWARRAY instruction.
-     */
-  static MANA_INSN = 16
-
-  /**
-     * The type of the WIDE instruction.
-     */
-  static WIDE_INSN = 17
-
-  /**
-     * The type of the ASM pseudo instructions with an unsigned 2 bytes offset
-     * label (see Label#resolve).
-     */
-  static ASM_LABEL_INSN = 18
-
-  /**
-     * Represents a frame inserted between already existing frames. This kind of
-     * frame can only be used if the frame content can be computed from the
-     * previous existing frame and from the instructions between this existing
-     * frame and the inserted one, without any knowledge of the type hierarchy.
-     * This kind of frame is only used when an unconditional jump is inserted in
-     * a method while expanding an ASM pseudo instruction (see ClassReader).
-     */
-  static F_INSERT = 256
-
-  /**
-     * The instruction types of all JVM opcodes.
-     */
-  static TYPE: number[]; public static TYPE_$LI$(): number[] { ClassWriter.__static_initialize(); return ClassWriter.TYPE }
-
-  /**
-     * The type of CONSTANT_Class constant pool items.
-     */
-  static CLASS = 7
-
-  /**
-     * The type of CONSTANT_Fieldref constant pool items.
-     */
-  static FIELD = 9
-
-  /**
-     * The type of CONSTANT_Methodref constant pool items.
-     */
-  static METH = 10
-
-  /**
-     * The type of CONSTANT_InterfaceMethodref constant pool items.
-     */
-  static IMETH = 11
-
-  /**
-     * The type of CONSTANT_String constant pool items.
-     */
-  static STR = 8
-
-  /**
-     * The type of CONSTANT_Integer constant pool items.
-     */
-  static INT = 3
-
-  /**
-     * The type of CONSTANT_Float constant pool items.
-     */
-  static FLOAT = 4
-
-  /**
-     * The type of CONSTANT_Long constant pool items.
-     */
-  static LONG = 5
-
-  /**
-     * The type of CONSTANT_Double constant pool items.
-     */
-  static DOUBLE = 6
-
-  /**
-     * The type of CONSTANT_NameAndType constant pool items.
-     */
-  static NAME_TYPE = 12
-
-  /**
-     * The type of CONSTANT_Utf8 constant pool items.
-     */
-  static UTF8 = 1
-
-  /**
-     * The type of CONSTANT_MethodType constant pool items.
-     */
-  static MTYPE = 16
-
-  /**
-     * The type of CONSTANT_MethodHandle constant pool items.
-     */
-  static HANDLE = 15
-
-  /**
-     * The type of CONSTANT_InvokeDynamic constant pool items.
-     */
-  static INDY = 18
-
-  /**
-     * The base value for all CONSTANT_MethodHandle constant pool items.
-     * Internally, ASM store the 9 variations of CONSTANT_MethodHandle into 9
-     * different items.
-     */
-  static HANDLE_BASE = 20
-
-  /**
-     * Normal type Item stored in the ClassWriter {@link ClassWriter#typeTable},
-     * instead of the constant pool, in order to avoid clashes with normal
-     * constant pool items in the ClassWriter constant pool's hash table.
-     */
-  static TYPE_NORMAL = 30
-
-  /**
-     * Uninitialized type Item stored in the ClassWriter
-     * {@link ClassWriter#typeTable}, instead of the constant pool, in order to
-     * avoid clashes with normal constant pool items in the ClassWriter constant
-     * pool's hash table.
-     */
-  static TYPE_UNINIT = 31
-
-  /**
-     * Merged type Item stored in the ClassWriter {@link ClassWriter#typeTable},
-     * instead of the constant pool, in order to avoid clashes with normal
-     * constant pool items in the ClassWriter constant pool's hash table.
-     */
-  static TYPE_MERGED = 32
-
-  /**
-     * The type of BootstrapMethods items. These items are stored in a special
-     * class attribute named BootstrapMethods and not in the constant pool.
-     */
-  static BSM = 33
-
   /**
      * The class reader from which this class writer was constructed, if any.
      */
@@ -530,16 +277,6 @@ export class ClassWriter extends ClassVisitor {
      */
   hasAsmInsns: boolean
 
-  static __static_initializer_0() {
-    let i: number
-    const b: number[] = new Array(220)
-    const s = 'AAAAAAAAAAAAAAAABCLMMDDDDDEEEEEEEEEEEEEEEEEEEEAAAAAAAADDDDDEEEEEEEEEEEEEEEEEEEEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANAAAAAAAAAAAAAAAAAAAAJJJJJJJJJJJJJJJJDOPAAAAAAGGGGGGGHIFBFAAFFAARQJJKKSSSSSSSSSSSSSSSSSS'
-    for (i = 0; i < b.length; ++i) {
-      b[i] = (((s.charAt(i)).charCodeAt(0) - ('A').charCodeAt(0)) | 0)
-    }
-    ClassWriter.TYPE = b
-  }
-
   /**
      * Constructs a new {@link ClassWriter} object and enables optimizations for
      * "mostly add" bytecode transformations. These optimizations are the
@@ -605,7 +342,7 @@ export class ClassWriter extends ClassVisitor {
         //     // this.key2 = new Item();
         //     // this.key3 = new Item();
         //     // this.key4 = new Item();
-        //     this.compute = (flags & ClassWriter.COMPUTE_FRAMES) !== 0 ? MethodWriter.FRAMES : ((flags & ClassWriter.COMPUTE_MAXS) !== 0 ? MethodWriter.MAXS : MethodWriter.NOTHING);
+        //     this.compute = (flags & ClassWriterConstant.COMPUTE_FRAMES) !== 0 ? MethodWriter.FRAMES : ((flags & ClassWriterConstant.COMPUTE_MAXS) !== 0 ? MethodWriter.MAXS : MethodWriter.NOTHING);
         // })();
       }
       // (() => {
@@ -641,7 +378,7 @@ export class ClassWriter extends ClassVisitor {
         // this.key2 = new Item();
         // this.key3 = new Item();
         // this.key4 = new Item();
-        this.compute = (flags & ClassWriter.COMPUTE_FRAMES) !== 0 ? MethodWriter.FRAMES : ((flags & ClassWriter.COMPUTE_MAXS) !== 0 ? MethodWriter.MAXS : MethodWriter.NOTHING)
+        this.compute = (flags & ClassWriterConstant.COMPUTE_FRAMES) !== 0 ? MethodWriter.FRAMES : ((flags & ClassWriterConstant.COMPUTE_MAXS) !== 0 ? MethodWriter.MAXS : MethodWriter.NOTHING)
       })()
     } else { throw new Error('invalid overload') }
   }
@@ -651,7 +388,7 @@ export class ClassWriter extends ClassVisitor {
     this.access = access
     this.name = this.newClass(name)
     this.thisName = name
-    if (ClassReader.SIGNATURES && signature != null) {
+    if (SIGNATURES && signature != null) {
       this.signature = this.newUTF8(signature)
     }
     this.superName = superName == null ? 0 : this.newClass(superName)
@@ -682,7 +419,7 @@ export class ClassWriter extends ClassVisitor {
   }
 
   public visitAnnotation(desc: string, visible: boolean): AnnotationVisitor {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -699,7 +436,7 @@ export class ClassWriter extends ClassVisitor {
   }
 
   public visitTypeAnnotation(typeRef: number, typePath: TypePath, desc: string, visible: boolean): AnnotationVisitor {
-    if (!ClassReader.ANNOTATIONS) {
+    if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
@@ -804,7 +541,7 @@ export class ClassWriter extends ClassVisitor {
     //     this.newUTF8("Deprecated");
     // }
     // if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-    //     if ((this.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+    //     if ((this.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
     //         ++attributeCount;
     //         size += 6;
     //         this.newUTF8("Synthetic");
@@ -815,22 +552,22 @@ export class ClassWriter extends ClassVisitor {
     //     size += 8 + this.innerClasses.length;
     //     this.newUTF8("InnerClasses");
     // }
-    // if (ClassReader.ANNOTATIONS && this.anns != null) {
+    // if (ANNOTATIONS && this.anns != null) {
     //     ++attributeCount;
     //     size += 8 + this.anns.getSize();
     //     this.newUTF8("RuntimeVisibleAnnotations");
     // }
-    // if (ClassReader.ANNOTATIONS && this.ianns != null) {
+    // if (ANNOTATIONS && this.ianns != null) {
     //     ++attributeCount;
     //     size += 8 + this.ianns.getSize();
     //     this.newUTF8("RuntimeInvisibleAnnotations");
     // }
-    // if (ClassReader.ANNOTATIONS && this.tanns != null) {
+    // if (ANNOTATIONS && this.tanns != null) {
     //     ++attributeCount;
     //     size += 8 + this.tanns.getSize();
     //     this.newUTF8("RuntimeVisibleTypeAnnotations");
     // }
-    // if (ClassReader.ANNOTATIONS && this.itanns != null) {
+    // if (ANNOTATIONS && this.itanns != null) {
     //     ++attributeCount;
     //     size += 8 + this.itanns.getSize();
     //     this.newUTF8("RuntimeInvisibleTypeAnnotations");
@@ -843,7 +580,7 @@ export class ClassWriter extends ClassVisitor {
     // let out: ByteVector = new ByteVector(size);
     // out.putInt(-889275714).putInt(this.version);
     // out.putShort(this.index).putByteArray(this.pool.data, 0, this.pool.length);
-    // let mask: number = Opcodes.ACC_DEPRECATED | ClassWriter.ACC_SYNTHETIC_ATTRIBUTE | (((this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) / ClassWriter.TO_ACC_SYNTHETIC_$LI$() | 0));
+    // let mask: number = Opcodes.ACC_DEPRECATED | ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE | (((this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) / ClassWriterConstant.TO_ACC_SYNTHETIC_$LI$() | 0));
     // out.putShort(this.access & ~mask).putShort(this.name).putShort(this.superName);
     // out.putShort(this.interfaceCount);
     // for (let i: number = 0; i < this.interfaceCount; ++i) {
@@ -886,7 +623,7 @@ export class ClassWriter extends ClassVisitor {
     //     out.putShort(this.newUTF8("Deprecated")).putInt(0);
     // }
     // if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-    //     if ((this.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+    //     if ((this.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
     //         out.putShort(this.newUTF8("Synthetic")).putInt(0);
     //     }
     // }
@@ -895,19 +632,19 @@ export class ClassWriter extends ClassVisitor {
     //     out.putInt(this.innerClasses.length + 2).putShort(this.innerClassesCount);
     //     out.putByteArray(this.innerClasses.data, 0, this.innerClasses.length);
     // }
-    // if (ClassReader.ANNOTATIONS && this.anns != null) {
+    // if (ANNOTATIONS && this.anns != null) {
     //     out.putShort(this.newUTF8("RuntimeVisibleAnnotations"));
     //     this.anns.put(out);
     // }
-    // if (ClassReader.ANNOTATIONS && this.ianns != null) {
+    // if (ANNOTATIONS && this.ianns != null) {
     //     out.putShort(this.newUTF8("RuntimeInvisibleAnnotations"));
     //     this.ianns.put(out);
     // }
-    // if (ClassReader.ANNOTATIONS && this.tanns != null) {
+    // if (ANNOTATIONS && this.tanns != null) {
     //     out.putShort(this.newUTF8("RuntimeVisibleTypeAnnotations"));
     //     this.tanns.put(out);
     // }
-    // if (ClassReader.ANNOTATIONS && this.itanns != null) {
+    // if (ANNOTATIONS && this.itanns != null) {
     //     out.putShort(this.newUTF8("RuntimeInvisibleTypeAnnotations"));
     //     this.itanns.put(out);
     // }
@@ -1018,10 +755,10 @@ export class ClassWriter extends ClassVisitor {
      * @return the index of a new or already existing UTF8 item.
      */
   public newUTF8(value: string): number {
-    this.key.set(ClassWriter.UTF8, value, null, null)
+    this.key.set(ClassWriterConstant.UTF8, value, null, null)
     let result: Item = this.get(this.key)
     if (result == null) {
-      this.pool.putByte(ClassWriter.UTF8).putUTF8(value)
+      this.pool.putByte(ClassWriterConstant.UTF8).putUTF8(value)
       result = new Item(this.index++, this.key)
       this.put(result)
     }
@@ -1039,10 +776,10 @@ export class ClassWriter extends ClassVisitor {
      * @return a new or already existing class reference item.
      */
   newClassItem(value: string): Item {
-    this.key2.set(ClassWriter.CLASS, value, null, null)
+    this.key2.set(ClassWriterConstant.CLASS, value, null, null)
     let result: Item = this.get(this.key2)
     if (result == null) {
-      this.pool.put12(ClassWriter.CLASS, this.newUTF8(value))
+      this.pool.put12(ClassWriterConstant.CLASS, this.newUTF8(value))
       result = new Item(this.index++, this.key2)
       this.put(result)
     }
@@ -1074,10 +811,10 @@ export class ClassWriter extends ClassVisitor {
      * @return a new or already existing method type reference item.
      */
   newMethodTypeItem(methodDesc: string): Item {
-    this.key2.set(ClassWriter.MTYPE, methodDesc, null, null)
+    this.key2.set(ClassWriterConstant.MTYPE, methodDesc, null, null)
     let result: Item = this.get(this.key2)
     if (result == null) {
-      this.pool.put12(ClassWriter.MTYPE, this.newUTF8(methodDesc))
+      this.pool.put12(ClassWriterConstant.MTYPE, this.newUTF8(methodDesc))
       result = new Item(this.index++, this.key2)
       this.put(result)
     }
@@ -1124,13 +861,13 @@ export class ClassWriter extends ClassVisitor {
      * @return a new or an already existing method type reference item.
      */
   newHandleItem(tag: number, owner: string, name: string, desc: string, itf: boolean): Item {
-    this.key4.set(ClassWriter.HANDLE_BASE + tag, owner, name, desc)
+    this.key4.set(ClassWriterConstant.HANDLE_BASE + tag, owner, name, desc)
     let result: Item = this.get(this.key4)
     if (result == null) {
       if (tag <= Opcodes.H_PUTSTATIC) {
-        this.put112(ClassWriter.HANDLE, tag, this.newField(owner, name, desc))
+        this.put112(ClassWriterConstant.HANDLE, tag, this.newField(owner, name, desc))
       } else {
-        this.put112(ClassWriter.HANDLE, tag, this.newMethod(owner, name, desc, itf))
+        this.put112(ClassWriterConstant.HANDLE, tag, this.newMethod(owner, name, desc, itf))
       }
       result = new Item(this.index++, this.key4)
       this.put(result)
@@ -1241,7 +978,7 @@ export class ClassWriter extends ClassVisitor {
     hashCode &= 2147483647
     let result: Item = this.items[hashCode % this.items.length]
     loop: while ((result != null)) {
-      if (result.type !== ClassWriter.BSM || result.__hashCode !== hashCode) {
+      if (result.type !== ClassWriterConstant.BSM || result.__hashCode !== hashCode) {
         result = result.next
         continue
       }
@@ -1267,7 +1004,7 @@ export class ClassWriter extends ClassVisitor {
     this.key3.setInvkDynItem(name, desc, bootstrapMethodIndex)
     result = this.get(this.key3)
     if (result == null) {
-      this.put122(ClassWriter.INDY, bootstrapMethodIndex, this.newNameType(name, desc))
+      this.put122(ClassWriterConstant.INDY, bootstrapMethodIndex, this.newNameType(name, desc))
       result = new Item(this.index++, this.key3)
       this.put(result)
     }
@@ -1309,10 +1046,10 @@ export class ClassWriter extends ClassVisitor {
      * @return a new or already existing field reference item.
      */
   newFieldItem(owner: string, name: string, desc: string): Item {
-    this.key3.set(ClassWriter.FIELD, owner, name, desc)
+    this.key3.set(ClassWriterConstant.FIELD, owner, name, desc)
     let result: Item = this.get(this.key3)
     if (result == null) {
-      this.put122(ClassWriter.FIELD, this.newClass(owner), this.newNameType(name, desc))
+      this.put122(ClassWriterConstant.FIELD, this.newClass(owner), this.newNameType(name, desc))
       result = new Item(this.index++, this.key3)
       this.put(result)
     }
@@ -1352,7 +1089,7 @@ export class ClassWriter extends ClassVisitor {
      * @return a new or already existing method reference item.
      */
   newMethodItem(owner: string, name: string, desc: string, itf: boolean): Item {
-    const type: number = itf ? ClassWriter.IMETH : ClassWriter.METH
+    const type: number = itf ? ClassWriterConstant.IMETH : ClassWriterConstant.METH
     this.key3.set(type, owner, name, desc)
     let result: Item = this.get(this.key3)
     if (result == null) {
@@ -1395,7 +1132,7 @@ export class ClassWriter extends ClassVisitor {
     this.key.set$int(value)
     let result: Item = this.get(this.key)
     if (result == null) {
-      this.pool.putByte(ClassWriter.INT).putInt(value)
+      this.pool.putByte(ClassWriterConstant.INT).putInt(value)
       result = new Item(this.index++, this.key)
       this.put(result)
     }
@@ -1414,7 +1151,7 @@ export class ClassWriter extends ClassVisitor {
     this.key.set$float(value)
     let result: Item = this.get(this.key)
     if (result == null) {
-      this.pool.putByte(ClassWriter.FLOAT).putInt(this.key.intVal)
+      this.pool.putByte(ClassWriterConstant.FLOAT).putInt(this.key.intVal)
       result = new Item(this.index++, this.key)
       this.put(result)
     }
@@ -1433,7 +1170,7 @@ export class ClassWriter extends ClassVisitor {
     this.key.set$long(value)
     let result: Item = this.get(this.key)
     if (result == null) {
-      this.pool.putByte(ClassWriter.LONG).putLong(value)
+      this.pool.putByte(ClassWriterConstant.LONG).putLong(value)
       result = new Item(this.index, this.key)
       this.index += 2
       this.put(result)
@@ -1453,7 +1190,7 @@ export class ClassWriter extends ClassVisitor {
     this.key.set$double(value)
     let result: Item = this.get(this.key)
     if (result == null) {
-      this.pool.putByte(ClassWriter.DOUBLE).putLong(this.key.longVal)
+      this.pool.putByte(ClassWriterConstant.DOUBLE).putLong(this.key.longVal)
       result = new Item(this.index, this.key)
       this.index += 2
       this.put(result)
@@ -1470,10 +1207,10 @@ export class ClassWriter extends ClassVisitor {
      * @return a new or already existing string item.
      */
   private newString(value: string): Item {
-    this.key2.set(ClassWriter.STR, value, null, null)
+    this.key2.set(ClassWriterConstant.STR, value, null, null)
     let result: Item = this.get(this.key2)
     if (result == null) {
-      this.pool.put12(ClassWriter.STR, this.newUTF8(value))
+      this.pool.put12(ClassWriterConstant.STR, this.newUTF8(value))
       result = new Item(this.index++, this.key2)
       this.put(result)
     }
@@ -1507,10 +1244,10 @@ export class ClassWriter extends ClassVisitor {
      * @return a new or already existing name and type item.
      */
   newNameTypeItem(name: string, desc: string): Item {
-    this.key2.set(ClassWriter.NAME_TYPE, name, desc, null)
+    this.key2.set(ClassWriterConstant.NAME_TYPE, name, desc, null)
     let result: Item = this.get(this.key2)
     if (result == null) {
-      this.put122(ClassWriter.NAME_TYPE, this.newUTF8(name), this.newUTF8(desc))
+      this.put122(ClassWriterConstant.NAME_TYPE, this.newUTF8(name), this.newUTF8(desc))
       result = new Item(this.index++, this.key2)
       this.put(result)
     }
@@ -1529,7 +1266,7 @@ export class ClassWriter extends ClassVisitor {
     if (((typeof type === 'string') || type === null)) {
       const __args = Array.prototype.slice.call(arguments)
       return <any>(() => {
-        this.key.set(ClassWriter.TYPE_NORMAL, type, null, null)
+        this.key.set(ClassWriterConstant.TYPE_NORMAL, type, null, null)
         let result: Item = this.get(this.key)
         if (result == null) {
           result = this.addType(this.key)
@@ -1554,10 +1291,10 @@ export class ClassWriter extends ClassVisitor {
      * @return the index of this internal name in the type table.
      */
   addUninitializedType(type: string, offset: number): number {
-    this.key.type = ClassWriter.TYPE_UNINIT
+    this.key.type = ClassWriterConstant.TYPE_UNINIT
     this.key.intVal = offset
     this.key.strVal1 = type
-    this.key.__hashCode = 2147483647 & (ClassWriter.TYPE_UNINIT + (<any>type.toString()) + offset)
+    this.key.__hashCode = 2147483647 & (ClassWriterConstant.TYPE_UNINIT + (<any>type.toString()) + offset)
     let result: Item = this.get(this.key)
     if (result == null) {
       result = this.addType(this.key)
@@ -1604,9 +1341,9 @@ export class ClassWriter extends ClassVisitor {
      */
   getMergedType(type1: number, type2: number): number {
     throw new Error('not supported')
-    // this.key2.type = ClassWriter.TYPE_MERGED;
+    // this.key2.type = ClassWriterConstant.TYPE_MERGED;
     // this.key2.longVal = type1 | ((Math.round(<number>type2)) << 32);
-    // this.key2.__hashCode = 2147483647 & (ClassWriter.TYPE_MERGED + type1 + type2);
+    // this.key2.__hashCode = 2147483647 & (ClassWriterConstant.TYPE_MERGED + type1 + type2);
     // let result: Item = this.get(this.key2);
     // if (result == null) {
     //     let t: string = this.typeTable[type1].strVal1;
@@ -1738,8 +1475,4 @@ export class ClassWriter extends ClassVisitor {
   }
 }
 
-ClassWriter.TYPE_$LI$()
-
-ClassWriter.TO_ACC_SYNTHETIC_$LI$()
-
-ClassWriter.__static_initialize()
+ClassWriterConstant.__static_initialize()

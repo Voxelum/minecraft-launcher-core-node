@@ -33,7 +33,7 @@
  *
  * @author Eric Bruneton
  */
-import { Label } from './Label'
+import type { Label } from './Label'
 export class Edge {
   /**
      * Denotes a normal control flow graph edge.
