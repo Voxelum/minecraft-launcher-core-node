@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 import { VarInt, VarLong, Long, Short, Float, String, Bool, Byte, UByte, Int, ByteArray, Double, Json, Slot, UUID, UShort } from './coders'
 import { ByteBuffer } from '@xmcl/bytebuffer'
 import { randomUUID } from 'crypto'

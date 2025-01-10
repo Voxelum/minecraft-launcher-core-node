@@ -92,7 +92,7 @@ export class ClientUser extends User {
      */
   async getSelectedVoiceChannel(): Promise<Channel | null> {
     const response = await this.client.request('GET_SELECTED_VOICE_CHANNEL')
-    return response.data != null ? new Channel(this.client, response.data) : null
+    return response.data ? new Channel(this.client, response.data) : null
   }
 
   /**

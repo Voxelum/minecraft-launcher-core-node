@@ -4,7 +4,6 @@ import { Task, task } from '@xmcl/task'
 import { link } from 'fs/promises'
 import { dirname, join } from 'path'
 import { Dispatcher, request } from 'undici'
-import { URL } from 'url'
 import { DownloadMultipleTask } from './downloadTask'
 import { ensureDir, ParallelTaskOptions } from './utils'
 /**

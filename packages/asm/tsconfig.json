@@ -24,6 +24,9 @@
         "libs/MethodWriter.ts",
         "libs/Type.ts",
         "libs/TypeReference.ts",
+        "libs/ClassReaderConstant.ts",
+        "libs/MethodWriterConstant.ts",
+        "libs/ClassWriterConstant.ts",
         "index.ts"
     ],
     "extends": "../../tsconfig.json",

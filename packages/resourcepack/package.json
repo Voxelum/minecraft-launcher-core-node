@@ -4,7 +4,7 @@
   "main": "./index.ts",
   "description": "A Minecraft resource pack parser",
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "scripts": {
     "build:type": "tsc",

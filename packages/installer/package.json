@@ -4,7 +4,7 @@
   "main": "./index.ts",
   "description": "The installers of Minecraft/Forge/Fabric/Liteloader/Quilt",
   "engines": {
-    "node": ">=16.0"
+    "node": ">=20"
   },
   "scripts": {
     "build:type": "tsc",
@@ -49,9 +49,9 @@
     "@types/node": "~18.15.11",
     "@types/yazl": "^2.4.5",
     "@types/yauzl": "^2.10.0",
-    "@xmcl/eslint-config": "workspace:^*",
+    "@xmcl/oxlint-config": "workspace:^*",
     "esbuild": "^0.17.16",
-    "eslint": "^8.37.0",
+    "oxlint": "^0.15.5",
     "typescript": "^5.3.3"
   }
 }

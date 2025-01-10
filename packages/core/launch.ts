@@ -436,7 +436,7 @@ export interface ServerOptions extends BaseServerOptions {
 
 export async function launchServer(options: ServerOptions) {
   const args = generateArgumentsServer(options)
-  const spawnOption = { env: process.env, ...(options.extraExecOption || {}) }
+  const spawnOption = { env: process.env, ...options.extraExecOption }
   return (options.spawn ?? spawn)(args[0], args.slice(1), spawnOption)
 }
 
@@ -559,7 +559,7 @@ export async function launch(options: LaunchOption): Promise<ChildProcess> {
   const minecraftFolder = MinecraftFolder.from(resourcePath)
   const prechecks = options.prechecks || LaunchPrecheck.DEFAULT_PRECHECKS
   await Promise.all(prechecks.map((f) => f(minecraftFolder, version, options)))
-  const spawnOption = { cwd: options.gamePath, ...(options.extraExecOption || {}) }
+  const spawnOption = { cwd: options.gamePath, ...options.extraExecOption }
 
   if (options.extraExecOption?.shell) {
     args = args.map((a) => `"${a}"`)

@@ -35,6 +35,7 @@
  * @author Eric Bruneton
  */
 import { ClassWriter } from './ClassWriter'
+import * as ClassWriterConstant from './ClassWriterConstant'
 import { floatToIntBits, doubleToLongBits } from './bits'
 export class Item {
   /**
@@ -134,7 +135,7 @@ export class Item {
      * the value of this item.
      */
   set$int(intVal: number) {
-    this.type = ClassWriter.INT
+    this.type = ClassWriterConstant.INT
     this.intVal = intVal
     this.__hashCode = 2147483647 & (this.type + intVal)
   }
@@ -146,7 +147,7 @@ export class Item {
      * the value of this item.
      */
   set$long(longVal: bigint) {
-    this.type = ClassWriter.LONG
+    this.type = ClassWriterConstant.LONG
     this.longVal = longVal
     this.__hashCode = 2147483647 & (this.type + Number(longVal & 0xffffffffn))
   }
@@ -158,7 +159,7 @@ export class Item {
      * the value of this item.
      */
   set$float(floatVal: number) {
-    this.type = ClassWriter.FLOAT
+    this.type = ClassWriterConstant.FLOAT
     this.intVal = floatToIntBits(floatVal)
     this.__hashCode = 2147483647 & (this.type + (floatVal | 0))
   }
@@ -170,7 +171,7 @@ export class Item {
      * the value of this item.
      */
   set$double(doubleVal: number) {
-    this.type = ClassWriter.DOUBLE
+    this.type = ClassWriterConstant.DOUBLE
     this.longVal = doubleToLongBits(doubleVal)
     this.__hashCode = 2147483647 & (this.type + (doubleVal | 0))
   }
@@ -193,24 +194,24 @@ export class Item {
     this.strVal2 = strVal2 ?? ''
     this.strVal3 = strVal3 ?? ''
     switch (type) {
-      case ClassWriter.CLASS:
+      case ClassWriterConstant.CLASS:
         this.intVal = 0 // intVal of a class must be zero, see visitInnerClass
       // eslint-disable-next-line no-fallthrough
-      case ClassWriter.UTF8:
-      case ClassWriter.STR:
-      case ClassWriter.MTYPE:
-      case ClassWriter.TYPE_NORMAL:
+      case ClassWriterConstant.UTF8:
+      case ClassWriterConstant.STR:
+      case ClassWriterConstant.MTYPE:
+      case ClassWriterConstant.TYPE_NORMAL:
         this.__hashCode = 0x7FFFFFFF & (type + str_hash(this.strVal1))
         return
-      case ClassWriter.NAME_TYPE: {
+      case ClassWriterConstant.NAME_TYPE: {
         this.__hashCode = 0x7FFFFFFF & (type + str_hash(this.strVal1) *
                     str_hash(this.strVal2))
         return
       }
-      // ClassWriter.FIELD:
-      // ClassWriter.METH:
-      // ClassWriter.IMETH:
-      // ClassWriter.HANDLE_BASE + 1..9
+      // ClassWriterConstant.FIELD:
+      // ClassWriterConstant.METH:
+      // ClassWriterConstant.IMETH:
+      // ClassWriterConstant.HANDLE_BASE + 1..9
       default:
         this.__hashCode = 0x7FFFFFFF & (type + str_hash(this.strVal1) *
                     str_hash(this.strVal2) * str_hash(this.strVal3))
@@ -228,11 +229,11 @@ export class Item {
      * zero based index into the class attribute BootrapMethods.
      */
   setInvkDynItem(name: string, desc: string, bsmIndex: number) {
-    this.type = ClassWriter.INDY
+    this.type = ClassWriterConstant.INDY
     this.longVal = BigInt(bsmIndex)
     this.strVal1 = name
     this.strVal2 = desc
-    this.__hashCode = 2147483647 & (ClassWriter.INDY + bsmIndex * (<any> this.strVal1.toString()) * (<any> this.strVal2.toString()))
+    this.__hashCode = 2147483647 & (ClassWriterConstant.INDY + bsmIndex * (<any> this.strVal1.toString()) * (<any> this.strVal2.toString()))
   }
 
   /**
@@ -246,7 +247,7 @@ export class Item {
      * bootstrap arguments.
      */
   setPosHash(position: number, hashCode: number) {
-    this.type = ClassWriter.BSM
+    this.type = ClassWriterConstant.BSM
     this.intVal = position
     this.__hashCode = hashCode
   }
@@ -263,24 +264,24 @@ export class Item {
      */
   isEqualTo(i: Item): boolean {
     switch ((this.type)) {
-      case ClassWriter.UTF8:
-      case ClassWriter.STR:
-      case ClassWriter.CLASS:
-      case ClassWriter.MTYPE:
-      case ClassWriter.TYPE_NORMAL:
+      case ClassWriterConstant.UTF8:
+      case ClassWriterConstant.STR:
+      case ClassWriterConstant.CLASS:
+      case ClassWriterConstant.MTYPE:
+      case ClassWriterConstant.TYPE_NORMAL:
         return (i.strVal1 === this.strVal1)
-      case ClassWriter.TYPE_MERGED:
-      case ClassWriter.LONG:
-      case ClassWriter.DOUBLE:
+      case ClassWriterConstant.TYPE_MERGED:
+      case ClassWriterConstant.LONG:
+      case ClassWriterConstant.DOUBLE:
         return i.longVal === this.longVal
-      case ClassWriter.INT:
-      case ClassWriter.FLOAT:
+      case ClassWriterConstant.INT:
+      case ClassWriterConstant.FLOAT:
         return i.intVal === this.intVal
-      case ClassWriter.TYPE_UNINIT:
+      case ClassWriterConstant.TYPE_UNINIT:
         return i.intVal === this.intVal && (i.strVal1 === this.strVal1)
-      case ClassWriter.NAME_TYPE:
+      case ClassWriterConstant.NAME_TYPE:
         return (i.strVal1 === this.strVal1) && (i.strVal2 === this.strVal2)
-      case ClassWriter.INDY:
+      case ClassWriterConstant.INDY:
       {
         return i.longVal === this.longVal && (i.strVal1 === this.strVal1) && (i.strVal2 === this.strVal2)
       }

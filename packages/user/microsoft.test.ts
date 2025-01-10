@@ -5,7 +5,7 @@ import { MicrosoftAuthenticator } from './microsoft'
 describe('MicrosoftAuthenticator', () => {
   const agent = new MockAgent()
   const fetch: typeof globalThis.fetch = (input, init) => {
-    init = Object.assign(init || {}, { 
+    init = Object.assign(init || {}, {
       dispatcher: agent,
     })
     return _fetch(input as any, init as any) as any

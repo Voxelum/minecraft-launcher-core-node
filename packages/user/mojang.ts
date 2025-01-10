@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-redeclare */
 import { fetch, FormData } from 'undici'
 
 /**

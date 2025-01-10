@@ -3,8 +3,8 @@
     "version": "7.6.0",
     "scripts": {
         "build:docs": "tsx scripts/docs.ts",
-        "lint": "eslint packages --ext .ts",
-        "lint:fix": "eslint packages --ext .ts --fix",
+        "lint": "oxlint -c ./oxlintrc.json packages/**",
+        "lint:fix": "oxlint -c ./oxlintrc.json packages/** --fix",
         "test": "vitest",
         "coverage": "vitest run --coverage"
     },
@@ -12,6 +12,7 @@
     "devDependencies": {
         "tsx": "^4.19.2",
         "typedoc": "^0.27.6",
+        "oxlint": "^0.15.5",
         "typescript": "^5.3.3",
         "@vitest/coverage-v8": "^2.1.8",
         "vitest": "^2.1.8"

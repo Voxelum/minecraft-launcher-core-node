@@ -1,5 +1,5 @@
 import type { APIApplication, OAuth2Scopes } from 'discord-api-types/v10'
-import crypto from 'node:crypto'
+import { randomUUID } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { Dispatcher, request } from 'undici'
 import { ClientUser } from './structures/ClientUser'
@@ -169,7 +169,7 @@ export class Client extends (EventEmitter) {
   /**
      * @hidden
      */
-  async fetch<R = any>(
+  async fetch(
     method: Dispatcher.HttpMethod,
     path: string,
     req?: { data?: any; query?: any; headers?: any },
@@ -180,7 +180,7 @@ export class Client extends (EventEmitter) {
       query: req?.query,
       body: req?.data ?? undefined,
       headers: {
-        ...(req?.headers ?? {}),
+        ...req?.headers,
         ...(this.accessToken ? { Authorization: `${this.tokenType} ${this.accessToken}` } : {}),
       },
     })
@@ -196,7 +196,7 @@ export class Client extends (EventEmitter) {
     RPCError.captureStackTrace(error, this.request)
 
     return new Promise((resolve, reject) => {
-      const nonce = crypto.randomUUID()
+      const nonce = randomUUID()
 
       this.transport.send({ cmd, args, evt, nonce })
       this._nonceMap.set(nonce, { resolve, reject, error })

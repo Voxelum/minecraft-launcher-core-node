@@ -1,3 +1,4 @@
+/* eslint-disable n/no-unsupported-features/node-builtins */
 import { ChildProcess, ExecOptions, spawn, SpawnOptions } from 'child_process'
 import { Abortable } from 'events'
 import { access, mkdir, stat } from 'fs/promises'

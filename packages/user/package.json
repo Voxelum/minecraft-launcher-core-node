@@ -10,7 +10,7 @@
     "build:browser": "esbuild --target=es2020 --sourcemap --external:uuid --alias:undici=undici-shim --format=esm --bundle --outfile=dist/index.browser.mjs index.ts"
   },
   "engines": {
-    "node": ">=16.4"
+    "node": ">=20"
   },
   "publishConfig": {
     "main": "./dist/index.js",

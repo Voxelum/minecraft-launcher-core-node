@@ -1,3 +1,4 @@
+/* eslint-disable n/no-unsupported-features/node-builtins */
 import { LibraryInfo, MinecraftFolder, MinecraftLocation } from '@xmcl/core'
 import { DownloadBaseOptions, getDownloadBaseOptions } from '@xmcl/file-transfer'
 import { AbortableTask, CancelledError, Task, task } from '@xmcl/task'

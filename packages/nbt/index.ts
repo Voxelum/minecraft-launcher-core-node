@@ -115,7 +115,7 @@ function createPrototypeObject(schema: CompoundSchema, constructor?: Constructor
  *
  * @param object The object or class
  */
-export function getPrototypeOf(object: object | Function): NBTPrototype | undefined {
+export function getPrototypeOf(object: object | ((...p: any[]) => any)): NBTPrototype | undefined {
   const targetObject = typeof object === 'function' ? object.prototype : object
   return targetObject[kNBTPrototype]
 }
@@ -125,7 +125,7 @@ export function getPrototypeOf(object: object | Function): NBTPrototype | undefi
  * @param object A object or a class function
  * @param nbtPrototype The nbt prototype
  */
-export function setPrototypeOf(object: object | Function, nbtPrototype: NBTPrototype) {
+export function setPrototypeOf(object: object | ((...p: any[]) => any), nbtPrototype: NBTPrototype) {
   const target = typeof object === 'function' ? object.prototype : object
   Object.defineProperty(target, kNBTPrototype, { value: nbtPrototype })
 }
