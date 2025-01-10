@@ -1,5 +1,115 @@
 # Changelog
 
+## 7.7.0
+### @xmcl/client@3.2.0
+#### Features
+
+- feat: Support packet splitting ([3a7c38368cc369f338ed02d7c168c2ae8555340a](https://github.com/voxelum/minecraft-launcher-core-node/commit/3a7c38368cc369f338ed02d7c168c2ae8555340a))
+#### Bug Fixes
+
+- fix: Wrong ipv6 address for fake lan server ([b48d5f5735efc37fe4eda514d6e4b0ecb2da19c9](https://github.com/voxelum/minecraft-launcher-core-node/commit/b48d5f5735efc37fe4eda514d6e4b0ecb2da19c9))
+### @xmcl/core@2.14.0
+#### Features
+
+- feat: Allow override sep for cmd gen ([ae6f2a5b2a5a5cdb8acfe5d83c7cc8bad66f7182](https://github.com/voxelum/minecraft-launcher-core-node/commit/ae6f2a5b2a5a5cdb8acfe5d83c7cc8bad66f7182))
+- feat: Support prepend multiple commands ([fe995cdd83cbc2784d4d130d38067142f08090ad](https://github.com/voxelum/minecraft-launcher-core-node/commit/fe995cdd83cbc2784d4d130d38067142f08090ad))
+- feat: Support use hash instead of id to download assets index ([defd2049fd44e527526238942d7b2745ffcdc4a7](https://github.com/voxelum/minecraft-launcher-core-node/commit/defd2049fd44e527526238942d7b2745ffcdc4a7))
+- feat: Support prepend command ([1011163eaa772b7d200362ccac4aaac92bd8796f](https://github.com/voxelum/minecraft-launcher-core-node/commit/1011163eaa772b7d200362ccac4aaac92bd8796f))
+- feat: add version server json getter ([e90eebfe37655c4635ba2e2b134be71d3adef4b5](https://github.com/voxelum/minecraft-launcher-core-node/commit/e90eebfe37655c4635ba2e2b134be71d3adef4b5))
+#### Bug Fixes
+
+- fix: Handle more stat fs error ([b6a3bc7d834805ee9b22d43a7021bbf5f5623208](https://github.com/voxelum/minecraft-launcher-core-node/commit/b6a3bc7d834805ee9b22d43a7021bbf5f5623208))
+- fix: Correctly link the legacy assets ([67593d1468b97d5e2b4881d4731ea4ffbb3f0d94](https://github.com/voxelum/minecraft-launcher-core-node/commit/67593d1468b97d5e2b4881d4731ea4ffbb3f0d94))
+- fix: Ensure the resolved library path ([1b0263c991ebd6e7c286e32ed846b4dcca20ab6c](https://github.com/voxelum/minecraft-launcher-core-node/commit/1b0263c991ebd6e7c286e32ed846b4dcca20ab6c))
+- fix: Should not assign default memory for server launch ([f50dd793edf3d1f853fa324d11a05129f4057da8](https://github.com/voxelum/minecraft-launcher-core-node/commit/f50dd793edf3d1f853fa324d11a05129f4057da8))
+- fix: Use msa user to launch by default ([06bb7b47d077fe23be1bbe721bb8d4abb01432fd](https://github.com/voxelum/minecraft-launcher-core-node/commit/06bb7b47d077fe23be1bbe721bb8d4abb01432fd))
+- fix: Should detect some special modpack logs ([3129d0a02deb1dc0da183e8e3f6eb400879c7c3a](https://github.com/voxelum/minecraft-launcher-core-node/commit/3129d0a02deb1dc0da183e8e3f6eb400879c7c3a))
+- fix: Should raise issue if file size is 0 ([b22eab2b799021950ae2295e6e93bebb095a1144](https://github.com/voxelum/minecraft-launcher-core-node/commit/b22eab2b799021950ae2295e6e93bebb095a1144))
+- fix: Avoid conflict of DlibraryDirectory arg ([c9988bf778b6c6b10458ef6b418c6bb817077407](https://github.com/voxelum/minecraft-launcher-core-node/commit/c9988bf778b6c6b10458ef6b418c6bb817077407))
+- fix: Forge launch fail due to missing DlibraryDirectory & some assets decompression ([4c530615a5ab56f39bb9d9a6110123ffb0a838f0](https://github.com/voxelum/minecraft-launcher-core-node/commit/4c530615a5ab56f39bb9d9a6110123ffb0a838f0))
+- fix: Correct the natives filter algorithm. Should not parse new natives as common native libraries. ([3cd7d1901e18d9331a5b0e48406657c1907e201e](https://github.com/voxelum/minecraft-launcher-core-node/commit/3cd7d1901e18d9331a5b0e48406657c1907e201e))
+### @xmcl/curseforge@2.2.0
+#### Features
+
+- feat: Support neoforge search type ([61d94b759076f88219e5d243cc91f6eab3a761f9](https://github.com/voxelum/minecraft-launcher-core-node/commit/61d94b759076f88219e5d243cc91f6eab3a761f9))
+#### Bug Fixes
+
+- fix: Adjust curseforge fingerprint interface ([8b4eb88ee8b22df80c8065d4f2d875289e13767f](https://github.com/voxelum/minecraft-launcher-core-node/commit/8b4eb88ee8b22df80c8065d4f2d875289e13767f))
+### @xmcl/file-transfer@2.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: new download impl ([11e5ea1284e6c2063c6ff3f8b779b43921d8bf13](https://github.com/voxelum/minecraft-launcher-core-node/commit/11e5ea1284e6c2063c6ff3f8b779b43921d8bf13))
+#### Bug Fixes
+
+- fix: Wrongly install neoforge/forge client/server ([10fa7885c8b0d39e3a48386867a0ba12b5e6d45d](https://github.com/voxelum/minecraft-launcher-core-node/commit/10fa7885c8b0d39e3a48386867a0ba12b5e6d45d))
+- fix: wrong download url with querystring ([b9c7d7f1c282a8b7f8c44bf60db3a9ce85a67985](https://github.com/voxelum/minecraft-launcher-core-node/commit/b9c7d7f1c282a8b7f8c44bf60db3a9ce85a67985))
+- fix: Some server does not follow range protocol. Add fallback behavior for range download ([3ee268e570f2fae387bf08001ddbf7b40a84bfbc](https://github.com/voxelum/minecraft-launcher-core-node/commit/3ee268e570f2fae387bf08001ddbf7b40a84bfbc))
+- fix: Ensure data is synced before validate ([005bed96ff2eb4636aab51e38a4533e195fe6701](https://github.com/voxelum/minecraft-launcher-core-node/commit/005bed96ff2eb4636aab51e38a4533e195fe6701))
+- fix: validator should not block download ([90f91e0ae4e6fabc82eceb6363bdfd503093c40e](https://github.com/voxelum/minecraft-launcher-core-node/commit/90f91e0ae4e6fabc82eceb6363bdfd503093c40e))
+- fix(file-transfer): Deny the 203 status code ([1d6f450245f3c8ea363b3e3a7ab00c11e9532258](https://github.com/voxelum/minecraft-launcher-core-node/commit/1d6f450245f3c8ea363b3e3a7ab00c11e9532258))
+- fix: The partial download does not work ([77ed295765108ebc7fafcb473624d5fd3fc895dc](https://github.com/voxelum/minecraft-launcher-core-node/commit/77ed295765108ebc7fafcb473624d5fd3fc895dc))
+- fix: Try to avoid fail on false positive rename error ([542cc59a5794c6be8eff6704d030709151326b2a](https://github.com/voxelum/minecraft-launcher-core-node/commit/542cc59a5794c6be8eff6704d030709151326b2a))
+### @xmcl/system@2.2.8
+#### Bug Fixes
+
+- fix: Should use fs instead fs/promises ([31f70b67572bc9c462ac270475a1e3a265796f10](https://github.com/voxelum/minecraft-launcher-core-node/commit/31f70b67572bc9c462ac270475a1e3a265796f10))
+- fix: The wrong browser release config ([91707d524a72601e4e5cdb0641c4e152b345d2f7](https://github.com/voxelum/minecraft-launcher-core-node/commit/91707d524a72601e4e5cdb0641c4e152b345d2f7))
+### @xmcl/gamesetting@3.0.3
+#### Bug Fixes
+
+- fix: Should parse the resource pack with name comma ([4668601281b1f121135f3463bf0c46d82d01ff90](https://github.com/voxelum/minecraft-launcher-core-node/commit/4668601281b1f121135f3463bf0c46d82d01ff90))
+### @xmcl/task@4.1.1
+#### Bug Fixes
+
+- fix: Correctly detect abort error ([71631e0a01a93118964a8cf25c229abc63986de2](https://github.com/voxelum/minecraft-launcher-core-node/commit/71631e0a01a93118964a8cf25c229abc63986de2))
+### @xmcl/modrinth@2.3.2
+#### Bug Fixes
+
+- fix: Should use downloads instead of relevance for modrinth by default ([68dcfc84b5bb91063b53b6cde16d552a6fa328e3](https://github.com/voxelum/minecraft-launcher-core-node/commit/68dcfc84b5bb91063b53b6cde16d552a6fa328e3))
+- fix: Update project type ([490599b6107dbce08575688a2739c869653cdde1](https://github.com/voxelum/minecraft-launcher-core-node/commit/490599b6107dbce08575688a2739c869653cdde1))
+### @xmcl/game-data@1.2.5
+- Dependency @xmcl/system bump **patch**
+### @xmcl/installer@6.0.0
+#### BREAKING CHANGES
+
+- BREAKING CHANGE: make install libraries a multi-download task ([9377c6cbe12477ee0f66b13e9f871dd99cae7186](https://github.com/voxelum/minecraft-launcher-core-node/commit/9377c6cbe12477ee0f66b13e9f871dd99cae7186))
+#### Features
+
+- feat: Support use hash instead of id to download assets index ([defd2049fd44e527526238942d7b2745ffcdc4a7](https://github.com/voxelum/minecraft-launcher-core-node/commit/defd2049fd44e527526238942d7b2745ffcdc4a7))
+- feat: Support custom handler for post processin ([057c1bd312a57e7b72b8d025a55bc760ca0e1124](https://github.com/voxelum/minecraft-launcher-core-node/commit/057c1bd312a57e7b72b8d025a55bc760ca0e1124))
+- feat: Support install server for fabric and forge ([4d0e81ec86a5dfb0f365b7becf0876faf55aa411](https://github.com/voxelum/minecraft-launcher-core-node/commit/4d0e81ec86a5dfb0f365b7becf0876faf55aa411))
+#### Bug Fixes
+
+- fix: Correctly handle the java exec error ([901edb65a8b0907ba3b45b1aa8233e921488d5d1](https://github.com/voxelum/minecraft-launcher-core-node/commit/901edb65a8b0907ba3b45b1aa8233e921488d5d1))
+- fix: Wrongly install neoforge/forge client/server ([10fa7885c8b0d39e3a48386867a0ba12b5e6d45d](https://github.com/voxelum/minecraft-launcher-core-node/commit/10fa7885c8b0d39e3a48386867a0ba12b5e6d45d))
+- fix: Adapt neoforge install script ([c85430741fd8b7644fd5daffc0e05f7ac96578ad](https://github.com/voxelum/minecraft-launcher-core-node/commit/c85430741fd8b7644fd5daffc0e05f7ac96578ad))
+- fix: Add the fetch option to redownload the assets index ([2dc1477d475c938cc684fc863e963511390f513f](https://github.com/voxelum/minecraft-launcher-core-node/commit/2dc1477d475c938cc684fc863e963511390f513f))
+- fix: Wrong install asset path ([2dbf6e890f3b6c0128db601147309ae9144e5e27](https://github.com/voxelum/minecraft-launcher-core-node/commit/2dbf6e890f3b6c0128db601147309ae9144e5e27))
+- fix: Avoid duplicated java exe ([a0e8ec73d28226c278d871e0e8f1177e1cdfef58](https://github.com/voxelum/minecraft-launcher-core-node/commit/a0e8ec73d28226c278d871e0e8f1177e1cdfef58))
+- fix: quilt and fabric version id is mismatched ([3a769999caffb6f1c7c926f1872a0769dc592394](https://github.com/voxelum/minecraft-launcher-core-node/commit/3a769999caffb6f1c7c926f1872a0769dc592394))
+- fix: Add the more java runtime types ([a29534029dabd290021840f9d43b9481d8e6b2a6](https://github.com/voxelum/minecraft-launcher-core-node/commit/a29534029dabd290021840f9d43b9481d8e6b2a6))
+- fix: Force post processing without validate ([3f00ecd3502b6806f2ac1516617108994d42b2dd](https://github.com/voxelum/minecraft-launcher-core-node/commit/3f00ecd3502b6806f2ac1516617108994d42b2dd))
+- fix: Support fabric/forge/neoforge/quilt server ([3abc0e5363f52f5a68e2817e61f9a8fcb37b3a32](https://github.com/voxelum/minecraft-launcher-core-node/commit/3abc0e5363f52f5a68e2817e61f9a8fcb37b3a32))
+- fix: Should parse openjdk 1.8 version also ([b24151782ea8a6a3901561635106c4345578beb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/b24151782ea8a6a3901561635106c4345578beb5))
+- fix: Parse openjdk version ([5f86c178777d11d38296221e1550df0f7599ec04](https://github.com/voxelum/minecraft-launcher-core-node/commit/5f86c178777d11d38296221e1550df0f7599ec04))
+- fix: Wrong maven replacement ([749bc847508948127072bfee63e3c094af873724](https://github.com/voxelum/minecraft-launcher-core-node/commit/749bc847508948127072bfee63e3c094af873724))
+- fix: Should only respect the libraries host resolved result ([718f18094d6851f57592a7702017e701ac07db05](https://github.com/voxelum/minecraft-launcher-core-node/commit/718f18094d6851f57592a7702017e701ac07db05))
+- fix: Revert javaw change due to some incompatible situation ([e9069dd6a97ca7d82b9e3e7a63d66bdaccc30d57](https://github.com/voxelum/minecraft-launcher-core-node/commit/e9069dd6a97ca7d82b9e3e7a63d66bdaccc30d57))
+- fix: Use javaw instead of java ([4a6d6e8250eb0df6609ff884aae44c964050af14](https://github.com/voxelum/minecraft-launcher-core-node/commit/4a6d6e8250eb0df6609ff884aae44c964050af14))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/file-transfer bump **patch**
+- Dependency @xmcl/task bump **patch**
+### @xmcl/mod-parser@3.4.0
+#### Features
+
+- feat: Support switch filename to parse neoforge ([3aaaf6e9a1e7485232f2b75c258bc26ff7d34f82](https://github.com/voxelum/minecraft-launcher-core-node/commit/3aaaf6e9a1e7485232f2b75c258bc26ff7d34f82))
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.2.4
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@2.0.4
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 7.6.0
 ### @xmcl/core@2.13.0
 #### Features
