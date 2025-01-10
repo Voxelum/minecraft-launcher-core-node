@@ -26,7 +26,7 @@ describe('JavaInstaller', () => {
       const inf = parseJavaVersion(`openjdk version "1.8.0-262"
 OpenJDK Runtime Environment (build 1.8.0-262-b10)
 OpenJDK 64-Bit Server VM (build 25.71-b10, mixed mode)`)
-      expect(inf).toEqual({ version: '1.8.0-262', majorVersion: 1, patch: -1 })
+      expect(inf).toEqual({ version: '1.8.0', majorVersion: 8, patch: -1 })
     })
   })
 })
