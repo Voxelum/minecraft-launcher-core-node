@@ -8,7 +8,7 @@
         "test": "vitest",
         "coverage": "vitest run --coverage"
     },
-    "packageManager": "pnpm@8.2.0",
+    "packageManager": "pnpm@9.15.3",
     "devDependencies": {
         "tsx": "^4.19.2",
         "typedoc": "^0.27.6",
