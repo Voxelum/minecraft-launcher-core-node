@@ -17,7 +17,7 @@ jobs:
         ref: ${{ github.sha	}}
     - uses: pnpm/action-setup@v2.0.1
       with:
-        version: 8.2.0
+        version: 9.15.3
     - name: Use Node.js
       uses: actions/setup-node@v2
       with:
