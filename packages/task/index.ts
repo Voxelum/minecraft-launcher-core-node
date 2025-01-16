@@ -144,15 +144,15 @@ export abstract class BaseTask<T> implements Task<T> {
 
   async cancel(timeout?: number) {
     if (this.state !== TaskState.Running && this.state !== TaskState.Idle) { return }
+    this._state = TaskState.Cancelled
     this.reject(new CancelledError())
     try {
       if (timeout) {
-        await Promise.race([this.cancelTask(), new Promise((resolve) => setTimeout(resolve, timeout))])
+        await Promise.race([this.cancelTask(timeout), new Promise((resolve) => setTimeout(resolve, timeout))])
       } else {
         await this.cancelTask()
       }
     } finally {
-      this._state = TaskState.Cancelled
       this.context.onCancelled?.(this)
     }
   }
@@ -205,7 +205,7 @@ export abstract class BaseTask<T> implements Task<T> {
   onChildUpdate(chunkSize: number) { }
 
   protected abstract runTask(): Promise<T>
-  protected abstract cancelTask(): Promise<void>
+  protected abstract cancelTask(timeout?: number): Promise<void>
   protected abstract pauseTask(): Promise<void>
   protected abstract resumeTask(): Promise<void>
 
@@ -296,12 +296,12 @@ export abstract class TaskGroup<T> extends BaseTask<T> {
     this.update(chunkSize)
   }
 
-  protected async cancelTask(): Promise<void> {
-    await Promise.all(this.children.map((task) => task.cancel()))
+  protected async cancelTask(timeout?: number): Promise<void> {
+    await Promise.allSettled(this.children.map((task) => task.cancel(timeout)))
   }
 
   protected async pauseTask(): Promise<void> {
-    await Promise.all(this.children.map((task) => task.pause()))
+    await Promise.allSettled(this.children.map((task) => task.pause()))
   }
 
   protected async resumeTask(): Promise<void> {
@@ -328,19 +328,8 @@ export abstract class TaskGroup<T> extends BaseTask<T> {
         if (errors.length === 1) {
           throw errors[0]
         }
-        const flatten = [] as Error[]
-        const flatError = (e: any) => {
-          if (e instanceof AggregateError) {
-            for (const err of e.errors) {
-              flatError(err)
-            }
-          }
-          flatten.push(e)
-        }
-        for (const e of errors) {
-          flatError(e)
-        }
-        throw new AggregateError(flatten, getErrorMessage?.(errors))
+        const flatten = errors.flatMap((e) => e instanceof AggregateError ? e.errors : e)
+        throw new AggregateError(flatten, getErrorMessage?.(flatten))
       }
       return result
     } catch (e) {
