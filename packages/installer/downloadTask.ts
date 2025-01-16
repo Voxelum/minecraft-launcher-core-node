@@ -95,7 +95,7 @@ export class DownloadMultipleTask extends AbortableTask<void> {
       if (this.isAbortedError(rejecteds[0].reason)) {
         throw rejecteds[0].reason
       }
-      throw new AggregateError(rejecteds.map((r) => r.reason))
+      throw new AggregateError(rejecteds.map((r) => r.reason).flatMap(r => r instanceof AggregateError ? r.errors : r))
     }
   }
 

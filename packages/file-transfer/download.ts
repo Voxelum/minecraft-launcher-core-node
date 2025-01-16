@@ -148,7 +148,7 @@ async function head(url: string, headers: Record<string, string>, dispatcher: Di
   }
 }
 
-async function get(url: string, fd: number, destination: string, headers: Record<string, string>, range: Range | undefined,
+async function get(url: string, fd: number, noRetry: boolean | undefined, headers: Record<string, string>, range: Range | undefined,
   dispatcher: Dispatcher, progress: (url: URL, chunkSize: number, written: number, partLength: number, totalLength: number) => void, signal?: AbortSignal) {
   const parsedUrl = new URL(url)
 
@@ -164,6 +164,8 @@ async function get(url: string, fd: number, destination: string, headers: Record
       headers: requestHeader,
       dispatcher,
       signal,
+      // @ts-expect-error
+      noRetry,
     }, ({ statusCode, headers }) => {
       if (statusCode === 203 || statusCode >= 300) {
         const pass = new PassThrough()
@@ -310,7 +312,7 @@ export async function download(options: DownloadOptions) {
       let writtens = ranges.map(() => 0)
       let totals = ranges.map(() => 0)
       let results = await Promise.all(ranges.map(
-        (range, index) => get(redirectedUrl, fd, output, headers, range, dispatcher, (url, chunk, written, partLength, totalLength) => {
+        (range, index) => get(redirectedUrl, fd, !metadataOrMetadata?.acceptRange, headers, range, dispatcher, (url, chunk, written, partLength, totalLength) => {
           writtens[index] = written
           totals[index] = partLength
           const writtenTotal = writtens.reduce((a, b) => a + b, 0)
@@ -324,7 +326,7 @@ export async function download(options: DownloadOptions) {
         writtens = [0]
         totals = [0]
         results = [
-          await get(redirectedUrl, fd, output, headers, undefined, dispatcher, (url, chunk, written, partLength, totalLength) => {
+          await get(redirectedUrl, fd, !metadataOrMetadata?.acceptRange, headers, undefined, dispatcher, (url, chunk, written, partLength, totalLength) => {
             writtens[0] = written
             totals[0] = partLength
             const writtenTotal = writtens.reduce((a, b) => a + b, 0)
@@ -379,19 +381,7 @@ export async function download(options: DownloadOptions) {
     }
 
     if (aggregate.length > 1) {
-      const flatten = [] as Error[]
-      const flatError = (e: any) => {
-        if (e instanceof AggregateError) {
-          for (const err of e.errors) {
-            flatError(err)
-          }
-        }
-        flatten.push(e)
-      }
-      for (const e of aggregate) {
-        flatError(e)
-      }
-      throw new AggregateError(flatten)
+      throw new AggregateError(aggregate.flatMap(e => e instanceof AggregateError ? e.errors : e))
     }
 
     throw aggregate[0]
