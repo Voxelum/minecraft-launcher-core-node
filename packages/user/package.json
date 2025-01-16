@@ -19,7 +19,7 @@
     "access": "public"
   },
   "dependencies": {
-    "undici": "7.1.1",
+    "undici": "7.2.3",
     "uuid": "^9.0.0"
   },
   "sideEffects": false,
