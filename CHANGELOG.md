@@ -1,5 +1,21 @@
 # Changelog
 
+## 7.8.0
+### @xmcl/file-transfer@2.0.1
+#### Bug Fixes
+
+- fix: Correctly throw aggregate error and add hint noRetry ([c9d232eed139cdb096bd2388f9b7ba11e74110f5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c9d232eed139cdb096bd2388f9b7ba11e74110f5))
+### @xmcl/semver@0.1.0
+#### Features
+
+- feat: Add the fabric semver as package ([1af4026fed9301ede09e7b141e25230e865dc7c3](https://github.com/voxelum/minecraft-launcher-core-node/commit/1af4026fed9301ede09e7b141e25230e865dc7c3))
+### @xmcl/installer@6.0.1
+#### Bug Fixes
+
+- fix: Correctly throw aggregate error and add hint noRetry ([c9d232eed139cdb096bd2388f9b7ba11e74110f5](https://github.com/voxelum/minecraft-launcher-core-node/commit/c9d232eed139cdb096bd2388f9b7ba11e74110f5))
+- Dependency @xmcl/file-transfer bump **patch**
+
+
 ## 7.7.0
 ### @xmcl/client@3.2.0
 #### Features
