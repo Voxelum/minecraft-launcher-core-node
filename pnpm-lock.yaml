@@ -1,3 +1,4 @@
+
 lockfileVersion: '9.0'
 
 settings:
@@ -156,8 +157,8 @@ importers:
   packages/curseforge:
     dependencies:
       undici:
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.2.3
+        version: 7.2.3
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -172,8 +173,8 @@ importers:
         specifier: ^0.37.39
         version: 0.37.39
       undici:
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.2.3
+        version: 7.2.3
     devDependencies:
       '@types/node':
         specifier: ~18
@@ -203,8 +204,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       undici:
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.2.3
+        version: 7.2.3
     devDependencies:
       '@types/node':
         specifier: ~18.15.11
@@ -311,8 +312,8 @@ importers:
         specifier: workspace:^*
         version: link:../unzip
       undici:
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.2.3
+        version: 7.2.3
       yauzl:
         specifier: ^2.10.0
         version: 2.10.0
@@ -401,8 +402,8 @@ importers:
   packages/modrinth:
     dependencies:
       undici:
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.2.3
+        version: 7.2.3
     devDependencies:
       esbuild:
         specifier: ^0.17.16
@@ -420,8 +421,8 @@ importers:
         specifier: ^4.3.2
         version: 4.3.2
       undici:
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.2.3
+        version: 7.2.3
     devDependencies:
       '@types/node':
         specifier: ^18.15.11
@@ -596,8 +597,8 @@ importers:
   packages/user:
     dependencies:
       undici:
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.2.3
+        version: 7.2.3
       uuid:
         specifier: ^9.0.0
         version: 9.0.0
@@ -624,8 +625,8 @@ importers:
         specifier: ~18.15.11
         version: 18.15.11
       undici:
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.2.3
+        version: 7.2.3
 
 packages:
 
@@ -2201,8 +2202,8 @@ packages:
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
 
-  undici@7.1.1:
-    resolution: {integrity: sha512-WZkQ6eH9f5ZT93gaIffsbUaDpBwjbpvmMbfaEhOnbdUneurTESeRxwPGwjI28mRFESH3W3e8Togijh37ptOQqA==}
+  undici@7.2.3:
+    resolution: {integrity: sha512-2oSLHaDalSt2/O/wHA9M+/ZPAOcU2yrSP/cdBYJ+YxZskiPYDSqHbysLSlD7gq3JMqOoJI5O31RVU3BxX/MnAA==}
     engines: {node: '>=20.18.1'}
 
   util-deprecate@1.0.2:
@@ -3714,7 +3715,7 @@ snapshots:
 
   uc.micro@2.1.0: {}
 
-  undici@7.1.1: {}
+  undici@7.2.3: {}
 
   util-deprecate@1.0.2: {}
 
