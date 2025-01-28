@@ -31,6 +31,24 @@ describe('ForgeWebpage', () => {
       expect(ver.version).toEqual('36.1.3')
       expect(ver.installer!.path).toEqual('/maven/net/minecraftforge/forge/1.16.5-36.1.3/forge-1.16.5-36.1.3-installer.jar')
     })
+
+    test('should parse new forge site', async ({ mock }) => {
+      const content = await promises.readFile(path.join(mock, 'sample-forge-new.html'))
+      const page = parse(content.toString())
+      expect(page).toBeTruthy()
+
+      expect(page.versions).toHaveLength(3)
+      expect(page.mcversion).toEqual('1.20.1')
+
+      for (const ver of page.versions) {
+        expect(ver.type).toBeTruthy()
+        expect(ver.version).toBeTruthy()
+
+        expect(ver.installer!.sha1).toBeTruthy()
+        expect(ver.installer!.path).toBeTruthy()
+        expect(ver.installer!.md5).toBeTruthy()
+      }
+    })
   })
 
   // describe("#getWebPage", () => {
