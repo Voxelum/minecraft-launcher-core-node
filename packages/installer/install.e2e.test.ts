@@ -1,10 +1,10 @@
 import { diagnose, MinecraftFolder, MinecraftLocation, Version } from '@xmcl/core'
 import { existsSync } from 'fs'
 import { join } from 'path'
+import { describe, expect, test } from 'vitest'
 import { installForge } from './forge'
-import { ForgeVersion, getVersionList, install, installDependencies, MinecraftVersion } from './index'
+import { ForgeVersion, install, installDependencies, MinecraftVersion } from './index'
 import { getLiteloaderVersionList, installLiteloader, LiteloaderVersion } from './liteloader'
-import { describe, test, expect } from 'vitest'
 
 const javaPath = (global as any).Java
 
@@ -64,6 +64,15 @@ describe.skip('Install', () => {
         url: 'https://launchermeta.mojang.com/v1/packages/b2bc26bec3ed3d4763722941b75a25c0a043b744/1.15.2.json',
         time: '2020-01-24T11:23:24+00:00',
         releaseTime: '2020-01-17T10:03:52+00:00',
+      }, temp)
+    })
+    test.only('should be able to install 1.20.1', async ({ temp }) => {
+      await installVersionClient({
+        id: '1.20.1',
+        type: 'release',
+        url: 'https://launchermeta.mojang.com/v1/packages/7a66a503888c280c377a998c43b584cf70891d1c/1.20.1.json',
+        time: '2025-01-22T06:36:57+00:00',
+        releaseTime: '2023-06-12T13:25:51+00:00',
       }, temp)
     })
   })
@@ -167,6 +176,22 @@ describe.skip('ForgeInstaller', () => {
       .resolves
       .toBeTruthy()
     await installDependencies(await Version.parse(temp, result))
+  })
+  test.only('should install forge 1.20.1-forge-47.3.0', async ({ temp }) => {
+    const meta = {
+      mcversion: '1.20.1',
+      version: '47.3.0',
+      installer: {
+        md5: 'ee3ca303001d1e856558b75b2a5854f1',
+        sha1: '0deb8e547a9e3f098a4c9f082903499703c52f5d',
+        path: '/net/minecraftforge/forge/1.20.1-47.3.0/forge-1.20.1-47.3.0-installer.jar',
+      },
+      type: 'common',
+    }
+    const result = await installForge(meta, MinecraftFolder.from(temp), { java: javaPath })
+    expect(result).toEqual('1.20.1-forge-47.3.0')
+    expect(existsSync(join(temp, 'versions', '1.20.1-forge-47.3.0', '1.20.1-forge-47.3.0.json')))
+      .toBeTruthy()
   })
 }, 100000000)
 

@@ -1,11 +1,11 @@
-import { fdatasync, close as sclose, open as sopen, rename as srename, stat as sstat, unlink as sunlink, write, mkdir as smkdir } from 'fs'
+import { fdatasync, close as sclose, mkdir as smkdir, open as sopen, rename as srename, stat as sstat, unlink as sunlink, write } from 'fs'
 import { dirname } from 'path'
 import { PassThrough, Writable, finished as sfinished } from 'stream'
-import { Agent, Dispatcher, errors, stream } from 'undici'
+import { Dispatcher, errors, stream } from 'undici'
 import { promisify } from 'util'
 // @ts-ignore
 import { parseRangeHeader } from 'undici/lib/core/util'
-import { getDefaultAgentOptions } from './agent'
+import { getDefaultAgent } from './agent'
 import { CheckpointHandler } from './checkpoint'
 import { ProgressController, resolveProgressController } from './progress'
 import { DefaultRangePolicy, Range, RangePolicy } from './rangePolicy'
@@ -123,7 +123,7 @@ async function head(url: string, headers: Record<string, string>, dispatcher: Di
       metadata.total = total
       metadata.acceptRange = headers['accept-ranges'] === 'bytes'
 
-      if (ctx) {
+      if (ctx && ctx.opts) {
         metadata.pathname = ctx.opts.path
         metadata.origin = ctx.opts.origin as string
       }
@@ -249,7 +249,7 @@ export async function download(options: DownloadOptions) {
   const skipPrevalidate = options.skipPrevalidate
   const skipRevalidate = options.skipRevalidate
   const rangePolicy = options?.rangePolicy ?? new DefaultRangePolicy(2 * 1024 * 1024, 4)
-  const dispatcher = options?.dispatcher ?? new Agent(getDefaultAgentOptions())
+  const dispatcher = options?.dispatcher ?? getDefaultAgent()
 
   await mkdir(dirname(destination), { recursive: true }).catch(() => { })
 
