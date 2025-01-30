@@ -243,6 +243,10 @@ export interface ModVersionFile {
    */
   filename: string
   primary: boolean
+  /**
+   * The size of the file in bytes
+   */
+  size: number
 }
 
 export interface License {
