@@ -1,5 +1,12 @@
 # Changelog
 
+## 7.9.0
+### @xmcl/modrinth@2.4.0
+#### Features
+
+- feat(modrinth): Add size type ([bed662fc5cf33f177b9c233c78abb71c323a052a](https://github.com/voxelum/minecraft-launcher-core-node/commit/bed662fc5cf33f177b9c233c78abb71c323a052a))
+
+
 ## 7.8.0
 ### @xmcl/file-transfer@2.0.1
 #### Bug Fixes
