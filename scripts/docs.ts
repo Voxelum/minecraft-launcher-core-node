@@ -1,13 +1,19 @@
 import { existsSync } from 'fs'
 import { link, mkdir, readFile, readdir, writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
-import { Application, Comment, ContainerReflection, DeclarationReflection, ParameterReflection, ReflectionFlag, ReflectionFlags, ReflectionKind, SourceReference, TSConfigReader, TypeDocReader } from 'typedoc'
+import { Application, Comment, ContainerReflection, DeclarationReflection, ParameterReflection, Reflection, ReflectionFlag, ReflectionFlags, ReflectionKind, SourceReference, TSConfigReader, TypeDocReader } from 'typedoc'
 
 const renderLink = (fileName: string, line: number) => `<a href="https://github.com/voxelum/minecraft-launcher-core-node/blob/master/${fileName}#L${line}" target="_blank" rel="noreferrer">${fileName}:${line}</a>`
 const renderSourceReferences = (locations: SourceReference[]) =>
   `<p style="font-size: 14px; color: var(--vp-c-text-2)">
 <strong>Defined in:</strong> ${locations.map((l) => renderLink(l.fileName, l.line)).join(', ')}
 </p>`
+
+function getAlias(r: Reflection) {
+  const fName = r.getFriendlyFullName()
+  const result = fName.substring(fName.indexOf('.') + 1)
+  return result
+}
 
 async function generateDocs() {
   const projectRoot = join(__dirname, '..')
@@ -82,9 +88,9 @@ async function generateDocs() {
           markdown += `(${s.target})`
         } else if (s.target && 'kindOf' in s.target) {
           if (s.target.kindOf([ReflectionKind.ClassOrInterface, ReflectionKind.Namespace, ReflectionKind.Enum])) {
-            markdown += `(${s.target.getFriendlyFullName()})`
+            markdown += `(${getAlias(s.target)})`
           } else {
-            markdown += `(#${s.target.getFriendlyFullName()})`
+            markdown += `(#${getAlias(s.target)})`
           }
         }
       }
@@ -225,7 +231,7 @@ async function generateDocs() {
     if (classes.length > 0) {
       markdown += '## 🧾 Classes\n\n'
       for (const c of classes) {
-        outputs[`${namepsace + '/' + c.getFriendlyFullName()}.md`] = renderNamespaceReflection(c, namepsace + '/' + c.getFriendlyFullName())
+        outputs[`${namepsace + '/' + getAlias(c)}.md`] = renderNamespaceReflection(c, namepsace + '/' + getAlias(c))
       }
       markdown += generateDefinitionTable(classes, namepsace, 'class')
     }
@@ -233,7 +239,7 @@ async function generateDocs() {
     if (interfaces.length > 0) {
       markdown += '## 🤝 Interfaces\n\n'
       for (const i of interfaces) {
-        outputs[`${namepsace + '/' + i.getFriendlyFullName()}.md`] = renderNamespaceReflection(i, namepsace + '/' + i.getFriendlyFullName())
+        outputs[`${namepsace + '/' + getAlias(i)}.md`] = renderNamespaceReflection(i, namepsace + '/' + getAlias(i))
       }
       markdown += generateDefinitionTable(interfaces, namepsace, 'interface')
     }
@@ -241,7 +247,7 @@ async function generateDocs() {
     if (namespaces.length > 0) {
       markdown += '## 🗃️ Namespaces\n\n'
       for (const n of namespaces) {
-        outputs[`${namepsace + '/' + n.getFriendlyFullName()}.md`] = renderNamespaceReflection(n, namepsace + '/' + n.getFriendlyFullName())
+        outputs[`${namepsace + '/' + getAlias(n)}.md`] = renderNamespaceReflection(n, namepsace + '/' + getAlias(n))
       }
       markdown += generateDefinitionTable(namespaces, namepsace, 'namespace')
     }
@@ -249,7 +255,7 @@ async function generateDocs() {
     if (enums.length > 0) {
       markdown += '## 🏳️ Enums\n\n'
       for (const e of enums) {
-        outputs[`${namepsace + '/' + e.getFriendlyFullName()}.md`] = renderNamespaceReflection(e, namepsace + '/' + e.getFriendlyFullName())
+        outputs[`${namepsace + '/' + getAlias(e)}.md`] = renderNamespaceReflection(e, namepsace + '/' + getAlias(e))
       }
       markdown += generateDefinitionTable(enums, namepsace, 'enum')
     }
@@ -350,7 +356,7 @@ async function generateDocs() {
       if (classes.length > 0) {
         markdown += '## 🧾 Classes\n\n'
         for (const c of classes) {
-          const name = `${simpleName}/${c.getFriendlyFullName()}`
+          const name = `${simpleName}/${getAlias(c)}`
 
           sidebarItem.items!.push({
             text: c.name,
@@ -366,7 +372,7 @@ async function generateDocs() {
       if (interfaces.length > 0) {
         markdown += '## 🤝 Interfaces\n\n'
         for (const c of interfaces) {
-          const name = `${simpleName}/${c.getFriendlyFullName()}`
+          const name = `${simpleName}/${getAlias(c)}`
 
           outputs[`${name}.md`] = renderNamespaceReflection(c, name)
         }
@@ -377,7 +383,7 @@ async function generateDocs() {
       if (namespaces.length > 0) {
         markdown += '## 🗃️ Namespaces\n\n'
         for (const c of namespaces) {
-          const name = `${simpleName}/${c.getFriendlyFullName()}`
+          const name = `${simpleName}/${getAlias(c)}`
 
           sidebarItem.items!.push({
             text: c.name,
@@ -393,7 +399,7 @@ async function generateDocs() {
       if (enums.length > 0) {
         markdown += '## 🏳️ Enums\n\n'
         for (const c of enums) {
-          const name = `${simpleName}/${c.getFriendlyFullName()}`
+          const name = `${simpleName}/${getAlias(c)}`
 
           outputs[`${name}.md`] = renderNamespaceReflection(c, name)
         }
@@ -435,7 +441,7 @@ async function generateDocs() {
 
   function generateDefinitionTable(namespaces: DeclarationReflection[], namespace: string, type: string) {
     return `<div class="definition-grid ${type}">` +
-      namespaces.map(c => `<a href="${namespace}/${c.getFriendlyFullName()}">${c.name}</a>`).join('') +
+      namespaces.map(c => `<a href="${namespace}/${getAlias(c)}">${c.name}</a>`).join('') +
       '</div>\n\n'
   }
 
