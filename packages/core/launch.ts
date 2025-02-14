@@ -579,12 +579,8 @@ function unshiftPrependCommand(cmd: string[], prependCommand?: string[] | string
         cmd.push(prependCommand.trim())
       }
     } else {
-      for (const c of prependCommand) {
-        const trimmed = c.trim()
-        if (trimmed.length > 0) {
-          cmd.unshift(trimmed)
-        }
-      }
+      const prepended = prependCommand.filter((c) => c.trim().length > 0)
+      cmd.unshift(...prepended)
     }
   }
 }
