@@ -331,6 +331,14 @@ export class PostProcessFailedError extends Error {
   name = 'PostProcessFailedError'
 }
 
+export class PostProcessValidationFailedError extends PostProcessFailedError {
+  constructor(jarPath: string, commands: string[], message: string, readonly file: string, readonly expect: string, readonly actual: string) {
+    super(jarPath, commands, message)
+  }
+
+  name = 'PostProcessValidationFailedError'
+}
+
 const PAUSEED = Symbol('PAUSED')
 /**
  * Post process the post processors from `InstallProfile`.
@@ -383,12 +391,12 @@ export class PostProcessingTask extends AbortableTask<void> {
       if (!expect) {
         return false
       }
-      const sha1 = await checksum(file, 'sha1').catch((e) => '')
-      if (!sha1) return true // if file not exist, the file is not generated
-      if (!expect) return false // if expect is empty, we just need file exists
+      const sha1 = await checksum(file, 'sha1').catch((e) => '') as string
       const expected = expect.replace(/'/g, '')
+      if (!sha1) return [file, expected, sha1] as const // if file not exist, the file is not generated
+      if (!expect) return false // if expect is empty, we just need file exists
       if (expected !== sha1) {
-        return true
+        return [file, expected, sha1] as const
       }
     }
     return false
@@ -418,8 +426,12 @@ export class PostProcessingTask extends AbortableTask<void> {
       }
       throw e
     }
-    if (proc.outputs && await this.isInvalid(proc.outputs)) {
-      throw new PostProcessFailedError(proc.jar, [options.java ?? 'java', ...cmd], 'Validate the output of process failed!')
+    if (proc.outputs) {
+      const invalidation = await this.isInvalid(proc.outputs)
+      if (invalidation) {
+        const [file, expect, actual] = invalidation
+        throw new PostProcessValidationFailedError(proc.jar, [options.java ?? 'java', ...cmd], 'Validate the output of process failed!', file, expect, actual)
+      }
     }
   }
 
