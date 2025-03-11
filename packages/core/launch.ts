@@ -10,7 +10,7 @@ import { pipeline } from 'stream'
 import { promisify } from 'util'
 import { MinecraftFolder } from './folder'
 import { Platform, getPlatform } from './platform'
-import { checksum, validateSha1 } from './utils'
+import { checksum, isNotNull, validateSha1 } from './utils'
 import { ResolvedLibrary, ResolvedVersion, Version } from './version'
 
 function format(template: string, args: any) {
@@ -342,6 +342,10 @@ export namespace LaunchPrecheck {
         return os === platform.name && platformArch === platform.arch
       }
 
+      if (!n.download.path) {
+        throw Object.assign(new TypeError(`Library ${n.name}(${version.id}) has no download path!`), { library: n })
+      }
+
       const from = resource.getLibraryByPath(n.download.path)
       const promises: Promise<void>[] = []
       const zip = await open(from, { lazyEntries: true, autoClose: false })
@@ -378,10 +382,17 @@ export namespace LaunchPrecheck {
       }
       const missingNatives = natives.filter((n) => !validEntries[n.name])
       if (missingNatives.length !== 0) {
-        await Promise.all(missingNatives.map(extractJar))
-      }
+        const result = await Promise.allSettled(missingNatives.map(extractJar))
+        const errors = result.map((r) => r.status === 'rejected' ? r.reason as Error : undefined).filter(isNotNull)
+        if (errors.length === 0) {
+          return
+        }
+        if (errors.length === 1) {
+          throw errors[0]
+        }
+        throw new AggregateError(errors, 'Some natives failed to extract')
     } else {
-      await Promise.all(natives.map(extractJar))
+      const result = await Promise.allSettled(natives.map(extractJar))
       const entries = await Promise.all(extractedNatives.map(async (n) => ({
         ...n,
         sha1: await checksum(join(native, n.file), 'sha1'),
@@ -391,6 +402,15 @@ export namespace LaunchPrecheck {
         libraries: includedLibs,
       })
       await writeFile(checksumFile, fileContent)
+
+      const errors = result.map((r) => r.status === 'rejected' ? r.reason as Error : undefined).filter(isNotNull)
+      if (errors.length === 0) {
+        return
+      }
+      if (errors.length === 1) {
+        throw errors[0]
+      }
+      throw new AggregateError(errors, 'Some natives failed to extract')
     }
   }
 }
