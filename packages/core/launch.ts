@@ -391,6 +391,7 @@ export namespace LaunchPrecheck {
           throw errors[0]
         }
         throw new AggregateError(errors, 'Some natives failed to extract')
+      }
     } else {
       const result = await Promise.allSettled(natives.map(extractJar))
       const entries = await Promise.all(extractedNatives.map(async (n) => ({
