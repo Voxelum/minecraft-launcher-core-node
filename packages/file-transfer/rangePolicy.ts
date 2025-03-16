@@ -21,21 +21,28 @@ export function resolveRangePolicy(rangeOptions?: RangePolicy | DefaultRangePoli
 
 export interface DefaultRangePolicyOptions {
   /**
-     * The minimum bytes a range should have.
-     * @default 2MB
-     */
+   * The minimum bytes a range should have.
+   * @default 2MB
+   */
   rangeThreshold?: number
 }
 
 export class DefaultRangePolicy implements RangePolicy {
-  constructor(readonly rangeThreshold: number, readonly concurrency: number) { }
+  constructor(
+    readonly rangeThreshold: number,
+    readonly concurrency: number
+  ) { }
+
+  getConcurrency() {
+    return this.concurrency
+  }
 
   computeRanges(total: number): Range[] {
-    const { rangeThreshold: chunkSize, concurrency } = this
-    if (total <= chunkSize) {
+    const { rangeThreshold: minChunkSize } = this
+    if (total <= minChunkSize) {
       return [{ start: 0, end: total }]
     }
-    const partSize = Math.max(chunkSize, Math.floor(total / concurrency))
+    const partSize = Math.max(minChunkSize, Math.floor(total / this.getConcurrency()))
     const ranges: Range[] = []
     for (let cur = 0, chunkSize = 0; cur < total; cur += chunkSize) {
       const remain = total - cur
@@ -43,7 +50,12 @@ export class DefaultRangePolicy implements RangePolicy {
         chunkSize = partSize
         ranges.push({ start: cur, end: cur + chunkSize - 1 })
       } else {
-        ranges.push({ start: cur, end: cur + remain - 1 })
+        const last = ranges[ranges.length - 1]
+        if (!last) {
+          ranges.push({ start: 0, end: remain - 1 })
+        } else {
+          last.end = last.end + remain
+        }
         cur = total
       }
     }

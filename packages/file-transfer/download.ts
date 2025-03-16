@@ -60,8 +60,8 @@ export interface DownloadBaseOptions {
 
 export interface DownloadOptions extends DownloadBaseOptions {
   /**
-     * The url or urls (fallback) of the resource
-     */
+   * The url or urls (fallback) of the resource
+   */
   url: string | string[]
   /**
    * The header of the request
@@ -89,18 +89,6 @@ export interface DownloadOptions extends DownloadBaseOptions {
   pendingFile?: string
 }
 
-interface Context {
-  history: URL[]
-  opts: Dispatcher.DispatchOptions
-}
-interface Metadata {
-  origin?: string
-  pathname?: string
-  offset: number
-  total: number
-  acceptRange: boolean
-}
-
 async function getWithRange(
   url: string,
   fd: number,
@@ -109,12 +97,13 @@ async function getWithRange(
   dispatcher: Dispatcher,
   onHeaderMetadata: (metadata: HeaderMetadata) => void,
   onDataWritten: (chunkSize: number, metadata: HeaderMetadata) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) {
   let writable: Writable | undefined
   try {
     const requestHeader = { ...headers }
-    if (range.end !== -1) {
+    const isInitializeRequest = range.end === -1
+    if (!isInitializeRequest) {
       requestHeader.range = `bytes=${range.start}-${range.end}`
     }
     const noRetry = {
@@ -162,18 +151,19 @@ async function getWithRange(
       onHeaderMetadata(metadata)
 
       function writeBuf(chunk: Buffer, callback: (err?: Error | null) => void) {
-        write(fd, chunk, 0, chunk.length, rangeTracker.start, (err) => {
-          if (rangeTracker.start > rangeTracker.end) {
-            callback(new RangeError('REACHED_THE_END'))
+        const reachLimit = (range.start + chunk.length) > range.end
+        const killRequest = isInitializeRequest && reachLimit
+        write(fd, chunk, 0, chunk.length, range.start, (err) => {
+          range.start += chunk.length
+          onDataWritten(chunk.length, metadata)
+          if (killRequest) {
+            callback(new Error('REACHED_THE_END'))
           } else {
             callback(err)
           }
-          rangeTracker.start += chunk.length
-          onDataWritten(chunk.length, metadata)
         })
       }
 
-      const rangeTracker = range
       const writable = new Writable({
         write(chunk, encoding, callback) {
           writeBuf(chunk, callback)
@@ -215,7 +205,7 @@ class DownloadJob {
     readonly onProgress: (url: URL | string, chunkSize: number, progress: number, total: number) => void,
     readonly dispatcher: Dispatcher,
     readonly rangePolicy: RangePolicy,
-    readonly signal?: AbortSignal
+    readonly signal?: AbortSignal,
   ) { }
 
   readonly progress = [{
@@ -234,7 +224,7 @@ class DownloadJob {
       if (metadata.range) {
         // start to divide the range
         const ranges = this.rangePolicy.computeRanges(metadata.contentLength)
-        if (ranges.length > 1) {
+        if (ranges.length > 0) {
           const [first, ...pendings] = ranges
           progress[0].end = first.end
           progress.push(...pendings)
@@ -243,6 +233,8 @@ class DownloadJob {
           }, (chunkSize) => {
             this.onProgress(metadata.url, chunkSize, sumProgress(), metadata.contentLength)
           }, this.signal)))
+        } else {
+          progress[0].end = metadata.contentLength - 1
         }
       } else {
         progress[0].end = metadata.contentLength - 1
@@ -252,7 +244,10 @@ class DownloadJob {
       this.onProgress(metadata.url, chunkSize, sumProgress(), metadata.contentLength)
     }, this.signal)
 
-    return await Promise.all([initial, ...rangesPromises])
+    const initialResult = await initial
+    const result = await Promise.all(rangesPromises)
+
+    return [initialResult, ...result]
   }
 }
 
