@@ -1,5 +1,26 @@
 # Changelog
 
+## 7.9.0
+### @xmcl/core@2.14.1
+#### Bug Fixes
+
+- fix: Throw error if lib is invalid during checkNative ([9b44c61275175bd6f7fed5cdc09d40946267f256](https://github.com/voxelum/minecraft-launcher-core-node/commit/9b44c61275175bd6f7fed5cdc09d40946267f256))
+- fix: Prepend command order is reversed ([c29170993e26d78096706a8adf210a146c2807f3](https://github.com/voxelum/minecraft-launcher-core-node/commit/c29170993e26d78096706a8adf210a146c2807f3))
+### @xmcl/file-transfer@2.0.2
+#### Bug Fixes
+
+- fix: Download range is not properly awaited ([ae261df3265617e22e2f21197aa1d20c70cfe6be](https://github.com/voxelum/minecraft-launcher-core-node/commit/ae261df3265617e22e2f21197aa1d20c70cfe6be))
+- fix: Correctly handle redirect and download abort ([aef15383998b53d9d0b39a4c0639fd51acbfc10e](https://github.com/voxelum/minecraft-launcher-core-node/commit/aef15383998b53d9d0b39a4c0639fd51acbfc10e))
+- fix: The update progress is incorrect ([40f67587b95ed11822b691f23948df4d638f554e](https://github.com/voxelum/minecraft-launcher-core-node/commit/40f67587b95ed11822b691f23948df4d638f554e))
+### @xmcl/modrinth@2.4.0
+#### Features
+
+- feat(modrinth): Add size type ([bed662fc5cf33f177b9c233c78abb71c323a052a](https://github.com/voxelum/minecraft-launcher-core-node/commit/bed662fc5cf33f177b9c233c78abb71c323a052a))
+### @xmcl/installer@6.0.2
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/file-transfer bump **patch**
+
+
 ## 7.8.0
 ### @xmcl/file-transfer@2.0.1
 #### Bug Fixes
