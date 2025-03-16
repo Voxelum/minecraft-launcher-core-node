@@ -16,7 +16,7 @@ export function resolveRangePolicy(rangeOptions?: RangePolicy | DefaultRangePoli
   if (isRangePolicy(rangeOptions)) {
     return rangeOptions
   }
-  return new DefaultRangePolicy(rangeOptions?.rangeThreshold ?? 2 * 1024 * 1024, 4)
+  return new DefaultRangePolicy(rangeOptions?.rangeThreshold ?? 1024 * 1024, 4)
 }
 
 export interface DefaultRangePolicyOptions {
@@ -43,12 +43,7 @@ export class DefaultRangePolicy implements RangePolicy {
         chunkSize = partSize
         ranges.push({ start: cur, end: cur + chunkSize - 1 })
       } else {
-        const last = ranges[ranges.length - 1]
-        if (!last) {
-          ranges.push({ start: 0, end: remain - 1 })
-        } else {
-          last.end = last.end + remain
-        }
+        ranges.push({ start: cur, end: cur + remain - 1 })
         cur = total
       }
     }
