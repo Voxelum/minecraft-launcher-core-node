@@ -105,7 +105,7 @@ async function getWithRange(
   url: string,
   fd: number,
   headers: Record<string, string>,
-  range: Range | undefined,
+  range: Range,
   dispatcher: Dispatcher,
   onHeaderMetadata: (metadata: HeaderMetadata) => void,
   onDataWritten: (chunkSize: number, metadata: HeaderMetadata) => void,
@@ -114,7 +114,7 @@ async function getWithRange(
   let writable: Writable | undefined
   try {
     const requestHeader = { ...headers }
-    if (range) {
+    if (range.end !== -1) {
       requestHeader.range = `bytes=${range.start}-${range.end}`
     }
     const noRetry = {
@@ -139,7 +139,7 @@ async function getWithRange(
 
       const length = headers['content-length'] ? parseInt(headers['content-length'] as string) : 0
       const rangeHeader = parseRangeHeader(headers['content-range'])
-      if (range?.start && rangeHeader?.start && range.start !== rangeHeader.start) {
+      if (range.start && rangeHeader?.start && range.start !== rangeHeader.start) {
         throw new RangeError(`Range mismatch. ${range.start} !== ${rangeHeader.start}`)
       }
 
@@ -155,7 +155,7 @@ async function getWithRange(
         url: redirectedUrl ? redirectedUrl : url,
         contentLength: length,
         range: headers['accept-ranges'] === 'bytes' ? {
-          offset: rangeHeader?.start ?? range?.start ?? 0,
+          offset: rangeHeader?.start ?? range.start,
           total: rangeHeader?.size ?? length,
         } : undefined,
       }
@@ -173,7 +173,7 @@ async function getWithRange(
         })
       }
 
-      const rangeTracker = range ?? { start: 0, end: length - 1 }
+      const rangeTracker = range
       const writable = new Writable({
         write(chunk, encoding, callback) {
           writeBuf(chunk, callback)
@@ -229,7 +229,7 @@ class DownloadJob {
     const progress = this.progress
     const rangesPromises = [] as Promise<unknown>[]
     const sumProgress = () => this.contentLength - progress.map(v => v.end - v.start + 1).reduce((a, b) => a + b, 0)
-    const initial = getWithRange(this.url, this.fd, this.headers, undefined, this.dispatcher, (metadata) => {
+    const initial = getWithRange(this.url, this.fd, this.headers, progress[0], this.dispatcher, (metadata) => {
       this.contentLength = metadata.contentLength
       if (metadata.range) {
         // start to divide the range
