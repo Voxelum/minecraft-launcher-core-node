@@ -163,13 +163,13 @@ async function getWithRange(
 
       function writeBuf(chunk: Buffer, callback: (err?: Error | null) => void) {
         write(fd, chunk, 0, chunk.length, rangeTracker.start, (err) => {
-          rangeTracker.start += chunk.length
-          onDataWritten(chunk.length, metadata)
           if (rangeTracker.start > rangeTracker.end) {
             callback(new RangeError('REACHED_THE_END'))
           } else {
             callback(err)
           }
+          rangeTracker.start += chunk.length
+          onDataWritten(chunk.length, metadata)
         })
       }
 
@@ -238,7 +238,7 @@ class DownloadJob {
           const [first, ...pendings] = ranges
           progress[0].end = first.end
           progress.push(...pendings)
-          rangesPromises.push(...pendings.map((range) => getWithRange(this.url, this.fd, this.headers, range, this.dispatcher, () => {
+          rangesPromises.push(...pendings.map((range) => getWithRange(metadata.url, this.fd, this.headers, range, this.dispatcher, () => {
             this.onProgress(metadata.url, 0, sumProgress(), metadata.contentLength)
           }, (chunkSize) => {
             this.onProgress(metadata.url, chunkSize, sumProgress(), metadata.contentLength)
