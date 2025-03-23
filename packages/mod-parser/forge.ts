@@ -182,6 +182,8 @@ export interface ForgeModTOMLData {
      * A list of dependencies of this mod
      */
   dependencies: { modId: string; mandatory: boolean; versionRange: string; ordering: 'NONE' | 'BEFORE' | 'AFTER'; side: 'BOTH' | 'CLIENT' | 'SERVER' }[]
+
+  provides: string[]
   /**
      * The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
      */
