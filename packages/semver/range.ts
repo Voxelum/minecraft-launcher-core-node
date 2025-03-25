@@ -147,8 +147,16 @@ export function parseVersionRange(rangeString: string): VersionRange {
             }
         }
 
-        const version = new FabricSemanticVersion(term, true) // Assume a parseVersion function exists
-        return new SingleVersionPredicate(operator, version)
+        try {
+            const version = new FabricSemanticVersion(term, true) // Assume a parseVersion function exists
+            return new SingleVersionPredicate(operator, version)
+        } catch (e) {
+            if (e instanceof Error && e.message === "Versions of form 'x' or 'X' not allowed!") {
+                const version = new FabricSemanticVersion(term, false)
+                return new SingleVersionPredicate(operator, version)
+            }
+            throw e
+        }
     })
 
     return predicates.length === 1 ? predicates[0] : new MultiVersionPredicate(predicates)
