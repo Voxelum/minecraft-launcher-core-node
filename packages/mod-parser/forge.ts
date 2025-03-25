@@ -492,6 +492,7 @@ export async function readForgeModToml(mod: ForgeModInput, manifest?: Record<str
           description: tomlMod.description ?? '',
           displayURL: tomlMod.displayURL ?? root.displayURL as string ?? '',
           updateJSONURL: tomlMod.updateJSONURL ?? root.updateJSONURL ?? '',
+          provides: tomlMod.provides ?? [],
           dependencies: [],
           logoFile: tomlMod.logoFile ?? '',
           credits: tomlMod.credits ?? '',
