@@ -65,6 +65,12 @@ class JsonTask extends AbortableTask<string> {
     const librariesUrl = `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/libraries/${this.environment}.json`
     const versionInfo = this.manifest.minecraftVersions.find((v) => v.tag === this.tag)!
 
+    if (!versionInfo) {
+      throw Object.assign(new Error(`Cannot find version info for ${this.tag}`), {
+        name: 'VersionInfoNotFoundError',
+      })
+    }
+
     interface LibInfo {
       name: string
       url: string
