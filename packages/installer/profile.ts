@@ -70,6 +70,9 @@ export interface PostProcessOptions extends SpawnJavaOptions {
    * Custom handlers to handle the post processor
    */
   handler?: (postProcessor: PostProcessor) => Promise<boolean>
+
+  onPostProcessFailed?: (proc: PostProcessor, jar: string, classPaths: string, mainClass: string, args: string[], error: unknown) => void
+  onPostProcessSuccess?: (proc: PostProcessor, jar: string, classPaths: string, mainClass: string, args: string[]) => void
 }
 
 export interface InstallProfileOption extends LibraryOptions, InstallSideOption, PostProcessOptions {
@@ -420,7 +423,11 @@ export class PostProcessingTask extends AbortableTask<void> {
           process.kill(1)
         }
       })
+      options.onPostProcessSuccess?.(proc, jarRealPath, cp, mainClass, proc.args)
     } catch (e) {
+      if (e !== PAUSEED) {
+        options.onPostProcessFailed?.(proc, jarRealPath, cp, mainClass, proc.args, e)
+      }
       if (e instanceof Error && e.name === 'Error') {
         throw new PostProcessFailedError(proc.jar, [options.java ?? 'java', ...cmd], e.message)
       }
