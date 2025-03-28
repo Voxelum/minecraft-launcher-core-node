@@ -16,7 +16,7 @@ describe('Forge', () => {
   test('should not crash if the toml does not have the dependencies', async ({ mock }) => {
     const metadata = await readForgeModToml(`${mock}/mods/sample-mod-1.13-no-deps.jar`)
     // eslint-disable-next-line no-template-curly-in-string
-    expect(metadata).toEqual([{ authors: 'mezz', credits: '', dependencies: [], description: 'JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n', displayName: 'Just Enough Items', displayURL: 'https://minecraft.curseforge.com/projects/jei', issueTrackerURL: 'https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue', loaderVersion: '[14,)', logoFile: '', modLoader: 'javafml', modid: 'jei', updateJSONURL: '', version: '${file.jarVersion}' }])
+    expect(metadata).toEqual([{ authors: 'mezz', credits: '', dependencies: [], description: 'JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n', displayName: 'Just Enough Items', displayURL: 'https://minecraft.curseforge.com/projects/jei', issueTrackerURL: 'https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue', loaderVersion: '[14,)', logoFile: '', modLoader: 'javafml', modid: 'jei', provides: [], updateJSONURL: '', version: '${file.jarVersion}' }])
   })
 
   test('should read >1.13 forge mod jar', async ({ mock }) => {
@@ -61,6 +61,7 @@ describe('Forge', () => {
           displayURL: 'https://minecraft.curseforge.com/projects/jei',
           logoFile: '',
           modid: 'jei',
+          provides: [],
           updateJSONURL: '',
           issueTrackerURL: 'https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue',
           modLoader: 'javafml',
