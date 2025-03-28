@@ -1,5 +1,41 @@
 # Changelog
 
+## 7.9.0
+### @xmcl/core@2.14.1
+#### Bug Fixes
+
+- fix: Throw error if lib is invalid during checkNative ([9b44c61275175bd6f7fed5cdc09d40946267f256](https://github.com/voxelum/minecraft-launcher-core-node/commit/9b44c61275175bd6f7fed5cdc09d40946267f256))
+- fix: Prepend command order is reversed ([c29170993e26d78096706a8adf210a146c2807f3](https://github.com/voxelum/minecraft-launcher-core-node/commit/c29170993e26d78096706a8adf210a146c2807f3))
+### @xmcl/file-transfer@2.0.2
+#### Bug Fixes
+
+- fix: Download range is not properly awaited ([ae261df3265617e22e2f21197aa1d20c70cfe6be](https://github.com/voxelum/minecraft-launcher-core-node/commit/ae261df3265617e22e2f21197aa1d20c70cfe6be))
+- fix: Correctly handle redirect and download abort ([aef15383998b53d9d0b39a4c0639fd51acbfc10e](https://github.com/voxelum/minecraft-launcher-core-node/commit/aef15383998b53d9d0b39a4c0639fd51acbfc10e))
+- fix: The update progress is incorrect ([40f67587b95ed11822b691f23948df4d638f554e](https://github.com/voxelum/minecraft-launcher-core-node/commit/40f67587b95ed11822b691f23948df4d638f554e))
+### @xmcl/mod-parser@3.4.1
+#### Bug Fixes
+
+- fix: Forge should parsed toml with provides ([2cd15f8d943ef6e5dc0be4091ae2601501d85fb5](https://github.com/voxelum/minecraft-launcher-core-node/commit/2cd15f8d943ef6e5dc0be4091ae2601501d85fb5))
+### @xmcl/modrinth@2.4.0
+#### Features
+
+- feat(modrinth): Add size type ([bed662fc5cf33f177b9c233c78abb71c323a052a](https://github.com/voxelum/minecraft-launcher-core-node/commit/bed662fc5cf33f177b9c233c78abb71c323a052a))
+### @xmcl/semver@0.1.1
+#### Bug Fixes
+
+- fix: Fallback parse some corner case for fabric version ([02a53b63a3bca7582dce73ed71635d614271dc47](https://github.com/voxelum/minecraft-launcher-core-node/commit/02a53b63a3bca7582dce73ed71635d614271dc47))
+### @xmcl/installer@6.1.0
+#### Features
+
+- feat: Add option to replace url in getVersionList #319 ([d26402c4c7716f3988cde6c1c570d418a8927c6d](https://github.com/voxelum/minecraft-launcher-core-node/commit/d26402c4c7716f3988cde6c1c570d418a8927c6d))
+- feat: Add hook for postprocessing ([5a5bbeef01aa5d47c2ffe3911306aafde4ca3c57](https://github.com/voxelum/minecraft-launcher-core-node/commit/5a5bbeef01aa5d47c2ffe3911306aafde4ca3c57))
+#### Bug Fixes
+
+- fix: handle labymod version not found error ([a40ff639e6ab86a84935a9c4a8be58415ddbfb73](https://github.com/voxelum/minecraft-launcher-core-node/commit/a40ff639e6ab86a84935a9c4a8be58415ddbfb73))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/file-transfer bump **patch**
+
+
 ## 7.8.0
 ### @xmcl/file-transfer@2.0.1
 #### Bug Fixes
