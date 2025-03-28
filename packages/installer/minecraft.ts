@@ -89,9 +89,10 @@ export async function getVersionList(options: {
   /**
    * Request dispatcher
    */
-  fetch?: typeof fetch
+  fetch?: typeof fetch,
+  remote?: string
 } = {}): Promise<MinecraftVersionList> {
-  const response = await (options.fetch ?? fetch)(DEFAULT_VERSION_MANIFEST_URL)
+  const response = await (options.fetch ?? fetch)(options.remote ?? DEFAULT_VERSION_MANIFEST_URL);
   return await response.json() as any
 }
 
