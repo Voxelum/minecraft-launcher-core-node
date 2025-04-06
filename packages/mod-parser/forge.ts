@@ -1,5 +1,5 @@
 import { resolveFileSystem, FileSystem } from '@xmcl/system'
-import { parse as parseToml } from 'toml'
+import { TomlDate, parse as parseToml } from 'smol-toml'
 import { AnnotationVisitor, ClassReader, ClassVisitor, MethodVisitor, Opcodes } from '@xmcl/asm'
 
 /**
@@ -481,26 +481,28 @@ export async function readForgeModToml(mod: ForgeModInput, manifest?: Record<str
     if (root.mods instanceof Array) {
       for (const mod of root.mods) {
         const tomlMod = mod
-        const modObject: ForgeModTOMLData = {
-          modid: tomlMod.modId ?? '',
-          authors: tomlMod.authors ?? root.authors as string ?? '',
-          // eslint-disable-next-line no-template-curly-in-string
-          version: tomlMod.version === '${file.jarVersion}' && typeof manifest?.['Implementation-Version'] === 'string'
-            ? manifest?.['Implementation-Version']
-            : tomlMod.version,
-          displayName: tomlMod.displayName ?? '',
-          description: tomlMod.description ?? '',
-          displayURL: tomlMod.displayURL ?? root.displayURL as string ?? '',
-          updateJSONURL: tomlMod.updateJSONURL ?? root.updateJSONURL ?? '',
-          provides: tomlMod.provides ?? [],
-          dependencies: [],
-          logoFile: tomlMod.logoFile ?? '',
-          credits: tomlMod.credits ?? '',
-          loaderVersion: root.loaderVersion as string ?? '',
-          modLoader: root.modLoader as string ?? '',
-          issueTrackerURL: root.issueTrackerURL as string ?? '',
+        if (typeof tomlMod === 'object' && !(tomlMod instanceof TomlDate) && !(tomlMod instanceof Array)) {
+          const modObject: ForgeModTOMLData = {
+            modid: tomlMod.modId as string ?? '',
+            authors: tomlMod.authors as string ?? root.authors as string ?? '',
+            // eslint-disable-next-line no-template-curly-in-string
+            version: tomlMod.version === '${file.jarVersion}' && typeof manifest?.['Implementation-Version'] === 'string'
+              ? manifest?.['Implementation-Version']
+              : tomlMod.version as string,
+            displayName: tomlMod.displayName as string ?? '',
+            description: tomlMod.description as string ?? '',
+            displayURL: tomlMod.displayURL as string ?? root.displayURL as string ?? '',
+            updateJSONURL: tomlMod.updateJSONURL as string ?? root.updateJSONURL ?? '',
+            provides: tomlMod.provides as string[] ?? [],
+            dependencies: [],
+            logoFile: tomlMod.logoFile as string ?? '',
+            credits: tomlMod.credits as string ?? '',
+            loaderVersion: root.loaderVersion as string ?? '',
+            modLoader: root.modLoader as string ?? '',
+            issueTrackerURL: root.issueTrackerURL as string ?? '',
+          }
+          all.push(modObject)
         }
-        all.push(modObject)
       }
     }
     if (typeof root.dependencies === 'object') {
