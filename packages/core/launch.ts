@@ -186,7 +186,10 @@ export interface LaunchOption {
    * @see {@link generateArguments}
    */
   prechecks?: LaunchPrecheck[]
-
+  /**
+   * Demo mode.
+   */
+  demo?: boolean
   /**
    * The spawn process function. Used for spawn the java process at the end.
    *
@@ -820,6 +823,10 @@ export async function generateArguments(options: LaunchOption) {
         cmd.push('--width', options.resolution.width.toString())
       }
     }
+  }
+  
+  if (options.isDemo) {
+    cmd.push('--demo')
   }
 
   unshiftPrependCommand(cmd, options.prependCommand)
