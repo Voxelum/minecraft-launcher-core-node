@@ -520,6 +520,8 @@ export class InstallLibraryTask extends DownloadMultipleTask {
 }
 
 export class InstallAssetTask extends DownloadMultipleTask {
+  #total = 0
+
   constructor(assets: AssetInfo[], folder: MinecraftFolder, options: AssetsOptions) {
     const assetsHosts = normalizeArray(options.assetsHost || [])
 
@@ -551,9 +553,13 @@ export class InstallAssetTask extends DownloadMultipleTask {
       }
     }))
 
-    this._total = assets.reduce((a, b) => a + b.size, 0)
+    this.#total = assets.reduce((a, b) => a + b.size, 0)
     this.name = 'asset'
     this.param = { count: assets.length }
+  }
+
+  get total(): number {
+    return this.#total
   }
 }
 
