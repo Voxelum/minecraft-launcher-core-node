@@ -3,7 +3,7 @@
  * @module @xmcl/modrinth
  */
 
-import { Category, GameVersion, License, Loader, Project, ProjectVersion, TeamMember, User } from './types'
+import { Category, Collection, GameVersion, License, Loader, Project, ProjectVersion, TeamMember, User } from './types'
 
 export * from './types'
 
@@ -426,6 +426,126 @@ export class ModrinthV2Client {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
     const result = await response.json() as Loader[]
+    return result
+  }
+
+  async getCollections(userId: string, signal?: AbortSignal) {
+    const url = new URL(this.baseUrl + `/v3/user/${userId}/collections`)
+    const response = await this.fetch(url, {
+      headers: this.headers,
+      signal,
+    })
+    if (response.status !== 200) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+    const result = await response.json() as Collection[]
+    return result
+  }
+
+  async uppdateCollectionIcon(collectionId: string, iconData: ArrayBuffer, mimeType: string, signal?: AbortSignal) {
+    const ext = mimeType.split('/')[1]
+    const url = new URL(this.baseUrl + `/v3/collection/${collectionId}/icon?ext=${ext}`)
+    const response = await this.fetch(url, {
+      method: 'PATCH',
+      headers: {
+        ...this.headers,
+        'content-type': mimeType,
+      },
+      body: iconData,
+      signal,
+    })
+    if (response.status !== 200) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+  }
+
+  async createCollection(name: string, description: string, projectIds: string[], signal?: AbortSignal) {
+    const url = new URL(this.baseUrl + '/v3/collection')
+    const response = await this.fetch(url, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify({
+        name,
+        description,
+        projects: projectIds,
+      }),
+      signal,
+    })
+    if (response.status !== 200) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+    const result = await response.json() as Collection
+    return result
+  }
+
+  async updateCollection(collectionId: string, projectIds: string[], signal?: AbortSignal) {
+    const url = new URL(this.baseUrl + `/v3/collection/${collectionId}`)
+    const response = await this.fetch(url, {
+      method: 'PATCH',
+      headers: this.headers,
+      body: JSON.stringify({ new_projects: projectIds }),
+      signal,
+    })
+    if (response.status !== 200) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+  }
+
+  async getAuthenticatedUser(signal?: AbortSignal) {
+    const url = new URL(this.baseUrl + '/v2/user')
+    const response = await this.fetch(url, {
+      headers: this.headers,
+    })
+    if (response.status !== 200) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+    const result = await response.json() as User
+    return result
+  }
+
+  /**
+   * @see https://docs.modrinth.com/api/operations/followproject/#_top
+   */
+  async followProject(id: string, signal?: AbortSignal) {
+    const url = new URL(this.baseUrl + `/v2/project/${id}/follow`)
+    const response = await this.fetch(url, {
+      method: 'POST',
+      headers: this.headers,
+      signal,
+    })
+    if (!response.ok) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+  }
+
+  /**
+   * @see https://docs.modrinth.com/api/operations/unfollowproject/
+   */
+  async unfollowProject(id: string, signal?: AbortSignal) {
+    const url = new URL(this.baseUrl + `/v2/project/${id}/follow`)
+    const response = await this.fetch(url, {
+      method: 'DELETE',
+      headers: this.headers,
+      signal,
+    })
+    if (!response.ok) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+  }
+
+  /**
+   * @see https://docs.modrinth.com/api/operations/getfollowedprojects/#_top
+   */
+  async getUserFollowedProjects(userId: string, signal?: AbortSignal) {
+    const url = new URL(this.baseUrl + `/v2/user/${userId}/follows`)
+    const response = await this.fetch(url, {
+      headers: this.headers,
+      signal,
+    })
+    if (response.status !== 200) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+    const result = await response.json() as Project[]
     return result
   }
 

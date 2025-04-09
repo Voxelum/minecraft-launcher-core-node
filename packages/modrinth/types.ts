@@ -57,6 +57,19 @@ export interface GameVersion {
   version_type: string
 }
 
+export interface Collection {
+   id: string
+   user: string
+   name: string
+   description: string
+   icon_url?: string
+   color?: string
+   status: 'listed'
+   created: Date
+   updated: Date
+   projects: string[]
+}
+
 export interface Project {
   /**
     * The ID of the mod, encoded as a base62 string
