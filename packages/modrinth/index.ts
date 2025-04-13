@@ -461,17 +461,21 @@ export class ModrinthV2Client {
 
   async createCollection(name: string, description: string, projectIds: string[], signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v3/collection')
+    const body = JSON.stringify({
+      name,
+      description,
+      projects: projectIds,
+    }, (key, value) => !value ? undefined : value)
     const response = await this.fetch(url, {
       method: 'POST',
-      headers: this.headers,
-      body: JSON.stringify({
-        name,
-        description,
-        projects: projectIds,
-      }),
+      headers: {
+        ...this.headers,
+        'content-type': 'application/json',
+      },
+      body,
       signal,
     })
-    if (response.status !== 200) {
+    if (!response.ok) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
     const result = await response.json() as Collection
@@ -482,11 +486,14 @@ export class ModrinthV2Client {
     const url = new URL(this.baseUrl + `/v3/collection/${collectionId}`)
     const response = await this.fetch(url, {
       method: 'PATCH',
-      headers: this.headers,
+      headers: {
+        ...this.headers,
+        'content-type': 'application/json',
+      },
       body: JSON.stringify({ new_projects: projectIds }),
       signal,
     })
-    if (response.status !== 200) {
+    if (!response.ok) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
   }
