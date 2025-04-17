@@ -7,7 +7,7 @@ import { delimiter, dirname, join, relative, sep } from 'path'
 import { ZipFile } from 'yauzl'
 import { convertClasspathToMaven, parseManifest } from './manifest'
 import { InstallLibraryTask, InstallSideOption, LibraryOptions } from './minecraft'
-import { checksum, missing, SpawnJavaOptions, waitProcess } from './utils'
+import { SpawnJavaOptions, checksum, missing, waitProcess } from './utils'
 
 export interface PostProcessor {
   /**
@@ -186,6 +186,68 @@ export function installByProfile(installProfile: InstallProfile, minecraft: Mine
   return installByProfileTask(installProfile, minecraft, options).startAndWait()
 }
 
+function parseArgumentsFromArgsFile(content: string, parentDir: string, serverProfile: Version) {
+  const args = content.split('\n').map(v => v.trim().split(' ')).flatMap(v => v).filter(v => v)
+  // find the Main class or -jar
+  let mainClass: string = ''
+  let jar: string | undefined
+  let found = false
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith('-')) {
+      if (args[i] === '-jar') {
+        jar = join(parentDir, args[i + 1])
+        found = true
+        i++
+        continue
+      }
+    } else if (!mainClass) {
+      mainClass = args[i]
+      found = true
+      continue
+    }
+    if (!found) {
+      if (!args[i].startsWith('-D')) {
+        serverProfile.arguments!.jvm.push(args[i], args[i + 1])
+        i++
+      } else {
+        serverProfile.arguments!.jvm.push(args[i])
+      }
+    } else {
+      serverProfile.arguments!.game.push(args[i])
+    }
+  }
+
+  serverProfile.mainClass = mainClass
+
+  return jar
+}
+
+async function parseJar(minecraftFolder: MinecraftFolder, jar: string, installProfile: InstallProfile, serverVersion: Version) {
+  let zip: ZipFile | undefined
+  try {
+    const jsonContent: Version = JSON.parse(await readFile(minecraftFolder.getVersionJson(installProfile.version), 'utf-8'))
+    zip = await open(jar, { lazyEntries: true, autoClose: false })
+    const [entry] = await filterEntries(zip, ['META-INF/MANIFEST.MF'])
+    if (entry) {
+      const manifestContent = await readEntry(zip, entry).then((b) => b.toString())
+      const result = parseManifest(manifestContent)
+      serverVersion.mainClass = result.mainClass
+      const cp = [...result.classPath, relative(minecraftFolder.libraries, jar).replaceAll(sep, '/')]
+      serverVersion.libraries.push(...jsonContent.libraries.filter(l => !l.name.endsWith(':client')))
+      const mavenPaths = convertClasspathToMaven(cp)
+      for (const name of mavenPaths) {
+        if (serverVersion.libraries.find(l => l.name === name)) continue
+        if (name.startsWith(':')) continue
+        serverVersion.libraries.push({ name })
+      }
+    }
+  } catch (e) {
+    throw new PostProcessBadJarError(jar, e as any)
+  } finally {
+    zip?.close()
+  }
+}
+
 /**
  * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
  *
@@ -219,89 +281,49 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
       let txtPath: string | undefined
       for (const p of installProfile.processors) {
         txtPath = p.args.find(a => a.startsWith('{ROOT}') && a.endsWith(argsText))
-        if (txtPath) break
-      }
-      if (!txtPath) { return }
-      txtPath = txtPath.replace('{ROOT}', minecraftFolder.root)
-
-      if (await missing(txtPath)) {
-        throw new Error(`No ${argsText} found in the forge jar`)
-      }
-
-      const content = await readFile(txtPath, 'utf-8')
-      const args = content.split('\n').map(v => v.trim().split(' ')).flatMap(v => v).filter(v => v)
-      // find the Main class or -jar
-      let mainClass: string = ''
-      let jar: string | undefined
-      const game = [] as string[]
-      const jvm = [] as string[]
-      let found = false
-      for (let i = 0; i < args.length; i++) {
-        if (args[i].startsWith('-')) {
-          if (args[i] === '-jar') {
-            jar = join(dirname(txtPath), args[i + 1])
-            found = true
-            i++
-            continue
+        if (txtPath) {
+          txtPath = txtPath.replace('{ROOT}', minecraftFolder.root)
+          if (await missing(txtPath)) {
+            throw new Error(`No ${argsText} found in the forge jar`)
           }
-        } else if (!mainClass) {
-          mainClass = args[i]
-          found = true
-          continue
-        }
-        if (!found) {
-          if (!args[i].startsWith('-D')) {
-            jvm.push(args[i], args[i + 1])
-            i++
-          } else {
-            jvm.push(args[i])
-          }
-        } else {
-          game.push(args[i])
+          break
         }
       }
-
-      const libraries: Version.Library[] = []
-      if (jar) {
-        // Open the jar and find the main class
-        let zip: ZipFile | undefined
-        try {
-          const jsonContent: Version = JSON.parse(await readFile(minecraftFolder.getVersionJson(installProfile.version), 'utf-8'))
-          zip = await open(jar, { lazyEntries: true, autoClose: false })
-          const [entry] = await filterEntries(zip, ['META-INF/MANIFEST.MF'])
-          if (entry) {
-            const manifestContent = await readEntry(zip, entry).then((b) => b.toString())
-            const result = parseManifest(manifestContent)
-            mainClass = result.mainClass
-            const cp = [...result.classPath, relative(minecraftFolder.libraries, jar).replaceAll(sep, '/')]
-            libraries.push(...jsonContent.libraries.filter(l => !l.name.endsWith(':client')))
-            for (const name of convertClasspathToMaven(cp)) {
-              if (libraries.find(l => l.name === name)) continue
-              libraries.push({ name })
-            }
-          }
-        } catch (e) {
-          throw new PostProcessBadJarError(jar, e as any)
-        } finally {
-          zip?.close()
-        }
-      }
-
       const serverProfile: Version = {
         id: installProfile.version,
-        libraries,
+        libraries: [],
         type: 'release',
         arguments: {
-          game,
-          jvm,
+          game: [],
+          jvm: [],
         },
-        jar: jar && !mainClass ? relative(minecraftFolder.libraries, jar).replaceAll(sep, '/') : undefined,
         releaseTime: new Date().toJSON(),
         time: new Date().toJSON(),
         minimumLauncherVersion: 13,
-        mainClass,
+        mainClass: '',
         inheritsFrom: installProfile.minecraft,
       }
+
+      let jar: string | undefined
+
+      if (!txtPath) {
+        // legacy
+        const info = LibraryInfo.resolve(installProfile.path)
+        const libPath = minecraftFolder.getLibraryByPath(info.path)
+        jar = libPath
+      } else {
+        const content = await readFile(txtPath, 'utf-8')
+        jar = parseArgumentsFromArgsFile(content, dirname(txtPath), serverProfile)
+      }
+
+      if (jar) {
+        await parseJar(minecraftFolder, jar, installProfile, serverProfile)
+      }
+
+      if (!serverProfile.mainClass) {
+        throw new PostProcessNoMainClassError(jar!)
+      }
+
       await writeFile(join(minecraftFolder.getVersionRoot(serverProfile.id), 'server.json'), JSON.stringify(serverProfile, null, 4))
 
       const resolvedLibraries = VersionJson.resolveLibraries(serverProfile.libraries)
