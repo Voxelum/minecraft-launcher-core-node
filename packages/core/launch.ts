@@ -130,7 +130,6 @@ export interface LaunchOption {
    * The `launch` function will do it for you, but if you want to spawn process by yourself, remember to do that.
    */
   extraExecOption?: SpawnOptions
-  isDemo?: boolean
 
   /**
    * Native directory. It's .minecraft/versions/<version>/<version>-natives by default.
@@ -660,7 +659,7 @@ export function generateArgumentsServer(options: ServerOptions, _delimiter: stri
  */
 export async function generateArguments(options: LaunchOption) {
   if (!options.version) { throw new TypeError('Version cannot be null!') }
-  if (!options.isDemo) { options.isDemo = false }
+  if (!options.demo) { options.demo = false }
 
   const currentPlatform = options.platform ?? getPlatform()
   const gamePath = !isAbsolute(options.gamePath) ? resolve(options.gamePath) : options.gamePath
@@ -824,8 +823,8 @@ export async function generateArguments(options: LaunchOption) {
       }
     }
   }
-  
-  if (options.isDemo) {
+
+  if (options.demo) {
     cmd.push('--demo')
   }
 
