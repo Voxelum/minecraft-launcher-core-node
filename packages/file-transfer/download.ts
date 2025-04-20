@@ -87,6 +87,10 @@ export interface DownloadOptions extends DownloadBaseOptions {
    * Will first download to pending file and then rename to actual file
    */
   pendingFile?: string
+  /**
+   * The expected total size of the file.
+   */
+  expectedTotal?: number
 }
 
 async function getWithRange(
@@ -275,6 +279,7 @@ export async function download(options: DownloadOptions) {
   const skipRevalidate = options.skipRevalidate
   const rangePolicy = options?.rangePolicy ?? new DefaultRangePolicy(2 * 1024 * 1024, 4)
   const dispatcher = options?.dispatcher ?? getDefaultAgent()
+  const expectedTotal = options.expectedTotal
 
   await mkdir(dirname(destination), { recursive: true }).catch(() => { })
 
@@ -323,7 +328,7 @@ export async function download(options: DownloadOptions) {
       })
 
       const job = new DownloadJob(url, fd, headers, (url, chunkSize, progress, total) => {
-        progressController(typeof url === 'string' ? new URL(url) : url, chunkSize, progress, total)
+        progressController(typeof url === 'string' ? new URL(url) : url, chunkSize, progress, !total && expectedTotal ? expectedTotal : total)
       }, dispatcher, rangePolicy, abortSignal)
 
       const results = await job.run()
