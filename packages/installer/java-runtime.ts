@@ -1,10 +1,10 @@
 import { getPlatform, Platform } from '@xmcl/core'
 import { ChecksumValidatorOptions, DownloadBaseOptions, DownloadOptions, getDownloadBaseOptions, Validator } from '@xmcl/file-transfer'
-import { Task, task } from '@xmcl/task'
-import { link } from 'fs/promises'
+import { Task, task, TaskRoutine } from '@xmcl/task'
+import { link, readFile } from 'fs/promises'
 import { dirname, join } from 'path'
 import { Dispatcher, request } from 'undici'
-import { DownloadMultipleTask } from './downloadTask'
+import { DownloadMultipleTask, DownloadTask } from './downloadTask'
 import { ensureDir, ParallelTaskOptions } from './utils'
 /**
  * Contain all java runtimes basic info
@@ -252,6 +252,39 @@ export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifest
   }
 }
 
+
+async function downloadFiles(this: TaskRoutine<any>, destination: string, options: InstallJavaRuntimeWithJsonOptions | InstallJavaRuntimeOptions, manifest: JavaRuntimeManifest) {
+  const downloadLzma = false
+  await this.yield(new DownloadMultipleTask(Object.entries(manifest.files)
+    .filter(([file, entry]) => entry.type === 'file')
+    .map(([file, entry]) => {
+      const fEntry = entry as FileEntry
+      const downloadInfo = (downloadLzma && fEntry.downloads.lzma) ? fEntry.downloads.lzma : fEntry.downloads.raw
+      const isLzma = downloadInfo === fEntry.downloads.lzma
+      const dest = isLzma ? (join(destination, file) + '.lzma') : join(destination, file)
+      const urls = normalizeUrls(downloadInfo.url, options.apiHost)
+      const hash = downloadInfo.sha1
+      const downloadOptions: DownloadOptions = {
+        url: urls,
+        validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
+        destination: dest,
+        ...getDownloadBaseOptions(options),
+      }
+      return downloadOptions
+    })
+  ).setName('download'))
+  await Promise.all(Object.entries(manifest.files)
+    .filter(([file, entry]) => entry.type !== 'file')
+    .map(async ([file, entry]) => {
+      const dest = join(destination, file)
+      if (entry.type === 'directory') {
+        await ensureDir(dest)
+      } else if (entry.type === 'link') {
+        await link(dest, join(dirname(dest), entry.target)).catch(() => { })
+      }
+    }))
+}
+
 export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, ParallelTaskOptions {
   /**
      * The alternative download host for the file
@@ -283,34 +316,57 @@ export function installJavaRuntimeTask(options: InstallJavaRuntimeOptions): Task
   return task('installJavaRuntime', async function () {
     const destination = options.destination
     const manifest = options.manifest
-    const downloadLzma = false
-    await this.yield(new DownloadMultipleTask(Object.entries(manifest.files)
-      .filter(([file, entry]) => entry.type === 'file')
-      .map(([file, entry]) => {
-        const fEntry = entry as FileEntry
-        const downloadInfo = (downloadLzma && fEntry.downloads.lzma) ? fEntry.downloads.lzma : fEntry.downloads.raw
-        const isLzma = downloadInfo === fEntry.downloads.lzma
-        const dest = isLzma ? (join(destination, file) + '.lzma') : join(destination, file)
-        const urls = normalizeUrls(downloadInfo.url, options.apiHost)
-        const hash = downloadInfo.sha1
-        const downloadOptions: DownloadOptions = {
-          url: urls,
-          validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
-          destination: dest,
-          ...getDownloadBaseOptions(options),
-        }
-        return downloadOptions
-      })
-    ).setName('download'))
-    await Promise.all(Object.entries(manifest.files)
-      .filter(([file, entry]) => entry.type !== 'file')
-      .map(async ([file, entry]) => {
-        const dest = join(destination, file)
-        if (entry.type === 'directory') {
-          await ensureDir(dest)
-        } else if (entry.type === 'link') {
-          await link(dest, join(dirname(dest), entry.target)).catch(() => { })
-        }
-      }))
+    await downloadFiles.call(this, destination, options, manifest)
+  })
+}
+
+
+export interface InstallJavaRuntimeWithJsonOptions extends DownloadBaseOptions, ParallelTaskOptions {
+  /**
+   * The alternative download host for the file
+   */
+  apiHost?: string | string[]
+  /**
+   * The destination of this installation
+   */
+  destination: string
+  /**
+   * The actual manfiest metadata.
+   */
+  target: JavaRuntimeTarget
+  /**
+   * Download lzma compressed version instead of raw version.
+   * - If `true`, it will just download lzma file version, you need to decompress by youself!
+   * - If `Function`, it will use that function to decompress the file!
+   */
+  lzma?: boolean | ((compressedFilePath: string, targetPath: string) => Promise<void>)
+
+  checksumValidatorResolver?: (checksum: ChecksumValidatorOptions) => Validator
+}
+
+/**
+ * Install java runtime from java runtime manifest
+ * @param options The options to install java runtime
+ */
+export function installJavaRuntimeWithJsonTask(options: InstallJavaRuntimeWithJsonOptions): Task<void> {
+  return task('installJavaRuntime', async function () {
+    const destination = options.destination
+    const target = options.target
+    const downloadOptions = getDownloadBaseOptions(options)
+    const jsonPath = join(destination, 'manifest.json')
+    await this.yield(new DownloadTask({
+      destination: jsonPath,
+      url: target.manifest.url,
+      validator: {
+        algorithm: 'sha1',
+        hash: target.manifest.sha1,
+      },
+      ...downloadOptions,
+    }).setName('json'))
+
+    const content = await readFile(jsonPath, 'utf-8')
+    const manifest: JavaRuntimeManifest = JSON.parse(content)
+
+    await downloadFiles.call(this, destination, options, manifest)
   })
 }
