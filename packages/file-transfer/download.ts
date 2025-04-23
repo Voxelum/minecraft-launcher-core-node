@@ -27,7 +27,6 @@ export function getDownloadBaseOptions<T extends DownloadBaseOptions>(options?: 
     rangePolicy: options.rangePolicy,
     dispatcher: options.dispatcher,
     checkpointHandler: options.checkpointHandler,
-    skipHead: options.skipHead,
     skipRevalidate: options.skipRevalidate,
     skipPrevalidate: options.skipPrevalidate,
   }
@@ -50,8 +49,6 @@ export interface DownloadBaseOptions {
    * The checkpoint handler to save & restore the download progress
    */
   checkpointHandler?: CheckpointHandler
-
-  skipHead?: boolean
 
   skipRevalidate?: boolean
 
@@ -87,6 +84,10 @@ export interface DownloadOptions extends DownloadBaseOptions {
    * Will first download to pending file and then rename to actual file
    */
   pendingFile?: string
+  /**
+   * The expected total size of the file.
+   */
+  expectedTotal?: number
 }
 
 async function getWithRange(
@@ -151,7 +152,7 @@ async function getWithRange(
       onHeaderMetadata(metadata)
 
       function writeBuf(chunk: Buffer, callback: (err?: Error | null) => void) {
-        const reachLimit = (range.start + chunk.length) > range.end
+        const reachLimit = range.end !== -1 && (range.start + chunk.length) > range.end
         const killRequest = isInitializeRequest && reachLimit
         write(fd, chunk, 0, chunk.length, range.start, (err) => {
           range.start += chunk.length
@@ -202,11 +203,14 @@ class DownloadJob {
     readonly url: string,
     readonly fd: number,
     readonly headers: Record<string, string>,
+    readonly expectedTotal: number | undefined,
     readonly onProgress: (url: URL | string, chunkSize: number, progress: number, total: number) => void,
     readonly dispatcher: Dispatcher,
     readonly rangePolicy: RangePolicy,
     readonly signal?: AbortSignal,
-  ) { }
+  ) { 
+    this.contentLength = expectedTotal ?? 0
+  }
 
   readonly progress = [{
     start: 0,
@@ -275,6 +279,7 @@ export async function download(options: DownloadOptions) {
   const skipRevalidate = options.skipRevalidate
   const rangePolicy = options?.rangePolicy ?? new DefaultRangePolicy(2 * 1024 * 1024, 4)
   const dispatcher = options?.dispatcher ?? getDefaultAgent()
+  const expectedTotal = options.expectedTotal
 
   await mkdir(dirname(destination), { recursive: true }).catch(() => { })
 
@@ -322,8 +327,8 @@ export async function download(options: DownloadOptions) {
         pendingFile,
       })
 
-      const job = new DownloadJob(url, fd, headers, (url, chunkSize, progress, total) => {
-        progressController(typeof url === 'string' ? new URL(url) : url, chunkSize, progress, total)
+      const job = new DownloadJob(url, fd, headers, expectedTotal, (url, chunkSize, progress, total) => {
+        progressController(typeof url === 'string' ? new URL(url) : url, chunkSize, progress, !total && expectedTotal ? expectedTotal : total)
       }, dispatcher, rangePolicy, abortSignal)
 
       const results = await job.run()
