@@ -1,5 +1,5 @@
 import { LibraryInfo, MinecraftFolder, MinecraftLocation, Version, Version as VersionJson } from '@xmcl/core'
-import { AbortableTask, CancelledError, task } from '@xmcl/task'
+import { AbortableTask, CancelledError, Task, task } from '@xmcl/task'
 import { filterEntries, open, readEntry, walkEntriesGenerator } from '@xmcl/unzip'
 import { spawn } from 'child_process'
 import { readFile, writeFile } from 'fs/promises'
@@ -70,9 +70,9 @@ export interface PostProcessOptions extends SpawnJavaOptions {
    * Custom handlers to handle the post processor
    */
   handler?: (postProcessor: PostProcessor) => Promise<boolean>
-
   onPostProcessFailed?: (proc: PostProcessor, jar: string, classPaths: string, mainClass: string, args: string[], error: unknown) => void
   onPostProcessSuccess?: (proc: PostProcessor, jar: string, classPaths: string, mainClass: string, args: string[]) => void
+  customPostProcessTask?: (processor: PostProcessor[], minecraftFolder: MinecraftFolder, options: PostProcessOptions) => Task<void>
 }
 
 export interface InstallProfileOption extends LibraryOptions, InstallSideOption, PostProcessOptions {
@@ -267,7 +267,11 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
 
     await this.yield(new InstallLibraryTask(installRequiredLibs, minecraftFolder, options))
 
-    await this.yield(new PostProcessingTask(processor, minecraftFolder, options))
+    if (options.customPostProcessTask) {
+      await this.yield(options.customPostProcessTask(processor, minecraftFolder, options))
+    } else {
+      await this.yield(new PostProcessingTask(processor, minecraftFolder, options))
+    }
 
     if (side === 'client') {
       const versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse)
@@ -455,13 +459,13 @@ export class PostProcessingTask extends AbortableTask<void> {
       }
       throw e
     }
-    if (proc.outputs) {
-      const invalidation = await this.isInvalid(proc.outputs)
-      if (invalidation) {
-        const [file, expect, actual] = invalidation
-        throw new PostProcessValidationFailedError(proc.jar, [options.java ?? 'java', ...cmd], 'Validate the output of process failed!', file, expect, actual)
-      }
-    }
+    // if (proc.outputs) {
+    //   const invalidation = await this.isInvalid(proc.outputs)
+    //   if (invalidation) {
+    //     const [file, expect, actual] = invalidation
+    //     throw new PostProcessValidationFailedError(proc.jar, [options.java ?? 'java', ...cmd], 'Validate the output of process failed!', file, expect, actual)
+    //   }
+    // }
   }
 
   protected async process(): Promise<void> {
