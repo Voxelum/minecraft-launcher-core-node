@@ -286,6 +286,9 @@ export async function download(options: DownloadOptions) {
   if (!skipPrevalidate && validator) {
     const error = await validator.validate(destination, urls[0]).catch((e) => e)
     if (!error) {
+      if (options.expectedTotal) {
+        progressController(new URL(urls[0]), 0, options.expectedTotal, options.expectedTotal)
+      }
       // file is already downloaded and validated
       return
     }
