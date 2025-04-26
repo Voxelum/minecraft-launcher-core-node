@@ -354,9 +354,10 @@ export function installJavaRuntimeWithJsonTask(options: InstallJavaRuntimeWithJs
     const target = options.target
     const downloadOptions = getDownloadBaseOptions(options)
     const jsonPath = join(destination, 'manifest.json')
+    const manifestUrl = normalizeUrls(target.manifest.url, options.apiHost)
     await this.yield(new DownloadTask({
       destination: jsonPath,
-      url: target.manifest.url,
+      url: manifestUrl,
       validator: {
         algorithm: 'sha1',
         hash: target.manifest.sha1,
