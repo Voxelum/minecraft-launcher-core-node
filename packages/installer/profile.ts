@@ -72,7 +72,7 @@ export interface PostProcessOptions extends SpawnJavaOptions {
   handler?: (postProcessor: PostProcessor) => Promise<boolean>
   onPostProcessFailed?: (proc: PostProcessor, jar: string, classPaths: string, mainClass: string, args: string[], error: unknown) => void
   onPostProcessSuccess?: (proc: PostProcessor, jar: string, classPaths: string, mainClass: string, args: string[]) => void
-  customPostProcessTask?: (processor: PostProcessor[], minecraftFolder: MinecraftFolder, options: PostProcessOptions) => Task<void>
+  customPostProcessTask?: (processor: PostProcessor[], minecraftFolder: MinecraftFolder, options: PostProcessOptions, originalTask: () => Task<void>) => Task<void>
 }
 
 export interface InstallProfileOption extends LibraryOptions, InstallSideOption, PostProcessOptions {
@@ -268,7 +268,7 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
     await this.yield(new InstallLibraryTask(installRequiredLibs, minecraftFolder, options))
 
     if (options.customPostProcessTask) {
-      await this.yield(options.customPostProcessTask(processor, minecraftFolder, options))
+      await this.yield(options.customPostProcessTask(processor, minecraftFolder, options, () => new PostProcessingTask(processor, minecraftFolder, options)))
     } else {
       await this.yield(new PostProcessingTask(processor, minecraftFolder, options))
     }
