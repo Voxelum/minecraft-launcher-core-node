@@ -281,8 +281,6 @@ export async function download(options: DownloadOptions) {
   const dispatcher = options?.dispatcher ?? getDefaultAgent()
   const expectedTotal = options.expectedTotal
 
-  await mkdir(dirname(destination), { recursive: true }).catch(() => { })
-
   if (!skipPrevalidate && validator) {
     const error = await validator.validate(destination, urls[0]).catch((e) => e)
     if (!error) {
@@ -306,7 +304,8 @@ export async function download(options: DownloadOptions) {
   }
 
   const output = pendingFile || destination
-  const fd = await open(output, 'w').catch((e) => {
+  await mkdir(dirname(destination), { recursive: true }).catch(() => { })
+  function assignError(e: Error) {
     e.stack = new Error().stack
     Object.assign(e, {
       phase: 'open',
@@ -315,6 +314,16 @@ export async function download(options: DownloadOptions) {
       destination,
       pendingFile,
     })
+  }
+  const fd = await open(output, 'w').catch(async (e) => {
+    if (e.code === 'ENOENT') {
+      await mkdir(dirname(destination), { recursive: true })
+      return await open(output, 'w').catch((e) => {
+        assignError(e)
+        throw e
+      })
+    }
+    assignError(e)
     throw e
   })
 
