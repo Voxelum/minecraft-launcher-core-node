@@ -109,7 +109,7 @@ export interface LaunchOption {
   /**
    * Resolution. This will add --height & --width or --fullscreen to the java arguments
    */
-  resolution?: { width?: number; height?: number; fullscreen?: true }
+  resolution?: { width?: number; height?: number; fullscreen?: boolean }
   /**
    * Extra jvm options. This will append after to generated options.
    * If this is empty, the `DEFAULT_EXTRA_JVM_ARGS` will be used.
