@@ -28,14 +28,13 @@ export async function openFileSystem(basePath: string | Uint8Array): Promise<Fil
             // absolute path convert to relative path
             e.fileName = fileName.replace(/^[a-zA-Z]:/, '').replace(/^\//, '')
           }
-          if (fileName.split("/").indexOf("..") !== -1) {
-            return "invalid relative path: " + fileName;
-          }
-          // all good
           return null;
         },
       })
-      const entries = await readAllEntries(zip)
+      const entries = await readAllEntries(zip).then(es =>
+        // ignore entries with '..' in the path
+        es.filter(e => e.fileName.split("/").indexOf("..") === -1)
+      )
       const entriesRecord: Record<string, Entry> = {}
       for (const entry of entries) {
         entriesRecord[entry.fileName] = entry
