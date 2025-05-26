@@ -299,7 +299,7 @@ export async function diagnoseAssetIndex(resolvedVersion: ResolvedVersion, minec
 
 export async function diagnoseJar(resolvedVersion: ResolvedVersion, minecraft: MinecraftFolder, options?: DiagnoseOptions & { side?: 'client' | 'server' }): Promise<MinecraftJarIssue | undefined> {
   const side = options?.side ?? 'client'
-  const jarPath = minecraft.getVersionJar(resolvedVersion.minecraftVersion, side)
+  const jarPath = minecraft.getVersionJar(resolvedVersion.inheritances.length === 1 ? resolvedVersion.id : resolvedVersion.minecraftVersion, side)
   const issue = await diagnoseFile(
     { file: jarPath, expectedChecksum: resolvedVersion.downloads[side]?.sha1 ?? '', role: 'minecraftJar', hint: 'Problem on Minecraft jar! Please consider to use Installer.instalVersion to fix.' })
   if (issue) {
