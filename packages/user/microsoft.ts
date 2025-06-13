@@ -111,7 +111,12 @@ export class MicrosoftAuthenticator {
     })
 
     if (xstsResponse.status !== 200) {
-      throw new Error(`Failed to authorize with xbox live, status code: ${xstsResponse.status}: ${await xstsResponse.text()}}`)
+      const errText = await xstsResponse.text()
+      let errObj = {} as any
+      try {
+        errObj = JSON.parse(errText)
+      } catch (e) {}
+      throw Object.assign(new Error(`Failed to authorize with xbox live, status code: ${xstsResponse.status}: ${errText}}`), errObj)
     }
 
     const result = await xstsResponse.json() as XBoxResponse
