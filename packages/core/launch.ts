@@ -107,6 +107,11 @@ export interface LaunchOption {
    */
   server?: { ip: string; port?: number }
   /**
+   * Directly launch to a server using quickPlayMultiplayer option (for newer Minecraft versions)
+   * This will use --quickPlayMultiplayer instead of --server and --port
+   */
+  quickPlayMultiplayer?: string
+  /**
    * Resolution. This will add --height & --width or --fullscreen to the java arguments
    */
   resolution?: { width?: number; height?: number; fullscreen?: boolean }
@@ -805,7 +810,9 @@ export async function generateArguments(options: LaunchOption) {
   if (options.extraMCArgs) {
     cmd.push(...options.extraMCArgs)
   }
-  if (options.server) {
+  if (options.quickPlayMultiplayer) {
+    cmd.push('--quickPlayMultiplayer', options.quickPlayMultiplayer)
+  } else if (options.server) {
     cmd.push('--server', options.server.ip)
     if (options.server.port) {
       cmd.push('--port', options.server.port.toString())
@@ -853,4 +860,14 @@ function normalizeArguments(args: Version.LaunchArgument[], platform: Platform, 
     }
     return result
   }, [])
+}
+
+/**
+ * Create a quickPlayMultiplayer string from server IP and optional port
+ * @param ip The server IP address
+ * @param port The server port (optional, defaults to 25565 if not specified)
+ * @returns A formatted string for quickPlayMultiplayer option
+ */
+export function createQuickPlayMultiplayer(ip: string, port?: number): string {
+  return port ? `${ip}:${port}` : ip
 }

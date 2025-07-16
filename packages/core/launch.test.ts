@@ -2,7 +2,7 @@ import assert from 'assert'
 import { spawnSync } from 'child_process'
 import { EOL } from 'os'
 import * as path from 'path'
-import { DEFAULT_EXTRA_JVM_ARGS, generateArguments, generateArgumentsServer } from './launch'
+import { DEFAULT_EXTRA_JVM_ARGS, generateArguments, generateArgumentsServer, createQuickPlayMultiplayer } from './launch'
 import { describe, test, expect } from 'vitest'
 
 function getJavaVersion(javaPath: string) {
@@ -280,6 +280,49 @@ describe('Launcher', () => {
       })
       expect(args[args.indexOf('--server') + 1]).toEqual(server.ip)
       expect(args[args.indexOf('--port') + 1]).toEqual(server.port.toString())
+    })
+    test('should generate correct command with quickPlayMultiplayer', async ({ mock }) => {
+      const args = await generateArguments({
+        version: '1.14.4', gamePath: mock, javaPath: '/test/java', quickPlayMultiplayer: '127.0.0.1:25565',
+      })
+      expect(args[args.indexOf('--quickPlayMultiplayer') + 1]).toEqual('127.0.0.1:25565')
+      // Should not contain old server arguments
+      expect(args.indexOf('--server')).toBe(-1)
+      expect(args.indexOf('--port')).toBe(-1)
+    })
+    test('should prefer quickPlayMultiplayer over server option', async ({ mock }) => {
+      const server = {
+        ip: '192.168.1.1',
+        port: 25565,
+      }
+      const args = await generateArguments({
+        version: '1.14.4', 
+        gamePath: mock, 
+        javaPath: '/test/java', 
+        server,
+        quickPlayMultiplayer: '127.0.0.1:25565',
+      })
+      expect(args[args.indexOf('--quickPlayMultiplayer') + 1]).toEqual('127.0.0.1:25565')
+      // Should not contain old server arguments when quickPlayMultiplayer is present
+      expect(args.indexOf('--server')).toBe(-1)
+      expect(args.indexOf('--port')).toBe(-1)
+    })
+  })
+
+  describe('#createQuickPlayMultiplayer', () => {
+    test('should create quickPlayMultiplayer string with IP only', () => {
+      const result = createQuickPlayMultiplayer('127.0.0.1')
+      expect(result).toEqual('127.0.0.1')
+    })
+
+    test('should create quickPlayMultiplayer string with IP and port', () => {
+      const result = createQuickPlayMultiplayer('127.0.0.1', 25565)
+      expect(result).toEqual('127.0.0.1:25565')
+    })
+
+    test('should create quickPlayMultiplayer string with custom port', () => {
+      const result = createQuickPlayMultiplayer('play.example.com', 8080)
+      expect(result).toEqual('play.example.com:8080')
     })
   })
 })
