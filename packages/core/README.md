@@ -66,3 +66,41 @@ Detach from the parent process. So your launcher's exit/crash won't affact the M
 ```ts
 const proc: Promise<ChildProcess> = Launcher.launch({ gamePath, javaPath, version, extraExecOption: { detached: true } });
 ```
+
+#### Launching with Server Connection
+
+For newer Minecraft versions, use the `quickPlayMultiplayer` option to directly connect to a server:
+
+```ts
+import { launch, createQuickPlayMultiplayer } from "@xmcl/core"
+
+// Option 1: Use quickPlayMultiplayer directly
+const proc = launch({ 
+  gamePath, 
+  javaPath, 
+  version,
+  quickPlayMultiplayer: 'play.hypixel.net:25565'
+});
+
+// Option 2: Use helper function
+const proc = launch({ 
+  gamePath, 
+  javaPath, 
+  version,
+  quickPlayMultiplayer: createQuickPlayMultiplayer('mc.example.com', 8080)
+});
+```
+
+For backward compatibility, the legacy `server` option is still supported:
+
+```ts
+// Legacy server option (still works)
+const proc = launch({ 
+  gamePath, 
+  javaPath, 
+  version,
+  server: { ip: 'play.hypixel.net', port: 25565 }
+});
+```
+
+**Note:** When both `quickPlayMultiplayer` and `server` options are provided, `quickPlayMultiplayer` takes precedence.
