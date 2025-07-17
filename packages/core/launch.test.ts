@@ -290,7 +290,7 @@ describe('Launcher', () => {
       expect(args.indexOf('--server')).toBe(-1)
       expect(args.indexOf('--port')).toBe(-1)
     })
-    test('should prefer quickPlayMultiplayer over server option', async ({ mock }) => {
+    test('should allow both quickPlayMultiplayer and server options for compatibility', async ({ mock }) => {
       const server = {
         ip: '192.168.1.1',
         port: 25565,
@@ -303,9 +303,9 @@ describe('Launcher', () => {
         quickPlayMultiplayer: '127.0.0.1:25565',
       })
       expect(args[args.indexOf('--quickPlayMultiplayer') + 1]).toEqual('127.0.0.1:25565')
-      // Should not contain old server arguments when quickPlayMultiplayer is present
-      expect(args.indexOf('--server')).toBe(-1)
-      expect(args.indexOf('--port')).toBe(-1)
+      // Should also contain legacy server arguments for compatibility
+      expect(args[args.indexOf('--server') + 1]).toEqual('192.168.1.1')
+      expect(args[args.indexOf('--port') + 1]).toEqual('25565')
     })
   })
 

@@ -103,4 +103,15 @@ const proc = launch({
 });
 ```
 
-**Note:** When both `quickPlayMultiplayer` and `server` options are provided, `quickPlayMultiplayer` takes precedence.
+Both `quickPlayMultiplayer` and `server` options can be used together for compatibility:
+
+```ts
+// Both options together for compatibility
+const proc = launch({ 
+  gamePath, 
+  javaPath, 
+  version,
+  quickPlayMultiplayer: 'play.hypixel.net:25565',
+  server: { ip: 'play.hypixel.net', port: 25565 }
+});
+```
