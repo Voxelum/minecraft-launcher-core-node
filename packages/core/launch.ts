@@ -812,7 +812,8 @@ export async function generateArguments(options: LaunchOption) {
   }
   if (options.quickPlayMultiplayer) {
     cmd.push('--quickPlayMultiplayer', options.quickPlayMultiplayer)
-  } else if (options.server) {
+  }
+  if (options.server) {
     cmd.push('--server', options.server.ip)
     if (options.server.port) {
       cmd.push('--port', options.server.port.toString())
