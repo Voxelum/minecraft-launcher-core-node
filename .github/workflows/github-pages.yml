@@ -20,12 +20,12 @@ jobs:
         node-version: [20]
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: pnpm/action-setup@v2.0.1
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
       with:
         version: 9.15.3
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'pnpm'
@@ -38,7 +38,7 @@ jobs:
       run: |
         pnpm build:docs
     - name: Deploy to Github Pages
-      uses: crazy-max/ghaction-github-pages@v1
+      uses: crazy-max/ghaction-github-pages@v4
       with:
         target_branch: gh-pages
         build_dir: docs/
