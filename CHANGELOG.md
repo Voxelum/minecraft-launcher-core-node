@@ -1,5 +1,56 @@
 # Changelog
 
+## 7.10.0
+### @xmcl/core@2.15.0
+#### Features
+
+- feat: Support demo launch argument ([111b46b9b4609e5ba049ee6153c64e4c1fce5da9](https://github.com/voxelum/minecraft-launcher-core-node/commit/111b46b9b4609e5ba049ee6153c64e4c1fce5da9))
+#### Bug Fixes
+
+- fix: Allow quickPlayMultiplayer and server options to work together for compatibility (#324) ([f1cb1d5b871e05ce72f40b534a46c01ae8959b6a](https://github.com/voxelum/minecraft-launcher-core-node/commit/f1cb1d5b871e05ce72f40b534a46c01ae8959b6a))
+- fix: Support --quickPlayMultiplayer options for newer Minecraft versions (#321) ([1e533fecdb34f9e0a38c21e137cb4649e3861155](https://github.com/voxelum/minecraft-launcher-core-node/commit/1e533fecdb34f9e0a38c21e137cb4649e3861155))
+- fix: Correctly diagnose version jar for special version ([17744fee1b61f945f722d01fa417a425dc6f26f0](https://github.com/voxelum/minecraft-launcher-core-node/commit/17744fee1b61f945f722d01fa417a425dc6f26f0))
+### @xmcl/file-transfer@2.0.3
+#### Bug Fixes
+
+- fix: Handle download error if file does not exist ([7eadc4c8a0c9df510ed390c34b7d893ffcb7cbcb](https://github.com/voxelum/minecraft-launcher-core-node/commit/7eadc4c8a0c9df510ed390c34b7d893ffcb7cbcb))
+- fix: Should download for unknown length request ([6e5dea8898f89e2b2a1a5cc17e86d0882889b186](https://github.com/voxelum/minecraft-launcher-core-node/commit/6e5dea8898f89e2b2a1a5cc17e86d0882889b186))
+### @xmcl/system@2.2.9
+#### Bug Fixes
+
+- fix: Ignore the relative path in zip instead of throwing error ([461a5d92f45865742d53c9b6230dccc02ad8b274](https://github.com/voxelum/minecraft-launcher-core-node/commit/461a5d92f45865742d53c9b6230dccc02ad8b274))
+- fix: Should handle some corner case for zip entry names ([f3b2f2ca2adab71e7ecc5f3fa5c94f6fa4b70e18](https://github.com/voxelum/minecraft-launcher-core-node/commit/f3b2f2ca2adab71e7ecc5f3fa5c94f6fa4b70e18))
+### @xmcl/modrinth@2.5.0
+#### Features
+
+- feat: Support modrinth collection ([641df7277cdcca8420ad5418386d7345513446ea](https://github.com/voxelum/minecraft-launcher-core-node/commit/641df7277cdcca8420ad5418386d7345513446ea))
+#### Bug Fixes
+
+- fix: Correctly impl modrinth api ([fd2ffbb9fc411797bdd67a69fa58f3e8dd7b0daf](https://github.com/voxelum/minecraft-launcher-core-node/commit/fd2ffbb9fc411797bdd67a69fa58f3e8dd7b0daf))
+### @xmcl/user@4.3.0
+#### Features
+
+- feat: Support to parse xbox login error code ([a255c84cd072e7d99cfc6db1482f49627906c2bd](https://github.com/voxelum/minecraft-launcher-core-node/commit/a255c84cd072e7d99cfc6db1482f49627906c2bd))
+### @xmcl/game-data@1.2.6
+- Dependency @xmcl/system bump **patch**
+### @xmcl/installer@6.1.1
+#### Bug Fixes
+
+- fix: Java manifest should also respect the api host ([814ad7cc6dd6a556eee42dcf648cc8a32c0a8094](https://github.com/voxelum/minecraft-launcher-core-node/commit/814ad7cc6dd6a556eee42dcf648cc8a32c0a8094))
+- fix: Support legacy for server ([555b641ac433fe2fc0a943aba0c1d188f386622b](https://github.com/voxelum/minecraft-launcher-core-node/commit/555b641ac433fe2fc0a943aba0c1d188f386622b))
+- Dependency @xmcl/core bump **patch**
+- Dependency @xmcl/file-transfer bump **patch**
+### @xmcl/mod-parser@3.4.2
+#### Bug Fixes
+
+- fix: Forge parser should latest toml format metadata ([8806124801d81e584399de4ff67b8b341867e1a0](https://github.com/voxelum/minecraft-launcher-core-node/commit/8806124801d81e584399de4ff67b8b341867e1a0))
+- Dependency @xmcl/system bump **patch**
+### @xmcl/resourcepack@1.2.5
+- Dependency @xmcl/system bump **patch**
+### @xmcl/model@2.0.5
+- Dependency @xmcl/resourcepack bump **patch**
+
+
 ## 7.9.0
 ### @xmcl/core@2.14.1
 #### Bug Fixes
