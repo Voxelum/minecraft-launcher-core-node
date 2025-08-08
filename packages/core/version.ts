@@ -665,6 +665,12 @@ export namespace Version {
           url: 'https://libraries.minecraft.net/' + info.path,
         }
       }
+      if (!nativeArtifact.path) {
+        nativeArtifact = {
+          ...nativeArtifact,
+          path: info.path,
+        }
+      }
       return new ResolvedLibrary(lib.name + ':' + classifier, info, nativeArtifact, true, undefined, undefined, undefined, lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined)
     }
     const info = LibraryInfo.resolve(lib.name)
