@@ -1,5 +1,14 @@
 # Changelog
 
+## 7.10.1
+### @xmcl/core@2.15.1
+#### Bug Fixes
+
+- fix: Should decorate the path of the native library ([9d2332ccab4c32f6c77ce83de7c1dfb589657981](https://github.com/voxelum/minecraft-launcher-core-node/commit/9d2332ccab4c32f6c77ce83de7c1dfb589657981))
+### @xmcl/installer@6.1.2
+- Dependency @xmcl/core bump **patch**
+
+
 ## 7.10.0
 ### @xmcl/core@2.15.0
 #### Features
