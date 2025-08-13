@@ -8,7 +8,7 @@ export interface FileSystem {
   /**
    * Get file information
    */
-  getFile(path: string): Promise<{ size: number; mtime: number } | null>
+  getFile(path: string): Promise<{ size: number; mtime: number } | undefined>
   /**
    * Compute SHA1 hash
    */

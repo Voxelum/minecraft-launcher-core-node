@@ -51,7 +51,6 @@ export interface VanillaProfiles {
  */
 export async function parseVanillaInstance(
   minecraftPath: string, 
-  versionMetadataService?: { getLocalVersions(): Promise<Array<{ id: string }>> }
 ): Promise<Array<{ path: string; options: CreateInstanceOptions }>> {
   try {
     const profilesPath = join(minecraftPath, 'launcher_profiles.json')

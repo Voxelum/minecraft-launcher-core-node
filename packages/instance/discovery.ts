@@ -39,7 +39,7 @@ export interface ResourceMetadata {
  */
 export interface ResourceManager {
   getSnapshotsByIno(inos: number[]): Promise<Array<{ ino: number; sha1: string }>>
-  getMetadataByHashes(hashes: string[]): Promise<Array<ResourceMetadata | null>>
+  getMetadataByHashes(hashes: string[]): Promise<Array<ResourceMetadata | undefined>>
   getUrisByHash(hashes: string[]): Promise<Array<{ sha1: string; uri: string }>>
 }
 

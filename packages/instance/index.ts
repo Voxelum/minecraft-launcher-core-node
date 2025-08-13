@@ -5,6 +5,7 @@ export * from './options'
 export * from './modpack'
 export * from './utils'
 export * from './templates'
+export * from './assignment'
 
 // File discovery and processing
 export * from './discovery'

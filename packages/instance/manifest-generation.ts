@@ -9,7 +9,6 @@ import {
   ChecksumWorker, 
   ResourceManager 
 } from './discovery'
-import { isNonnull } from './utils'
 
 /**
  * Options for generating instance manifest
