@@ -244,3 +244,118 @@ export interface InstanceSchema extends InstanceData {
 export interface Instance extends InstanceSchema {
   path: string
 }
+
+
+/**
+ * Options for creating a new instance
+ */
+export interface CreateInstanceOptions {
+  name: string
+  author?: string
+  description?: string
+  java?: string
+  runtime?: RuntimeVersions
+  server?: {
+    host: string
+    port?: number
+  } | null
+  minMemory?: number
+  maxMemory?: number
+  showLog?: boolean
+  vmOptions?: string[]
+  mcOptions?: string[]
+  resolution?: {
+    width?: number
+    height?: number
+    fullscreen?: boolean
+  }
+  icon?: string
+  url?: string
+  resourcepacks?: boolean
+  shaderpacks?: boolean
+  lastPlayedDate?: number
+  playtime?: number
+  upstream?: InstanceUpstream
+  /**
+   * Additional tags for the instance
+   */
+  tags?: string[]
+  /**
+   * Environment variables for launching
+   */
+  env?: Record<string, string>
+}
+
+/**
+ * Check if two upstream sources are from the same origin
+ */
+export function isUpstreamSameOrigin(a: InstanceUpstream, b: InstanceUpstream): boolean {
+  const aType = a.type
+  const bType = b.type
+  if (aType !== bType) return false
+  if (a.type === 'curseforge-modpack') return a.modId === (b as any).modId
+  if (a.type === 'modrinth-modpack') return a.projectId === (b as any).projectId
+  if (a.type === 'ftb-modpack') return a.id === (b as any).id
+  if (a.type === 'peer') return a.id === (b as any).id
+  return false
+}
+
+/**
+ * Create a default instance template
+ */
+export function createInstanceTemplate(): Instance {
+  return {
+    path: '',
+    name: '',
+
+    resolution: undefined,
+    minMemory: undefined,
+    maxMemory: undefined,
+    vmOptions: undefined,
+    mcOptions: undefined,
+    env: undefined,
+
+    url: '',
+    icon: '',
+
+    runtime: {
+      minecraft: '',
+      forge: '',
+      liteloader: '',
+      fabricLoader: '',
+      yarn: '',
+      optifine: '',
+      quiltLoader: '',
+      neoForged: '',
+      labyMod: '',
+    },
+    java: '',
+    version: '',
+    server: null,
+
+    author: '',
+    description: '',
+
+    lastAccessDate: -1,
+    creationDate: -1,
+    modpackVersion: '',
+    fileApi: '',
+    tags: [],
+
+    assignMemory: undefined,
+    prependCommand: undefined,
+    showLog: undefined,
+    hideLauncher: undefined,
+    disableAuthlibInjector: undefined,
+    disableElybyAuthlib: undefined,
+    fastLaunch: undefined,
+    upstream: undefined,
+    lastPlayedDate: 0,
+    playtime: 0,
+  }
+}
+
+/**
+ * Default instance template (frozen for immutability)
+ */
+export const DEFAULT_INSTANCE: Instance = Object.freeze(createInstanceTemplate())

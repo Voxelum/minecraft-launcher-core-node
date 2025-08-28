@@ -1,10 +1,10 @@
-import { join } from 'path'
-import { InstanceFile, InstanceFileUpdate, FileOperation } from './manifest'
+import type { join } from 'path';
+import { InstanceFile, InstanceFileUpdate } from './instance-files';
 
 /**
  * File system abstraction for checking files
  */
-export interface FileSystem {
+interface FileSystem {
   /**
    * Get file information
    */
@@ -17,6 +17,8 @@ export interface FileSystem {
    * Compute CRC32 hash
    */
   getCrc32(instancePath: string, file: { size: number; mtime: number }): Promise<number>
+
+  join: typeof join
 }
 
 /**
@@ -40,7 +42,7 @@ export async function computeFileUpdates(
   const result: InstanceFileUpdate[] = []
   
   for (const p of jointFilePaths) {
-    const filePath = join(instancePath, p)
+    const filePath = fs.join(instancePath, p)
     const file = await fs.getFile(filePath)
 
     if (!file) {

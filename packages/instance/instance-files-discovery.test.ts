@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isSpecialFile } from './discovery'
+import { isSpecialFile } from './instance-files-discovery'
 
 describe('Instance Discovery Utilities', () => {
   describe('isSpecialFile', () => {

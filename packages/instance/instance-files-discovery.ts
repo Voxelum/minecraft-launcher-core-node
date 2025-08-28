@@ -1,22 +1,6 @@
-import { Stats, stat } from 'fs-extra'
-import { join, relative } from 'path'
-import { readdirIfPresent } from './utils'
-import { InstanceFile } from './manifest'
-
-/**
- * Logger interface abstraction
- */
-export interface Logger {
-  warn(message: string | Error): void
-  log(message: string): void
-}
-
-/**
- * Worker interface for computing checksums
- */
-export interface ChecksumWorker {
-  checksum(filePath: string, algorithm: string): Promise<string>
-}
+import type { Stats } from 'fs-extra'
+import { InstanceFile } from './instance-files'
+import type { ChecksumWorker, InstanceSystemEnv, Logger, ResourceManager } from './internal-type'
 
 /**
  * Resource metadata interface
@@ -35,15 +19,6 @@ export interface ResourceMetadata {
 }
 
 /**
- * Resource manager interface abstraction
- */
-export interface ResourceManager {
-  getSnapshotsByIno(inos: number[]): Promise<Array<{ ino: number; sha1: string }>>
-  getMetadataByHashes(hashes: string[]): Promise<Array<ResourceMetadata | undefined>>
-  getUrisByHash(hashes: string[]): Promise<Array<{ sha1: string; uri: string }>>
-}
-
-/**
  * Filter function for file discovery
  */
 export type FileFilter = (relativePath: string, stats: Stats) => boolean
@@ -52,9 +27,9 @@ export type FileFilter = (relativePath: string, stats: Stats) => boolean
  * Discover all files in an instance directory
  * @returns The instance file with file stats array. The InstanceFile does not have hashes and downloads.
  */
-export async function discoverInstanceFiles(
-  instancePath: string, 
-  logger: Logger, 
+export async function getInstanceFiles(
+  instancePath: string,
+  { logger, stat, join, relative, readdir }: InstanceSystemEnv,
   filter?: FileFilter
 ): Promise<Array<[InstanceFile, Stats]>> {
   const files: Array<[InstanceFile, Stats]> = []
@@ -70,14 +45,14 @@ export async function discoverInstanceFiles(
 
     const isDirectory = stats.isDirectory()
     const relativePath = relative(instancePath, dirOrFile).replace(/\\/g, '/')
-    
+
     if (filter && filter(relativePath, stats)) {
       return
     }
 
     if (isDirectory) {
-      const children = await readdirIfPresent(dirOrFile)
-      await Promise.all(children.map(child => 
+      const children = await readdir(dirOrFile)
+      await Promise.all(children.map(child =>
         scan(join(dirOrFile, child)).catch((e) => {
           logger.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
         })
@@ -100,22 +75,22 @@ export async function discoverInstanceFiles(
  * Check if file is a special file that needs metadata decoration
  */
 export const isSpecialFile = (relativePath: string): boolean =>
-  (relativePath.startsWith('resourcepacks') || 
-   relativePath.startsWith('shaderpacks') || 
-   relativePath.startsWith('mods')) &&
+  (relativePath.startsWith('resourcepacks') ||
+    relativePath.startsWith('shaderpacks') ||
+    relativePath.startsWith('mods')) &&
   !relativePath.endsWith('.txt')
 
 /**
  * Resolve hashes for a file
  */
 async function resolveHashes(
-  file: string, 
-  worker: ChecksumWorker, 
-  hashes?: string[], 
+  file: string,
+  worker: ChecksumWorker,
+  hashes?: string[],
   sha1?: string
 ): Promise<Record<string, string>> {
   const result: Record<string, string> = {}
-  
+
   if (hashes) {
     for (const hash of hashes) {
       if (hash === 'sha1') {
@@ -141,6 +116,7 @@ export async function decorateInstanceFiles(
   worker: ChecksumWorker,
   resourceManager: ResourceManager,
   undecoratedResources: Set<InstanceFile>,
+  { join }: Pick<InstanceSystemEnv, 'join'>,
   hashes?: string[]
 ): Promise<void> {
   // Get SHA1 hashes from resource manager using inode numbers
@@ -148,7 +124,7 @@ export async function decorateInstanceFiles(
     files
       .filter(([localFile, stat]) => isSpecialFile(localFile.path))
       .map(([localFile, stat]) => stat.ino)
-  ).then(snapshots => 
+  ).then(snapshots =>
     Object.fromEntries(snapshots.map(s => [s.ino, s.sha1]))
   )
 
@@ -157,7 +133,7 @@ export async function decorateInstanceFiles(
     const relativePath = localFile.path
     const filePath = join(instancePath, relativePath)
     const ino = stat.ino
-    
+
     if (isSpecialFile(relativePath)) {
       const sha1 = sha1Lookup[ino] || await worker.checksum(filePath, 'sha1')
       localFile.hashes.sha1 = sha1
@@ -170,7 +146,7 @@ export async function decorateInstanceFiles(
     .filter((sha1): sha1 is string => !!sha1)
 
   const metadataLookup = await resourceManager.getMetadataByHashes(existingSha1)
-    .then(metadata => 
+    .then(metadata =>
       Object.fromEntries(
         metadata
           .filter((m): m is ResourceMetadata => !!m)
@@ -179,7 +155,7 @@ export async function decorateInstanceFiles(
     )
 
   const urisLookup = await resourceManager.getUrisByHash(existingSha1)
-    .then(uris => 
+    .then(uris =>
       uris.reduce((acc, cur) => {
         if (!acc[cur.sha1]) {
           acc[cur.sha1] = []
@@ -193,18 +169,18 @@ export async function decorateInstanceFiles(
   for (const [localFile, stat] of files) {
     const relativePath = localFile.path
     const filePath = join(instancePath, relativePath)
-    
+
     if (isSpecialFile(relativePath)) {
       const sha1 = localFile.hashes.sha1
       const metadata = metadataLookup[sha1]
-      
+
       if (metadata?.modrinth) {
         localFile.modrinth = {
           projectId: metadata.modrinth.projectId,
           versionId: metadata.modrinth.versionId,
         }
       }
-      
+
       if (metadata?.curseforge) {
         localFile.curseforge = {
           projectId: metadata.curseforge.projectId,
@@ -213,10 +189,10 @@ export async function decorateInstanceFiles(
       }
 
       const uris = urisLookup[sha1]
-      localFile.downloads = uris && uris.some(u => u.startsWith('http')) 
-        ? uris.filter(u => u.startsWith('http')) 
+      localFile.downloads = uris && uris.some(u => u.startsWith('http'))
+        ? uris.filter(u => u.startsWith('http'))
         : undefined
-      
+
       localFile.hashes = {
         ...localFile.hashes,
         ...await resolveHashes(filePath, worker, hashes, sha1),

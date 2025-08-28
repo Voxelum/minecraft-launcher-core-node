@@ -1,6 +1,26 @@
-import { InstanceData, RuntimeVersions } from './instance'
-import { InstanceFile } from './manifest'
-import { CreateInstanceOptions } from './options'
+import { CreateInstanceOptions, InstanceData, RuntimeVersions } from './instance'
+import { InstanceFile } from './instance-files'
+
+/**
+ * Third-party launcher manifest structure
+ */
+export interface ThirdPartyLauncherManifest {
+  instances: Array<{
+    path: string
+    options: CreateInstanceOptions
+  }>
+  folder: {
+    versions: string
+    libraries: string
+    assets: string
+    jre?: string
+  }
+}
+
+/**
+ * Supported instance types for parsing
+ */
+export type InstanceType = 'mmc' | 'vanilla' | 'modrinth' | 'curseforge'
 
 /**
  * Represent a common modpack metadata in a zip file.

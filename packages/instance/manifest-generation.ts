@@ -1,14 +1,12 @@
 import { task } from '@xmcl/task'
 import { join } from 'path'
-import { Instance, RuntimeVersions } from './instance'
-import { InstanceFile, InstanceManifest } from './manifest'
-import { 
-  discoverInstanceFiles, 
-  decorateInstanceFiles, 
-  Logger, 
-  ChecksumWorker, 
-  ResourceManager 
-} from './discovery'
+import { Instance } from './instance'
+import { InstanceFile, InstanceManifest } from './instance-files'
+import {
+  decorateInstanceFiles,
+  getInstanceFiles
+} from './instance-files-discovery'
+import { ChecksumWorker, InstanceSystemEnv, ResourceManager } from './internal-type'
 
 /**
  * Options for generating instance manifest
@@ -32,17 +30,18 @@ export async function generateInstanceManifest(
   instance: Instance,
   worker: ChecksumWorker,
   resourceManager: ResourceManager,
-  logger: Logger
+  env: InstanceSystemEnv,
 ): Promise<InstanceManifest> {
   const instancePath = options.path
   let files: InstanceFile[] = []
   const undecoratedResources = new Set<InstanceFile>()
 
   await task('generateInstanceManifest', async function () {
+    const logger = env.logger
     const start = performance.now()
-    
+
     // Discover all files in the instance
-    const fileWithStats = await discoverInstanceFiles(instancePath, logger, (relativePath, stat) => {
+    const fileWithStats = await getInstanceFiles(instancePath, env, (relativePath, stat) => {
       // Filter out files we don't want in the manifest
       if (relativePath.startsWith('resourcepacks') || relativePath.startsWith('shaderpacks')) {
         if (relativePath.endsWith('.json') || relativePath.endsWith('.png')) {
@@ -71,13 +70,13 @@ export async function generateInstanceManifest(
       }
       return false // include
     })
-    
+
     const duration = performance.now() - start
     logger.log(`Discover instance files in ${instancePath} in ${duration}ms`)
 
     const decorateStart = performance.now()
     try {
-      await decorateInstanceFiles(fileWithStats, instancePath, worker, resourceManager, undecoratedResources)
+      await decorateInstanceFiles(fileWithStats, instancePath, worker, resourceManager, undecoratedResources, env)
     } catch (e) {
       logger.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
     }
@@ -122,11 +121,11 @@ export async function generateInstanceManifest(
  */
 export async function generateInstanceServerManifest(
   options: GetManifestOptions,
-  logger: Logger
+  env: InstanceSystemEnv,
 ): Promise<InstanceFile[]> {
   const serverPath = join(options.path, 'server')
-  
-  const fileWithStats = await discoverInstanceFiles(serverPath, logger, (filePath) => {
+
+  const fileWithStats = await getInstanceFiles(serverPath, env, (filePath) => {
     if (filePath.startsWith('libraries') || filePath.startsWith('versions') || filePath.startsWith('assets')) {
       return true // exclude
     }
@@ -150,34 +149,34 @@ export function createDefaultFileFilter() {
         return true
       }
     }
-    
+
     // Exclude system files
-    if (relativePath.startsWith('.backups') || 
-        relativePath.endsWith('.DS_Store') || 
-        relativePath.endsWith('.gitignore') ||
-        relativePath === 'instance.json') {
+    if (relativePath.startsWith('.backups') ||
+      relativePath.endsWith('.DS_Store') ||
+      relativePath.endsWith('.gitignore') ||
+      relativePath === 'instance.json') {
       return true
     }
-    
+
     // Exclude server directory
     if (relativePath === 'server' && stat.isDirectory()) {
       return true
     }
-    
+
     // Exclude executables
-    if (relativePath.endsWith('.dll') || 
-        relativePath.endsWith('.so') || 
-        relativePath.endsWith('.exe')) {
+    if (relativePath.endsWith('.dll') ||
+      relativePath.endsWith('.so') ||
+      relativePath.endsWith('.exe')) {
       return true
     }
-    
+
     // Exclude Minecraft installation directories
-    if (relativePath.startsWith('versions') || 
-        relativePath.startsWith('assets') || 
-        relativePath.startsWith('libraries')) {
+    if (relativePath.startsWith('versions') ||
+      relativePath.startsWith('assets') ||
+      relativePath.startsWith('libraries')) {
       return true
     }
-    
+
     return false
   }
 }

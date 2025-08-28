@@ -1,10 +1,10 @@
 import { readFile } from 'fs-extra'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
-import { RuntimeVersions } from '../instance'
-import { InstanceFile } from '../manifest'
-import { CreateInstanceOptions } from '../options'
-import { discoverInstanceFiles, Logger } from '../discovery'
+import { CreateInstanceOptions, RuntimeVersions } from '../instance'
+import { InstanceFile } from '../instance-files'
+import { getInstanceFiles } from '../instance-files-discovery'
+import { InstanceSystemEnv } from '../internal-type'
 
 /**
  * Vanilla launcher profile
@@ -105,8 +105,8 @@ export async function parseVanillaInstance(
 /**
  * Parse vanilla instance files
  */
-export async function parseVanillaInstanceFiles(instancePath: string, logger: Logger): Promise<InstanceFile[]> {
-  const files = await discoverInstanceFiles(instancePath, logger, (f) => {
+export async function parseVanillaInstanceFiles(instancePath: string, env: InstanceSystemEnv): Promise<InstanceFile[]> {
+  const files = await getInstanceFiles(instancePath, env, (f) => {
     if (f === 'launcher_profiles.json') return true
     if (f === 'launcher_settings.json') return true
     if (f === 'usercache.json') return true

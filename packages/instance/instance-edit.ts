@@ -1,13 +1,5 @@
-import { Instance, InstanceSchema, RuntimeVersions } from './instance'
-import { CreateInstanceOptions } from './options'
-import { createInstanceTemplate } from './templates'
-
-/**
- * Interface for version metadata provider
- */
-export interface VersionMetadataProvider {
-  getLatestRelease(): string
-}
+import { CreateInstanceOptions, Instance, InstanceSchema, RuntimeVersions, createInstanceTemplate } from './instance'
+import type { VersionMetadataProvider } from './internal-type'
 
 /**
   * Safely assign properties from source to target, only updating if values differ

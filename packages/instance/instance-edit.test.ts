@@ -1,16 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  EditInstanceOptions,
-  VersionMetadataProvider,
-  applyInstanceChanges,
-  assignShallow,
-  computeInstanceEditChanges,
-  createInstanceFromOptions,
-  loadInstanceFromOptions
-} from './assignment'
-import { InstanceSchema } from './instance'
-import { CreateInstanceOptions } from './options'
-import { createInstanceTemplate } from './templates'
+import { CreateInstanceOptions, InstanceSchema, createInstanceTemplate } from './instance'
+import { EditInstanceOptions, applyInstanceChanges, assignShallow, computeInstanceEditChanges, createInstanceFromOptions, loadInstanceFromOptions } from './instance-edit'
+import { VersionMetadataProvider } from './internal-type'
 
 describe('Instance Assignment Utils', () => {
   let mockVersionProvider: VersionMetadataProvider

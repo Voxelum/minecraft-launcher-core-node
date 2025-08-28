@@ -1,10 +1,10 @@
 import { existsSync, readFile } from 'fs-extra'
 import { dirname, join } from 'path'
 import { pathToFileURL } from 'url'
-import { RuntimeVersions } from '../instance'
-import { InstanceFile } from '../manifest'
-import { CreateInstanceOptions } from '../options'
-import { discoverInstanceFiles, Logger } from '../discovery'
+import { CreateInstanceOptions, RuntimeVersions } from '../instance'
+import { InstanceFile } from '../instance-files'
+import { getInstanceFiles } from '../instance-files-discovery'
+import { InstanceSystemEnv } from '../internal-type'
 
 /**
  * MultiMC instance configuration interface
@@ -154,8 +154,8 @@ export async function parseMultiMCInstance(path: string): Promise<CreateInstance
 /**
  * Parse MultiMC instance files
  */
-export async function parseMultiMCInstanceFiles(instancePath: string, logger: Logger): Promise<InstanceFile[]> {
-  const files = await discoverInstanceFiles(instancePath, logger)
+export async function parseMultiMCInstanceFiles(instancePath: string, env: InstanceSystemEnv): Promise<InstanceFile[]> {
+  const files = await getInstanceFiles(instancePath, env)
   
   for (const [f] of files) {
     f.downloads = [pathToFileURL(join(instancePath, f.path)).toString()]

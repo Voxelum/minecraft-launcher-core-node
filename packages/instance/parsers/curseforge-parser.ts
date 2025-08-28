@@ -1,10 +1,11 @@
 import { readFile } from 'fs-extra'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
-import { InstanceFile } from '../manifest'
-import { CreateInstanceOptions } from '../options'
+import { CreateInstanceOptions } from '../instance'
+import { InstanceFile } from '../instance-files'
+import { getInstanceFiles } from '../instance-files-discovery'
+import { InstanceSystemEnv } from '../internal-type'
 import { CurseforgeModpackManifest, getInstanceConfigFromCurseforgeModpack } from '../modpack'
-import { discoverInstanceFiles, Logger } from '../discovery'
 
 /**
  * Curseforge launcher instance configuration
@@ -74,8 +75,8 @@ export async function parseCurseforgeInstance(instancePath: string): Promise<Cre
 /**
  * Parse Curseforge instance files
  */
-export async function parseCurseforgeInstanceFiles(instancePath: string, logger: Logger): Promise<InstanceFile[]> {
-  const files = await discoverInstanceFiles(instancePath, logger, (f) => {
+export async function parseCurseforgeInstanceFiles(instancePath: string, env: InstanceSystemEnv): Promise<InstanceFile[]> {
+  const files = await getInstanceFiles(instancePath, env, (f) => {
     if (f === 'minecraftinstance.json') return true
     return false
   })

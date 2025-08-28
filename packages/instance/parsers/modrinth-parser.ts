@@ -1,10 +1,10 @@
 import { readFile } from 'fs-extra'
 import { join, sep } from 'path'
 import { pathToFileURL } from 'url'
-import { RuntimeVersions } from '../instance'
-import { InstanceFile } from '../manifest'
-import { CreateInstanceOptions } from '../options'
-import { discoverInstanceFiles, Logger, ChecksumWorker } from '../discovery'
+import { CreateInstanceOptions, RuntimeVersions } from '../instance'
+import { InstanceFile } from '../instance-files'
+import { getInstanceFiles } from '../instance-files-discovery'
+import { ChecksumWorker, InstanceSystemEnv } from '../internal-type'
 
 /**
  * Modrinth project interface (simplified)
@@ -141,10 +141,9 @@ export async function parseModrinthInstance(instancePath: string): Promise<Creat
  */
 export async function parseModrinthInstanceFiles(
   instancePath: string,
-  worker: ChecksumWorker,
-  logger: Logger
+  env: InstanceSystemEnv
 ): Promise<InstanceFile[]> {
-  const files = await discoverInstanceFiles(instancePath, logger, (f) => {
+  const files = await getInstanceFiles(instancePath, env, (f) => {
     if (f === 'profile.json') return true
     return false
   })
