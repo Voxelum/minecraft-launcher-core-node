@@ -1,5 +1,3 @@
-import { readFile } from 'fs-extra'
-import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { CreateInstanceOptions, RuntimeVersions } from '../instance'
 import { InstanceFile } from '../instance-files'
@@ -50,11 +48,12 @@ export interface VanillaProfiles {
  * Parse vanilla Minecraft instances from launcher_profiles.json
  */
 export async function parseVanillaInstance(
-  minecraftPath: string, 
+  minecraftPath: string,
+  env: InstanceSystemEnv
 ): Promise<Array<{ path: string; options: CreateInstanceOptions }>> {
   try {
-    const profilesPath = join(minecraftPath, 'launcher_profiles.json')
-    const data = await readFile(profilesPath, 'utf-8')
+    const profilesPath = env.join(minecraftPath, 'launcher_profiles.json')
+    const data = await env.readFile(profilesPath, 'utf-8')
     const profiles = JSON.parse(data) as VanillaProfiles
 
     const instances: Array<{ path: string; options: CreateInstanceOptions }> = []
@@ -115,7 +114,7 @@ export async function parseVanillaInstanceFiles(instancePath: string, env: Insta
   })
 
   for (const [file] of files) {
-    file.downloads = [pathToFileURL(join(instancePath, file.path)).toString()]
+    file.downloads = [pathToFileURL(env.join(instancePath, file.path)).toString()]
   }
 
   return files.map(([file]) => file)

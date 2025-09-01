@@ -31,78 +31,76 @@ export async function generateInstanceManifest(
   worker: ChecksumWorker,
   resourceManager: ResourceManager,
   env: InstanceSystemEnv,
+  undecoratedResources = new Set<InstanceFile>()
 ): Promise<InstanceManifest> {
   const instancePath = options.path
   let files: InstanceFile[] = []
-  const undecoratedResources = new Set<InstanceFile>()
 
-  await task('generateInstanceManifest', async function () {
-    const logger = env.logger
-    const start = performance.now()
+  const logger = env.logger
+  const start = performance.now()
 
-    // Discover all files in the instance
-    const fileWithStats = await getInstanceFiles(instancePath, env, (relativePath, stat) => {
-      // Filter out files we don't want in the manifest
-      if (relativePath.startsWith('resourcepacks') || relativePath.startsWith('shaderpacks')) {
-        if (relativePath.endsWith('.json') || relativePath.endsWith('.png')) {
-          return true // exclude
-        }
-      }
-      if (relativePath.startsWith('.backups')) {
+  // Discover all files in the instance
+  const fileWithStats = await getInstanceFiles(instancePath, env, (relativePath, stat) => {
+    // Filter out files we don't want in the manifest
+    if (relativePath.startsWith('resourcepacks') || relativePath.startsWith('shaderpacks')) {
+      if (relativePath.endsWith('.json') || relativePath.endsWith('.png')) {
         return true // exclude
       }
-      if (relativePath.endsWith('.DS_Store') || relativePath.endsWith('.gitignore')) {
-        return true // exclude
-      }
-      if (relativePath === 'instance.json') {
-        return true // exclude
-      }
-      if (relativePath === 'server' && stat.isDirectory()) {
-        return true // exclude
-      }
-      // Exclude executables and libraries
-      if (relativePath.endsWith('.dll') || relativePath.endsWith('.so') || relativePath.endsWith('.exe')) {
-        return true // exclude
-      }
-      // Don't share versions/libs/assets
-      if (relativePath.startsWith('versions') || relativePath.startsWith('assets') || relativePath.startsWith('libraries')) {
-        return true // exclude
-      }
-      return false // include
-    })
-
-    const duration = performance.now() - start
-    logger.log(`Discover instance files in ${instancePath} in ${duration}ms`)
-
-    const decorateStart = performance.now()
-    try {
-      await decorateInstanceFiles(fileWithStats, instancePath, worker, resourceManager, undecoratedResources, env)
-    } catch (e) {
-      logger.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
     }
-    logger.log(`Decorate instance files in ${instancePath} in ${performance.now() - decorateStart}ms`)
-
-    // Compute additional hashes if requested
-    if (options.hashes) {
-      const hashStart = performance.now()
-      const hashes = options.hashes
-      await Promise.all(fileWithStats.filter(([f]) => {
-        for (const h of hashes) {
-          if (!f.hashes[h]) {
-            return true
-          }
-        }
-        return false
-      }).map(([f]) => Promise.all(hashes.map(async (algorithm) => {
-        if (!f.hashes[algorithm]) {
-          f.hashes[algorithm] = await worker.checksum(join(instancePath, f.path), algorithm)
-        }
-      }))))
-      logger.log(`Resolve hashes in ${instancePath} in ${performance.now() - hashStart}ms`)
+    if (relativePath.startsWith('.backups')) {
+      return true // exclude
     }
+    if (relativePath.endsWith('.DS_Store') || relativePath.endsWith('.gitignore')) {
+      return true // exclude
+    }
+    if (relativePath === 'instance.json') {
+      return true // exclude
+    }
+    if (relativePath === 'server' && stat.isDirectory()) {
+      return true // exclude
+    }
+    // Exclude executables and libraries
+    if (relativePath.endsWith('.dll') || relativePath.endsWith('.so') || relativePath.endsWith('.exe')) {
+      return true // exclude
+    }
+    // Don't share versions/libs/assets
+    if (relativePath.startsWith('versions') || relativePath.startsWith('assets') || relativePath.startsWith('libraries')) {
+      return true // exclude
+    }
+    return false // include
+  })
 
-    files = fileWithStats.map(([file]) => file)
-  }).startAndWait()
+  const duration = performance.now() - start
+  logger.log(`Discover instance files in ${instancePath} in ${duration}ms`)
+
+  const decorateStart = performance.now()
+  try {
+    await decorateInstanceFiles(fileWithStats, instancePath, worker, resourceManager, undecoratedResources, env)
+  } catch (e) {
+    logger.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
+  }
+  logger.log(`Decorate instance files in ${instancePath} in ${performance.now() - decorateStart}ms`)
+
+  // Compute additional hashes if requested
+  if (options.hashes) {
+    const hashStart = performance.now()
+    const hashes = options.hashes
+    await Promise.all(fileWithStats.filter(([f]) => {
+      for (const h of hashes) {
+        if (!f.hashes[h]) {
+          return true
+        }
+      }
+      return false
+    }).map(([f]) => Promise.all(hashes.map(async (algorithm) => {
+      if (!f.hashes[algorithm]) {
+        f.hashes[algorithm] = await worker.checksum(join(instancePath, f.path), algorithm)
+      }
+    }))))
+    logger.log(`Resolve hashes in ${instancePath} in ${performance.now() - hashStart}ms`)
+  }
+
+  files = fileWithStats.map(([file]) => file)
 
   return {
     files,

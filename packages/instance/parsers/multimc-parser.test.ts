@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { 
+import { join } from 'path'
+import {
   detectMMCRoot,
   type MultiMCManifestComponent,
   type MultiMCConfig,
@@ -17,13 +18,17 @@ vi.mock('fs-extra', () => ({
 vi.mock('../discovery', () => ({
   discoverInstanceFiles: vi.fn().mockResolvedValue([]),
 }))
+const env = {
+  join,
+  existsSync
+} as any
 
 describe('MultiMC Parser', () => {
   describe('detectMMCRoot', () => {
     it('should return the input path if instances folder exists', () => {
       vi.mocked(existsSync).mockReturnValue(true)
 
-      const result = detectMMCRoot('/mmc')
+      const result = detectMMCRoot('/mmc', env)
       expect(result).toBe('/mmc')
       expect(existsSync).toHaveBeenCalledWith('/mmc/instances')
     })
@@ -33,14 +38,14 @@ describe('MultiMC Parser', () => {
         .mockReturnValueOnce(false) // /mmc/instances/test-instance/instances doesn't exist
         .mockReturnValueOnce(true)  // /mmc/instances exists
 
-      const result = detectMMCRoot('/mmc/instances/test-instance')
+      const result = detectMMCRoot('/mmc/instances/test-instance', env)
       expect(result).toBe('/mmc')
     })
 
     it('should return input path if no instances folder is found', () => {
       vi.mocked(existsSync).mockReturnValue(false)
 
-      const result = detectMMCRoot('/some/path')
+      const result = detectMMCRoot('/some/path', env)
       expect(result).toBe('/some/path')
     })
   })
@@ -184,14 +189,14 @@ describe('MultiMC Parser', () => {
     it('should handle Windows paths correctly', () => {
       vi.mocked(existsSync).mockReturnValue(true)
 
-      const result = detectMMCRoot('C:\\MultiMC')
+      const result = detectMMCRoot('C:\\MultiMC', env)
       expect(result).toBe('C:\\MultiMC')
     })
 
     it('should handle Unix paths correctly', () => {
       vi.mocked(existsSync).mockReturnValue(true)
 
-      const result = detectMMCRoot('/home/user/MultiMC')
+      const result = detectMMCRoot('/home/user/MultiMC', env)
       expect(result).toBe('/home/user/MultiMC')
     })
 
@@ -200,7 +205,7 @@ describe('MultiMC Parser', () => {
         .mockReturnValueOnce(false) // nested/path/instances doesn't exist
         .mockReturnValueOnce(true)  // parent/instances exists
 
-      const result = detectMMCRoot('/mmc/instances/my-instance/nested/path')
+      const result = detectMMCRoot('/mmc/instances/my-instance/nested/path', env)
       expect(result).toBe('/mmc')
     })
   })

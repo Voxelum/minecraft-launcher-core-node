@@ -1,6 +1,7 @@
 import type { existsSync } from 'fs'
-import type { readdir, stat } from 'fs-extra'
+import type { readdir, stat, readFile } from 'fs-extra'
 import type { join, relative } from 'path'
+import type { pathToFileURL } from 'url'
 import type { ResourceMetadata } from './instance-files-discovery'
 /**
  * Logger interface abstraction
@@ -24,6 +25,9 @@ export interface InstanceSystemEnv {
   readdir: typeof readdir
   existsSync: typeof existsSync
   logger: Logger
+  readFile: typeof readFile
+  pathToFileURL: typeof pathToFileURL
+  sep: string
 }
 
 /**

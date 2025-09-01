@@ -1,10 +1,7 @@
-import { readFile } from 'fs-extra'
-import { join, sep } from 'path'
-import { pathToFileURL } from 'url'
 import { CreateInstanceOptions, RuntimeVersions } from '../instance'
 import { InstanceFile } from '../instance-files'
 import { getInstanceFiles } from '../instance-files-discovery'
-import { ChecksumWorker, InstanceSystemEnv } from '../internal-type'
+import { InstanceSystemEnv } from '../internal-type'
 
 /**
  * Modrinth project interface (simplified)
@@ -98,8 +95,8 @@ export interface ModrinthProfile {
 /**
  * Parse Modrinth instance configuration
  */
-export async function parseModrinthInstance(instancePath: string): Promise<CreateInstanceOptions> {
-  const data = await readFile(join(instancePath, 'profile.json'), 'utf-8')
+export async function parseModrinthInstance(instancePath: string, env: InstanceSystemEnv): Promise<CreateInstanceOptions> {
+  const data = await env.readFile(env.join(instancePath, 'profile.json'), 'utf-8')
   const modrinth = JSON.parse(data) as ModrinthProfile
 
   let icon = ''
@@ -148,13 +145,13 @@ export async function parseModrinthInstanceFiles(
     return false
   })
 
-  const data = await readFile(join(instancePath, 'profile.json'), 'utf-8')
+  const data = await env.readFile(env.join(instancePath, 'profile.json'), 'utf-8')
   const modrinth = JSON.parse(data) as ModrinthProfile
 
   for (const [file] of files) {
-    const osPath = file.path.replace(/\//g, sep)
+    const osPath = file.path.replace(/\//g, env.sep)
     const existedProject = modrinth.projects[file.path] || modrinth.projects[osPath]
-    file.downloads = [pathToFileURL(join(instancePath, osPath)).toString()]
+    file.downloads = [env.pathToFileURL(env.join(instancePath, osPath)).toString()]
     
     if (existedProject) {
       if (typeof existedProject.metadata.version !== 'string' && existedProject.metadata.version) {

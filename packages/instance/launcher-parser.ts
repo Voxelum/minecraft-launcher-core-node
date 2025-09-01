@@ -1,5 +1,5 @@
 import type { InstanceSystemEnv } from './internal-type'
-import { ThirdPartyLauncherManifest, InstanceType } from './modpack'
+import type { InstanceType, ThirdPartyLauncherManifest } from './modpack'
 import {
   parseCurseforgeInstance,
   parseCurseforgeInstanceFiles
@@ -51,7 +51,7 @@ function isVanillaMinecraft({ existsSync, join }: InstanceSystemEnv, path: strin
  * Auto-detect the launcher type from a path
  */
 export function detectLauncherType(path: string, env: InstanceSystemEnv): InstanceType | null {
-  if (isMultiMCInstance(env, path) || (detectMMCRoot(path) !== path && env.existsSync(env.join(detectMMCRoot(path), 'instances')))) {
+  if (isMultiMCInstance(env, path) || (detectMMCRoot(path, env) !== path && env.existsSync(env.join(detectMMCRoot(path, env), 'instances')))) {
     return 'mmc'
   }
 
@@ -88,13 +88,13 @@ export async function parseLauncherData(
   try {
     switch (actualType) {
       case 'mmc': {
-        const rootPath = detectMMCRoot(path)
+        const rootPath = detectMMCRoot(path, env)
         const instancesPath = join(rootPath, 'instances')
         const instances = await readdir(instancesPath)
 
         const manifests = await Promise.allSettled(instances.map(async (instance) => {
           const instancePath = join(instancesPath, instance)
-          const options = await parseMultiMCInstance(instancePath)
+          const options = await parseMultiMCInstance(instancePath, env)
           return {
             options,
             path: instancePath,
@@ -120,7 +120,7 @@ export async function parseLauncherData(
 
         const manifests = await Promise.allSettled(instances.map(async (instance) => {
           const instancePath = join(instancesPath, instance)
-          const options = await parseModrinthInstance(instancePath)
+          const options = await parseModrinthInstance(instancePath, env)
           return {
             options,
             path: instancePath,
@@ -152,7 +152,7 @@ export async function parseLauncherData(
         const instances = await readdir(instancesPath)
         const manifests = await Promise.allSettled(instances.map(async (instance) => {
           const instancePath = join(instancesPath, instance)
-          const options = await parseCurseforgeInstance(instancePath)
+          const options = await parseCurseforgeInstance(instancePath, env)
           return {
             options,
             path: instancePath,
@@ -177,7 +177,7 @@ export async function parseLauncherData(
       }
 
       case 'vanilla': {
-        const vanillaInstances = await parseVanillaInstance(path)
+        const vanillaInstances = await parseVanillaInstance(path, env)
 
         const assets = join(path, 'assets')
         const libraries = join(path, 'libraries')

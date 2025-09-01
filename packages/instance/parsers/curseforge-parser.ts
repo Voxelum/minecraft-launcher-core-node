@@ -1,6 +1,3 @@
-import { readFile } from 'fs-extra'
-import { join } from 'path'
-import { pathToFileURL } from 'url'
 import { CreateInstanceOptions } from '../instance'
 import { InstanceFile } from '../instance-files'
 import { getInstanceFiles } from '../instance-files-discovery'
@@ -47,8 +44,8 @@ export interface CurseforgeInstance {
 /**
  * Parse Curseforge instance configuration
  */
-export async function parseCurseforgeInstance(instancePath: string): Promise<CreateInstanceOptions> {
-  const data = await readFile(join(instancePath, 'minecraftinstance.json'), 'utf-8')
+export async function parseCurseforgeInstance(instancePath: string, env: InstanceSystemEnv): Promise<CreateInstanceOptions> {
+  const data = await env.readFile(env.join(instancePath, 'minecraftinstance.json'), 'utf-8')
   const cf = JSON.parse(data) as CurseforgeInstance
 
   const config = getInstanceConfigFromCurseforgeModpack(cf.manifest)
@@ -82,7 +79,7 @@ export async function parseCurseforgeInstanceFiles(instancePath: string, env: In
   })
 
   for (const [file] of files) {
-    file.downloads = [pathToFileURL(join(instancePath, file.path)).toString()]
+    file.downloads = [env.pathToFileURL(env.join(instancePath, file.path)).toString()]
   }
 
   return files.map(([file]) => file)

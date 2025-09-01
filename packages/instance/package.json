@@ -25,10 +25,10 @@
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node"
   },
   "dependencies": {
-    "@xmcl/task": "workspace:*",
-    "fs-extra": "^11.1.0"
+    "@xmcl/task": "workspace:*"
   },
   "devDependencies": {
+    "fs-extra": "^11.1.0",
     "@types/node": "^18.0.0",
     "@types/fs-extra": "^11.0.1",
     "typescript": "^5.3.3",
