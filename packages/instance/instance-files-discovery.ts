@@ -5,7 +5,7 @@ import type { ChecksumWorker, InstanceSystemEnv, Logger, ResourceManager } from 
 /**
  * Resource metadata interface
  */
-export interface ResourceMetadata {
+export interface ResourceLike {
   sha1: string
   ino?: number
   modrinth?: {
@@ -149,7 +149,7 @@ export async function decorateInstanceFiles(
     .then(metadata =>
       Object.fromEntries(
         metadata
-          .filter((m): m is ResourceMetadata => !!m)
+          .filter((m): m is ResourceLike => !!m)
           .map(m => [m.sha1, m])
       )
     )

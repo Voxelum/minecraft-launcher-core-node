@@ -6,6 +6,7 @@ export * from './instance-create'
 export * from './instance-files'
 export * from './instance-files-delta'
 export * from './instance-files-discovery'
+export * from './instance-file-handler'
 export * from './modpack'
 export * from './utils'
 
