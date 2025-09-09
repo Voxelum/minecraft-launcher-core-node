@@ -1,6 +1,7 @@
-import type { Stats } from 'fs-extra'
-import { InstanceFile } from './instance-files'
-import type { ChecksumWorker, InstanceSystemEnv, Logger, ResourceManager } from './internal-type'
+import { readdir, stat, type Stats } from 'fs-extra'
+import { join, relative } from 'path'
+import { InstanceFile } from './files'
+import type { ChecksumWorker, Logger, ResourceManager } from './internal_type'
 
 /**
  * Resource metadata interface
@@ -29,7 +30,7 @@ export type FileFilter = (relativePath: string, stats: Stats) => boolean
  */
 export async function getInstanceFiles(
   instancePath: string,
-  { logger, stat, join, relative, readdir }: InstanceSystemEnv,
+  logger?: Logger,
   filter?: FileFilter
 ): Promise<Array<[InstanceFile, Stats]>> {
   const files: Array<[InstanceFile, Stats]> = []
@@ -54,7 +55,7 @@ export async function getInstanceFiles(
       const children = await readdir(dirOrFile)
       await Promise.all(children.map(child =>
         scan(join(dirOrFile, child)).catch((e) => {
-          logger.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
+          logger?.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
         })
       ))
     } else {
@@ -116,7 +117,6 @@ export async function decorateInstanceFiles(
   worker: ChecksumWorker,
   resourceManager: ResourceManager,
   undecoratedResources: Set<InstanceFile>,
-  { join }: Pick<InstanceSystemEnv, 'join'>,
   hashes?: string[]
 ): Promise<void> {
   // Get SHA1 hashes from resource manager using inode numbers

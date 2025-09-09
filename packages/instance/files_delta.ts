@@ -1,5 +1,5 @@
-import type { join } from 'path';
-import { InstanceFile, InstanceFileUpdate } from './instance-files';
+import { join } from 'path';
+import { InstanceFile, InstanceFileUpdate } from './files';
 
 /**
  * File system abstraction for checking files
@@ -17,8 +17,6 @@ interface FileSystem {
    * Compute CRC32 hash
    */
   getCrc32(instancePath: string, file: { size: number; mtime: number }): Promise<number>
-
-  join: typeof join
 }
 
 /**
@@ -40,9 +38,9 @@ export async function computeFileUpdates(
   const jointFilePaths = new Set([...oldFiles.map(f => f.path), ...newFiles.map(f => f.path)])
 
   const result: InstanceFileUpdate[] = []
-  
+
   for (const p of jointFilePaths) {
-    const filePath = fs.join(instancePath, p)
+    const filePath = join(instancePath, p)
     const file = await fs.getFile(filePath)
 
     if (!file) {
@@ -56,7 +54,7 @@ export async function computeFileUpdates(
     } else {
       let currentSha1 = ''
       let currentCrc32 = 0
-      
+
       // Check if file changed compared to old install
       const isFileChangedComparedToOldFile = typeof oldInstallTime === 'number'
         ? oldInstallTime < file.mtime
@@ -89,11 +87,11 @@ export async function computeFileUpdates(
             if ('sha1' in toAddFile.hashes) {
               return (currentSha1 || await fs.getSha1(instancePath, file)) !== toAdd[p].hashes.sha1
             }
-            const crcDiff = 'crc32' in toAddFile.hashes 
-              ? (currentCrc32 || (currentCrc32 = await fs.getCrc32(instancePath, file))) !== Number.parseInt(toAdd[p].hashes.crc32) 
+            const crcDiff = 'crc32' in toAddFile.hashes
+              ? (currentCrc32 || (currentCrc32 = await fs.getCrc32(instancePath, file))) !== Number.parseInt(toAdd[p].hashes.crc32)
               : undefined
             const sizeDiff = 'size' in toAddFile ? file.size !== toAdd[p].size : undefined
-            
+
             if (crcDiff || sizeDiff) {
               return true
             }
@@ -106,7 +104,7 @@ export async function computeFileUpdates(
 
           const dontKnowOldFile = isFileChangedComparedToOldFile === undefined
           const isFileDifferent = await isFileDiff()
-          
+
           result.push({
             file: toAdd[p],
             operation: !isFileDifferent ? 'keep' : dontKnowOldFile ? 'backup-add' : 'add'

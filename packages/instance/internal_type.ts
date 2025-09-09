@@ -1,8 +1,4 @@
-import type { existsSync } from 'fs'
-import type { readdir, stat, readFile } from 'fs-extra'
-import type { join, relative } from 'path'
-import type { pathToFileURL } from 'url'
-import { ResourceLike } from './instance-files-discovery'
+import { ResourceLike } from './files_discovery'
 /**
  * Logger interface abstraction
  */
@@ -16,18 +12,6 @@ export interface Logger {
  */
 export interface ChecksumWorker {
   checksum(filePath: string, algorithm: string): Promise<string>
-}
-
-export interface InstanceSystemEnv {
-  join: typeof join
-  relative: typeof relative
-  stat: typeof stat
-  readdir: typeof readdir
-  existsSync: typeof existsSync
-  logger: Logger
-  readFile: typeof readFile
-  pathToFileURL: typeof pathToFileURL
-  sep: string
 }
 
 /**

@@ -1,69 +1,71 @@
-import type { InstanceSystemEnv } from './internal-type'
+import { existsSync, readdir } from 'fs-extra'
 import type { InstanceType, ThirdPartyLauncherManifest } from './modpack'
 import {
   parseCurseforgeInstance,
   parseCurseforgeInstanceFiles
-} from './parsers/curseforge-parser'
+} from './parsers/curseforge_parser'
 import {
   parseModrinthInstance,
   parseModrinthInstanceFiles
-} from './parsers/modrinth-parser'
+} from './parsers/modrinth_parser'
 import {
   detectMMCRoot,
   parseMultiMCInstance,
   parseMultiMCInstanceFiles
-} from './parsers/multimc-parser'
+} from './parsers/multimc_parser'
 import {
   parseVanillaInstance,
   parseVanillaInstanceFiles
-} from './parsers/vanilla-parser'
+} from './parsers/vanilla_parser'
 import { isSystemError } from './utils'
+import { join } from 'path'
+import { Logger } from './internal_type'
 
 /**
  * Check if a path is a MultiMC instance
  */
-function isMultiMCInstance({ existsSync, join }: InstanceSystemEnv, path: string): boolean {
+function isMultiMCInstance(path: string): boolean {
   return existsSync(join(path, 'instance.cfg')) && existsSync(join(path, 'mmc-pack.json'))
 }
 
 /**
  * Check if a path is a Modrinth instance
  */
-function isModrinthInstance({ existsSync, join }: InstanceSystemEnv, path: string): boolean {
+function isModrinthInstance(path: string): boolean {
   return existsSync(join(path, 'profile.json'))
 }
 
 /**
  * Check if a path is a CurseForge instance
  */
-function isCurseforgeInstance({ existsSync, join }: InstanceSystemEnv, path: string): boolean {
+function isCurseforgeInstance(path: string): boolean {
   return existsSync(join(path, 'minecraftinstance.json'))
 }
 
 /**
  * Check if a path is a Vanilla Minecraft installation
  */
-function isVanillaMinecraft({ existsSync, join }: InstanceSystemEnv, path: string): boolean {
+function isVanillaMinecraft(path: string): boolean {
   return existsSync(join(path, 'launcher_profiles.json'))
 }
 
 /**
  * Auto-detect the launcher type from a path
  */
-export function detectLauncherType(path: string, env: InstanceSystemEnv): InstanceType | null {
-  if (isMultiMCInstance(env, path) || (detectMMCRoot(path, env) !== path && env.existsSync(env.join(detectMMCRoot(path, env), 'instances')))) {
+export function detectLauncherType(path: string): InstanceType | null {
+  if (isMultiMCInstance(path) || (detectMMCRoot(path) !== path && existsSync(join(detectMMCRoot(path), 'instances')))) {
     return 'mmc'
   }
 
-  if (isModrinthInstance(env, path) || env.existsSync(env.join(path, 'profiles'))) {
+  if (isModrinthInstance(path) || existsSync(join(path, 'profiles'))) {
     return 'modrinth'
   }
 
-  if (isCurseforgeInstance(env, path) || env.existsSync(env.join(path, 'Instances'))) {
+  if (isCurseforgeInstance(path) || existsSync(join(path, 'Instances'))) {
     return 'curseforge'
   }
 
-  if (isVanillaMinecraft(env, path)) {
+  if (isVanillaMinecraft(path)) {
     return 'vanilla'
   }
 
@@ -75,11 +77,9 @@ export function detectLauncherType(path: string, env: InstanceSystemEnv): Instan
  */
 export async function parseLauncherData(
   path: string,
-  env: InstanceSystemEnv,
   type?: InstanceType,
 ): Promise<ThirdPartyLauncherManifest> {
-  const actualType = type || detectLauncherType(path, env)
-  const { join, readdir, existsSync } = env
+  const actualType = type || detectLauncherType(path)
 
   if (!actualType) {
     throw new Error(`Cannot detect launcher type for path: ${path}`)
@@ -88,13 +88,13 @@ export async function parseLauncherData(
   try {
     switch (actualType) {
       case 'mmc': {
-        const rootPath = detectMMCRoot(path, env)
+        const rootPath = detectMMCRoot(path)
         const instancesPath = join(rootPath, 'instances')
         const instances = await readdir(instancesPath)
 
         const manifests = await Promise.allSettled(instances.map(async (instance) => {
           const instancePath = join(instancesPath, instance)
-          const options = await parseMultiMCInstance(instancePath, env)
+          const options = await parseMultiMCInstance(instancePath)
           return {
             options,
             path: instancePath,
@@ -120,7 +120,7 @@ export async function parseLauncherData(
 
         const manifests = await Promise.allSettled(instances.map(async (instance) => {
           const instancePath = join(instancesPath, instance)
-          const options = await parseModrinthInstance(instancePath, env)
+          const options = await parseModrinthInstance(instancePath)
           return {
             options,
             path: instancePath,
@@ -152,7 +152,7 @@ export async function parseLauncherData(
         const instances = await readdir(instancesPath)
         const manifests = await Promise.allSettled(instances.map(async (instance) => {
           const instancePath = join(instancesPath, instance)
-          const options = await parseCurseforgeInstance(instancePath, env)
+          const options = await parseCurseforgeInstance(instancePath)
           return {
             options,
             path: instancePath,
@@ -177,7 +177,7 @@ export async function parseLauncherData(
       }
 
       case 'vanilla': {
-        const vanillaInstances = await parseVanillaInstance(path, env)
+        const vanillaInstances = await parseVanillaInstance(path)
 
         const assets = join(path, 'assets')
         const libraries = join(path, 'libraries')
@@ -211,10 +211,9 @@ export async function parseLauncherData(
  */
 export async function parseInstanceFiles(
   path: string,
-  env: InstanceSystemEnv,
   type?: InstanceType,
 ) {
-  const actualType = type || detectLauncherType(path, env)
+  const actualType = type || detectLauncherType(path)
 
   if (!actualType) {
     throw new Error(`Cannot detect launcher type for path: ${path}`)
@@ -222,16 +221,16 @@ export async function parseInstanceFiles(
 
   switch (actualType) {
     case 'mmc':
-      return parseMultiMCInstanceFiles(path, env)
+      return parseMultiMCInstanceFiles(path)
 
     case 'modrinth':
-      return parseModrinthInstanceFiles(path, env)
+      return parseModrinthInstanceFiles(path)
 
     case 'curseforge':
-      return parseCurseforgeInstanceFiles(path, env)
+      return parseCurseforgeInstanceFiles(path)
 
     case 'vanilla':
-      return parseVanillaInstanceFiles(path, env)
+      return parseVanillaInstanceFiles(path)
 
     default:
       throw new Error(`Unsupported launcher type: ${actualType}`)

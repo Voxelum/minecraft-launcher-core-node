@@ -3,7 +3,7 @@ import {
   type Project,
   type ProjectVersion,
   type ModrinthProfile
-} from './modrinth-parser'
+} from './modrinth_parser'
 
 describe('Modrinth Parser', () => {
   describe('Type Definitions', () => {

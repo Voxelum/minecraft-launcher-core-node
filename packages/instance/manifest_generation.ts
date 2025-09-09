@@ -1,12 +1,11 @@
-import { task } from '@xmcl/task'
 import { join } from 'path'
 import { Instance } from './instance'
-import { InstanceFile, InstanceManifest } from './instance-files'
+import { InstanceFile, InstanceManifest } from './files'
 import {
   decorateInstanceFiles,
   getInstanceFiles
-} from './instance-files-discovery'
-import { ChecksumWorker, InstanceSystemEnv, ResourceManager } from './internal-type'
+} from './files_discovery'
+import { ChecksumWorker, Logger, ResourceManager } from './internal_type'
 
 /**
  * Options for generating instance manifest
@@ -30,17 +29,16 @@ export async function generateInstanceManifest(
   instance: Instance,
   worker: ChecksumWorker,
   resourceManager: ResourceManager,
-  env: InstanceSystemEnv,
+  logger: Logger,
   undecoratedResources = new Set<InstanceFile>()
 ): Promise<InstanceManifest> {
   const instancePath = options.path
   let files: InstanceFile[] = []
 
-  const logger = env.logger
   const start = performance.now()
 
   // Discover all files in the instance
-  const fileWithStats = await getInstanceFiles(instancePath, env, (relativePath, stat) => {
+  const fileWithStats = await getInstanceFiles(instancePath, logger, (relativePath, stat) => {
     // Filter out files we don't want in the manifest
     if (relativePath.startsWith('resourcepacks') || relativePath.startsWith('shaderpacks')) {
       if (relativePath.endsWith('.json') || relativePath.endsWith('.png')) {
@@ -75,7 +73,7 @@ export async function generateInstanceManifest(
 
   const decorateStart = performance.now()
   try {
-    await decorateInstanceFiles(fileWithStats, instancePath, worker, resourceManager, undecoratedResources, env)
+    await decorateInstanceFiles(fileWithStats, instancePath, worker, resourceManager, undecoratedResources)
   } catch (e) {
     logger.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
   }
@@ -119,11 +117,11 @@ export async function generateInstanceManifest(
  */
 export async function generateInstanceServerManifest(
   options: GetManifestOptions,
-  env: InstanceSystemEnv,
+  logger: Logger,
 ): Promise<InstanceFile[]> {
   const serverPath = join(options.path, 'server')
 
-  const fileWithStats = await getInstanceFiles(serverPath, env, (filePath) => {
+  const fileWithStats = await getInstanceFiles(serverPath, logger, (filePath) => {
     if (filePath.startsWith('libraries') || filePath.startsWith('versions') || filePath.startsWith('assets')) {
       return true // exclude
     }

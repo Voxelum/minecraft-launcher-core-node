@@ -1,5 +1,5 @@
 import { CreateInstanceOptions, InstanceSchema, RuntimeVersions, createInstanceTemplate } from './instance'
-import type { VersionMetadataProvider } from './internal-type'
+import type { VersionMetadataProvider } from './internal_type'
 
 /**
   * Safely assign properties from source to target, only updating if values differ

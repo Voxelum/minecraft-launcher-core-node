@@ -1,8 +1,10 @@
+import { readFile } from 'fs-extra'
+import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { CreateInstanceOptions, RuntimeVersions } from '../instance'
-import { InstanceFile } from '../instance-files'
-import { getInstanceFiles } from '../instance-files-discovery'
-import { InstanceSystemEnv } from '../internal-type'
+import { InstanceFile } from '../files'
+import { getInstanceFiles } from '../files_discovery'
+import { Logger } from '../internal_type'
 
 /**
  * Vanilla launcher profile
@@ -49,18 +51,17 @@ export interface VanillaProfiles {
  */
 export async function parseVanillaInstance(
   minecraftPath: string,
-  env: InstanceSystemEnv
 ): Promise<Array<{ path: string; options: CreateInstanceOptions }>> {
   try {
-    const profilesPath = env.join(minecraftPath, 'launcher_profiles.json')
-    const data = await env.readFile(profilesPath, 'utf-8')
+    const profilesPath = join(minecraftPath, 'launcher_profiles.json')
+    const data = await readFile(profilesPath, 'utf-8')
     const profiles = JSON.parse(data) as VanillaProfiles
 
     const instances: Array<{ path: string; options: CreateInstanceOptions }> = []
 
     for (const [id, profile] of Object.entries(profiles.profiles)) {
       const instancePath = profile.gameDir || minecraftPath
-      
+
       const runtime: RuntimeVersions = {
         minecraft: profile.lastVersionId,
       }
@@ -104,8 +105,8 @@ export async function parseVanillaInstance(
 /**
  * Parse vanilla instance files
  */
-export async function parseVanillaInstanceFiles(instancePath: string, env: InstanceSystemEnv): Promise<InstanceFile[]> {
-  const files = await getInstanceFiles(instancePath, env, (f) => {
+export async function parseVanillaInstanceFiles(instancePath: string, logger?: Logger): Promise<InstanceFile[]> {
+  const files = await getInstanceFiles(instancePath, logger, (f) => {
     if (f === 'launcher_profiles.json') return true
     if (f === 'launcher_settings.json') return true
     if (f === 'usercache.json') return true
@@ -114,7 +115,7 @@ export async function parseVanillaInstanceFiles(instancePath: string, env: Insta
   })
 
   for (const [file] of files) {
-    file.downloads = [pathToFileURL(env.join(instancePath, file.path)).toString()]
+    file.downloads = [pathToFileURL(join(instancePath, file.path)).toString()]
   }
 
   return files.map(([file]) => file)

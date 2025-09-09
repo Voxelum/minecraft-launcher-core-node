@@ -24,7 +24,7 @@ export interface InstanceFile {
     fileId: number
   }
   /**
-   * The associated modrinth project/version of the instance file
+   * The associated modrinth project/version of the instance file 
    */
   modrinth?: {
     projectId: string

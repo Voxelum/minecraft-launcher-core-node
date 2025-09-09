@@ -1,5 +1,5 @@
 import { InstanceSchema, createInstanceTemplate } from './instance'
-import { assignShallow } from './instance-edit'
+import { assignShallow } from './edit'
 
 export type CreateInstanceOption = Partial<Omit<InstanceSchema, 'lastAccessDate' | 'creationDate'>> & {
   path?: string
@@ -19,7 +19,8 @@ export type CreateInstanceOption = Partial<Omit<InstanceSchema, 'lastAccessDate'
 
 export function createInstance(
   payload: CreateInstanceOption,
-  getCandidatePath: (name: string) => string
+  getCandidatePath: (name: string) => string,
+  getLatestRelease: () => string,
 ) {
   const instance = createInstanceTemplate()
 
@@ -44,7 +45,7 @@ export function createInstance(
     instance.path = getCandidatePath(payload.name)
   }
 
-  instance.runtime.minecraft = instance.runtime.minecraft || this.versionMetadataService.getLatestRelease()
+  instance.runtime.minecraft = instance.runtime.minecraft || getLatestRelease()
   instance.creationDate = Date.now()
   instance.lastAccessDate = Date.now()
 

@@ -1,8 +1,10 @@
+import { pathToFileURL } from 'url'
 import { CreateInstanceOptions } from '../instance'
-import { InstanceFile } from '../instance-files'
-import { getInstanceFiles } from '../instance-files-discovery'
-import { InstanceSystemEnv } from '../internal-type'
+import { InstanceFile } from '../files'
+import { getInstanceFiles } from '../files_discovery'
 import { CurseforgeModpackManifest, getInstanceConfigFromCurseforgeModpack } from '../modpack'
+import { join } from 'path'
+import { readFile } from 'fs-extra'
 
 /**
  * Curseforge launcher instance configuration
@@ -44,8 +46,8 @@ export interface CurseforgeInstance {
 /**
  * Parse Curseforge instance configuration
  */
-export async function parseCurseforgeInstance(instancePath: string, env: InstanceSystemEnv): Promise<CreateInstanceOptions> {
-  const data = await env.readFile(env.join(instancePath, 'minecraftinstance.json'), 'utf-8')
+export async function parseCurseforgeInstance(instancePath: string): Promise<CreateInstanceOptions> {
+  const data = await readFile(join(instancePath, 'minecraftinstance.json'), 'utf-8')
   const cf = JSON.parse(data) as CurseforgeInstance
 
   const config = getInstanceConfigFromCurseforgeModpack(cf.manifest)
@@ -72,14 +74,14 @@ export async function parseCurseforgeInstance(instancePath: string, env: Instanc
 /**
  * Parse Curseforge instance files
  */
-export async function parseCurseforgeInstanceFiles(instancePath: string, env: InstanceSystemEnv): Promise<InstanceFile[]> {
-  const files = await getInstanceFiles(instancePath, env, (f) => {
+export async function parseCurseforgeInstanceFiles(instancePath: string): Promise<InstanceFile[]> {
+  const files = await getInstanceFiles(instancePath, undefined, (f) => {
     if (f === 'minecraftinstance.json') return true
     return false
   })
 
   for (const [file] of files) {
-    file.downloads = [env.pathToFileURL(env.join(instancePath, file.path)).toString()]
+    file.downloads = [pathToFileURL(join(instancePath, file.path)).toString()]
   }
 
   return files.map(([file]) => file)

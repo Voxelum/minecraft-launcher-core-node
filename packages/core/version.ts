@@ -2,6 +2,7 @@ import { MinecraftFolder, MinecraftLocation } from './folder'
 import { Platform, getPlatform } from './platform'
 import { extname } from 'path'
 import { readFile } from 'fs/promises'
+import { isNotNull } from './utils'
 
 interface PartialResolvedVersion extends Version {
   libraries: ResolvedLibrary[]
@@ -82,6 +83,18 @@ export interface ResolvedVersion {
    * The first element is the user provided version.
    */
   pathChain: string[]
+}
+
+export interface ResolvedServerVersion {
+  id: string
+  libraries: ResolvedLibrary[]
+  mainClass: string
+  jar?: string
+  minecraftVersion: string
+  arguments: {
+    game: string[]
+    jvm: string[]
+  }
 }
 
 /**
@@ -387,6 +400,33 @@ export namespace Version {
     // e.g. [liteloader version, forge version, minecraft version]
     const hierarchy = await resolveDependency(folder, version, platofrm)
     return resolve(minecraftPath, hierarchy)
+  }
+
+  /**
+   * Parse the server version from the Minecraft folder.
+   * 
+   * This is non-standard version json format, only contains server related information.
+   *
+   * @param minecraftPath The path of the Minecraft folder
+   * @param version The version id
+   * @returns The resolved server version
+   */
+  export async function parseServer(minecraftPath: MinecraftLocation, version: string): Promise<ResolvedServerVersion> {
+    const folder = MinecraftFolder.from(minecraftPath)
+    const filePath = folder.getVersionServerJson(version)
+    const content = await readFile(filePath, 'utf-8')
+    const profile = JSON.parse(content) as Version
+    return {
+      id: version,
+      minecraftVersion: profile.inheritsFrom || profile.id,
+      mainClass: profile.mainClass,
+      jar: profile.jar,
+      libraries: profile.libraries.map(l => Version.resolveLibrary(l)).filter(isNotNull),
+      arguments: {
+        jvm: profile.arguments?.jvm || [] as any,
+        game: profile.arguments?.game || [] as any,
+      },
+    }
   }
 
   /**

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { 
   type CurseforgeInstance
-} from './curseforge-parser'
+} from './curseforge_parser'
 
 describe('CurseForge Parser', () => {
   describe('Type Definitions', () => {

@@ -1,7 +1,10 @@
+import { readFile } from 'fs-extra'
+import { join, sep } from 'path'
+import { pathToFileURL } from 'url'
 import { CreateInstanceOptions, RuntimeVersions } from '../instance'
-import { InstanceFile } from '../instance-files'
-import { getInstanceFiles } from '../instance-files-discovery'
-import { InstanceSystemEnv } from '../internal-type'
+import { InstanceFile } from '../files'
+import { getInstanceFiles } from '../files_discovery'
+import { Logger } from '../internal_type'
 
 /**
  * Modrinth project interface (simplified)
@@ -95,8 +98,8 @@ export interface ModrinthProfile {
 /**
  * Parse Modrinth instance configuration
  */
-export async function parseModrinthInstance(instancePath: string, env: InstanceSystemEnv): Promise<CreateInstanceOptions> {
-  const data = await env.readFile(env.join(instancePath, 'profile.json'), 'utf-8')
+export async function parseModrinthInstance(instancePath: string): Promise<CreateInstanceOptions> {
+  const data = await readFile(join(instancePath, 'profile.json'), 'utf-8')
   const modrinth = JSON.parse(data) as ModrinthProfile
 
   let icon = ''
@@ -138,21 +141,21 @@ export async function parseModrinthInstance(instancePath: string, env: InstanceS
  */
 export async function parseModrinthInstanceFiles(
   instancePath: string,
-  env: InstanceSystemEnv
+  logger?: Logger
 ): Promise<InstanceFile[]> {
-  const files = await getInstanceFiles(instancePath, env, (f) => {
+  const files = await getInstanceFiles(instancePath, logger, (f) => {
     if (f === 'profile.json') return true
     return false
   })
 
-  const data = await env.readFile(env.join(instancePath, 'profile.json'), 'utf-8')
+  const data = await readFile(join(instancePath, 'profile.json'), 'utf-8')
   const modrinth = JSON.parse(data) as ModrinthProfile
 
   for (const [file] of files) {
-    const osPath = file.path.replace(/\//g, env.sep)
+    const osPath = file.path.replace(/\//g, sep)
     const existedProject = modrinth.projects[file.path] || modrinth.projects[osPath]
-    file.downloads = [env.pathToFileURL(env.join(instancePath, osPath)).toString()]
-    
+    file.downloads = [pathToFileURL(join(instancePath, osPath)).toString()]
+
     if (existedProject) {
       if (typeof existedProject.metadata.version !== 'string' && existedProject.metadata.version) {
         const existedFile = existedProject.metadata.version.files.find(f => f.hashes.sha256 === existedProject.sha512)

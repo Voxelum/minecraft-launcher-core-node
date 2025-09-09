@@ -1,12 +1,14 @@
 import type { Task } from '@xmcl/task';
-import type { ensureDir, remove, rename, rmdir, unlink } from 'fs-extra';
-import type { dirname } from 'path';
-import type { fileURLToPath } from 'url';
-import { InstanceFile, InstanceFileUpdate } from './instance-files';
-import { ChecksumWorker, InstanceSystemEnv } from './internal-type';
+import { ensureDir, remove, rename, rmdir, unlink } from 'fs-extra';
+import { dirname, join, relative } from 'path';
+import { fileURLToPath } from 'url';
+import { InstanceFile, InstanceFileUpdate } from './files';
+import { ChecksumWorker, Logger } from './internal_type';
 
-export interface InstanceFileOperationHandlerContext extends InstanceSystemEnv {
+export interface InstanceFileOperationHandlerContext {
   worker: ChecksumWorker
+
+  logger: Logger
 
   onSpecialFile: (file: InstanceFile) => void
 
@@ -19,20 +21,6 @@ export interface InstanceFileOperationHandlerContext extends InstanceSystemEnv {
   getDownloadTask: (p: HttpTaskPayload[], finished: Set<string>) => Task<void>
 
   getFileOperationTask: (p: FileOperationPayload[], finished: Set<string>, unhandled: InstanceFile[]) => Task<void>
-
-  fileURLToPath: typeof fileURLToPath
-
-  rename: typeof rename
-
-  unlink: typeof unlink
-
-  dirname: typeof dirname
-
-  ensureDir: typeof ensureDir
-
-  rmdir: typeof rmdir
-
-  remove: typeof remove
 }
 
 export interface UnzipTaskPayload { file: InstanceFile; zipPath: string; entryName: string; destination: string }
@@ -115,8 +103,8 @@ export class InstanceFileOperationHandler {
     }
 
     for (const file of unhandled) {
-      if (await this.#handleUnzip(file, this.context.join(this.workspacePath, file.path))) continue
-      if (await this.#handleHttp(file, this.context.join(this.workspacePath, file.path))) continue
+      if (await this.#handleUnzip(file, join(this.workspacePath, file.path))) continue
+      if (await this.#handleHttp(file, join(this.workspacePath, file.path))) continue
       this.unresolvable.push(file)
     }
 
@@ -138,18 +126,18 @@ export class InstanceFileOperationHandler {
     const finished = [] as [string, string][]
     try {
       for (const file of this.#backupQueue) {
-        const src = this.context.join(this.instancePath, file.path)
-        const dest = this.context.join(this.backupPath, file.path)
+        const src = join(this.instancePath, file.path)
+        const dest = join(this.backupPath, file.path)
 
-        await this.context.ensureDir(this.context.dirname(dest))
-        await this.context.rename(src, dest)
+        await ensureDir(dirname(dest))
+        await rename(src, dest)
         finished.push([src, dest])
       }
     } catch (e) {
       // rollback with best effort
       this.context.logger.warn('Rollback due to backup files failed', e)
       for (const [src, dest] of finished) {
-        await this.context.rename(dest, src).catch(() => undefined)
+        await rename(dest, src).catch(() => undefined)
       }
 
       throw e
@@ -159,7 +147,7 @@ export class InstanceFileOperationHandler {
     finished.splice(0, finished.length)
 
     // phase 3, move the workspace files to instance location
-    await this.context.ensureDir(this.instancePath)
+    await ensureDir(this.instancePath)
     const files = [
       ...this.#linkQueue.map(f => f.file),
       ...this.#unzipQueue.map(f => f.file),
@@ -167,20 +155,20 @@ export class InstanceFileOperationHandler {
     ]
 
     try {
-      const dirToCreate = Array.from(new Set(files.map(file => this.context.dirname(this.context.join(this.instancePath, file.path)))))
-      await Promise.all(dirToCreate.map(dir => this.context.ensureDir(dir)))
+      const dirToCreate = Array.from(new Set(files.map(file => dirname(join(this.instancePath, file.path)))))
+      await Promise.all(dirToCreate.map(dir => ensureDir(dir)))
 
       await Promise.all(files.map(async (file) => {
-        const src = this.context.join(this.workspacePath, file.path)
-        const dest = this.context.join(this.instancePath, file.path)
-        await this.context.rename(src, dest)
+        const src = join(this.workspacePath, file.path)
+        const dest = join(this.instancePath, file.path)
+        await rename(src, dest)
         finished.push([src, dest])
       }))
     } catch (e) {
       // rollback with best effort
       this.context.logger.warn('Rollback due to rename files failed', e)
       for (const [src, dest] of finished) {
-        await this.context.rename(dest, src).catch(() => undefined)
+        await rename(dest, src).catch(() => undefined)
       }
 
       throw e
@@ -188,14 +176,14 @@ export class InstanceFileOperationHandler {
     this.context.logger.log('Rename stage finished ' + finished.length)
 
     for (const file of this.#removeQueue) {
-      const dest = this.context.join(this.backupPath, file.path)
-      await this.context.unlink(dest).catch(() => undefined)
-      await this.context.rmdir(this.context.dirname(dest)).catch(() => undefined)
+      const dest = join(this.backupPath, file.path)
+      await unlink(dest).catch(() => undefined)
+      await rmdir(dirname(dest)).catch(() => undefined)
     }
     this.context.logger.log('Remove stage finished ' + this.#removeQueue.length)
 
     // Remove the workspace folder
-    await this.context.remove(this.workspacePath)
+    await remove(this.workspacePath)
   }
 
   /**
@@ -203,9 +191,9 @@ export class InstanceFileOperationHandler {
   */
   async #handleFile({ file, operation }: InstanceFileUpdate) {
     const instancePath = this.instancePath
-    const destination = this.context.join(instancePath, file.path)
+    const destination = join(instancePath, file.path)
 
-    if (this.context.relative(instancePath, destination).startsWith('..')) {
+    if (relative(instancePath, destination).startsWith('..')) {
       return
     }
 
@@ -298,7 +286,7 @@ export class InstanceFileOperationHandler {
   async #handleLink(file: InstanceFile, destination: string, sha1: string) {
     if (file.downloads) {
       if (file.downloads[0].startsWith('file://')) {
-        this.#linkQueue.push({ file, src: this.context.fileURLToPath(file.downloads[0]), destination })
+        this.#linkQueue.push({ file, src: fileURLToPath(file.downloads[0]), destination })
         return true
       }
     }
@@ -313,7 +301,7 @@ export class InstanceFileOperationHandler {
   }
 
   async #dispatchFileTask(file: InstanceFile, sha1: string) {
-    const destination = this.context.join(this.workspacePath, file.path)
+    const destination = join(this.workspacePath, file.path)
     if (await this.#handleLink(file, destination, sha1)) return
 
     if (!file.downloads) {

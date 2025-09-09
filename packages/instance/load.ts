@@ -1,6 +1,6 @@
 import { Instance, InstanceSchema, createInstanceTemplate } from './instance';
-import type { VersionMetadataProvider } from './internal-type';
-import { assignShallow } from './instance-edit';
+import type { VersionMetadataProvider } from './internal_type';
+import { assignShallow } from './edit';
 
 /**
  * Load and assign instance data from options

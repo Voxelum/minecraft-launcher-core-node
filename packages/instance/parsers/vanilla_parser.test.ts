@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { 
   type VanillaProfile,
   type VanillaProfiles
-} from './vanilla-parser'
+} from './vanilla_parser'
 
 describe('Vanilla Parser', () => {
   describe('Type Definitions', () => {

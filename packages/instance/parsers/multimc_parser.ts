@@ -1,9 +1,9 @@
 import { dirname, join } from 'path'
 import { pathToFileURL } from 'url'
 import { CreateInstanceOptions, RuntimeVersions } from '../instance'
-import { InstanceFile } from '../instance-files'
-import { getInstanceFiles } from '../instance-files-discovery'
-import { InstanceSystemEnv } from '../internal-type'
+import { InstanceFile } from '../files'
+import { getInstanceFiles } from '../files_discovery'
+import { existsSync, readFile } from 'fs-extra'
 
 /**
  * MultiMC instance configuration interface
@@ -47,21 +47,21 @@ export interface MultiMCManifestComponent {
 /**
  * Detect MultiMC root directory
  */
-export function detectMMCRoot(path: string, env: InstanceSystemEnv): string {
+export function detectMMCRoot(path: string): string {
   const original = path
-  let instancesPath = env.join(path, 'instances')
+  let instancesPath = join(path, 'instances')
 
-  if (!env.existsSync(instancesPath)) {
+  if (!existsSync(instancesPath)) {
     path = dirname(path)
-    instancesPath = env.join(path, 'instances')
+    instancesPath = join(path, 'instances')
   }
 
-  if (!env.existsSync(instancesPath)) {
+  if (!existsSync(instancesPath)) {
     path = dirname(path)
-    instancesPath = env.join(path, 'instances')
+    instancesPath = join(path, 'instances')
   }
 
-  if (!env.existsSync(instancesPath)) {
+  if (!existsSync(instancesPath)) {
     // Not a MultiMC root... but return and throw error in later code path
     return original
   }
@@ -74,9 +74,8 @@ export function detectMMCRoot(path: string, env: InstanceSystemEnv): string {
  */
 export async function parseMultiMCInstance(
   path: string,
-  env: InstanceSystemEnv
 ): Promise<CreateInstanceOptions> {
-  const instanceCFGText = await env.readFile(join(path, 'instance.cfg'), 'utf-8')
+  const instanceCFGText = await readFile(join(path, 'instance.cfg'), 'utf-8')
   const instanceCFG = instanceCFGText.split('\n').reduce((acc, line) => {
     if (!line || line.trim().length === 0) return acc
     const [key, value] = line.split('=')
@@ -84,7 +83,7 @@ export async function parseMultiMCInstance(
     return acc
   }, {} as Record<string, string>) as any as MultiMCConfig
 
-  const instancePack = JSON.parse(await env.readFile(join(path, 'mmc-pack.json'), 'utf-8')) as MultiMCManifest
+  const instancePack = JSON.parse(await readFile(join(path, 'mmc-pack.json'), 'utf-8')) as MultiMCManifest
 
   const instanceOptions: CreateInstanceOptions = {
     name: instanceCFG.name,
@@ -156,8 +155,8 @@ export async function parseMultiMCInstance(
 /**
  * Parse MultiMC instance files
  */
-export async function parseMultiMCInstanceFiles(instancePath: string, env: InstanceSystemEnv): Promise<InstanceFile[]> {
-  const files = await getInstanceFiles(instancePath, env)
+export async function parseMultiMCInstanceFiles(instancePath: string): Promise<InstanceFile[]> {
+  const files = await getInstanceFiles(instancePath)
 
   for (const [f] of files) {
     f.downloads = [pathToFileURL(join(instancePath, f.path)).toString()]
