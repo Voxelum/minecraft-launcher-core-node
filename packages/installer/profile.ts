@@ -324,6 +324,23 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         await parseJar(minecraftFolder, jar, installProfile, serverProfile)
       }
 
+      const neoForgeVersion = serverProfile.arguments?.game.find((v, i, arr) => arr[i - 1] === '--fml.neoForgeVersion')
+      if (neoForgeVersion) {
+        serverProfile.libraries.push({
+          name: `net.neoforged:neoforge:${neoForgeVersion}:universal`,
+        }, {
+          name: `net.neoforged:neoforge:${neoForgeVersion}:server`,
+        })
+      }
+      const neoFormVersion = serverProfile.arguments?.game.find((v, i, arr) => arr[i - 1] === '--fml.neoFormVersion')
+      if (neoFormVersion) {
+        serverProfile.libraries.push({
+          name: `net.minecraft:server:${installProfile.minecraft}-${neoFormVersion}:extra`,
+        }, {
+          name: `net.minecraft:server:${installProfile.minecraft}-${neoFormVersion}:srg`,
+        })
+      }
+
       if (!serverProfile.mainClass) {
         throw new PostProcessNoMainClassError(jar!)
       }
