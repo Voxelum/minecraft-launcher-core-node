@@ -341,6 +341,26 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         })
       }
 
+      const forgeShim = serverProfile.libraries.find(l => l.name.startsWith('net.minecraftforge:forge') && l.name.endsWith(':shim'))
+      if (forgeShim) {
+        let zip: ZipFile | undefined
+        try {
+          zip = await open(minecraftFolder.getLibraryByPath(LibraryInfo.resolve(forgeShim.name).path))
+          for await (const entry of walkEntriesGenerator(zip)) {
+            if (entry.fileName === 'bootstrap-shim.list') {
+              const content = await readEntry(zip, entry).then(e => e.toString().split('\n').map(v => v.trim()).filter(v => v).map(l => {
+                const [sha1, name, path] = l.split('\t')
+                return { name }
+              }))
+              serverProfile.libraries.push(...content)
+              break
+            }
+          }
+        } finally {
+          zip?.close()
+        }
+      }
+
       if (!serverProfile.mainClass) {
         throw new PostProcessNoMainClassError(jar!)
       }
