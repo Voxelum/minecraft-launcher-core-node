@@ -1,5 +1,5 @@
-import { InstanceSchema, createInstanceTemplate } from './instance'
 import { assignShallow } from './edit'
+import { InstanceSchema, createInstanceTemplate } from './instance'
 
 export type CreateInstanceOption = Partial<Omit<InstanceSchema, 'lastAccessDate' | 'creationDate'>> & {
   path?: string

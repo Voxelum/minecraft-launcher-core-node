@@ -1,5 +1,6 @@
 import { CreateInstanceOptions, InstanceData, RuntimeVersions } from './instance'
-import { InstanceFile } from './instance-files'
+import { InstanceFile } from './files'
+import { CreateInstanceOption } from './create'
 
 /**
  * Third-party launcher manifest structure
@@ -405,4 +406,11 @@ export function getMcbbsModpackFromInstance(instance: InstanceData): McbbsModpac
   }
   
   return mcbbsManifest
+}
+
+export interface ModpackInstallProfile {
+  instance: CreateInstanceOption & {
+    runtime: RuntimeVersions
+  }
+  files: InstanceFile[]
 }
