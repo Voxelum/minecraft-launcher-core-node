@@ -5,13 +5,6 @@
   "description": "Core instance management functionality for Minecraft launchers",
   "main": "./index.ts",
   "browser": "./index.browser.ts",
-  "exports": {
-    ".": {
-      "import": "./index.js",
-      "require": "./index.js",
-      "types": "./index.d.ts"
-    }
-  },
   "keywords": [
     "minecraft",
     "instance",
@@ -27,6 +20,7 @@
   "dependencies": {
     "@xmcl/task": "workspace:*",
     "@xmcl/core": "workspace:*",
+    "@types/ssh2": "^1.15.5",
     "fs-extra": "^11.1.0"
   },
   "devDependencies": {

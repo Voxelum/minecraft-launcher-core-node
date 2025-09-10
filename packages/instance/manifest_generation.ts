@@ -6,6 +6,7 @@ import {
   getInstanceFiles
 } from './files_discovery'
 import { ChecksumWorker, Logger, ResourceManager } from './internal_type'
+import { Stats } from 'fs-extra'
 
 /**
  * Options for generating instance manifest
@@ -19,6 +20,27 @@ export interface GetManifestOptions {
    * The hash algorithms to compute for each file
    */
   hashes?: string[]
+}
+
+export function shouldBeExcluded(relativePath: string, stat: Stats): boolean {
+  if (relativePath.startsWith('.backups')) {
+    return true // exclude
+  }
+  if (relativePath.endsWith('.DS_Store') || relativePath.endsWith('.gitignore')) {
+    return true // exclude
+  }
+  if (relativePath === 'instance.json') {
+    return true // exclude
+  }
+  if (relativePath === 'server' && stat.isDirectory()) {
+    return true // exclude
+  }
+  // Don't share versions/libs/assets
+  if (relativePath.startsWith('versions') || relativePath.startsWith('assets') || relativePath.startsWith('libraries')) {
+    return true // exclude
+  }
+
+  return false
 }
 
 /**
@@ -45,24 +67,11 @@ export async function generateInstanceManifest(
         return true // exclude
       }
     }
-    if (relativePath.startsWith('.backups')) {
-      return true // exclude
-    }
-    if (relativePath.endsWith('.DS_Store') || relativePath.endsWith('.gitignore')) {
-      return true // exclude
-    }
-    if (relativePath === 'instance.json') {
-      return true // exclude
-    }
-    if (relativePath === 'server' && stat.isDirectory()) {
-      return true // exclude
+    if (shouldBeExcluded(relativePath, stat)) {
+      return true
     }
     // Exclude executables and libraries
     if (relativePath.endsWith('.dll') || relativePath.endsWith('.so') || relativePath.endsWith('.exe')) {
-      return true // exclude
-    }
-    // Don't share versions/libs/assets
-    if (relativePath.startsWith('versions') || relativePath.startsWith('assets') || relativePath.startsWith('libraries')) {
       return true // exclude
     }
     return false // include

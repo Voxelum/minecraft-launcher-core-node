@@ -55,41 +55,23 @@ export function createInstanceFromOptions(
 /**
  * Edit options for instances
  */
-export interface EditInstanceOptions {
-  name?: string
-  author?: string
-  description?: string
-  icon?: string
-  url?: string
-  fileApi?: string
-  runtime?: Partial<RuntimeVersions>
-  java?: string
-  assignMemory?: boolean | 'auto'
-  maxMemory?: number | undefined
-  minMemory?: number | undefined
-  vmOptions?: string[] | undefined
-  mcOptions?: string[] | undefined
-  showLog?: boolean
-  hideLauncher?: boolean
-  fastLaunch?: boolean
-  disableAuthlibInjector?: boolean
-  disableElybyAuthlib?: boolean
-  prependCommand?: string | undefined
-  resolution?: { width?: number; height?: number; fullscreen?: boolean }
-  server?: {
-    host: string
-    port?: number
-  } | undefined
-  env?: Record<string, string> | undefined
+export interface EditInstanceOptions extends Partial<Omit<InstanceSchema, 'runtime' | 'server'>> {
+  resolution?: InstanceSchema['resolution']
+  runtime?: InstanceSchema['runtime']
+  /**
+   * If this is undefined, it will disable the server of this instance
+   */
+  server?: InstanceSchema['server']
 }
 
 /**
  * Compute changes between current instance and edit options
  */
-export function computeInstanceEditChanges(
+export async function computeInstanceEditChanges(
   currentInstance: InstanceSchema,
-  editOptions: EditInstanceOptions
-): Partial<InstanceSchema> {
+  editOptions: EditInstanceOptions,
+  getIconUrl: (path: string) => Promise<string>
+): Promise<Partial<InstanceSchema>> {
   const result: Partial<InstanceSchema> = {}
 
   // Check simple properties
@@ -209,6 +191,14 @@ export function computeInstanceEditChanges(
         Object.keys(editOptions.env).some(k => editOptions.env?.[k] !== currentInstance.env?.[k]))
     if (hasDiff) {
       result.env = editOptions.env
+    }
+  }
+
+  if ('icon' in result && result.icon) {
+    const iconURL = new URL(result.icon)
+    const path = iconURL.searchParams.get('path')
+    if (iconURL.host === 'launcher' && iconURL.pathname === '/media' && path) {
+      result.icon = await getIconUrl(path)
     }
   }
 

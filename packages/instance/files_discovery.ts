@@ -44,13 +44,13 @@ export async function getInstanceFiles(
       throw error
     }
 
-    const isDirectory = stats.isDirectory()
     const relativePath = relative(instancePath, dirOrFile).replace(/\\/g, '/')
 
     if (filter && filter(relativePath, stats)) {
       return
     }
 
+    const isDirectory = stats.isDirectory()
     if (isDirectory) {
       const children = await readdir(dirOrFile)
       await Promise.all(children.map(child =>

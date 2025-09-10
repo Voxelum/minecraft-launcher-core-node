@@ -1,6 +1,6 @@
-import { MinecraftFolder, ResolvedServerVersion, ServerOptions, Version, generateArgumentsServer } from '@xmcl/core';
+import { ServerOptions, generateArgumentsServer } from '@xmcl/core';
 import { copy, writeFile } from 'fs-extra';
-import { join, relative } from 'path';
+import { delimiter, join, relative } from 'path';
 
 /**
  * The abstract layer to export instance as a runnable server.
@@ -16,6 +16,8 @@ export abstract class ServerExporter {
   abstract emitFile(path: string, content: string): void
   abstract end(): Promise<void>
 
+  onProgress: (chunk: number, progress: number, total: number) => void = () => { }
+
   /**
    * 
    * @param minecraftPath The root folder of the Minecraft installation
@@ -26,26 +28,32 @@ export abstract class ServerExporter {
   async exportInstance(
     serverDir: string,
     options: ServerOptions,
-    version: string,
     files: string[]
   ): Promise<void> {
     const ops = { ...options }
     ops.javaPath = 'java' // force use system java
 
-    ops.classPath = ops.classPath?.map(cp => relative(this.minecraftPath, cp)) // force to use relative path
+    if (ops.extraJVMArgs) {
+      const paths = ops.extraJVMArgs.find((_, i, arr) => arr[i - 1] === '-p')?.split(delimiter) || []
+      for (const p of paths) {
+        this.copyFile(join(this.minecraftPath, p), p)
+      }
+      const legacyCp = ops.extraJVMArgs.find((v) => v.startsWith('-DlegacyClassPath'))?.split('=')[1]?.split(delimiter) || []
+      for (const p of legacyCp) {
+        this.copyFile(join(this.minecraftPath, p), p)
+      }
+    }
 
-    const mc = MinecraftFolder.from(this.minecraftPath)
+    ops.classPath = ops.classPath?.map(cp => relative(serverDir, cp)) // force to use relative path
+
+    for (const lib of ops.classPath || []) {
+      this.copyFile(join(serverDir, lib), lib)
+    }
 
     // copy all files to the output folder
-    files.forEach(file => this.copyFile(join(serverDir, file), file))
-
-    // copy all libs to the output folder
-    const serverVersion = await Version.parseServer(this.minecraftPath, version)
-    serverVersion.libraries.forEach(lib => this.copyFile(mc.getLibraryByPath(lib.path), `libraries/${lib.path}`))
-
-    // copy mc server jar
-    const serverJarPath = mc.getVersionJar(serverVersion.minecraftVersion, 'server')
-    this.copyFile(serverJarPath, relative(mc.root, serverJarPath))
+    for (const file of files) {
+      this.copyFile(join(serverDir, file), file)
+    }
 
     if (ops.serverExectuableJarPath) {
       // copy to the output folder
