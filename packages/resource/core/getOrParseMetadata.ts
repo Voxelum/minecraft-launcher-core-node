@@ -2,7 +2,7 @@ import { ResourceDomain } from '../ResourceDomain'
 import { ResourceMetadata } from '../ResourceMetadata'
 import { File } from '../File'
 import { pickMetadata } from './generateResource'
-import { ResourceContext } from '../ResourceContext'
+import type { ResourceContext } from '../ResourceContext'
 import { ResourceWorkerQueuePayload } from '../ResourceWorkerQueuePayload'
 import { ResourceSnapshotTable } from '../schema'
 import { jsonArrayFrom } from './sqlHelper'
@@ -37,7 +37,7 @@ export async function getOrParseMetadata(
       err.name === 'FileNotFoundError' ||
       err.name === 'PermissionError'
     ) {
-      throw new context.ExpectedError({ type: 'parseResourceException', code: err.name })
+      context.throwException({ type: 'parseResourceException', code: err.name })
     }
     throw err
   }

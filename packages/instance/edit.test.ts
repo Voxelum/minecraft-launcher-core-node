@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CreateInstanceOptions, InstanceSchema, createInstanceTemplate } from './instance'
-import { EditInstanceOptions, applyInstanceChanges, assignShallow, computeInstanceEditChanges, createInstanceFromOptions } from './instance-edit'
-import { VersionMetadataProvider } from './internal-type'
-import { loadInstanceFromOptions } from './instance-load'
+import { EditInstanceOptions, applyInstanceChanges, assignShallow, computeInstanceEditChanges, createInstanceFromOptions } from './edit'
+import { VersionMetadataProvider } from './internal_type'
+import { loadInstanceFromOptions } from './load'
 
 describe('Instance Assignment Utils', () => {
   let mockVersionProvider: VersionMetadataProvider
@@ -189,14 +189,14 @@ describe('Instance Assignment Utils', () => {
       }
     })
 
-    it('should detect simple property changes', () => {
+    it('should detect simple property changes', async () => {
       const editOptions: EditInstanceOptions = {
         name: 'New Name',
         author: 'New Author',
         description: 'New Description'
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.name).toBe('New Name')
       expect(changes.author).toBe('New Author')
@@ -204,44 +204,44 @@ describe('Instance Assignment Utils', () => {
       expect(Object.keys(changes)).toHaveLength(3)
     })
 
-    it('should not include unchanged properties', () => {
+    it('should not include unchanged properties', async () => {
       const editOptions: EditInstanceOptions = {
         name: 'Current Instance', // same as current
         author: 'New Author'
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.name).toBeUndefined()
       expect(changes.author).toBe('New Author')
       expect(Object.keys(changes)).toHaveLength(1)
     })
 
-    it('should handle memory options correctly', () => {
+    it('should handle memory options correctly', async () => {
       const editOptions: EditInstanceOptions = {
         maxMemory: 8192,
         minMemory: undefined
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.maxMemory).toBe(8192)
       expect(changes.minMemory).toBeUndefined()
     })
 
-    it('should handle negative memory values by setting to 0', () => {
+    it('should handle negative memory values by setting to 0', async () => {
       const editOptions: EditInstanceOptions = {
         maxMemory: -1000,
         minMemory: -500
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.maxMemory).toBe(0)
       expect(changes.minMemory).toBe(0)
     })
 
-    it('should handle boolean properties', () => {
+    it('should handle boolean properties', async () => {
       const editOptions: EditInstanceOptions = {
         assignMemory: true,
         showLog: true,
@@ -249,7 +249,7 @@ describe('Instance Assignment Utils', () => {
         fastLaunch: true
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.assignMemory).toBe(true)
       expect(changes.showLog).toBe(true)
@@ -257,27 +257,27 @@ describe('Instance Assignment Utils', () => {
       expect(changes.fastLaunch).toBe(true)
     })
 
-    it('should handle resolution changes', () => {
+    it('should handle resolution changes', async () => {
       const editOptions: EditInstanceOptions = {
         resolution: { width: 2560, height: 1440, fullscreen: true }
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.resolution).toEqual({ width: 2560, height: 1440, fullscreen: true })
     })
 
-    it('should handle resolution being set to undefined', () => {
+    it('should handle resolution being set to undefined', async () => {
       const editOptions: EditInstanceOptions = {
         resolution: undefined
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.resolution).toBeUndefined()
     })
 
-    it('should handle runtime changes', () => {
+    it('should handle runtime changes', async () => {
       const editOptions: EditInstanceOptions = {
         runtime: {
           minecraft: '1.20.1',
@@ -285,7 +285,7 @@ describe('Instance Assignment Utils', () => {
         }
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.runtime).toEqual({
         minecraft: '1.19.2', // preserved from current
@@ -293,44 +293,44 @@ describe('Instance Assignment Utils', () => {
       })
     })
 
-    it('should handle server changes', () => {
+    it('should handle server changes', async () => {
       const editOptions: EditInstanceOptions = {
         server: { host: 'new.example.com', port: 25566 }
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.server).toEqual({ host: 'new.example.com', port: 25566 })
     })
 
-    it('should handle server being set to undefined', () => {
+    it('should handle server being set to undefined', async () => {
       const editOptions: EditInstanceOptions = {
         server: undefined
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.server).toBeUndefined()
     })
 
-    it('should detect changes in array options', () => {
+    it('should detect changes in array options', async () => {
       const editOptions: EditInstanceOptions = {
         vmOptions: ['-Xmx8G', '-XX:+UseG1GC'],
         mcOptions: ['--username', 'newuser']
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.vmOptions).toEqual(['-Xmx8G', '-XX:+UseG1GC'])
       expect(changes.mcOptions).toEqual(['--username', 'newuser'])
     })
 
-    it('should handle environment variables', () => {
+    it('should handle environment variables', async () => {
       const editOptions: EditInstanceOptions = {
         env: { JAVA_HOME: '/usr/lib/jvm/java-17', CUSTOM_VAR: 'value' }
       }
 
-      const changes = computeInstanceEditChanges(currentInstance, editOptions)
+      const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.env).toEqual({ JAVA_HOME: '/usr/lib/jvm/java-17', CUSTOM_VAR: 'value' })
     })
@@ -394,7 +394,7 @@ describe('Instance Assignment Utils', () => {
   })
 
   describe('Integration Tests', () => {
-    it('should handle complete edit workflow', () => {
+    it('should handle complete edit workflow', async () => {
       const mockProvider: VersionMetadataProvider = {
         getLatestRelease: () => '1.19.2'
       }
@@ -416,7 +416,7 @@ describe('Instance Assignment Utils', () => {
         showLog: true
       }
 
-      const changes = computeInstanceEditChanges(instance, editOptions)
+      const changes = await computeInstanceEditChanges(instance, editOptions, async (s) => s)
 
       // Apply changes
       const updatedInstance = applyInstanceChanges(instance, changes)

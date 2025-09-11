@@ -1,19 +1,19 @@
+import { AggregateExecutor, AnyError, WorkerQueue, isSystemError } from '@xmcl/utils'
 import { FSWatcher } from 'chokidar'
 import { basename, join, resolve, sep } from 'path'
-import { Resource } from '../Resource'
-import { ResourceDomain } from '../ResourceDomain'
-import { ResourceMetadata } from '../ResourceMetadata'
 import { File } from '../File'
 import { ResourceContext } from '../ResourceContext'
+import { ResourceDomain } from '../ResourceDomain'
+import { ResourceMetadata } from '../ResourceMetadata'
 import { ResourceWorkerQueuePayload } from '../ResourceWorkerQueuePayload'
-import { getFile, getFiles } from './getFile'
-import { generateResourceV3, pickMetadata } from './generateResource'
-import { getOrParseMetadata } from './getOrParseMetadata'
+import { ResourceAction, ResourceActionTuple, ResourceState, UpdateResourcePayload } from '../ResourcesState'
 import { ResourceSnapshotTable } from '../schema'
+import { generateResourceV3, pickMetadata } from './generateResource'
+import { getFile, getFiles } from './getFile'
+import { getOrParseMetadata } from './getOrParseMetadata'
 import { shouldIgnoreFile } from './shouldIgnoreFile'
-import { getDomainedPath, isSnapshotValid, takeSnapshot } from './takeSnapshot'
 import { jsonArrayFrom } from './sqlHelper'
-import { ResourceAction, ResourcesState, UpdateResourcePayload } from '../ResourcesState'
+import { getDomainedPath, isSnapshotValid, takeSnapshot } from './takeSnapshot'
 
 function createRevalidateFunction(
   dir: string,
@@ -104,20 +104,16 @@ function createRevalidateFunction(
 
   return revalidate
 }
-
-function createWorkerQueue(
-  context: ResourceContext,
-  domain: ResourceDomain,
+function createWorkerQueue(context: ResourceContext, domain: ResourceDomain,
   intercept: (func: () => Promise<void>) => Promise<void>,
   onResourceEmit: ResouceEmitFunc,
-  queueFactory: WorkerQueueFactory,
   parse: boolean,
 ) {
-  const workerQueue = queueFactory(async (job) => intercept(async () => {
+  const workerQueue = new WorkerQueue<ResourceWorkerQueuePayload>(async (job) => intercept(async () => {
     if (!job.file) {
       job.file = await getFile(job.filePath)
       if (!job.file) {
-        throw new context.UnexpectedError('ResourceFileNotFoundError', `Resource file ${job.filePath} not found`)
+        throw new AnyError('ResourceFileNotFoundError', `Resource file ${job.filePath} not found`)
       }
     }
 
@@ -138,7 +134,20 @@ function createWorkerQueue(
     }
 
     onResourceEmit(job.file, job.record, metadata ?? {})
-  }))
+  }), 16, {
+    retryCount: 7,
+    shouldRetry: (e) => isSystemError(e) && (e.code === 'EMFILE' || e.code === 'EBUSY'),
+    retryAwait: (retry) => Math.random() * 2000 + 1000,
+    isEqual: (a, b) => a.filePath === b.filePath,
+    merge: (a, b) => {
+      a.icons = [...new Set([...a.icons || [], ...b.icons || []])]
+      a.uris = [...new Set([...a.uris || [], ...b.uris || []])]
+      a.metadata = { ...a.metadata, ...b.metadata }
+      a.record = b.record || a.record
+      a.file = b.file || a.file
+      return a
+    },
+  })
   return workerQueue
 }
 
@@ -159,6 +168,7 @@ function createWatcher(
       if (resolve(filePath) === path) return false
       return shouldIgnoreFile(filePath)
     },
+  // @ts-ignore
   }).on('all', async (event, file, stat) => {
     if (!file) return
 
@@ -196,12 +206,6 @@ function createWatcher(
 
 type ResouceEmitFunc = (file: File, record: ResourceSnapshotTable, metadata: ResourceMetadata & { icons?: string[] }) => void
 
-export interface WorkerQueue<T> {
-  push(value: T): void
-  dispose(): void
-  onerror(job: T, e: Error): void
-}
-
 export interface WorkerQueueFactory {
   (handler: (value: ResourceWorkerQueuePayload) => Promise<void>): WorkerQueue<ResourceWorkerQueuePayload>
 }
@@ -224,7 +228,11 @@ export function watchResourcesDirectory(
   }: WatchResourceDirectoryOptions
 ) {
   let disposed = false
-  const state = context.createResourceState()
+  const update = new AggregateExecutor<ResourceActionTuple, ResourceActionTuple[]>(v => v,
+    (all) => state.filesUpdates(all),
+    500)
+
+  const state = new ResourceState()
 
   const onRemove = (file: string) => {
     if (disposed) return
@@ -234,16 +242,16 @@ export function watchResourcesDirectory(
       .execute()
       .catch((e) => { })
 
-    state.push(ResourceAction.Remove, file)
+    update.push([file, ResourceAction.Remove])
   }
 
   const onResourceEmit: ResouceEmitFunc = (file, record, metadata) => {
     const resource = generateResourceV3(file, record, metadata)
     if (!resource.path) {
-      context.onError(new context.UnexpectedError('ResourcePathError', 'Resource path is not available'))
+      context.onError(new AnyError('ResourcePathError', 'Resource path is not available'))
       return
     }
-    state.push(ResourceAction.Upsert, resource)
+    update.push([resource, ResourceAction.Upsert])
   }
 
   const onResourceQueue = (job: ResourceWorkerQueuePayload) => {
@@ -255,12 +263,12 @@ export function watchResourcesDirectory(
     const all = Object.fromEntries(files.map(f => [f.path, f]))
     for (const file of state.files) {
       if (!all[file.path]) {
-        state.push(ResourceAction.Remove, file.path)
+        update.push([file.path, ResourceAction.Remove])
       }
     }
   }
 
-  const workerQueue = createWorkerQueue(context, domain, processUpdate, onResourceEmit, context.createWorkerQueue, true)
+  const workerQueue = createWorkerQueue(context, domain, processUpdate, onResourceEmit, true)
   const revalidate = createRevalidateFunction(directory, context, onRemove,
     onResourceQueue, onResourceEmit, onResourcePostRevalidate)
 
@@ -290,7 +298,11 @@ export function watchResourcesDirectory(
   }
 
   const onResourceUpdate = (res: UpdateResourcePayload[]) => {
-    state.push(ResourceAction.BatchUpdate, res)
+    if (res) {
+      update.push([res, ResourceAction.BatchUpdate])
+    } else {
+      context.onError(new AnyError('InstanceResourceUpdateError', 'Cannot update instance resource as it is empty'))
+    }
   }
 
   context.event.on('resourceUpdate', onResourceUpdate)
@@ -306,7 +318,7 @@ export function watchResourcesDirectory(
 
   function enqueue(job: ResourceWorkerQueuePayload) {
     if (!job.filePath.startsWith(directory)) {
-      context.onError(new context.UnexpectedError('ResourceEnqueueError', `Resource ${job.filePath} is not in the directory ${directory}`))
+      context.onError(new AnyError('ResourceEnqueueError', `Resource ${job.filePath} is not in the directory ${directory}`))
       return
     }
     workerQueue.push(job)

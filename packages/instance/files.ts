@@ -1,3 +1,5 @@
+import { InstanceData, RuntimeVersions } from './instance'
+
 /**
  * Represent an instance file
  */
@@ -90,25 +92,12 @@ export interface InstanceInstallLockSchema extends InstanceLockSchema {
   workspace: string
 }
 
+type InstanceDataFields = Pick<InstanceData, 'description' | 'minMemory' | 'maxMemory' | 'vmOptions' | 'mcOptions' | 'name'>
+
 /**
  * Instance manifest for sharing/syncing instances
  */
-export interface InstanceManifest {
-  /**
-   * Instance metadata
-   */
-  name?: string
-  description?: string
-  minMemory?: number
-  maxMemory?: number
-  vmOptions?: string[]
-  mcOptions?: string[]
-  /**
-   * Runtime versions
-   */
-  runtime: import('./instance').RuntimeVersions
-  /**
-   * List of files in the instance
-   */
+export interface InstanceManifest extends Partial<InstanceDataFields> {
+  runtime: RuntimeVersions
   files: Array<InstanceFile>
 }

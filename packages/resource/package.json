@@ -24,6 +24,7 @@
     "@xmcl/system": "workspace:*",
     "@xmcl/instance": "workspace:*",
     "@xmcl/resourcepack": "workspace:*",
+    "@xmcl/utils": "workspace:*",
     "chokidar": "^4.0.3",
     "file-type": "^16.5.4",
     "kysely": "^0.26.1",

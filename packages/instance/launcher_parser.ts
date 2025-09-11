@@ -1,4 +1,6 @@
+import { isSystemError } from '@xmcl/utils'
 import { existsSync, readdir } from 'fs-extra'
+import { join } from 'path'
 import type { InstanceType, ThirdPartyLauncherManifest } from './modpack'
 import {
   parseCurseforgeInstance,
@@ -17,9 +19,6 @@ import {
   parseVanillaInstance,
   parseVanillaInstanceFiles
 } from './parsers/vanilla_parser'
-import { isSystemError } from './utils'
-import { join } from 'path'
-import { Logger } from './internal_type'
 
 /**
  * Check if a path is a MultiMC instance

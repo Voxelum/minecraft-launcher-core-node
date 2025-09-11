@@ -11,6 +11,7 @@ import { isSnapshotValid, takeSnapshot } from './core/takeSnapshot'
 import { upsertMetadata } from './core/upsertMetadata'
 import { WatchResourceDirectoryOptions, watchResourcesDirectory } from './core/watchResourcesDirectory'
 import { ResourceSnapshotTable, ResourceUriTable } from './schema'
+import { AnyError } from '@xmcl/utils'
 
 export class ResourceManager {
   #watched: Record<string, { enqueue: (job: ResourceWorkerQueuePayload) => void }> = {}
@@ -178,7 +179,7 @@ export class ResourceManager {
     if (payloads.length === 0) return []
     for (const resource of payloads) {
       if (!resource.hash) {
-        this.context.event.emit('resourceUpdateMetadataError', resource, new this.context.UnexpectedError('UpdateMetadataError', 'No hash provided'))
+        this.context.event.emit('resourceUpdateMetadataError', resource, new AnyError('UpdateMetadataError', 'No hash provided'))
         continue
       }
       await upsertMetadata(resource.hash, this.context, resource.metadata, resource.uris, resource.icons, resource.metadata?.name)
