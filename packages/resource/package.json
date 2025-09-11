@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Core resource parsing and caching functionality for Minecraft launchers",
   "main": "./index.ts",
-  "browser": "./index.browser.ts",
+  "module": "./index.browser.ts",
   "type": "module",
   "keywords": [
     "minecraft",
@@ -19,6 +19,12 @@
     "url": "https://github.com/Voxelum/minecraft-launcher-core-node"
   },
   "dependencies": {
+    
+  },
+  "devDependencies": {
+    "@types/node": "~20",
+    "@types/fs-extra": "^11.0.1",
+    "typescript": "^5.3.3",
     "@xmcl/mod-parser": "workspace:*",
     "@xmcl/game-data": "workspace:*",
     "@xmcl/system": "workspace:*",
@@ -28,12 +34,7 @@
     "chokidar": "^4.0.3",
     "file-type": "^16.5.4",
     "kysely": "^0.26.1",
-    "fs-extra": "^11.1.0"
-  },
-  "devDependencies": {
-    "@types/node": "~20",
-    "@types/fs-extra": "^11.0.1",
-    "typescript": "^5.3.3",
+    "fs-extra": "^11.1.0",
     "vitest": "^2.1.8"
   }
 }

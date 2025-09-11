@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "description": "Utility of the xmcl",
   "main": "./index.ts",
-  "browser": "./index.browser.ts",
   "type": "module",
   "author": "ci010 <cijhn@hotmail.com>",
   "license": "MIT",
