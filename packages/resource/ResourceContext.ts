@@ -1,16 +1,14 @@
 import EventEmitter from 'events'
 import { Kysely } from 'kysely'
-import { ParseResourceArgs, ParseResourceResult } from '../parsers'
-import { ResourceActionDispatcher } from './ResourceActionDispatcher'
-import { Logger } from './logger'
+import { ResourcesState } from './ResourcesState'
+import { WorkerQueueFactory } from './core/watchResourcesDirectory'
+import { ParseResourceArgs, ParseResourceResult } from './parsers'
 import { Database } from './schema'
 
 export interface ResourceContext {
   readonly db: Kysely<Database>
 
   readonly root: string
-
-  readonly logger: Logger
 
   ExpectedError: { new(...args: any[]): Error }
 
@@ -22,10 +20,13 @@ export interface ResourceContext {
 
   cacheImage(buf: Uint8Array): Promise<string>
 
-  dispatch: ResourceActionDispatcher
+  createWorkerQueue: WorkerQueueFactory
 
-  eventBus: EventEmitter
+  createResourceState(): ResourcesState
+
+  event: EventEmitter
 
   onError(e: Error): void
+
   onException(): void
 }

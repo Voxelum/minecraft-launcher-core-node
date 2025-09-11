@@ -1,5 +1,6 @@
 import { PackMeta, readIcon, readPackMeta } from '@xmcl/resourcepack'
-import { ResourceType, ResourceDomain } from '../resource'
+import { ResourceDomain } from '../ResourceDomain'
+import { ResourceType } from '../ResourceType'
 import type { IResourceParser } from './index'
 
 export const resourcePackParser: IResourceParser<PackMeta.Pack> = ({

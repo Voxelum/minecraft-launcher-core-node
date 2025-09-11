@@ -1,6 +1,6 @@
 import { readdir, stat } from 'fs-extra'
 import { basename, join } from 'path'
-import { File } from '../resource'
+import { File } from '../File'
 import { shouldIgnoreFile } from './shouldIgnoreFile'
 
 export async function getFile(path: string, fileName = basename(path)) {

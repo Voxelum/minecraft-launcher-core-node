@@ -1,4 +1,5 @@
-import { File, ResourceMetadata } from '../resource'
+import { File } from './File'
+import { ResourceMetadata } from './ResourceMetadata'
 import { ResourceSnapshotTable } from './schema'
 
 export interface ResourceWorkerQueuePayload {

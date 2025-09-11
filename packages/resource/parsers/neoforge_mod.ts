@@ -1,6 +1,7 @@
 import { readForgeModToml } from '@xmcl/mod-parser'
 import { NeoforgeMetadata } from '../mod'
-import { ResourceDomain, ResourceType } from '../resource'
+import { ResourceDomain } from '../ResourceDomain'
+import { ResourceType } from '../ResourceType'
 import type { IResourceParser } from './index'
 
 export const neoforgeModParser: IResourceParser<NeoforgeMetadata> = ({

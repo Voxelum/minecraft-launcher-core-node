@@ -1,14 +1,16 @@
 import { join } from 'path'
-import { File, Resource, ResourceDomain, ResourceMetadata } from '../resource'
-import { UpdateResourcePayload } from './ResourceActionDispatcher'
+import { File } from './File'
+import { Resource } from './Resource'
 import { ResourceContext } from './ResourceContext'
+import { ResourceMetadata } from './ResourceMetadata'
 import { ResourceWorkerQueuePayload } from './ResourceWorkerQueuePayload'
-import { getFile } from './files'
-import { generateResourceV3, pickMetadata } from './generateResource'
+import { UpdateResourcePayload } from './ResourcesState'
+import { generateResourceV3, pickMetadata } from './core/generateResource'
+import { getFile } from './core/getFile'
+import { isSnapshotValid, takeSnapshot } from './core/takeSnapshot'
+import { upsertMetadata } from './core/upsertMetadata'
+import { WatchResourceDirectoryOptions, watchResourcesDirectory } from './core/watchResourcesDirectory'
 import { ResourceSnapshotTable, ResourceUriTable } from './schema'
-import { isSnapshotValid, takeSnapshot } from './snapshot'
-import { upsertMetadata } from './upsertMetadata'
-import { ResourcesState, WorkerQueueFactory, watchResourcesDirectory } from './watchResourcesDirectory'
 
 export class ResourceManager {
   #watched: Record<string, { enqueue: (job: ResourceWorkerQueuePayload) => void }> = {}
@@ -103,6 +105,8 @@ export class ResourceManager {
     return this.getSnapshotsByDomainedPath([domainedPath]).then(v => v[0])
   }
 
+  getSnapshot(file: File): Promise<ResourceSnapshotTable>
+  getSnapshot(file: string): Promise<ResourceSnapshotTable | undefined>
   async getSnapshot(file: File | string) {
     const resolved = typeof file === 'string' ? await getFile(file) : file
     if (resolved) {
@@ -150,11 +154,16 @@ export class ResourceManager {
     return this.getMetadataByHashes([sha1]).then(v => v[0])
   }
 
-  watch(directory: string, domain: ResourceDomain, processUpdate: (func: () => Promise<void>) => Promise<void>, queueFactory: WorkerQueueFactory, state: ResourcesState) {
-    const result = watchResourcesDirectory(directory, domain, this.context, processUpdate, queueFactory, state, () => {
-      delete this.#watched[directory]
+  watch(options: Omit<WatchResourceDirectoryOptions, 'context' | 'onDispose'>) {
+    const dir = options.directory
+    const result = watchResourcesDirectory({
+      ...options,
+      onDispose: () => {
+        delete this.#watched[dir]
+      },
+      context: this.context
     })
-    this.#watched[directory] = result
+    this.#watched[dir] = result
     return result
   }
 
@@ -169,13 +178,13 @@ export class ResourceManager {
     if (payloads.length === 0) return []
     for (const resource of payloads) {
       if (!resource.hash) {
-        this.context.eventBus.emit('resourceUpdateMetadataError', resource, new this.context.UnexpectedError('UpdateMetadataError', 'No hash provided'))
+        this.context.event.emit('resourceUpdateMetadataError', resource, new this.context.UnexpectedError('UpdateMetadataError', 'No hash provided'))
         continue
       }
       await upsertMetadata(resource.hash, this.context, resource.metadata, resource.uris, resource.icons, resource.metadata?.name)
     }
 
-    this.context.eventBus.emit('resourceUpdate', payloads)
+    this.context.event.emit('resourceUpdate', payloads)
 
     return []
   }

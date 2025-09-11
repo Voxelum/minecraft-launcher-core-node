@@ -1,4 +1,4 @@
-import { ResourceMetadata } from '../resource'
+import { ResourceMetadata } from './ResourceMetadata'
 
 export interface ResourceTable extends ResourceMetadata {
   sha1: string

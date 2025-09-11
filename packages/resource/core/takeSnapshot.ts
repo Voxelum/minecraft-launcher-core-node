@@ -1,7 +1,7 @@
 import { relative } from 'path'
-import { File } from '../resource'
-import { ResourceContext } from './ResourceContext'
-import { ResourceSnapshotTable } from './schema'
+import { File } from '../File'
+import { ResourceContext } from '../ResourceContext'
+import { ResourceSnapshotTable } from '../schema'
 
 export function getDomainedPath(filePath: string, root: string) {
   return relative(root, filePath).replace(/\\/g, '/')

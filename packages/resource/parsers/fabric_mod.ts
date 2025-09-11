@@ -1,5 +1,6 @@
 import { FabricModMetadata, readFabricMod } from '@xmcl/mod-parser'
-import { ResourceDomain, ResourceType } from '../resource'
+import { ResourceDomain } from '../ResourceDomain'
+import { ResourceType } from '../ResourceType'
 import type { IResourceParser } from './index'
 
 export const fabricModParser: IResourceParser<FabricModMetadata | FabricModMetadata[]> = ({

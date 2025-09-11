@@ -1,6 +1,6 @@
-import { ResourceMetadata } from '../resource'
-import { ResourceContext } from './ResourceContext'
-import { ResourceTable } from './schema'
+import { ResourceMetadata } from '../ResourceMetadata'
+import { ResourceContext } from '../ResourceContext'
+import { ResourceTable } from '../schema'
 
 /**
  * Safely update or insert the resource data. This will update both of the `metadata` and `uri` database.

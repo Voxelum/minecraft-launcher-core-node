@@ -1,7 +1,6 @@
 import { Kysely, Migration, MigrationProvider, Migrator, sql } from 'kysely'
-import { Database } from './schema'
-import { ResourceType } from '../resource'
-import { Logger } from './logger'
+import { Database } from '../schema'
+import { ResourceType } from '../ResourceType'
 
 export class ResourceMigrateProvider implements MigrationProvider {
   getMigrations(): Promise<Record<string, Migration>> {
@@ -62,7 +61,7 @@ async function fixResourceTable(db: Kysely<Database>) {
  * Migrate the database to latest version
  * @param db The sqldatabase
  */
-export async function migrate(db: Kysely<Database>, logger: Logger) {
+export async function migrate(db: Kysely<Database>) {
   const migrator = new Migrator({
     db,
     provider: new ResourceMigrateProvider(),

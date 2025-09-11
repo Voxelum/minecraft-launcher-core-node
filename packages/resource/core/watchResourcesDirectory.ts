@@ -1,16 +1,19 @@
 import { FSWatcher } from 'chokidar'
 import { basename, join, resolve, sep } from 'path'
-import { File, Resource, ResourceDomain, ResourceMetadata } from '../resource'
-import { ResourceAction, ResourceActionDispatcher, UpdateResourcePayload } from './ResourceActionDispatcher'
-import { ResourceContext } from './ResourceContext'
-import { ResourceWorkerQueuePayload } from './ResourceWorkerQueuePayload'
-import { getFile, getFiles } from './files'
+import { Resource } from '../Resource'
+import { ResourceDomain } from '../ResourceDomain'
+import { ResourceMetadata } from '../ResourceMetadata'
+import { File } from '../File'
+import { ResourceContext } from '../ResourceContext'
+import { ResourceWorkerQueuePayload } from '../ResourceWorkerQueuePayload'
+import { getFile, getFiles } from './getFile'
 import { generateResourceV3, pickMetadata } from './generateResource'
 import { getOrParseMetadata } from './getOrParseMetadata'
-import { ResourceSnapshotTable } from './schema'
+import { ResourceSnapshotTable } from '../schema'
 import { shouldIgnoreFile } from './shouldIgnoreFile'
-import { getDomainedPath, isSnapshotValid, takeSnapshot } from './snapshot'
+import { getDomainedPath, isSnapshotValid, takeSnapshot } from './takeSnapshot'
 import { jsonArrayFrom } from './sqlHelper'
+import { ResourceAction, ResourcesState, UpdateResourcePayload } from '../ResourcesState'
 
 function createRevalidateFunction(
   dir: string,
@@ -131,7 +134,7 @@ function createWorkerQueue(
     const metadata = await getOrParseMetadata(job.file, job.record, domain, context, job, parse)
 
     if (parse && metadata) {
-      context.eventBus.emit('resourceParsed', job.record.sha1, domain, metadata)
+      context.event.emit('resourceParsed', job.record.sha1, domain, metadata)
     }
 
     onResourceEmit(job.file, job.record, metadata ?? {})
@@ -203,21 +206,25 @@ export interface WorkerQueueFactory {
   (handler: (value: ResourceWorkerQueuePayload) => Promise<void>): WorkerQueue<ResourceWorkerQueuePayload>
 }
 
-export interface ResourcesState {
-  files: Resource[]
-  push: ResourceActionDispatcher
+export interface WatchResourceDirectoryOptions {
+  directory: string
+  domain: ResourceDomain
+  context: ResourceContext
+  processUpdate: (func: () => Promise<void>) => Promise<void>
+  onDispose: () => void
 }
 
 export function watchResourcesDirectory(
-  directory: string,
-  domain: ResourceDomain,
-  context: ResourceContext,
-  processUpdate: (func: () => Promise<void>) => Promise<void>,
-  queueFactory: WorkerQueueFactory,
-  state: ResourcesState,
-  onDispose: () => void,
+  {
+    directory,
+    domain,
+    context,
+    processUpdate,
+    onDispose,
+  }: WatchResourceDirectoryOptions
 ) {
   let disposed = false
+  const state = context.createResourceState()
 
   const onRemove = (file: string) => {
     if (disposed) return
@@ -253,7 +260,7 @@ export function watchResourcesDirectory(
     }
   }
 
-  const workerQueue = createWorkerQueue(context, domain, processUpdate, onResourceEmit, queueFactory, true)
+  const workerQueue = createWorkerQueue(context, domain, processUpdate, onResourceEmit, context.createWorkerQueue, true)
   const revalidate = createRevalidateFunction(directory, context, onRemove,
     onResourceQueue, onResourceEmit, onResourcePostRevalidate)
 
@@ -286,13 +293,13 @@ export function watchResourcesDirectory(
     state.push(ResourceAction.BatchUpdate, res)
   }
 
-  context.eventBus.on('resourceUpdate', onResourceUpdate)
+  context.event.on('resourceUpdate', onResourceUpdate)
   function dispose() {
     disposed = true
     onDispose()
     watcher.close()
     workerQueue.dispose()
-    context.eventBus.off('resourceUpdate', onResourceUpdate)
+    context.event.off('resourceUpdate', onResourceUpdate)
   }
 
   revalidate()
@@ -309,6 +316,6 @@ export function watchResourcesDirectory(
     enqueue,
     dispose,
     revalidate,
-    onResourceUpdate,
+    state,
   }
 }

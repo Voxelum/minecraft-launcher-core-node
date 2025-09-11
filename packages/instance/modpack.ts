@@ -228,7 +228,7 @@ export interface CurseforgeModpackManifest extends ModpackManifest {
 /**
  * Convert MCBBS modpack manifest to instance configuration
  */
-export function getInstanceConfigFromMcbbsModpack(manifest: McbbsModpackManifest): CreateInstanceOptions {
+export function getInstanceConfigFromMcbbsModpack(manifest: McbbsModpackManifest) {
   return {
     name: `${manifest.name}-${manifest.version}`,
     author: manifest.author,
@@ -250,12 +250,12 @@ export function getInstanceConfigFromMcbbsModpack(manifest: McbbsModpackManifest
 /**
  * Convert MultiMC modpack manifest to instance configuration
  */
-export function getInstanceConfigFromMmcModpack(manifest: MMCModpackManifest): CreateInstanceOptions {
+export function getInstanceConfigFromMmcModpack(manifest: MMCModpackManifest) {
   const forge = manifest.json.components.find(c => c.uid === 'net.minecraftforge')
   const fabric = manifest.json.components.find(c => c.uid === 'net.fabricmc.fabric-loader')
   const quilt = manifest.json.components.find(c => c.uid === 'net.quiltmc.quilt-loader')
   const neoForge = manifest.json.components.find(c => c.uid === 'net.neoforge')
-  
+
   return {
     name: manifest.cfg.name,
     description: manifest.cfg.notes,
@@ -272,12 +272,12 @@ export function getInstanceConfigFromMmcModpack(manifest: MMCModpackManifest): C
 /**
  * Convert CurseForge modpack manifest to instance configuration
  */
-export function getInstanceConfigFromCurseforgeModpack(manifest: CurseforgeModpackManifest): CreateInstanceOptions {
+export function getInstanceConfigFromCurseforgeModpack(manifest: CurseforgeModpackManifest) {
   const forgeId = manifest.minecraft.modLoaders.find(l => l.id.startsWith('forge'))
   const fabricId = manifest.minecraft.modLoaders.find(l => l.id.startsWith('fabric'))
   const neoForgeId = manifest.minecraft.modLoaders.find(l => l.id.startsWith('neoforge'))
   const quiltId = manifest.minecraft.modLoaders.find(l => l.id.startsWith('quilt'))
-  
+
   return {
     name: `${manifest.name}-${manifest.version}`,
     author: manifest.author,
@@ -294,7 +294,7 @@ export function getInstanceConfigFromCurseforgeModpack(manifest: CurseforgeModpa
 /**
  * Convert Modrinth modpack manifest to instance configuration
  */
-export function getInstanceConfigFromModrinthModpack(manifest: ModrinthModpackManifest): CreateInstanceOptions {
+export function getInstanceConfigFromModrinthModpack(manifest: ModrinthModpackManifest) {
   return {
     name: `${manifest.name}-${manifest.versionId}`,
     description: manifest.summary,
@@ -397,14 +397,14 @@ export function getMcbbsModpackFromInstance(instance: InstanceData): McbbsModpac
     },
     addons: [{ id: 'game', version: instance.runtime.minecraft }],
   }
-  
+
   if (instance.runtime.forge) {
     mcbbsManifest.addons.push({ id: 'forge', version: instance.runtime.forge })
   }
   if (instance.runtime.fabricLoader) {
     mcbbsManifest.addons.push({ id: 'fabric', version: instance.runtime.fabricLoader })
   }
-  
+
   return mcbbsManifest
 }
 

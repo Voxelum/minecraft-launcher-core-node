@@ -9,7 +9,17 @@
   "include": [
     "index.ts",
     "core/*",
-    "parsers/*"
+    "parsers/*",
+    "File.ts",
+    "Resource.ts",
+    "ResourcesState.ts",
+    "ResourceContext.ts",
+    "ResourceManager.ts",
+    "ResourceMetadata.ts",
+    "ResourceType.ts",
+    "ResourceWorkerQueuePayload.ts",
+    "schema.ts",
+    "index.browser.ts"
   ],
   "exclude": [
     "node_modules",

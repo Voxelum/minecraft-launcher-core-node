@@ -1,5 +1,6 @@
 import { QuiltModMetadata, readQuiltMod } from '@xmcl/mod-parser'
-import { ResourceType, ResourceDomain } from '../resource'
+import { ResourceDomain } from '../ResourceDomain'
+import { ResourceType } from '../ResourceType'
 import type { IResourceParser } from './index'
 
 export const quiltModParser: IResourceParser<QuiltModMetadata> = ({

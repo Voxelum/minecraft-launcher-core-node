@@ -7,7 +7,9 @@ import { neoforgeModParser } from './neoforge_mod'
 import { quiltModParser } from './quilt_mod'
 import { resourcePackParser } from './resource_pack'
 import { shaderPackParser } from './shader_pack'
-import { ResourceDomain, ResourceMetadata, ResourceType } from '../resource'
+import { ResourceDomain } from '../ResourceDomain'
+import { ResourceType } from '../ResourceType'
+import { ResourceMetadata } from '../ResourceMetadata'
 
 export interface IResourceParser<T> {
   type: ResourceType
@@ -27,6 +29,7 @@ export type ParseResourceArgs = {
   domain: ResourceDomain
   fileType: string
 }
+
 export type ParseResourceResult = {
   name: string
   metadata: ResourceMetadata

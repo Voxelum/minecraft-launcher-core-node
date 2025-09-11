@@ -1,5 +1,3 @@
-// import { xxhashFileFromBuf, xxhashFileFromStream } from '../util/hash'
-
 import { createHash } from 'crypto'
 import { createReadStream } from 'fs'
 import { readFile, readdir, stat } from 'fs-extra'

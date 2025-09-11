@@ -1,5 +1,8 @@
-import { File, Resource, ResourceMetadata, ResourceType } from '../resource'
-import { ResourceSnapshotTable } from './schema'
+import { Resource } from '../Resource'
+import { ResourceType } from '../ResourceType'
+import { ResourceMetadata } from '../ResourceMetadata'
+import { File } from '../File'
+import { ResourceSnapshotTable } from '../schema'
 
 export function pickMetadata(metadata: ResourceMetadata): ResourceMetadata {
   return {

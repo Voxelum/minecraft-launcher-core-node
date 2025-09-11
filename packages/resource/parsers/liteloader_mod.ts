@@ -1,6 +1,7 @@
 import { LiteloaderModMetadata, readLiteloaderMod } from '@xmcl/mod-parser'
 import type { IResourceParser } from './index'
-import { ResourceType, ResourceDomain } from '../resource'
+import { ResourceDomain } from '../ResourceDomain'
+import { ResourceType } from '../ResourceType'
 
 export const liteloaderModParser: IResourceParser<LiteloaderModMetadata> = ({
   type: ResourceType.Liteloader,
