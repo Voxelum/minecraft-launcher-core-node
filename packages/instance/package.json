@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Core instance management functionality for Minecraft launchers",
   "main": "./index.ts",
+  "module": "./index.ts",
   "browser": "./index.browser.ts",
   "keywords": [
     "minecraft",

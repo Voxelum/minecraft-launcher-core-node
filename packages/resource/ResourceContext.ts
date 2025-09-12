@@ -2,6 +2,7 @@ import EventEmitter from 'events'
 import { Kysely } from 'kysely'
 import type { ParseResourceArgs, ParseResourceResult } from './parsers'
 import { Database } from './schema'
+import { ResourceState } from './ResourcesState'
 
 export interface ResourceContext {
   readonly db: Kysely<Database>
@@ -13,6 +14,8 @@ export interface ResourceContext {
   parse(resource: ParseResourceArgs): Promise<ParseResourceResult>
 
   cacheImage(buf: Uint8Array): Promise<string>
+
+  createResourceState(): ResourceState
 
   event: EventEmitter
 

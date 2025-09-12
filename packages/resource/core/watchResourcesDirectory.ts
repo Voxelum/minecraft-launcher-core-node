@@ -6,7 +6,7 @@ import { ResourceContext } from '../ResourceContext'
 import { ResourceDomain } from '../ResourceDomain'
 import { ResourceMetadata } from '../ResourceMetadata'
 import { ResourceWorkerQueuePayload } from '../ResourceWorkerQueuePayload'
-import { ResourceAction, ResourceActionTuple, ResourceState, UpdateResourcePayload } from '../ResourcesState'
+import { ResourceAction, ResourceActionTuple, UpdateResourcePayload } from '../ResourcesState'
 import { ResourceSnapshotTable } from '../schema'
 import { generateResourceV3, pickMetadata } from './generateResource'
 import { getFile, getFiles } from './getFile'
@@ -232,7 +232,7 @@ export function watchResourcesDirectory(
     (all) => state.filesUpdates(all),
     500)
 
-  const state = new ResourceState()
+  const state = context.createResourceState()
 
   const onRemove = (file: string) => {
     if (disposed) return

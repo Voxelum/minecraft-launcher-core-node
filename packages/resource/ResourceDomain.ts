@@ -1,5 +1,5 @@
 
-export enum ResourceDomain {
+export const enum ResourceDomain {
   Mods = 'mods',
   ResourcePacks = 'resourcepacks',
   ShaderPacks = 'shaderpacks',

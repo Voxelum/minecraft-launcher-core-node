@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Core resource parsing and caching functionality for Minecraft launchers",
   "main": "./index.ts",
-  "module": "./index.browser.ts",
+  "module": "./index.ts",
+  "browser": "./index.browser.ts",
   "type": "module",
   "keywords": [
     "minecraft",
