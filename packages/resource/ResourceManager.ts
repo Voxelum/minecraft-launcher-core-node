@@ -72,7 +72,8 @@ export class ResourceManager {
     return await this.validateSnapshotFile(snapshot) !== undefined
   }
 
-  async validateSnapshotFile(snapshot: ResourceSnapshotTable): Promise<File | undefined> {
+  async validateSnapshotFile(snapshot?: ResourceSnapshotTable): Promise<File | undefined> {
+    if (!snapshot) return undefined
     const file = await getFile(join(this.context.root, snapshot.domainedPath))
     if (!file) return undefined
     if (!isSnapshotValid(file, snapshot)) {

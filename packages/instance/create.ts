@@ -27,6 +27,7 @@ export function createInstance(
   assignShallow(instance, payload)
   if (payload.runtime) {
     assignShallow(instance.runtime, payload.runtime)
+    instance.runtime.labyMod = payload.runtime.labyMod || ''
   }
   if (payload.resolution) {
     if (instance.resolution) {

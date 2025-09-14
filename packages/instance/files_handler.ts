@@ -1,5 +1,5 @@
 import type { Task } from '@xmcl/task';
-import { ensureDir, remove, rename, rmdir, unlink } from 'fs-extra';
+import { ensureDir, exists, remove, rename, rmdir, stat, unlink } from 'fs-extra';
 import { dirname, join, relative } from 'path';
 import { fileURLToPath } from 'url';
 import { InstanceFile, InstanceFileUpdate } from './files';
@@ -286,8 +286,12 @@ export class InstanceFileOperationHandler {
   async #handleLink(file: InstanceFile, destination: string, sha1: string) {
     if (file.downloads) {
       if (file.downloads[0].startsWith('file://')) {
-        this.#linkQueue.push({ file, src: fileURLToPath(file.downloads[0]), destination })
-        return true
+        const filePath = fileURLToPath(file.downloads[0])
+        const fStat = await stat(filePath).catch(() => undefined)
+        if (fStat && fStat.isFile()) {
+          this.#linkQueue.push({ file, src: filePath, destination })
+          return true
+        }
       }
     }
 

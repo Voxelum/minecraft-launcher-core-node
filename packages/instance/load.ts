@@ -18,7 +18,15 @@ export function loadInstanceFromOptions(
   instance.name = instance.name.trim();
   // Handle runtime versions
   if (options.runtime) {
-    assignShallow(instance.runtime, options.runtime);
+    instance.runtime.minecraft = options.runtime.minecraft || '';
+    instance.runtime.forge = options.runtime.forge || '';
+    instance.runtime.neoForged = options.runtime.neoForged || '';
+    instance.runtime.liteloader = options.runtime.liteloader || '';
+    instance.runtime.fabricLoader = options.runtime.fabricLoader || '';
+    instance.runtime.quiltLoader = options.runtime.quiltLoader || '';
+    instance.runtime.yarn = options.runtime.yarn || '';
+    instance.runtime.optifine = options.runtime.optifine || '';
+    instance.runtime.labyMod = options.runtime.labyMod || '';
   }
 
   // Assign specific properties with type safety
