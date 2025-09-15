@@ -477,6 +477,7 @@ export async function launchServer(options: ServerOptions) {
  * 2. child process started, but game crash (code is not 0).
  * 3. cihld process started, game normally exit (code is 0).
  */
+// @ts-ignore
 export interface MinecraftProcessWatcher extends EventEmitter {
   /**
    * Fire when the process DOESN'T start at all, like "java not found".
