@@ -1,7 +1,6 @@
-import { assignShallow } from './edit'
 import { InstanceSchema, createInstanceTemplate } from './instance'
 
-export type CreateInstanceOption = Partial<Omit<InstanceSchema, 'lastAccessDate' | 'creationDate'>> & {
+export type CreateInstanceOption = Partial<Omit<InstanceSchema, 'lastAccessDate' | 'creationDate' | 'playTime' | 'lastPlayedDate'>> & {
   path?: string
   name: string
   resolution?: InstanceSchema['resolution']
@@ -24,14 +23,46 @@ export function createInstance(
 ) {
   const instance = createInstanceTemplate()
 
-  assignShallow(instance, payload)
+  instance.name = payload.name ?? instance.name
+  instance.author = payload.author ?? instance.author
+  instance.description = payload.description ?? instance.description
+  instance.version = payload.version ?? instance.version
+  instance.java = payload.java ?? instance.java
+  instance.minMemory = payload.minMemory ?? instance.minMemory
+  if (payload.maxMemory !== undefined) instance.maxMemory = payload.maxMemory
+  if (payload.assignMemory !== undefined) instance.assignMemory = payload.assignMemory
+  if (payload.vmOptions !== undefined) instance.vmOptions = payload.vmOptions
+  if (payload.mcOptions !== undefined) instance.mcOptions = payload.mcOptions
+  if (payload.env !== undefined) instance.env = payload.env
+  if (payload.prependCommand !== undefined) instance.prependCommand = payload.prependCommand
+  if (payload.preExecuteCommand !== undefined) instance.preExecuteCommand = payload.preExecuteCommand
+  if (payload.url !== undefined) instance.url = payload.url
+  if (payload.icon !== undefined) instance.icon = payload.icon
+  if (payload.modpackVersion !== undefined) instance.modpackVersion = payload.modpackVersion
+  if (payload.fileApi !== undefined) instance.fileApi = payload.fileApi
+  if (payload.showLog !== undefined) instance.showLog = payload.showLog
+  if (payload.hideLauncher !== undefined) instance.hideLauncher = payload.hideLauncher
+  if (payload.fastLaunch !== undefined) instance.fastLaunch = payload.fastLaunch
+  if (payload.disableElybyAuthlib !== undefined) instance.disableElybyAuthlib = payload.disableElybyAuthlib
+  if (payload.disableAuthlibInjector !== undefined) instance.disableAuthlibInjector = payload.disableAuthlibInjector
+  if (payload.useLatest !== undefined) instance.useLatest = payload.useLatest
+  if (payload.upstream !== undefined) instance.upstream = payload.upstream
   if (payload.runtime) {
-    assignShallow(instance.runtime, payload.runtime)
+    if (payload.runtime.minecraft !== undefined) instance.runtime.minecraft = payload.runtime.minecraft
+    if (payload.runtime.forge !== undefined) instance.runtime.forge = payload.runtime.forge
+    if (payload.runtime.neoForged !== undefined) instance.runtime.neoForged = payload.runtime.neoForged
+    if (payload.runtime.liteloader !== undefined) instance.runtime.liteloader = payload.runtime.liteloader
+    if (payload.runtime.fabricLoader !== undefined) instance.runtime.fabricLoader = payload.runtime.fabricLoader
+    if (payload.runtime.quiltLoader !== undefined) instance.runtime.quiltLoader = payload.runtime.quiltLoader
+    if (payload.runtime.yarn !== undefined) instance.runtime.yarn = payload.runtime.yarn
+    if (payload.runtime.optifine !== undefined) instance.runtime.optifine = payload.runtime.optifine
     instance.runtime.labyMod = payload.runtime.labyMod || ''
   }
   if (payload.resolution) {
     if (instance.resolution) {
-      assignShallow(instance.resolution, payload.resolution)
+      if (payload.resolution.width !== undefined) instance.resolution.width = payload.resolution.width
+      if (payload.resolution.height !== undefined) instance.resolution.height = payload.resolution.height
+      if (payload.resolution.fullscreen !== undefined) instance.resolution.fullscreen = payload.resolution.fullscreen
     } else {
       instance.resolution = payload.resolution
     }

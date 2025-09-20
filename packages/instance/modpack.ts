@@ -279,7 +279,7 @@ export function getInstanceConfigFromCurseforgeModpack(manifest: CurseforgeModpa
   const quiltId = manifest.minecraft.modLoaders.find(l => l.id.startsWith('quilt'))
 
   return {
-    name: `${manifest.name}-${manifest.version}`,
+    name: manifest.version ? `${manifest.name}-${manifest.version}` : manifest.name,
     author: manifest.author,
     runtime: {
       minecraft: manifest.minecraft.version,
@@ -296,7 +296,7 @@ export function getInstanceConfigFromCurseforgeModpack(manifest: CurseforgeModpa
  */
 export function getInstanceConfigFromModrinthModpack(manifest: ModrinthModpackManifest) {
   return {
-    name: `${manifest.name}-${manifest.versionId}`,
+    name: manifest.versionId ? `${manifest.name}-${manifest.versionId}` : manifest.name,
     description: manifest.summary,
     runtime: {
       minecraft: manifest.dependencies.minecraft,

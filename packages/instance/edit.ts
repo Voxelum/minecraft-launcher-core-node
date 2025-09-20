@@ -1,5 +1,4 @@
-import { CreateInstanceOptions, InstanceSchema, RuntimeVersions, createInstanceTemplate } from './instance'
-import type { VersionMetadataProvider } from './internal_type'
+import { InstanceSchema, RuntimeVersions } from './instance'
 
 /**
   * Safely assign properties from source to target, only updating if values differ
@@ -13,43 +12,6 @@ export function assignShallow<T extends Record<string, any>>(target: T, source: 
     }
   }
   return hasChanges
-}
-
-export function createInstanceFromOptions(
-  payload: CreateInstanceOptions,
-  versionProvider: VersionMetadataProvider
-): InstanceSchema {
-  const instance = createInstanceTemplate()
-
-  assignShallow(instance, payload)
-
-  if (payload.runtime) {
-    assignShallow(instance.runtime, payload.runtime)
-  }
-
-  if (payload.resolution) {
-    if (instance.resolution) {
-      assignShallow(instance.resolution, payload.resolution)
-    } else {
-      instance.resolution = payload.resolution
-    }
-  }
-
-  if (payload.server) {
-    instance.server = payload.server
-  }
-
-  instance.runtime.minecraft = instance.runtime.minecraft || versionProvider.getLatestRelease()
-  instance.creationDate = Date.now()
-  instance.lastAccessDate = Date.now()
-
-  instance.author = payload.author ?? instance.author
-  instance.description = payload.description ?? instance.description
-  instance.showLog = payload.showLog ?? instance.showLog
-  instance.upstream = payload.upstream
-  instance.icon = payload.icon ?? ''
-
-  return instance
 }
 
 /**
