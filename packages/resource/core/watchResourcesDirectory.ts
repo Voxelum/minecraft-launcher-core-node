@@ -20,10 +20,10 @@ function createRevalidateFunction(
   context: ResourceContext,
   onResourceRemove: (path: string) => void,
   onResourceQueue: (job: ResourceWorkerQueuePayload) => void,
-  onResourceEmit: ResouceEmitFunc,
+  onResourceTouched: ResouceEmitFunc,
   onResourcePostRevalidate: (files: File[]) => void,
 ) {
-  async function getUpserts() {
+  async function getFilesStatus() {
     const entries = await getFiles(dir).catch((e) => {
       if (e.code === 'ENOENT') {
         return []
@@ -66,9 +66,10 @@ function createRevalidateFunction(
   }
 
   async function revalidate() {
-    const results = await getUpserts()
+    const touchedFiles = await getFilesStatus()
 
-    const hits = results.map((jobs) => {
+    // files has snapshots
+    const existed = touchedFiles.map((jobs) => {
       if (!jobs[1]) {
         onResourceQueue({ filePath: jobs[0].path, file: jobs[0] })
         return undefined
@@ -83,10 +84,10 @@ function createRevalidateFunction(
           eb.selectFrom('icons').select(['icons.icon', 'icons.sha1']).whereRef('icons.sha1', '=', 'resources.sha1'),
         ).as('icons'),
       ])
-      .where('sha1', 'in', hits.map(h => h[1].sha1))
+      .where('sha1', 'in', existed.map(h => h[1].sha1))
       .execute().then((all) => Object.fromEntries(all.map(a => [a.sha1, a])))
 
-    for (const [file, record] of hits) {
+    for (const [file, record] of existed) {
       const resource = resources[record.sha1]
       if (!resource) {
         onResourceQueue({ filePath: file.path, file, record })
@@ -96,10 +97,10 @@ function createRevalidateFunction(
         onResourceQueue({ filePath: file.path, file, record, metadata: resource })
         continue
       }
-      onResourceEmit(file, record, { ...pickMetadata(resource), icons: resource.icons.map(i => i.icon) })
+      onResourceTouched(file, record, { ...pickMetadata(resource), icons: resource.icons.map(i => i.icon) })
     }
 
-    onResourcePostRevalidate(results.map(([f]) => f))
+    onResourcePostRevalidate(touchedFiles.map(([f]) => f))
   }
 
   return revalidate
@@ -270,7 +271,12 @@ export function watchResourcesDirectory(
 
   const workerQueue = createWorkerQueue(context, domain, processUpdate, onResourceEmit, true)
   const revalidate = createRevalidateFunction(directory, context, onRemove,
-    onResourceQueue, onResourceEmit, onResourcePostRevalidate)
+    onResourceQueue, (f, r, m) => {
+      if (state.files.find(ff => ff.path === f.path)) {
+        return
+      }
+      onResourceEmit(f, r, m)
+    }, onResourcePostRevalidate)
 
   const watcher = createWatcher(directory, async (file) => {
     if (disposed) return
