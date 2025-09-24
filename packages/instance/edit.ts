@@ -103,10 +103,10 @@ export async function computeInstanceEditChanges(
     for (const version of Object.keys(runtime) as Array<keyof RuntimeVersions>) {
       if (version in currentRuntime) {
         if (currentRuntime[version] !== runtime[version]) {
-          resultRuntime[version] = runtime[version] || undefined
+          resultRuntime[version] = runtime[version] || ''
         }
       } else {
-        resultRuntime[version] = runtime[version] || undefined
+        resultRuntime[version] = runtime[version] || ''
       }
     }
 
