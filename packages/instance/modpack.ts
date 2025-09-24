@@ -317,7 +317,7 @@ export function getModrinthModpackFromInstance(instance: InstanceData): Modrinth
   return {
     formatVersion: 1,
     game: 'minecraft',
-    versionId: instance.modpackVersion,
+    versionId: '',
     name: instance.name,
     summary: instance.description,
     dependencies: {
@@ -370,7 +370,7 @@ export function getCurseforgeModpackFromInstance(instance: InstanceData): Cursef
       modLoaders,
     },
     name: instance.name,
-    version: instance.modpackVersion,
+    version: '',
     author: instance.author,
     files: [],
     overrides: 'overrides',
