@@ -37,7 +37,11 @@ export async function computeInstanceEditChanges(
   const result: Partial<InstanceSchema> = {}
 
   // Check simple properties
-  const simpleProps = ['name', 'author', 'description', 'icon', 'url', 'fileApi'] as const
+  const simpleProps = ['name', 'author', 'description', 'icon', 'url', 'fileApi', 'java',
+    'lastAccessDate',
+    'lastPlayedDate',
+    'playtime',
+  ] as const
   for (const prop of simpleProps) {
     if (prop in editOptions && editOptions[prop] !== currentInstance[prop]) {
       (result as any)[prop] = editOptions[prop]
