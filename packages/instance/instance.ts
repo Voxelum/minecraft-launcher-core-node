@@ -184,7 +184,7 @@ export interface InstanceData {
    * The option for instance to launch server directly
    * @default null
    */
-  server: {
+  server?: {
     host: string
     port?: number
   } | null

@@ -28,8 +28,8 @@ export function createInstance(
   instance.description = payload.description ?? instance.description
   instance.version = payload.version ?? instance.version
   instance.java = payload.java ?? instance.java
-  instance.minMemory = payload.minMemory ?? instance.minMemory
-  if (payload.maxMemory !== undefined) instance.maxMemory = payload.maxMemory
+  instance.minMemory = payload.minMemory || instance.minMemory
+  if (payload.maxMemory) instance.maxMemory = payload.maxMemory
   if (payload.assignMemory !== undefined) instance.assignMemory = payload.assignMemory
   if (payload.vmOptions !== undefined) instance.vmOptions = payload.vmOptions
   if (payload.mcOptions !== undefined) instance.mcOptions = payload.mcOptions

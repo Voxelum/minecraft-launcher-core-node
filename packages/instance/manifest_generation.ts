@@ -45,6 +45,7 @@ export function shouldBeExcluded(relativePath: string, stat: Stats): boolean {
 
 /**
  * Generate an instance manifest from local files
+ * @param undecoratedResources A set to store the no download urls files
  */
 export async function generateInstanceManifest(
   options: GetManifestOptions,
