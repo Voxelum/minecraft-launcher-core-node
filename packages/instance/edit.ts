@@ -41,6 +41,7 @@ export async function computeInstanceEditChanges(
     'lastAccessDate',
     'lastPlayedDate',
     'playtime',
+    'version'
   ] as const
   for (const prop of simpleProps) {
     if (prop in editOptions && editOptions[prop] !== currentInstance[prop]) {
