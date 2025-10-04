@@ -101,18 +101,18 @@ export interface ParallelTaskOptions {
  */
 export interface InstallOptions {
   /**
-     * When you want to install a version over another one.
-     *
-     * Like, you want to install liteloader over a forge version.
-     * You should fill this with that forge version id.
-     */
+   * When you want to install a version over another one.
+   *
+   * Like, you want to install liteloader over a forge version.
+   * You should fill this with that forge version id.
+   */
   inheritsFrom?: string
 
   /**
-     * Override the newly installed version id.
-     *
-     * If this is absent, the installed version id will be either generated or provided by installer.
-     */
+   * Override the newly installed version id.
+   *
+   * If this is absent, the installed version id will be either generated or provided by installer.
+   */
   versionId?: string
 }
 
