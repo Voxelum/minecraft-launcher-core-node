@@ -196,6 +196,10 @@ export interface ForgeModTOMLData {
      * A URL to refer people to when problems occur with this mod
      */
   issueTrackerURL: string
+  /**
+     * If true, the mod is client side only
+     */
+  clientSideOnly: boolean
 }
 
 export interface ForgeModASMData {
@@ -500,6 +504,7 @@ export async function readForgeModToml(mod: ForgeModInput, manifest?: Record<str
             loaderVersion: root.loaderVersion as string ?? '',
             modLoader: root.modLoader as string ?? '',
             issueTrackerURL: root.issueTrackerURL as string ?? '',
+            clientSideOnly: (root.clientSideOnly as boolean || tomlMod.clientSideOnly as boolean) ?? false,
           }
           all.push(modObject)
         }
