@@ -321,6 +321,28 @@ export class ModrinthV2Client {
   }
 
   /**
+   * @see https://docs.modrinth.com/api/operations/versionfromhash/
+   */
+  async getProjectVersionByHash(hash: string, { algorithm = 'sha1', multiple = false }: { algorithm?: string; multiple?: boolean } = {}, signal?: AbortSignal) {
+    const url = new URL(this.baseUrl + '/v2/version_file/' + hash)
+    url.searchParams.append('algorithm', algorithm)
+    url.searchParams.append('multiple', multiple ? 'true' : 'false')
+    const response = await this.fetch(url, {
+      method: 'GET',
+      headers: {
+        ...this.headers,
+        'content-type': 'application/json',
+      },
+      signal,
+    })
+    if (response.status !== 200) {
+      throw new ModerinthApiError(url.toString(), response.status, await response.text())
+    }
+    const versions = await response.json() as ProjectVersion
+    return versions
+  }
+
+  /**
    * @see https://docs.modrinth.com/api-spec#tag/version-files/operation/getLatestVersionsFromHashes
    */
   async getLatestVersionsFromHashes(hashes: string[], { algorithm, loaders = [], gameVersions = [] }: { algorithm?: string; loaders?: string[]; gameVersions?: string[] } = {}, signal?: AbortSignal) {
