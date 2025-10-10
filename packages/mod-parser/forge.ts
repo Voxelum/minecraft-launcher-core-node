@@ -504,7 +504,7 @@ export async function readForgeModToml(mod: ForgeModInput, manifest?: Record<str
             loaderVersion: root.loaderVersion as string ?? '',
             modLoader: root.modLoader as string ?? '',
             issueTrackerURL: root.issueTrackerURL as string ?? '',
-            clientSideOnly: (root.clientSideOnly as boolean || tomlMod.clientSideOnly as boolean) ?? false,
+            clientSideOnly: (root.clientSideOnly as boolean) ?? (tomlMod.clientSideOnly as boolean) ?? false,
           }
           all.push(modObject)
         }
