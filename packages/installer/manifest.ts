@@ -1,5 +1,5 @@
 export function convertClasspathToMaven(paths: string[]): string[] {
-  return paths.map(path => {
+  return paths.map((path) => {
     const trimmedPath = path.replace(/^libraries\//, '')
 
     const parts = trimmedPath.split('/')
@@ -45,7 +45,7 @@ export function parseManifest(manifestContent: string): { mainClass: string; cla
         i++
         classPathLine += lines[i].slice(1)
       }
-      classPath = classPathLine.split(' ').filter(path => path.length > 0)
+      classPath = classPathLine.split(' ').filter((path) => path.length > 0)
     }
   }
 

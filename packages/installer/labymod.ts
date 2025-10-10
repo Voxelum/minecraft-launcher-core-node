@@ -1,42 +1,22 @@
 /* eslint-disable n/no-unsupported-features/node-builtins */
 import { LibraryInfo, MinecraftFolder, MinecraftLocation } from '@xmcl/core'
-import { DownloadBaseOptions, getDownloadBaseOptions } from '@xmcl/file-transfer'
-import { AbortableTask, CancelledError, Task, task } from '@xmcl/task'
+import {
+  DownloadBaseOptions,
+  downloadMultiple,
+  getDownloadBaseOptions
+} from '@xmcl/file-transfer'
 import { writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
-import { Dispatcher, request } from 'undici'
-import { DownloadTask } from './downloadTask'
-import { ensureDir } from './utils'
+import { Dispatcher } from 'undici'
+import { diagnoseFile } from './diagnose'
+import { LabyModManifest } from './labymod.browser'
+import { onDownloadMultiple, onState, Tracker, WithDownload } from './tracker'
+import { ensureDir, InstallOptions } from './utils'
 
-export interface LabyModManifest {
-  labyModVersion: string
-  commitReference: string
-  sha1: string
-  releaseTime: number
-  size: number
-
-  assets: {
-    shader: string
-    common: string
-    fonts: string
-    'vanilla-theme': string
-    'fancy-theme': string
-    i18n: string
-  }
-
-  minecraftVersions: MinecraftVersion[]
-}
-
-interface MinecraftVersion {
-  tag: string
-  version: string
-  index: number
-  type: string
-  runtime: {
-    name: string
-    version: number
-  }
-  customManifestUrl: string
+export interface LabyModTrackerEvents {
+  labymod: { version: string; tag: string }
+  'labymod.json': { version: string; tag: string }
+  'labymod.assets': WithDownload<{ count: number }>
 }
 
 /**
@@ -104,12 +84,6 @@ export interface LabyModAddonIndex {
   file_hash: string
 }
 
-export async function getLabyModManifest(env = 'production', options?: { dispatcher?: Dispatcher }): Promise<LabyModManifest> {
-  const url = `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/manifest/${env}/latest.json`
-  const res = await request(url, options)
-  return await res.body.json() as any
-}
-
 /**
  * Get the LabyMod addon index from Flint store
  * @param env The environment (production, beta, etc.)
@@ -135,12 +109,16 @@ export async function getLabyModAddon(namespace: string, env = 'production', opt
   return await res.body.json() as any
 }
 
-export interface InstallLabyModOptions extends DownloadBaseOptions {
+export interface InstallLabyModOptions extends DownloadBaseOptions, InstallOptions {
   dispatcher?: Dispatcher
   environment?: string
   fetch?: typeof fetch
+  /**
+   * The tracker to track the install process
+   */
+  tracker?: Tracker<LabyModTrackerEvents>
+  abortSignal?: AbortSignal
 }
-
 export interface InstallLabyModAddonOptions extends DownloadBaseOptions {
   dispatcher?: Dispatcher
   environment?: string
@@ -150,61 +128,70 @@ export interface InstallLabyModAddonOptions extends DownloadBaseOptions {
    */
   installDependencies?: boolean
 }
+async function createLabyModJson(
+  manifest: LabyModManifest,
+  tag: string,
+  folder: MinecraftFolder,
+  environment: string,
+  options: InstallLabyModOptions,
+): Promise<string> {
+  const librariesUrl = `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/libraries/${environment}.json`
+  const versionInfo = manifest.minecraftVersions.find((v) => v.tag === tag)!
 
-class JsonTask extends AbortableTask<string> {
-  private controller = new AbortController()
-
-  constructor(private manifest: LabyModManifest, private tag: string, private folder: MinecraftFolder, private environment: string, private fetch?: typeof globalThis.fetch) {
-    super()
-    this.name = 'json'
-    this.param = { version: tag }
+  if (!versionInfo) {
+    throw Object.assign(new Error(`Cannot find version info for ${tag}`), {
+      name: 'VersionInfoNotFoundError',
+    })
   }
 
-  protected async process(): Promise<string> {
-    this.controller = new AbortController()
-    const librariesUrl = `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/libraries/${this.environment}.json`
-    const versionInfo = this.manifest.minecraftVersions.find((v) => v.tag === this.tag)!
+  interface LibInfo {
+    name: string
+    url: string
+    minecraftVersion: string
+    sha1: string
+    size: number
+    natives: any[]
+    resolvedAt: number
+  }
 
-    if (!versionInfo) {
-      throw Object.assign(new Error(`Cannot find version info for ${this.tag}`), {
-        name: 'VersionInfoNotFoundError',
-      })
-    }
+  const fetch = options.fetch ?? globalThis.fetch
 
-    interface LibInfo {
-      name: string
-      url: string
-      minecraftVersion: string
-      sha1: string
-      size: number
-      natives: any[]
-      resolvedAt: number
-    }
+  const metadataResponse = await fetch(librariesUrl)
 
-    const fetch = this.fetch ?? globalThis.fetch
-
-    const metadataResponse = await fetch(librariesUrl, { signal: this.controller.signal })
-
-    if (!metadataResponse.ok) {
-      throw Object.assign(new Error(`Failed to fetch libraries metadata: ${metadataResponse.statusText}: ${await metadataResponse.text()}`), {
+  if (!metadataResponse.ok) {
+    throw Object.assign(
+      new Error(
+        `Failed to fetch libraries metadata: ${metadataResponse.statusText}: ${await metadataResponse.text()}`,
+      ),
+      {
         name: 'FetchLabyModMetadataError',
-      })
-    }
-    // Get version json and merge with libraries
-    const libraries: LibInfo[] = await metadataResponse.json()
-      .then((res) => res.libraries as LibInfo[])
-      .then((libs) => libs.filter(lib => lib.minecraftVersion === 'all' || lib.minecraftVersion === this.tag))
+      },
+    )
+  }
+  // Get version json and merge with libraries
+  const libraries: LibInfo[] = await metadataResponse
+    .json()
+    .then((res) => res.libraries as LibInfo[])
+    .then((libs) =>
+      libs.filter((lib) => lib.minecraftVersion === 'all' || lib.minecraftVersion === tag),
+    )
 
-    const versionJsonResponse = await fetch(versionInfo.customManifestUrl, { signal: this.controller.signal })
+  const versionJsonResponse = await fetch(versionInfo.customManifestUrl)
 
-    if (!versionJsonResponse.ok) {
-      throw Object.assign(new Error(`Failed to fetch version json: ${versionJsonResponse.statusText}: ${await versionJsonResponse.text()}`), {
+  if (!versionJsonResponse.ok) {
+    throw Object.assign(
+      new Error(
+        `Failed to fetch version json: ${versionJsonResponse.statusText}: ${await versionJsonResponse.text()}`,
+      ),
+      {
         name: 'FetchLabyModVersionJsonError',
-      })
-    }
-    const versionJson = await versionJsonResponse.json()
+      },
+    )
+  }
+  const versionJson = await versionJsonResponse.json()
 
-    versionJson.libraries.push(...libraries.map((l) => ({
+  versionJson.libraries.push(
+    ...libraries.map((l) => ({
       name: l.name,
       downloads: {
         artifact: {
@@ -214,65 +201,98 @@ class JsonTask extends AbortableTask<string> {
           url: l.url,
         },
       },
-    })), {
-      name: `net.labymod:LabyMod:${this.manifest.labyModVersion}`,
+    })),
+    {
+      name: `net.labymod:LabyMod:${manifest.labyModVersion}`,
       downloads: {
         artifact: {
-          path: `net/labymod/LabyMod/${this.manifest.labyModVersion}/LabyMod-${this.manifest.labyModVersion}.jar`,
-          sha1: this.manifest.sha1,
-          size: this.manifest.size,
-          url: `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/download/labymod4/${this.environment}/${this.manifest.commitReference}.jar`,
+          path: `net/labymod/LabyMod/${manifest.labyModVersion}/LabyMod-${manifest.labyModVersion}.jar`,
+          sha1: manifest.sha1,
+          size: manifest.size,
+          url: `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/download/labymod4/${environment}/${manifest.commitReference}.jar`,
         },
       },
     })
-    versionJson.id = `${this.tag}-LabyMod-4-${this.manifest.commitReference}`
+  versionJson.id = `${tag}-LabyMod-4-${manifest.commitReference}`
 
-    if (!versionJson.inheritFrom) {
-      versionJson.inheritFrom = versionJson._minecraftVersion || this.tag
-    }
-
-    // write json to file
-    const versionPath = this.folder.getPath('versions', versionJson.id, `${versionJson.id}.json`)
-    await ensureDir(dirname(versionPath))
-    await writeFile(versionPath, JSON.stringify(versionJson, null, 4))
-
-    return versionJson.id
+  if (!versionJson.inheritFrom) {
+    versionJson.inheritFrom = versionJson._minecraftVersion || tag
   }
 
-  protected abort(isCancelled: boolean): void {
-    this.controller.abort(new CancelledError())
-  }
+  // write json to file
+  const versionPath = folder.getPath('versions', versionJson.id, `${versionJson.id}.json`)
+  await ensureDir(dirname(versionPath))
+  await writeFile(versionPath, JSON.stringify(versionJson, null, 4))
 
-  protected isAbortedError(e: any): boolean {
-    return e instanceof CancelledError
-  }
+  return versionJson.id
 }
 
-export function installLabyMod4Task(manifest: LabyModManifest, tag: string, minecraft: MinecraftLocation, options?: InstallLabyModOptions): Task<string> {
-  return task('installLabyMod', async function () {
-    const folder = MinecraftFolder.from(minecraft)
-    const environment = options?.environment ?? 'production'
+export async function installLabyMod4(
+  manifest: LabyModManifest,
+  tag: string,
+  minecraft: MinecraftLocation,
+  options: InstallLabyModOptions = {},
+): Promise<string> {
+  const folder = MinecraftFolder.from(minecraft)
+  const environment = options?.environment ?? 'production'
+  onState(options.tracker, 'labymod', { version: manifest.labyModVersion, tag })
 
-    const versionId = await this.yield(new JsonTask(manifest, tag, folder, environment, options?.fetch))
+  const versionId = await createLabyModJson(manifest, tag, folder, environment, options)
 
-    // Download assets
-    for (const [name, hash] of Object.entries(manifest.assets)) {
-      const url = `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/download/assets/labymod4/${environment}/${manifest.commitReference}/${name}/${hash}.jar`
+  // Diagnose assets first in parallel
+  const assetEntries = Object.entries(manifest.assets)
+  const diagnoseResults = await Promise.all(
+    assetEntries.map(async ([name, hash]) => {
       const destination = folder.getPath('labymod-neo', 'assets', `${name}.jar`)
-      await this.yield(new DownloadTask({
+      const url = `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/download/assets/labymod4/${environment}/${manifest.commitReference}/${name}/${hash}.jar`
+
+      const issue = await diagnoseFile(
+        {
+          file: destination,
+          expectedChecksum: '', // LabyMod doesn't provide checksums for assets
+          role: 'labymod-asset',
+          hint: 'Problem on labymod asset! Please consider to reinstall labymod.',
+        },
+        { signal: options.abortSignal },
+      )
+
+      return {
+        name,
+        hash,
         url,
         destination,
-        validator: { algorithm: 'sha1', hash },
-        ...getDownloadBaseOptions(options),
-      }).setName('asset', { name }))
-    }
+        needsDownload: !!issue,
+      }
+    }),
+  )
 
-    return versionId
-  })
+  // Only download assets that need to be downloaded
+  const assetsToDownload = diagnoseResults.filter((r) => r.needsDownload)
+
+  if (assetsToDownload.length > 0) {
+    await downloadMultiple({
+      options: assetsToDownload.map((r) => ({
+        url: r.url,
+        destination: r.destination,
+      })),
+      ...getDownloadBaseOptions(options),
+      tracker: onDownloadMultiple(options.tracker, 'labymod.assets', {
+        count: assetsToDownload.length,
+      }),
+      abortSignal: options.abortSignal,
+    })
+  }
+
+  return versionId
 }
 
-export function installLaby4Mod(manifest: LabyModManifest, tag: string, minecraft: MinecraftLocation, options?: InstallLabyModOptions): Promise<string> {
-  return installLabyMod4Task(manifest, tag, minecraft, options).startAndWait()
+export function installLaby4Mod(
+  manifest: LabyModManifest,
+  tag: string,
+  minecraft: MinecraftLocation,
+  options?: InstallLabyModOptions,
+): Promise<string> {
+  return installLabyMod4(manifest, tag, minecraft, options)
 }
 
 /**
@@ -418,7 +438,7 @@ export function isLabyModAddonCompatible(addon: LabyModAddon | LabyModAddonIndex
       // Range format: "min<max"
       const [min, max] = range.split('<')
       if (compareVersions(minecraftVersion, min.trim()) >= 0 &&
-          compareVersions(minecraftVersion, max.trim()) <= 0) {
+        compareVersions(minecraftVersion, max.trim()) <= 0) {
         return true
       }
     } else {

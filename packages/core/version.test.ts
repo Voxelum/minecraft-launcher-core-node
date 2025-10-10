@@ -72,7 +72,9 @@ describe('Version', () => {
       expect(parsed.classifier).toEqual('universal')
       expect(parsed.type).toEqual('jar')
       expect(parsed.isSnapshot).toEqual(false)
-      expect(parsed.path).toEqual('net/minecraftforge/forge/1.14.3-27.0.47/forge-1.14.3-27.0.47-universal.jar')
+      expect(parsed.path).toEqual(
+        'net/minecraftforge/forge/1.14.3-27.0.47/forge-1.14.3-27.0.47-universal.jar',
+      )
     })
 
     test('should be able to parse strange forge resource', () => {
@@ -84,7 +86,9 @@ describe('Version', () => {
       expect(parsed.classifier).toEqual('')
       expect(parsed.type).toEqual('zip')
       expect(parsed.isSnapshot).toEqual(false)
-      expect(parsed.path).toEqual('de/oceanlabs/mcp/mcp_config/1.14.3-20190624.152911/mcp_config-1.14.3-20190624.152911.zip')
+      expect(parsed.path).toEqual(
+        'de/oceanlabs/mcp/mcp_config/1.14.3-20190624.152911/mcp_config-1.14.3-20190624.152911.zip',
+      )
     })
 
     test('should be able to parse normal minecraft library', () => {
@@ -95,7 +99,9 @@ describe('Version', () => {
       expect(parsed.version).toEqual('1.12.2-SNAPSHOT')
       expect(parsed.type).toEqual('jar')
       expect(parsed.isSnapshot).toEqual(true)
-      expect(parsed.path).toEqual('com/mumfrey/liteloader/1.12.2-SNAPSHOT/liteloader-1.12.2-SNAPSHOT.jar')
+      expect(parsed.path).toEqual(
+        'com/mumfrey/liteloader/1.12.2-SNAPSHOT/liteloader-1.12.2-SNAPSHOT.jar',
+      )
     })
   })
 
@@ -113,7 +119,11 @@ describe('Version', () => {
         },
       }
 
-      const [resolved] = Version.resolveLibraries([rawLib], { name: 'osx', version: '', arch: 'x64' })
+      const [resolved] = Version.resolveLibraries([rawLib], {
+        name: 'osx',
+        version: '',
+        arch: 'x64',
+      })
       expect(resolved.download).toEqual(rawLib.downloads.artifact)
       expect(resolved.checksums).toEqual(undefined)
       expect(resolved.serverreq).toEqual(undefined)
@@ -137,7 +147,9 @@ describe('Version', () => {
       expect(resolved.clientreq).toEqual(lib.clientreq)
       expect(resolved.checksums).toEqual(lib.checksums)
       expect(resolved.download.sha1).toEqual(lib.checksums[0])
-      expect(resolved.download.path).toEqual('org/scala-lang/plugins/scala-continuations-library_2.11/1.0.2/scala-continuations-library_2.11-1.0.2.jar')
+      expect(resolved.download.path).toEqual(
+        'org/scala-lang/plugins/scala-continuations-library_2.11/1.0.2/scala-continuations-library_2.11-1.0.2.jar',
+      )
     })
     test('should be able to filter out useless native library', () => {
       const lib = {
@@ -190,9 +202,21 @@ describe('Version', () => {
         ],
       }
 
-      const [onOsx] = Version.resolveLibraries([selectionNative], { name: 'osx', version: '', arch: '64' })
-      const [onWin] = Version.resolveLibraries([selectionNative], { name: 'windows', version: '', arch: '64' })
-      const [onLinux] = Version.resolveLibraries([selectionNative], { name: 'linux', version: '', arch: '64' })
+      const [onOsx] = Version.resolveLibraries([selectionNative], {
+        name: 'osx',
+        version: '',
+        arch: '64',
+      })
+      const [onWin] = Version.resolveLibraries([selectionNative], {
+        name: 'windows',
+        version: '',
+        arch: '64',
+      })
+      const [onLinux] = Version.resolveLibraries([selectionNative], {
+        name: 'linux',
+        version: '',
+        arch: '64',
+      })
       expect(onOsx).toBeUndefined()
       expect(onWin).toBeInstanceOf(ResolvedLibrary)
       expect(onWin.isNative).toBeTruthy()
@@ -233,9 +257,21 @@ describe('Version', () => {
         },
       }
 
-      const [onOsx] = Version.resolveLibraries([selectionNative], { name: 'osx', version: '', arch: '64' })
-      const [onWin] = Version.resolveLibraries([selectionNative], { name: 'windows', version: '', arch: '64' })
-      const [onLinux] = Version.resolveLibraries([selectionNative], { name: 'linux', version: '', arch: '64' })
+      const [onOsx] = Version.resolveLibraries([selectionNative], {
+        name: 'osx',
+        version: '',
+        arch: '64',
+      })
+      const [onWin] = Version.resolveLibraries([selectionNative], {
+        name: 'windows',
+        version: '',
+        arch: '64',
+      })
+      const [onLinux] = Version.resolveLibraries([selectionNative], {
+        name: 'linux',
+        version: '',
+        arch: '64',
+      })
       expect(onWin.isNative).toBeTruthy()
       expect(onOsx.isNative).toBeTruthy()
       expect(onLinux.isNative).toBeTruthy()
@@ -326,7 +362,11 @@ describe('Version', () => {
 
       const [onOsx] = Version.resolveLibraries([lib], { name: 'osx', version: '', arch: 'x64' })
       const [onWin] = Version.resolveLibraries([lib], { name: 'windows', version: '', arch: 'x64' })
-      const [onWin32] = Version.resolveLibraries([lib], { name: 'windows', version: '', arch: 'x32' })
+      const [onWin32] = Version.resolveLibraries([lib], {
+        name: 'windows',
+        version: '',
+        arch: 'x32',
+      })
       const [onLinux] = Version.resolveLibraries([lib], { name: 'linux', version: '', arch: 'x64' })
       expect(onOsx).toBeUndefined()
       expect(onWin.isNative).toBeTruthy()
@@ -340,29 +380,33 @@ describe('Version', () => {
   describe('#mixinArgumentString', () => {
     test('should be able to mixin the version string', () => {
       // eslint-disable-next-line no-template-curly-in-string
-      const s = Version.mixinArgumentString('--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}', '--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --versionType Forge')
+      const s = Version.mixinArgumentString(
+        '--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}',
+        '--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --versionType Forge',
+      )
       // eslint-disable-next-line no-template-curly-in-string
-      expect(s).toEqual('--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}')
+      expect(s).toEqual(
+        '--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}',
+      )
     })
   })
 
   describe('#parse', () => {
     test('should throw if no main class', async ({ mock }) => {
-      await expect(Version.parse(mock, 'no-main-class'))
-        .rejects
-        .toEqual(Object.assign(new Error(), {
+      await expect(Version.parse(mock, 'no-main-class')).rejects.toEqual(
+        Object.assign(new Error(), {
+          name: 'BadVersionJson',
           error: 'BadVersionJson',
           missing: 'MainClass',
           version: 'no-main-class',
-        }))
+        }),
+      )
     })
     test('should not throw if no asset json', async ({ mock }) => {
-      await expect(Version.parse(mock, 'no-assets-json'))
-        .resolves
+      await expect(Version.parse(mock, 'no-assets-json')).resolves
     })
     test('should not throw if no downloads', async ({ mock }) => {
-      await expect(Version.parse(mock, 'no-downloads'))
-        .resolves
+      await expect(Version.parse(mock, 'no-downloads')).resolves
     })
     test('should be able to parse 1.17.10 version', async ({ mock }) => {
       const version = await Version.parse(mock, '1.7.10')
@@ -377,13 +421,11 @@ describe('Version', () => {
       expect(version.inheritances).toEqual(['1.7.10'])
     })
     test('should be able to throw if version not existed', async ({ mock }) => {
-      await expect(Version.parse(mock, '1.12'))
-        .rejects
-        .toMatchObject({
-          error: 'MissingVersionJson',
-          version: '1.12',
-          path: join(mock, 'versions', '1.12', '1.12.json'),
-        })
+      await expect(Version.parse(mock, '1.12')).rejects.toMatchObject({
+        error: 'MissingVersionJson',
+        version: '1.12',
+        path: join(mock, 'versions', '1.12', '1.12.json'),
+      })
     })
     test('should be able to parse extended profile for forge', async ({ mock }) => {
       const version = await Version.parse(mock, '1.7.10-Forge10.13.3.1400-1.7.10')
@@ -397,8 +439,13 @@ describe('Version', () => {
       expect(version.minecraftVersion).toEqual('1.7.10')
       expect(version.inheritances).toEqual(['1.7.10-Forge10.13.3.1400-1.7.10', '1.7.10'])
     })
-    test.skip('should be able to parse extends version for forge & liteloader', async function ({ temp }) {
-      const version = await Version.parse(temp, '1.12.2-forge-14.23.5.2852-Liteloader1.12.2-1.12.2-SNAPSHOT')
+    test.skip('should be able to parse extends version for forge & liteloader', async function ({
+      temp,
+    }) {
+      const version = await Version.parse(
+        temp,
+        '1.12.2-forge-14.23.5.2852-Liteloader1.12.2-1.12.2-SNAPSHOT',
+      )
       expect(version).toBeTruthy()
       expect(version.pathChain).toBeInstanceOf(Array)
       expect(version.pathChain).toHaveLength(3)
@@ -414,39 +461,53 @@ describe('Version', () => {
   describe('#checkAllowed', () => {
     const currentPlatform = getPlatform()
     test('should be able to handle empty rules', () => {
-      expect(Version.checkAllowed([]))
-        .toBeTruthy()
+      expect(Version.checkAllowed([])).toBeTruthy()
     })
     test('should be able to handle featured rules', () => {
-      expect(Version.checkAllowed([
-        {
-          action: 'allow',
-          features: {
-            is_demo_user: true,
-          },
-        },
-      ], currentPlatform, ['is_demo_user']))
-        .toBeTruthy()
+      expect(
+        Version.checkAllowed(
+          [
+            {
+              action: 'allow',
+              features: {
+                is_demo_user: true,
+              },
+            },
+          ],
+          currentPlatform,
+          ['is_demo_user'],
+        ),
+      ).toBeTruthy()
     })
     test('should be able to handle featured rules with flag false', () => {
-      expect(Version.checkAllowed([
-        {
-          action: 'allow',
-          features: {
-            is_demo_user: false,
-          },
-        },
-      ], currentPlatform, ['']))
-        .toBeTruthy()
+      expect(
+        Version.checkAllowed(
+          [
+            {
+              action: 'allow',
+              features: {
+                is_demo_user: false,
+              },
+            },
+          ],
+          currentPlatform,
+          [''],
+        ),
+      ).toBeTruthy()
     })
   })
 
   describe('#mixinArgumentString', () => {
     test('should be able to mixin the version string', () => {
       // eslint-disable-next-line no-template-curly-in-string
-      const s = Version.mixinArgumentString('--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}', '--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --versionType Forge')
+      const s = Version.mixinArgumentString(
+        '--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}',
+        '--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --versionType Forge',
+      )
       // eslint-disable-next-line no-template-curly-in-string
-      expect(s).toEqual('--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}')
+      expect(s).toEqual(
+        '--tweakClass com.mumfrey.liteloader.launch.LiteLoaderTweaker --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker --username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --versionType ${version_type}',
+      )
     })
   })
 

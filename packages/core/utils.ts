@@ -9,15 +9,27 @@ import { pipeline } from 'stream/promises'
 
 /** @internal */
 export function exists(file: string) {
-  return access(file, constants.F_OK).then(() => true, () => false)
+  return access(file, constants.F_OK).then(
+    () => true,
+    () => false,
+  )
 }
 /**
  * Validate the sha1 value of the file
  * @internal
  */
 export async function validateSha1(target: string, hash?: string, strict = false) {
-  if (await access(target).then(() => false, () => true)) { return false }
-  if (!hash) { return !strict }
+  if (
+    await access(target).then(
+      () => false,
+      () => true,
+    )
+  ) {
+    return false
+  }
+  if (!hash) {
+    return !strict
+  }
   const sha1 = await checksum(target, 'sha1')
   return sha1 === hash
 }

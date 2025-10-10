@@ -17,9 +17,15 @@ export function getDefaultEntryResolver(): EntryResolver {
 
 export class UnzipTask extends BaseTask<void> {
   private streams: [Readable, Writable][] = []
-  private _onCancelled = () => { }
+  private _onCancelled = () => {}
 
-  constructor(readonly zipFile: ZipFile, readonly entries: Entry[], destination: string, readonly resolver: EntryResolver = getDefaultEntryResolver(), readonly interpreter: (input: Readable, file: string) => void = () => { }) {
+  constructor(
+    readonly zipFile: ZipFile,
+    readonly entries: Entry[],
+    destination: string,
+    readonly resolver: EntryResolver = getDefaultEntryResolver(),
+    readonly interpreter: (input: Readable, file: string) => void = () => {},
+  ) {
     super()
     this._to = destination
   }
@@ -86,8 +92,9 @@ export class UnzipTask extends BaseTask<void> {
   }
 
   protected async pauseTask(): Promise<void> {
-    const promise = Promise.all(this.streams.map(([read]) => new Promise((resolve) =>
-      read.once('pause', resolve))))
+    const promise = Promise.all(
+      this.streams.map(([read]) => new Promise((resolve) => read.once('pause', resolve))),
+    )
     for (const [read] of this.streams) {
       read.pause()
     }
@@ -95,8 +102,9 @@ export class UnzipTask extends BaseTask<void> {
   }
 
   protected async resumeTask(): Promise<void> {
-    const promise = Promise.all(this.streams.map(([read]) => new Promise((resolve) =>
-      read.once('readable', resolve))))
+    const promise = Promise.all(
+      this.streams.map(([read]) => new Promise((resolve) => read.once('readable', resolve))),
+    )
     for (const [read] of this.streams) {
       read.resume()
     }

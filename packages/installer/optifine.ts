@@ -22,7 +22,12 @@ export interface InstallOptifineOptions extends InstallOptions, SpawnJavaOptions
  * @param options The install options
  * @beta Might be changed and don't break the major version
  */
-export function generateOptifineVersion(editionRelease: string, minecraftVersion: string, launchWrapperVersion?: string, options: InstallOptifineOptions = {}): Version {
+export function generateOptifineVersion(
+  editionRelease: string,
+  minecraftVersion: string,
+  launchWrapperVersion?: string,
+  options: InstallOptifineOptions = {},
+): Version {
   const id = options.versionId ?? `${minecraftVersion}-Optifine_${editionRelease}`
   const inheritsFrom = options.inheritsFrom ?? minecraftVersion
   const mainClass = 'net.minecraft.launchwrapper.Launch'
@@ -36,7 +41,10 @@ export function generateOptifineVersion(editionRelease: string, minecraftVersion
     id,
     inheritsFrom,
     arguments: {
-      game: ['--tweakClass', options.useForgeTweaker ? 'optifine.OptiFineForgeTweaker' : 'optifine.OptiFineTweaker'],
+      game: [
+        '--tweakClass',
+        options.useForgeTweaker ? 'optifine.OptiFineForgeTweaker' : 'optifine.OptiFineTweaker',
+      ],
       jvm: [],
     },
     releaseTime: new Date().toJSON(),
@@ -57,7 +65,11 @@ export function generateOptifineVersion(editionRelease: string, minecraftVersion
  * @beta Might be changed and don't break the major version
  * @throws {@link BadOptifineJarError}
  */
-export function installOptifine(installer: string, minecraft: MinecraftLocation, options?: InstallOptifineOptions) {
+export function installOptifine(
+  installer: string,
+  minecraft: MinecraftLocation,
+  options?: InstallOptifineOptions,
+) {
   return installOptifineTask(installer, minecraft, options).startAndWait()
 }
 
@@ -65,8 +77,8 @@ export class BadOptifineJarError extends Error {
   constructor(
     public optifine: string,
     /**
-         * What entry in jar is missing
-         */
+     * What entry in jar is missing
+     */
     public entry: string,
   ) {
     super(`Missing entry ${entry} in optifine installer: ${optifine}`)
@@ -84,7 +96,11 @@ export class BadOptifineJarError extends Error {
  * @beta Might be changed and don't break the major version
  * @throws {@link BadOptifineJarError}
  */
-export function installOptifineTask(installer: string, minecraft: MinecraftLocation, options: InstallOptifineOptions = {}) {
+export function installOptifineTask(
+  installer: string,
+  minecraft: MinecraftLocation,
+  options: InstallOptifineOptions = {},
+) {
   return task('installOptifine', async function () {
     const mc = MinecraftFolder.from(minecraft)
 
@@ -95,7 +111,10 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
     const record = getEntriesRecord(entries)
     // context.update(10, 100);
 
-    const entry = record['net/optifine/Config.class'] ?? record['Config.class'] ?? record['notch/net/optifine/Config.class']
+    const entry =
+      record['net/optifine/Config.class'] ??
+      record['Config.class'] ??
+      record['notch/net/optifine/Config.class']
     if (!entry) {
       throw new BadOptifineJarError(installer, 'net/optifine/Config.class')
     }
@@ -122,37 +141,59 @@ export function installOptifineTask(installer: string, minecraft: MinecraftLocat
     const release: string = visitor.fields.OF_RELEASE // F5
     const editionRelease = edition + '_' + release
 
-    const versionJSON = generateOptifineVersion(editionRelease, mcversion, launchWrapperVersion, options)
+    const versionJSON = generateOptifineVersion(
+      editionRelease,
+      mcversion,
+      launchWrapperVersion,
+      options,
+    )
     const versionJSONPath = mc.getVersionJson(versionJSON.id)
 
     // context.update(20, 100);
     // write version json
-    await this.yield(task('json', async () => {
-      await ensureFile(versionJSONPath)
-      await writeFile(versionJSONPath, JSON.stringify(versionJSON, null, 4))
-    }))
+    await this.yield(
+      task('json', async () => {
+        await ensureFile(versionJSONPath)
+        await writeFile(versionJSONPath, JSON.stringify(versionJSON, null, 4))
+      }),
+    )
 
     const launchWrapperEntry = record[`launchwrapper-of-${launchWrapperVersion}.jar`]
     // write launch wrapper
     if (launchWrapperEntry) {
-      await this.yield(task('library', async () => {
-        const wrapperDest = mc.getLibraryByPath(`optifine/launchwrapper-of/${launchWrapperVersion}/launchwrapper-of-${launchWrapperVersion}.jar`)
-        await ensureFile(wrapperDest)
-        await writeFile(wrapperDest, await readEntry(zip, launchWrapperEntry))
-      }))
+      await this.yield(
+        task('library', async () => {
+          const wrapperDest = mc.getLibraryByPath(
+            `optifine/launchwrapper-of/${launchWrapperVersion}/launchwrapper-of-${launchWrapperVersion}.jar`,
+          )
+          await ensureFile(wrapperDest)
+          await writeFile(wrapperDest, await readEntry(zip, launchWrapperEntry))
+        }),
+      )
     }
 
     // write the optifine
-    await this.yield(task('jar', async () => {
-      const dest = mc.getLibraryByPath(`optifine/Optifine/${mcversion}_${editionRelease}/Optifine-${mcversion}_${editionRelease}.jar`)
-      const mcJar = mc.getVersionJar(mcversion)
+    await this.yield(
+      task('jar', async () => {
+        const dest = mc.getLibraryByPath(
+          `optifine/Optifine/${mcversion}_${editionRelease}/Optifine-${mcversion}_${editionRelease}.jar`,
+        )
+        const mcJar = mc.getVersionJar(mcversion)
 
-      await ensureFile(dest)
-      await spawnProcess(options, ['-cp', installer, 'optifine.Patcher', mcJar, installer, dest]).catch((e) => {
-        e.name = 'OptifinePatchError'
-        throw e
-      })
-    }))
+        await ensureFile(dest)
+        await spawnProcess(options, [
+          '-cp',
+          installer,
+          'optifine.Patcher',
+          mcJar,
+          installer,
+          dest,
+        ]).catch((e) => {
+          e.name = 'OptifinePatchError'
+          throw e
+        })
+      }),
+    )
 
     return versionJSON.id
   })

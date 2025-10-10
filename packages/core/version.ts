@@ -130,16 +130,26 @@ export interface BadVersionJsonError {
   missing: 'MainClass' | 'AssetIndex' | 'Downloads'
   version: string
 }
+export function isBadVersionJsonError(e: any): e is BadVersionJsonError {
+  return e && e.error === 'BadVersionJson'
+}
 export interface CorruptedVersionJsonError {
   error: 'CorruptedVersionJson'
   version: string
   json: string
+}
+export function isCorruptedVersionJsonError(e: any): e is CorruptedVersionJsonError {
+  return e && e.error === 'CorruptedVersionJson'
 }
 export interface MissingVersionJsonError {
   error: 'MissingVersionJson'
   version: string
   path: string
 }
+export function isMissingVersionJsonError(e: any): e is MissingVersionJsonError {
+  return e && e.error === 'MissingVersionJson'
+}
+
 export interface CircularDependenciesError {
   error: 'CircularDependencies'
   /**
@@ -150,7 +160,15 @@ export interface CircularDependenciesError {
   chain: string[]
 }
 
-export type VersionParseError = ((BadVersionJsonError | CorruptedVersionJsonError | MissingVersionJsonError | CircularDependenciesError) & Error) | Error
+export type VersionParseError =
+  | ((
+      | BadVersionJsonError
+      | CorruptedVersionJsonError
+      | MissingVersionJsonError
+      | CircularDependenciesError
+    ) &
+      Error)
+  | Error
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace LibraryInfo {
@@ -171,7 +189,10 @@ export namespace LibraryInfo {
 
     const isSnapshot = file.startsWith(version)
 
-    let classifier = file.substring(isSnapshot ? version.length : filePrefix.length, file.length - ext.length)
+    let classifier = file.substring(
+      isSnapshot ? version.length : filePrefix.length,
+      file.length - ext.length,
+    )
 
     if (classifier.startsWith('-')) {
       classifier = classifier.slice(1)
@@ -209,7 +230,9 @@ export namespace LibraryInfo {
 
     const groupPath = groupId.replace(/\./g, '/')
     let base = `${groupPath}/${artifactId}/${version}/${artifactId}-${version}`
-    if (classifier) { base += `-${classifier}` }
+    if (classifier) {
+      base += `-${classifier}`
+    }
     const path = `${base}.${type}`
 
     return {
@@ -244,7 +267,8 @@ export class ResolvedLibrary implements LibraryInfo {
     readonly checksums?: string[],
     readonly serverreq?: boolean,
     readonly clientreq?: boolean,
-    readonly extractExclude?: string[]) {
+    readonly extractExclude?: string[],
+  ) {
     const { groupId, artifactId, version, isSnapshot, type, classifier, path } = info
     this.groupId = groupId
     this.artifactId = artifactId
@@ -318,20 +342,28 @@ export namespace Version {
 
   export type Library = NormalLibrary | NativeLibrary | PlatformSpecificLibrary | LegacyLibrary
 
-  export type LaunchArgument = string | {
-    rules?: Rule[]
-    value: string | string[]
-  }
+  export type LaunchArgument =
+    | string
+    | {
+        rules?: Rule[]
+        value: string | string[]
+      }
 
   /**
-    * Check if all the rules in `Rule[]` are acceptable in certain OS `platform` and features.
-    * @param rules The rules usually comes from `Library` or `LaunchArgument`
-    * @param platform The platform, leave it absent will use the `currentPlatform`
-    * @param features The features, used by game launch argument `arguments.game`
-    */
-  export function checkAllowed(rules: Rule[], platform: Platform = getPlatform(), features: string[] = []): boolean {
+   * Check if all the rules in `Rule[]` are acceptable in certain OS `platform` and features.
+   * @param rules The rules usually comes from `Library` or `LaunchArgument`
+   * @param platform The platform, leave it absent will use the `currentPlatform`
+   * @param features The features, used by game launch argument `arguments.game`
+   */
+  export function checkAllowed(
+    rules: Rule[],
+    platform: Platform = getPlatform(),
+    features: string[] = [],
+  ): boolean {
     // by default it's allowed
-    if (!rules || rules.length === 0) { return true }
+    if (!rules || rules.length === 0) {
+      return true
+    }
     // else it's disallow by default
     let allow = false
     for (const rule of rules) {
@@ -342,8 +374,10 @@ export namespace Version {
         // don't apply by default if has os rule
         apply = false
         const osRule = rule.os
-        if (platform.name === osRule.name &&
-          (!osRule.version || platform.version.match(osRule.version))) {
+        if (
+          platform.name === osRule.name &&
+          (!osRule.version || platform.version.match(osRule.version))
+        ) {
           apply = true
           if (osRule.arch) {
             const ruleArch = osRule.arch === 'x86' ? 'ia32' : osRule.arch
@@ -355,11 +389,14 @@ export namespace Version {
         if ('features' in rule && rule.features) {
           const featureRequire = rule.features
           // only apply when the EVERY required features enabled & not required features disabled
-          apply = Object.entries(featureRequire)
-            .every(([k, v]) => v ? features.indexOf(k) !== -1 : features.indexOf(k) === -1)
+          apply = Object.entries(featureRequire).every(([k, v]) =>
+            v ? features.indexOf(k) !== -1 : features.indexOf(k) === -1,
+          )
         }
       }
-      if (apply) { allow = action }
+      if (apply) {
+        allow = action
+      }
     }
     return allow
   }
@@ -394,7 +431,11 @@ export namespace Version {
    * @throws {@link BadVersionJsonError}
    * @see {@link VersionParseError}
    */
-  export async function parse(minecraftPath: MinecraftLocation, version: string, platofrm: Platform = getPlatform()): Promise<ResolvedVersion> {
+  export async function parse(
+    minecraftPath: MinecraftLocation,
+    version: string,
+    platofrm: Platform = getPlatform(),
+  ): Promise<ResolvedVersion> {
     const folder = MinecraftFolder.from(minecraftPath)
     // the hierarchy is outer version to dep version
     // e.g. [liteloader version, forge version, minecraft version]
@@ -461,7 +502,8 @@ export namespace Version {
     let time = ''
     let type = ''
     let logging: any
-    const minecraftVersion: string = rootVersion.clientVersion ?? rootVersion._minecraftVersion ?? rootVersion.id
+    const minecraftVersion: string =
+      rootVersion.clientVersion ?? rootVersion._minecraftVersion ?? rootVersion.id
     let location: string
     let javaVersion: JavaVersion = { majorVersion: 8, component: 'jre-legacy' }
 
@@ -527,7 +569,9 @@ export namespace Version {
       inheritances,
       arguments: args,
       downloads: downloadsMap,
-      libraries: Object.keys(librariesMap).map((k) => librariesMap[k]).concat(Object.keys(nativesMap).map((k) => nativesMap[k])),
+      libraries: Object.keys(librariesMap)
+        .map((k) => librariesMap[k])
+        .concat(Object.keys(nativesMap).map((k) => nativesMap[k])),
       mainClass,
       minimumLauncherVersion,
       releaseTime,
@@ -560,7 +604,9 @@ export namespace Version {
     const launcherVersion = Math.max(parent.minimumLauncherVersion, version.minimumLauncherVersion)
 
     const libMap: { [name: string]: Library } = {}
-    parent.libraries.forEach((l) => { libMap[l.name] = l })
+    parent.libraries.forEach((l) => {
+      libMap[l.name] = l
+    })
     const libraries = version.libraries.filter((l) => libMap[l.name] === undefined)
 
     const result: Version = {
@@ -578,8 +624,10 @@ export namespace Version {
       if (typeof version.arguments === 'object') {
         throw new TypeError('Extends require two version in same format!')
       }
-      result.minecraftArguments = mixinArgumentString(parent.minecraftArguments,
-        version.minecraftArguments || '')
+      result.minecraftArguments = mixinArgumentString(
+        parent.minecraftArguments,
+        version.minecraftArguments || '',
+      )
     } else if (typeof parent.arguments === 'object') {
       if (typeof version.minecraftArguments === 'string') {
         throw new TypeError('Extends require two version in same format!')
@@ -600,27 +648,41 @@ export namespace Version {
     const arrA = hi.split(' ')
     const arrB = lo.split(' ')
     const args: { [key: string]: string[] } = {}
-    for (let i = 0; i < arrA.length; i++) { // collection higher priority argument
+    for (let i = 0; i < arrA.length; i++) {
+      // collection higher priority argument
       const element = arrA[i]
-      if (!args[element]) { args[element] = [] }
-      if (arrA[i + 1]) { args[element].push(arrA[i += 1]) }
+      if (!args[element]) {
+        args[element] = []
+      }
+      if (arrA[i + 1]) {
+        args[element].push(arrA[(i += 1)])
+      }
     }
-    for (let i = 0; i < arrB.length; i++) { // collect lower priority argument
+    for (let i = 0; i < arrB.length; i++) {
+      // collect lower priority argument
       const element = arrB[i]
-      if (!args[element]) { args[element] = [] }
-      if (arrB[i + 1]) { args[element].push(arrB[i += 1]) }
+      if (!args[element]) {
+        args[element] = []
+      }
+      if (arrB[i + 1]) {
+        args[element].push(arrB[(i += 1)])
+      }
     }
     const out: string[] = []
     for (const k of Object.keys(args)) {
       switch (k) {
         case '--tweakClass': {
           const set: { [arg: string]: 0 } = {}
-          for (const v of args[k]) { set[v] = 0 }
+          for (const v of args[k]) {
+            set[v] = 0
+          }
           Object.keys(set).forEach((v) => out.push(k, v))
           break
         }
         default:
-          if (args[k][0]) { out.push(k, args[k][0]) } // use higher priority argument in common
+          if (args[k][0]) {
+            out.push(k, args[k][0])
+          } // use higher priority argument in common
           break
       }
     }
@@ -635,7 +697,11 @@ export namespace Version {
    * @throws {@link CorruptedVersionJsonError}
    * @throws {@link MissingVersionJsonError}
    */
-  export async function resolveDependency(path: MinecraftLocation, version: string, platform: Platform = getPlatform()): Promise<PartialResolvedVersion[]> {
+  export async function resolveDependency(
+    path: MinecraftLocation,
+    version: string,
+    platform: Platform = getPlatform(),
+  ): Promise<PartialResolvedVersion[]> {
     const folder = MinecraftFolder.from(path)
     const stack: PartialResolvedVersion[] = []
 
@@ -686,15 +752,20 @@ export namespace Version {
     return stack
   }
 
-  export function resolveLibrary(lib: Library, platform: Platform = getPlatform()): ResolvedLibrary | undefined {
+  export function resolveLibrary(
+    lib: Library,
+    platform: Platform = getPlatform(),
+  ): ResolvedLibrary | undefined {
     if ('rules' in lib && !checkAllowed(lib.rules, platform)) {
       return undefined
     }
     // official natives foramt
     if ('natives' in lib) {
-      if (!lib.natives[platform.name]) { return undefined }
+      if (!lib.natives[platform.name]) {
+        return undefined
+      }
       // eslint-disable-next-line no-template-curly-in-string
-      const classifier = (lib.natives[platform.name]).replace('${arch}', platform.arch.substring(1))
+      const classifier = lib.natives[platform.name].replace('${arch}', platform.arch.substring(1))
       let nativeArtifact = lib.downloads?.classifiers?.[classifier]
       const info = LibraryInfo.resolve(lib.name + ':' + classifier)
       if (!nativeArtifact) {
@@ -711,7 +782,16 @@ export namespace Version {
           path: info.path,
         }
       }
-      return new ResolvedLibrary(lib.name + ':' + classifier, info, nativeArtifact, true, undefined, undefined, undefined, lib.extract ? lib.extract.exclude ? lib.extract.exclude : undefined : undefined)
+      return new ResolvedLibrary(
+        lib.name + ':' + classifier,
+        info,
+        nativeArtifact,
+        true,
+        undefined,
+        undefined,
+        undefined,
+        lib.extract ? (lib.extract.exclude ? lib.extract.exclude : undefined) : undefined,
+      )
     }
     const info = LibraryInfo.resolve(lib.name)
     // normal library
@@ -720,9 +800,10 @@ export namespace Version {
         throw new Error('Corrupted library: ' + JSON.stringify(lib))
       }
       if (!lib.downloads.artifact.url) {
-        lib.downloads.artifact.url = info.groupId === 'net.minecraftforge'
-          ? 'https://files.minecraftforge.net/maven/' + lib.downloads.artifact.path
-          : 'https://libraries.minecraft.net/' + lib.downloads.artifact.path
+        lib.downloads.artifact.url =
+          info.groupId === 'net.minecraftforge'
+            ? 'https://files.minecraftforge.net/maven/' + lib.downloads.artifact.path
+            : 'https://libraries.minecraft.net/' + lib.downloads.artifact.path
       }
       if (!lib.downloads.artifact.path) {
         lib.downloads.artifact = {
@@ -743,7 +824,15 @@ export namespace Version {
       path: info.path,
       url: maven + info.path,
     }
-    return new ResolvedLibrary(lib.name, info, artifact, false, lib.checksums, lib.serverreq, lib.clientreq)
+    return new ResolvedLibrary(
+      lib.name,
+      info,
+      artifact,
+      false,
+      lib.checksums,
+      lib.serverreq,
+      lib.clientreq,
+    )
   }
 
   /**
@@ -751,8 +840,13 @@ export namespace Version {
    * @param libs All raw lib
    * @param platform The platform
    */
-  export function resolveLibraries(libs: Library[], platform: Platform = getPlatform()): ResolvedLibrary[] {
-    return libs.map((lib) => resolveLibrary(lib, platform)).filter((l) => l !== undefined) as ResolvedLibrary[]
+  export function resolveLibraries(
+    libs: Library[],
+    platform: Platform = getPlatform(),
+  ): ResolvedLibrary[] {
+    return libs
+      .map((lib) => resolveLibrary(lib, platform))
+      .filter((l) => l !== undefined) as ResolvedLibrary[]
   }
 
   /**
@@ -769,12 +863,19 @@ export namespace Version {
    * @param versionString The version json string
    * @param root The root of the version
    */
-  export function normalizeVersionJson(versionString: string, root: string, platform: Platform = getPlatform()): PartialResolvedVersion {
+  export function normalizeVersionJson(
+    versionString: string,
+    root: string,
+    platform: Platform = getPlatform(),
+  ): PartialResolvedVersion {
     function processArguments(ar: Version.LaunchArgument[]) {
       return ar.filter((a) => {
         // only filter out the os only rule.
         // if the features fields presented, we don't process it now
-        if (typeof a === 'object' && a.rules?.every((r) => typeof r === 'string' || !('features' in r))) {
+        if (
+          typeof a === 'object' &&
+          a.rules?.every((r) => typeof r === 'string' || !('features' in r))
+        ) {
           return Version.checkAllowed(a.rules, platform)
         }
         return true
@@ -788,10 +889,9 @@ export namespace Version {
       jvm: [] as Version.LaunchArgument[],
       game: [] as Version.LaunchArgument[],
     }
-    if (!parsed.arguments) { // old version
-      args.game = parsed.minecraftArguments
-        ? parsed.minecraftArguments.split(' ')
-        : []
+    if (!parsed.arguments) {
+      // old version
+      args.game = parsed.minecraftArguments ? parsed.minecraftArguments.split(' ') : []
       args.jvm = [
         {
           rules: [
@@ -802,7 +902,8 @@ export namespace Version {
               },
             },
           ],
-          value: '-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump',
+          value:
+            '-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump',
         },
         {
           rules: [
@@ -814,10 +915,7 @@ export namespace Version {
               },
             },
           ],
-          value: [
-            '-Dos.name=Windows 10',
-            '-Dos.version=10.0',
-          ],
+          value: ['-Dos.name=Windows 10', '-Dos.version=10.0'],
         },
         // eslint-disable-next-line no-template-curly-in-string
         '-Djava.library.path=${natives_directory}',

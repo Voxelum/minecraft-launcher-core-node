@@ -27,4 +27,6 @@ export function __reset() {
   existedFiles = []
 }
 /** @ignore */
-export function isNotNull(v: any) { return !!v }
+export function isNotNull(v: any) {
+  return !!v
+}

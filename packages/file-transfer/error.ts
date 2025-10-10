@@ -1,4 +1,3 @@
-import { Range } from './rangePolicy'
 
 export class DownloadError extends Error {
   constructor(

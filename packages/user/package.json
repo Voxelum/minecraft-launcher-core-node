@@ -19,7 +19,7 @@
     "access": "public"
   },
   "dependencies": {
-    "undici": "7.2.3",
+    "undici": "7.16.0",
     "uuid": "^9.0.0"
   },
   "sideEffects": false,
@@ -46,7 +46,7 @@
   "devDependencies": {
     "@types/uuid": "^9.0.1",
     "esbuild": "^0.17.16",
-    "typescript": "^5.3.3",
+    "typescript": "^5.9.3",
     "user-offline-uuid": "workspace:^*",
     "undici-shim": "workspace:^*"
   }

@@ -2,10 +2,11 @@
  * @module @xmcl/file-transfer
  */
 
-export * from './error'
 export * from './agent'
-export * from './rangePolicy'
-export * from './progress'
-export * from './retry'
-export * from './validator'
+export * from './checkpoint'
 export * from './download'
+export * from './error'
+export * from './metadata'
+export * from './progress'
+export * from './range_policy'
+

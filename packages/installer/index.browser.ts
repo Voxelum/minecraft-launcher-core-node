@@ -1,0 +1,7 @@
+export * from './fabric.browser'
+export * from './forge.browser'
+export * from './quilt.browser'
+export * from './labymod.browser'
+export * from './minecraft.browser'
+export * from './java-runtime.browser'
+export * from './utils.browser'

@@ -31,7 +31,8 @@ test('#convertClasspathToMaven', () => {
 })
 
 test('#parseManifest', () => {
-  const manifestContent = ['Manifest-Version: 1.0',
+  const manifestContent = [
+    'Manifest-Version: 1.0',
     'Class-Path: libraries/net/minecraftforge/JarJarFileSystems/0.3.26/JarJar',
     ' FileSystems-0.3.26.jar libraries/com/google/guava/guava/32.1.2-jre/guav',
     ' a-32.1.2-jre.jar libraries/com/google/guava/failureaccess/1.0.1/failure',

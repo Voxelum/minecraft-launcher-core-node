@@ -1,18 +1,9 @@
 {
-    "files": [
-        "agent.ts",
-        "checkpoint.ts",
-        "error.ts",
-        "index.ts",
-        "metadata.ts",
-        "download.ts",
-        "retry.ts",
-        "rangePolicy.ts",
-        "progress.ts",
-        "validator.ts"
-    ],
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "outDir": "./dist"
     },
+    "include": [
+        "**/*.ts"
+    ]
 }

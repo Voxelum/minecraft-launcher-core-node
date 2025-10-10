@@ -92,7 +92,7 @@ export class Device {
 
     const res = await request(this.url, { method: 'GET', dispatcher: this.client })
     if (res.statusCode !== 200) {
-      throw new Error('Request failed: ' + res.statusCode)
+      throw new Error('Request failed: ' + res.statusCode + ' ' + await res.body.text())
     }
 
     const data = await res.body.text()
@@ -128,7 +128,33 @@ export class Device {
       '</u:' + action + '>' +
       '</s:Body>' +
       '</s:Envelope>'
-    const req = hrequest(info.controlURL, {
+    // const req = hrequest(info.controlURL, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'text/xml; charset="utf-8"',
+    //     'Content-Length': Buffer.byteLength(body).toString(),
+    //     connection: 'close',
+    //     SOAPAction: JSON.stringify(info.service + '#' + action),
+    //   },
+    // })
+    // req.write(body)
+    // req.end()
+    // const res = await new Promise<IncomingMessage>((resolve, reject) => {
+    //   req.once('response', resolve)
+    //   req.once('error', reject)
+    // })
+    // const rbody = async () => {
+    //   return new Promise<string>((resolve, reject) => {
+    //     const buf = [] as Buffer[]
+    //     res.on('data', (d) => {
+    //       buf.push(d)
+    //     })
+    //     res.on('end', () => {
+    //       resolve(Buffer.concat(buf).toString())
+    //     })
+    //   })
+    // }
+    const res = await fetch(info.controlURL, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/xml; charset="utf-8"',
@@ -136,48 +162,21 @@ export class Device {
         connection: 'close',
         SOAPAction: JSON.stringify(info.service + '#' + action),
       },
+      body,
     })
-    req.write(body)
-    req.end()
-    const res = await new Promise<IncomingMessage>((resolve, reject) => {
-      req.once('response', resolve)
-      req.once('error', reject)
-    })
-    const rbody = async () => {
-      return new Promise<string>((resolve, reject) => {
-        const buf = [] as Buffer[]
-        res.on('data', (d) => {
-          buf.push(d)
-        })
-        res.on('end', () => {
-          resolve(Buffer.concat(buf).toString())
-        })
-      })
-    }
-    // const res = await request(info.controlURL, {
-    //   method: 'POST',
-    //   dispatcher: this.client,
-    //   headers: {
-    //     'Content-Type': 'text/xml; charset="utf-8"',
-    //     'Content-Length': Buffer.byteLength(body).toString(),
-    //     connection: 'close',
-    //     SOAPAction: JSON.stringify(info.service + '#' + action),
-    //   },
-    //   body,
-    // })
 
-    if (res.statusCode !== 200) {
+    if (res.status !== 200) {
       // let body = ''
       const parser = new fxparser.XMLParser()
-      if (res.headers['content-length'] && Number(res.headers['content-length']) > 0) {
-        const error = parser.parse(await rbody())['s:Envelope']['s:Body']['s:Fault']
-        throw Object.assign(new Error(`Upnp action ${info.service}#${action} failed: ${res.statusCode}`), error)
+      if (res.headers.get('content-length') && Number(res.headers.get('content-length')) > 0) {
+        const error = parser.parse(await res.text())['s:Envelope']['s:Body']['s:Fault']
+        throw Object.assign(new Error(`Upnp action ${info.service}#${action} failed: ${res.status}`), error)
       }
       // console.log(body)
-      throw new Error(`Upnp action ${info.service}#${action} failed: ${res.statusCode}`)
+      throw new Error(`Upnp action ${info.service}#${action} failed: ${res.status}`)
     }
 
-    const data = await rbody()
+    const data = await res.text()
     const parser = new fxparser.XMLParser({ parseAttributeValue: true, ignoreAttributes: false })
 
     const parsedData = parser.parse(data)

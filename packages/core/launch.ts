@@ -59,7 +59,7 @@ export interface LaunchOption {
   /**
    * Overwrite the version name of the current version.
    * If this is absent, it will use version name from resolved version.
-    */
+   */
   versionName?: string
   /**
    * Overwrite the version type of the current version.
@@ -233,7 +233,12 @@ export namespace LaunchPrecheck {
   /**
    * The default launch precheck. It will check version jar, libraries and natives.
    */
-  export const DEFAULT_PRECHECKS: readonly LaunchPrecheck[] = Object.freeze([checkVersion, checkLibraries, checkNatives, linkAssets])
+  export const DEFAULT_PRECHECKS: readonly LaunchPrecheck[] = Object.freeze([
+    checkVersion,
+    checkLibraries,
+    checkNatives,
+    linkAssets,
+  ])
 
   /**
    * @deprecated
@@ -243,13 +248,19 @@ export namespace LaunchPrecheck {
   /**
    * Link assets to the assets/virtual/legacy.
    */
-  export async function linkAssets(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
+  export async function linkAssets(
+    resource: MinecraftFolder,
+    version: ResolvedVersion,
+    option: LaunchOption,
+  ) {
     if (version.assets !== 'legacy' && !version.assets.startsWith('pre-')) {
       return
     }
     const assetsIndexPath = resource.getAssetsIndex(version.assets)
     const buf = await readFile(assetsIndexPath)
-    const assetsIndex: { objects: Record<string, { hash: string; size: number }> } = JSON.parse(buf.toString())
+    const assetsIndex: { objects: Record<string, { hash: string; size: number }> } = JSON.parse(
+      buf.toString(),
+    )
     const virtualPath = resource.getPath('assets/virtual/' + version.assets)
     await mkdir(virtualPath, { recursive: true }).catch(() => { })
 
@@ -262,7 +273,9 @@ export namespace LaunchPrecheck {
       const assetPath = resource.getAsset(hash)
       const targetPath = join(virtualPath, path)
       await link(assetPath, targetPath).catch((e) => {
-        if (e.code !== 'EEXIST') { throw e }
+        if (e.code !== 'EEXIST') {
+          throw e
+        }
       })
     }
   }
@@ -271,14 +284,23 @@ export namespace LaunchPrecheck {
    * Quick check if Minecraft version jar is corrupted
    * @throws {@link CorruptedVersionJarError}
    */
-  export async function checkVersion(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
+  export async function checkVersion(
+    resource: MinecraftFolder,
+    version: ResolvedVersion,
+    option: LaunchOption,
+  ) {
     const jarPath = resource.getVersionJar(version.minecraftVersion)
     if (version.downloads.client?.sha1) {
-      if (!await validateSha1(jarPath, version.downloads.client.sha1)) {
-        throw Object.assign(new Error(`Corrupted Version jar ${jarPath}. Either the file not reachable or the file sha1 not matched!`), {
-          error: 'CorruptedVersionJar',
-          version: version.minecraftVersion,
-        } as CorruptedVersionJarError)
+      if (!(await validateSha1(jarPath, version.downloads.client.sha1))) {
+        throw Object.assign(
+          new Error(
+            `Corrupted Version jar ${jarPath}. Either the file not reachable or the file sha1 not matched!`,
+          ),
+          {
+            error: 'CorruptedVersionJar',
+            version: version.minecraftVersion,
+          } as CorruptedVersionJarError,
+        )
       }
     }
   }
@@ -286,17 +308,29 @@ export namespace LaunchPrecheck {
    * Quick check if there are missed libraries.
    * @throws {@link MissingLibrariesError}
    */
-  export async function checkLibraries(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
-    const validMask = await Promise.all(version.libraries
-      .map((lib) => validateSha1(resource.getLibraryByPath(lib.download.path), lib.download.sha1)))
+  export async function checkLibraries(
+    resource: MinecraftFolder,
+    version: ResolvedVersion,
+    option: LaunchOption,
+  ) {
+    const validMask = await Promise.all(
+      version.libraries.map((lib) =>
+        validateSha1(resource.getLibraryByPath(lib.download.path), lib.download.sha1),
+      ),
+    )
     const corruptedLibs = version.libraries.filter((_, index) => !validMask[index])
 
     if (corruptedLibs.length > 0) {
-      throw Object.assign(new Error(`Missing ${corruptedLibs.length} libraries! Either the file not reachable or the file sha1 not matched!`), {
-        error: 'MissingLibraries',
-        libraries: corruptedLibs,
-        version,
-      } as MissingLibrariesError)
+      throw Object.assign(
+        new Error(
+          `Missing ${corruptedLibs.length} libraries! Either the file not reachable or the file sha1 not matched!`,
+        ),
+        {
+          error: 'MissingLibraries',
+          libraries: corruptedLibs,
+          version,
+        } as MissingLibrariesError,
+      )
     }
   }
   /**
@@ -310,19 +344,36 @@ export namespace LaunchPrecheck {
    * @param resource The minecraft directory to extract native
    * @param option If the native root presented here, it will use the root here.
    */
-  export async function checkNatives(resource: MinecraftFolder, version: ResolvedVersion, option: LaunchOption) {
+  export async function checkNatives(
+    resource: MinecraftFolder,
+    version: ResolvedVersion,
+    option: LaunchOption,
+  ) {
     const native: string = option.nativeRoot || resource.getNativesRoot(version.id)
     await mkdir(native, { recursive: true }).catch((e) => {
-      if (e.code !== 'EEXIST') { throw e }
+      if (e.code !== 'EEXIST') {
+        throw e
+      }
     })
-    const natives = version.libraries.filter((lib) => lib.isNative || lib.classifier.startsWith('natives'))
+    const natives = version.libraries.filter(
+      (lib) => lib.isNative || lib.classifier.startsWith('natives'),
+    )
     const checksumFile = join(native, '.json')
     const includedLibs = natives.map((n) => n.name).sort()
 
-    interface ChecksumFile { entries: CheckEntry[]; libraries: string[] }
-    interface CheckEntry { file: string; sha1: string; name: string }
+    interface ChecksumFile {
+      entries: CheckEntry[]
+      libraries: string[]
+    }
+    interface CheckEntry {
+      file: string
+      sha1: string
+      name: string
+    }
 
-    const checksumFileObject: ChecksumFile = await readFile(checksumFile, 'utf-8').then(JSON.parse).catch((e) => undefined)
+    const checksumFileObject: ChecksumFile = await readFile(checksumFile, 'utf-8')
+      .then(JSON.parse)
+      .catch((e) => undefined)
 
     let shaEntries: CheckEntry[] | undefined
     if (checksumFileObject && checksumFileObject.libraries) {
@@ -335,7 +386,9 @@ export namespace LaunchPrecheck {
 
     const extractedNatives: CheckEntry[] = []
     async function extractJar(n: ResolvedLibrary | undefined) {
-      if (!n) { return }
+      if (!n) {
+        return
+      }
       const excluded: string[] = n.extractExclude || []
 
       const platform = option.platform || getPlatform()
@@ -343,14 +396,19 @@ export namespace LaunchPrecheck {
       const notInMetaInf = (p: string) => p.indexOf('META-INF/') === -1
       const notSha1AndNotGit = (p: string) => !(p.endsWith('.sha1') || p.endsWith('.git'))
       const isSatisfyPlaform = (p: string) => {
-        if (p.indexOf('/') === -1) { return true }
+        if (p.indexOf('/') === -1) {
+          return true
+        }
         const [os, arch] = p.split('/')
         const platformArch = arch === 'ia32' ? 'x86' : arch
         return os === platform.name && platformArch === platform.arch
       }
 
       if (!n.download.path) {
-        throw Object.assign(new TypeError(`Library ${n.name}(${version.id}) has no download path!`), { library: n })
+        throw Object.assign(
+          new TypeError(`Library ${n.name}(${version.id}) has no download path!`),
+          { library: n },
+        )
       }
 
       const from = resource.getLibraryByPath(n.download.path)
@@ -372,7 +430,9 @@ export namespace LaunchPrecheck {
             }).catch((e) => { })
           }
           extractedNatives.push({ file: fileName, name: n.name, sha1: '' })
-          promises.push(promisify(pipeline)(await openEntryReadStream(zip, entry), createWriteStream(dest)))
+          promises.push(
+            promisify(pipeline)(await openEntryReadStream(zip, entry), createWriteStream(dest)),
+          )
         }
       }
       await Promise.all(promises)
@@ -380,7 +440,9 @@ export namespace LaunchPrecheck {
     if (shaEntries) {
       const validEntries: { [name: string]: boolean } = {}
       for (const entry of shaEntries) {
-        if (typeof entry.file !== 'string') { continue }
+        if (typeof entry.file !== 'string') {
+          continue
+        }
         const file = join(native, entry.file)
         const valid = await validateSha1(file, entry.sha1, true)
         if (valid) {
@@ -390,7 +452,9 @@ export namespace LaunchPrecheck {
       const missingNatives = natives.filter((n) => !validEntries[n.name])
       if (missingNatives.length !== 0) {
         const result = await Promise.allSettled(missingNatives.map(extractJar))
-        const errors = result.map((r) => r.status === 'rejected' ? r.reason as Error : undefined).filter(isNotNull)
+        const errors = result
+          .map((r) => (r.status === 'rejected' ? (r.reason as Error) : undefined))
+          .filter(isNotNull)
         if (errors.length === 0) {
           return
         }
@@ -401,17 +465,21 @@ export namespace LaunchPrecheck {
       }
     } else {
       const result = await Promise.allSettled(natives.map(extractJar))
-      const entries = await Promise.all(extractedNatives.map(async (n) => ({
-        ...n,
-        sha1: await checksum(join(native, n.file), 'sha1'),
-      })))
+      const entries = await Promise.all(
+        extractedNatives.map(async (n) => ({
+          ...n,
+          sha1: await checksum(join(native, n.file), 'sha1'),
+        })),
+      )
       const fileContent = JSON.stringify({
         entries,
         libraries: includedLibs,
       })
       await writeFile(checksumFile, fileContent)
 
-      const errors = result.map((r) => r.status === 'rejected' ? r.reason as Error : undefined).filter(isNotNull)
+      const errors = result
+        .map((r) => (r.status === 'rejected' ? (r.reason as Error) : undefined))
+        .filter(isNotNull)
       if (errors.length === 0) {
         return
       }
@@ -488,24 +556,27 @@ export interface MinecraftProcessWatcher extends EventEmitter {
   /**
    * Fire after Minecraft process exit.
    */
-  on(event: 'minecraft-exit', listener: (event: {
-    /**
-     * The code of the process exit. This is the nodejs child process "exit" event arg.
-     */
-    code: number
-    /**
-     * The signal of the process exit. This is the nodejs child process "exit" event arg.
-     */
-    signal: string
-    /**
-     * The crash report content
-     */
-    crashReport: string
-    /**
-     * The location of the crash report
-     */
-    crashReportLocation: string
-  }) => void): this
+  on(
+    event: 'minecraft-exit',
+    listener: (event: {
+      /**
+       * The code of the process exit. This is the nodejs child process "exit" event arg.
+       */
+      code: number
+      /**
+       * The signal of the process exit. This is the nodejs child process "exit" event arg.
+       */
+      signal: string
+      /**
+       * The crash report content
+       */
+      crashReport: string
+      /**
+       * The location of the crash report
+       */
+      crashReportLocation: string
+    }) => void,
+  ): this
   /**
    * Fire around the time when Minecraft window appeared in screen.
    *
@@ -521,7 +592,10 @@ export interface MinecraftProcessWatcher extends EventEmitter {
  * @param process The Minecraft process
  * @param emitter The event emitter which will emit usefule event
  */
-export function createMinecraftProcessWatcher(process: ChildProcess, emitter: EventEmitter = new EventEmitter()): MinecraftProcessWatcher {
+export function createMinecraftProcessWatcher(
+  process: ChildProcess,
+  emitter: EventEmitter = new EventEmitter(),
+): MinecraftProcessWatcher {
   let crashReport = ''
   let crashReportLocation = ''
   let waitForReady = true
@@ -541,15 +615,24 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
     if (string.indexOf('---- Minecraft Crash Report ----') !== -1) {
       crashReport = string
     } else if (string.indexOf('Crash report saved to:') !== -1) {
-      crashReportLocation = string.substring(string.indexOf('Crash report saved to:') + 'Crash report saved to: #@!@# '.length)
+      crashReportLocation = string.substring(
+        string.indexOf('Crash report saved to:') + 'Crash report saved to: #@!@# '.length,
+      )
       crashReportLocation = crashReportLocation.replace(EOL, '').trim()
     } else if (string.indexOf('Crash report saved to ') !== -1) {
       crashReportLocation = string.substring(string.indexOf('Crash report saved to ') + 'Crash report saved to '.length)
       crashReportLocation = crashReportLocation.replace(EOL, '').trim()
-    } else if (waitForReady && (string.indexOf('Missing metadata in pack') !== -1 || string.indexOf('Registering resource reload listener') !== -1 || string.indexOf('Reloading ResourceManager') !== -1 || string.indexOf('LWJGL Version: ') !== -1 || string.indexOf('OpenAL initialized.') !== -1)) {
+    } else if (
+      waitForReady &&
+      (string.indexOf('Missing metadata in pack') !== -1 ||
+        string.indexOf('Registering resource reload listener') !== -1 ||
+        string.indexOf('Reloading ResourceManager') !== -1 ||
+        string.indexOf('LWJGL Version: ') !== -1 ||
+        string.indexOf('OpenAL initialized.') !== -1)
+    ) {
       waitForReady = false
       emitter.emit('minecraft-window-ready')
-    } else if (waitForReady && (string.indexOf(' Preparing level ') !== -1)) {
+    } else if (waitForReady && string.indexOf(' Preparing level ') !== -1) {
       waitForReady = false
       emitter.emit('minecraft-window-ready')
     } else if (string.indexOf('Failed to start the minecraft server') !== -1) {
@@ -584,7 +667,10 @@ export function createMinecraftProcessWatcher(process: ChildProcess, emitter: Ev
 export async function launch(options: LaunchOption): Promise<ChildProcess> {
   const gamePath = !isAbsolute(options.gamePath) ? resolve(options.gamePath) : options.gamePath
   const resourcePath = options.resourcePath || gamePath
-  const version = typeof options.version === 'string' ? await Version.parse(resourcePath, options.version) : options.version
+  const version =
+    typeof options.version === 'string'
+      ? await Version.parse(resourcePath, options.version)
+      : options.version
 
   let args = await generateArguments({ ...options, version, gamePath, resourcePath })
 
@@ -620,23 +706,30 @@ function unshiftPrependCommand(cmd: string[], prependCommand?: string[] | string
 /**
  * Generate the argument for server
  */
-export function generateArgumentsServer(options: ServerOptions, _delimiter: string = delimiter, _sep: string = sep) {
-  const { javaPath, minMemory, maxMemory, extraJVMArgs = [], extraMCArgs = [], extraExecOption = {} } = options
-  const cmd = [
+export function generateArgumentsServer(
+  options: ServerOptions,
+  _delimiter: string = delimiter,
+  _sep: string = sep,
+) {
+  const {
     javaPath,
-  ]
+    minMemory,
+    maxMemory,
+    extraJVMArgs = [],
+    extraMCArgs = [],
+    extraExecOption = {},
+  } = options
+  const cmd = [javaPath]
   if (minMemory) {
-    cmd.push(`-Xms${(minMemory)}M`)
+    cmd.push(`-Xms${minMemory}M`)
   }
   if (maxMemory) {
-    cmd.push(`-Xmx${(maxMemory)}M`)
+    cmd.push(`-Xmx${maxMemory}M`)
   }
-  cmd.push(
-    ...extraJVMArgs,
-  )
+  cmd.push(...extraJVMArgs)
 
   if (options.classPath && options.classPath.length > 0) {
-    cmd.push('-cp', options.classPath.map(v => v.replaceAll(sep, _sep)).join(_delimiter))
+    cmd.push('-cp', options.classPath.map((v) => v.replaceAll(sep, _sep)).join(_delimiter))
   }
 
   if (options.serverExectuableJarPath) {
@@ -667,13 +760,20 @@ export function generateArgumentsServer(options: ServerOptions, _delimiter: stri
  * @throws TypeError if options does not fully fulfill the requirement
  */
 export async function generateArguments(options: LaunchOption) {
-  if (!options.version) { throw new TypeError('Version cannot be null!') }
-  if (!options.demo) { options.demo = false }
+  if (!options.version) {
+    throw new TypeError('Version cannot be null!')
+  }
+  if (!options.demo) {
+    options.demo = false
+  }
 
   const currentPlatform = options.platform ?? getPlatform()
   const gamePath = !isAbsolute(options.gamePath) ? resolve(options.gamePath) : options.gamePath
   const resourcePath = options.resourcePath || gamePath
-  const version = typeof options.version === 'string' ? await Version.parse(resourcePath, options.version) : options.version
+  const version =
+    typeof options.version === 'string'
+      ? await Version.parse(resourcePath, options.version)
+      : options.version
   const mc = MinecraftFolder.from(resourcePath)
   const cmd: string[] = []
 
@@ -684,7 +784,9 @@ export async function generateArguments(options: LaunchOption) {
   const features = options.features || {}
   const jvmArguments = normalizeArguments(version.arguments.jvm, currentPlatform, features)
   const gameArguments = normalizeArguments(version.arguments.game, currentPlatform, features)
-  const featureValues = Object.values(features).filter((f) => typeof f === 'object').reduce((a: any, b: any) => ({ ...a, ...b }), {})
+  const featureValues = Object.values(features)
+    .filter((f) => typeof f === 'object')
+    .reduce((a: any, b: any) => ({ ...a, ...b }), {})
   const launcherName = options.launcherName || 'Launcher'
   const launcherBrand = options.launcherBrand || '0.0.1'
   const nativeRoot = options.nativeRoot || mc.getNativesRoot(version.id)
@@ -692,7 +794,10 @@ export async function generateArguments(options: LaunchOption) {
   let gameIcon = options.gameIcon
   if (!gameIcon) {
     const index = mc.getAssetsIndex(version.assets)
-    const indexContent = await readFile(index, { encoding: 'utf-8' }).then((b) => JSON.parse(b.toString()), () => ({}))
+    const indexContent = await readFile(index, { encoding: 'utf-8' }).then(
+      (b) => JSON.parse(b.toString()),
+      () => ({}),
+    )
     if ('icons/minecraft.icns' in indexContent) {
       gameIcon = mc.getAsset(indexContent['icons/minecraft.icns'].hash)
     } else if ('minecraft/icons/minecraft.icns' in indexContent) {
@@ -713,10 +818,10 @@ export async function generateArguments(options: LaunchOption) {
   }
 
   if (options.minMemory) {
-    cmd.push(`-Xms${(options.minMemory)}M`)
+    cmd.push(`-Xms${options.minMemory}M`)
   }
   if (options.maxMemory) {
-    cmd.push(`-Xmx${(options.maxMemory)}M`)
+    cmd.push(`-Xmx${options.maxMemory}M`)
   }
 
   if (options.ignoreInvalidMinecraftCertificates) {
@@ -740,7 +845,9 @@ export async function generateArguments(options: LaunchOption) {
     launcher_version: launcherBrand,
     game_directory: gamePath.replaceAll('\\', '/'),
     classpath: [
-      ...version.libraries.filter((lib) => !lib.isNative).map((lib) => mc.getLibraryByPath(lib.download.path)),
+      ...version.libraries
+        .filter((lib) => !lib.isNative)
+        .map((lib) => mc.getLibraryByPath(lib.download.path)),
       mc.getVersionJar(version.minecraftVersion),
       ...(options.extraClassPaths || []),
     ].map(c => c.replaceAll('\\', '/')).join(delimiter),
@@ -789,9 +896,11 @@ export async function generateArguments(options: LaunchOption) {
   const mcOptions = {
     version_name: versionName,
     version_type: versionType,
-    assets_root: assetsDir.replaceAll('\\', '/'),
+    assets_root: assetsDir.replaceAll('\\', '/'),,
     game_assets: join(assetsDir, 'virtual', version.assets).replaceAll('\\', '/'),
-    assets_index_name: options.useHashAssetsIndex ? version.assetIndex?.sha1 ?? version.assets : version.assets,
+    assets_index_name: options.useHashAssetsIndex
+      ? (version.assetIndex?.sha1 ?? version.assets)
+      : version.assets,
     auth_session: accessToken,
     game_directory: gamePath.replaceAll('\\', '/'),
     auth_player_name: name,
@@ -848,23 +957,29 @@ export async function generateArguments(options: LaunchOption) {
 /**
  * Truely normalize the launch argument.
  */
-function normalizeArguments(args: Version.LaunchArgument[], platform: Platform, features: EnabledFeatures): string[] {
-  return args.map((arg) => {
-    if (typeof arg === 'string') {
-      return arg
-    }
-    if (!Version.checkAllowed(arg.rules || [], platform, Object.keys(features))) {
-      return ''
-    }
-    return arg.value
-  }).reduce<string[]>((result, cur) => {
-    if (cur instanceof Array) {
-      result.push(...cur)
-    } else if (cur) {
-      result.push(cur)
-    }
-    return result
-  }, [])
+function normalizeArguments(
+  args: Version.LaunchArgument[],
+  platform: Platform,
+  features: EnabledFeatures,
+): string[] {
+  return args
+    .map((arg) => {
+      if (typeof arg === 'string') {
+        return arg
+      }
+      if (!Version.checkAllowed(arg.rules || [], platform, Object.keys(features))) {
+        return ''
+      }
+      return arg.value
+    })
+    .reduce<string[]>((result, cur) => {
+      if (cur instanceof Array) {
+        result.push(...cur)
+      } else if (cur) {
+        result.push(cur)
+      }
+      return result
+    }, [])
 }
 
 /**

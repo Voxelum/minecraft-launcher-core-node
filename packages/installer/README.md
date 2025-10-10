@@ -6,311 +6,498 @@
 [![npm](https://img.shields.io/npm/l/@xmcl/minecraft-launcher-core.svg)](https://github.com/voxelum/minecraft-launcher-core-node/blob/master/LICENSE)
 [![Build Status](https://github.com/voxelum/minecraft-launcher-core-node/workflows/Build/badge.svg)](https://github.com/Voxelum/minecraft-launcher-core-node/actions?query=workflow%3ABuild)
 
-Provide functions to install Minecraft client, libraries, and assets.
+Provide functions to install Minecraft client, libraries, and assets with smart diagnostics and efficient downloads.
+
+## Features
+
+- 🔍 **Diagnose-first pattern**: Checks existing files before downloading, skipping already-valid files
+- 🌐 **Browser compatible**: Fetch-based APIs available for browser environments
+- ⚡ **Efficient downloads**: Parallel checksum validation and downloads
+- 🎯 **AbortSignal support**: Cancel ongoing operations with standard abort signals
+- 📊 **Progress tracking**: Built-in tracker system for monitoring installation progress
+- 🔄 **Smart resume**: Continue interrupted installations without re-downloading valid files
 
 ## Usage
 
-### Install Minecraft
+### Complete Installation
 
-Fully install vanilla minecraft client including assets and libs.
-
-```ts
-import { getVersionList, MinecraftVersion, install } from "@xmcl/installer";
-import { MinecraftLocation } from "@xmcl/core";
-
-const minecraft: MinecraftLocation;
-const list: MinecraftVersion[] = (await getVersionList()).versions;
-const aVersion: MinecraftVersion = list[0]; // i just pick the first version in list here
-await install(aVersion, minecraft);
-```
-
-Just install libraries:
+Install a Minecraft version with all dependencies (jar, libraries, assets, and profiles):
 
 ```ts
-import { installLibraries } from "@xmcl/installer";
-import { ResolvedVersion, MinecraftLocation, Version } from "@xmcl/core";
-
-const minecraft: MinecraftLocation;
-const version: string; // version string like 1.13
-const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
-await installLibraries(resolvedVersion);
-```
-
-Just install assets:
-
-```ts
-import { installAssets } from "@xmcl/installer";
+import { completeInstallation } from "@xmcl/installer";
 import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
 
 const minecraft: MinecraftLocation;
-const version: string; // version string like 1.13
+const version: string; // version string like 1.20.1
 const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
-await installAssets(resolvedVersion);
-```
 
-Just ensure all assets and libraries are installed:
-
-```ts
-import { installDependencies } from "@xmcl/installer";
-import { MinecraftLocation, ResolvedVersion, Version } from "@xmcl/core";
-
-const minecraft: MinecraftLocation;
-const version: string; // version string like 1.13
-const resolvedVersion: ResolvedVersion = await Version.parse(minecraft, version);
-await installDependencies(resolvedVersion);
-```
-
-### Limit the concurrency of installation
-
-The library is using undici as the backbone of http request. It's a very fast http client. But it's also very aggressive. It will create a lot of connections to the server. If you want to limit the concurrency of the installation, you want to create your own undici `Dispatcher` to handle the request.
-
-```ts
-import { Dispatcher, Agent } from "undici";
-
-const agent = new Agent({
-    connection: 16 // only 16 connection (socket) we should create at most
-    // you can have other control here.
-});
-
-await installAssets(resolvedVersion, { 
-  agent: { // notice this is the DownloadAgent from `@xmcl/file-transfer`
-    dispatcher: agent // this is the undici Dispatcher option
+// Install everything with progress tracking
+await completeInstallation(resolvedVersion, {
+  tracker: (event) => {
+    console.log(`Phase: ${event.phase}`, event.payload);
+    if ('download' in event.payload) {
+      // Access download progress properties
+      const { progress, total, speed } = event.payload.download;
+      console.log(`Downloaded ${progress}/${total} bytes at ${speed} bytes/sec`);
+    }
   }
 });
 ```
 
-There are other type of `Dispatcher`, like `Pool`, `Client`, `ProxyAgent`. You can read undici document for more information.
+### Install Minecraft Jar
 
-### Progress Moniting on Installation
-
-Most install function has a corresponding task function. For example, `install` function has the function name `installTask` which is the task version monitor the progress of install.
-
-Here is the example of just moniting the install task overall progress: 
+Install just the Minecraft client or server jar:
 
 ```ts
-// suppose you have define such functions to update UI
-declare function updateTaskProgress(task: Task<any>, progress: number, total: number): void;
-declare function setTaskToFail(task: Task<any>): void;
-declare function setTaskToSuccess(task: Task<any>): void;
-declare function trackTask(task: Task<any>): void;
+import { installMinecraftJar } from "@xmcl/installer";
 
-const installAllTask: Task<ResolvedVersion> = installTask(versionMetadata, mcLocation);
-await installAllTask.startAndWait({
-    onStart(task: Task<any>) {
-        // a task start
-        // task.path show the path
-        // task.name is the name
-        trackTask(task)
-    },
-    onUpdate(task: Task<any>, chunkSize: number) {
-        // a task update
-        // the chunk size usually the buffer size
-        // you can use this to track download speed
-
-        // you can track this specific task progress
-        updateTaskProgress(task, task.progress, task.total);
-
-        // or you can update the root task by
-        updateTaskProgress(task, installAllTask.progress, installAllTask.total);
-    },
-    onFailed(task: Task<any>, error: any) {
-        // on a task fail
-        setTaskToFail(task);
-    },
-    onSucceed(task: Task<any>, result: any) {
-        // on task success
-        setTaskToSuccess(task);
-    },
-    // on task is paused/resumed/cancelled
-    onPaused(task: Task<any>) {
-    },
-    onResumed(task: Task<any>) {
-    },
-    onCancelled(task: Task<any>) {
-    },
+await installMinecraftJar(resolvedVersion, {
+  side: 'client', // or 'server'
+  tracker: (event) => {
+    console.log(`Installing ${event.phase}`, event.payload);
+  }
 });
-
 ```
 
-The task is designed to organize the all the works in a tree like structure.
+### Install Libraries
 
-The `installTask` has such parent/child structure
-
-- install
-  - version
-    - json
-    - jar
-  - dependencies
-    - assets
-      - assetsJson
-      - asset
-    - libraries
-      - library
-
-To generally display this tree in UI. You can identify the task by its `path`.
+Install all required libraries:
 
 ```ts
-function updateTaskUI(task: Task<any>, progress: number, total: number) {
-    // you can use task.path as identifier
-    // and update the task on UI
-    const path = task.path;
-    // the path can be something like `install.version.json`
-}
-```
+import { installLibraries } from "@xmcl/installer";
 
-Or you can use your own identifier like uuid:
-
-```ts
-// you customize function to make task to a user reacable string to display in UI
-declare function getTaskName(task: Task<any>): string;
-
-function runTask(rootTask: Task<any>) {
-    // your own id for this root task
-    const uid = uuid();
-    await rootTask.startAndWait({
-        onStart(task: Task<any>) {
-            // tell ui that a task with such name started
-            // the task id is a number id from 0
-            trackTask(`${uid}.${task.id}`, getTaskName(task));
-        },
-        onUpdate(task: Task<any>, chunkSize: number) {
-            // update the total progress 
-            updateTaskProgress(`${uid}.${task.id}`, installAllTask.progress, installAllTask.total);
-        },
-        onStart(task: Task<any>) {
-            // tell ui this task ended
-            endTask(`${uid}.${task.id}`);
-        },
-    });
-}
-
-```
-
-### Install Library/Assets with Customized Host
-
-To swap the library to your self-host or other customized host, you can assign the `libraryHost` field in options.
-
-For example, if you want to download the library `commons-io:commons-io:2.5` from your self hosted server, you can have
-
-```ts
-// the example for call `installLibraries`
-// this option will also work for other functions involving libraries like `install`, `installDependencies`.
 await installLibraries(resolvedVersion, {
-    libraryHost(library: ResolvedLibrary) {
-        if (library.name === "commons-io:commons-io:2.5") {
-            // the downloader will first try the first url in the array
-            // if this failed, it will try the 2nd.
-            // if it's still failed, it will try original url
-            return ["https://your-host.org/the/path/to/the/jar", "your-sencodary-url"];
-            // if you just have one url
-            // just return a string here...
-        }
-        // return undefined if you don't want to change lib url
-        return undefined;
-    },
-    mavenHost: ['https://www.your-other-maven.org'], // you still can use this to add other maven
+  tracker: (event) => {
+    if (event.phase === 'libraries') {
+      console.log(`Installing ${event.payload.count} libraries`);
+    }
+  }
 });
-
-// it will first try you libraryHost url and then try mavenHost url.
 ```
 
-To swap the assets host, you can just assign the assets host url to the options
+### Install Assets
+
+Install game assets:
+
+```ts
+import { installAssets } from "@xmcl/installer";
+
+await installAssets(resolvedVersion, {
+  tracker: (event) => {
+    if (event.phase === 'assets.assets') {
+      console.log(`Installing ${event.payload.count} assets`);
+      const { progress, total } = event.payload.download;
+      console.log(`Progress: ${(progress/total*100).toFixed(2)}%`);
+    }
+  }
+});
+```
+
+### Abort Signal Support
+
+Cancel ongoing installations using AbortSignal:
+
+```ts
+const controller = new AbortController();
+
+// Start installation
+const installPromise = completeInstallation(resolvedVersion, {
+  abortSignal: controller.signal
+});
+
+// Cancel after 5 seconds
+setTimeout(() => controller.abort(), 5000);
+
+try {
+  await installPromise;
+} catch (error) {
+  if (error.name === 'AbortError') {
+    console.log('Installation cancelled');
+  }
+}
+```
+
+### Diagnose Mode
+
+Check installation status without fixing issues. When `diagnose: true` is set, `completeInstallation` will throw `InstallError` with `InstallIssue` details instead of downloading missing files:
+
+```ts
+import { completeInstallation, InstallError, type InstallIssue } from "@xmcl/installer";
+
+try {
+  await completeInstallation(resolvedVersion, {
+    diagnose: true // Will throw InstallError if issues found
+  });
+  console.log('Installation is complete and valid');
+} catch (error) {
+  if (error instanceof InstallError) {
+    const issue: InstallIssue = error.issue;
+
+    // Check what's missing or corrupted
+    if (issue.libraries?.length) {
+      console.log(`Missing ${issue.libraries.length} libraries`);
+    }
+    if (issue.assets?.length) {
+      console.log(`Missing ${issue.assets.length} assets`);
+    }
+    if (issue.jar) {
+      console.log(`Bad jar: ${issue.jar}`);
+    }
+    if (issue.assetsIndex) {
+      console.log(`Bad assets index`);
+    }
+
+    // Now install to fix the issues
+    await completeInstallation(resolvedVersion);
+  }
+}
+```
+
+### Progress Tracking
+
+Track installation progress with the built-in tracker system. The tracker is a function that receives event objects with `phase` and `payload` properties. For download phases, the `payload.download` object provides readonly progress information:
+
+```ts
+import type { CompleteTrackerEvents } from "@xmcl/installer";
+import type { Tracker } from "@xmcl/installer";
+
+// Tracker is a function receiving discriminated union events
+const tracker: Tracker<CompleteTrackerEvents> = (event) => {
+  switch (event.phase) {
+    case 'version':
+      console.log(`Installing version ${event.payload.id}`);
+      break;
+    case 'version.json':
+      console.log(`Downloading version.json from ${event.payload.url}`);
+      // Access readonly progress properties
+      const { progress, total, speed, url } = event.payload.download;
+      console.log(`${url}: ${progress}/${total} bytes (${speed} bytes/sec)`);
+      break;
+    case 'version.jar':
+      console.log(`Downloading ${event.payload.side} jar for ${event.payload.id}`);
+      const jarDownload = event.payload.download;
+      console.log(`Jar: ${(jarDownload.progress/jarDownload.total*100).toFixed(1)}%`);
+      break;
+    case 'libraries':
+      console.log(`Installing ${event.payload.count} libraries`);
+      const libDownload = event.payload.download;
+      console.log(`Libraries: ${(libDownload.progress/libDownload.total*100).toFixed(1)}%`);
+      break;
+    case 'assets':
+      console.log(`Installing assets for ${event.payload.version}`);
+      break;
+    case 'assets.assets':
+      const assetDownload = event.payload.download;
+      console.log(`Assets: ${(assetDownload.progress/assetDownload.total*100).toFixed(1)}%`);
+      break;
+  }
+};
+
+await completeInstallation(resolvedVersion, { tracker });
+```
+
+**Download Progress Properties**: The `download` object in payloads provides these readonly properties:
+
+- `progress: number` - Bytes downloaded so far
+- `total: number` - Total bytes to download
+- `speed: number` - Current download speed in bytes/sec
+- `url: string` - URL(s) being downloaded
+- `acceptRanges: boolean` - Whether the server supports range requests
+
+**Tracker Event Interfaces**: Each installer function exports its own tracker event interface for type safety:
+
+- `MinecraftTrackerEvents` - Events for `installMinecraftJar()`
+- `LibrariesTrackerEvents` - Events for `installLibraries()`
+- `AssetsTrackerEvents` - Events for `installAssets()`
+- `ProfileTrackerEvents` - Events for profile post-processing
+- `ForgeTrackerEvents` - Events for `installForge()` (extends Libraries + Profile)
+- `LabyModTrackerEvents` - Events for `installLabyMod4()`
+- `JavaRuntimeTrackerEvents` - Events for `installJavaRuntime()`
+- `CompleteTrackerEvents` - Events for `completeInstallation()` (extends all above)
+
+These interfaces compose and extend each other, enabling reusability and type safety.
+
+### Customize Download Hosts
+
+#### Library Hosts
+
+Swap library download sources to your own or alternative Maven repositories:
+
+```ts
+await installLibraries(resolvedVersion, {
+  libraryHost(library: ResolvedLibrary) {
+    // Redirect specific libraries
+    if (library.name === "commons-io:commons-io:2.5") {
+      return "https://your-host.org/path/to/library.jar";
+    }
+    // Or use multiple fallback URLs
+    if (library.groupId === "net.minecraftforge") {
+      return [
+        "https://primary-host.org/libraries",
+        "https://fallback-host.org/libraries"
+      ];
+    }
+    return undefined; // Use default
+  },
+  mavenHost: [
+    'https://maven.aliyun.com/repository/central',
+    'https://your-custom-maven.org'
+  ]
+});
+```
+
+#### Assets Hosts
+
+Use custom asset servers:
 
 ```ts
 await installAssets(resolvedVersion, {
-    assetsHost: "https://www.your-url/assets"
+  assetsHost: "https://your-cdn.com/assets"
 });
 ```
 
-The assets host should accept the get asset request like `GET https://www.your-url/assets/<hash-head>/<hash>`, where `hash-head` is the first two char in `<hash>`. The `<hash>` is the sha1 of the asset. 
+The assets host should respond to requests like: `GET https://your-cdn.com/assets/<hash-prefix>/<hash>`
+where `hash-prefix` is the first two characters of the SHA1 hash.
+
+#### Minecraft Jar Hosts
+
+Customize Minecraft jar download URLs:
+
+```ts
+await installMinecraftJar(resolvedVersion, {
+  client: 'https://your-mirror.com/versions',
+  server: (version) => `https://custom-server.com/${version.id}/server.jar`
+});
+```
+
+### Browser Environment
+
+Use browser-compatible APIs with the fetch API:
+
+```ts
+import { getVersionList, getForgeVersionList } from "@xmcl/installer/browser";
+
+// These functions use fetch instead of undici
+const versions = await getVersionList({
+  fetch: window.fetch.bind(window)
+});
+
+const forgeVersions = await getForgeVersionList({
+  fetch: window.fetch.bind(window)
+});
+```
+
+### Download Manager (Throttler)
+
+Customize the download behavior using the `throttler` option. The download manager controls:
+
+- HTTP client configuration (via undici dispatcher)
+- Range download policies (how files are split and downloaded in parallel)
+- Checkpoint handling (for resumable downloads)
+- Speed monitoring and dynamic range splitting
+
+```ts
+import { getDefaultDownloadThrottler } from "@xmcl/file-transfer";
+import { Agent } from "undici";
+
+// Create a custom download manager
+const throttler = getDefaultDownloadThrottler({
+  // Configure the HTTP client
+  dispatcher: new Agent({
+    connections: 16, // Maximum 16 concurrent connections
+    pipelining: 1
+  }),
+  // Configure range splitting behavior
+  rangePolicy: {
+    rangeThreshold: 2 * 1024 * 1024, // Minimum 2MB per range
+  }
+});
+
+await completeInstallation(resolvedVersion, {
+  throttler
+});
+```
+
+**Download Manager Features**:
+
+- **Parallel Downloads**: Files are split into ranges and downloaded concurrently
+- **Dynamic Speed Optimization**: Slow ranges are automatically subdivided for better performance
+- **Resumable Downloads**: Uses checkpoint handlers to resume interrupted downloads
+- **Custom Range Policies**: Implement your own `RangePolicy` to control how files are split
+
+````
 
 ### Install Forge
 
-Get the forge version info and install forge from it. 
+Install Forge mod loader:
 
 ```ts
-import { installForge, getForgeVersionList, ForgeVersionList, ForgeVersion } from "@xmcl/installer";
-import { MinecraftLocation } from "@xmcl/core";
+import { installForge, getForgeVersionList } from "@xmcl/installer";
 
-const list: ForgeVersionList = await getForgeVersionList();
-const minecraftLocation: MinecraftLocation;
-const mcversion = page.mcversion; // mc version
-const firstVersionOnPage: ForgeVersion = page.versions[0];
-await installForge(firstVersionOnPage, minecraftLocation);
-```
+// Get available Forge versions
+const versionList = await getForgeVersionList();
+const forgeVersion = versionList.versions.find(v => v.mcversion === '1.20.1');
 
-If you know forge version and minecraft version. You can directly do such:
+// Install Forge
+await installForge(forgeVersion, minecraftLocation, {
+  java: '/path/to/java', // Required for Forge 1.13+
+  tracker: (event) => {
+    if (event.phase === 'forge.installer') {
+      console.log('Downloading Forge installer');
+      const { progress, total } = event.payload.download;
+      console.log(`${(progress/total*100).toFixed(1)}%`);
+    }
+  }
+});
+````
+
+Or install directly with version numbers:
 
 ```ts
-import { installForge } from "@xmcl/installer";
-
-const forgeVersion = 'a-forge-version'; // like 31.1.27
-await installForge({ version: forgeVersion, mcversion: '1.15.2' }, minecraftLocation);
+await installForge({
+  version: '47.2.0',
+  mcversion: '1.20.1'
+}, minecraftLocation);
 ```
 
-Notice that this installation doesn't ensure full libraries installation.
-Please run `installDependencies` afther that.
-
-The new 1.13 forge installation process requires java to run. 
-Either you have `java` executable in your environment variable PATH,
-or you can assign java location by `installForge(forgeVersionMeta, minecraftLocation, { java: yourJavaExecutablePath });`.
-
-If you use this auto installation process to install forge, please checkout [Lex's Patreon](https://www.patreon.com/LexManos).
-Consider support him to maintains forge.
+**Note**: Modern Forge (1.13+) requires Java to run the installer. Ensure `java` is in your PATH or specify the path via the `java` option.
 
 ### Install Fabric
 
-Fetch the new fabric version list.
+Install Fabric mod loader:
 
 ```ts
-import { installFabric, FabricArtifactVersion } from "@xmcl/installer";
+import { installFabric, getFabricLoaderArtifact } from "@xmcl/installer";
 
-const versionList: FabricArtifactVersion[] = await getFabricArtifactList();
+// Get Fabric loader version
+const loaderArtifact = await getFabricLoaderArtifact();
+
+// Install Fabric
+await installFabric({
+  minecraft: '1.20.1',
+  loader: loaderArtifact.version
+}, minecraftLocation);
 ```
 
-Install fabric to the client. This installation process doesn't ensure the minecraft libraries.
+### Install Quilt
+
+Install Quilt mod loader:
 
 ```ts
-const minecraftLocation: MinecraftLocation;
-await installFabric(versionList[0], minecraftLocation);
+import { installQuilt, getQuiltVersionList } from "@xmcl/installer";
+
+const versionList = await getQuiltVersionList();
+const quiltVersion = versionList.find(v => v.version === '0.20.2');
+
+await installQuilt(quiltVersion, '1.20.1', minecraftLocation);
 ```
 
-Please run `Installer.installDependencies` after that to install fully.
+### Install NeoForge
 
-## New Forge Installing process
-
-The module have three stage for installing new forge *(mcversion >= 1.13)*
-
-1. Deploy forge installer jar
-   1. Download installer jar
-   2. Extract forge universal jar files in installer jar into `.minecraft/libraries`
-   3. Extract `version.json` into target version folder, `.minecraft/versions/<ver>/<ver>.json`
-   4. Extract `installer_profile.json` into target version folder, `.minecraft/versions/<ver>/installer_profile.json`
-2. Download Dependencies
-   1. Merge libraires in `installer_profile.json` and `<ver>.json`
-   2. Download them
-3. Post processing forge jar
-   1. Parse `installer_profile.json`
-   2. Get the processors info and execute all of them.
-
-The `installForge` will do all of them.
-
-The `installByProfile` will do 2 and 3.
-
-### Install Java 8 From Mojang Source
-
-Scan java installation path from the disk. (Require a lzma unpacker, like [7zip-bin](https://www.npmjs.com/package/7zip-bin) or [lzma-native](https://www.npmjs.com/package/lzma-native))
+Install NeoForge (the fork of Forge):
 
 ```ts
-import { installJreFromMojang } from "@xmcl/installer";
+import { installNeoForge } from "@xmcl/installer";
 
-// this require a unpackLZMA util to work
-// you can use `7zip-bin`
-// or `lzma-native` for this
-const unpackLZMA: (src: string, dest: string) => Promise<void>;
-
-await installJreFromMojang({
-    destination: "your/java/home",
-    unpackLZMA,
+await installNeoForge({
+  version: '20.4.80',
+  minecraft: '1.20.4'
+}, minecraftLocation, {
+  java: '/path/to/java'
 });
 ```
+
+### Install LabyMod
+
+Install LabyMod client:
+
+```ts
+import { installLabyMod4, getLabyModManifest } from "@xmcl/installer";
+
+const manifest = await getLabyModManifest({
+  environment: 'production'
+});
+
+await installLabyMod4(manifest, '1.20.1', minecraftLocation, {
+  tracker: (event) => {
+    if (event.phase === 'labymod.assets') {
+      console.log(`Installing LabyMod assets`);
+    }
+  }
+});
+```
+
+### Install Java Runtime
+
+Install Java runtime from Mojang's official distribution:
+
+```ts
+import { installJavaRuntimeTask } from "@xmcl/installer";
+import { extractFile } from "lzma-native"; // or use 7zip-bin
+
+await installJavaRuntimeTask({
+  destination: '/path/to/java/home',
+  manifest: await fetchJavaRuntimeManifest(),
+  unpackLzma: async (src, dest) => {
+    await extractFile(src, dest);
+  }
+});
+```
+
+## Advanced Features
+
+### Diagnose Installation
+
+Use the `diagnose` option with installation functions to check validity without fixing issues. When enabled, functions throw `InstallError` with detailed `InstallIssue` information:
+
+```ts
+import {
+  completeInstallation,
+  InstallError,
+  type InstallIssue
+} from "@xmcl/installer";
+
+// Diagnose complete installation
+try {
+  await completeInstallation(resolvedVersion, { diagnose: true });
+  console.log('Installation is complete and valid');
+} catch (error) {
+  if (error instanceof InstallError) {
+    const issue: InstallIssue = error.issue;
+
+    // Examine what needs to be fixed
+    if (issue.libraries) {
+      console.log(`Missing ${issue.libraries.length} libraries:`,
+        issue.libraries.map(lib => lib.name));
+    }
+    if (issue.assets) {
+      console.log(`Missing ${issue.assets.length} assets`);
+    }
+    if (issue.jar) {
+      console.log(`Invalid jar: ${issue.jar}`);
+    }
+    if (issue.assetsIndex) {
+      console.log(`Invalid assets index`);
+    }
+    if (issue.version) {
+      console.log(`Invalid version: ${issue.version}`);
+    }
+
+    // Fix all issues
+    await completeInstallation(resolvedVersion);
+  }
+}
+```
+
+**Note**: Individual install functions (`installLibraries`, `installAssets`, `installMinecraftJar`) also support the `diagnose` option.
+
+### Smart Installation
+
+The installer uses a diagnose-first pattern:
+
+1. **Check existing files** with SHA1 checksums in parallel
+2. **Skip valid files** to save bandwidth
+3. **Download only missing/corrupted files**
+4. **Support resume** for interrupted downloads
+
+This makes reinstallations and updates much faster as it only downloads what's needed.

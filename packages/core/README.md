@@ -10,7 +10,7 @@ Provide the core function to parse Minecraft version and launch.
 
 ## Usage
 
-### Parse Version JSON 
+### Parse Version JSON
 
 Parse minecraft version as a resolved version, which is used for launching process. You can also read version info from it if you want.
 
@@ -48,7 +48,6 @@ for (let issue of issues) {
 }
 ```
 
-
 ### Launch Game
 
 Launch minecraft from a version:
@@ -75,17 +74,17 @@ For newer Minecraft versions, use the `quickPlayMultiplayer` option to directly 
 import { launch, createQuickPlayMultiplayer } from "@xmcl/core"
 
 // Option 1: Use quickPlayMultiplayer directly
-const proc = launch({ 
-  gamePath, 
-  javaPath, 
+const proc = launch({
+  gamePath,
+  javaPath,
   version,
   quickPlayMultiplayer: 'play.hypixel.net:25565'
 });
 
 // Option 2: Use helper function
-const proc = launch({ 
-  gamePath, 
-  javaPath, 
+const proc = launch({
+  gamePath,
+  javaPath,
   version,
   quickPlayMultiplayer: createQuickPlayMultiplayer('mc.example.com', 8080)
 });
@@ -95,9 +94,9 @@ For backward compatibility, the legacy `server` option is still supported:
 
 ```ts
 // Legacy server option (still works)
-const proc = launch({ 
-  gamePath, 
-  javaPath, 
+const proc = launch({
+  gamePath,
+  javaPath,
   version,
   server: { ip: 'play.hypixel.net', port: 25565 }
 });
@@ -107,9 +106,9 @@ Both `quickPlayMultiplayer` and `server` options can be used together for compat
 
 ```ts
 // Both options together for compatibility
-const proc = launch({ 
-  gamePath, 
-  javaPath, 
+const proc = launch({
+  gamePath,
+  javaPath,
   version,
   quickPlayMultiplayer: 'play.hypixel.net:25565',
   server: { ip: 'play.hypixel.net', port: 25565 }

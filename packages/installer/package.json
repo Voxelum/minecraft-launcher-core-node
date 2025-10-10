@@ -2,6 +2,7 @@
   "name": "@xmcl/installer",
   "version": "6.1.2",
   "main": "./index.ts",
+  "browser": "./index.browser.ts",
   "description": "The installers of Minecraft/Forge/Fabric/Liteloader/Quilt",
   "engines": {
     "node": ">=20"
@@ -24,7 +25,7 @@
     "@xmcl/task": "workspace:^*",
     "@xmcl/unzip": "workspace:^*",
     "tar-stream": "^3.1.7",
-    "undici": "7.2.3",
+    "undici": "7.16.0",
     "yazl": "^2.5.1",
     "yauzl": "^2.10.0"
   },
@@ -47,13 +48,13 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
-    "@types/node": "~18.15.11",
     "@types/tar-stream": "^3.1.3",
+    "@types/node": "~20",
     "@types/yazl": "^2.4.5",
     "@types/yauzl": "^2.10.0",
     "@xmcl/oxlint-config": "workspace:^*",
     "esbuild": "^0.17.16",
     "oxlint": "^0.15.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   }
 }

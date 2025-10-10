@@ -11,7 +11,5 @@ export * from './launch'
 export * from './version'
 export * from './platform'
 export * from './folder'
-export * from './diagnose'
-export {
-  checksum,
-} from './utils'
+export { checksum } from './utils'
+export * from './header'

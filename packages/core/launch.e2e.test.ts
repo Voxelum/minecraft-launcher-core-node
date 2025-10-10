@@ -12,10 +12,10 @@ function getJavaVersion(javaPath: string) {
     if (parts[0] === '1') {
       return Number.parseInt(parts[1].replace(/[^0-9]/g, ''), 10)
     } else {
-      return (Number.parseInt(parts[0].replace(/[^0-9]/g, ''), 10))
+      return Number.parseInt(parts[0].replace(/[^0-9]/g, ''), 10)
     }
   } else {
-    return (Number.parseInt(line.split(' ')[1].split('.')[0], 10))
+    return Number.parseInt(line.split(' ')[1].split('.')[0], 10)
   }
 }
 
@@ -78,7 +78,11 @@ describe('Launcher', () => {
     })
     describe.skipIf((javaVersion && javaVersion > 8) || !javaPath)('1.17.10', () => {
       test('should launch with forge', async ({ temp }) => {
-        const option: LaunchOption = { version: '1.7.10-Forge10.13.3.1400-1.7.10', gamePath: temp, javaPath }
+        const option: LaunchOption = {
+          version: '1.7.10-Forge10.13.3.1400-1.7.10',
+          gamePath: temp,
+          javaPath,
+        }
         await waitGameProcess(await launch(option), 'OpenAL initialized.')
       })
     })
@@ -86,7 +90,10 @@ describe('Launcher', () => {
     describe.skipIf((javaVersion && javaVersion > 8) || !javaPath)('1.12.2', () => {
       test('should launch normal minecraft', async ({ temp }) => {
         const option: LaunchOption = { version: '1.12.2', gamePath: temp, javaPath }
-        await waitGameProcess(await launch(option), '[Client thread/INFO]: Created: 1024x512 textures-atlas')
+        await waitGameProcess(
+          await launch(option),
+          '[Client thread/INFO]: Created: 1024x512 textures-atlas',
+        )
       })
       test('should launch server', async ({ temp }) => {
         const option: LaunchOption = {
@@ -98,19 +105,38 @@ describe('Launcher', () => {
             port: 25565,
           },
         }
-        await waitGameProcess(await launch(option), '[Client thread/INFO]: Connecting to 127.0.0.1, 25565')
+        await waitGameProcess(
+          await launch(option),
+          '[Client thread/INFO]: Connecting to 127.0.0.1, 25565',
+        )
       })
       test('should launch forge minecraft', async ({ temp }) => {
-        const option: LaunchOption = { version: '1.12.2-forge1.12.2-14.23.5.2823', gamePath: temp, javaPath }
+        const option: LaunchOption = {
+          version: '1.12.2-forge1.12.2-14.23.5.2823',
+          gamePath: temp,
+          javaPath,
+        }
         await waitGameProcess(await launch(option), '[main/INFO] [FML]:')
       })
       test('should launch liteloader minecraft', async ({ temp }) => {
-        const option: LaunchOption = { version: '1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT', gamePath: temp, javaPath }
+        const option: LaunchOption = {
+          version: '1.12.2-Liteloader1.12.2-1.12.2-SNAPSHOT',
+          gamePath: temp,
+          javaPath,
+        }
         await waitGameProcess(await launch(option), 'LiteLoader begin POSTINIT')
       })
       test('should launch forge liteloader minecraft', async ({ temp }) => {
-        const option: LaunchOption = { version: '1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT', gamePath: temp, javaPath }
-        await waitGameProcess(await launch(option), 'LiteLoader begin POSTINIT', '[main/INFO] [FML]:')
+        const option: LaunchOption = {
+          version: '1.12.2-forge1.12.2-14.23.5.2823-Liteloader1.12.2-1.12.2-SNAPSHOT',
+          gamePath: temp,
+          javaPath,
+        }
+        await waitGameProcess(
+          await launch(option),
+          'LiteLoader begin POSTINIT',
+          '[main/INFO] [FML]:',
+        )
       })
     })
 
@@ -135,7 +161,10 @@ describe('Launcher', () => {
         javaPath,
         // cwd: path.resolve('.'),
       })
-      await waitGameProcess(process, 'You need to agree to the EULA in order to run the server. Go to eula.txt for more info.')
+      await waitGameProcess(
+        process,
+        'You need to agree to the EULA in order to run the server. Go to eula.txt for more info.',
+      )
     })
   })
 })

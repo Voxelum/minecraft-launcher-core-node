@@ -34,10 +34,10 @@
   },
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
-    "@types/node": "~18.15.11",
+    "@types/node": "~20",
     "@xmcl/oxlint-config": "workspace:^*",
     "esbuild": "^0.17.16",
     "oxlint": "^0.15.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   }
 }

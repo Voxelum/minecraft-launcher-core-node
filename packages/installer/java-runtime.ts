@@ -1,139 +1,46 @@
-import { getPlatform, Platform } from '@xmcl/core'
-import { ChecksumValidatorOptions, DownloadBaseOptions, DownloadOptions, getDownloadBaseOptions, Validator } from '@xmcl/file-transfer'
-import { Task, task, TaskRoutine } from '@xmcl/task'
+import { Platform } from '@xmcl/core'
+import {
+  download,
+  DownloadBaseOptions,
+  downloadMultiple,
+  getDownloadBaseOptions,
+} from '@xmcl/file-transfer'
+import { createHash } from 'crypto'
 import { link, readFile } from 'fs/promises'
 import { dirname, join } from 'path'
-import { Dispatcher, request } from 'undici'
-import { DownloadMultipleTask, DownloadTask } from './downloadTask'
-import { ensureDir, ParallelTaskOptions } from './utils'
-/**
- * Contain all java runtimes basic info
- */
-export interface JavaRuntimes {
-  linux: JavaRuntimeTargets
-  'linux-i386': JavaRuntimeTargets
-  'mac-os': JavaRuntimeTargets
-  'mac-os-arm64': JavaRuntimeTargets
-  'windows-x64': JavaRuntimeTargets
-  'windows-x86': JavaRuntimeTargets
-  'windows-arm64': JavaRuntimeTargets
+import { diagnoseFile } from './diagnose'
+import {
+  FileEntry,
+  JavaRuntimeManifest,
+  JavaRuntimes,
+  JavaRuntimeTarget,
+  JavaRuntimeTargetType,
+} from './java-runtime.browser'
+import { Tracker, onDownloadMultiple, onDownloadSingle, WithDownload } from './tracker'
+import { ensureDir } from './utils'
+
+export interface JavaRuntimeTrackerEvents {
+  'java-runtime.json': WithDownload<{ target: string }>
+  'java-runtime.file': WithDownload<{ path: string }>
 }
 
-export interface JavaRuntimeTargets {
-  'java-runtime-alpha': JavaRuntimeTarget[]
-  'java-runtime-beta': JavaRuntimeTarget[]
-  'jre-legacy': JavaRuntimeTarget[]
-  'minecraft-java-exe': JavaRuntimeTarget[]
-  [key: string]: JavaRuntimeTarget[]
-}
-
-export enum JavaRuntimeTargetType {
-  /**
-   * The legacy java version
-   */
-  Legacy = 'jre-legacy',
-  /**
-   * The new java environment, which is the java 16
-   */
-  Alpha = 'java-runtime-alpha',
-  Beta = 'java-runtime-beta',
-  Delta = 'java-runtime-delta',
-  Gamma = 'java-runtime-gamma',
-  JavaExe = 'minecraft-java-exe',
-}
-
-/**
- * Represent a java runtime
- */
-export interface JavaRuntimeTarget {
-  /**
-     * Guessing this is the flight of this java runtime
-     */
-  availability: {
-    group: number
-    progress: number
-  }
-  /**
-   * The manifest detail of the resource
-   */
-  manifest: DownloadInfo
-  /**
-   * The basic version info of the manifest
-   */
-  version: {
-    /**
-     * The name of the version. e.g. `8u51`, `12`, `16.0.1.9.1`
-     */
-    name: string
-    /**
-     * The date string (UTC)
-     */
-    released: string
-  }
-}
-
-export interface Entry {
-  type: 'file' | 'link' | 'directory'
-}
-
-export interface LinkEntry extends Entry {
-  type: 'link'
-  /**
-   * The link target
-   */
-  target: string
-}
-
-export interface DirectoryEntry extends Entry {
-  type: 'directory'
-}
-
-export interface DownloadInfo {
-  /**
-   * The sha info of the resource
-   */
-  sha1: string
-  /**
-   * The size of the resource
-   */
-  size: number
-  /**
-   * The url to download resource
-   */
-  url: string
-}
-
-export interface FileEntry extends Entry {
-  type: 'file'
-  executable: boolean
-  downloads: {
-    /**
-     * The raw format of the file
-     */
-    raw: DownloadInfo
-    /**
-     * The lzma format of the file
-     */
-    lzma?: DownloadInfo
-  }
-}
-
-export type AnyEntry = FileEntry | DirectoryEntry | LinkEntry
-
-/**
- * Contains info about every files in this java runtime
- */
-export interface JavaRuntimeManifest {
-  target: JavaRuntimeTargetType | string
-  /**
-   * The files of the java runtime
-   */
-  files: Record<string, AnyEntry>
-
-  version: JavaRuntimeTarget['version']
-}
-
-export const DEFAULT_RUNTIME_ALL_URL = 'https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json'
+export {
+  DEFAULT_RUNTIME_ALL_URL,
+  fetchJavaRuntimeManifest,
+  JavaRuntimeTargetType,
+} from './java-runtime.browser'
+export type {
+  DirectoryEntry,
+  DownloadInfo,
+  Entry,
+  FileEntry,
+  JavaRuntimeManifest,
+  JavaRuntimes,
+  JavaRuntimeTarget,
+  JavaRuntimeTargets,
+  JreRuntimeEntry,
+  LinkEntry,
+} from './java-runtime.browser'
 
 function normalizeUrls(url: string, fileHost?: string | string[]): string[] {
   if (!fileHost) {
@@ -185,143 +92,163 @@ export interface FetchJavaRuntimeManifestOptions extends DownloadBaseOptions {
    */
   manifestIndex?: JavaRuntimes
   /**
-   * The dispatcher to request API
+   * Custom fetch function
    */
-  dispatcher?: Dispatcher
+  fetch?: (url: string, init?: RequestInit) => Promise<Response>
+  /**
+   * Abort signal for fetch
+   */
+  signal?: AbortSignal
 }
 
-/**
- * Fetch java runtime manifest. It should be able to resolve to your platform, or you can assign the platform.
- *
- * Also, you should assign the target to download, or it will use the latest java 16.
- * @param options The options of fetch runtime manifest
- */
-export async function fetchJavaRuntimeManifest(options: FetchJavaRuntimeManifestOptions = {}): Promise<JavaRuntimeManifest> {
-  let manifestIndex = options.manifestIndex
-  if (!manifestIndex) {
-    const response = await request(normalizeUrls(options.url ?? DEFAULT_RUNTIME_ALL_URL, options.apiHost)[0], { dispatcher: options.dispatcher, throwOnError: true })
-    manifestIndex = await response.body.json() as JavaRuntimes
-  }
-  const manifest = manifestIndex
-  const platform = options.platform ?? getPlatform()
-  const runtimeTarget = options.target ?? JavaRuntimeTargetType.Beta
-  const resolveTarget = () => {
-    if (platform.name === 'windows') {
-      if (platform.arch === 'x64') {
-        return manifest['windows-x64']
-      }
-      if (platform.arch === 'x86' || platform.arch === 'x32') {
-        return manifest['windows-x86']
-      }
-      if (platform.arch === 'arm64') {
-        return manifest['windows-arm64']
-      }
-      return manifest['windows-x64']
-    }
-    if (platform.name === 'osx') {
-      if (platform.arch === 'arm64') {
-        return manifest['mac-os-arm64']
-      }
-      return manifest['mac-os']
-    }
-    if (platform.name === 'linux') {
-      if (platform.arch === 'x86' || platform.arch === 'x32') {
-        return manifest['linux-i386']
-      }
-      if (platform.arch === 'x64') {
-        return manifest.linux
-      }
-      return manifest.linux
-    }
-    throw new Error('Cannot resolve platform')
-  }
-  const targets = resolveTarget()[runtimeTarget]
-  if (targets && targets.length > 0) {
-    const target = targets[0]
-    const manifestUrl = normalizeUrls(target.manifest.url, options.apiHost)[0]
-    const response = await request(manifestUrl, { dispatcher: options.dispatcher, throwOnError: true })
-    const manifest: JavaRuntimeManifest = await response.body.json() as any
-    const result: JavaRuntimeManifest = {
-      files: manifest.files,
-      target: runtimeTarget,
-      version: target.version,
-    }
-    return result
-  } else {
-    throw new Error()
-  }
-}
+async function downloadFiles(
+  destination: string,
+  options: InstallJavaRuntimeWithJsonOptions | InstallJavaRuntimeOptions,
+  manifest: JavaRuntimeManifest,
+) {
+  const unpackLzma = options.unpackLzma
 
+  // First, diagnose all files in parallel
+  const fileEntries = Object.entries(manifest.files).filter(
+    ([file, entry]) => entry.type === 'file',
+  )
 
-async function downloadFiles(this: TaskRoutine<any>, destination: string, options: InstallJavaRuntimeWithJsonOptions | InstallJavaRuntimeOptions, manifest: JavaRuntimeManifest) {
-  const downloadLzma = false
-  await this.yield(new DownloadMultipleTask(Object.entries(manifest.files)
-    .filter(([file, entry]) => entry.type === 'file')
-    .map(([file, entry]) => {
+  const diagnoseResults = await Promise.all(
+    fileEntries.map(async ([file, entry]) => {
       const fEntry = entry as FileEntry
-      const downloadInfo = (downloadLzma && fEntry.downloads.lzma) ? fEntry.downloads.lzma : fEntry.downloads.raw
-      const isLzma = downloadInfo === fEntry.downloads.lzma
-      const dest = isLzma ? (join(destination, file) + '.lzma') : join(destination, file)
-      const urls = normalizeUrls(downloadInfo.url, options.apiHost)
-      const hash = downloadInfo.sha1
-      const downloadOptions: DownloadOptions = {
-        url: urls,
-        validator: options.checksumValidatorResolver?.({ algorithm: 'sha1', hash }) || { algorithm: 'sha1', hash },
-        destination: dest,
-        ...getDownloadBaseOptions(options),
+      const useLzma = unpackLzma && fEntry.downloads.lzma
+      const rawDest = join(destination, file)
+
+      let needsDownload = false
+      let downloadInfo = fEntry.downloads.raw
+      let dest = rawDest
+      let urls = normalizeUrls(downloadInfo.url, options.apiHost)
+      let hash = downloadInfo.sha1
+      let needsUnpack = false
+
+      if (useLzma) {
+        // For lzma mode, first check if the decompressed (raw) file already exists and is valid
+        const rawIssue = await diagnoseFile(
+          {
+            file: rawDest,
+            expectedChecksum: fEntry.downloads.raw.sha1,
+            role: 'java-runtime-file',
+            hint: `Problem on java runtime file ${file}! Please consider to reinstall the java runtime.`,
+          },
+          { signal: options.signal },
+        )
+
+        if (!rawIssue) {
+          // Decompressed file exists and is valid, no need to download
+          needsDownload = false
+        } else {
+          // Decompressed file is missing or corrupted, need to download lzma
+          downloadInfo = fEntry.downloads.lzma!
+          dest = rawDest + '.lzma'
+          urls = normalizeUrls(downloadInfo.url, options.apiHost)
+          hash = downloadInfo.sha1
+          needsUnpack = true
+
+          // Check if lzma file already exists and is valid
+          const lzmaIssue = await diagnoseFile(
+            {
+              file: dest,
+              expectedChecksum: hash,
+              role: 'java-runtime-file',
+              hint: `Problem on java runtime file ${file}! Please consider to reinstall the java runtime.`,
+            },
+            { signal: options.signal },
+          )
+
+          needsDownload = !!lzmaIssue
+        }
+
+        return {
+          file,
+          dest,
+          rawDest,
+          urls,
+          hash,
+          needsDownload,
+          needsUnpack,
+          issue: needsDownload ? { type: 'missing' as const, file: dest } : undefined,
+        }
+      } else {
+        // Regular mode, just check the raw file
+        const issue = await diagnoseFile(
+          {
+            file: dest,
+            expectedChecksum: hash,
+            role: 'java-runtime-file',
+            hint: `Problem on java runtime file ${file}! Please consider to reinstall the java runtime.`,
+          },
+          { signal: options.signal },
+        )
+
+        return {
+          file,
+          dest,
+          rawDest,
+          urls,
+          hash,
+          needsDownload: !!issue,
+          needsUnpack: false,
+          issue,
+        }
       }
-      return downloadOptions
+    }),
+  )
+
+  // Check for issues and prepare download list
+  const issues = diagnoseResults.filter((r) => r.issue)
+  if (issues.length > 0 && options.diagnose) {
+    const errors = issues.map((r) => {
+      const issue = r.issue!
+      const receivedChecksum = issue.type === 'corrupted' ? issue.receivedChecksum : 'missing'
+      return `${r.file} is ${issue.type}: expected checksum ${r.hash}, got ${receivedChecksum}`
     })
-  ).setName('download'))
-  await Promise.all(Object.entries(manifest.files)
-    .filter(([file, entry]) => entry.type !== 'file')
-    .map(async ([file, entry]) => {
-      const dest = join(destination, file)
-      if (entry.type === 'directory') {
-        await ensureDir(dest)
-      } else if (entry.type === 'link') {
-        await link(dest, join(dirname(dest), entry.target)).catch(() => { })
-      }
+    throw new Error(`Java runtime files validation failed:\n${errors.join('\n')}`)
+  }
+
+  const filesToDownload = diagnoseResults
+    .filter((r) => r.needsDownload)
+    .map((r) => ({
+      url: r.urls,
+      destination: r.dest,
     }))
+
+  // Only download files that need to be downloaded
+  if (filesToDownload.length > 0) {
+    await downloadMultiple({
+      options: filesToDownload,
+      tracker: onDownloadMultiple(options.tracker, 'java-runtime.file', { path: destination }),
+      ...getDownloadBaseOptions(options),
+    })
+  }
+
+  // Unpack lzma files if needed
+  if (unpackLzma) {
+    await Promise.all(
+      diagnoseResults
+        .filter((r) => r.needsUnpack && r.needsDownload)
+        .map((r) => unpackLzma(r.dest, r.rawDest)),
+    )
+  }
+  await Promise.all(
+    Object.entries(manifest.files)
+      .filter(([file, entry]) => entry.type !== 'file')
+      .map(async ([file, entry]) => {
+        const dest = join(destination, file)
+        if (entry.type === 'directory') {
+          await ensureDir(dest)
+        } else if (entry.type === 'link') {
+          await link(dest, join(dirname(dest), entry.target)).catch(() => {})
+        }
+      }),
+  )
 }
 
-export interface InstallJavaRuntimeOptions extends DownloadBaseOptions, ParallelTaskOptions {
-  /**
-     * The alternative download host for the file
-     */
-  apiHost?: string | string[]
-  /**
-     * The destination of this installation
-     */
-  destination: string
-  /**
-     * The actual manfiest to install.
-     */
-  manifest: JavaRuntimeManifest
-  /**
-     * Download lzma compressed version instead of raw version.
-     * - If `true`, it will just download lzma file version, you need to decompress by youself!
-     * - If `Function`, it will use that function to decompress the file!
-     */
-  lzma?: boolean | ((compressedFilePath: string, targetPath: string) => Promise<void>)
-
-  checksumValidatorResolver?: (checksum: ChecksumValidatorOptions) => Validator
-}
-
-/**
- * Install java runtime from java runtime manifest
- * @param options The options to install java runtime
- */
-export function installJavaRuntimeTask(options: InstallJavaRuntimeOptions): Task<void> {
-  return task('installJavaRuntime', async function () {
-    const destination = options.destination
-    const manifest = options.manifest
-    await downloadFiles.call(this, destination, options, manifest)
-  })
-}
-
-
-export interface InstallJavaRuntimeWithJsonOptions extends DownloadBaseOptions, ParallelTaskOptions {
+interface InstallJavaRuntimeBaseOptions extends DownloadBaseOptions {
   /**
    * The alternative download host for the file
    */
@@ -331,43 +258,103 @@ export interface InstallJavaRuntimeWithJsonOptions extends DownloadBaseOptions, 
    */
   destination: string
   /**
-   * The actual manfiest metadata.
+   * The unpacker for lzma file
    */
-  target: JavaRuntimeTarget
+  unpackLzma?: (lzmaFile: string, destinationFile: string) => Promise<void>
   /**
-   * Download lzma compressed version instead of raw version.
-   * - If `true`, it will just download lzma file version, you need to decompress by youself!
-   * - If `Function`, it will use that function to decompress the file!
+   * Whether to diagnose the installation. If true, will throw error instead of fixing.
    */
-  lzma?: boolean | ((compressedFilePath: string, targetPath: string) => Promise<void>)
+  diagnose?: boolean
+  /**
+   * Abort signal
+   */
+  signal?: AbortSignal
+}
 
-  checksumValidatorResolver?: (checksum: ChecksumValidatorOptions) => Validator
+export interface InstallJavaRuntimeOptions extends InstallJavaRuntimeBaseOptions {
+  /**
+   * The actual manfiest to install.
+   */
+  manifest: JavaRuntimeManifest
+
+  tracker?: Tracker<JavaRuntimeTrackerEvents>
 }
 
 /**
  * Install java runtime from java runtime manifest
  * @param options The options to install java runtime
  */
-export function installJavaRuntimeWithJsonTask(options: InstallJavaRuntimeWithJsonOptions): Task<void> {
-  return task('installJavaRuntime', async function () {
-    const destination = options.destination
-    const target = options.target
+export async function installJavaRuntime(options: InstallJavaRuntimeOptions): Promise<void> {
+  const destination = options.destination
+  const manifest = options.manifest
+  await downloadFiles(destination, options, manifest)
+}
+
+export interface InstallJavaRuntimeWithJsonOptions extends InstallJavaRuntimeBaseOptions {
+  /**
+   * The actual manifest metadata.
+   */
+  target: JavaRuntimeTarget
+
+  tracker?: Tracker<JavaRuntimeTrackerEvents>
+
+  unpackLzma?: (lzmaFile: string, destinationFile: string) => Promise<void>
+}
+
+/**
+ * Install java runtime from java runtime manifest
+ * @param options The options to install java runtime
+ */
+export async function installJavaRuntimeWithJson(
+  options: InstallJavaRuntimeWithJsonOptions,
+): Promise<void> {
+  const destination = options.destination
+  const target = options.target
+  const jsonPath = join(destination, 'manifest.json')
+
+  const readManifest = async () => {
+    const content = await readFile(jsonPath)
+    const sha1 = createHash('sha1').update(content).digest('hex')
+    if (sha1 !== target.manifest.sha1) {
+      throw new Error(`Java runtime manifest sha1 mismatch`)
+    }
+    return JSON.parse(content.toString()) as JavaRuntimeManifest
+  }
+
+  // Diagnose the manifest.json first
+  const manifestIssue = await diagnoseFile(
+    {
+      file: jsonPath,
+      expectedChecksum: target.manifest.sha1,
+      role: 'java-runtime-manifest',
+      hint: 'Problem on java runtime manifest.json! Please consider to reinstall the java runtime.',
+    },
+    { signal: options.signal },
+  )
+
+  let manifest: JavaRuntimeManifest
+  if (manifestIssue) {
+    if (options.diagnose) {
+      throw new Error(
+        `Java runtime manifest is ${manifestIssue.type}: expected checksum ${target.manifest.sha1}, got ${manifestIssue.receivedChecksum}`,
+      )
+    }
+    // Download the manifest
     const downloadOptions = getDownloadBaseOptions(options)
-    const jsonPath = join(destination, 'manifest.json')
     const manifestUrl = normalizeUrls(target.manifest.url, options.apiHost)
-    await this.yield(new DownloadTask({
+    await download({
       destination: jsonPath,
       url: manifestUrl,
-      validator: {
-        algorithm: 'sha1',
-        hash: target.manifest.sha1,
-      },
       ...downloadOptions,
-    }).setName('json'))
+      tracker: onDownloadSingle(options.tracker, 'java-runtime.json', {
+        target: target.version.name,
+      }),
+    })
+    manifest = await readManifest()
+  } else {
+    // Manifest is valid, read it
+    manifest = await readManifest()
+  }
 
-    const content = await readFile(jsonPath, 'utf-8')
-    const manifest: JavaRuntimeManifest = JSON.parse(content)
-
-    await downloadFiles.call(this, destination, options, manifest)
-  })
+  await downloadFiles(destination, options, manifest)
 }

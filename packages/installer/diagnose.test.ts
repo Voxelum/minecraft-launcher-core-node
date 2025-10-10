@@ -1,9 +1,9 @@
 /* eslint-disable no-template-curly-in-string */
-import { MinecraftFolder } from './folder'
-import { diagnoseLibraries } from './diagnose'
+import { MinecraftFolder } from '@xmcl/core'
 import { join } from 'path'
 import * as utils from './utils'
 import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { diagnoseLibraries } from './libraries'
 
 vi.mock('./utils')
 
@@ -22,6 +22,7 @@ const resolvedLib = {
   type: 'jar',
   classifier: '',
   path: 'com/mojang/patchy/1.1/patchy-1.1.jar',
+  isNative: false,
 } as const
 
 describe('#diagnoseLibraries', () => {
@@ -32,52 +33,33 @@ describe('#diagnoseLibraries', () => {
 
   test('should diagnose empty result for valid library', async () => {
     // @ts-expect-error
-    utils.__addChecksum({ 'temp/libraries/com/mojang/patchy/1.1/patchy-1.1.jar': 'aef610b34a1be37fa851825f12372b78424d8903' })
+    utils.__addChecksum({
+      'temp/libraries/com/mojang/patchy/1.1/patchy-1.1.jar':
+        'aef610b34a1be37fa851825f12372b78424d8903',
+    })
     // @ts-expect-error
     utils.__addExistedFile('temp/libraries/com/mojang/patchy/1.1/patchy-1.1.jar')
-    const issue = await diagnoseLibraries({
-      ...resolvedVersion,
-      libraries: [resolvedLib],
-    } as any, MinecraftFolder.from('temp'))
-    expect(issue).toHaveLength(0)
+    const libs = await diagnoseLibraries([resolvedLib], MinecraftFolder.from('temp'))
+    expect(libs).toHaveLength(0)
   })
   test('should diagnose invalid library for no such file', async () => {
     // @ts-expect-error
-    utils.__addChecksum({ 'temp/libraries/com/mojang/patchy/1.1/patchy-1.1.jar': 'aef610b34a1be37fa851825f12372b78424d8903' })
-    const issue = await diagnoseLibraries({
-      ...resolvedVersion,
-      libraries: [resolvedLib],
-    } as any, MinecraftFolder.from('temp'))
-    expect(issue).toHaveLength(1)
-    expect(issue[0]).toEqual({
-      type: 'missing',
-      role: 'library',
-      file: join('temp', 'libraries', 'com', 'mojang', 'patchy', '1.1', 'patchy-1.1.jar'),
-      expectedChecksum: 'aef610b34a1be37fa851825f12372b78424d8903',
-      receivedChecksum: '',
-      hint: 'Problem on library! Please consider to use Installer.installLibraries to fix.',
-      library: resolvedLib,
+    utils.__addChecksum({
+      'temp/libraries/com/mojang/patchy/1.1/patchy-1.1.jar':
+        'aef610b34a1be37fa851825f12372b78424d8903',
     })
+    const libs = await diagnoseLibraries([resolvedLib], MinecraftFolder.from('temp'))
+    expect(libs).toHaveLength(1)
+    expect(libs[0]).toEqual(resolvedLib)
   })
   test('should diagnose invalid library for checksum not match', async () => {
     // @ts-expect-error
     utils.__addChecksum({ 'temp/libraries/com/mojang/patchy/1.1/patchy-1.1.jar': 'asd' })
     // @ts-expect-error
     utils.__addExistedFile('temp/libraries/com/mojang/patchy/1.1/patchy-1.1.jar')
-    const issue = await diagnoseLibraries({
-      ...resolvedVersion,
-      libraries: [resolvedLib],
-    } as any, MinecraftFolder.from('temp'))
-    expect(issue).toHaveLength(1)
-    expect(issue[0]).toEqual({
-      type: 'corrupted',
-      role: 'library',
-      file: join('temp', 'libraries', 'com', 'mojang', 'patchy', '1.1', 'patchy-1.1.jar'),
-      expectedChecksum: 'aef610b34a1be37fa851825f12372b78424d8903',
-      receivedChecksum: 'asd',
-      hint: 'Problem on library! Please consider to use Installer.installLibraries to fix.',
-      library: resolvedLib,
-    })
+    const libs = await diagnoseLibraries([resolvedLib], MinecraftFolder.from('temp'))
+    expect(libs).toHaveLength(1)
+    expect(libs[0]).toEqual(resolvedLib)
   })
 })
 
@@ -104,7 +86,8 @@ const resolvedVersion = {
             },
           },
         ],
-        value: '-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump',
+        value:
+          '-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump',
       },
       {
         rules: [
@@ -116,10 +99,7 @@ const resolvedVersion = {
             },
           },
         ],
-        value: [
-          '-Dos.name=Windows 10',
-          '-Dos.version=10.0',
-        ],
+        value: ['-Dos.name=Windows 10', '-Dos.version=10.0'],
       },
       '-Djava.library.path=${natives_directory}',
       '-Dminecraft.launcher.brand=${launcher_name}',
@@ -166,12 +146,7 @@ const resolvedVersion = {
             },
           },
         ],
-        value: [
-          '--width',
-          '${resolution_width}',
-          '--height',
-          '${resolution_height}',
-        ],
+        value: ['--width', '${resolution_width}', '--height', '${resolution_height}'],
       },
     ],
   },

@@ -1,3 +1,5 @@
+import { RangeRunningWatch } from "./download"
+
 export interface Range {
   start: number
   end: number
@@ -5,6 +7,10 @@ export interface Range {
 
 export interface RangePolicy {
   computeRanges(contentLength: number): Range[]
+
+  shouldDivide(watch: RangeRunningWatch): boolean
+
+  divideRange(position: number, end: number): number | undefined
 }
 
 export function isRangePolicy(rangeOptions?: RangePolicy | DefaultRangePolicyOptions): rangeOptions is RangePolicy {
@@ -16,7 +22,7 @@ export function resolveRangePolicy(rangeOptions?: RangePolicy | DefaultRangePoli
   if (isRangePolicy(rangeOptions)) {
     return rangeOptions
   }
-  return new DefaultRangePolicy(rangeOptions?.rangeThreshold ?? 1024 * 1024, 4)
+  return new DefaultRangePolicy(rangeOptions?.rangeThreshold ?? 1024 * 1024, 4, 1024 * 10, 1024 * 1024)
 }
 
 export interface DefaultRangePolicyOptions {
@@ -30,11 +36,21 @@ export interface DefaultRangePolicyOptions {
 export class DefaultRangePolicy implements RangePolicy {
   constructor(
     readonly rangeThreshold: number,
-    readonly concurrency: number
+    readonly concurrency: number,
+    readonly minSpeedThreshold: number,
+    readonly minDivideSize: number,
   ) { }
 
-  getConcurrency() {
-    return this.concurrency
+  shouldDivide(watch: RangeRunningWatch): boolean {
+    return watch.avgSpeed < this.minSpeedThreshold
+  }
+
+  divideRange(position: number, end: number): number | undefined {
+    const remaining = end - position + 1
+    if (remaining > (this.minDivideSize * 2)) {
+      return Math.floor((end - position) / 2) + position
+    }
+    return undefined
   }
 
   computeRanges(total: number): Range[] {
@@ -42,7 +58,7 @@ export class DefaultRangePolicy implements RangePolicy {
     if (total <= minChunkSize) {
       return [{ start: 0, end: total }]
     }
-    const partSize = Math.max(minChunkSize, Math.floor(total / this.getConcurrency()))
+    const partSize = Math.max(minChunkSize, Math.floor(total / this.concurrency))
     const ranges: Range[] = []
     for (let cur = 0, chunkSize = 0; cur < total; cur += chunkSize) {
       const remain = total - cur

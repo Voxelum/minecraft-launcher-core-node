@@ -2,7 +2,12 @@ import assert from 'assert'
 import { spawnSync } from 'child_process'
 import { EOL } from 'os'
 import * as path from 'path'
-import { DEFAULT_EXTRA_JVM_ARGS, generateArguments, generateArgumentsServer, createQuickPlayMultiplayer } from './launch'
+import {
+  DEFAULT_EXTRA_JVM_ARGS,
+  generateArguments,
+  generateArgumentsServer,
+  createQuickPlayMultiplayer,
+} from './launch'
 import { describe, test, expect } from 'vitest'
 
 function getJavaVersion(javaPath: string) {
@@ -13,10 +18,10 @@ function getJavaVersion(javaPath: string) {
     if (parts[0] === '1') {
       return Number.parseInt(parts[1].replace(/[^0-9]/g, ''), 10)
     } else {
-      return (Number.parseInt(parts[0].replace(/[^0-9]/g, ''), 10))
+      return Number.parseInt(parts[0].replace(/[^0-9]/g, ''), 10)
     }
   } else {
-    return (Number.parseInt(line.split(' ')[1].split('.')[0], 10))
+    return Number.parseInt(line.split(' ')[1].split('.')[0], 10)
   }
 }
 
@@ -48,7 +53,7 @@ describe('Launcher', () => {
         javaPath: '/test/java',
         extraExecOption: {
           cwd: mock,
-        }
+        },
         // version: '1.7.10',
       })
       assert(args)
@@ -58,9 +63,9 @@ describe('Launcher', () => {
 
   describe('#generateArguments', () => {
     test('should throw error if the version is empty', async () => {
-      await expect(generateArguments({} as any))
-        .rejects
-        .toEqual(new Error('Version cannot be null!'))
+      await expect(generateArguments({} as any)).rejects.toEqual(
+        new TypeError('Version cannot be null!'),
+      )
     })
 
     test('should generate correct command for 1.17.1-forge-37.0.97', async ({ mock }) => {
@@ -89,7 +94,9 @@ describe('Launcher', () => {
       expect(args[args.indexOf('--gameDir') + 1]).toEqual(path.resolve(gamePath))
       expect(args[args.indexOf('--assetsDir') + 1]).toEqual(path.resolve(gamePath, 'assets'))
       expect(args.indexOf('java.base/sun.security.util=cpw.mods.securejarhandler')).not.toEqual(-1)
-      expect(args.indexOf(`-DlibraryDirectory=${path.resolve(gamePath, 'libraries')}`)).not.toEqual(-1)
+      expect(args.indexOf(`-DlibraryDirectory=${path.resolve(gamePath, 'libraries')}`)).not.toEqual(
+        -1,
+      )
     })
 
     test('should generate correct command for 1.7.10 with forge', async ({ mock }) => {
@@ -185,14 +192,18 @@ describe('Launcher', () => {
       expect(args.indexOf('-Dfml.ignoreInvalidMinecraftCertificates=true') !== -1).toBeTruthy()
       expect(args.indexOf('-Dfml.ignorePatchDiscrepancies=true') !== -1).toBeTruthy()
       expect(args.indexOf('hello') + 1).toEqual(args.indexOf('net.minecraft.client.main.Main'))
-      expect(args.indexOf('Minecraft!')).toBeGreaterThan(args.indexOf('net.minecraft.client.main.Main'))
+      expect(args.indexOf('Minecraft!')).toBeGreaterThan(
+        args.indexOf('net.minecraft.client.main.Main'),
+      )
       expect(args[args.indexOf('--server') + 1]).toEqual('localhost')
       expect(args[args.indexOf('--port') + 1]).toEqual('10')
 
-      expect(args.find((a) => a.startsWith('-Dminecraft.launcher.version')))
-        .toEqual('-Dminecraft.launcher.version=launcherVersion')
-      expect(args.find((a) => a.startsWith('-Dminecraft.launcher.brand')))
-        .toEqual('-Dminecraft.launcher.brand=launcherName')
+      expect(args.find((a) => a.startsWith('-Dminecraft.launcher.version'))).toEqual(
+        '-Dminecraft.launcher.version=launcherVersion',
+      )
+      expect(args.find((a) => a.startsWith('-Dminecraft.launcher.brand'))).toEqual(
+        '-Dminecraft.launcher.brand=launcherName',
+      )
     })
     test('should use default jvm arguments', async ({ mock }) => {
       const jPath = '/test/java'
@@ -255,7 +266,9 @@ describe('Launcher', () => {
     })
     test('should generate default user', async ({ mock }) => {
       const args = await generateArguments({
-        version: '1.14.4', gamePath: mock, javaPath: '/test/java',
+        version: '1.14.4',
+        gamePath: mock,
+        javaPath: '/test/java',
       })
       expect(args.indexOf('net.minecraft.client.main.Main')).not.toBe(-1)
       expect(args[args.indexOf('--username') + 1]).toEqual('Steve')
@@ -266,7 +279,10 @@ describe('Launcher', () => {
         ip: '127.0.0.1',
       }
       const args = await generateArguments({
-        version: '1.14.4', gamePath: mock, javaPath: '/test/java', server,
+        version: '1.14.4',
+        gamePath: mock,
+        javaPath: '/test/java',
+        server,
       })
       expect(args[args.indexOf('--server') + 1]).toEqual(server.ip)
     })
@@ -276,29 +292,37 @@ describe('Launcher', () => {
         port: 25565,
       }
       const args = await generateArguments({
-        version: '1.14.4', gamePath: mock, javaPath: '/test/java', server,
+        version: '1.14.4',
+        gamePath: mock,
+        javaPath: '/test/java',
+        server,
       })
       expect(args[args.indexOf('--server') + 1]).toEqual(server.ip)
       expect(args[args.indexOf('--port') + 1]).toEqual(server.port.toString())
     })
     test('should generate correct command with quickPlayMultiplayer', async ({ mock }) => {
       const args = await generateArguments({
-        version: '1.14.4', gamePath: mock, javaPath: '/test/java', quickPlayMultiplayer: '127.0.0.1:25565',
+        version: '1.14.4',
+        gamePath: mock,
+        javaPath: '/test/java',
+        quickPlayMultiplayer: '127.0.0.1:25565',
       })
       expect(args[args.indexOf('--quickPlayMultiplayer') + 1]).toEqual('127.0.0.1:25565')
       // Should not contain old server arguments
       expect(args.indexOf('--server')).toBe(-1)
       expect(args.indexOf('--port')).toBe(-1)
     })
-    test('should allow both quickPlayMultiplayer and server options for compatibility', async ({ mock }) => {
+    test('should allow both quickPlayMultiplayer and server options for compatibility', async ({
+      mock,
+    }) => {
       const server = {
         ip: '192.168.1.1',
         port: 25565,
       }
       const args = await generateArguments({
-        version: '1.14.4', 
-        gamePath: mock, 
-        javaPath: '/test/java', 
+        version: '1.14.4',
+        gamePath: mock,
+        javaPath: '/test/java',
         server,
         quickPlayMultiplayer: '127.0.0.1:25565',
       })

@@ -1,12 +1,10 @@
 import { FileHandle } from 'fs/promises'
-import CachePolicy from 'http-cache-semantics'
-import { Range } from './rangePolicy'
+import { Range } from './range_policy'
 
 export interface DownloadCheckpoint {
   ranges: Range[]
   url: string
   contentLength: number
-  policy: CachePolicy
 }
 
 export interface CheckpointHandler {
