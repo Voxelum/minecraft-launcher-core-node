@@ -72,6 +72,7 @@ describe('Forge', () => {
           modLoader: 'javafml',
           loaderVersion: '[14,)',
           version: '6.0.0.26',
+          clientSideOnly: false,
         },
       ],
       usedForgePackage: true,
