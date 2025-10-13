@@ -1,5 +1,16 @@
 # Changelog
 
+## 7.11.0
+### @xmcl/mod-parser@3.4.3
+#### Bug Fixes
+
+- fix: attach clientSideOnly to mods toml if found in root (#329) ([0daaa1d97ad0e9a9d920d4534878f7411b69b021](https://github.com/voxelum/minecraft-launcher-core-node/commit/0daaa1d97ad0e9a9d920d4534878f7411b69b021))
+### @xmcl/modrinth@2.6.0
+#### Features
+
+- feat: add get project version by hash method ([91ed3c12ab16b6c3fa53f61d6109702a014bb976](https://github.com/voxelum/minecraft-launcher-core-node/commit/91ed3c12ab16b6c3fa53f61d6109702a014bb976))
+
+
 ## 7.10.1
 ### @xmcl/core@2.15.1
 #### Bug Fixes
