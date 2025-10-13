@@ -4,7 +4,7 @@ import { Task, task } from '@xmcl/task'
 import { exec } from 'child_process'
 import { stat, unlink } from 'fs/promises'
 import { EOL, platform, tmpdir } from 'os'
-import { basename, join, resolve } from 'path'
+import path, { basename, join, resolve } from 'path'
 import { Dispatcher, request } from 'undici'
 import { DownloadTask } from './downloadTask'
 import { ensureDir, missing } from './utils'
@@ -212,6 +212,11 @@ export async function getPotentialJavaLocations(): Promise<string[]> {
 
   if (process.env.JAVA_HOME) {
     unchecked.add(join(process.env.JAVA_HOME, 'bin', javaFile))
+  }
+
+  if (process.env.XMCL_JAVA_PATHS) {
+    const paths = process.env.XMCL_JAVA_PATHS.split(path.delimiter);
+    paths.forEach(p => unchecked.add(join(p, 'bin', javaFile)));
   }
 
   const which = () => new Promise<string>((resolve) => {
