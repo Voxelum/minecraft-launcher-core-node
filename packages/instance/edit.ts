@@ -49,6 +49,10 @@ export async function computeInstanceEditChanges(
     }
   }
 
+  if ('upstream' in editOptions) {
+    result.upstream = editOptions.upstream
+  }
+
   // Handle memory options
   if ('maxMemory' in editOptions && editOptions.maxMemory !== currentInstance.maxMemory) {
     if (typeof editOptions.maxMemory === 'undefined') {
