@@ -735,16 +735,16 @@ export async function generateArguments(options: LaunchOption) {
   }
 
   const jvmOptions = {
-    natives_directory: nativeRoot,
+    natives_directory: nativeRoot.replaceAll('\\', '/'),
     launcher_name: launcherName,
     launcher_version: launcherBrand,
-    game_directory: gamePath,
+    game_directory: gamePath.replaceAll('\\', '/'),
     classpath: [
       ...version.libraries.filter((lib) => !lib.isNative).map((lib) => mc.getLibraryByPath(lib.download.path)),
       mc.getVersionJar(version.minecraftVersion),
       ...(options.extraClassPaths || []),
-    ].join(delimiter),
-    library_directory: mc.getPath('libraries'),
+    ].map(c => c.replaceAll('\\', '/')).join(delimiter),
+    library_directory: mc.getPath('libraries').replaceAll('\\', '/'),
     classpath_separator: delimiter,
     version_name: version.minecraftVersion,
     ...featureValues,
@@ -763,7 +763,7 @@ export async function generateArguments(options: LaunchOption) {
   cmd.push(...jvmArguments.map((arg) => format(arg, jvmOptions)))
 
   if (!cmd.some(v => v.startsWith('-DlibraryDirectory'))) {
-    cmd.push('-DlibraryDirectory=' + mc.getPath('libraries'))
+    cmd.push('-DlibraryDirectory=' + mc.getPath('libraries').replaceAll('\\', '/'))
   }
 
   // add extra jvm args
@@ -789,11 +789,11 @@ export async function generateArguments(options: LaunchOption) {
   const mcOptions = {
     version_name: versionName,
     version_type: versionType,
-    assets_root: assetsDir,
-    game_assets: join(assetsDir, 'virtual', version.assets),
+    assets_root: assetsDir.replaceAll('\\', '/'),
+    game_assets: join(assetsDir, 'virtual', version.assets).replaceAll('\\', '/'),
     assets_index_name: options.useHashAssetsIndex ? version.assetIndex?.sha1 ?? version.assets : version.assets,
     auth_session: accessToken,
-    game_directory: gamePath,
+    game_directory: gamePath.replaceAll('\\', '/'),
     auth_player_name: name,
     auth_uuid: id,
     auth_access_token: accessToken,
