@@ -482,6 +482,17 @@ export interface LevelDataFrame {
   MapFeatures: number
   Player: PlayerDataFrame
   RandomSeed: bigint
+  WorldGenSettings: {
+    seed: bigint
+    generate_features: 1 | 0
+    bonus_chest: 1 | 0
+    dimensions: {
+      'minecraft:overworld': {}
+      'minecraft:the_nether': {}
+      'minecraft:the_end': {}
+      [key: string]: object
+    }
+  }
   readonly SizeOnDisk: bigint
   SpawnX: number
   SpawnY: number
