@@ -16,24 +16,30 @@ export class Handshake {
 }
 
 @Packet('client', 0x00, 'status')
-export class ServerQuery { }
+export class ServerQuery {}
 
 @Packet('server', 0x00, 'status')
-export class ServerStatus { @Field(Json) status!: Status }
+export class ServerStatus {
+  @Field(Json) status!: Status
+}
 
 @Packet('client', 0x01, 'status')
-export class Ping { @Field(CLong) time = BigInt(Date.now()) }
+export class Ping {
+  @Field(CLong) time = BigInt(Date.now())
+}
 
 @Packet('server', 0x01, 'status')
-export class Pong { @Field(CLong) ping!: bigint }
+export class Pong {
+  @Field(CLong) ping!: bigint
+}
 
 /**
  * The json format for Minecraft server handshake status query response
  */
 export interface Status {
   /**
-     * The version info of the server
-     */
+   * The version info of the server
+   */
   version: {
     /**
      * The name of the version, might be standard version, like 1.14.4.
@@ -46,37 +52,37 @@ export interface Status {
     protocol: number
   }
   /**
-     * The player info in server
-     */
+   * The player info in server
+   */
   players: {
     /**
-         * The server max player capacity
-         */
+     * The server max player capacity
+     */
     max: number
     /**
-         * The current online player number
-         */
+     * The current online player number
+     */
     online: number
     /**
-         * The online player info
-         */
+     * The online player info
+     */
     sample?: Array<GameProfile>
   }
   /**
-     * The motd of server, which might be the raw TextComponent string or structurelized TextComponent JSON
-     */
+   * The motd of server, which might be the raw TextComponent string or structurelized TextComponent JSON
+   */
   description: TextComponent | string
   /**
-     * The base 64 favicon data
-     */
+   * The base 64 favicon data
+   */
   favicon: string | ''
   modinfo?: {
     type: string | 'FML'
     modList: Array<ForgeModIdentity>
   }
   /**
-     * The ping from server
-     */
+   * The ping from server
+   */
   ping: number
 }
 interface GameProfile {
@@ -90,12 +96,12 @@ interface ForgeModIdentity {
 
 export interface QueryOptions {
   /**
-     * see http://wiki.vg/Protocol_version_numbers
-     */
+   * see http://wiki.vg/Protocol_version_numbers
+   */
   protocol?: number
   /**
-     * timeout milliseconds
-     */
+   * timeout milliseconds
+   */
   timeout?: number
   retryTimes?: number
 }
@@ -123,7 +129,10 @@ export function createChannel() {
  * @param server The server information
  * @param options The query options
  */
-export async function queryStatus(server: { host: string; port?: number }, options: QueryOptions = {}): Promise<Status> {
+export async function queryStatus(
+  server: { host: string; port?: number },
+  options: QueryOptions = {},
+): Promise<Status> {
   const host = server.host
   const port = server.port || 25565
   const timeout = options.timeout || 4000
@@ -157,16 +166,28 @@ export async function queryStatus(server: { host: string; port?: number }, optio
 export function createClient(protocol: number, timeout?: number) {
   const channel: Channel = createChannel()
   return {
-    get channel() { return channel },
-    set protocol(v: number) { protocol = v },
-    get protocol() { return protocol },
+    get channel() {
+      return channel
+    },
+    set protocol(v: number) {
+      protocol = v
+    },
+    get protocol() {
+      return protocol
+    },
     query(host: string, port = 25565) {
       return query(channel, host, port, timeout || 4000, protocol)
     },
   }
 }
 
-async function query(channel: Channel, host: string, port: number, timeout: number, protocol: number) {
+async function query(
+  channel: Channel,
+  host: string,
+  port: number,
+  timeout: number,
+  protocol: number,
+) {
   await channel.listen({
     host,
     port,

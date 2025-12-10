@@ -23,109 +23,127 @@ describe('CurseforgeV1Client', () => {
   })
   test('#getMod', async () => {
     const mockPool = agent.get('https://api.curseforge.com')
-    mockPool.intercept({
-      path: '/v1/mods/310806',
-      headers: { 'x-api-key': 'key' },
-    }).reply(200, { data: 'hello' })
+    mockPool
+      .intercept({
+        path: '/v1/mods/310806',
+        headers: { 'x-api-key': 'key' },
+      })
+      .reply(200, { data: 'hello' })
     const client = new CurseforgeV1Client('key', { fetch })
     const result = await client.getMod(310806)
     expect(result).toEqual('hello')
   })
   test('#getModDescription', async () => {
     const mockPool = agent.get('https://api.curseforge.com')
-    mockPool.intercept({
-      path: '/v1/mods/310806/description',
-      headers: { 'x-api-key': 'key' },
-    }).reply(200, { data: 'description' })
+    mockPool
+      .intercept({
+        path: '/v1/mods/310806/description',
+        headers: { 'x-api-key': 'key' },
+      })
+      .reply(200, { data: 'description' })
     const client = new CurseforgeV1Client('key', { fetch })
     const result = await client.getModDescription(310806)
     expect(result).toEqual('description')
   })
   test('#getModFile', async () => {
     const mockPool = agent.get('https://api.curseforge.com')
-    mockPool.intercept({
-      path: '/v1/mods/310806/files/2657461',
-      headers: { 'x-api-key': 'key' },
-    }).reply(200, { data: 'file' })
+    mockPool
+      .intercept({
+        path: '/v1/mods/310806/files/2657461',
+        headers: { 'x-api-key': 'key' },
+      })
+      .reply(200, { data: 'file' })
     const client = new CurseforgeV1Client('key', { fetch })
     const result = await client.getModFile(310806, 2657461)
     expect(result).toEqual('file')
   })
   test('#getMods', async () => {
     const mockPool = agent.get('https://api.curseforge.com')
-    mockPool.intercept({
-      method: 'POST',
-      body: JSON.stringify({ modIds: [310806] }),
-      path: '/v1/mods',
-      headers: { 'x-api-key': 'key', accept: 'application/json' },
-    }).reply(200, { data: '[]' })
+    mockPool
+      .intercept({
+        method: 'POST',
+        body: JSON.stringify({ modIds: [310806] }),
+        path: '/v1/mods',
+        headers: { 'x-api-key': 'key', accept: 'application/json' },
+      })
+      .reply(200, { data: '[]' })
     const client = new CurseforgeV1Client('key', { fetch })
     const result = await client.getMods([310806])
     expect(result).toEqual('[]')
   })
   test('#getFiles', async () => {
     const mockPool = agent.get('https://api.curseforge.com')
-    mockPool.intercept({
-      method: 'POST',
-      body: JSON.stringify({ fileIds: [2657461] }),
-      path: '/v1/mods/files',
-      headers: { 'x-api-key': 'key' },
-    }).reply(200, { data: '[]' })
+    mockPool
+      .intercept({
+        method: 'POST',
+        body: JSON.stringify({ fileIds: [2657461] }),
+        path: '/v1/mods/files',
+        headers: { 'x-api-key': 'key' },
+      })
+      .reply(200, { data: '[]' })
     const client = new CurseforgeV1Client('key', { fetch })
     const result = await client.getFiles([2657461])
     expect(result).toEqual('[]')
   })
   test('#getCategories', async () => {
     const mockPool = agent.get('https://api.curseforge.com')
-    mockPool.intercept({
-      path: '/v1/categories',
-      query: { gameId: '432' },
-      headers: { 'x-api-key': 'key' },
-    }).reply(200, { data: '[]' })
+    mockPool
+      .intercept({
+        path: '/v1/categories',
+        query: { gameId: '432' },
+        headers: { 'x-api-key': 'key' },
+      })
+      .reply(200, { data: '[]' })
     const client = new CurseforgeV1Client('key', { fetch })
     const result = await client.getCategories()
     expect(result).toEqual('[]')
   })
   test('#getCategories', async () => {
     const mockPool = agent.get('https://api.curseforge.com')
-    mockPool.intercept({
-      path: '/v1/categories',
-      query: { gameId: '432' },
-      headers: { 'x-api-key': 'key' },
-    }).reply(200, { data: '[]' })
+    mockPool
+      .intercept({
+        path: '/v1/categories',
+        query: { gameId: '432' },
+        headers: { 'x-api-key': 'key' },
+      })
+      .reply(200, { data: '[]' })
     const client = new CurseforgeV1Client('key', { fetch })
     const result = await client.getCategories()
     expect(result).toEqual('[]')
   })
   test('#getModFiles', async () => {
     const mockPool = agent.get('https://api.curseforge.com')
-    mockPool.intercept({
-      path: '/v1/mods/310806/files',
-      headers: { 'x-api-key': 'key' },
-      query: {
-        gameVersion: '',
-        gameVersionTypeId: '',
-        index: '',
-        pageSize: '',
-      },
-    }).reply(200, { data: [] })
+    mockPool
+      .intercept({
+        path: '/v1/mods/310806/files',
+        headers: { 'x-api-key': 'key' },
+        query: {
+          gameVersion: '',
+          gameVersionTypeId: '',
+          index: '',
+          pageSize: '',
+        },
+      })
+      .reply(200, { data: [] })
     const client = new CurseforgeV1Client('key', { fetch })
     const result = await client.getModFiles({ modId: 310806 })
     expect(result).toStrictEqual({ data: [] })
   })
   test('#searchMods', async () => {
     const mockPool = agent.get('https://api.curseforge.com')
-    mockPool.intercept({
-      path: '/v1/mods/search',
-      headers: { 'x-api-key': 'key' },
-      query: {
-        gameId: '432',
-        sortField: '2',
-        sortOrder: 'desc',
-        index: '0',
-        pageSize: '25',
-      },
-    }).reply(200, { data: [] })
+    mockPool
+      .intercept({
+        path: '/v1/mods/search',
+        headers: { 'x-api-key': 'key' },
+        query: {
+          gameId: '432',
+          sortField: '2',
+          sortOrder: 'desc',
+          index: '0',
+          pageSize: '25',
+        },
+      })
+      .reply(200, { data: [] })
     const client = new CurseforgeV1Client('key', { fetch })
     const result = await client.searchMods({})
     expect(result).toStrictEqual({ data: [] })

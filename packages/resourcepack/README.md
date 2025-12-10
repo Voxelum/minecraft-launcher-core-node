@@ -79,7 +79,7 @@ if (resource) {
 You can use this to load Minecraft block model and texture just like Minecraft.
 
 ```ts
-import { ResourcePack, Resource, BlockModel,ResourceManager, ModelLoader } from "@xmcl/resourcepack"; 
+import { ResourcePack, Resource, BlockModel,ResourceManager, ModelLoader } from "@xmcl/resourcepack";
 import { openFileSystem } from "@xmcl/system";
 
 const man = new ResourceManager();
@@ -104,8 +104,8 @@ const resolvedModel: BlockModel.Resolved = models["block/grass"];
 You can use this module in nodejs/electron:
 
 ```ts
-import { openFileSystem } from "@xmcl/system"; 
-import { ResourcePack, Resource, ResourceManager, ResourceLocation  } from "@xmcl/resourcepack"; 
+import { openFileSystem } from "@xmcl/system";
+import { ResourcePack, Resource, ResourceManager, ResourceLocation  } from "@xmcl/resourcepack";
 const manager: ResourceManager = new ResourceManager();
 
 // add a resource source which load resource from file

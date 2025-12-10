@@ -12,7 +12,16 @@ import format, { CubeUVMapping, ModelTemplate } from './player-model'
 function convertLegacySkin(context: CanvasRenderingContext2D, width: number) {
   const scale = width / 64.0
 
-  function copySkin(ctx: CanvasRenderingContext2D, sX: number, sY: number, w: number, h: number, dX: number, dY: number, flipHorizontal: boolean) {
+  function copySkin(
+    ctx: CanvasRenderingContext2D,
+    sX: number,
+    sY: number,
+    w: number,
+    h: number,
+    dX: number,
+    dY: number,
+    flipHorizontal: boolean,
+  ) {
     sX *= scale
     sY *= scale
     w *= scale
@@ -23,9 +32,9 @@ function convertLegacySkin(context: CanvasRenderingContext2D, width: number) {
     const imgData = ctx.getImageData(sX, sY, w, h)
     if (flipHorizontal) {
       for (let y = 0; y < h; y++) {
-        for (let x = 0; x < (w / 2); x++) {
+        for (let x = 0; x < w / 2; x++) {
           const index = (x + y * w) * 4
-          const index2 = ((w - x - 1) + y * w) * 4
+          const index2 = (w - x - 1 + y * w) * 4
           const pA1 = imgData.data[index]
           const pA2 = imgData.data[index + 1]
           const pA3 = imgData.data[index + 2]
@@ -74,20 +83,15 @@ function mapCubeUV(mesh: Mesh, src: CubeUVMapping) {
   const tileUvH = 1 / texture.image.height
   const uvs: Vector2[] = []
   /**
-     * Set the box mesh UV to the Minecraft skin texture
-     */
+   * Set the box mesh UV to the Minecraft skin texture
+   */
   function mapUV(x1: number, y1: number, x2: number, y2: number) {
     x1 *= tileUvW
     x2 *= tileUvW
-    y1 = 1 - (y1 * tileUvH)
-    y2 = 1 - (y2 * tileUvH)
+    y1 = 1 - y1 * tileUvH
+    y2 = 1 - y2 * tileUvH
 
-    uvs.push(
-      new Vector2(x1, y1),
-      new Vector2(x2, y1),
-      new Vector2(x1, y2),
-      new Vector2(x2, y2),
-    )
+    uvs.push(new Vector2(x1, y1), new Vector2(x2, y1), new Vector2(x1, y2), new Vector2(x2, y2))
   }
 
   const faces = ['left', 'right', 'top', 'bottom', 'front', 'back'] as const
@@ -108,7 +112,12 @@ function mapCubeUV(mesh: Mesh, src: CubeUVMapping) {
 export class PlayerObject3D extends Object3D {
   private _slim = false
 
-  constructor(skin: MeshBasicMaterial, cape: MeshBasicMaterial, transparent: MeshBasicMaterial, slim: boolean) {
+  constructor(
+    skin: MeshBasicMaterial,
+    cape: MeshBasicMaterial,
+    transparent: MeshBasicMaterial,
+    slim: boolean,
+  ) {
     super()
     this._slim = slim
     buildPlayerModel(this, skin, cape, transparent, slim)
@@ -126,17 +135,29 @@ export class PlayerObject3D extends Object3D {
 
       leftArm.geometry = new BoxGeometry(template.leftArm.w, template.leftArm.h, template.leftArm.d)
       mapCubeUV(leftArm, template.leftArm)
-      rightArm.geometry = new BoxGeometry(template.rightArm.w, template.rightArm.h, template.rightArm.d)
+      rightArm.geometry = new BoxGeometry(
+        template.rightArm.w,
+        template.rightArm.h,
+        template.rightArm.d,
+      )
       mapCubeUV(rightArm, template.rightArm)
 
       const leftArmLayer = this.getObjectByName('leftArmLayer')! as Mesh
       const rightArmLayer = this.getObjectByName('rightArmLayer')! as Mesh
       if (leftArmLayer) {
-        leftArmLayer.geometry = new BoxGeometry(template.leftArm.layer.w, template.leftArm.layer.h, template.leftArm.layer.d)
+        leftArmLayer.geometry = new BoxGeometry(
+          template.leftArm.layer.w,
+          template.leftArm.layer.h,
+          template.leftArm.layer.d,
+        )
         mapCubeUV(leftArmLayer, template.leftArm.layer)
       }
       if (rightArmLayer) {
-        rightArmLayer.geometry = new BoxGeometry(template.rightArm.layer.w, template.rightArm.layer.h, template.rightArm.layer.d)
+        rightArmLayer.geometry = new BoxGeometry(
+          template.rightArm.layer.w,
+          template.rightArm.layer.h,
+          template.rightArm.layer.d,
+        )
         mapCubeUV(rightArmLayer, template.rightArm.layer)
       }
     }
@@ -144,20 +165,34 @@ export class PlayerObject3D extends Object3D {
   }
 }
 
-function buildPlayerModel(root: Object3D, skin: MeshBasicMaterial, cape: MeshBasicMaterial, transparent: MeshBasicMaterial, slim: boolean): Object3D {
+function buildPlayerModel(
+  root: Object3D,
+  skin: MeshBasicMaterial,
+  cape: MeshBasicMaterial,
+  transparent: MeshBasicMaterial,
+  slim: boolean,
+): Object3D {
   const template = slim ? format.alex : format.steve
   const partsNames: Array<keyof ModelTemplate> = Object.keys(template) as any
 
   for (const partName of partsNames) {
     const model = template[partName]
 
-    const mesh = new Mesh(new BoxGeometry(model.w, model.h, model.d),
-      partName === 'cape' ? cape : skin)
+    const mesh = new Mesh(
+      new BoxGeometry(model.w, model.h, model.d),
+      partName === 'cape' ? cape : skin,
+    )
 
     mesh.name = partName
-    if (model.y) { mesh.position.y = model.y }
-    if (model.x) { mesh.position.x = model.x }
-    if (model.z) { mesh.position.z = model.z }
+    if (model.y) {
+      mesh.position.y = model.y
+    }
+    if (model.x) {
+      mesh.position.x = model.x
+    }
+    if (model.z) {
+      mesh.position.z = model.z
+    }
     if (partName === 'cape') {
       mesh.rotation.x = 25 * (Math.PI / 180)
     }
@@ -172,9 +207,15 @@ function buildPlayerModel(root: Object3D, skin: MeshBasicMaterial, cape: MeshBas
       const layer = model.layer
       const layerMesh = new Mesh(new BoxGeometry(layer.w, layer.h, layer.d), transparent)
       layerMesh.name = `${partName}Layer`
-      if (layer.y) { layerMesh.position.y = layer.y }
-      if (layer.x) { layerMesh.position.x = layer.x }
-      if (layer.z) { layerMesh.position.z = layer.z }
+      if (layer.y) {
+        layerMesh.position.y = layer.y
+      }
+      if (layer.x) {
+        layerMesh.position.x = layer.x
+      }
+      if (layer.z) {
+        layerMesh.position.z = layer.z
+      }
 
       mapCubeUV(layerMesh, layer)
 
@@ -194,8 +235,12 @@ function ensureImage(textureSource: TextureSource) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
-    img.onload = () => { resolve(img) }
-    img.onerror = (e, source, lineno, colno, error) => { reject(error) }
+    img.onload = () => {
+      resolve(img)
+    }
+    img.onerror = (e, source, lineno, colno, error) => {
+      reject(error)
+    }
     if (textureSource instanceof URL) {
       img.src = textureSource.toString()
     } else {
@@ -205,7 +250,9 @@ function ensureImage(textureSource: TextureSource) {
 }
 
 export class PlayerModel {
-  static create() { return new PlayerModel() }
+  static create() {
+    return new PlayerModel()
+  }
 
   readonly playerObject3d: PlayerObject3D
   readonly materialPlayer: MeshBasicMaterial
@@ -246,13 +293,18 @@ export class PlayerModel {
     materialCape.visible = false
     this.materialCape = materialCape
 
-    this.playerObject3d = new PlayerObject3D(this.materialPlayer, this.materialCape, this.materialTransparent, false)
+    this.playerObject3d = new PlayerObject3D(
+      this.materialPlayer,
+      this.materialCape,
+      this.materialTransparent,
+      false,
+    )
   }
 
   /**
-     * @param skin The skin texture source. Should be url string, URL object, or a Image HTML element
-     * @param isSlim Is this skin slim
-     */
+   * @param skin The skin texture source. Should be url string, URL object, or a Image HTML element
+   * @param isSlim Is this skin slim
+   */
   async setSkin(skin: TextureSource, isSlim = false) {
     this.playerObject3d.slim = isSlim
     const texture = this.texturePlayer

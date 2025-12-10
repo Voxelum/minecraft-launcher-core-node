@@ -58,401 +58,408 @@ import * as bits from './bits'
 import { assert } from './utils'
 
 export class MethodWriter extends MethodVisitor {
-
   /**
-     * Frame has exactly the same locals as the previous stack map frame and
-     * number of stack items is zero.
-     */
+   * Frame has exactly the same locals as the previous stack map frame and
+   * number of stack items is zero.
+   */
   static SAME_FRAME = 0
 
   /**
-     * Frame has exactly the same locals as the previous stack map frame and
-     * number of stack items is 1
-     */
+   * Frame has exactly the same locals as the previous stack map frame and
+   * number of stack items is 1
+   */
   static SAME_LOCALS_1_STACK_ITEM_FRAME = 64
 
   /**
-     * Reserved for future use
-     */
+   * Reserved for future use
+   */
   static RESERVED = 128
 
   /**
-     * Frame has exactly the same locals as the previous stack map frame and
-     * number of stack items is 1. Offset is bigger then 63;
-     */
+   * Frame has exactly the same locals as the previous stack map frame and
+   * number of stack items is 1. Offset is bigger then 63;
+   */
   static SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED = 247
 
   /**
-     * Frame where current locals are the same as the locals in the previous
-     * frame, except that the k last locals are absent. The value of k is given
-     * by the formula 251-frame_type.
-     */
+   * Frame where current locals are the same as the locals in the previous
+   * frame, except that the k last locals are absent. The value of k is given
+   * by the formula 251-frame_type.
+   */
   static CHOP_FRAME = 248
 
   /**
-     * Frame has exactly the same locals as the previous stack map frame and
-     * number of stack items is zero. Offset is bigger then 63;
-     */
+   * Frame has exactly the same locals as the previous stack map frame and
+   * number of stack items is zero. Offset is bigger then 63;
+   */
   static SAME_FRAME_EXTENDED = 251
 
   /**
-     * Frame where current locals are the same as the locals in the previous
-     * frame, except that k additional locals are defined. The value of k is
-     * given by the formula frame_type-251.
-     */
+   * Frame where current locals are the same as the locals in the previous
+   * frame, except that k additional locals are defined. The value of k is
+   * given by the formula frame_type-251.
+   */
   static APPEND_FRAME = 252
 
   /**
-     * Full frame
-     */
+   * Full frame
+   */
   static FULL_FRAME = 255
 
   /**
-     * Indicates that the stack map frames must be recomputed from scratch. In
-     * this case the maximum stack size and number of local variables is also
-     * recomputed from scratch.
-     *
-     * @see #compute
-     */
+   * Indicates that the stack map frames must be recomputed from scratch. In
+   * this case the maximum stack size and number of local variables is also
+   * recomputed from scratch.
+   *
+   * @see #compute
+   */
   static FRAMES = 0
 
   /**
-     * Indicates that the stack map frames of type F_INSERT must be computed.
-     * The other frames are not (re)computed. They should all be of type F_NEW
-     * and should be sufficient to compute the content of the F_INSERT frames,
-     * together with the bytecode instructions between a F_NEW and a F_INSERT
-     * frame - and without any knowledge of the type hierarchy (by definition of
-     * F_INSERT).
-     *
-     * @see #compute
-     */
+   * Indicates that the stack map frames of type F_INSERT must be computed.
+   * The other frames are not (re)computed. They should all be of type F_NEW
+   * and should be sufficient to compute the content of the F_INSERT frames,
+   * together with the bytecode instructions between a F_NEW and a F_INSERT
+   * frame - and without any knowledge of the type hierarchy (by definition of
+   * F_INSERT).
+   *
+   * @see #compute
+   */
   static INSERTED_FRAMES = 1
 
   /**
-     * Indicates that the maximum stack size and number of local variables must
-     * be automatically computed.
-     *
-     * @see #compute
-     */
+   * Indicates that the maximum stack size and number of local variables must
+   * be automatically computed.
+   *
+   * @see #compute
+   */
   static MAXS = 2
 
   /**
-     * Indicates that nothing must be automatically computed.
-     *
-     * @see #compute
-     */
+   * Indicates that nothing must be automatically computed.
+   *
+   * @see #compute
+   */
   static NOTHING = 3
 
   /**
-     * The class writer to which this method must be added.
-     */
+   * The class writer to which this method must be added.
+   */
   cw: ClassWriter
 
   /**
-     * Access flags of this method.
-     */
+   * Access flags of this method.
+   */
   private access: number
 
   /**
-     * The index of the constant pool item that contains the name of this
-     * method.
-     */
+   * The index of the constant pool item that contains the name of this
+   * method.
+   */
   private name: number
 
   /**
-     * The index of the constant pool item that contains the descriptor of this
-     * method.
-     */
+   * The index of the constant pool item that contains the descriptor of this
+   * method.
+   */
   private desc: number
 
   /**
-     * The descriptor of this method.
-     */
+   * The descriptor of this method.
+   */
   private descriptor: string
 
   /**
-     * The signature of this method.
-     */
+   * The signature of this method.
+   */
   signature: string | null = null
 
   /**
-     * If not zero, indicates that the code of this method must be copied from
-     * the ClassReader associated to this writer in <code>cw.cr</code>. More
-     * precisely, this field gives the index of the first byte to copied from
-     * <code>cw.cr.b</code>.
-     */
+   * If not zero, indicates that the code of this method must be copied from
+   * the ClassReader associated to this writer in <code>cw.cr</code>. More
+   * precisely, this field gives the index of the first byte to copied from
+   * <code>cw.cr.b</code>.
+   */
   classReaderOffset: number
 
   /**
-     * If not zero, indicates that the code of this method must be copied from
-     * the ClassReader associated to this writer in <code>cw.cr</code>. More
-     * precisely, this field gives the number of bytes to copied from
-     * <code>cw.cr.b</code>.
-     */
+   * If not zero, indicates that the code of this method must be copied from
+   * the ClassReader associated to this writer in <code>cw.cr</code>. More
+   * precisely, this field gives the number of bytes to copied from
+   * <code>cw.cr.b</code>.
+   */
   classReaderLength: number
 
   /**
-     * Number of exceptions that can be thrown by this method.
-     */
+   * Number of exceptions that can be thrown by this method.
+   */
   exceptionCount: number
 
   /**
-     * The exceptions that can be thrown by this method. More precisely, this
-     * array contains the indexes of the constant pool items that contain the
-     * internal names of these exception classes.
-     */
+   * The exceptions that can be thrown by this method. More precisely, this
+   * array contains the indexes of the constant pool items that contain the
+   * internal names of these exception classes.
+   */
   exceptions: number[] | null = null
 
   /**
-     * The annotation default attribute of this method. May be <tt>null</tt>.
-     */
+   * The annotation default attribute of this method. May be <tt>null</tt>.
+   */
   private annd: ByteVector | null = null
 
   /**
-     * The runtime visible annotations of this method. May be <tt>null</tt>.
-     */
+   * The runtime visible annotations of this method. May be <tt>null</tt>.
+   */
   private anns: AnnotationWriter | null = null
 
   /**
-     * The runtime invisible annotations of this method. May be <tt>null</tt>.
-     */
+   * The runtime invisible annotations of this method. May be <tt>null</tt>.
+   */
   private ianns: AnnotationWriter | null = null
 
   /**
-     * The runtime visible type annotations of this method. May be <tt>null</tt>
-     * .
-     */
+   * The runtime visible type annotations of this method. May be <tt>null</tt>
+   * .
+   */
   private tanns: AnnotationWriter | null = null
 
   /**
-     * The runtime invisible type annotations of this method. May be
-     * <tt>null</tt>.
-     */
+   * The runtime invisible type annotations of this method. May be
+   * <tt>null</tt>.
+   */
   private itanns: AnnotationWriter | null = null
 
   /**
-     * The runtime visible parameter annotations of this method. May be
-     * <tt>null</tt>.
-     */
+   * The runtime visible parameter annotations of this method. May be
+   * <tt>null</tt>.
+   */
   private panns: AnnotationWriter[] | null = null
 
   /**
-     * The runtime invisible parameter annotations of this method. May be
-     * <tt>null</tt>.
-     */
+   * The runtime invisible parameter annotations of this method. May be
+   * <tt>null</tt>.
+   */
   private ipanns: AnnotationWriter[] | null = null
 
   /**
-     * The number of synthetic parameters of this method.
-     */
+   * The number of synthetic parameters of this method.
+   */
   private synthetics: number
 
   /**
-     * The non standard attributes of the method.
-     */
+   * The non standard attributes of the method.
+   */
   private attrs: Attribute | null = null
 
   /**
-     * The bytecode of this method.
-     */
+   * The bytecode of this method.
+   */
   private code: ByteVector = new ByteVector()
 
   /**
-     * Maximum stack size of this method.
-     */
+   * Maximum stack size of this method.
+   */
   private maxStack: number
 
   /**
-     * Maximum number of local variables for this method.
-     */
+   * Maximum number of local variables for this method.
+   */
   private maxLocals: number
 
   /**
-     * Number of local variables in the current stack map frame.
-     */
+   * Number of local variables in the current stack map frame.
+   */
   private currentLocals: number
 
   /**
-     * Number of stack map frames in the StackMapTable attribute.
-     */
+   * Number of stack map frames in the StackMapTable attribute.
+   */
   private frameCount: number
 
   /**
-     * The StackMapTable attribute.
-     */
+   * The StackMapTable attribute.
+   */
   private stackMap: ByteVector | null = null
 
   /**
-     * The offset of the last frame that was written in the StackMapTable
-     * attribute.
-     */
+   * The offset of the last frame that was written in the StackMapTable
+   * attribute.
+   */
   private previousFrameOffset: number
 
   /**
-     * The last frame that was written in the StackMapTable attribute.
-     *
-     * @see #frame
-     */
+   * The last frame that was written in the StackMapTable attribute.
+   *
+   * @see #frame
+   */
   private previousFrame: number[] | null = null
 
   /**
-     * The current stack map frame. The first element contains the offset of the
-     * instruction to which the frame corresponds, the second element is the
-     * number of locals and the third one is the number of stack elements. The
-     * local variables start at index 3 and are followed by the operand stack
-     * values. In summary frame[0] = offset, frame[1] = nLocal, frame[2] =
-     * nStack, frame[3] = nLocal. All types are encoded as integers, with the
-     * same format as the one used in {@link Label}, but limited to BASE types.
-     */
+   * The current stack map frame. The first element contains the offset of the
+   * instruction to which the frame corresponds, the second element is the
+   * number of locals and the third one is the number of stack elements. The
+   * local variables start at index 3 and are followed by the operand stack
+   * values. In summary frame[0] = offset, frame[1] = nLocal, frame[2] =
+   * nStack, frame[3] = nLocal. All types are encoded as integers, with the
+   * same format as the one used in {@link Label}, but limited to BASE types.
+   */
   private frame: number[] | null = null
 
   /**
-     * Number of elements in the exception handler list.
-     */
+   * Number of elements in the exception handler list.
+   */
   private handlerCount: number
 
   /**
-     * The first element in the exception handler list.
-     */
+   * The first element in the exception handler list.
+   */
   private firstHandler: Handler | null = null
 
   /**
-     * The last element in the exception handler list.
-     */
+   * The last element in the exception handler list.
+   */
   private lastHandler: Handler | null = null
 
   /**
-     * Number of entries in the MethodParameters attribute.
-     */
+   * Number of entries in the MethodParameters attribute.
+   */
   private methodParametersCount: number
 
   /**
-     * The MethodParameters attribute.
-     */
+   * The MethodParameters attribute.
+   */
   private methodParameters: ByteVector | null = null
 
   /**
-     * Number of entries in the LocalVariableTable attribute.
-     */
+   * Number of entries in the LocalVariableTable attribute.
+   */
   private localVarCount: number
 
   /**
-     * The LocalVariableTable attribute.
-     */
+   * The LocalVariableTable attribute.
+   */
   private localVar: ByteVector | null = null
 
   /**
-     * Number of entries in the LocalVariableTypeTable attribute.
-     */
+   * Number of entries in the LocalVariableTypeTable attribute.
+   */
   private localVarTypeCount: number
 
   /**
-     * The LocalVariableTypeTable attribute.
-     */
+   * The LocalVariableTypeTable attribute.
+   */
   private localVarType: ByteVector | null = null
 
   /**
-     * Number of entries in the LineNumberTable attribute.
-     */
+   * Number of entries in the LineNumberTable attribute.
+   */
   private lineNumberCount: number
 
   /**
-     * The LineNumberTable attribute.
-     */
+   * The LineNumberTable attribute.
+   */
   private lineNumber: ByteVector | null = null
 
   /**
-     * The start offset of the last visited instruction.
-     */
+   * The start offset of the last visited instruction.
+   */
   private lastCodeOffset: number
 
   /**
-     * The runtime visible type annotations of the code. May be <tt>null</tt>.
-     */
+   * The runtime visible type annotations of the code. May be <tt>null</tt>.
+   */
   private ctanns: AnnotationWriter | null = null
 
   /**
-     * The runtime invisible type annotations of the code. May be <tt>null</tt>.
-     */
+   * The runtime invisible type annotations of the code. May be <tt>null</tt>.
+   */
   private ictanns: AnnotationWriter | null = null
 
   /**
-     * The non standard attributes of the method's code.
-     */
+   * The non standard attributes of the method's code.
+   */
   private cattrs: Attribute | null = null
 
   /**
-     * The number of subroutines in this method.
-     */
+   * The number of subroutines in this method.
+   */
   private subroutines: number
 
   /**
-     * Indicates what must be automatically computed.
-     *
-     * @see #FRAMES
-     * @see #INSERTED_FRAMES
-     * @see #MAXS
-     * @see #NOTHING
-     */
+   * Indicates what must be automatically computed.
+   *
+   * @see #FRAMES
+   * @see #INSERTED_FRAMES
+   * @see #MAXS
+   * @see #NOTHING
+   */
   private compute: number
 
   /**
-     * A list of labels. This list is the list of basic blocks in the method,
-     * i.e. a list of Label objects linked to each other by their
-     * {@link Label#successor} field, in the order they are visited by
-     * {@link MethodVisitor#visitLabel}, and starting with the first basic
-     * block.
-     */
+   * A list of labels. This list is the list of basic blocks in the method,
+   * i.e. a list of Label objects linked to each other by their
+   * {@link Label#successor} field, in the order they are visited by
+   * {@link MethodVisitor#visitLabel}, and starting with the first basic
+   * block.
+   */
   private labels: Label | null = null
 
   /**
-     * The previous basic block.
-     */
+   * The previous basic block.
+   */
   private previousBlock: Label | null = null
 
   /**
-     * The current basic block.
-     */
+   * The current basic block.
+   */
   private currentBlock: Label | null = null
 
   /**
-     * The (relative) stack size after the last visited instruction. This size
-     * is relative to the beginning of the current basic block, i.e., the true
-     * stack size after the last visited instruction is equal to the
-     * {@link Label#inputStackTop beginStackSize} of the current basic block
-     * plus <tt>stackSize</tt>.
-     */
+   * The (relative) stack size after the last visited instruction. This size
+   * is relative to the beginning of the current basic block, i.e., the true
+   * stack size after the last visited instruction is equal to the
+   * {@link Label#inputStackTop beginStackSize} of the current basic block
+   * plus <tt>stackSize</tt>.
+   */
   private stackSize: number
 
   /**
-     * The (relative) maximum stack size after the last visited instruction.
-     * This size is relative to the beginning of the current basic block, i.e.,
-     * the true maximum stack size after the last visited instruction is equal
-     * to the {@link Label#inputStackTop beginStackSize} of the current basic
-     * block plus <tt>stackSize</tt>.
-     */
+   * The (relative) maximum stack size after the last visited instruction.
+   * This size is relative to the beginning of the current basic block, i.e.,
+   * the true maximum stack size after the last visited instruction is equal
+   * to the {@link Label#inputStackTop beginStackSize} of the current basic
+   * block plus <tt>stackSize</tt>.
+   */
   private maxStackSize: number
 
   /**
-     * Constructs a new {@link MethodWriter}.
-     *
-     * @param cw
-     * the class writer in which the method must be added.
-     * @param access
-     * the method's access flags (see {@link Opcodes}).
-     * @param name
-     * the method's name.
-     * @param desc
-     * the method's descriptor (see {@link Type}).
-     * @param signature
-     * the method's signature. May be <tt>null</tt>.
-     * @param exceptions
-     * the internal names of the method's exceptions. May be
-     * <tt>null</tt>.
-     * @param compute
-     * Indicates what must be automatically computed (see #compute).
-     */
-  constructor(cw: ClassWriter, access: number, name: string, desc: string, signature: string, exceptions: string[], compute: number) {
+   * Constructs a new {@link MethodWriter}.
+   *
+   * @param cw
+   * the class writer in which the method must be added.
+   * @param access
+   * the method's access flags (see {@link Opcodes}).
+   * @param name
+   * the method's name.
+   * @param desc
+   * the method's descriptor (see {@link Type}).
+   * @param signature
+   * the method's signature. May be <tt>null</tt>.
+   * @param exceptions
+   * the internal names of the method's exceptions. May be
+   * <tt>null</tt>.
+   * @param compute
+   * Indicates what must be automatically computed (see #compute).
+   */
+  constructor(
+    cw: ClassWriter,
+    access: number,
+    name: string,
+    desc: string,
+    signature: string,
+    exceptions: string[],
+    compute: number,
+  ) {
     super(Opcodes.ASM5)
     this.access = 0
     this.name = 0
@@ -484,7 +491,7 @@ export class MethodWriter extends MethodVisitor {
     cw.lastMethod = this
     this.cw = cw
     this.access = access
-    if ((name === '<init>')) {
+    if (name === '<init>') {
       this.access |= ACC_CONSTRUCTOR
     }
     this.name = cw.newUTF8(name)
@@ -519,7 +526,7 @@ export class MethodWriter extends MethodVisitor {
       this.methodParameters = new ByteVector()
     }
     ++this.methodParametersCount
-    this.methodParameters.putShort((name == null) ? 0 : this.cw.newUTF8(name)).putShort(access)
+    this.methodParameters.putShort(name == null ? 0 : this.cw.newUTF8(name)).putShort(access)
   }
 
   public visitAnnotationDefault(): AnnotationVisitor | null {
@@ -547,7 +554,12 @@ export class MethodWriter extends MethodVisitor {
     return aw
   }
 
-  public visitTypeAnnotation(typeRef: number, typePath: TypePath, desc: string, visible: boolean): AnnotationVisitor | null {
+  public visitTypeAnnotation(
+    typeRef: number,
+    typePath: TypePath,
+    desc: string,
+    visible: boolean,
+  ): AnnotationVisitor | null {
     if (!ANNOTATIONS) {
       return null
     }
@@ -565,12 +577,16 @@ export class MethodWriter extends MethodVisitor {
     return aw
   }
 
-  public visitParameterAnnotation(parameter: number, desc: string, visible: boolean): AnnotationVisitor | null {
+  public visitParameterAnnotation(
+    parameter: number,
+    desc: string,
+    visible: boolean,
+  ): AnnotationVisitor | null {
     if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
-    if ((desc === 'Ljava/lang/Synthetic;')) {
+    if (desc === 'Ljava/lang/Synthetic;') {
       this.synthetics = Math.max(this.synthetics, parameter + 1)
       return new AnnotationWriter(this.cw, false, bv, null, 0)
     }
@@ -602,12 +618,17 @@ export class MethodWriter extends MethodVisitor {
     }
   }
 
-  public visitCode() {
-  }
+  public visitCode() {}
 
   public visitFrame(type?: any, nLocal?: any, local?: any, nStack?: any, stack?: any): any {
     assert(this.frame)
-    if (((typeof type === 'number') || type === null) && ((typeof nLocal === 'number') || nLocal === null) && ((local != null && local instanceof Array) || local === null) && ((typeof nStack === 'number') || nStack === null) && ((stack != null && stack instanceof Array) || stack === null)) {
+    if (
+      (typeof type === 'number' || type === null) &&
+      (typeof nLocal === 'number' || nLocal === null) &&
+      ((local != null && local instanceof Array) || local === null) &&
+      (typeof nStack === 'number' || nStack === null) &&
+      ((stack != null && stack instanceof Array) || stack === null)
+    ) {
       const __args = Array.prototype.slice.call(arguments)
       return <any>(() => {
         if (!FRAMES || this.compute === MethodWriter.FRAMES) {
@@ -616,7 +637,12 @@ export class MethodWriter extends MethodVisitor {
         if (this.compute === MethodWriter.INSERTED_FRAMES) {
           if (this.currentBlock && this.currentBlock.frame == null) {
             this.currentBlock.frame = new CurrentFrame(this.currentBlock)
-            this.currentBlock.frame.initInputFrame(this.cw, this.access, Type.getArgumentTypes(this.descriptor), nLocal)
+            this.currentBlock.frame.initInputFrame(
+              this.cw,
+              this.access,
+              Type.getArgumentTypes(this.descriptor),
+              nLocal,
+            )
             this.visitImplicitFirstFrame()
           } else {
             assert(this.currentBlock)
@@ -637,18 +663,22 @@ export class MethodWriter extends MethodVisitor {
             if (typeof local[i] === 'string') {
               this.frame[frameIndex++] = Frame.OBJECT_$LI$() | this.cw.addType(<string>local[i])
             } else if (typeof local[i] === 'number') {
-              this.frame[frameIndex++] = /* intValue */((<number>local[i]) | 0)
+              this.frame[frameIndex++] = /* intValue */ <number>local[i] | 0
             } else {
-              this.frame[frameIndex++] = Frame.UNINITIALIZED_$LI$() | this.cw.addUninitializedType('', (<Label>local[i]).position)
+              this.frame[frameIndex++] =
+                Frame.UNINITIALIZED_$LI$() |
+                this.cw.addUninitializedType('', (<Label>local[i]).position)
             }
           }
           for (let i = 0; i < nStack; ++i) {
             if (typeof stack[i] === 'string') {
               this.frame[frameIndex++] = Frame.OBJECT_$LI$() | this.cw.addType(<string>stack[i])
             } else if (typeof stack[i] === 'number') {
-              this.frame[frameIndex++] = /* intValue */((<number>stack[i]) | 0)
+              this.frame[frameIndex++] = /* intValue */ <number>stack[i] | 0
             } else {
-              this.frame[frameIndex++] = Frame.UNINITIALIZED_$LI$() | this.cw.addUninitializedType('', (<Label>stack[i]).position)
+              this.frame[frameIndex++] =
+                Frame.UNINITIALIZED_$LI$() |
+                this.cw.addUninitializedType('', (<Label>stack[i]).position)
             }
           }
           this.endFrame()
@@ -667,7 +697,7 @@ export class MethodWriter extends MethodVisitor {
               }
             }
           }
-          switch ((type)) {
+          switch (type) {
             case Opcodes.F_FULL:
               this.currentLocals = nLocal
               this.stackMap.putByte(MethodWriter.FULL_FRAME).putShort(delta).putShort(nLocal)
@@ -701,7 +731,9 @@ export class MethodWriter extends MethodVisitor {
               if (delta < 64) {
                 this.stackMap.putByte(MethodWriter.SAME_LOCALS_1_STACK_ITEM_FRAME + delta)
               } else {
-                this.stackMap.putByte(MethodWriter.SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED).putShort(delta)
+                this.stackMap
+                  .putByte(MethodWriter.SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED)
+                  .putShort(delta)
               }
               this.writeFrameType(stack[0])
               break
@@ -712,9 +744,17 @@ export class MethodWriter extends MethodVisitor {
         this.maxStack = Math.max(this.maxStack, nStack)
         this.maxLocals = Math.max(this.maxLocals, this.currentLocals)
       })()
-    } else if (((type != null && type instanceof Frame) || type === null) && nLocal === undefined && local === undefined && nStack === undefined && stack === undefined) {
-      return <any> this.visitFrame$Frame(type)
-    } else { throw new Error('invalid overload') }
+    } else if (
+      ((type != null && type instanceof Frame) || type === null) &&
+      nLocal === undefined &&
+      local === undefined &&
+      nStack === undefined &&
+      stack === undefined
+    ) {
+      return <any>this.visitFrame$Frame(type)
+    } else {
+      throw new Error('invalid overload')
+    }
   }
 
   public visitInsn(opcode: number) {
@@ -780,7 +820,12 @@ export class MethodWriter extends MethodVisitor {
     }
     if (this.compute !== MethodWriter.NOTHING) {
       let n: number
-      if (opcode === Opcodes.LLOAD || opcode === Opcodes.DLOAD || opcode === Opcodes.LSTORE || opcode === Opcodes.DSTORE) {
+      if (
+        opcode === Opcodes.LLOAD ||
+        opcode === Opcodes.DLOAD ||
+        opcode === Opcodes.LSTORE ||
+        opcode === Opcodes.DSTORE
+      ) {
         n = __var + 2
       } else {
         n = __var + 1
@@ -835,7 +880,7 @@ export class MethodWriter extends MethodVisitor {
       } else {
         let size: number
         const c: string = desc.charAt(0)
-        switch ((opcode)) {
+        switch (opcode) {
           case Opcodes.GETSTATIC:
             size = this.stackSize + (c === 'D' || c === 'J' ? 2 : 1)
             break
@@ -859,14 +904,23 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitMethodInsn(opcode?: any, owner?: any, name?: any, desc?: any, itf?: any): any {
-    if (((typeof opcode === 'number') || opcode === null) && ((typeof owner === 'string') || owner === null) && ((typeof name === 'string') || name === null) && ((typeof desc === 'string') || desc === null) && ((typeof itf === 'boolean') || itf === null)) {
+    if (
+      (typeof opcode === 'number' || opcode === null) &&
+      (typeof owner === 'string' || owner === null) &&
+      (typeof name === 'string' || name === null) &&
+      (typeof desc === 'string' || desc === null) &&
+      (typeof itf === 'boolean' || itf === null)
+    ) {
       const __args = Array.prototype.slice.call(arguments)
       return <any>(() => {
         this.lastCodeOffset = this.code.length
         const i: Item = this.cw.newMethodItem(owner, name, desc, itf)
         let argSize: number = i.intVal
         if (this.currentBlock != null) {
-          if (this.compute === MethodWriter.FRAMES || this.compute === MethodWriter.INSERTED_FRAMES) {
+          if (
+            this.compute === MethodWriter.FRAMES ||
+            this.compute === MethodWriter.INSERTED_FRAMES
+          ) {
             assert(this.currentBlock.frame)
             this.currentBlock.frame.execute(opcode, 0, this.cw, i)
           } else {
@@ -896,9 +950,24 @@ export class MethodWriter extends MethodVisitor {
           this.code.put12(opcode, i.index)
         }
       })()
-    } else if (((typeof opcode === 'number') || opcode === null) && ((typeof owner === 'string') || owner === null) && ((typeof name === 'string') || name === null) && ((typeof desc === 'string') || desc === null) && itf === undefined) {
-      return <any> this.visitMethodInsn$int$java_lang_String$java_lang_String$java_lang_String(opcode, owner, name, desc)
-    } else { throw new Error('invalid overload') }
+    } else if (
+      (typeof opcode === 'number' || opcode === null) &&
+      (typeof owner === 'string' || owner === null) &&
+      (typeof name === 'string' || name === null) &&
+      (typeof desc === 'string' || desc === null) &&
+      itf === undefined
+    ) {
+      return <any>(
+        this.visitMethodInsn$int$java_lang_String$java_lang_String$java_lang_String(
+          opcode,
+          owner,
+          name,
+          desc,
+        )
+      )
+    } else {
+      throw new Error('invalid overload')
+    }
   }
 
   public visitInvokeDynamicInsn(name: string, desc: string, bsm: Handle, ...bsmArgs: any[]) {
@@ -956,7 +1025,10 @@ export class MethodWriter extends MethodVisitor {
         }
       }
     }
-    if ((label.status & Label.RESOLVED) !== 0 && label.position - this.code.length < bits.SHORT_MIN) {
+    if (
+      (label.status & Label.RESOLVED) !== 0 &&
+      label.position - this.code.length < bits.SHORT_MIN
+    ) {
       if (opcode === Opcodes.GOTO) {
         this.code.putByte(200)
       } else if (opcode === Opcodes.JSR) {
@@ -988,14 +1060,15 @@ export class MethodWriter extends MethodVisitor {
   }
 
   public visitLabel(label: Label) {
-    this.cw.hasAsmInsns = this.cw.hasAsmInsns || label.resolve(this, this.code.length, this.code.data)
+    this.cw.hasAsmInsns =
+      this.cw.hasAsmInsns || label.resolve(this, this.code.length, this.code.data)
     if ((label.status & Label.DEBUG) !== 0) {
       return
     }
     if (this.compute === MethodWriter.FRAMES) {
       if (this.currentBlock != null) {
         if (label.position === this.currentBlock.position) {
-          this.currentBlock.status |= (label.status & Label.TARGET)
+          this.currentBlock.status |= label.status & Label.TARGET
           label.frame = this.currentBlock.frame
           return
         }
@@ -1007,7 +1080,7 @@ export class MethodWriter extends MethodVisitor {
       }
       if (this.previousBlock != null) {
         if (label.position === this.previousBlock.position) {
-          this.previousBlock.status |= (label.status & Label.TARGET)
+          this.previousBlock.status |= label.status & Label.TARGET
           label.frame = this.previousBlock.frame
           this.currentBlock = this.previousBlock
           return
@@ -1079,7 +1152,7 @@ export class MethodWriter extends MethodVisitor {
         this.maxLocals = n
       }
     }
-    if ((__var > 255) || (increment > 127) || (increment < -128)) {
+    if (__var > 255 || increment > 127 || increment < -128) {
       this.code.putByte(196).put12(Opcodes.IINC, __var).putShort(increment)
     } else {
       this.code.putByte(Opcodes.IINC).put11(__var, increment)
@@ -1090,7 +1163,7 @@ export class MethodWriter extends MethodVisitor {
     this.lastCodeOffset = this.code.length
     const source: number = this.code.length
     this.code.putByte(Opcodes.TABLESWITCH)
-    this.code.putByteArray(null, 0, (4 - this.code.length % 4) % 4)
+    this.code.putByteArray(null, 0, (4 - (this.code.length % 4)) % 4)
     dflt.put(this, this.code, source, true)
     this.code.putInt(min).putInt(max)
     for (let i = 0; i < labels.length; ++i) {
@@ -1103,7 +1176,7 @@ export class MethodWriter extends MethodVisitor {
     this.lastCodeOffset = this.code.length
     const source: number = this.code.length
     this.code.putByte(Opcodes.LOOKUPSWITCH)
-    this.code.putByteArray(null, 0, (4 - this.code.length % 4) % 4)
+    this.code.putByteArray(null, 0, (4 - (this.code.length % 4)) % 4)
     dflt.put(this, this.code, source, true)
     this.code.putInt(labels.length)
     for (let i = 0; i < labels.length; ++i) {
@@ -1149,7 +1222,12 @@ export class MethodWriter extends MethodVisitor {
     this.code.put12(Opcodes.MULTIANEWARRAY, i.index).putByte(dims)
   }
 
-  public visitInsnAnnotation(typeRef: number, typePath: TypePath, desc: string, visible: boolean): AnnotationVisitor | null {
+  public visitInsnAnnotation(
+    typeRef: number,
+    typePath: TypePath,
+    desc: string,
+    visible: boolean,
+  ): AnnotationVisitor | null {
     if (!ANNOTATIONS) {
       return null
     }
@@ -1184,7 +1262,12 @@ export class MethodWriter extends MethodVisitor {
     this.lastHandler = h
   }
 
-  public visitTryCatchAnnotation(typeRef: number, typePath: TypePath, desc: string, visible: boolean): AnnotationVisitor | null {
+  public visitTryCatchAnnotation(
+    typeRef: number,
+    typePath: TypePath,
+    desc: string,
+    visible: boolean,
+  ): AnnotationVisitor | null {
     if (!ANNOTATIONS) {
       return null
     }
@@ -1202,19 +1285,36 @@ export class MethodWriter extends MethodVisitor {
     return aw
   }
 
-  public visitLocalVariable(name: string, desc: string, signature: string, start: Label, end: Label, index: number) {
+  public visitLocalVariable(
+    name: string,
+    desc: string,
+    signature: string,
+    start: Label,
+    end: Label,
+    index: number,
+  ) {
     if (signature != null) {
       if (this.localVarType == null) {
         this.localVarType = new ByteVector()
       }
       ++this.localVarTypeCount
-      this.localVarType.putShort(start.position).putShort(end.position - start.position).putShort(this.cw.newUTF8(name)).putShort(this.cw.newUTF8(signature)).putShort(index)
+      this.localVarType
+        .putShort(start.position)
+        .putShort(end.position - start.position)
+        .putShort(this.cw.newUTF8(name))
+        .putShort(this.cw.newUTF8(signature))
+        .putShort(index)
     }
     if (this.localVar == null) {
       this.localVar = new ByteVector()
     }
     ++this.localVarCount
-    this.localVar.putShort(start.position).putShort(end.position - start.position).putShort(this.cw.newUTF8(name)).putShort(this.cw.newUTF8(desc)).putShort(index)
+    this.localVar
+      .putShort(start.position)
+      .putShort(end.position - start.position)
+      .putShort(this.cw.newUTF8(name))
+      .putShort(this.cw.newUTF8(desc))
+      .putShort(index)
     if (this.compute !== MethodWriter.NOTHING) {
       const c: string = desc.charAt(0)
       const n: number = index + (c === 'J' || c === 'D' ? 2 : 1)
@@ -1224,14 +1324,24 @@ export class MethodWriter extends MethodVisitor {
     }
   }
 
-  public visitLocalVariableAnnotation(typeRef: number, typePath: TypePath, start: Label[], end: Label[], index: number[], desc: string, visible: boolean): AnnotationVisitor | null {
+  public visitLocalVariableAnnotation(
+    typeRef: number,
+    typePath: TypePath,
+    start: Label[],
+    end: Label[],
+    index: number[],
+    desc: string,
+    visible: boolean,
+  ): AnnotationVisitor | null {
     if (!ANNOTATIONS) {
       return null
     }
     const bv: ByteVector = new ByteVector()
     bv.putByte(typeRef >>> 24).putShort(start.length)
     for (let i = 0; i < start.length; ++i) {
-      bv.putShort(start[i].position).putShort(end[i].position - start[i].position).putShort(index[i])
+      bv.putShort(start[i].position)
+        .putShort(end[i].position - start[i].position)
+        .putShort(index[i])
     }
     if (typePath == null) {
       bv.putByte(0)
@@ -1263,7 +1373,7 @@ export class MethodWriter extends MethodVisitor {
   public visitMaxs(maxStack: number, maxLocals: number) {
     if (FRAMES && this.compute === MethodWriter.FRAMES) {
       let handler: Handler | null = this.firstHandler
-      while ((handler != null)) {
+      while (handler != null) {
         assert(handler.start)
         assert(handler.handler)
         assert(handler.end)
@@ -1274,7 +1384,7 @@ export class MethodWriter extends MethodVisitor {
         const t: string = handler.desc == null ? 'java/lang/Throwable' : handler.desc
         const kind: number = Frame.OBJECT_$LI$() | this.cw.addType(t)
         h.status |= Label.TARGET
-        while ((l !== e)) {
+        while (l !== e) {
           const b: Edge = new Edge()
           b.info = kind
           b.successor = h
@@ -1291,7 +1401,7 @@ export class MethodWriter extends MethodVisitor {
       this.visitFrame(f)
       let max = 0
       let changed: Label | null = this.labels
-      while ((changed != null)) {
+      while (changed != null) {
         const l: Label = changed
         changed = changed.next
         l.next = null
@@ -1306,7 +1416,7 @@ export class MethodWriter extends MethodVisitor {
           max = blockMax
         }
         let e: Edge | null = l.successors
-        while ((e != null)) {
+        while (e != null) {
           const n: Label = e.successor!.getFirst()
           const change: boolean = f.merge(this.cw, n.frame!, e.info)
           if (change && n.next == null) {
@@ -1317,7 +1427,7 @@ export class MethodWriter extends MethodVisitor {
         }
       }
       let l: Label | null = this.labels
-      while ((l != null)) {
+      while (l != null) {
         f = l.frame
         if ((l.status & Label.STORE) !== 0) {
           this.visitFrame(f)
@@ -1331,7 +1441,7 @@ export class MethodWriter extends MethodVisitor {
             for (let i: number = start; i < end; ++i) {
               this.code.data[i] = Opcodes.NOP
             }
-            this.code.data[end] = (Opcodes.ATHROW | 0)
+            this.code.data[end] = Opcodes.ATHROW | 0
             const frameIndex: number = this.startFrame(start, 0, 1)
             assert(this.frame)
             this.frame[frameIndex] = Frame.OBJECT_$LI$() | this.cw.addType('java/lang/Throwable')
@@ -1343,18 +1453,18 @@ export class MethodWriter extends MethodVisitor {
       }
       handler = this.firstHandler
       this.handlerCount = 0
-      while ((handler != null)) {
+      while (handler != null) {
         this.handlerCount += 1
         handler = handler.next
       }
       this.maxStack = max
     } else if (this.compute === MethodWriter.MAXS) {
       let handler: Handler | null = this.firstHandler
-      while ((handler != null)) {
+      while (handler != null) {
         let l: Label | null = handler.start
         const h: Label | null = handler.handler
         const e: Label | null = handler.end
-        while ((l !== e)) {
+        while (l !== e) {
           const b: Edge = new Edge()
           b.info = Edge.EXCEPTION
           b.successor = h
@@ -1374,22 +1484,26 @@ export class MethodWriter extends MethodVisitor {
         assert(this.labels)
         this.labels.visitSubroutine(null, 1, this.subroutines)
         let l: Label | null = this.labels
-        while ((l != null)) {
+        while (l != null) {
           if ((l.status & Label.JSR) !== 0) {
             const subroutine: Label | null = l.successors.next!.successor
             assert(subroutine)
             if ((subroutine.status & Label.VISITED) === 0) {
               id += 1
-              subroutine.visitSubroutine(null, (Math.round(id / 32)) << 32 | (1 << (id % 32)), this.subroutines)
+              subroutine.visitSubroutine(
+                null,
+                (Math.round(id / 32) << 32) | (1 << (id % 32)),
+                this.subroutines,
+              )
             }
           }
           l = l.successor
         }
         l = this.labels
-        while ((l != null)) {
+        while (l != null) {
           if ((l.status & Label.JSR) !== 0) {
             let L: Label | null = this.labels
-            while ((L != null)) {
+            while (L != null) {
               L.status &= ~Label.VISITED2
               L = L.successor
             }
@@ -1401,7 +1515,7 @@ export class MethodWriter extends MethodVisitor {
       }
       let max = 0
       let stack: Label | null = this.labels
-      while ((stack != null)) {
+      while (stack != null) {
         let l: Label | null = stack
         stack = stack.next
         const start: number = l.inputStackTop
@@ -1413,7 +1527,7 @@ export class MethodWriter extends MethodVisitor {
         if ((l.status & Label.JSR) !== 0) {
           b = b.next
         }
-        while ((b != null)) {
+        while (b != null) {
           l = b.successor
           if (l && (l.status & Label.PUSHED) === 0) {
             l.inputStackTop = b.info === Edge.EXCEPTION ? 1 : start + b.info
@@ -1431,17 +1545,16 @@ export class MethodWriter extends MethodVisitor {
     }
   }
 
-  public visitEnd() {
-  }
+  public visitEnd() {}
 
   /**
-     * Adds a successor to the {@link #currentBlock currentBlock} block.
-     *
-     * @param info
-     * information about the control flow edge to be added.
-     * @param successor
-     * the successor block to be added to the current block.
-     */
+   * Adds a successor to the {@link #currentBlock currentBlock} block.
+   *
+   * @param info
+   * information about the control flow edge to be added.
+   * @param successor
+   * the successor block to be added to the current block.
+   */
   private addSuccessor(info: number, successor: Label) {
     const b: Edge = new Edge()
     b.info = info
@@ -1452,9 +1565,9 @@ export class MethodWriter extends MethodVisitor {
   }
 
   /**
-     * Ends the current basic block. This method must be used in the case where
-     * the current basic block does not have any successor.
-     */
+   * Ends the current basic block. This method must be used in the case where
+   * the current basic block does not have any successor.
+   */
   private noSuccessor() {
     if (this.compute === MethodWriter.FRAMES) {
       const l: Label = new Label()
@@ -1472,11 +1585,11 @@ export class MethodWriter extends MethodVisitor {
   }
 
   /**
-     * Visits a frame that has been computed from scratch.
-     *
-     * @param f
-     * the frame that must be visited.
-     */
+   * Visits a frame that has been computed from scratch.
+   *
+   * @param f
+   * the frame that must be visited.
+   */
   private visitFrame$Frame(f: Frame) {
     let i: number
     let t: number
@@ -1524,8 +1637,8 @@ export class MethodWriter extends MethodVisitor {
   }
 
   /**
-     * Visit the implicit first frame of this method.
-     */
+   * Visit the implicit first frame of this method.
+   */
   private visitImplicitFirstFrame() {
     assert(this.frame)
     let frameIndex: number = this.startFrame(0, this.descriptor.length + 1, 0)
@@ -1537,9 +1650,9 @@ export class MethodWriter extends MethodVisitor {
       }
     }
     let i = 1
-    loop: while ((true)) {
+    loop: while (true) {
       const j: number = i
-      switch ((this.descriptor.charAt(i++))) {
+      switch (this.descriptor.charAt(i++)) {
         case 'Z':
         case 'C':
         case 'B':
@@ -1557,22 +1670,24 @@ export class MethodWriter extends MethodVisitor {
           this.frame[frameIndex++] = 3
           break
         case '[':
-          while ((this.descriptor.charAt(i) === '[')) {
+          while (this.descriptor.charAt(i) === '[') {
             ++i
           }
           if (this.descriptor.charAt(i) === 'L') {
             ++i
-            while ((this.descriptor.charAt(i) !== ';')) {
+            while (this.descriptor.charAt(i) !== ';') {
               ++i
             }
           }
-          this.frame[frameIndex++] = Frame.OBJECT_$LI$() | this.cw.addType(this.descriptor.substring(j, ++i))
+          this.frame[frameIndex++] =
+            Frame.OBJECT_$LI$() | this.cw.addType(this.descriptor.substring(j, ++i))
           break
         case 'L':
-          while ((this.descriptor.charAt(i) !== ';')) {
+          while (this.descriptor.charAt(i) !== ';') {
             ++i
           }
-          this.frame[frameIndex++] = Frame.OBJECT_$LI$() | this.cw.addType(this.descriptor.substring(j + 1, i++))
+          this.frame[frameIndex++] =
+            Frame.OBJECT_$LI$() | this.cw.addType(this.descriptor.substring(j + 1, i++))
           break
         default:
           break loop
@@ -1583,16 +1698,16 @@ export class MethodWriter extends MethodVisitor {
   }
 
   /**
-     * Starts the visit of a stack map frame.
-     *
-     * @param offset
-     * the offset of the instruction to which the frame corresponds.
-     * @param nLocal
-     * the number of local variables in the frame.
-     * @param nStack
-     * the number of stack elements in the frame.
-     * @return the index of the next element to be written in this frame.
-     */
+   * Starts the visit of a stack map frame.
+   *
+   * @param offset
+   * the offset of the instruction to which the frame corresponds.
+   * @param nLocal
+   * the number of local variables in the frame.
+   * @param nStack
+   * the number of stack elements in the frame.
+   * @return the index of the next element to be written in this frame.
+   */
   private startFrame(offset: number, nLocal: number, nStack: number): number {
     const n: number = 3 + nLocal + nStack
     if (this.frame == null || this.frame.length < n) {
@@ -1605,9 +1720,9 @@ export class MethodWriter extends MethodVisitor {
   }
 
   /**
-     * Checks if the visit of the current frame {@link #frame} is finished, and
-     * if yes, write it in the StackMapTable attribute.
-     */
+   * Checks if the visit of the current frame {@link #frame} is finished, and
+   * if yes, write it in the StackMapTable attribute.
+   */
   private endFrame() {
     if (this.previousFrame != null) {
       if (this.stackMap == null) {
@@ -1621,9 +1736,9 @@ export class MethodWriter extends MethodVisitor {
   }
 
   /**
-     * Compress and writes the current frame {@link #frame} in the StackMapTable
-     * attribute.
-     */
+   * Compress and writes the current frame {@link #frame} in the StackMapTable
+   * attribute.
+   */
   private writeFrame() {
     assert(this.frame)
     assert(this.previousFrame)
@@ -1649,7 +1764,7 @@ export class MethodWriter extends MethodVisitor {
     }
     if (cstackSize === 0) {
       k = clocalsSize - localsSize
-      switch ((k)) {
+      switch (k) {
         case -3:
         case -2:
         case -1:
@@ -1666,7 +1781,10 @@ export class MethodWriter extends MethodVisitor {
           break
       }
     } else if (clocalsSize === localsSize && cstackSize === 1) {
-      type = delta < 63 ? MethodWriter.SAME_LOCALS_1_STACK_ITEM_FRAME : MethodWriter.SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED
+      type =
+        delta < 63
+          ? MethodWriter.SAME_LOCALS_1_STACK_ITEM_FRAME
+          : MethodWriter.SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED
     }
     if (type !== MethodWriter.FULL_FRAME) {
       let l = 3
@@ -1678,7 +1796,7 @@ export class MethodWriter extends MethodVisitor {
         l++
       }
     }
-    switch ((type)) {
+    switch (type) {
       case MethodWriter.SAME_FRAME:
         this.stackMap.putByte(delta)
         break
@@ -1709,16 +1827,16 @@ export class MethodWriter extends MethodVisitor {
   }
 
   /**
-     * Writes some types of the current frame {@link #frame} into the
-     * StackMapTableAttribute. This method converts types from the format used
-     * in {@link Label} to the format used in StackMapTable attributes. In
-     * particular, it converts type table indexes to constant pool indexes.
-     *
-     * @param start
-     * index of the first type in {@link #frame} to write.
-     * @param end
-     * index of last type in {@link #frame} to write (exclusive).
-     */
+   * Writes some types of the current frame {@link #frame} into the
+   * StackMapTableAttribute. This method converts types from the format used
+   * in {@link Label} to the format used in StackMapTable attributes. In
+   * particular, it converts type table indexes to constant pool indexes.
+   *
+   * @param start
+   * index of the first type in {@link #frame} to write.
+   * @param end
+   * index of last type in {@link #frame} to write (exclusive).
+   */
   private writeFrameTypes(start: number, end: number) {
     assert(this.frame)
     assert(this.stackMap)
@@ -1728,7 +1846,7 @@ export class MethodWriter extends MethodVisitor {
       let d: number = t & Frame.DIM
       if (d === 0) {
         const v: number = t & Frame.BASE_VALUE
-        switch ((t & Frame.BASE_KIND)) {
+        switch (t & Frame.BASE_KIND) {
           case Frame.OBJECT_$LI$():
             this.stackMap.putByte(7).putShort(this.cw.newClass(this.cw.typeTable[v].strVal1))
             break
@@ -1741,7 +1859,7 @@ export class MethodWriter extends MethodVisitor {
       } else {
         let sb = ''
         d >>= 28
-        while ((d-- > 0)) {
+        while (d-- > 0) {
           sb += '['
         }
         if ((t & Frame.BASE_KIND) === Frame.OBJECT_$LI$()) {
@@ -1749,7 +1867,7 @@ export class MethodWriter extends MethodVisitor {
           sb += this.cw.typeTable[t & Frame.BASE_VALUE].strVal1
           sb += ';'
         } else {
-          switch ((t & 15)) {
+          switch (t & 15) {
             case 1:
               sb += 'I'
               break
@@ -1785,17 +1903,17 @@ export class MethodWriter extends MethodVisitor {
     if (typeof type === 'string') {
       this.stackMap.putByte(7).putShort(this.cw.newClass(type))
     } else if (typeof type === 'number') {
-      this.stackMap.putByte(/* intValue */((type) | 0))
+      this.stackMap.putByte(/* intValue */ type | 0)
     } else {
       this.stackMap.putByte(8).putShort((<Label>type).position)
     }
   }
 
   /**
-     * Returns the size of the bytecode of this method.
-     *
-     * @return the size of the bytecode of this method.
-     */
+   * Returns the size of the bytecode of this method.
+   *
+   * @return the size of the bytecode of this method.
+   */
   getSize(): number {
     if (this.classReaderOffset !== 0) {
       return 6 + this.classReaderLength
@@ -1833,7 +1951,13 @@ export class MethodWriter extends MethodVisitor {
         size += 8 + this.ictanns.getSize()
       }
       if (this.cattrs != null) {
-        size += this.cattrs.getSize(this.cw, this.code.data, this.code.length, this.maxStack, this.maxLocals)
+        size += this.cattrs.getSize(
+          this.cw,
+          this.code.data,
+          this.code.length,
+          this.maxStack,
+          this.maxLocals,
+        )
       }
     }
     if (this.exceptionCount > 0) {
@@ -1841,7 +1965,10 @@ export class MethodWriter extends MethodVisitor {
       size += 8 + 2 * this.exceptionCount
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if (
+        (this.cw.version & 65535) < Opcodes.V1_5 ||
+        (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0
+      ) {
         this.cw.newUTF8('Synthetic')
         size += 6
       }
@@ -1900,16 +2027,23 @@ export class MethodWriter extends MethodVisitor {
   }
 
   /**
-     * Puts the bytecode of this method in the given byte vector.
-     *
-     * @param out
-     * the byte vector into which the bytecode of this method must be
-     * copied.
-     */
+   * Puts the bytecode of this method in the given byte vector.
+   *
+   * @param out
+   * the byte vector into which the bytecode of this method must be
+   * copied.
+   */
   put(out: ByteVector) {
     const FACTOR: number = ClassWriterConstant.TO_ACC_SYNTHETIC_$LI$()
-    const mask: number = ACC_CONSTRUCTOR | Opcodes.ACC_DEPRECATED | ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE | (((this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) / FACTOR | 0))
-    out.putShort(this.access & ~mask).putShort(this.name).putShort(this.desc)
+    const mask: number =
+      ACC_CONSTRUCTOR |
+      Opcodes.ACC_DEPRECATED |
+      ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE |
+      (((this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) / FACTOR) | 0)
+    out
+      .putShort(this.access & ~mask)
+      .putShort(this.name)
+      .putShort(this.desc)
     if (this.classReaderOffset !== 0) {
       out.putByteArray(this.cw.cr.buf, this.classReaderOffset, this.classReaderLength)
       return
@@ -1922,7 +2056,10 @@ export class MethodWriter extends MethodVisitor {
       ++attributeCount
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if (
+        (this.cw.version & 65535) < Opcodes.V1_5 ||
+        (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0
+      ) {
         ++attributeCount
       }
     }
@@ -1981,7 +2118,13 @@ export class MethodWriter extends MethodVisitor {
         size += 8 + this.ictanns.getSize()
       }
       if (this.cattrs != null) {
-        size += this.cattrs.getSize(this.cw, this.code.data, this.code.length, this.maxStack, this.maxLocals)
+        size += this.cattrs.getSize(
+          this.cw,
+          this.code.data,
+          this.code.length,
+          this.maxStack,
+          this.maxLocals,
+        )
       }
       out.putShort(this.cw.newUTF8('Code')).putInt(size)
       out.putShort(this.maxStack).putShort(this.maxLocals)
@@ -1989,8 +2132,12 @@ export class MethodWriter extends MethodVisitor {
       out.putShort(this.handlerCount)
       if (this.handlerCount > 0) {
         let h: Handler | null = this.firstHandler
-        while ((h != null)) {
-          out.putShort(h.start!.position).putShort(h.end!.position).putShort(h.handler!.position).putShort(h.type)
+        while (h != null) {
+          out
+            .putShort(h.start!.position)
+            .putShort(h.end!.position)
+            .putShort(h.handler!.position)
+            .putShort(h.type)
           h = h.next
         }
       }
@@ -2047,7 +2194,14 @@ export class MethodWriter extends MethodVisitor {
         this.ictanns.put(out)
       }
       if (this.cattrs != null) {
-        this.cattrs.put(this.cw, this.code.data, this.code.length, this.maxLocals, this.maxStack, out)
+        this.cattrs.put(
+          this.cw,
+          this.code.data,
+          this.code.length,
+          this.maxLocals,
+          this.maxStack,
+          out,
+        )
       }
     }
     if (this.exceptionCount > 0) {
@@ -2059,7 +2213,10 @@ export class MethodWriter extends MethodVisitor {
       }
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if (
+        (this.cw.version & 65535) < Opcodes.V1_5 ||
+        (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0
+      ) {
         out.putShort(this.cw.newUTF8('Synthetic')).putInt(0)
       }
     }
@@ -2111,49 +2268,49 @@ export class MethodWriter extends MethodVisitor {
 
 class Handler {
   /**
-     * Beginning of the exception handler's scope (inclusive).
-     */
+   * Beginning of the exception handler's scope (inclusive).
+   */
   start: Label | null = null
 
   /**
-     * End of the exception handler's scope (exclusive).
-     */
+   * End of the exception handler's scope (exclusive).
+   */
   end: Label | null = null
 
   /**
-     * Beginning of the exception handler's code.
-     */
+   * Beginning of the exception handler's code.
+   */
   handler: Label | null = null
 
   /**
-     * Internal name of the type of exceptions handled by this handler, or
-     * <tt>null</tt> to catch any exceptions.
-     */
+   * Internal name of the type of exceptions handled by this handler, or
+   * <tt>null</tt> to catch any exceptions.
+   */
   desc = ''
 
   /**
-     * Constant pool index of the internal name of the type of exceptions
-     * handled by this handler, or 0 to catch any exceptions.
-     */
+   * Constant pool index of the internal name of the type of exceptions
+   * handled by this handler, or 0 to catch any exceptions.
+   */
   type: number
 
   /**
-     * Next exception handler block info.
-     */
+   * Next exception handler block info.
+   */
   next: Handler | null = null
 
   /**
-     * Removes the range between start and end from the given exception
-     * handlers.
-     *
-     * @param h
-     * an exception handler list.
-     * @param start
-     * the start of the range to be removed.
-     * @param end
-     * the end of the range to be removed. Maybe null.
-     * @return the exception handler list with the start-end range removed.
-     */
+   * Removes the range between start and end from the given exception
+   * handlers.
+   *
+   * @param h
+   * an exception handler list.
+   * @param start
+   * the start of the range to be removed.
+   * @param end
+   * the end of the range to be removed. Maybe null.
+   * @return the exception handler list with the start-end range removed.
+   */
   static remove(h: Handler | null, start: Label, end: Label): Handler | null {
     if (h == null) {
       return null

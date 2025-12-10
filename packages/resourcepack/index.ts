@@ -24,13 +24,17 @@ export * from './format'
  *
  * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
  */
-export async function readPackMeta(resourcePack: string | Uint8Array | FileSystem): Promise<PackMeta.Pack> {
+export async function readPackMeta(
+  resourcePack: string | Uint8Array | FileSystem,
+): Promise<PackMeta.Pack> {
   const system = await resolveFileSystem(resourcePack)
   try {
-    if (!await system.existsFile('pack.mcmeta')) {
+    if (!(await system.existsFile('pack.mcmeta'))) {
       throw new Error('Illegal Resourcepack: Cannot find pack.mcmeta!')
     }
-    const metadata = JSON.parse((await system.readFile('pack.mcmeta', 'utf-8')).replace(/^\uFEFF/, ''))
+    const metadata = JSON.parse(
+      (await system.readFile('pack.mcmeta', 'utf-8')).replace(/^\uFEFF/, ''),
+    )
     if (!metadata.pack) {
       throw new Error("Illegal Resourcepack: pack.mcmeta doesn't contain the pack metadata!")
     }
@@ -44,7 +48,9 @@ export async function readPackMeta(resourcePack: string | Uint8Array | FileSyste
  * Read the resource pack icon png binary.
  * @param resourcePack The absolute path of the resource pack file, or a buffer, or a opened resource pack.
  */
-export async function readIcon(resourcePack: string | Uint8Array | FileSystem): Promise<Uint8Array> {
+export async function readIcon(
+  resourcePack: string | Uint8Array | FileSystem,
+): Promise<Uint8Array> {
   const system = await resolveFileSystem(resourcePack)
   try {
     return system.readFile('pack.png')

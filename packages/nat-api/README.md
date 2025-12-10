@@ -58,7 +58,6 @@ See type definition in typescript.
 - http://wikipedia.org/wiki/NAT_Port_Mapping_Protocol
 - http://tools.ietf.org/html/draft-cheshire-nat-pmp-03
 
-
 ## License
 
 MIT. Copyright (c) [Alex](https://github.com/alxhotel)

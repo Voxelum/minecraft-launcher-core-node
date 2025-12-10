@@ -23,7 +23,7 @@ class CustomClassVisitor extends ClassVisitor {
         super(Opcodes.ASM5);
     }
 
-    // visit the class 
+    // visit the class
     visit(version: number, access: number, name: string, signature: string, superName: string, interfaces: string[]): void {
     }
 

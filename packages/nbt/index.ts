@@ -7,30 +7,36 @@
 
 import { ByteBuffer } from '@xmcl/bytebuffer'
 import { readUTF8, writeUTF8 } from './utils'
-import { ungzip, inflate, gunzipSync, gzip, gzipSync, inflateSync, deflateSync, deflate } from './zlib'
+import {
+  ungzip,
+  inflate,
+  gunzipSync,
+  gzip,
+  gzipSync,
+  inflateSync,
+  deflateSync,
+  deflate,
+} from './zlib'
 
 type Constructor<T> = new (...args: any) => T
 
 export const kNBTPrototype = Symbol('NBTPrototype')
 export const kNBTConstructor = Symbol('NBTConstructor')
 
-export type TagType =
-  TagTypePrimitive |
-  typeof TagType.List |
-  typeof TagType.Compound
+export type TagType = TagTypePrimitive | typeof TagType.List | typeof TagType.Compound
 
 export type TagTypePrimitive =
-  typeof TagType.End |
-  typeof TagType.Byte |
-  typeof TagType.Short |
-  typeof TagType.Int |
-  typeof TagType.Long |
-  typeof TagType.Float |
-  typeof TagType.Double |
-  typeof TagType.ByteArray |
-  typeof TagType.String |
-  typeof TagType.IntArray |
-  typeof TagType.LongArray
+  | typeof TagType.End
+  | typeof TagType.Byte
+  | typeof TagType.Short
+  | typeof TagType.Int
+  | typeof TagType.Long
+  | typeof TagType.Float
+  | typeof TagType.Double
+  | typeof TagType.ByteArray
+  | typeof TagType.String
+  | typeof TagType.IntArray
+  | typeof TagType.LongArray
 
 /**
  * Ensure the plain object or prototype object has correctly setup the NBTPrototype.
@@ -73,8 +79,11 @@ export function TagType<T>(type: TagType | Constructor<T> | Schema) {
  * - If pass-in value is a constructor, it will try to take the NBTPrototype on the constructor to create object.
  */
 function constructObject(valueType: CompoundSchema | Constructor<any> | undefined): any {
-  if (!valueType) { return {} }
-  const prot = typeof valueType === 'object' ? createPrototypeObject(valueType) : getPrototypeOf(valueType)
+  if (!valueType) {
+    return {}
+  }
+  const prot =
+    typeof valueType === 'object' ? createPrototypeObject(valueType) : getPrototypeOf(valueType)
   if (prot) return prot[kNBTConstructor]()
   if (!prot) {
     // value is constructor but no tag decodated yet.
@@ -83,7 +92,10 @@ function constructObject(valueType: CompoundSchema | Constructor<any> | undefine
   }
 }
 
-function createPrototypeObject(schema: CompoundSchema, constructor?: Constructor<any>): NBTPrototype {
+function createPrototypeObject(
+  schema: CompoundSchema,
+  constructor?: Constructor<any>,
+): NBTPrototype {
   const proto: any = {
     ...schema,
   }
@@ -125,7 +137,10 @@ export function getPrototypeOf(object: object | ((...p: any[]) => any)): NBTProt
  * @param object A object or a class function
  * @param nbtPrototype The nbt prototype
  */
-export function setPrototypeOf(object: object | ((...p: any[]) => any), nbtPrototype: NBTPrototype) {
+export function setPrototypeOf(
+  object: object | ((...p: any[]) => any),
+  nbtPrototype: NBTPrototype,
+) {
   const target = typeof object === 'function' ? object.prototype : object
   Object.defineProperty(target, kNBTPrototype, { value: nbtPrototype })
 }
@@ -184,26 +199,65 @@ export interface TagCoder {
 }
 
 const coders: TagCoder[] = [
-  { write: (buf) => undefined, read(buf, v) { } }, // end
-  { write: (buf) => buf.readByte(), read(buf, v = 0) { buf.writeByte(v) } }, // byte
-  { write: (buf) => buf.readShort(), read(buf, v = 0) { buf.writeShort(v) } }, // short
-  { write: (buf) => buf.readInt(), read(buf, v = 0) { buf.writeInt(v) } }, // int
-  { write: (buf) => buf.readInt64(), read(buf, v = 0) { buf.writeInt64(v) } }, // long
-  { write: (buf) => buf.readFloat(), read(buf, v = 0) { buf.writeFloat(v) } }, // float
-  { write: (buf) => buf.readDouble(), read(buf, v = 0) { buf.writeDouble(v) } }, // double
-  { // byte array
+  { write: (buf) => undefined, read(buf, v) {} }, // end
+  {
+    write: (buf) => buf.readByte(),
+    read(buf, v = 0) {
+      buf.writeByte(v)
+    },
+  }, // byte
+  {
+    write: (buf) => buf.readShort(),
+    read(buf, v = 0) {
+      buf.writeShort(v)
+    },
+  }, // short
+  {
+    write: (buf) => buf.readInt(),
+    read(buf, v = 0) {
+      buf.writeInt(v)
+    },
+  }, // int
+  {
+    write: (buf) => buf.readInt64(),
+    read(buf, v = 0) {
+      buf.writeInt64(v)
+    },
+  }, // long
+  {
+    write: (buf) => buf.readFloat(),
+    read(buf, v = 0) {
+      buf.writeFloat(v)
+    },
+  }, // float
+  {
+    write: (buf) => buf.readDouble(),
+    read(buf, v = 0) {
+      buf.writeDouble(v)
+    },
+  }, // double
+  {
+    // byte array
     write(buf) {
       const arr = new Array(buf.readInt())
-      for (let i = 0; i < arr.length; i++) { arr[i] = buf.readByte() }
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = buf.readByte()
+      }
       return arr
     },
     read(buf, arr = []) {
       buf.writeInt(arr.length)
-      for (let i = 0; i < arr.length; i++) { buf.writeByte(arr[i]) }
+      for (let i = 0; i < arr.length; i++) {
+        buf.writeByte(arr[i])
+      }
     },
   },
-  { write: (buf, context) => readUTF8(buf, context), read: (buf, v = '', context) => writeUTF8(buf, v, context) }, // string
-  { // list
+  {
+    write: (buf, context) => readUTF8(buf, context),
+    read: (buf, v = '', context) => writeUTF8(buf, v, context),
+  }, // string
+  {
+    // list
     write(buf, context) {
       const listType = buf.readByte()
 
@@ -264,7 +318,8 @@ const coders: TagCoder[] = [
       }
     },
   },
-  { // tag compound
+  {
+    // tag compound
     write(buf, context) {
       assertCompoundSchema(context.schema)
 
@@ -272,7 +327,7 @@ const coders: TagCoder[] = [
       const nbtPrototype = ensurePrototype(object as any)
       const knowingType = !!context.schema
 
-      for (let tag = 0; (tag = buf.readByte()) !== TagType.End;) {
+      for (let tag = 0; (tag = buf.readByte()) !== TagType.End; ) {
         const reader = coders[tag]
 
         const key = readUTF8(buf, context)
@@ -283,7 +338,10 @@ const coders: TagCoder[] = [
         if (knowingType) {
           const valueType = nbtPrototype[key]
           // skip for undefined field or type not matched!
-          if (typeof valueType === 'undefined' || (typeof valueType === 'number' && valueType !== tag)) {
+          if (
+            typeof valueType === 'undefined' ||
+            (typeof valueType === 'number' && valueType !== tag)
+          ) {
             continue
           }
           childContext = context.fork(valueType)
@@ -311,7 +369,7 @@ const coders: TagCoder[] = [
           ? context.schema instanceof Function
             ? getPrototypeOf(context.schema)
             : context.schema
-          : getPrototypeOf(object)) || {} as CompoundSchema
+          : getPrototypeOf(object)) || ({} as CompoundSchema)
 
       for (const [key, value] of Object.entries(object)) {
         const valueType = schema[key]
@@ -345,27 +403,37 @@ const coders: TagCoder[] = [
       buf.writeByte(TagType.End)
     },
   },
-  { // int array
+  {
+    // int array
     write(buf) {
       const arr = new Array(buf.readInt())
-      for (let i = 0; i < arr.length; i++) { arr[i] = buf.readInt() }
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = buf.readInt()
+      }
       return arr
     },
     read(buf, v = []) {
       buf.writeInt(v.length)
-      for (let i = 0; i < v.length; i++) { buf.writeInt(v[i]) }
+      for (let i = 0; i < v.length; i++) {
+        buf.writeInt(v[i])
+      }
     },
   },
-  { // long array
+  {
+    // long array
     write(buf) {
       const len = buf.readInt()
       const arr: bigint[] = new Array(len)
-      for (let i = 0; i < len; i++) { arr[i] = buf.readInt64() }
+      for (let i = 0; i < len; i++) {
+        arr[i] = buf.readInt64()
+      }
       return arr
     },
     read(buf, v = []) {
       buf.writeInt(v.length)
-      for (let i = 0; i < v.length; i++) { buf.writeInt64(v[i]) }
+      for (let i = 0; i < v.length; i++) {
+        buf.writeInt64(v[i])
+      }
     },
   },
 ]
@@ -373,21 +441,21 @@ const coders: TagCoder[] = [
 export interface SerializationOption {
   compressed?: true | 'deflate' | 'gzip'
   /**
-     * IO override for serialization
-     */
+   * IO override for serialization
+   */
   io?: { [tagType: number]: TagCoder }
 
   /**
-     * Used for serialize function. Assign the filename for it.
-     */
+   * Used for serialize function. Assign the filename for it.
+   */
   filename?: string
 }
 
 export interface DeserializationOption<T> {
   compressed?: true | 'deflate' | 'gzip'
   /**
-     * IO override for serialization
-     */
+   * IO override for serialization
+   */
   io?: { [tagType: number]: TagCoder }
 
   type?: Constructor<T>
@@ -398,8 +466,16 @@ export interface DeserializationOption<T> {
  * @param object The json
  * @param compressed Should we compress it
  */
-export async function serialize(object: object, option: SerializationOption = {}): Promise<Uint8Array> {
-  const buff = writeRootTag(object, undefined, option.filename || '', Object.assign({}, coders, option.io))
+export async function serialize(
+  object: object,
+  option: SerializationOption = {},
+): Promise<Uint8Array> {
+  const buff = writeRootTag(
+    object,
+    undefined,
+    option.filename || '',
+    Object.assign({}, coders, option.io),
+  )
   return normalizeBuffer(buff, option.compressed)
 }
 
@@ -407,13 +483,18 @@ export async function serialize(object: object, option: SerializationOption = {}
  * Deserialize the nbt binary into json
  * @param fileData The nbt binary
  */
-export async function deserialize<T>(fileData: Uint8Array, option: DeserializationOption<T> = {}): Promise<T> {
+export async function deserialize<T>(
+  fileData: Uint8Array,
+  option: DeserializationOption<T> = {},
+): Promise<T> {
   const doUnzip = normalizeCompress(fileData, option.compressed)
-  const bb = ByteBuffer.wrap(doUnzip === 'none'
-    ? fileData
-    : doUnzip === 'gzip'
-      ? await ungzip(fileData)
-      : await inflate(fileData))
+  const bb = ByteBuffer.wrap(
+    doUnzip === 'none'
+      ? fileData
+      : doUnzip === 'gzip'
+        ? await ungzip(fileData)
+        : await inflate(fileData),
+  )
 
   return readRootTag(bb, Object.assign({}, coders, option.io), option.type)
 }
@@ -423,7 +504,12 @@ export async function deserialize<T>(fileData: Uint8Array, option: Deserializati
  * @param object The json
  */
 export function serializeSync(object: object, option: SerializationOption = {}): Uint8Array {
-  const buff = writeRootTag(object, undefined, option.filename || '', Object.assign({}, coders, option.io))
+  const buff = writeRootTag(
+    object,
+    undefined,
+    option.filename || '',
+    Object.assign({}, coders, option.io),
+  )
   return normalizeBufferSync(buff, option.compressed)
 }
 
@@ -434,16 +520,21 @@ export function serializeSync(object: object, option: SerializationOption = {}):
  */
 export function deserializeSync<T>(fileData: Uint8Array, option: DeserializationOption<T> = {}): T {
   const doUnzip = normalizeCompress(fileData, option.compressed)
-  const bb = ByteBuffer.wrap(doUnzip === 'none'
-    ? fileData
-    : doUnzip === 'gzip'
-      ? gunzipSync(fileData)
-      : inflateSync(fileData))
+  const bb = ByteBuffer.wrap(
+    doUnzip === 'none'
+      ? fileData
+      : doUnzip === 'gzip'
+        ? gunzipSync(fileData)
+        : inflateSync(fileData),
+  )
 
   return readRootTag(bb, Object.assign({}, coders, option.io), option.type)
 }
 
-function normalizeCompress(fileData: Uint8Array, compressed?: true | 'deflate' | 'gzip'): 'none' | 'gzip' | 'deflate' {
+function normalizeCompress(
+  fileData: Uint8Array,
+  compressed?: true | 'deflate' | 'gzip',
+): 'none' | 'gzip' | 'deflate' {
   let doUnzip: 'none' | 'gzip' | 'deflate'
   if (typeof compressed === 'undefined') {
     doUnzip = 'none'
@@ -456,27 +547,44 @@ function normalizeCompress(fileData: Uint8Array, compressed?: true | 'deflate' |
 }
 
 function normalizeBuffer(buff: Uint8Array, compressed?: true | 'deflate' | 'gzip') {
-  if (!compressed) { return buff }
-  if (compressed === 'deflate') { return deflate(buff) }
+  if (!compressed) {
+    return buff
+  }
+  if (compressed === 'deflate') {
+    return deflate(buff)
+  }
   return gzip(buff)
 }
 function normalizeBufferSync(buff: Uint8Array, compressed?: true | 'deflate' | 'gzip') {
-  if (!compressed) { return buff }
-  if (compressed === 'deflate') { return deflateSync(buff) }
+  if (!compressed) {
+    return buff
+  }
+  if (compressed === 'deflate') {
+    return deflateSync(buff)
+  }
   return gzipSync(buff)
 }
 
 function readRootTag(buffer: ByteBuffer, io: ArrayLike<TagCoder>, type?: Constructor<any>) {
   const rootType = buffer.readByte()
-  if (rootType === TagType.End) { throw new Error('NBTEnd') }
-  if (rootType !== TagType.Compound) { throw new Error('Root tag must be a named compound tag. ' + rootType) }
+  if (rootType === TagType.End) {
+    throw new Error('NBTEnd')
+  }
+  if (rootType !== TagType.Compound) {
+    throw new Error('Root tag must be a named compound tag. ' + rootType)
+  }
   const context = new ReadContext(type, TagType.Compound)
   const name = readUTF8(buffer, context) // I think this is the nameProperty of the file...
   const value = io[TagType.Compound].write(buffer, context)
   return value
 }
 
-function writeRootTag(value: any, type: Schema | undefined, filename: string, coders: TagCoder[]): Uint8Array {
+function writeRootTag(
+  value: any,
+  type: Schema | undefined,
+  filename: string,
+  coders: TagCoder[],
+): Uint8Array {
   const buffer = new ByteBuffer()
   buffer.writeByte(TagType.Compound)
   const context = new WriteContext(type, 10)
@@ -506,7 +614,10 @@ function assertTag(v: number): asserts v is TagType {
 export class ReadContext {
   public inspect: Schema | undefined
   #decoder: TextDecoder | undefined
-  constructor(public schema: Schema | undefined, public tagType: TagType) { }
+  constructor(
+    public schema: Schema | undefined,
+    public tagType: TagType,
+  ) {}
 
   get decoder() {
     if (!this.#decoder) {
@@ -516,15 +627,26 @@ export class ReadContext {
   }
 
   fork(schemaOrTagType: TagType | Schema) {
-    if (typeof schemaOrTagType === 'number') { return new ReadContext(undefined, schemaOrTagType) }
-    return new ReadContext(schemaOrTagType, typeof schemaOrTagType === 'number' ? schemaOrTagType : schemaOrTagType instanceof Array ? TagType.List : TagType.Compound)
+    if (typeof schemaOrTagType === 'number') {
+      return new ReadContext(undefined, schemaOrTagType)
+    }
+    return new ReadContext(
+      schemaOrTagType,
+      typeof schemaOrTagType === 'number'
+        ? schemaOrTagType
+        : schemaOrTagType instanceof Array
+          ? TagType.List
+          : TagType.Compound,
+    )
   }
 }
 
 export class WriteContext {
   #encoder: TextEncoder | undefined
-  constructor(readonly schema: Schema | undefined, readonly tagType: TagType) {
-  }
+  constructor(
+    readonly schema: Schema | undefined,
+    readonly tagType: TagType,
+  ) {}
 
   get encoder() {
     if (!this.#encoder) {
@@ -534,10 +656,16 @@ export class WriteContext {
   }
 
   fork(schemaOrTagType: TagType | Schema): WriteContext {
-    if (schemaOrTagType === TagType.Compound) { throw new Error('IllegalState') }
+    if (schemaOrTagType === TagType.Compound) {
+      throw new Error('IllegalState')
+    }
     return new WriteContext(
       typeof schemaOrTagType === 'number' ? undefined : schemaOrTagType,
-      typeof schemaOrTagType === 'number' ? schemaOrTagType : schemaOrTagType instanceof Array ? TagType.List : TagType.Compound,
+      typeof schemaOrTagType === 'number'
+        ? schemaOrTagType
+        : schemaOrTagType instanceof Array
+          ? TagType.List
+          : TagType.Compound,
     )
   }
 }

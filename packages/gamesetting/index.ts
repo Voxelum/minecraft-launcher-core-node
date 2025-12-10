@@ -25,7 +25,38 @@ export enum Difficulty {
   Hard = 3,
 }
 export type MipmapLevel = 0 | 1 | 2 | 3 | 4
-export type RenderDistance = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32
+export type RenderDistance =
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20
+  | 21
+  | 22
+  | 23
+  | 24
+  | 25
+  | 26
+  | 27
+  | 28
+  | 29
+  | 30
+  | 31
+  | 32
 export const RenderDistances = Object.freeze({ Tiny: 2, Short: 4, Normal: 8, Far: 16, Extreme: 32 })
 export const Graphics = Object.freeze({ Fast: false, Fancy: true })
 export type Graphic = boolean
@@ -283,59 +314,60 @@ export function getDefaultFrame(): FullFrame {
 }
 
 export type ModelPart =
-  'cape' |
-  'jacket' |
-  'left_sleeve' |
-  'right_sleeve' |
-  'left_pants_leg' |
-  'right_pants_leg' |
-  'hat'
+  | 'cape'
+  | 'jacket'
+  | 'left_sleeve'
+  | 'right_sleeve'
+  | 'left_pants_leg'
+  | 'right_pants_leg'
+  | 'hat'
 
 export type SoundCategories =
-  'master' |
-  'music' |
-  'record' |
-  'weather' |
-  'block' |
-  'hostile' |
-  'neutral' |
-  'player' |
-  'ambient' |
-  'voice'
+  | 'master'
+  | 'music'
+  | 'record'
+  | 'weather'
+  | 'block'
+  | 'hostile'
+  | 'neutral'
+  | 'player'
+  | 'ambient'
+  | 'voice'
 
-export type HotKeys = 'attack' |
-  'use' |
-  'forward' |
-  'left' |
-  'back' |
-  'right' |
-  'jump' |
-  'sneak' |
-  'sprint' |
-  'drop' |
-  'inventory' |
-  'chat' |
-  'playerlist' |
-  'pickItem' |
-  'command' |
-  'screenshot' |
-  'togglePerspective' |
-  'smoothCamera' |
-  'fullscreen' |
-  'spectatorOutlines' |
-  'swapHands' |
-  'saveToolbarActivator' |
-  'loadToolbarActivator' |
-  'advancements' |
-  'hotbar.1' |
-  'hotbar.2' |
-  'hotbar.3' |
-  'hotbar.4' |
-  'hotbar.5' |
-  'hotbar.6' |
-  'hotbar.7' |
-  'hotbar.8' |
-  'hotbar.9'
+export type HotKeys =
+  | 'attack'
+  | 'use'
+  | 'forward'
+  | 'left'
+  | 'back'
+  | 'right'
+  | 'jump'
+  | 'sneak'
+  | 'sprint'
+  | 'drop'
+  | 'inventory'
+  | 'chat'
+  | 'playerlist'
+  | 'pickItem'
+  | 'command'
+  | 'screenshot'
+  | 'togglePerspective'
+  | 'smoothCamera'
+  | 'fullscreen'
+  | 'spectatorOutlines'
+  | 'swapHands'
+  | 'saveToolbarActivator'
+  | 'loadToolbarActivator'
+  | 'advancements'
+  | 'hotbar.1'
+  | 'hotbar.2'
+  | 'hotbar.3'
+  | 'hotbar.4'
+  | 'hotbar.5'
+  | 'hotbar.6'
+  | 'hotbar.7'
+  | 'hotbar.8'
+  | 'hotbar.9'
 
 /**
  * Parse raw game setting options.txt content
@@ -352,7 +384,7 @@ export function parse(str: string, strict?: boolean): GameSetting | Frame {
     return strict ? getDefaultFrame() : {}
   }
   const setting = lines
-    .map(l => {
+    .map((l) => {
       const i = l.indexOf(':')
       if (i !== -1) {
         return [l.slice(0, i), l.slice(i + 1)]
@@ -403,7 +435,9 @@ export function parse(str: string, strict?: boolean): GameSetting | Frame {
       return { [key]: newValue }
     })
     .reduce((prev, current) => Object.assign(prev, current), {})
-  if (!strict) { return setting as Frame }
+  if (!strict) {
+    return setting as Frame
+  }
   const source: any = getDefaultFrame()
   const target: any = {}
   Object.keys(source).forEach((key) => {
@@ -420,7 +454,11 @@ export function parse(str: string, strict?: boolean): GameSetting | Frame {
  * @param original
  * @param eol The end of line character, default is `\n`
  */
-export function stringify(setting: GameSetting | Frame | any, original?: string, eol = '\n'): string {
+export function stringify(
+  setting: GameSetting | Frame | any,
+  original?: string,
+  eol = '\n',
+): string {
   let model: any
   if (original) {
     model = parse(original) as any
@@ -429,14 +467,19 @@ export function stringify(setting: GameSetting | Frame | any, original?: string,
         model[key] = setting[key]
       }
     }
-  } else { model = setting }
+  } else {
+    model = setting
+  }
   return Object.keys(model)
     .filter((key) => key !== undefined && key !== 'undefined')
     .map((key) => {
       const val = model[key]
-      if (typeof val === 'undefined') { return '' }
+      if (typeof val === 'undefined') {
+        return ''
+      }
       return typeof val !== 'string' ? `${key}:${JSON.stringify(val)}` : `${key}:${val}`
-    }).join(eol)
+    })
+    .join(eol)
 }
 
 export type GameSetting = ReturnType<typeof getDefaultFrame>

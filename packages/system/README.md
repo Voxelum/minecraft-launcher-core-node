@@ -23,5 +23,3 @@ let zipPath = "/path/to/file.zip"
 const fs = await openFileSystem(zipPath);
 fs.readFile("a.txt"); // read a.txt in the file.zip!
 ```
-
-

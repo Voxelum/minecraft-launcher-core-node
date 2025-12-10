@@ -38,15 +38,17 @@ export type ParseResourceResult = {
 }
 
 export class ResourceParser {
-  constructor(private parsers = [
-    fabricModParser,
-    quiltModParser,
-    liteloaderModParser,
-    forgeModParser,
-    neoforgeModParser,
-    shaderPackParser,
-    resourcePackParser,
-  ]) { }
+  constructor(
+    private parsers = [
+      fabricModParser,
+      quiltModParser,
+      liteloaderModParser,
+      forgeModParser,
+      neoforgeModParser,
+      shaderPackParser,
+      resourcePackParser,
+    ],
+  ) {}
 
   async parse(args: ParseResourceArgs): Promise<ParseResourceResult> {
     const inspectExt = args.fileType === 'zip' ? '.zip' : undefined
@@ -55,19 +57,19 @@ export class ResourceParser {
     let parsers: IResourceParser<any>[]
     if (args.domain === ResourceDomain.Unclassified) {
       if (ext) {
-        parsers = this.parsers.filter(r => r.ext === ext)
+        parsers = this.parsers.filter((r) => r.ext === ext)
         if (parsers.length === 0 && inspectExt) {
-          parsers.push(...this.parsers.filter(r => r.ext === inspectExt), forgeModParser)
+          parsers.push(...this.parsers.filter((r) => r.ext === inspectExt), forgeModParser)
         }
       } else {
         if (inspectExt) {
-          parsers = this.parsers.filter(r => r.ext === inspectExt).concat(forgeModParser)
+          parsers = this.parsers.filter((r) => r.ext === inspectExt).concat(forgeModParser)
         } else {
           parsers = [...this.parsers]
         }
       }
     } else {
-      parsers = this.parsers.filter(r => r.domain === args.domain)
+      parsers = this.parsers.filter((r) => r.domain === args.domain)
     }
 
     const icons: Uint8Array[] = []

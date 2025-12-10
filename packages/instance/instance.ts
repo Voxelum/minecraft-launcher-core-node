@@ -245,7 +245,6 @@ export interface Instance extends InstanceSchema {
   path: string
 }
 
-
 /**
  * Options for creating a new instance
  */

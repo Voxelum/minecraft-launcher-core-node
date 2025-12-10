@@ -16,16 +16,20 @@ export abstract class FileSystem {
   abstract readFile(name: string, encoding?: 'utf-8' | 'base64'): Promise<Uint8Array | string>
 
   /**
-     * Get the url for a file entry. If the system does not support get url. This should return an empty string.
-     */
-  getUrl(name: string): string { return '' }
+   * Get the url for a file entry. If the system does not support get url. This should return an empty string.
+   */
+  getUrl(name: string): string {
+    return ''
+  }
 
   abstract listFiles(name: string): Promise<string[]>
 
   abstract cd(name: string): void
 
-  isClosed(): boolean { return false }
-  close(): void { }
+  isClosed(): boolean {
+    return false
+  }
+  close(): void {}
 
   // extension methods
 

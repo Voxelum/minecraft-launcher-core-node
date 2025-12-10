@@ -1,133 +1,52 @@
 /* eslint-disable n/no-unsupported-features/node-builtins */
 import { LibraryInfo, MinecraftFolder, MinecraftLocation } from '@xmcl/core'
 import {
+  download,
   DownloadBaseOptions,
   downloadMultiple,
-  getDownloadBaseOptions
+  getDownloadBaseOptions,
 } from '@xmcl/file-transfer'
+
 import { writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
-import { Dispatcher } from 'undici'
 import { diagnoseFile } from './diagnose'
-import { LabyModManifest } from './labymod.browser'
-import { onDownloadMultiple, onState, Tracker, WithDownload } from './tracker'
+import {
+  getLabyModAddon,
+  LabyModAddon,
+  LabyModAddonIndex,
+  LabyModManifest,
+} from './labymod.browser'
+import { onDownloadMultiple, onDownloadSingle, onState, Tracker, WithDownload } from './tracker'
 import { ensureDir, InstallOptions } from './utils'
+import { doFetch, FetchOptions } from './utils.browser'
 
 export interface LabyModTrackerEvents {
   labymod: { version: string; tag: string }
   'labymod.json': { version: string; tag: string }
   'labymod.assets': WithDownload<{ count: number }>
+  'labymod.addon': WithDownload<{ namespace: string; name: string }>
 }
 
-/**
- * Information about a LabyMod addon from the Flint store
- */
-export interface LabyModAddon {
-  id: number
-  namespace: string
-  name: string
-  featured: boolean
-  verified: boolean
-  organization: number
-  author: string
-  downloads: number
-  download_string: string
-  short_description: string
-  rating: {
-    count: number
-    rating: number
-  }
-  changelog: string
-  required_labymod_build: number
-  releases: number
-  last_update: number
-  licence: string
-  version_string: string
-  meta: string[]
-  dependencies: Array<{
-    namespace: string
-    optional: boolean
-  }>
-  permissions: string[]
-  file_hash: string
-  source_url?: string
-  brand_images: Array<{
-    type: string
-    hash: string
-  }>
-}
-
-/**
- * Information about a LabyMod addon from the index
- */
-export interface LabyModAddonIndex {
-  name: string
-  namespace: string
-  short_description: string
-  author: string
-  organization_name: string
-  ranking: number
-  tags: number[]
-  rating: {
-    count: number
-    rating: number
-  }
-  version_string: string
-  meta: string[]
-  dependencies: Array<{
-    namespace: string
-    optional: boolean
-  }>
-  required_labymod_build: number
-  icon_hash: string
-  thumbnail_hash: string
-  file_hash: string
-}
-
-/**
- * Get the LabyMod addon index from Flint store
- * @param env The environment (production, beta, etc.)
- * @param options Request options
- * @returns List of all available addons
- */
-export async function getLabyModAddonIndex(env = 'production', options?: { dispatcher?: Dispatcher }): Promise<LabyModAddonIndex[]> {
-  const url = `https://flintmc.net/api/client-store/get-index/${env}`
-  const res = await request(url, options)
-  return await res.body.json() as any
-}
-
-/**
- * Get detailed information about a specific LabyMod addon
- * @param namespace The addon namespace (e.g., 'labyfabric', 'modcompat')
- * @param env The environment (production, beta, etc.)
- * @param options Request options
- * @returns Detailed addon information
- */
-export async function getLabyModAddon(namespace: string, env = 'production', options?: { dispatcher?: Dispatcher }): Promise<LabyModAddon> {
-  const url = `https://flintmc.net/api/client-store/get-modification/${namespace}/${env}`
-  const res = await request(url, options)
-  return await res.body.json() as any
-}
-
-export interface InstallLabyModOptions extends DownloadBaseOptions, InstallOptions {
-  dispatcher?: Dispatcher
+export interface InstallLabyModOptions extends DownloadBaseOptions, InstallOptions, FetchOptions {
   environment?: string
-  fetch?: typeof fetch
   /**
    * The tracker to track the install process
    */
   tracker?: Tracker<LabyModTrackerEvents>
-  abortSignal?: AbortSignal
 }
-export interface InstallLabyModAddonOptions extends DownloadBaseOptions {
-  dispatcher?: Dispatcher
+export interface InstallLabyModAddonOptions extends DownloadBaseOptions, FetchOptions {
   environment?: string
   /**
    * Whether to install addon dependencies automatically
    * @default true
    */
   installDependencies?: boolean
+  /**
+   * The tracker to track the install process
+   */
+  tracker?: Tracker<LabyModTrackerEvents>
 }
+
 async function createLabyModJson(
   manifest: LabyModManifest,
   tag: string,
@@ -154,9 +73,7 @@ async function createLabyModJson(
     resolvedAt: number
   }
 
-  const fetch = options.fetch ?? globalThis.fetch
-
-  const metadataResponse = await fetch(librariesUrl)
+  const metadataResponse = await doFetch(options, librariesUrl)
 
   if (!metadataResponse.ok) {
     throw Object.assign(
@@ -176,7 +93,7 @@ async function createLabyModJson(
       libs.filter((lib) => lib.minecraftVersion === 'all' || lib.minecraftVersion === tag),
     )
 
-  const versionJsonResponse = await fetch(versionInfo.customManifestUrl)
+  const versionJsonResponse = await doFetch(options, versionInfo.customManifestUrl)
 
   if (!versionJsonResponse.ok) {
     throw Object.assign(
@@ -212,7 +129,8 @@ async function createLabyModJson(
           url: `https://laby-releases.s3.de.io.cloud.ovh.net/api/v1/download/labymod4/${environment}/${manifest.commitReference}.jar`,
         },
       },
-    })
+    },
+  )
   versionJson.id = `${tag}-LabyMod-4-${manifest.commitReference}`
 
   if (!versionJson.inheritFrom) {
@@ -253,7 +171,7 @@ export async function installLabyMod4(
           role: 'labymod-asset',
           hint: 'Problem on labymod asset! Please consider to reinstall labymod.',
         },
-        { signal: options.abortSignal },
+        { signal: options.signal },
       )
 
       return {
@@ -279,7 +197,7 @@ export async function installLabyMod4(
       tracker: onDownloadMultiple(options.tracker, 'labymod.assets', {
         count: assetsToDownload.length,
       }),
-      abortSignal: options.abortSignal,
+      abortSignal: options.signal,
     })
   }
 
@@ -295,50 +213,56 @@ export function installLaby4Mod(
   return installLabyMod4(manifest, tag, minecraft, options)
 }
 
-/**
- * Install a LabyMod addon (like Fabric Loader addon - labyfabric)
- *
- * The addon will be downloaded to the labymod-neo/addons directory.
- * If the addon has dependencies and installDependencies is true (default),
- * they will also be installed.
- *
- * @param addon The addon information (from getLabyModAddon or getLabyModAddonIndex)
- * @param minecraft The Minecraft location
- * @param options Installation options
- * @returns Task that resolves to the installed addon file path
- */
-export function installLabyModAddonTask(addon: LabyModAddon | LabyModAddonIndex, minecraft: MinecraftLocation, options?: InstallLabyModAddonOptions): Task<string> {
-  return task('installLabyModAddon', async function () {
-    const folder = MinecraftFolder.from(minecraft)
-    const environment = options?.environment ?? 'production'
-    const installDependencies = options?.installDependencies ?? true
+async function installLabyModAddonImpl(
+  addon: LabyModAddon | LabyModAddonIndex,
+  minecraft: MinecraftLocation,
+  options?: InstallLabyModAddonOptions,
+): Promise<string> {
+  const folder = MinecraftFolder.from(minecraft)
+  const environment = options?.environment ?? 'production'
+  const installDependencies = options?.installDependencies ?? true
 
-    // Install dependencies first if needed
-    if (installDependencies && addon.dependencies && addon.dependencies.length > 0) {
-      for (const dep of addon.dependencies) {
-        if (!dep.optional) {
-          const depAddon = await getLabyModAddon(dep.namespace, environment, options)
-          await this.yield(installLabyModAddonTask(depAddon, minecraft, {
-            ...options,
-            installDependencies: true,
-          }))
-        }
+  // Install dependencies first if needed
+  if (installDependencies && addon.dependencies && addon.dependencies.length > 0) {
+    for (const dep of addon.dependencies) {
+      if (!dep.optional) {
+        const depAddon = await getLabyModAddon(dep.namespace, environment, options)
+        await installLabyModAddonImpl(depAddon, minecraft, {
+          ...options,
+          installDependencies: true,
+        })
       }
     }
+  }
 
-    // Download the addon jar
-    const url = `https://flintmc.net/api/client-store/fetch-jar-by-hash/${addon.file_hash}`
-    const destination = join(folder.getPath('labymod-neo', 'addons'), `${addon.namespace}.jar`)
+  // Download the addon jar
+  const url = `https://flintmc.net/api/client-store/fetch-jar-by-hash/${addon.file_hash}`
+  const destination = join(folder.getPath('labymod-neo', 'addons'), `${addon.namespace}.jar`)
 
-    await this.yield(new DownloadTask({
+  // Check if file needs download
+  const issue = await diagnoseFile(
+    {
+      file: destination,
+      expectedChecksum: addon.file_hash,
+      role: 'labymod-addon',
+      hint: 'Problem on labymod addon! Please consider to reinstall.',
+    },
+    { signal: options?.signal },
+  )
+
+  if (issue) {
+    await download({
       url,
       destination,
-      validator: { algorithm: 'sha1', hash: addon.file_hash },
       ...getDownloadBaseOptions(options),
-    }).setName('addon', { name: addon.name, namespace: addon.namespace }))
+      tracker: onDownloadSingle(options?.tracker, 'labymod.addon', {
+        namespace: addon.namespace,
+        name: addon.name,
+      }),
+    })
+  }
 
-    return destination
-  })
+  return destination
 }
 
 /**
@@ -349,10 +273,14 @@ export function installLabyModAddonTask(addon: LabyModAddon | LabyModAddonIndex,
  * @param options Installation options
  * @returns Promise that resolves to the installed addon file path
  */
-export async function installLabyModAddon(namespace: string, minecraft: MinecraftLocation, options?: InstallLabyModAddonOptions): Promise<string> {
+export async function installLabyModAddon(
+  namespace: string,
+  minecraft: MinecraftLocation,
+  options?: InstallLabyModAddonOptions,
+): Promise<string> {
   const environment = options?.environment ?? 'production'
   const addon = await getLabyModAddon(namespace, environment, options)
-  return installLabyModAddonTask(addon, minecraft, options).startAndWait()
+  return installLabyModAddonImpl(addon, minecraft, options)
 }
 
 /**
@@ -365,24 +293,11 @@ export async function installLabyModAddon(namespace: string, minecraft: Minecraf
  * @param options Installation options
  * @returns Promise that resolves to the installed addon file path
  */
-export function installLabyModFabricAddon(minecraft: MinecraftLocation, options?: InstallLabyModAddonOptions): Promise<string> {
+export function installLabyModFabricAddon(
+  minecraft: MinecraftLocation,
+  options?: InstallLabyModAddonOptions,
+): Promise<string> {
   return installLabyModAddon('labyfabric', minecraft, options)
-}
-
-/**
- * Install Fabric Loader addon for LabyMod 4 as a task
- *
- * This installs the labyfabric addon which allows running Fabric mods within LabyMod.
- * It will also install required dependencies like modcompat.
- *
- * @param minecraft The Minecraft location
- * @param options Installation options
- * @returns Task that resolves to the installed addon file path
- */
-export async function installLabyModFabricAddonTask(minecraft: MinecraftLocation, options?: InstallLabyModAddonOptions): Promise<Task<string>> {
-  const environment = options?.environment ?? 'production'
-  const addon = await getLabyModAddon('labyfabric', environment, options)
-  return installLabyModAddonTask(addon, minecraft, options)
 }
 
 /**
@@ -396,25 +311,11 @@ export async function installLabyModFabricAddonTask(minecraft: MinecraftLocation
  * @param options Installation options
  * @returns Promise that resolves to the installed addon file path
  */
-export function installLabyModForgeAddon(minecraft: MinecraftLocation, options?: InstallLabyModAddonOptions): Promise<string> {
+export function installLabyModForgeAddon(
+  minecraft: MinecraftLocation,
+  options?: InstallLabyModAddonOptions,
+): Promise<string> {
   return installLabyModAddon('labyforge', minecraft, options)
-}
-
-/**
- * Install Forge Loader addon for LabyMod 4 as a task
- *
- * This installs the labyforge addon which allows running Forge mods within LabyMod.
- * Note: Forge Loader only supports Minecraft 1.8.9.
- * It will also install required dependencies like modcompat.
- *
- * @param minecraft The Minecraft location
- * @param options Installation options
- * @returns Task that resolves to the installed addon file path
- */
-export async function installLabyModForgeAddonTask(minecraft: MinecraftLocation, options?: InstallLabyModAddonOptions): Promise<Task<string>> {
-  const environment = options?.environment ?? 'production'
-  const addon = await getLabyModAddon('labyforge', environment, options)
-  return installLabyModAddonTask(addon, minecraft, options)
 }
 
 /**
@@ -424,7 +325,10 @@ export async function installLabyModForgeAddonTask(minecraft: MinecraftLocation,
  * @param minecraftVersion The Minecraft version to check (e.g., '1.20.1', '1.21')
  * @returns true if the addon supports the version, false otherwise
  */
-export function isLabyModAddonCompatible(addon: LabyModAddon | LabyModAddonIndex, minecraftVersion: string): boolean {
+export function isLabyModAddonCompatible(
+  addon: LabyModAddon | LabyModAddonIndex,
+  minecraftVersion: string,
+): boolean {
   const versionString = addon.version_string
   if (!versionString || versionString === '*') {
     return true
@@ -437,8 +341,10 @@ export function isLabyModAddonCompatible(addon: LabyModAddon | LabyModAddonIndex
     if (range.includes('<')) {
       // Range format: "min<max"
       const [min, max] = range.split('<')
-      if (compareVersions(minecraftVersion, min.trim()) >= 0 &&
-        compareVersions(minecraftVersion, max.trim()) <= 0) {
+      if (
+        compareVersions(minecraftVersion, min.trim()) >= 0 &&
+        compareVersions(minecraftVersion, max.trim()) <= 0
+      ) {
         return true
       }
     } else {

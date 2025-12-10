@@ -21,7 +21,7 @@ const reader: WorldReader = await WorldReader.create(worldSaveFolder);
 const levelData: LevelDataFrame = await reader.getLevelData();
 ```
 
-***Preview*** Read the region data, this feature is not tested yet, but the api will look like this
+**_Preview_** Read the region data, this feature is not tested yet, but the api will look like this
 
 ```ts
 import { WorldReader, RegionDataFrame, RegionReader } from "@xmcl/game-data";
@@ -44,7 +44,7 @@ In code, they are represented by `LevelDataFrame`.
 
 ### Region
 
-The Minecraft blocks data are stored in region file (.mca). One region contains 16 sections. Each section contains 16x16x16 blockstates, biome, entities, tileentities and other data. 
+The Minecraft blocks data are stored in region file (.mca). One region contains 16 sections. Each section contains 16x16x16 blockstates, biome, entities, tileentities and other data.
 
 For the Minecraft version < 1.13, the mca NBT data store the **global** blockstate ids in `Data` and `Blocks` fields.
 
@@ -53,7 +53,6 @@ For the Minecraft version >= 1.13, the mca NBT data store the **local** blocksta
 #### In-Chunk Coord
 
 One chunk (section) in region contains 4096 (16x16x16) blockstates, and they are indexed by [0, 4096). The mapping from x, y, z to index is `(x, y, z) -> y << 8 | z << 4 | x`.
-
 
 ### Read and Write Server Info
 

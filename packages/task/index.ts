@@ -113,21 +113,45 @@ export abstract class BaseTask<T> implements Task<T> {
     }
   }
 
-  get id() { return this._id }
-  get path() { return this._path }
-  get progress() { return this._progress }
-  get total() { return this._total }
-  get to() { return this._to }
-  get from() { return this._from }
-  get state() { return this._state }
+  get id() {
+    return this._id
+  }
+  get path() {
+    return this._path
+  }
+  get progress() {
+    return this._progress
+  }
+  get total() {
+    return this._total
+  }
+  get to() {
+    return this._to
+  }
+  get from() {
+    return this._from
+  }
+  get state() {
+    return this._state
+  }
 
-  get isCancelled() { return this._state === TaskState.Cancelled }
-  get isPaused() { return this._state === TaskState.Paused }
-  get isDone() { return this._state === TaskState.Succeed }
-  get isRunning() { return this._state === TaskState.Running }
+  get isCancelled() {
+    return this._state === TaskState.Cancelled
+  }
+  get isPaused() {
+    return this._state === TaskState.Paused
+  }
+  get isDone() {
+    return this._state === TaskState.Succeed
+  }
+  get isRunning() {
+    return this._state === TaskState.Running
+  }
 
   async pause() {
-    if (this._state !== TaskState.Running) { return }
+    if (this._state !== TaskState.Running) {
+      return
+    }
     await this.pauseTask().then(() => {
       this._state = TaskState.Paused
       this.context.onPaused?.(this)
@@ -135,7 +159,9 @@ export abstract class BaseTask<T> implements Task<T> {
   }
 
   async resume() {
-    if (this._state !== TaskState.Paused) { return }
+    if (this._state !== TaskState.Paused) {
+      return
+    }
     this._state = TaskState.Running
     await this.resumeTask().then(() => {
       this.context.onResumed?.(this)
@@ -143,12 +169,17 @@ export abstract class BaseTask<T> implements Task<T> {
   }
 
   async cancel(timeout?: number) {
-    if (this.state !== TaskState.Running && this.state !== TaskState.Idle) { return }
+    if (this.state !== TaskState.Running && this.state !== TaskState.Idle) {
+      return
+    }
     this._state = TaskState.Cancelled
     this.reject(new CancelledError())
     try {
       if (timeout) {
-        await Promise.race([this.cancelTask(timeout), new Promise((resolve) => setTimeout(resolve, timeout))])
+        await Promise.race([
+          this.cancelTask(timeout),
+          new Promise((resolve) => setTimeout(resolve, timeout)),
+        ])
       } else {
         await this.cancelTask()
       }
@@ -171,25 +202,30 @@ export abstract class BaseTask<T> implements Task<T> {
     if (context) {
       Object.assign(this.context, context)
     }
-    if (!this.context.fork) { this.context.fork = createFork() }
+    if (!this.context.fork) {
+      this.context.fork = createFork()
+    }
     this.parent = parent
     this._state = TaskState.Running
     this._id = this.context.fork!(this)
     this._path = parent ? `${parent.path}.${this.name}` : this.name
     this.context.onStart?.(this)
-    this.runTask().then((value) => {
-      this.resolve(value)
-      this._state = TaskState.Succeed
-      this.resultOrError = value
-      this.context.onSucceed?.(this, value)
-    }, (error) => {
-      this.reject(error)
-      this.resultOrError = error
-      if (this.state !== TaskState.Cancelled) {
-        this._state = TaskState.Failed
-        this.context.onFailed?.(this, error)
-      }
-    })
+    this.runTask().then(
+      (value) => {
+        this.resolve(value)
+        this._state = TaskState.Succeed
+        this.resultOrError = value
+        this.context.onSucceed?.(this, value)
+      },
+      (error) => {
+        this.reject(error)
+        this.resultOrError = error
+        if (this.state !== TaskState.Cancelled) {
+          this._state = TaskState.Failed
+          this.context.onFailed?.(this, error)
+        }
+      },
+    )
   }
 
   startAndWait(context?: TaskContext, parent?: Task<any>) {
@@ -202,7 +238,7 @@ export abstract class BaseTask<T> implements Task<T> {
     this.parent?.onChildUpdate(chunkSize)
   }
 
-  onChildUpdate(chunkSize: number) { }
+  onChildUpdate(chunkSize: number) {}
 
   protected abstract runTask(): Promise<T>
   protected abstract cancelTask(timeout?: number): Promise<void>
@@ -213,7 +249,9 @@ export abstract class BaseTask<T> implements Task<T> {
     const copy = Object.create(this)
     const wait = copy.wait
     copy.wait = function (this: any) {
-      return wait.bind(this)().then((r: any) => (transform.bind(this) as any)(r))
+      return wait
+        .bind(this)()
+        .then((r: any) => (transform.bind(this) as any)(r))
     }
     return copy
   }
@@ -221,9 +259,9 @@ export abstract class BaseTask<T> implements Task<T> {
 
 export abstract class AbortableTask<T> extends BaseTask<T> {
   protected _pausing: Promise<void> = Promise.resolve()
-  protected _unpause = () => { }
-  protected _onAborted = () => { }
-  protected _onResume = () => { }
+  protected _unpause = () => {}
+  protected _onAborted = () => {}
+  protected _onResume = () => {}
 
   protected abstract process(): Promise<T>
   protected abstract abort(isCancelled: boolean): void
@@ -307,7 +345,16 @@ export abstract class TaskGroup<T> extends BaseTask<T> {
     await Promise.all(this.children.map((task) => task.resume()))
   }
 
-  async all<T extends Task<any>>(tasks: Iterable<T>, { throwErrorImmediately, getErrorMessage }: { throwErrorImmediately?: boolean; getErrorMessage?: (errors: any[]) => string } = { throwErrorImmediately: true, getErrorMessage: (errors: any[]) => '' }): Promise<(T extends Task<infer R> ? R : never)[]> {
+  async all<T extends Task<any>>(
+    tasks: Iterable<T>,
+    {
+      throwErrorImmediately,
+      getErrorMessage,
+    }: { throwErrorImmediately?: boolean; getErrorMessage?: (errors: any[]) => string } = {
+      throwErrorImmediately: true,
+      getErrorMessage: (errors: any[]) => '',
+    },
+  ): Promise<(T extends Task<infer R> ? R : never)[]> {
     const errors: unknown[] = []
     const promises: Promise<any | void>[] = []
     for (const task of tasks) {
@@ -327,7 +374,7 @@ export abstract class TaskGroup<T> extends BaseTask<T> {
         if (errors.length === 1) {
           throw errors[0]
         }
-        const flatten = errors.flatMap((e) => e instanceof AggregateError ? e.errors : e)
+        const flatten = errors.flatMap((e) => (e instanceof AggregateError ? e.errors : e))
         throw new AggregateError(flatten, getErrorMessage?.(flatten))
       }
       return result
@@ -350,7 +397,11 @@ export abstract class TaskGroup<T> extends BaseTask<T> {
 
 export type TaskExecutor<T> = (this: TaskRoutine<any>) => Promise<T> | T
 export class TaskRoutine<T> extends TaskGroup<T> {
-  constructor(name: string, readonly executor: TaskExecutor<T>, param: object = {}) {
+  constructor(
+    name: string,
+    readonly executor: TaskExecutor<T>,
+    param: object = {},
+  ) {
     super()
     this.setName(name, param)
   }
@@ -368,8 +419,8 @@ export class TaskRoutine<T> extends TaskGroup<T> {
   }
 
   /**
-     * Yield a new child task to this routine
-     */
+   * Yield a new child task to this routine
+   */
   yield<T>(task: Task<T>): Promise<T> {
     if (this.state !== TaskState.Running) {
       throw new Error('IllegalState')
@@ -391,6 +442,10 @@ export class TaskRoutine<T> extends TaskGroup<T> {
   }
 }
 
-export function task<T>(name: string, executor: TaskExecutor<T>, param: object = {}): TaskRoutine<T> {
+export function task<T>(
+  name: string,
+  executor: TaskExecutor<T>,
+  param: object = {},
+): TaskRoutine<T> {
   return new TaskRoutine<T>(name, executor, param)
 }

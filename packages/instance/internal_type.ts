@@ -29,4 +29,3 @@ export interface ResourceManager {
 export interface VersionMetadataProvider {
   getLatestRelease(): string
 }
-

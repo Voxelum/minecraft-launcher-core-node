@@ -1,4 +1,3 @@
-
 export interface SystemError extends Error {
   /**
    * Please see `constants.errno` in `os` module

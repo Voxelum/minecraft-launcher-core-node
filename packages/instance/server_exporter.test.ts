@@ -28,7 +28,7 @@ describe('server_exporter', () => {
       classPath: ['libs/a.jar', 'libs/b.jar'],
       extraJVMArgs: [],
       serverExectuableJarPath: undefined,
-      mainClass: 'net.minecraft.server.Main'
+      mainClass: 'net.minecraft.server.Main',
     } as any
 
     // create some files list
@@ -38,7 +38,7 @@ describe('server_exporter', () => {
     await exporter.exportInstance('/server', ops as any, files)
 
     // it should have emitted server.bat and server.sh
-    const emittedPaths = exporter.emitted.map(e => e.path).sort()
+    const emittedPaths = exporter.emitted.map((e) => e.path).sort()
     expect(emittedPaths).toContain('server.bat')
     expect(emittedPaths).toContain('server.sh')
   })

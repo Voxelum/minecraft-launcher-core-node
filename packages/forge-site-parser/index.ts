@@ -12,20 +12,23 @@ interface Download {
   path: string
 }
 
-function notnull<T>(v: T | undefined): v is T { return !!v }
+function notnull<T>(v: T | undefined): v is T {
+  return !!v
+}
 
 function parseLink(elem: Node) {
   const e = (elem as HTMLElement).removeWhitespace()
   /*
-     * <div class="info-tooltip">
-     *   <strong>MD5:</strong> 31742b6c996f53af96f606b7a0c46e2a<br>
-     *   <strong>SHA1:</strong> 8d6a23554839d6f6014fbdb7991e3cd8af7eca80
-     * </div>
-     */
+   * <div class="info-tooltip">
+   *   <strong>MD5:</strong> 31742b6c996f53af96f606b7a0c46e2a<br>
+   *   <strong>SHA1:</strong> 8d6a23554839d6f6014fbdb7991e3cd8af7eca80
+   * </div>
+   */
   const tooltipInfo = e.querySelector('.info-tooltip')
-  const url = tooltipInfo?.querySelector('a')?.attributes?.href ||
-        e.querySelector('.info-link')?.attributes?.href ||
-        e.querySelector('a')?.attributes?.href
+  const url =
+    tooltipInfo?.querySelector('a')?.attributes?.href ||
+    e.querySelector('.info-link')?.attributes?.href ||
+    e.querySelector('a')?.attributes?.href
 
   if (!url) {
     return undefined
@@ -33,16 +36,24 @@ function parseLink(elem: Node) {
   // href is like /maven/net/minecraftforge/forge/1.14.4-28.1.70/forge-1.14.4-28.1.70-changelog.txt
   const href = url.trim()
   const matched = /forge-.+-.+-(\w+)\.\w+/.exec(href)
-  let name = ''; let sha1 = ''; let md5 = ''
-  if (matched) { name = matched[1] }
+  let name = ''
+  let sha1 = ''
+  let md5 = ''
+  if (matched) {
+    name = matched[1]
+  }
   if (!name) {
-    throw new SyntaxError(`Cannot determine name for forge url "${href}". Maybe the forge webisite changed?`)
+    throw new SyntaxError(
+      `Cannot determine name for forge url "${href}". Maybe the forge webisite changed?`,
+    )
   }
   try {
     md5 = tooltipInfo?.childNodes[1].text.trim() ?? ''
     sha1 = tooltipInfo?.childNodes[4].text.trim() ?? ''
   } catch {
-    console.warn(`Error during fetching the sha1 and md5 for the forge "${href}". The result might be wrong.`)
+    console.warn(
+      `Error during fetching the sha1 and md5 for the forge "${href}". The result might be wrong.`,
+    )
   }
   const isSha1 = /\b([a-f0-9]{40})\b/i
   const isMd5 = /\b[a-f0-9]{32}\b/i
@@ -76,8 +87,9 @@ export function parse(content: string): ForgeWebPage {
   const mcversion = selected.text
 
   function parseVersion(e: HTMLElement): Version {
-    const links = e.querySelector('.download-links')?.childNodes
-      .filter((elem) => elem instanceof HTMLElement && elem.rawTagName === 'li')
+    const links = e
+      .querySelector('.download-links')
+      ?.childNodes.filter((elem) => elem instanceof HTMLElement && elem.rawTagName === 'li')
       .map(parseLink)
       .filter(notnull)
     const downloadVersionElem = e.querySelector('.download-version')
@@ -105,7 +117,9 @@ export function parse(content: string): ForgeWebPage {
     const mdk = links?.find((l) => l.name === 'mdk')
 
     if (installer === undefined && universal === undefined) {
-      throw new SyntaxError('Cannot parse forge web since it missing installer and universal jar info.')
+      throw new SyntaxError(
+        'Cannot parse forge web since it missing installer and universal jar info.',
+      )
     }
     const result: Version = {
       version,
@@ -123,7 +137,10 @@ export function parse(content: string): ForgeWebPage {
 
     return result
   }
-  const versions = dom.querySelector('.download-list')!.querySelector('tbody')!.querySelectorAll('tr')!
+  const versions = dom
+    .querySelector('.download-list')!
+    .querySelector('tbody')!
+    .querySelectorAll('tr')!
     .map(parseVersion)
   return {
     mcversion,
@@ -135,17 +152,17 @@ export function parse(content: string): ForgeWebPage {
  */
 interface Version {
   /**
-     * The minecraft version
-     */
+   * The minecraft version
+   */
   mcversion: string
   /**
-     * The version of forge
-     */
+   * The version of forge
+   */
   version: string
   date: string
   /**
-     * The changelog info
-     */
+   * The changelog info
+   */
   changelog?: Download
   installer?: Download
   mdk?: Download
@@ -155,8 +172,8 @@ interface Version {
   ['installer-win']: Download | undefined
 
   /**
-     * The type of the forge release. The `common` means the normal release.
-     */
+   * The type of the forge release. The `common` means the normal release.
+   */
   type: 'buggy' | 'recommended' | 'common' | 'latest'
 }
 

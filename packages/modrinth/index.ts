@@ -3,7 +3,17 @@
  * @module @xmcl/modrinth
  */
 
-import { Category, Collection, GameVersion, License, Loader, Project, ProjectVersion, TeamMember, User } from './types'
+import {
+  Category,
+  Collection,
+  GameVersion,
+  License,
+  Loader,
+  Project,
+  ProjectVersion,
+  TeamMember,
+  User,
+} from './types'
 
 export * from './types'
 
@@ -39,46 +49,46 @@ export interface SearchResultHit {
    */
   categories: Array<string>
   /**
-     * A list of the minecraft versions supported by the project.
-     */
+   * A list of the minecraft versions supported by the project.
+   */
   versions: Array<string>
   /**
-     * The total number of downloads for the project
-     */
+   * The total number of downloads for the project
+   */
   downloads: number
 
   follows: number
   /**
-     * A link to the project's main page; */
+   * A link to the project's main page; */
   page_url: string
   /**
-     * The url of the project's icon */
+   * The url of the project's icon */
   icon_url: string
   /**
-     * The url of the project's author */
+   * The url of the project's author */
   author_url: string
   /**
-     * The date that the project was originally created
-     */
+   * The date that the project was originally created
+   */
   date_created: string
   /**
-     * The date that the project was last modified
-     */
+   * The date that the project was last modified
+   */
   date_modified: string
   /**
-     * The latest version of minecraft that this project supports */
+   * The latest version of minecraft that this project supports */
   latest_version: string
   /**
-     * The id of the license this project follows */
+   * The id of the license this project follows */
   license: string
   /**
-     * The side type id that this project is on the client */
+   * The side type id that this project is on the client */
   client_side: string
   /**
-     * The side type id that this project is on the server */
+   * The side type id that this project is on the server */
   server_side: string
   /**
-     * The host that this project is from, always modrinth */
+   * The host that this project is from, always modrinth */
   host: string
 
   gallery: string[]
@@ -90,58 +100,58 @@ export interface SearchResultHit {
 
 export interface SearchProjectOptions {
   /**
-     * The query to search
-     */
+   * The query to search
+   */
   query?: string
   /**
-     * The recommended way of filtering search results. [Learn more about using facets](https://docs.modrinth.com/docs/tutorials/search).
-     *
-     * @enum "categories" "versions" "license" "project_type"
-     * @example [["categories:forge"],["versions:1.17.1"],["project_type:mod"]]
-     */
+   * The recommended way of filtering search results. [Learn more about using facets](https://docs.modrinth.com/docs/tutorials/search).
+   *
+   * @enum "categories" "versions" "license" "project_type"
+   * @example [["categories:forge"],["versions:1.17.1"],["project_type:mod"]]
+   */
   facets?: string
   /**
-     * A list of filters relating to the properties of a project. Use filters when there isn't an available facet for your needs. [More information](https://docs.meilisearch.com/reference/features/filtering.html)
-     *
-     * @example filter=categories="fabric" AND (categories="technology" OR categories="utility")
-     */
+   * A list of filters relating to the properties of a project. Use filters when there isn't an available facet for your needs. [More information](https://docs.meilisearch.com/reference/features/filtering.html)
+   *
+   * @example filter=categories="fabric" AND (categories="technology" OR categories="utility")
+   */
   filter?: string
   /**
-     * What the results are sorted by
-     *
-     * @enum "relevance" "downloads" "follows" "newest" "updated"
-     * @example "downloads"
-     * @default relevance
-     */
+   * What the results are sorted by
+   *
+   * @enum "relevance" "downloads" "follows" "newest" "updated"
+   * @example "downloads"
+   * @default relevance
+   */
   index?: string
   /**
-     * The offset into the search; skips this number of results
-     * @default 0
-     */
+   * The offset into the search; skips this number of results
+   * @default 0
+   */
   offset?: number
   /**
-     * The number of mods returned by the search
-     * @default 10
-     */
+   * The number of mods returned by the search
+   * @default 10
+   */
   limit?: number
 }
 
 export interface SearchResult {
   /**
-     * The list of results
-     */
+   * The list of results
+   */
   hits: Array<SearchResultHit>
   /**
-     * The number of results that were skipped by the query
-     */
+   * The number of results that were skipped by the query
+   */
   offset: number
   /**
-     * The number of mods returned by the query
-     */
+   * The number of mods returned by the query
+   */
   limit: number
   /**
-     * The total number of mods that the query found
-     */
+   * The total number of mods that the query found
+   */
   total_hits: number
 }
 
@@ -149,14 +159,18 @@ export interface GetProjectVersionsOptions {
   id: string
   loaders?: Array<string>
   /**
-     * Minecraft version filtering
-     */
+   * Minecraft version filtering
+   */
   game_versions?: Array<string>
   featured?: boolean
 }
 
 export class ModerinthApiError extends Error {
-  constructor(readonly url: string, readonly status: number, readonly body: string) {
+  constructor(
+    readonly url: string,
+    readonly status: number,
+    readonly body: string,
+  ) {
     super(`Fail to fetch modrinth api ${url}. Status=${status}. ${body}`)
     this.name = 'ModerinthApiError'
   }
@@ -198,7 +212,9 @@ export class ModrinthV2Client {
     url.searchParams.append('index', options.index || (options.query ? 'relevance' : 'downloads'))
     url.searchParams.append('offset', options.offset?.toString() ?? '0')
     url.searchParams.append('limit', options.limit?.toString() ?? '10')
-    if (options.facets) { url.searchParams.append('facets', options.facets) }
+    if (options.facets) {
+      url.searchParams.append('facets', options.facets)
+    }
     const response = await this.fetch(url, {
       signal,
       headers: this.headers,
@@ -206,7 +222,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as SearchResult
+    const result = (await response.json()) as SearchResult
     return result
   }
 
@@ -214,7 +230,9 @@ export class ModrinthV2Client {
    * @see https://docs.modrinth.com/#tag/projects/operation/getProject
    */
   async getProject(projectId: string, signal?: AbortSignal): Promise<Project> {
-    if (projectId.startsWith('local-')) { projectId = projectId.slice('local-'.length) }
+    if (projectId.startsWith('local-')) {
+      projectId = projectId.slice('local-'.length)
+    }
     const url = new URL(this.baseUrl + `/v2/project/${projectId}`)
     const response = await this.fetch(url, {
       signal,
@@ -223,7 +241,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const project = await response.json() as Project
+    const project = (await response.json()) as Project
     return project
   }
 
@@ -240,18 +258,32 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const project = await response.json() as Project[]
+    const project = (await response.json()) as Project[]
     return project
   }
 
   /**
    * @see https://docs.modrinth.com/#tag/versions/operation/getProjectVersions
    */
-  async getProjectVersions(projectId: string, { loaders, gameVersions, featured }: { loaders?: string[]; gameVersions?: string[]; featured?: boolean } = {}, signal?: AbortSignal): Promise<ProjectVersion[]> {
+  async getProjectVersions(
+    projectId: string,
+    {
+      loaders,
+      gameVersions,
+      featured,
+    }: { loaders?: string[]; gameVersions?: string[]; featured?: boolean } = {},
+    signal?: AbortSignal,
+  ): Promise<ProjectVersion[]> {
     const url = new URL(this.baseUrl + `/v2/project/${projectId}/version`)
-    if (loaders) { url.searchParams.append('loaders', JSON.stringify(loaders)) }
-    if (gameVersions) { url.searchParams.append('game_versions', JSON.stringify(gameVersions)) }
-    if (featured !== undefined) { url.searchParams.append('featured', featured ? 'true' : 'false') }
+    if (loaders) {
+      url.searchParams.append('loaders', JSON.stringify(loaders))
+    }
+    if (gameVersions) {
+      url.searchParams.append('game_versions', JSON.stringify(gameVersions))
+    }
+    if (featured !== undefined) {
+      url.searchParams.append('featured', featured ? 'true' : 'false')
+    }
     const response = await this.fetch(url, {
       signal,
       headers: this.headers,
@@ -259,7 +291,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const versions = await response.json() as ProjectVersion[]
+    const versions = (await response.json()) as ProjectVersion[]
     return versions
   }
 
@@ -275,7 +307,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const version = await response.json() as ProjectVersion
+    const version = (await response.json()) as ProjectVersion
     return version
   }
 
@@ -292,7 +324,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const versions = await response.json() as ProjectVersion[]
+    const versions = (await response.json()) as ProjectVersion[]
     return versions
   }
 
@@ -316,7 +348,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const versions = await response.json() as Record<string, ProjectVersion>
+    const versions = (await response.json()) as Record<string, ProjectVersion>
     return versions
   }
 
@@ -345,7 +377,15 @@ export class ModrinthV2Client {
   /**
    * @see https://docs.modrinth.com/api-spec#tag/version-files/operation/getLatestVersionsFromHashes
    */
-  async getLatestVersionsFromHashes(hashes: string[], { algorithm, loaders = [], gameVersions = [] }: { algorithm?: string; loaders?: string[]; gameVersions?: string[] } = {}, signal?: AbortSignal) {
+  async getLatestVersionsFromHashes(
+    hashes: string[],
+    {
+      algorithm,
+      loaders = [],
+      gameVersions = [],
+    }: { algorithm?: string; loaders?: string[]; gameVersions?: string[] } = {},
+    signal?: AbortSignal,
+  ) {
     const url = new URL(this.baseUrl + '/v2/version_files/update')
     const response = await this.fetch(url, {
       method: 'POST',
@@ -361,14 +401,22 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const versions = await response.json() as Record<string, ProjectVersion>
+    const versions = (await response.json()) as Record<string, ProjectVersion>
     return versions
   }
 
   /**
    * @see https://docs.modrinth.com/#tag/version-files/operation/getLatestVersionFromHash
    */
-  async getLatestProjectVersion(sha1: string, { algorithm, loaders = [], gameVersions = [] }: { algorithm?: string; loaders?: string[]; gameVersions?: string[] } = {}, signal?: AbortSignal): Promise<ProjectVersion> {
+  async getLatestProjectVersion(
+    sha1: string,
+    {
+      algorithm,
+      loaders = [],
+      gameVersions = [],
+    }: { algorithm?: string; loaders?: string[]; gameVersions?: string[] } = {},
+    signal?: AbortSignal,
+  ): Promise<ProjectVersion> {
     const url = new URL(this.baseUrl + `/v2/version_file/${sha1}/update`)
     url.searchParams.append('algorithm', algorithm ?? 'sha1')
     const response = await this.fetch(url, {
@@ -383,7 +431,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const version = await response.json() as ProjectVersion
+    const version = (await response.json()) as ProjectVersion
     return version
   }
 
@@ -399,7 +447,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as License[]
+    const result = (await response.json()) as License[]
     return result
   }
 
@@ -415,7 +463,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as Category[]
+    const result = (await response.json()) as Category[]
     return result
   }
 
@@ -431,7 +479,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as GameVersion[]
+    const result = (await response.json()) as GameVersion[]
     return result
   }
 
@@ -447,7 +495,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as Loader[]
+    const result = (await response.json()) as Loader[]
     return result
   }
 
@@ -460,11 +508,16 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as Collection[]
+    const result = (await response.json()) as Collection[]
     return result
   }
 
-  async uppdateCollectionIcon(collectionId: string, iconData: ArrayBuffer, mimeType: string, signal?: AbortSignal) {
+  async uppdateCollectionIcon(
+    collectionId: string,
+    iconData: ArrayBuffer,
+    mimeType: string,
+    signal?: AbortSignal,
+  ) {
     const ext = mimeType.split('/')[1]
     const url = new URL(this.baseUrl + `/v3/collection/${collectionId}/icon?ext=${ext}`)
     const response = await this.fetch(url, {
@@ -481,13 +534,21 @@ export class ModrinthV2Client {
     }
   }
 
-  async createCollection(name: string, description: string, projectIds: string[], signal?: AbortSignal) {
+  async createCollection(
+    name: string,
+    description: string,
+    projectIds: string[],
+    signal?: AbortSignal,
+  ) {
     const url = new URL(this.baseUrl + '/v3/collection')
-    const body = JSON.stringify({
-      name,
-      description,
-      projects: projectIds,
-    }, (key, value) => !value ? undefined : value)
+    const body = JSON.stringify(
+      {
+        name,
+        description,
+        projects: projectIds,
+      },
+      (key, value) => (!value ? undefined : value),
+    )
     const response = await this.fetch(url, {
       method: 'POST',
       headers: {
@@ -500,7 +561,7 @@ export class ModrinthV2Client {
     if (!response.ok) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as Collection
+    const result = (await response.json()) as Collection
     return result
   }
 
@@ -528,7 +589,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as User
+    const result = (await response.json()) as User
     return result
   }
 
@@ -574,7 +635,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as Project[]
+    const result = (await response.json()) as Project[]
     return result
   }
 
@@ -590,7 +651,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as TeamMember[]
+    const result = (await response.json()) as TeamMember[]
     return result
   }
 
@@ -606,7 +667,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as User
+    const result = (await response.json()) as User
     return result
   }
 
@@ -622,7 +683,7 @@ export class ModrinthV2Client {
     if (response.status !== 200) {
       throw new ModerinthApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as Project[]
+    const result = (await response.json()) as Project[]
     return result
   }
 }

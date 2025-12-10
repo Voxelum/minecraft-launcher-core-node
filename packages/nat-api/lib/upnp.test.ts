@@ -1,5 +1,5 @@
-import { assert, test } from "vitest"
-import { createUpnpClient } from "./upnp"
+import { assert, test } from 'vitest'
+import { createUpnpClient } from './upnp'
 
 test('upnp', async () => {
   const client = await createUpnpClient()
@@ -10,7 +10,13 @@ test('upnp', async () => {
   // const gateway = await client.findGateway()
 
   // assert.ok(mappings)
-  await client.map({ protocol: 'tcp', private: 25565, public: 25565, ttl: 60 * 1000, description: 'x' })
+  await client.map({
+    protocol: 'tcp',
+    private: 25565,
+    public: 25565,
+    ttl: 60 * 1000,
+    description: 'x',
+  })
 
   mappings = await client.getMappings()
   const ip = await client.externalIp()

@@ -2,7 +2,13 @@
  * @module @xmcl/system
  */
 import { open, readEntry, readAllEntries } from '@xmcl/unzip'
-import { access as saccess, stat as sstat, writeFile as swriteFile, readFile as sreadFile, readdir as sreaddir } from 'fs'
+import {
+  access as saccess,
+  stat as sstat,
+  writeFile as swriteFile,
+  readFile as sreadFile,
+  readdir as sreaddir,
+} from 'fs'
 import { promisify } from 'util'
 import { join, sep } from 'path'
 import { FileSystem } from './system'
@@ -24,16 +30,16 @@ export async function openFileSystem(basePath: string | Uint8Array): Promise<Fil
       Object.assign(zip, {
         validateFileName: (e: Entry) => {
           const fileName = e.fileName
-          if (/^[a-zA-Z]:/.test(fileName) || /^\//.test(fileName)) {
+          if (/^[a-zA-Z]:/.test(fileName) || fileName.startsWith('/')) {
             // absolute path convert to relative path
             e.fileName = fileName.replace(/^[a-zA-Z]:/, '').replace(/^\//, '')
           }
-          return null;
+          return null
         },
       })
-      const entries = await readAllEntries(zip).then(es =>
+      const entries = await readAllEntries(zip).then((es) =>
         // ignore entries with '..' in the path
-        es.filter(e => e.fileName.split("/").indexOf("..") === -1)
+        es.filter((e) => e.fileName.split('/').indexOf('..') === -1),
       )
       const entriesRecord: Record<string, Entry> = {}
       for (const entry of entries) {
@@ -80,7 +86,10 @@ class NodeFileSystem extends FileSystem {
   }
 
   existsFile(name: string): Promise<boolean> {
-    return access(join(this.root, name)).then(() => true, () => false)
+    return access(join(this.root, name)).then(
+      () => true,
+      () => false,
+    )
   }
 
   readFile(name: any, encoding?: any) {
@@ -95,7 +104,9 @@ class NodeFileSystem extends FileSystem {
     this.root = join(this.root, name)
   }
 
-  constructor(public root: string) { super() }
+  constructor(public root: string) {
+    super()
+  }
 }
 class NodeZipFileSystem extends FileSystem {
   sep = '/'
@@ -106,7 +117,11 @@ class NodeZipFileSystem extends FileSystem {
 
   private fileRoot: string
 
-  constructor(root: string, private zip: ZipFile, private entries: Record<string, Entry>) {
+  constructor(
+    root: string,
+    private zip: ZipFile,
+    private entries: Record<string, Entry>,
+  ) {
     super()
     this.fileRoot = root
   }
@@ -119,7 +134,9 @@ class NodeZipFileSystem extends FileSystem {
     this.zip.close()
   }
 
-  get root() { return this.fileRoot + (this.zipRoot.length === 0 ? '' : `/${this.zipRoot}`) }
+  get root() {
+    return this.fileRoot + (this.zipRoot.length === 0 ? '' : `/${this.zipRoot}`)
+  }
 
   protected normalizePath(name: string): string {
     if (name.startsWith('/')) {
@@ -154,8 +171,9 @@ class NodeZipFileSystem extends FileSystem {
 
   existsFile(name: string): Promise<boolean> {
     name = this.normalizePath(name)
-    if (this.entries[name] ||
-      this.entries[name + '/']) { return Promise.resolve(true) }
+    if (this.entries[name] || this.entries[name + '/']) {
+      return Promise.resolve(true)
+    }
     // the root dir won't have entries
     // therefore we need to do an extra track here
     const entries = Object.keys(this.entries)
@@ -165,7 +183,9 @@ class NodeZipFileSystem extends FileSystem {
   async readFile(name: string, encoding?: 'utf-8' | 'base64'): Promise<any> {
     name = this.normalizePath(name)
     const entry = this.entries[name]
-    if (!entry) { throw new Error(`Not found file named ${name}`) }
+    if (!entry) {
+      throw new Error(`Not found file named ${name}`)
+    }
     const buffer = await readEntry(this.zip, entry)
     if (encoding === 'utf-8') {
       return buffer.toString('utf-8')
@@ -179,11 +199,13 @@ class NodeZipFileSystem extends FileSystem {
   listFiles(name: string): Promise<string[]> {
     name = this.normalizePath(name)
     return Promise.resolve([
-      ...new Set(Object.keys(this.entries)
-        .filter((n) => n.startsWith(name))
-        .map((n) => n.substring(name.length))
-        .map((n) => n.startsWith('/') ? n.substring(1) : n)
-        .map((n) => n.split('/')[0])),
+      ...new Set(
+        Object.keys(this.entries)
+          .filter((n) => n.startsWith(name))
+          .map((n) => n.substring(name.length))
+          .map((n) => (n.startsWith('/') ? n.substring(1) : n))
+          .map((n) => n.split('/')[0]),
+      ),
     ])
   }
 
@@ -216,7 +238,9 @@ class NodeZipFileSystem extends FileSystem {
     startingDir = this.normalizePath(startingDir)
     const root = startingDir.startsWith('/') ? startingDir.substring(1) : startingDir
     for (const child of Object.keys(this.entries).filter((e) => e.startsWith(root))) {
-      if (child.endsWith('/')) { continue }
+      if (child.endsWith('/')) {
+        continue
+      }
       const result = walker(child)
       if (result instanceof Promise) {
         await result

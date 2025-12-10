@@ -147,7 +147,12 @@ export interface ModrinthModpackManifest {
 export interface MMCModpackManifest {
   json: {
     components: Array<{
-      uid: 'net.minecraft' | 'net.minecraftforge' | 'net.fabricmc.fabric-loader' | 'net.quiltmc.quilt-loader' | 'net.neoforge'
+      uid:
+        | 'net.minecraft'
+        | 'net.minecraftforge'
+        | 'net.fabricmc.fabric-loader'
+        | 'net.quiltmc.quilt-loader'
+        | 'net.neoforge'
       version: string
     }>
     formatVersion: 1
@@ -235,10 +240,10 @@ export function getInstanceConfigFromMcbbsModpack(manifest: McbbsModpackManifest
     url: manifest.url,
     description: manifest.description,
     runtime: {
-      minecraft: manifest.addons.find(a => a.id === 'game')?.version ?? '',
-      forge: manifest.addons.find(a => a.id === 'forge')?.version ?? '',
+      minecraft: manifest.addons.find((a) => a.id === 'game')?.version ?? '',
+      forge: manifest.addons.find((a) => a.id === 'forge')?.version ?? '',
       liteloader: '',
-      fabricLoader: manifest.addons.find(a => a.id === 'fabric')?.version ?? '',
+      fabricLoader: manifest.addons.find((a) => a.id === 'fabric')?.version ?? '',
       yarn: '',
     },
     mcOptions: manifest.launchInfo ? manifest.launchInfo.launchArgument : undefined,
@@ -251,16 +256,16 @@ export function getInstanceConfigFromMcbbsModpack(manifest: McbbsModpackManifest
  * Convert MultiMC modpack manifest to instance configuration
  */
 export function getInstanceConfigFromMmcModpack(manifest: MMCModpackManifest) {
-  const forge = manifest.json.components.find(c => c.uid === 'net.minecraftforge')
-  const fabric = manifest.json.components.find(c => c.uid === 'net.fabricmc.fabric-loader')
-  const quilt = manifest.json.components.find(c => c.uid === 'net.quiltmc.quilt-loader')
-  const neoForge = manifest.json.components.find(c => c.uid === 'net.neoforge')
+  const forge = manifest.json.components.find((c) => c.uid === 'net.minecraftforge')
+  const fabric = manifest.json.components.find((c) => c.uid === 'net.fabricmc.fabric-loader')
+  const quilt = manifest.json.components.find((c) => c.uid === 'net.quiltmc.quilt-loader')
+  const neoForge = manifest.json.components.find((c) => c.uid === 'net.neoforge')
 
   return {
     name: manifest.cfg.name,
     description: manifest.cfg.notes,
     runtime: {
-      minecraft: manifest.json.components.find(c => c.uid === 'net.minecraft')!.version,
+      minecraft: manifest.json.components.find((c) => c.uid === 'net.minecraft')!.version,
       forge: forge ? forge.version : undefined,
       fabricLoader: fabric ? fabric.version : undefined,
       quiltLoader: quilt ? quilt.version : undefined,
@@ -273,10 +278,10 @@ export function getInstanceConfigFromMmcModpack(manifest: MMCModpackManifest) {
  * Convert CurseForge modpack manifest to instance configuration
  */
 export function getInstanceConfigFromCurseforgeModpack(manifest: CurseforgeModpackManifest) {
-  const forgeId = manifest.minecraft.modLoaders.find(l => l.id.startsWith('forge'))
-  const fabricId = manifest.minecraft.modLoaders.find(l => l.id.startsWith('fabric'))
-  const neoForgeId = manifest.minecraft.modLoaders.find(l => l.id.startsWith('neoforge'))
-  const quiltId = manifest.minecraft.modLoaders.find(l => l.id.startsWith('quilt'))
+  const forgeId = manifest.minecraft.modLoaders.find((l) => l.id.startsWith('forge'))
+  const fabricId = manifest.minecraft.modLoaders.find((l) => l.id.startsWith('fabric'))
+  const neoForgeId = manifest.minecraft.modLoaders.find((l) => l.id.startsWith('neoforge'))
+  const quiltId = manifest.minecraft.modLoaders.find((l) => l.id.startsWith('quilt'))
 
   return {
     name: manifest.version ? `${manifest.name}-${manifest.version}` : manifest.name,
@@ -334,7 +339,9 @@ export function getModrinthModpackFromInstance(instance: InstanceData): Modrinth
 /**
  * Convert instance data to CurseForge modpack manifest
  */
-export function getCurseforgeModpackFromInstance(instance: InstanceData): CurseforgeModpackManifest {
+export function getCurseforgeModpackFromInstance(
+  instance: InstanceData,
+): CurseforgeModpackManifest {
   const modLoaders = [] as { id: string; primary: boolean }[]
 
   if (instance.runtime.forge) {

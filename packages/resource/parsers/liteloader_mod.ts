@@ -3,12 +3,12 @@ import type { IResourceParser } from './index'
 import { ResourceDomain } from '../ResourceDomain'
 import { ResourceType } from '../ResourceType'
 
-export const liteloaderModParser: IResourceParser<LiteloaderModMetadata> = ({
+export const liteloaderModParser: IResourceParser<LiteloaderModMetadata> = {
   type: ResourceType.Liteloader,
   domain: ResourceDomain.Mods,
   ext: '.litemod',
   parseIcon: async () => undefined,
-  parseMetadata: fs => readLiteloaderMod(fs),
+  parseMetadata: (fs) => readLiteloaderMod(fs),
   getSuggestedName: (meta) => {
     let name = ''
     if (typeof meta.name === 'string') {
@@ -25,5 +25,5 @@ export const liteloaderModParser: IResourceParser<LiteloaderModMetadata> = ({
     }
     return name
   },
-  getUri: meta => [`liteloader:${meta.name}:${meta.version}`],
-})
+  getUri: (meta) => [`liteloader:${meta.name}:${meta.version}`],
+}

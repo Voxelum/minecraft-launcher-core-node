@@ -52,7 +52,9 @@ export function forceForgeModMetadata(e: ForgeModParseFailedError, fileName: str
   if (asm.fmlPluginClassName) {
     const split = asm.fmlPluginClassName.split('/')
     let className = split[split.length - 1]
-    className = className.endsWith('Plugin') ? className.substring(0, className.length - 'Plugin'.length) : className
+    className = className.endsWith('Plugin')
+      ? className.substring(0, className.length - 'Plugin'.length)
+      : className
 
     result.modid = className
     result.name = className
@@ -89,8 +91,12 @@ export function normalizeForgeModMetadata(metadata: ForgeModMetadata): ForgeModC
     result.name = modInfo.displayName
     result.version = modInfo.version
     result.description = modInfo.description ?? ''
-    result.acceptMinecraft = modInfo.dependencies.find((d) => d.modId === 'minecraft')?.versionRange || annotation?.acceptedMinecraftVersions || ''
-    result.acceptForge = modInfo.dependencies.find((d) => d.modId === 'forge')?.versionRange ?? '[*]'
+    result.acceptMinecraft =
+      modInfo.dependencies.find((d) => d.modId === 'minecraft')?.versionRange ||
+      annotation?.acceptedMinecraftVersions ||
+      ''
+    result.acceptForge =
+      modInfo.dependencies.find((d) => d.modId === 'forge')?.versionRange ?? '[*]'
     result.authors = modInfo.authors ? [modInfo.authors] : []
     result.logoFile = modInfo.logoFile
 
@@ -99,19 +105,22 @@ export function normalizeForgeModMetadata(metadata: ForgeModMetadata): ForgeModC
       result.modid = annotation.modid || modInfo.modid
       result.version = annotation.version || result.version
       result.description = modInfo.description || annotation.description || ''
-      modInfo.dependencies.push({
-        modId: 'minecraft',
-        mandatory: true,
-        versionRange: `[${annotation.mcversion}]`,
-        ordering: 'AFTER',
-        side: 'CLIENT',
-      }, {
-        modId: 'forge',
-        mandatory: true,
-        versionRange: modInfo.loaderVersion,
-        ordering: 'AFTER',
-        side: 'CLIENT',
-      })
+      modInfo.dependencies.push(
+        {
+          modId: 'minecraft',
+          mandatory: true,
+          versionRange: `[${annotation.mcversion}]`,
+          ordering: 'AFTER',
+          side: 'CLIENT',
+        },
+        {
+          modId: 'forge',
+          mandatory: true,
+          versionRange: modInfo.loaderVersion,
+          ordering: 'AFTER',
+          side: 'CLIENT',
+        },
+      )
     }
   } else if (metadata.mcmodInfo.length > 0) {
     const modInfo = metadata.mcmodInfo[0]
@@ -121,7 +130,8 @@ export function normalizeForgeModMetadata(metadata: ForgeModMetadata): ForgeModC
     result.name = annotation?.name || modInfo.name || modInfo.modid
     result.version = annotation?.version || modInfo.version
     result.description = modInfo.description ?? ''
-    result.acceptMinecraft = annotation?.acceptedMinecraftVersions || (modInfo.mcversion ? `[${modInfo.mcversion}]` : '')
+    result.acceptMinecraft =
+      annotation?.acceptedMinecraftVersions || (modInfo.mcversion ? `[${modInfo.mcversion}]` : '')
     result.acceptForge = '[*]'
     result.authors = modInfo.authorList
     result.logoFile = modInfo.logoFile

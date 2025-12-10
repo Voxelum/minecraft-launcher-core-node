@@ -26,7 +26,7 @@ export interface InstanceFile {
     fileId: number
   }
   /**
-   * The associated modrinth project/version of the instance file 
+   * The associated modrinth project/version of the instance file
    */
   modrinth?: {
     projectId: string
@@ -92,7 +92,10 @@ export interface InstanceInstallLockSchema extends InstanceLockSchema {
   workspace: string
 }
 
-type InstanceDataFields = Pick<InstanceData, 'description' | 'minMemory' | 'maxMemory' | 'vmOptions' | 'mcOptions' | 'name'>
+type InstanceDataFields = Pick<
+  InstanceData,
+  'description' | 'minMemory' | 'maxMemory' | 'vmOptions' | 'mcOptions' | 'name'
+>
 
 /**
  * Instance manifest for sharing/syncing instances

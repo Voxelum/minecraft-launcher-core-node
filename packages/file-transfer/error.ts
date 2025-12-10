@@ -1,4 +1,3 @@
-
 export class DownloadError extends Error {
   constructor(
     message: string,
@@ -20,13 +19,7 @@ export class DownloadFileSystemError extends DownloadError {
     destination: string,
     readonly error: unknown,
   ) {
-    super(
-      message,
-      urls,
-      headers,
-      destination,
-      { cause: error },
-    )
+    super(message, urls, headers, destination, { cause: error })
     this.name = 'DownloadFileSystemError'
   }
 }

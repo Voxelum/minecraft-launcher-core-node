@@ -233,11 +233,11 @@ export interface File {
    */
   fileName: string
   /**
-    * Release or type.
-    * - `1` is the release
-    * - `2` beta
-    * - `3` alpha
-    */
+   * Release or type.
+   * - `1` is the release
+   * - `2` beta
+   * - `3` alpha
+   */
   releaseType: number
 
   fileStatus: FileStatus
@@ -474,7 +474,12 @@ export interface QueryOption {
   /**
    * override the http client
    */
-  client?: (url: string, options: QueryOption, body?: object, text?: boolean) => Promise<object | string>
+  client?: (
+    url: string,
+    options: QueryOption,
+    body?: object,
+    text?: boolean,
+  ) => Promise<object | string>
 }
 
 export interface GetModFilesOptions {
@@ -556,7 +561,11 @@ export interface FingerprintFuzzyMatchResult {
 }
 
 export class CurseforgeApiError extends Error {
-  constructor(readonly url: string, readonly status: number, readonly body: string) {
+  constructor(
+    readonly url: string,
+    readonly status: number,
+    readonly body: string,
+  ) {
     super(`Fail to fetch curseforge api ${url}. Status=${status}. ${body}`)
     this.name = 'CurseforgeApiError'
   }
@@ -570,7 +579,10 @@ export class CurseforgeV1Client {
   private fetch: typeof fetch
   private baseUrl: string
 
-  constructor(private apiKey: string, options?: CurseforgeClientOptions) {
+  constructor(
+    private apiKey: string,
+    options?: CurseforgeClientOptions,
+  ) {
     this.headers = {
       'x-api-key': this.apiKey,
       ...options?.headers,
@@ -595,7 +607,7 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const categories = await response.json() as { data: ModCategory[] }
+    const categories = (await response.json()) as { data: ModCategory[] }
     return categories.data
   }
 
@@ -617,7 +629,7 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as { data: Mod }
+    const result = (await response.json()) as { data: Mod }
     return result.data
   }
 
@@ -636,7 +648,7 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as { data: string }
+    const result = (await response.json()) as { data: string }
     return result.data
   }
 
@@ -662,7 +674,7 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as { data: File[]; pagination: Pagination }
+    const result = (await response.json()) as { data: File[]; pagination: Pagination }
     return result
   }
 
@@ -681,7 +693,7 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as { data: File }
+    const result = (await response.json()) as { data: File }
     return result.data
   }
 
@@ -703,7 +715,7 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as { data: Mod[] }
+    const result = (await response.json()) as { data: Mod[] }
     return result.data
   }
 
@@ -725,7 +737,7 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as { data: File[] }
+    const result = (await response.json()) as { data: File[] }
     return result.data
   }
 
@@ -735,18 +747,37 @@ export class CurseforgeV1Client {
   async searchMods(options: SearchOptions, signal?: AbortSignal) {
     const url = new URL(this.baseUrl + '/v1/mods/search')
     url.searchParams.append('gameId', '432')
-    if (options.classId) { url.searchParams.append('classId', options.classId.toString()) }
-    if (options.categoryId) { url.searchParams.append('categoryId', options.categoryId.toString()) }
-    if (options.gameVersion) { url.searchParams.append('gameVersion', options.gameVersion) }
-    if (options.searchFilter) { url.searchParams.append('searchFilter', options.searchFilter) }
-    url.searchParams.append('sortField', options.sortField?.toString() ?? ModsSearchSortField.Popularity.toString())
+    if (options.classId) {
+      url.searchParams.append('classId', options.classId.toString())
+    }
+    if (options.categoryId) {
+      url.searchParams.append('categoryId', options.categoryId.toString())
+    }
+    if (options.gameVersion) {
+      url.searchParams.append('gameVersion', options.gameVersion)
+    }
+    if (options.searchFilter) {
+      url.searchParams.append('searchFilter', options.searchFilter)
+    }
+    url.searchParams.append(
+      'sortField',
+      options.sortField?.toString() ?? ModsSearchSortField.Popularity.toString(),
+    )
     url.searchParams.append('sortOrder', options.sortOrder ?? 'desc')
-    if (options.modLoaderType) { url.searchParams.append('modLoaderType', options.modLoaderType.toString()) }
-    if (options.modLoaderTypes) { url.searchParams.append('modLoaderTypes', '[' + options.modLoaderTypes.join(',') + ']') }
-    if (options.gameVersionTypeId) { url.searchParams.append('gameVersionTypeId', options.gameVersionTypeId.toString()) }
+    if (options.modLoaderType) {
+      url.searchParams.append('modLoaderType', options.modLoaderType.toString())
+    }
+    if (options.modLoaderTypes) {
+      url.searchParams.append('modLoaderTypes', '[' + options.modLoaderTypes.join(',') + ']')
+    }
+    if (options.gameVersionTypeId) {
+      url.searchParams.append('gameVersionTypeId', options.gameVersionTypeId.toString())
+    }
     url.searchParams.append('index', options.index?.toString() ?? '0')
     url.searchParams.append('pageSize', options.pageSize?.toString() ?? '25')
-    if (options.slug) { url.searchParams.append('slug', options.slug) }
+    if (options.slug) {
+      url.searchParams.append('slug', options.slug)
+    }
     const response = await this.fetch(url, {
       headers: {
         ...this.headers,
@@ -757,7 +788,7 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as { data: Mod[]; pagination: Pagination }
+    const result = (await response.json()) as { data: Mod[]; pagination: Pagination }
     return result
   }
 
@@ -776,11 +807,15 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as { data: string }
+    const result = (await response.json()) as { data: string }
     return result.data
   }
 
-  async getFingerprintsMatchesByGameId(gameId: number, fingerprints: number[], signal?: AbortSignal) {
+  async getFingerprintsMatchesByGameId(
+    gameId: number,
+    fingerprints: number[],
+    signal?: AbortSignal,
+  ) {
     const url = new URL(this.baseUrl + `/v1/fingerprints/${gameId}`)
     const response = await this.fetch(url, {
       method: 'POST',
@@ -795,11 +830,15 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as FingerprintsMatchesResult
+    const result = (await response.json()) as FingerprintsMatchesResult
     return result.data
   }
 
-  async getFingerprintsFuzzyMatchesByGameId(gameId: number, fingerprints: number[], signal?: AbortSignal) {
+  async getFingerprintsFuzzyMatchesByGameId(
+    gameId: number,
+    fingerprints: number[],
+    signal?: AbortSignal,
+  ) {
     const url = new URL(this.baseUrl + `/v1/fingerprints/fuzzy/${gameId}`)
     const response = await this.fetch(url, {
       method: 'POST',
@@ -814,12 +853,15 @@ export class CurseforgeV1Client {
     if (response.status !== 200) {
       throw new CurseforgeApiError(url.toString(), response.status, await response.text())
     }
-    const result = await response.json() as FingerprintFuzzyMatchResult
+    const result = (await response.json()) as FingerprintFuzzyMatchResult
     return result.data
   }
 }
 
 export function guessCurseforgeFileUrl(id: number, name: string) {
   const fileId = id.toString()
-  return [`https://edge.forgecdn.net/files/${fileId.slice(0, 4)}/${fileId.slice(4)}/${name}`, `https://mediafiles.forgecdn.net/files/${fileId.slice(0, 4)}/${fileId.slice(4)}/${name}`]
+  return [
+    `https://edge.forgecdn.net/files/${fileId.slice(0, 4)}/${fileId.slice(4)}/${name}`,
+    `https://mediafiles.forgecdn.net/files/${fileId.slice(0, 4)}/${fileId.slice(4)}/${name}`,
+  ]
 }

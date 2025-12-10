@@ -1,8 +1,8 @@
-import type { ModpackInstallProfile } from '@xmcl/instance';
-import type { FabricModMetadata, LiteloaderModMetadata, QuiltModMetadata } from '@xmcl/mod-parser';
-import type { PackMeta } from '@xmcl/resourcepack';
-import { ForgeModCommonMetadata, NeoforgeMetadata } from './mod';
-import { ResourceType } from './ResourceType';
+import type { ModpackInstallProfile } from '@xmcl/instance'
+import type { FabricModMetadata, LiteloaderModMetadata, QuiltModMetadata } from '@xmcl/mod-parser'
+import type { PackMeta } from '@xmcl/resourcepack'
+import { ForgeModCommonMetadata, NeoforgeMetadata } from './mod'
+import { ResourceType } from './ResourceType'
 
 export interface ResourceSourceCurseforge {
   /**
@@ -43,34 +43,34 @@ export interface ResourceSourceModrinth {
 }
 
 export interface ResourceMetadata {
-  name?: string;
-  forge?: ForgeModCommonMetadata;
-  neoforge?: NeoforgeMetadata;
-  [ResourceType.Fabric]?: FabricModMetadata | FabricModMetadata[];
-  [ResourceType.Liteloader]?: LiteloaderModMetadata;
-  [ResourceType.Quilt]?: QuiltModMetadata;
-  [ResourceType.ResourcePack]?: PackMeta.Pack;
-  [ResourceType.ShaderPack]?: {};
+  name?: string
+  forge?: ForgeModCommonMetadata
+  neoforge?: NeoforgeMetadata
+  [ResourceType.Fabric]?: FabricModMetadata | FabricModMetadata[]
+  [ResourceType.Liteloader]?: LiteloaderModMetadata
+  [ResourceType.Quilt]?: QuiltModMetadata
+  [ResourceType.ResourcePack]?: PackMeta.Pack
+  [ResourceType.ShaderPack]?: {}
   /**
    * The data to create instance from this resource.
    *
    * This should only existed in modpack resource
    */
-  instance?: ModpackInstallProfile;
+  instance?: ModpackInstallProfile
   /**
    * The github info for this source. If this is imported from github release, it will present.
    */
-  github?: ResourceSourceGit;
+  github?: ResourceSourceGit
   /**
    * The curseforge info for this source. If this is imported from curseforge, it will present.
    */
-  curseforge?: ResourceSourceCurseforge;
+  curseforge?: ResourceSourceCurseforge
   /**
    * The modrinth info for this source.
    */
-  modrinth?: ResourceSourceModrinth;
+  modrinth?: ResourceSourceModrinth
   /**
    * The gitlab project information
    */
-  gitlab?: ResourceSourceGit;
+  gitlab?: ResourceSourceGit
 }

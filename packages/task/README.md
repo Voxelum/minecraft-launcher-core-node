@@ -12,7 +12,7 @@ This is a helper module for Minecraft Launcher. See the github home page for mor
 
 ### Progress Moniting
 
-You can use `@xmcl/task` model to track the progress of a task. *In the launcher, they are majorly download task.*
+You can use `@xmcl/task` model to track the progress of a task. _In the launcher, they are majorly download task._
 
 This module implements a basic object model for task with progress. The task can be paused or cancelled.
 

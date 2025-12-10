@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CreateInstanceOptions, InstanceSchema, createInstanceTemplate } from './instance'
-import { EditInstanceOptions, applyInstanceChanges, assignShallow, computeInstanceEditChanges, createInstanceFromOptions } from './edit'
+import {
+  EditInstanceOptions,
+  applyInstanceChanges,
+  assignShallow,
+  computeInstanceEditChanges,
+  createInstanceFromOptions,
+} from './edit'
 import { VersionMetadataProvider } from './internal_type'
 import { loadInstanceFromOptions } from './load'
 
@@ -9,7 +15,7 @@ describe('Instance Assignment Utils', () => {
 
   beforeEach(() => {
     mockVersionProvider = {
-      getLatestRelease: () => '1.19.2'
+      getLatestRelease: () => '1.19.2',
     }
   })
 
@@ -49,7 +55,6 @@ describe('Instance Assignment Utils', () => {
       })
     })
 
-
     describe('loadInstanceFromOptions', () => {
       it('should load basic instance properties', () => {
         const options: InstanceSchema = {
@@ -57,7 +62,7 @@ describe('Instance Assignment Utils', () => {
           name: 'Test Instance',
           author: 'Test Author',
           description: 'Test Description',
-          runtime: { minecraft: '1.18.2' }
+          runtime: { minecraft: '1.18.2' },
         }
 
         const instance = loadInstanceFromOptions(options, mockVersionProvider)
@@ -72,7 +77,7 @@ describe('Instance Assignment Utils', () => {
         const options: InstanceSchema = {
           ...createInstanceTemplate(),
           name: 'Test Instance',
-          runtime: { minecraft: '' }
+          runtime: { minecraft: '' },
         }
 
         const instance = loadInstanceFromOptions(options, mockVersionProvider)
@@ -87,8 +92,8 @@ describe('Instance Assignment Utils', () => {
           runtime: {
             minecraft: '1.19.2',
             forge: '43.2.0',
-            fabricLoader: '0.14.21'
-          }
+            fabricLoader: '0.14.21',
+          },
         }
 
         const instance = loadInstanceFromOptions(options, mockVersionProvider)
@@ -103,7 +108,7 @@ describe('Instance Assignment Utils', () => {
         const options: InstanceSchema = {
           ...createInstanceTemplate(),
           name: 'Test Instance',
-          resolution: { width: 1920, height: 1080, fullscreen: false }
+          resolution: { width: 1920, height: 1080, fullscreen: false },
         }
 
         const instance = loadInstanceFromOptions(options, mockVersionProvider)
@@ -115,7 +120,7 @@ describe('Instance Assignment Utils', () => {
         const options: InstanceSchema = {
           ...createInstanceTemplate(),
           name: 'Test Instance',
-          server: { host: 'example.com', port: 25565 }
+          server: { host: 'example.com', port: 25565 },
         }
 
         const instance = loadInstanceFromOptions(options, mockVersionProvider)
@@ -131,7 +136,7 @@ describe('Instance Assignment Utils', () => {
           author: 'Creator',
           description: 'A new instance',
           runtime: { minecraft: '1.19.2', forge: '43.2.0' },
-          icon: 'icon.png'
+          icon: 'icon.png',
         }
 
         const instance = createInstanceFromOptions(payload, mockVersionProvider)
@@ -148,7 +153,7 @@ describe('Instance Assignment Utils', () => {
 
       it('should use version provider for minecraft version when not specified', () => {
         const payload: CreateInstanceOptions = {
-          name: 'New Instance'
+          name: 'New Instance',
         }
 
         const instance = createInstanceFromOptions(payload, mockVersionProvider)
@@ -159,7 +164,7 @@ describe('Instance Assignment Utils', () => {
       it('should handle resolution in creation options', () => {
         const payload: CreateInstanceOptions = {
           name: 'New Instance',
-          resolution: { width: 1024, height: 768, fullscreen: true }
+          resolution: { width: 1024, height: 768, fullscreen: true },
         }
 
         const instance = createInstanceFromOptions(payload, mockVersionProvider)
@@ -185,7 +190,7 @@ describe('Instance Assignment Utils', () => {
         resolution: { width: 1920, height: 1080, fullscreen: false },
         vmOptions: ['-Xmx4G'],
         mcOptions: ['--username', 'test'],
-        server: { host: 'old.example.com', port: 25565 }
+        server: { host: 'old.example.com', port: 25565 },
       }
     })
 
@@ -193,7 +198,7 @@ describe('Instance Assignment Utils', () => {
       const editOptions: EditInstanceOptions = {
         name: 'New Name',
         author: 'New Author',
-        description: 'New Description'
+        description: 'New Description',
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -207,7 +212,7 @@ describe('Instance Assignment Utils', () => {
     it('should not include unchanged properties', async () => {
       const editOptions: EditInstanceOptions = {
         name: 'Current Instance', // same as current
-        author: 'New Author'
+        author: 'New Author',
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -220,7 +225,7 @@ describe('Instance Assignment Utils', () => {
     it('should handle memory options correctly', async () => {
       const editOptions: EditInstanceOptions = {
         maxMemory: 8192,
-        minMemory: undefined
+        minMemory: undefined,
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -232,7 +237,7 @@ describe('Instance Assignment Utils', () => {
     it('should handle negative memory values by setting to 0', async () => {
       const editOptions: EditInstanceOptions = {
         maxMemory: -1000,
-        minMemory: -500
+        minMemory: -500,
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -246,7 +251,7 @@ describe('Instance Assignment Utils', () => {
         assignMemory: true,
         showLog: true,
         hideLauncher: false,
-        fastLaunch: true
+        fastLaunch: true,
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -259,7 +264,7 @@ describe('Instance Assignment Utils', () => {
 
     it('should handle resolution changes', async () => {
       const editOptions: EditInstanceOptions = {
-        resolution: { width: 2560, height: 1440, fullscreen: true }
+        resolution: { width: 2560, height: 1440, fullscreen: true },
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -269,7 +274,7 @@ describe('Instance Assignment Utils', () => {
 
     it('should handle resolution being set to undefined', async () => {
       const editOptions: EditInstanceOptions = {
-        resolution: undefined
+        resolution: undefined,
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -281,21 +286,21 @@ describe('Instance Assignment Utils', () => {
       const editOptions: EditInstanceOptions = {
         runtime: {
           minecraft: '1.20.1',
-          forge: '47.1.0'
-        }
+          forge: '47.1.0',
+        },
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.runtime).toEqual({
         minecraft: '1.19.2', // preserved from current
-        forge: '47.1.0' // new value
+        forge: '47.1.0', // new value
       })
     })
 
     it('should handle server changes', async () => {
       const editOptions: EditInstanceOptions = {
-        server: { host: 'new.example.com', port: 25566 }
+        server: { host: 'new.example.com', port: 25566 },
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -305,7 +310,7 @@ describe('Instance Assignment Utils', () => {
 
     it('should handle server being set to undefined', async () => {
       const editOptions: EditInstanceOptions = {
-        server: undefined
+        server: undefined,
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -316,7 +321,7 @@ describe('Instance Assignment Utils', () => {
     it('should detect changes in array options', async () => {
       const editOptions: EditInstanceOptions = {
         vmOptions: ['-Xmx8G', '-XX:+UseG1GC'],
-        mcOptions: ['--username', 'newuser']
+        mcOptions: ['--username', 'newuser'],
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -327,7 +332,7 @@ describe('Instance Assignment Utils', () => {
 
     it('should handle environment variables', async () => {
       const editOptions: EditInstanceOptions = {
-        env: { JAVA_HOME: '/usr/lib/jvm/java-17', CUSTOM_VAR: 'value' }
+        env: { JAVA_HOME: '/usr/lib/jvm/java-17', CUSTOM_VAR: 'value' },
       }
 
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
@@ -345,7 +350,7 @@ describe('Instance Assignment Utils', () => {
         name: 'Original Instance',
         author: 'Original Author',
         runtime: { minecraft: '1.19.2', forge: '43.2.0' },
-        maxMemory: 4096
+        maxMemory: 4096,
       }
     })
 
@@ -353,7 +358,7 @@ describe('Instance Assignment Utils', () => {
       const changes = {
         name: 'Updated Instance',
         author: 'Updated Author',
-        maxMemory: 8192
+        maxMemory: 8192,
       }
 
       const result = applyInstanceChanges(instance, changes)
@@ -366,11 +371,11 @@ describe('Instance Assignment Utils', () => {
 
     it('should merge runtime changes properly', () => {
       const changes: Partial<InstanceSchema> = {
-        runtime: { 
+        runtime: {
           ...instance.runtime,
-          fabricLoader: '0.14.21', 
-          quiltLoader: '0.19.2' 
-        }
+          fabricLoader: '0.14.21',
+          quiltLoader: '0.19.2',
+        },
       }
 
       const result = applyInstanceChanges(instance, changes)
@@ -396,14 +401,14 @@ describe('Instance Assignment Utils', () => {
   describe('Integration Tests', () => {
     it('should handle complete edit workflow', async () => {
       const mockProvider: VersionMetadataProvider = {
-        getLatestRelease: () => '1.19.2'
+        getLatestRelease: () => '1.19.2',
       }
 
       // Create initial instance
       const createOptions: CreateInstanceOptions = {
         name: 'Test Instance',
         author: 'Test Author',
-        runtime: { minecraft: '1.19.2', forge: '43.2.0' }
+        runtime: { minecraft: '1.19.2', forge: '43.2.0' },
       }
 
       const instance = createInstanceFromOptions(createOptions, mockProvider)
@@ -413,7 +418,7 @@ describe('Instance Assignment Utils', () => {
         name: 'Updated Test Instance',
         runtime: { minecraft: '1.20.1', fabricLoader: '0.14.21' },
         maxMemory: 8192,
-        showLog: true
+        showLog: true,
       }
 
       const changes = await computeInstanceEditChanges(instance, editOptions, async (s) => s)

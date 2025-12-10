@@ -5,7 +5,10 @@ import { Dispatcher, request } from 'undici'
 import { ClientUser } from './structures/ClientUser'
 import {
   CUSTOM_RPC_ERROR_CODE,
-  RPC_ERROR_CODE, type CommandIncoming, type RPC_CMD, type RPC_EVT,
+  RPC_ERROR_CODE,
+  type CommandIncoming,
+  type RPC_CMD,
+  type RPC_EVT,
   type Transport,
   type TransportOptions,
 } from './structures/Transport'
@@ -21,28 +24,28 @@ export type AuthorizeOptions = {
 
 export interface ClientOptions {
   /**
-     * application id
-     */
+   * application id
+   */
   clientId: string
   /**
-     * application secret
-     */
+   * application secret
+   */
   clientSecret?: string
   /**
-     * pipe id
-     */
+   * pipe id
+   */
   pipeId?: number
   /**
-     * transport configs
-     */
+   * transport configs
+   */
   transport?: {
     /**
-         * transport type
-         */
-    type?: 'ipc' | 'websocket' | { new(options: TransportOptions): Transport }
+     * transport type
+     */
+    type?: 'ipc' | 'websocket' | { new (options: TransportOptions): Transport }
     /**
-         * ipc transport's path list
-         */
+     * ipc transport's path list
+     */
     pathList?: FormatFunction[]
   }
 
@@ -51,36 +54,36 @@ export interface ClientOptions {
 
 export type ClientEvents = {
   /**
-     * fired when the client is ready
-     */
+   * fired when the client is ready
+   */
   ready: () => void
   /**
-     * fired when the client is connected to local rpc server
-     */
+   * fired when the client is connected to local rpc server
+   */
   connected: () => void
   /**
-     * fired when the client is disconnected from the local rpc server
-     */
+   * fired when the client is disconnected from the local rpc server
+   */
   disconnected: () => void
   /**
-     * fired when the client is have debug message
-     */
+   * fired when the client is have debug message
+   */
   debug: (...data: any[]) => void
 }
 
-export class Client extends (EventEmitter) {
+export class Client extends EventEmitter {
   /**
-     * application id
-     */
+   * application id
+   */
   clientId: string
   /**
-     * application secret
-     */
+   * application secret
+   */
   clientSecret?: string
 
   /**
-     * pipe id
-     */
+   * pipe id
+   */
   pipeId?: number
 
   private accessToken?: string
@@ -88,22 +91,22 @@ export class Client extends (EventEmitter) {
   private tokenType = 'Bearer'
 
   /**
-     * transport instance
-     */
+   * transport instance
+   */
   readonly transport: Transport
 
   /**
-     * current user
-     */
+   * current user
+   */
   user?: ClientUser
   /**
-     * current application
-     */
+   * current application
+   */
   application?: APIApplication
 
   /**
-     * @hidden
-     */
+   * @hidden
+   */
   cdnHost = 'https://cdn.discordapp.com'
   /**
    * @hidden
@@ -121,7 +124,7 @@ export class Client extends (EventEmitter) {
   private _nonceMap = new Map<
     string,
     {
-      resolve:(value?: any) => void
+      resolve: (value?: any) => void
       reject: (reason?: any) => void
       error: RPCError
     }
@@ -144,7 +147,9 @@ export class Client extends (EventEmitter) {
     this.transport.on('message', (message) => {
       if (message.cmd === 'DISPATCH' && message.evt === 'READY') {
         if (message.data.user) this.user = new ClientUser(this, message.data.user)
-        if (message.data.config && message.data.config.cdn_host) { this.cdnHost = `https://${message.data.config.cdn_host}` }
+        if (message.data.config && message.data.config.cdn_host) {
+          this.cdnHost = `https://${message.data.config.cdn_host}`
+        }
         this.emit('connected')
       } else {
         if (message.nonce && this._nonceMap.has(message.nonce)) {
@@ -167,8 +172,8 @@ export class Client extends (EventEmitter) {
   // #region Request Handlers
 
   /**
-     * @hidden
-     */
+   * @hidden
+   */
   async fetch(
     method: Dispatcher.HttpMethod,
     path: string,
@@ -189,9 +194,13 @@ export class Client extends (EventEmitter) {
   }
 
   /**
-     * @hidden
-     */
-  async request<A = any, D = any>(cmd: RPC_CMD, args?: any, evt?: RPC_EVT): Promise<CommandIncoming<A, D>> {
+   * @hidden
+   */
+  async request<A = any, D = any>(
+    cmd: RPC_CMD,
+    args?: any,
+    evt?: RPC_EVT,
+  ): Promise<CommandIncoming<A, D>> {
     const error = new RPCError(RPC_ERROR_CODE.RPC_UNKNOWN_ERROR)
     RPCError.captureStackTrace(error, this.request)
 
@@ -208,8 +217,9 @@ export class Client extends (EventEmitter) {
   // #region Authorization handlers
 
   private async authenticate(): Promise<void> {
-    const { application, user } = (await this.request('AUTHENTICATE', { access_token: this.accessToken ?? '' }))
-      .data
+    const { application, user } = (
+      await this.request('AUTHENTICATE', { access_token: this.accessToken ?? '' })
+    ).data
     this.application = application
     this.user = new ClientUser(this, user)
     this.emit('ready')
@@ -241,7 +251,9 @@ export class Client extends (EventEmitter) {
       !('refresh_token' in data) ||
       !('expires_in' in data) ||
       !('token_type' in data)
-    ) { throw new TypeError(`Invalid access token response!\nData: ${JSON.stringify(data, null, 2)}`) }
+    ) {
+      throw new TypeError(`Invalid access token response!\nData: ${JSON.stringify(data, null, 2)}`)
+    }
 
     this.accessToken = data.access_token
     this.refreshToken = data.refresh_token
@@ -298,17 +310,20 @@ export class Client extends (EventEmitter) {
   // #endregion
 
   /**
-     * Used to subscribe to events. `evt` of the payload should be set to the event being subscribed to. `args` of the payload should be set to the args needed for the event.
-     * @param event event name now subscribed to
-     * @param args args for the event
-     * @returns an object to unsubscribe from the event
-     */
-  async subscribe(event: Exclude<RPC_EVT, 'READY' | 'ERROR'>, args?: any): Promise<{ unsubscribe: () => void }> {
+   * Used to subscribe to events. `evt` of the payload should be set to the event being subscribed to. `args` of the payload should be set to the args needed for the event.
+   * @param event event name now subscribed to
+   * @param args args for the event
+   * @returns an object to unsubscribe from the event
+   */
+  async subscribe(
+    event: Exclude<RPC_EVT, 'READY' | 'ERROR'>,
+    args?: any,
+  ): Promise<{ unsubscribe: () => void }> {
     await this.request('SUBSCRIBE', args, event)
     return {
       /**
-             * Unsubscribes from the event
-             */
+       * Unsubscribes from the event
+       */
       unsubscribe: () => this.request('UNSUBSCRIBE', args, event),
     }
   }
@@ -316,8 +331,8 @@ export class Client extends (EventEmitter) {
   /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
-     * connect to the local rpc server
-     */
+   * connect to the local rpc server
+   */
   async connect(): Promise<void> {
     if (this.connectionPromise) return this.connectionPromise
 
@@ -343,7 +358,7 @@ export class Client extends (EventEmitter) {
             promise.error.code =
               typeof reason === 'object' ? reason!.code : CUSTOM_RPC_ERROR_CODE.RPC_CONNECTION_ENDED
             promise.error.message =
-              typeof reason === 'object' ? reason!.message : reason ?? 'Connection ended'
+              typeof reason === 'object' ? reason!.message : (reason ?? 'Connection ended')
             promise.reject(promise.error)
           })
 
@@ -361,9 +376,9 @@ export class Client extends (EventEmitter) {
   }
 
   /**
-     * will try to authorize if a scope is specified, else it's the same as `connect()`
-     * @param options options for the authorization
-     */
+   * will try to authorize if a scope is specified, else it's the same as `connect()`
+   * @param options options for the authorization
+   */
   async login(options?: AuthorizeOptions): Promise<void> {
     await this.connect()
 
@@ -377,8 +392,8 @@ export class Client extends (EventEmitter) {
   }
 
   /**
-     * disconnects from the local rpc server
-     */
+   * disconnects from the local rpc server
+   */
   async destroy(): Promise<void> {
     if (this.refreshTimeout) {
       clearTimeout(this.refreshTimeout)

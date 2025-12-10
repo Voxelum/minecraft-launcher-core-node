@@ -36,40 +36,40 @@
 import type { Label } from './Label'
 export class Edge {
   /**
-     * Denotes a normal control flow graph edge.
-     */
+   * Denotes a normal control flow graph edge.
+   */
   static readonly NORMAL: number = 0
 
   /**
-     * Denotes a control flow graph edge corresponding to an exception handler.
-     * More precisely any {@link Edge} whose {@link #info} is strictly positive
-     * corresponds to an exception handler. The actual value of {@link #info} is
-     * the index, in the {@link ClassWriter} type table, of the exception that
-     * is catched.
-     */
+   * Denotes a control flow graph edge corresponding to an exception handler.
+   * More precisely any {@link Edge} whose {@link #info} is strictly positive
+   * corresponds to an exception handler. The actual value of {@link #info} is
+   * the index, in the {@link ClassWriter} type table, of the exception that
+   * is catched.
+   */
   static readonly EXCEPTION: number = 2147483647
 
   /**
-     * Information about this control flow graph edge. If
-     * {@link ClassWriter#COMPUTE_MAXS} is used this field is the (relative)
-     * stack size in the basic block from which this edge originates. This size
-     * is equal to the stack size at the "jump" instruction to which this edge
-     * corresponds, relatively to the stack size at the beginning of the
-     * originating basic block. If {@link ClassWriter#COMPUTE_FRAMES} is used,
-     * this field is the kind of this control flow graph edge (i.e. NORMAL or
-     * EXCEPTION).
-     */
+   * Information about this control flow graph edge. If
+   * {@link ClassWriter#COMPUTE_MAXS} is used this field is the (relative)
+   * stack size in the basic block from which this edge originates. This size
+   * is equal to the stack size at the "jump" instruction to which this edge
+   * corresponds, relatively to the stack size at the beginning of the
+   * originating basic block. If {@link ClassWriter#COMPUTE_FRAMES} is used,
+   * this field is the kind of this control flow graph edge (i.e. NORMAL or
+   * EXCEPTION).
+   */
   info = 0
 
   /**
-     * The successor block of the basic block from which this edge originates.
-     */
+   * The successor block of the basic block from which this edge originates.
+   */
   successor!: Label | null
 
   /**
-     * The next edge in the list of successors of the originating basic block.
-     * See {@link Label#successors successors}.
-     */
+   * The next edge in the list of successors of the originating basic block.
+   * See {@link Label#successors successors}.
+   */
   next: Edge | null = null
 
   constructor() {

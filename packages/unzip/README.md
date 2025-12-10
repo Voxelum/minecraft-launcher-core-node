@@ -14,7 +14,7 @@ Support `Promise` and nodejs `Stream`.
 
 The people
 
-1. who use nodejs 
+1. who use nodejs
 2. who want a unzip only interface
 3. who think yauzl is good but its API is hard to use
 
@@ -22,4 +22,4 @@ might want to look at this.
 
 ## Where is the document
 
-Since this is majorly used in its [parent project](https://github.com/voxelum/minecraft-launcher-core-node). You can 
+Since this is majorly used in its [parent project](https://github.com/voxelum/minecraft-launcher-core-node). You can

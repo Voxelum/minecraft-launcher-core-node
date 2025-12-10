@@ -72,18 +72,21 @@ export function detectMMCRoot(path: string): string {
 /**
  * Parse MultiMC instance configuration
  */
-export async function parseMultiMCInstance(
-  path: string,
-): Promise<CreateInstanceOptions> {
+export async function parseMultiMCInstance(path: string): Promise<CreateInstanceOptions> {
   const instanceCFGText = await readFile(join(path, 'instance.cfg'), 'utf-8')
-  const instanceCFG = instanceCFGText.split('\n').reduce((acc, line) => {
-    if (!line || line.trim().length === 0) return acc
-    const [key, value] = line.split('=')
-    acc[key] = value
-    return acc
-  }, {} as Record<string, string>) as any as MultiMCConfig
+  const instanceCFG = instanceCFGText.split('\n').reduce(
+    (acc, line) => {
+      if (!line || line.trim().length === 0) return acc
+      const [key, value] = line.split('=')
+      acc[key] = value
+      return acc
+    },
+    {} as Record<string, string>,
+  ) as any as MultiMCConfig
 
-  const instancePack = JSON.parse(await readFile(join(path, 'mmc-pack.json'), 'utf-8')) as MultiMCManifest
+  const instancePack = JSON.parse(
+    await readFile(join(path, 'mmc-pack.json'), 'utf-8'),
+  ) as MultiMCManifest
 
   const instanceOptions: CreateInstanceOptions = {
     name: instanceCFG.name,
@@ -97,7 +100,7 @@ export async function parseMultiMCInstance(
     const [host, port] = instanceCFG.JoinServerOnLaunchAddress.split(':')
     instanceOptions.server = {
       host,
-      port: port && !isNaN(parseInt(port)) ? parseInt(port) : undefined
+      port: port && !isNaN(parseInt(port)) ? parseInt(port) : undefined,
     }
   }
 
@@ -131,11 +134,14 @@ export async function parseMultiMCInstance(
   }
 
   if (instancePack.formatVersion === 1) {
-    const minecraft = instancePack.components.find(c => c.uid === 'net.minecraft')?.version ?? ''
-    const forge = instancePack.components.find(c => c.uid === 'net.minecraftforge')?.version ?? ''
-    const optifine = instancePack.components.find(c => c.uid === 'optifine.Optifine')?.version ?? ''
-    const fabricLoader = instancePack.components.find(c => c.uid === 'net.fabricmc.fabric-loader')?.version ?? ''
-    const quiltLoader = instancePack.components.find(c => c.uid === 'org.quiltmc.quilt-loader')?.version ?? ''
+    const minecraft = instancePack.components.find((c) => c.uid === 'net.minecraft')?.version ?? ''
+    const forge = instancePack.components.find((c) => c.uid === 'net.minecraftforge')?.version ?? ''
+    const optifine =
+      instancePack.components.find((c) => c.uid === 'optifine.Optifine')?.version ?? ''
+    const fabricLoader =
+      instancePack.components.find((c) => c.uid === 'net.fabricmc.fabric-loader')?.version ?? ''
+    const quiltLoader =
+      instancePack.components.find((c) => c.uid === 'org.quiltmc.quilt-loader')?.version ?? ''
     const runtime: RuntimeVersions = {
       minecraft,
       forge,

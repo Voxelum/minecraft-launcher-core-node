@@ -1,4 +1,9 @@
 {
     "typescript.tsdk": "node_modules/typescript/lib",
     "editor.tabSize": 2,
+    "oxc.fmt.experimental": true,
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "[typescript]": {
+        "editor.defaultFormatter": "oxc.oxc-vscode"
+    }
 }

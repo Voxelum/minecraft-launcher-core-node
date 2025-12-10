@@ -21,7 +21,7 @@ describe.skip('Install', () => {
           console.log(`Download progress: ${d.progress}/${d.total} ${d.speed}`)
         }
       }, 1000)
-      const resolved = await installMinecraft(version, loc, { 
+      const resolved = await installMinecraft(version, loc, {
         tracker: (e) => {
           if (e.phase === 'version.jar') {
             console.log(e.payload.id, e.payload.side, e.payload.size)
@@ -30,7 +30,7 @@ describe.skip('Install', () => {
             console.log(e.payload.id, e.payload.url)
             downloads.push(e.payload.download)
           }
-        }
+        },
       })
       await completeInstallation(resolved, {
         tracker: (e) => {
@@ -39,7 +39,7 @@ describe.skip('Install', () => {
           } else if (e.phase === 'libraries') {
             downloads.push(e.payload.download)
           }
-        }
+        },
       })
       clearInterval(timeout)
       expect(existsSync(loc.getVersionJar(version.id))).toBeTruthy()
@@ -220,4 +220,3 @@ describe.skip('Install', () => {
 //       .toBeTruthy()
 //   })
 // }, 100000000)
-

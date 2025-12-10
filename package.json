@@ -3,18 +3,19 @@
     "version": "7.10.1",
     "scripts": {
         "build:docs": "tsx scripts/docs.ts",
-        "lint": "oxlint -c ./oxlintrc.json packages/**",
-        "lint:fix": "oxlint -c ./oxlintrc.json packages/** --fix",
+        "lint": "oxlint -c ./.oxlintrc.json packages",
+        "format": "oxfmt -c ./.oxfmtrc.json packages --write",
+        "lint:fix": "oxlint -c ./.oxlintrc.json packages --fix",
         "test": "vitest",
         "coverage": "vitest run --coverage"
     },
     "packageManager": "pnpm@9.15.3",
     "devDependencies": {
-        "tsx": "^4.19.2",
-        "typedoc": "^0.27.6",
-        "oxlint": "^0.15.5",
-        "typescript": "^5.9.3",
-        "@vitest/coverage-v8": "^2.1.8",
-        "vitest": "^2.1.8"
+        "oxfmt": "^0.17.0",
+        "oxlint": "^1.32.0",
+        "tsx": "^4.21.0",
+        "vitest": "^4.0.15",
+        "typedoc": "^0.28.15",
+        "typescript": "^5.9.3"
     }
 }

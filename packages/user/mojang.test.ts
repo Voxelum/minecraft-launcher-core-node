@@ -5,7 +5,6 @@ describe.skip('MojangService', () => {
   // test("should be send set name req and accept 204", async () => {
   //   nock("https://api.mojang.com")
   //     .post("/user/profile/uuid/name", { name: "name" }, {
-
   // describe("#checkLocation", () => {
   //     test("should be send check location req and accept 204", async () => {
   //         nock("https://api.mojang.com")

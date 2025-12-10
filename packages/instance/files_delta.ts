@@ -1,5 +1,5 @@
-import { join } from 'path';
-import { InstanceFile, InstanceFileUpdate } from './files';
+import { join } from 'path'
+import { InstanceFile, InstanceFileUpdate } from './files'
 
 /**
  * File system abstraction for checking files
@@ -27,7 +27,7 @@ export async function computeFileUpdates(
   oldFiles: InstanceFile[],
   newFiles: InstanceFile[],
   oldInstallTime: number | undefined,
-  fs: FileSystem
+  fs: FileSystem,
 ): Promise<InstanceFileUpdate[]> {
   const toAdd: Record<string, InstanceFile> = {}
   const oldFilesMap: Record<string, InstanceFile> = {}
@@ -35,7 +35,7 @@ export async function computeFileUpdates(
   for (const f of oldFiles) oldFilesMap[f.path] = f
   for (const f of newFiles) toAdd[f.path] = f
 
-  const jointFilePaths = new Set([...oldFiles.map(f => f.path), ...newFiles.map(f => f.path)])
+  const jointFilePaths = new Set([...oldFiles.map((f) => f.path), ...newFiles.map((f) => f.path)])
 
   const result: InstanceFileUpdate[] = []
 
@@ -48,7 +48,7 @@ export async function computeFileUpdates(
       if (toAdd[p]) {
         result.push({
           file: toAdd[p],
-          operation: 'add'
+          operation: 'add',
         })
       }
     } else {
@@ -56,27 +56,29 @@ export async function computeFileUpdates(
       let currentCrc32 = 0
 
       // Check if file changed compared to old install
-      const isFileChangedComparedToOldFile = typeof oldInstallTime === 'number'
-        ? oldInstallTime < file.mtime
-        : oldFilesMap[p]?.hashes.sha1
-          ? oldFilesMap[p]?.hashes.sha1 !== (currentSha1 = await fs.getSha1(instancePath, file))
-          : oldFilesMap[p]?.hashes.crc32
-            ? Number.parseInt(oldFilesMap[p]?.hashes.crc32) !== (currentCrc32 = await fs.getCrc32(instancePath, file))
-            : oldFilesMap[p]?.size
-              ? oldFilesMap[p]?.size !== file.size
-              : undefined
+      const isFileChangedComparedToOldFile =
+        typeof oldInstallTime === 'number'
+          ? oldInstallTime < file.mtime
+          : oldFilesMap[p]?.hashes.sha1
+            ? oldFilesMap[p]?.hashes.sha1 !== (currentSha1 = await fs.getSha1(instancePath, file))
+            : oldFilesMap[p]?.hashes.crc32
+              ? Number.parseInt(oldFilesMap[p]?.hashes.crc32) !==
+                (currentCrc32 = await fs.getCrc32(instancePath, file))
+              : oldFilesMap[p]?.size
+                ? oldFilesMap[p]?.size !== file.size
+                : undefined
 
       if (isFileChangedComparedToOldFile) {
         // File was modified
         if (toAdd[p]) {
           result.push({
             file: toAdd[p],
-            operation: 'backup-add'
+            operation: 'backup-add',
           })
         } else {
           result.push({
             file: oldFilesMap[p],
-            operation: 'backup-remove'
+            operation: 'backup-remove',
           })
         }
       } else {
@@ -85,11 +87,15 @@ export async function computeFileUpdates(
 
           const isFileDiff = async (): Promise<boolean> => {
             if ('sha1' in toAddFile.hashes) {
-              return (currentSha1 || await fs.getSha1(instancePath, file)) !== toAdd[p].hashes.sha1
+              return (
+                (currentSha1 || (await fs.getSha1(instancePath, file))) !== toAdd[p].hashes.sha1
+              )
             }
-            const crcDiff = 'crc32' in toAddFile.hashes
-              ? (currentCrc32 || (currentCrc32 = await fs.getCrc32(instancePath, file))) !== Number.parseInt(toAdd[p].hashes.crc32)
-              : undefined
+            const crcDiff =
+              'crc32' in toAddFile.hashes
+                ? (currentCrc32 || (currentCrc32 = await fs.getCrc32(instancePath, file))) !==
+                  Number.parseInt(toAdd[p].hashes.crc32)
+                : undefined
             const sizeDiff = 'size' in toAddFile ? file.size !== toAdd[p].size : undefined
 
             if (crcDiff || sizeDiff) {
@@ -107,12 +113,12 @@ export async function computeFileUpdates(
 
           result.push({
             file: toAdd[p],
-            operation: !isFileDifferent ? 'keep' : dontKnowOldFile ? 'backup-add' : 'add'
+            operation: !isFileDifferent ? 'keep' : dontKnowOldFile ? 'backup-add' : 'add',
           })
         } else {
           result.push({
             file: oldFilesMap[p],
-            operation: 'remove'
+            operation: 'remove',
           })
         }
       }

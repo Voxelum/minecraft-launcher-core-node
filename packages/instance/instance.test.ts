@@ -6,7 +6,7 @@ import {
   isUpstreamSameOrigin,
   type Instance,
   type InstanceData,
-  type RuntimeVersions
+  type RuntimeVersions,
 } from './instance'
 
 describe('Instance Templates', () => {
@@ -71,13 +71,13 @@ describe('Instance Templates', () => {
 
       // Attempts to modify should not work
       expect(() => {
-        (DEFAULT_INSTANCE as any).name = 'Modified'
+        ;(DEFAULT_INSTANCE as any).name = 'Modified'
       }).toThrow()
     })
 
     it('should have the same structure as created template', () => {
       const template = createInstanceTemplate()
-      
+
       expect(Object.keys(DEFAULT_INSTANCE)).toEqual(Object.keys(template))
       expect(DEFAULT_INSTANCE.name).toBe(template.name)
       expect(DEFAULT_INSTANCE.runtime.minecraft).toBe(template.runtime.minecraft)
@@ -89,12 +89,12 @@ describe('Instance Templates', () => {
       const curseforge: InstanceUpstream = {
         type: 'curseforge-modpack',
         modId: 123,
-        fileId: 456
+        fileId: 456,
       }
       const modrinth: InstanceUpstream = {
         type: 'modrinth-modpack',
         projectId: 'test-project',
-        versionId: 'test-version'
+        versionId: 'test-version',
       }
 
       expect(isUpstreamSameOrigin(curseforge, modrinth)).toBe(false)
@@ -104,12 +104,12 @@ describe('Instance Templates', () => {
       const upstream1: InstanceUpstream = {
         type: 'curseforge-modpack',
         modId: 123,
-        fileId: 456
+        fileId: 456,
       }
       const upstream2: InstanceUpstream = {
         type: 'curseforge-modpack',
         modId: 123,
-        fileId: 789 // Different file ID but same mod ID
+        fileId: 789, // Different file ID but same mod ID
       }
 
       expect(isUpstreamSameOrigin(upstream1, upstream2)).toBe(true)
@@ -119,12 +119,12 @@ describe('Instance Templates', () => {
       const upstream1: InstanceUpstream = {
         type: 'curseforge-modpack',
         modId: 123,
-        fileId: 456
+        fileId: 456,
       }
       const upstream2: InstanceUpstream = {
         type: 'curseforge-modpack',
         modId: 456, // Different mod ID
-        fileId: 789
+        fileId: 789,
       }
 
       expect(isUpstreamSameOrigin(upstream1, upstream2)).toBe(false)
@@ -134,12 +134,12 @@ describe('Instance Templates', () => {
       const upstream1: InstanceUpstream = {
         type: 'modrinth-modpack',
         projectId: 'test-project',
-        versionId: 'v1.0.0'
+        versionId: 'v1.0.0',
       }
       const upstream2: InstanceUpstream = {
         type: 'modrinth-modpack',
         projectId: 'test-project',
-        versionId: 'v2.0.0' // Different version but same project
+        versionId: 'v2.0.0', // Different version but same project
       }
 
       expect(isUpstreamSameOrigin(upstream1, upstream2)).toBe(true)
@@ -149,12 +149,12 @@ describe('Instance Templates', () => {
       const upstream1: InstanceUpstream = {
         type: 'modrinth-modpack',
         projectId: 'project-1',
-        versionId: 'v1.0.0'
+        versionId: 'v1.0.0',
       }
       const upstream2: InstanceUpstream = {
         type: 'modrinth-modpack',
         projectId: 'project-2', // Different project
-        versionId: 'v1.0.0'
+        versionId: 'v1.0.0',
       }
 
       expect(isUpstreamSameOrigin(upstream1, upstream2)).toBe(false)
@@ -164,12 +164,12 @@ describe('Instance Templates', () => {
       const upstream1: InstanceUpstream = {
         type: 'ftb-modpack',
         id: 123,
-        versionId: 1
+        versionId: 1,
       }
       const upstream2: InstanceUpstream = {
         type: 'ftb-modpack',
         id: 123,
-        versionId: 2 // Different version but same ID
+        versionId: 2, // Different version but same ID
       }
 
       expect(isUpstreamSameOrigin(upstream1, upstream2)).toBe(true)
@@ -178,15 +178,15 @@ describe('Instance Templates', () => {
     it('should handle peer upstream comparison', () => {
       const upstream1: InstanceUpstream = {
         type: 'peer',
-        id: 'peer-123'
+        id: 'peer-123',
       }
       const upstream2: InstanceUpstream = {
         type: 'peer',
-        id: 'peer-123'
+        id: 'peer-123',
       }
       const upstream3: InstanceUpstream = {
         type: 'peer',
-        id: 'peer-456'
+        id: 'peer-456',
       }
 
       expect(isUpstreamSameOrigin(upstream1, upstream2)).toBe(true)

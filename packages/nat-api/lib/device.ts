@@ -92,7 +92,7 @@ export class Device {
 
     const res = await request(this.url, { method: 'GET', dispatcher: this.client })
     if (res.statusCode !== 200) {
-      throw new Error('Request failed: ' + res.statusCode + ' ' + await res.body.text())
+      throw new Error('Request failed: ' + res.statusCode + ' ' + (await res.body.text()))
     }
 
     const data = await res.body.text()
@@ -115,17 +115,24 @@ export class Device {
   async run(action: string, args: Record<string, number | string | undefined>): Promise<any> {
     const info = await this._getService(this.services)
 
-    const body = '<?xml version="1.0"?>' +
+    const body =
+      '<?xml version="1.0"?>' +
       '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" ' +
       's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">' +
       '<s:Body>' +
-      '<u:' + action + ' xmlns:u=' + JSON.stringify(info.service) + '>' +
-      Object.entries(args).map((args) => {
-        return '<' + args[0] + '>' +
-          (args[1] !== undefined ? args[1] : '') +
-          '</' + args[0] + '>'
-      }).join('') +
-      '</u:' + action + '>' +
+      '<u:' +
+      action +
+      ' xmlns:u=' +
+      JSON.stringify(info.service) +
+      '>' +
+      Object.entries(args)
+        .map((args) => {
+          return '<' + args[0] + '>' + (args[1] !== undefined ? args[1] : '') + '</' + args[0] + '>'
+        })
+        .join('') +
+      '</u:' +
+      action +
+      '>' +
       '</s:Body>' +
       '</s:Envelope>'
     // const req = hrequest(info.controlURL, {
@@ -170,7 +177,10 @@ export class Device {
       const parser = new fxparser.XMLParser()
       if (res.headers.get('content-length') && Number(res.headers.get('content-length')) > 0) {
         const error = parser.parse(await res.text())['s:Envelope']['s:Body']['s:Fault']
-        throw Object.assign(new Error(`Upnp action ${info.service}#${action} failed: ${res.status}`), error)
+        throw Object.assign(
+          new Error(`Upnp action ${info.service}#${action} failed: ${res.status}`),
+          error,
+        )
       }
       // console.log(body)
       throw new Error(`Upnp action ${info.service}#${action} failed: ${res.status}`)

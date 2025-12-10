@@ -46,82 +46,89 @@ import { TypePath } from './TypePath'
 
 export class FieldWriter extends FieldVisitor {
   /**
-     * The class writer to which this field must be added.
-     */
+   * The class writer to which this field must be added.
+   */
   private cw: ClassWriter
 
   /**
-     * Access flags of this field.
-     */
+   * Access flags of this field.
+   */
   private access: number
 
   /**
-     * The index of the constant pool item that contains the name of this
-     * method.
-     */
+   * The index of the constant pool item that contains the name of this
+   * method.
+   */
   private name: number
 
   /**
-     * The index of the constant pool item that contains the descriptor of this
-     * field.
-     */
+   * The index of the constant pool item that contains the descriptor of this
+   * field.
+   */
   private desc: number
 
   /**
-     * The index of the constant pool item that contains the signature of this
-     * field.
-     */
+   * The index of the constant pool item that contains the signature of this
+   * field.
+   */
   private signature: number
 
   /**
-     * The index of the constant pool item that contains the constant value of
-     * this field.
-     */
+   * The index of the constant pool item that contains the constant value of
+   * this field.
+   */
   private value: number
 
   /**
-     * The runtime visible annotations of this field. May be <tt>null</tt>.
-     */
+   * The runtime visible annotations of this field. May be <tt>null</tt>.
+   */
   private anns!: AnnotationWriter
 
   /**
-     * The runtime invisible annotations of this field. May be <tt>null</tt>.
-     */
+   * The runtime invisible annotations of this field. May be <tt>null</tt>.
+   */
   private ianns!: AnnotationWriter
 
   /**
-     * The runtime visible type annotations of this field. May be <tt>null</tt>.
-     */
+   * The runtime visible type annotations of this field. May be <tt>null</tt>.
+   */
   private tanns!: AnnotationWriter
 
   /**
-     * The runtime invisible type annotations of this field. May be
-     * <tt>null</tt>.
-     */
+   * The runtime invisible type annotations of this field. May be
+   * <tt>null</tt>.
+   */
   private itanns!: AnnotationWriter
 
   /**
-     * The non standard attributes of this field. May be <tt>null</tt>.
-     */
+   * The non standard attributes of this field. May be <tt>null</tt>.
+   */
   private attrs!: Attribute
 
   /**
-     * Constructs a new {@link FieldWriter}.
-     *
-     * @param cw
-     * the class writer to which this field must be added.
-     * @param access
-     * the field's access flags (see {@link Opcodes}).
-     * @param name
-     * the field's name.
-     * @param desc
-     * the field's descriptor (see {@link Type}).
-     * @param signature
-     * the field's signature. May be <tt>null</tt>.
-     * @param value
-     * the field's constant value. May be <tt>null</tt>.
-     */
-  constructor(cw: ClassWriter, access: number, name: string, desc: string, signature: string, value: any) {
+   * Constructs a new {@link FieldWriter}.
+   *
+   * @param cw
+   * the class writer to which this field must be added.
+   * @param access
+   * the field's access flags (see {@link Opcodes}).
+   * @param name
+   * the field's name.
+   * @param desc
+   * the field's descriptor (see {@link Type}).
+   * @param signature
+   * the field's signature. May be <tt>null</tt>.
+   * @param value
+   * the field's constant value. May be <tt>null</tt>.
+   */
+  constructor(
+    cw: ClassWriter,
+    access: number,
+    name: string,
+    desc: string,
+    signature: string,
+    value: any,
+  ) {
     super(Opcodes.ASM5)
     this.access = 0
     this.name = 0
@@ -163,7 +170,12 @@ export class FieldWriter extends FieldVisitor {
     return aw
   }
 
-  public visitTypeAnnotation(typeRef: number, typePath: TypePath, desc: string, visible: boolean): AnnotationVisitor | null {
+  public visitTypeAnnotation(
+    typeRef: number,
+    typePath: TypePath,
+    desc: string,
+    visible: boolean,
+  ): AnnotationVisitor | null {
     if (!ANNOTATIONS) {
       return null
     }
@@ -186,14 +198,13 @@ export class FieldWriter extends FieldVisitor {
     this.attrs = attr
   }
 
-  public visitEnd() {
-  }
+  public visitEnd() {}
 
   /**
-     * Returns the size of this field.
-     *
-     * @return the size of this field.
-     */
+   * Returns the size of this field.
+   *
+   * @return the size of this field.
+   */
   getSize(): number {
     let size = 8
     if (this.value !== 0) {
@@ -201,7 +212,10 @@ export class FieldWriter extends FieldVisitor {
       size += 8
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if (
+        (this.cw.version & 65535) < Opcodes.V1_5 ||
+        (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0
+      ) {
         this.cw.newUTF8('Synthetic')
         size += 6
       }
@@ -237,21 +251,30 @@ export class FieldWriter extends FieldVisitor {
   }
 
   /**
-     * Puts the content of this field into the given byte vector.
-     *
-     * @param out
-     * where the content of this field must be put.
-     */
+   * Puts the content of this field into the given byte vector.
+   *
+   * @param out
+   * where the content of this field must be put.
+   */
   put(out: ByteVector) {
     const FACTOR: number = ClassWriterConstant.TO_ACC_SYNTHETIC_$LI$()
-    const mask: number = Opcodes.ACC_DEPRECATED | ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE | (((this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) / FACTOR | 0))
-    out.putShort(this.access & ~mask).putShort(this.name).putShort(this.desc)
+    const mask: number =
+      Opcodes.ACC_DEPRECATED |
+      ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE |
+      (((this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) / FACTOR) | 0)
+    out
+      .putShort(this.access & ~mask)
+      .putShort(this.name)
+      .putShort(this.desc)
     let attributeCount = 0
     if (this.value !== 0) {
       ++attributeCount
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if (
+        (this.cw.version & 65535) < Opcodes.V1_5 ||
+        (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0
+      ) {
         ++attributeCount
       }
     }
@@ -282,7 +305,10 @@ export class FieldWriter extends FieldVisitor {
       out.putInt(2).putShort(this.value)
     }
     if ((this.access & Opcodes.ACC_SYNTHETIC) !== 0) {
-      if ((this.cw.version & 65535) < Opcodes.V1_5 || (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0) {
+      if (
+        (this.cw.version & 65535) < Opcodes.V1_5 ||
+        (this.access & ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE) !== 0
+      ) {
         out.putShort(this.cw.newUTF8('Synthetic')).putInt(0)
       }
     }

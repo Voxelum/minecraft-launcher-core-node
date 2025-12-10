@@ -7,12 +7,12 @@
  */
 export interface GameProfile {
   /**
-     * game profile unique id
-     */
+   * game profile unique id
+   */
   id: string
   /**
-     * This is in game displayed name
-     */
+   * This is in game displayed name
+   */
   name: string
   properties?: { [name: string]: string }
   userId?: string

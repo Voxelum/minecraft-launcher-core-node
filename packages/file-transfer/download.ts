@@ -1,12 +1,20 @@
-import { ftruncate, rename, close as sclose, mkdir as smkdir, open as sopen, unlink, write } from 'fs'
+import {
+  ftruncate,
+  rename,
+  close as sclose,
+  mkdir as smkdir,
+  open as sopen,
+  unlink,
+  write,
+} from 'fs'
 import { dirname } from 'path'
 import { PassThrough, Writable } from 'stream'
 import { Dispatcher } from 'undici'
 import { promisify } from 'util'
-import { isNativeError } from "util/types"
+import { isNativeError } from 'util/types'
 import { getDefaultAgent } from './agent'
-import { CheckpointHandler } from './checkpoint'
-import { getWithRange, HTTPResource } from "./http_range"
+import type { CheckpointHandler } from './checkpoint'
+import { getWithRange, HTTPResource } from './http_range'
 import { ProgressTrackerMultiple, ProgressTrackerSingle } from './progress'
 import { RangePolicy, resolveRangePolicy } from './range_policy'
 
@@ -51,7 +59,10 @@ export interface DownloadOptions extends DownloadBaseOptions {
   expectedTotal?: number
 }
 
-export type DownloadMultipleOption = Pick<DownloadOptions, 'url' | 'headers' | 'destination' | 'pendingFile' | 'expectedTotal'>
+export type DownloadMultipleOption = Pick<
+  DownloadOptions,
+  'url' | 'headers' | 'destination' | 'pendingFile' | 'expectedTotal'
+>
 
 export interface DownloadMultipleOptions extends DownloadBaseOptions {
   options: DownloadMultipleOption[]
@@ -63,8 +74,10 @@ export interface DownloadMultipleOptions extends DownloadBaseOptions {
   maxConcurrency?: number
 }
 
-export async function downloadMultiple(options: DownloadMultipleOptions): Promise<PromiseSettledResult<void>[]> {
-  const tracker = options.tracker;
+export async function downloadMultiple(
+  options: DownloadMultipleOptions,
+): Promise<PromiseSettledResult<void>[]> {
+  const tracker = options.tracker
   const chunks: DownloadMultipleOptions['options'][] = []
 
   if (options.maxConcurrency) {
@@ -78,11 +91,17 @@ export async function downloadMultiple(options: DownloadMultipleOptions): Promis
 
   const result = [] as PromiseSettledResult<void>[]
   for (const chunk of chunks) {
-    result.push(...await Promise.allSettled(chunk.map((opt) => download({
-      ...opt,
-      tracker: tracker?.subSingle(),
-      abortSignal: options.abortSignal,
-    }))))
+    result.push(
+      ...(await Promise.allSettled(
+        chunk.map((opt) =>
+          download({
+            ...opt,
+            tracker: tracker?.subSingle(),
+            abortSignal: options.abortSignal,
+          }),
+        ),
+      )),
+    )
   }
   return result
 }
@@ -131,10 +150,15 @@ export async function download(options: DownloadOptions): Promise<void> {
         return
       }
 
-      handle.construct({
-        ...probeResult,
-        range: probeResult.range,
-      }, headers, throttler.dispatcher, throttler.blackhole)
+      handle.construct(
+        {
+          ...probeResult,
+          range: probeResult.range,
+        },
+        headers,
+        throttler.dispatcher,
+        throttler.blackhole,
+      )
 
       // add to tracked list for speed monitoring
       throttler.tracked.add(handle)
@@ -161,7 +185,7 @@ export async function download(options: DownloadOptions): Promise<void> {
     }
   } finally {
     // Ensure file descriptor is closed on error
-    await close(fd).catch(() => { })
+    await close(fd).catch(() => {})
   }
 }
 
@@ -173,7 +197,9 @@ export interface DownloadThrottlerOptions {
   checkpointHandler?: CheckpointHandler
 }
 
-export function getDefaultDownloadThrottler(options: DownloadThrottlerOptions = {}): DownloadThrottler {
+export function getDefaultDownloadThrottler(
+  options: DownloadThrottlerOptions = {},
+): DownloadThrottler {
   return new DownloadThrottler(
     options.dispatcher || getDefaultAgent(),
     resolveRangePolicy(options.rangePolicy),
@@ -197,8 +223,8 @@ export class DownloadThrottler {
     /**
      * The checkpoint handler to save & restore the download progress
      */
-    readonly checkpointHandler?: CheckpointHandler
-  ) { }
+    readonly checkpointHandler?: CheckpointHandler,
+  ) {}
 
   /**
    * Throttle the download speed, divide slow ranges into smaller ranges
@@ -244,8 +270,7 @@ export class RangeRunningWatch {
     public tracker: RangeTracker,
     public startPosition: number,
     public startTime: number,
-  ) {
-  }
+  ) {}
 
   get lifetime() {
     return Date.now() - this.startTime
@@ -290,6 +315,10 @@ export class RangeTracker {
 
   write(chunk: Buffer, callback: (error?: Error | null) => void): boolean {
     let length = chunk.length
+    if (length === 0) {
+      callback()
+      return false
+    }
     let beyond = false
     // ensure not to write beyond the range
     if (this.position + length > this.end + 1) {
@@ -297,7 +326,7 @@ export class RangeTracker {
       beyond = true
     }
     if (length <= 0) {
-      callback()
+      callback(new Error('ABORT_END'))
       return true
     }
     write(this.fd, chunk, 0, length, this.position, (err, written) => {
@@ -314,7 +343,11 @@ export class RangeTracker {
       this.position += written
       callback()
     })
-    return beyond
+    if (beyond) {
+      callback(new Error('ABORT_END'))
+      return true
+    }
+    return false
   }
 
   final() {
@@ -322,7 +355,9 @@ export class RangeTracker {
   }
 }
 
-function noop() { return false }
+function noop() {
+  return false
+}
 
 export class DownloadHandle {
   #ranges: RangeTracker[] = []
@@ -334,8 +369,7 @@ export class DownloadHandle {
     readonly policy: RangePolicy,
     readonly tracker?: ProgressTrackerSingle,
     readonly signal?: AbortSignal,
-  ) {
-  }
+  ) {}
 
   wait() {
     return this.#promise.promise
@@ -346,52 +380,72 @@ export class DownloadHandle {
       if (metadata.range) {
         return true
       }
-      ftruncate(this.fd, metadata.contentLength, () => { })
+      ftruncate(this.fd, metadata.contentLength, () => {})
       range.end = metadata.contentLength - 1
       this.tracker?.setAccessor({
         url: metadata.url,
         total: metadata.contentLength,
         acceptRanges: false,
-        get progress() { return range.position },
-        get speed() { return range.running?.avgSpeed ?? 0 },
+        get progress() {
+          return range.position
+        },
+        get speed() {
+          return range.running?.avgSpeed ?? 0
+        },
       })
       return false
     })
   }
 
-  dispatch = (range: RangeTracker) => { }
+  dispatch = (range: RangeTracker) => {}
 
   /**
    * Pivot the initial ranges based on the content length
    */
-  construct(resource: Required<HTTPResource>, headers: Record<string, string>, dispatcher: Dispatcher, blackhole: Writable) {
-    this.dispatch = (range) => getWithRange({
-      url: resource.url,
-      headers: headers,
-      range,
-      dispatcher: dispatcher,
-      blackhole: blackhole,
-    }).catch((e) => {
-      this.#errors.push(e)
-    }).finally(() => {
-      this.#checkCompletion()
-    })
-    this.#ranges = this.policy.computeRanges(resource.contentLength).map(range => new RangeTracker(this.fd, range.start, range.end, noop))
+  construct(
+    resource: Required<HTTPResource>,
+    headers: Record<string, string>,
+    dispatcher: Dispatcher,
+    blackhole: Writable,
+  ) {
+    this.dispatch = (range) =>
+      getWithRange({
+        url: resource.url,
+        headers: headers,
+        range,
+        dispatcher: dispatcher,
+        blackhole: blackhole,
+      })
+        .catch((e) => {
+          this.#errors.push(e)
+        })
+        .finally(() => {
+          this.#checkCompletion()
+        })
+    const total = resource.range ? resource.range.total : resource.contentLength
+    this.#ranges = this.policy
+      .computeRanges(total)
+      .map((range) => new RangeTracker(this.fd, range.start, range.end, noop))
     this.#ranges.forEach(this.dispatch)
     const ranges = this.#ranges
-    const total = resource.range ? resource.range.total : resource.contentLength
     this.tracker?.setAccessor({
       url: resource.url,
       total,
       acceptRanges: !!resource.range,
-      get progress() { return ranges.map(r => r.position - r.start).reduce((a, b) => a + b, 0) },
-      get speed() { return ranges.filter(r => r.running).map(r => r.running!.avgSpeed).reduce((a, b) => a + b, 0) },
+      get progress() {
+        return ranges.map((r) => r.position - r.start).reduce((a, b) => a + b, 0)
+      },
+      get speed() {
+        return ranges
+          .filter((r) => r.running)
+          .map((r) => r.running!.avgSpeed)
+          .reduce((a, b) => a + b, 0)
+      },
     })
   }
 
-
   #checkCompletion = () => {
-    if (this.#ranges.every(r => !r.isRunning)) {
+    if (this.#ranges.every((r) => !r.isRunning)) {
       this.#promise.resolve(this.#errors.length > 0 ? new AggregateError(this.#errors) : undefined)
     }
   }
@@ -400,7 +454,7 @@ export class DownloadHandle {
    * Divide slow ranges into smaller ranges
    */
   divideIfSlow() {
-    const slow = this.#ranges.filter(r => r.running && this.policy.shouldDivide(r.running))
+    const slow = this.#ranges.filter((r) => r.running && this.policy.shouldDivide(r.running))
     const newRanges: RangeTracker[] = []
 
     for (const range of slow) {

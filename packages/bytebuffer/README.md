@@ -31,7 +31,7 @@ const bb = ByteBuffer.allocate(10)
 ```
 
 Using extra methods:
-    
+
 ```ts
 import { ByteBuffer } from '@xmcl/bytebuffer'
 import '@xmcl/bytebuffer/varint64' // importing this will inject the varint64 methods to ByteBuffer

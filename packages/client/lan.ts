@@ -8,8 +8,14 @@ export const LAN_MULTICAST_PORT = 4445
 export interface MinecraftLanDiscover {
   on(channel: 'discover', listener: (event: LanServerInfo & { remote: RemoteInfo }) => void): this
   once(channel: 'discover', listener: (event: LanServerInfo & { remote: RemoteInfo }) => void): this
-  addListener(channel: 'discover', listener: (event: LanServerInfo & { remote: RemoteInfo }) => void): this
-  removeListener(channel: 'discover', listener: (event: LanServerInfo & { remote: RemoteInfo }) => void): this
+  addListener(
+    channel: 'discover',
+    listener: (event: LanServerInfo & { remote: RemoteInfo }) => void,
+  ): this
+  removeListener(
+    channel: 'discover',
+    listener: (event: LanServerInfo & { remote: RemoteInfo }) => void,
+  ): this
 }
 
 export class MinecraftLanDiscover extends EventEmitter {
@@ -57,20 +63,27 @@ export class MinecraftLanDiscover extends EventEmitter {
 
   broadcast(inf: LanServerInfo) {
     return new Promise<number>((resolve, reject) => {
-      this.socket.send(`[MOTD]${inf.motd}[/MOTD][AD]${inf.port}[/AD]`, LAN_MULTICAST_PORT, this.#group, (err, bytes) => {
-        if (err) reject(err)
-        else resolve(bytes)
-      })
+      this.socket.send(
+        `[MOTD]${inf.motd}[/MOTD][AD]${inf.port}[/AD]`,
+        LAN_MULTICAST_PORT,
+        this.#group,
+        (err, bytes) => {
+          if (err) reject(err)
+          else resolve(bytes)
+        },
+      )
     })
   }
 
   bind(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.socket.bind(LAN_MULTICAST_PORT, () => {
-        resolve()
-      }).once('error', (e) => {
-        reject(e)
-      })
+      this.socket
+        .bind(LAN_MULTICAST_PORT, () => {
+          resolve()
+        })
+        .once('error', (e) => {
+          reject(e)
+        })
     })
   }
 

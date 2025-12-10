@@ -1,4 +1,3 @@
-
 export enum ResourceType {
   Forge = 'forge',
   Neoforge = 'neoforge',
@@ -6,5 +5,5 @@ export enum ResourceType {
   Fabric = 'fabric',
   Quilt = 'quilt',
   ResourcePack = 'resourcepack',
-  ShaderPack = 'shaderpack'
+  ShaderPack = 'shaderpack',
 }

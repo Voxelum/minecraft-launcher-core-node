@@ -38,10 +38,18 @@ export async function createSsdp(options: { sourcePort?: number } = {}) {
     })
   }
 
-  const sockets = await Promise.all(Object.values(interfaces).map(infos => infos?.filter((info) => !info.internal).map((item) => createSocket(item)) || [])
-    .reduce((a, b) => [...a, ...b], []))
+  const sockets = await Promise.all(
+    Object.values(interfaces)
+      .map(
+        (infos) => infos?.filter((info) => !info.internal).map((item) => createSocket(item)) || [],
+      )
+      .reduce((a, b) => [...a, ...b], []),
+  )
 
-  return new Ssdp(sourcePort, sockets.filter((s): s is Socket => !!s))
+  return new Ssdp(
+    sourcePort,
+    sockets.filter((s): s is Socket => !!s),
+  )
 }
 
 export class Ssdp extends EventEmitter {
@@ -89,11 +97,17 @@ export class Ssdp extends EventEmitter {
     return new Promise<SsdpSearchResult>((resolve, reject) => {
       const query = Buffer.from(
         'M-SEARCH * HTTP/1.1\r\n' +
-        'HOST: ' + this.multicast + ':' + this.port + '\r\n' +
-        'MAN: "ssdp:discover"\r\n' +
-        'MX: 1\r\n' +
-        'ST: ' + device + '\r\n' +
-        '\r\n',
+          'HOST: ' +
+          this.multicast +
+          ':' +
+          this.port +
+          '\r\n' +
+          'MAN: "ssdp:discover"\r\n' +
+          'MX: 1\r\n' +
+          'ST: ' +
+          device +
+          '\r\n' +
+          '\r\n',
       )
 
       // Send query on each socket
@@ -133,13 +147,16 @@ export class Ssdp extends EventEmitter {
     const lines = headerStr.split(/\r\n/g)
 
     // Parse headers from lines to hashmap
-    return lines.reduce((headers, line) => {
-      line.replace(/^([^:]*)\s*:\s*(.*)$/, (a, key, value) => {
-        headers[key.toLowerCase()] = value
-        return a
-      })
-      return headers
-    }, {} as Record<string, string>)
+    return lines.reduce(
+      (headers, line) => {
+        line.replace(/^([^:]*)\s*:\s*(.*)$/, (a, key, value) => {
+          headers[key.toLowerCase()] = value
+          return a
+        })
+        return headers
+      },
+      {} as Record<string, string>,
+    )
   }
 
   destroy() {

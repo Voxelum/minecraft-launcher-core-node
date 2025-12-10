@@ -1,6 +1,6 @@
 import { MinecraftFolder, MinecraftLocation, Version } from '@xmcl/core'
 import { writeFile } from 'fs/promises'
-import { InstallOptions, } from './utils'
+import { InstallOptions } from './utils'
 import { DEFAULT_META_URL_QUILT } from './quilt.browser'
 import { ensureFile } from './utils'
 import { doFetch, FetchOptions } from './utils.browser'
@@ -40,7 +40,10 @@ export async function installQuiltVersion(options: InstallQuiltVersionOptions) {
     content.id = options.versionId || `${options.minecraftVersion}-quilt${options.version}`
   }
 
-  const jsonPath = side === 'client' ? minecraft.getVersionJson(content.id) : minecraft.getVersionServerJson(content.id)
+  const jsonPath =
+    side === 'client'
+      ? minecraft.getVersionJson(content.id)
+      : minecraft.getVersionServerJson(content.id)
 
   await ensureFile(jsonPath)
   await writeFile(jsonPath, JSON.stringify(content))

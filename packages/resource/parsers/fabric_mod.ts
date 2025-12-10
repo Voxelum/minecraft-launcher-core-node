@@ -3,7 +3,7 @@ import { ResourceDomain } from '../ResourceDomain'
 import { ResourceType } from '../ResourceType'
 import type { IResourceParser } from './index'
 
-export const fabricModParser: IResourceParser<FabricModMetadata | FabricModMetadata[]> = ({
+export const fabricModParser: IResourceParser<FabricModMetadata | FabricModMetadata[]> = {
   type: ResourceType.Fabric,
   domain: ResourceDomain.Mods,
   ext: '.jar',
@@ -16,16 +16,18 @@ export const fabricModParser: IResourceParser<FabricModMetadata | FabricModMetad
     }
     return Promise.resolve(undefined)
   },
-  parseMetadata: async fs => {
+  parseMetadata: async (fs) => {
     const result = await readFabricMod(fs)
     if (result.jars) {
-      const nested = await Promise.all(result.jars.map(async (jar) => {
-        try {
-          return await readFabricMod(await fs.readFile(jar.file))
-        } catch {
-          return undefined
-        }
-      }))
+      const nested = await Promise.all(
+        result.jars.map(async (jar) => {
+          try {
+            return await readFabricMod(await fs.readFile(jar.file))
+          } catch {
+            return undefined
+          }
+        }),
+      )
       return [result, ...nested.filter((v): v is FabricModMetadata => !!v)]
     }
     return result
@@ -47,10 +49,10 @@ export const fabricModParser: IResourceParser<FabricModMetadata | FabricModMetad
     }
     return name
   },
-  getUri: meta => {
+  getUri: (meta) => {
     if (meta instanceof Array) {
       meta = meta[0]
     }
     return [`fabric:${meta.id}:${meta.version}`]
   },
-})
+}

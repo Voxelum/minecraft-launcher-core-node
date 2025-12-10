@@ -1,13 +1,12 @@
 import { upnpNat } from '@achingbrain/nat-port-mapper'
 import { test } from 'vitest'
 
-
-test('test', async () => {
+test.skip('test', async () => {
   const client = upnpNat()
   const gateway = await client.getGateway(new URL('http://192.168.1.1:49652/49652gatedesc.xml'))
   // Map public port 1000 to private port 1000 with TCP
   await gateway.map(25565, '192.168.1.2', {
-    protocol: 'tcp'
+    protocol: 'tcp',
   })
 
   // Unmap previously mapped private port 1000

@@ -1,9 +1,12 @@
 import { InstanceSchema, RuntimeVersions } from './instance'
 
 /**
-  * Safely assign properties from source to target, only updating if values differ
-  */
-export function assignShallow<T extends Record<string, any>>(target: T, source: Partial<T>): boolean {
+ * Safely assign properties from source to target, only updating if values differ
+ */
+export function assignShallow<T extends Record<string, any>>(
+  target: T,
+  source: Partial<T>,
+): boolean {
   let hasChanges = false
   for (const key in source) {
     if (source[key] !== undefined && target[key] !== source[key]) {
@@ -32,20 +35,27 @@ export interface EditInstanceOptions extends Partial<Omit<InstanceSchema, 'runti
 export async function computeInstanceEditChanges(
   currentInstance: InstanceSchema,
   editOptions: EditInstanceOptions,
-  getIconUrl: (path: string) => Promise<string>
+  getIconUrl: (path: string) => Promise<string>,
 ): Promise<Partial<InstanceSchema>> {
   const result: Partial<InstanceSchema> = {}
 
   // Check simple properties
-  const simpleProps = ['name', 'author', 'description', 'icon', 'url', 'fileApi', 'java',
+  const simpleProps = [
+    'name',
+    'author',
+    'description',
+    'icon',
+    'url',
+    'fileApi',
+    'java',
     'lastAccessDate',
     'lastPlayedDate',
     'playtime',
-    'version'
+    'version',
   ] as const
   for (const prop of simpleProps) {
     if (prop in editOptions && editOptions[prop] !== currentInstance[prop]) {
-      (result as any)[prop] = editOptions[prop]
+      ;(result as any)[prop] = editOptions[prop]
     }
   }
 
@@ -72,17 +82,24 @@ export async function computeInstanceEditChanges(
 
   // Handle boolean properties
   const boolProps = [
-    'assignMemory', 'showLog', 'hideLauncher', 'fastLaunch',
-    'disableAuthlibInjector', 'disableElybyAuthlib'
+    'assignMemory',
+    'showLog',
+    'hideLauncher',
+    'fastLaunch',
+    'disableAuthlibInjector',
+    'disableElybyAuthlib',
   ] as const
   for (const prop of boolProps) {
     if (prop in editOptions && editOptions[prop] !== currentInstance[prop]) {
-      (result as any)[prop] = editOptions[prop]
+      ;(result as any)[prop] = editOptions[prop]
     }
   }
 
   // Handle prependCommand
-  if ('prependCommand' in editOptions && editOptions.prependCommand !== currentInstance.prependCommand) {
+  if (
+    'prependCommand' in editOptions &&
+    editOptions.prependCommand !== currentInstance.prependCommand
+  ) {
     result.prependCommand = editOptions.prependCommand
   }
 
@@ -93,12 +110,15 @@ export async function computeInstanceEditChanges(
 
     if (!editOptions.resolution) {
       result.resolution = undefined
-    } else if ((currentRes === undefined && newRes !== undefined) ||
+    } else if (
+      (currentRes === undefined && newRes !== undefined) ||
       (currentRes !== undefined && newRes === undefined) ||
-      (currentRes && newRes &&
+      (currentRes &&
+        newRes &&
         (currentRes.fullscreen !== newRes.fullscreen ||
           currentRes.width !== newRes.width ||
-          currentRes.height !== newRes.height))) {
+          currentRes.height !== newRes.height))
+    ) {
       result.resolution = editOptions.resolution
     }
   }
@@ -127,8 +147,10 @@ export async function computeInstanceEditChanges(
   // Handle server
   if ('server' in editOptions) {
     if (editOptions.server) {
-      if (editOptions.server.host !== currentInstance.server?.host ||
-        editOptions.server.port !== currentInstance.server?.port) {
+      if (
+        editOptions.server.host !== currentInstance.server?.host ||
+        editOptions.server.port !== currentInstance.server?.port
+      ) {
         result.server = editOptions.server
       }
     } else if (currentInstance.server !== undefined) {
@@ -138,7 +160,8 @@ export async function computeInstanceEditChanges(
 
   // Handle array options
   if ('vmOptions' in editOptions) {
-    const hasDiff = typeof editOptions.vmOptions !== typeof currentInstance.vmOptions ||
+    const hasDiff =
+      typeof editOptions.vmOptions !== typeof currentInstance.vmOptions ||
       editOptions.vmOptions?.length !== currentInstance.vmOptions?.length ||
       editOptions.vmOptions?.some((e, i) => e !== currentInstance.vmOptions?.[i])
     if (hasDiff) {
@@ -147,7 +170,8 @@ export async function computeInstanceEditChanges(
   }
 
   if ('mcOptions' in editOptions) {
-    const hasDiff = typeof editOptions.mcOptions !== typeof currentInstance.mcOptions ||
+    const hasDiff =
+      typeof editOptions.mcOptions !== typeof currentInstance.mcOptions ||
       editOptions.mcOptions?.length !== currentInstance.mcOptions?.length ||
       editOptions.mcOptions?.some((e, i) => e !== currentInstance.mcOptions?.[i])
     if (hasDiff) {
@@ -157,9 +181,11 @@ export async function computeInstanceEditChanges(
 
   // Handle environment variables
   if ('env' in editOptions) {
-    const hasDiff = typeof editOptions.env !== typeof currentInstance.env ||
-      (editOptions.env && currentInstance.env &&
-        Object.keys(editOptions.env).some(k => editOptions.env?.[k] !== currentInstance.env?.[k]))
+    const hasDiff =
+      typeof editOptions.env !== typeof currentInstance.env ||
+      (editOptions.env &&
+        currentInstance.env &&
+        Object.keys(editOptions.env).some((k) => editOptions.env?.[k] !== currentInstance.env?.[k]))
     if (hasDiff) {
       result.env = editOptions.env
     }
@@ -181,15 +207,15 @@ export async function computeInstanceEditChanges(
  */
 export function applyInstanceChanges(
   instance: InstanceSchema,
-  changes: Partial<InstanceSchema>
+  changes: Partial<InstanceSchema>,
 ): InstanceSchema {
   const result = { ...instance }
 
   for (const [key, value] of Object.entries(changes)) {
     if (key === 'runtime' && value && typeof value === 'object') {
-      result.runtime = { ...result.runtime, ...value as Partial<RuntimeVersions> }
+      result.runtime = { ...result.runtime, ...(value as Partial<RuntimeVersions>) }
     } else {
-      (result as any)[key] = value
+      ;(result as any)[key] = value
     }
   }
 

@@ -1,7 +1,10 @@
 import type { State } from './channel'
 import { Coder } from './coders'
 
-interface FieldRecord { name: string; type: Coder<any> }
+interface FieldRecord {
+  name: string
+  type: Coder<any>
+}
 
 export type Side = 'server' | 'client'
 
@@ -14,7 +17,11 @@ export interface PacketRegistryEntry {
 }
 
 export type FieldType<T> = (type: Coder<T>) => (target: any, key: string) => void
-export type PacketType = (side: Side, id: number, state: State) => (constructor: (...args: any[]) => any) => void
+export type PacketType = (
+  side: Side,
+  id: number,
+  state: State,
+) => (constructor: (...args: any[]) => any) => void
 
 export const PacketMetadata = Symbol('PacketMetadata')
 export const PacketFieldsMetadata = Symbol('PacketFieldsMetadata')
@@ -72,7 +79,9 @@ export function Packet(side: Side, id: number, state: State, name = '') {
             try {
               value[cod.name] = cod.type.decode(buffer)
             } catch (e) {
-              console.error(new Error(`Exception during reciving packet [${id}]${constructor.name}`))
+              console.error(
+                new Error(`Exception during reciving packet [${id}]${constructor.name}`),
+              )
               console.error(e)
             }
           })

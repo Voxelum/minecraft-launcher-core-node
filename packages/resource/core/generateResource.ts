@@ -21,7 +21,11 @@ export function pickMetadata(metadata: ResourceMetadata): ResourceMetadata {
   }
 }
 
-export function generateResourceV3(file: File, record: ResourceSnapshotTable, metadata: ResourceMetadata & { icons?: string[] }): Resource {
+export function generateResourceV3(
+  file: File,
+  record: ResourceSnapshotTable,
+  metadata: ResourceMetadata & { icons?: string[] },
+): Resource {
   const resource: Resource = {
     version: 3,
     ...file,

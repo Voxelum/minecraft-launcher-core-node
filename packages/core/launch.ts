@@ -262,7 +262,7 @@ export namespace LaunchPrecheck {
       buf.toString(),
     )
     const virtualPath = resource.getPath('assets/virtual/' + version.assets)
-    await mkdir(virtualPath, { recursive: true }).catch(() => { })
+    await mkdir(virtualPath, { recursive: true }).catch(() => {})
 
     const dirs = Object.keys(assetsIndex.objects)
       .map((path) => dirname(join(virtualPath, path)))
@@ -427,7 +427,7 @@ export namespace LaunchPrecheck {
           if (fileName.indexOf('/') !== -1) {
             await mkdir(dirname(dest), {
               recursive: true,
-            }).catch((e) => { })
+            }).catch((e) => {})
           }
           extractedNatives.push({ file: fileName, name: n.name, sha1: '' })
           promises.push(
@@ -620,7 +620,9 @@ export function createMinecraftProcessWatcher(
       )
       crashReportLocation = crashReportLocation.replace(EOL, '').trim()
     } else if (string.indexOf('Crash report saved to ') !== -1) {
-      crashReportLocation = string.substring(string.indexOf('Crash report saved to ') + 'Crash report saved to '.length)
+      crashReportLocation = string.substring(
+        string.indexOf('Crash report saved to ') + 'Crash report saved to '.length,
+      )
       crashReportLocation = crashReportLocation.replace(EOL, '').trim()
     } else if (
       waitForReady &&
@@ -850,7 +852,9 @@ export async function generateArguments(options: LaunchOption) {
         .map((lib) => mc.getLibraryByPath(lib.download.path)),
       mc.getVersionJar(version.minecraftVersion),
       ...(options.extraClassPaths || []),
-    ].map(c => c.replaceAll('\\', '/')).join(delimiter),
+    ]
+      .map((c) => c.replaceAll('\\', '/'))
+      .join(delimiter),
     library_directory: mc.getPath('libraries').replaceAll('\\', '/'),
     classpath_separator: delimiter,
     version_name: version.minecraftVersion,
@@ -869,7 +873,7 @@ export async function generateArguments(options: LaunchOption) {
 
   cmd.push(...jvmArguments.map((arg) => format(arg, jvmOptions)))
 
-  if (!cmd.some(v => v.startsWith('-DlibraryDirectory'))) {
+  if (!cmd.some((v) => v.startsWith('-DlibraryDirectory'))) {
     cmd.push('-DlibraryDirectory=' + mc.getPath('libraries').replaceAll('\\', '/'))
   }
 
@@ -896,7 +900,7 @@ export async function generateArguments(options: LaunchOption) {
   const mcOptions = {
     version_name: versionName,
     version_type: versionType,
-    assets_root: assetsDir.replaceAll('\\', '/'),,
+    assets_root: assetsDir.replaceAll('\\', '/'),
     game_assets: join(assetsDir, 'virtual', version.assets).replaceAll('\\', '/'),
     assets_index_name: options.useHashAssetsIndex
       ? (version.assetIndex?.sha1 ?? version.assets)

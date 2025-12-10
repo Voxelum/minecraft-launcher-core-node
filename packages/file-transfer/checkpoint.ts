@@ -1,5 +1,5 @@
 import { FileHandle } from 'fs/promises'
-import { Range } from './range_policy'
+import type { Range } from './range_policy'
 
 export interface DownloadCheckpoint {
   ranges: Range[]
@@ -9,7 +9,12 @@ export interface DownloadCheckpoint {
 
 export interface CheckpointHandler {
   lookup(url: URL, handle: FileHandle, destination: string): Promise<DownloadCheckpoint | undefined>
-  put(url: URL, handle: FileHandle, destination: string, checkpoint: DownloadCheckpoint): Promise<void>
+  put(
+    url: URL,
+    handle: FileHandle,
+    destination: string,
+    checkpoint: DownloadCheckpoint,
+  ): Promise<void>
   delete(url: URL, handle: FileHandle, destination: string): Promise<void>
 }
 

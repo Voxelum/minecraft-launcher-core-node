@@ -5,7 +5,7 @@ import { ForgeModCommonMetadata, forceForgeModMetadata, normalizeForgeModMetadat
 import { ResourceDomain } from '../ResourceDomain'
 import { ResourceType } from '../ResourceType'
 
-export const forgeModParser: IResourceParser<ForgeModCommonMetadata> = ({
+export const forgeModParser: IResourceParser<ForgeModCommonMetadata> = {
   type: ResourceType.Forge,
   domain: ResourceDomain.Mods,
   ext: '.jar',
@@ -32,7 +32,7 @@ export const forgeModParser: IResourceParser<ForgeModCommonMetadata> = ({
     }
     return name
   },
-  getUri: meta => {
+  getUri: (meta) => {
     const urls: string[] = []
     for (const m of meta.mcmodInfo) {
       urls.push(`forge:${m.modid}:${m.version}`)
@@ -57,4 +57,4 @@ export const forgeModParser: IResourceParser<ForgeModCommonMetadata> = ({
     }
     return urls
   },
-})
+}

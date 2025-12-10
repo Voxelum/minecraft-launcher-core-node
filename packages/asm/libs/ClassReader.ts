@@ -60,108 +60,108 @@ import { assert } from './utils'
 
 export class ClassReader {
   /**
-     * True to enable bytecode writing support.
-     */
+   * True to enable bytecode writing support.
+   */
   static WRITER = true
 
   /**
-     * True to enable JSR_W and GOTO_W support.
-     */
+   * True to enable JSR_W and GOTO_W support.
+   */
   static RESIZE = true
 
   /**
-     * Flag to skip method code. If this class is set <code>CODE</code>
-     * attribute won't be visited. This can be used, for example, to retrieve
-     * annotations for methods and method parameters.
-     */
+   * Flag to skip method code. If this class is set <code>CODE</code>
+   * attribute won't be visited. This can be used, for example, to retrieve
+   * annotations for methods and method parameters.
+   */
   public static SKIP_CODE = 1
 
   /**
-     * Flag to skip the debug information in the class. If this flag is set the
-     * debug information of the class is not visited, i.e. the
-     * {@link MethodVisitor#visitLocalVariable visitLocalVariable} and
-     * {@link MethodVisitor#visitLineNumber visitLineNumber} methods will not be
-     * called.
-     */
+   * Flag to skip the debug information in the class. If this flag is set the
+   * debug information of the class is not visited, i.e. the
+   * {@link MethodVisitor#visitLocalVariable visitLocalVariable} and
+   * {@link MethodVisitor#visitLineNumber visitLineNumber} methods will not be
+   * called.
+   */
   public static SKIP_DEBUG = 2
 
   /**
-     * Flag to skip the stack map frames in the class. If this flag is set the
-     * stack map frames of the class is not visited, i.e. the
-     * {@link MethodVisitor#visitFrame visitFrame} method will not be called.
-     * This flag is useful when the {@link ClassWriter#COMPUTE_FRAMES} option is
-     * used: it avoids visiting frames that will be ignored and recomputed from
-     * scratch in the class writer.
-     */
+   * Flag to skip the stack map frames in the class. If this flag is set the
+   * stack map frames of the class is not visited, i.e. the
+   * {@link MethodVisitor#visitFrame visitFrame} method will not be called.
+   * This flag is useful when the {@link ClassWriter#COMPUTE_FRAMES} option is
+   * used: it avoids visiting frames that will be ignored and recomputed from
+   * scratch in the class writer.
+   */
   public static SKIP_FRAMES = 4
 
   /**
-     * Flag to expand the stack map frames. By default stack map frames are
-     * visited in their original format (i.e. "expanded" for classes whose
-     * version is less than V1_6, and "compressed" for the other classes). If
-     * this flag is set, stack map frames are always visited in expanded format
-     * (this option adds a decompression/recompression step in ClassReader and
-     * ClassWriter which degrades performances quite a lot).
-     */
+   * Flag to expand the stack map frames. By default stack map frames are
+   * visited in their original format (i.e. "expanded" for classes whose
+   * version is less than V1_6, and "compressed" for the other classes). If
+   * this flag is set, stack map frames are always visited in expanded format
+   * (this option adds a decompression/recompression step in ClassReader and
+   * ClassWriter which degrades performances quite a lot).
+   */
   public static EXPAND_FRAMES = 8
 
   /**
-     * Flag to expand the ASM pseudo instructions into an equivalent sequence of
-     * standard bytecode instructions. When resolving a forward jump it may
-     * happen that the signed 2 bytes offset reserved for it is not sufficient
-     * to store the bytecode offset. In this case the jump instruction is
-     * replaced with a temporary ASM pseudo instruction using an unsigned 2
-     * bytes offset (see Label#resolve). This internal flag is used to re-read
-     * classes containing such instructions, in order to replace them with
-     * standard instructions. In addition, when this flag is used, GOTO_W and
-     * JSR_W are <i>not</i> converted into GOTO and JSR, to make sure that
-     * infinite loops where a GOTO_W is replaced with a GOTO in ClassReader and
-     * converted back to a GOTO_W in ClassWriter cannot occur.
-     */
+   * Flag to expand the ASM pseudo instructions into an equivalent sequence of
+   * standard bytecode instructions. When resolving a forward jump it may
+   * happen that the signed 2 bytes offset reserved for it is not sufficient
+   * to store the bytecode offset. In this case the jump instruction is
+   * replaced with a temporary ASM pseudo instruction using an unsigned 2
+   * bytes offset (see Label#resolve). This internal flag is used to re-read
+   * classes containing such instructions, in order to replace them with
+   * standard instructions. In addition, when this flag is used, GOTO_W and
+   * JSR_W are <i>not</i> converted into GOTO and JSR, to make sure that
+   * infinite loops where a GOTO_W is replaced with a GOTO in ClassReader and
+   * converted back to a GOTO_W in ClassWriter cannot occur.
+   */
   static EXPAND_ASM_INSNS = 256
 
   /**
-     * The class to be parsed. <i>The content of this array must not be
-     * modified. This field is intended for {@link Attribute} sub classes, and
-     * is normally not needed by class generators or adapters.</i>
-     */
+   * The class to be parsed. <i>The content of this array must not be
+   * modified. This field is intended for {@link Attribute} sub classes, and
+   * is normally not needed by class generators or adapters.</i>
+   */
   public buf: Uint8Array
 
   /**
-     * The start index of each constant pool item in {@link #b b}, plus one. The
-     * one byte offset skips the constant pool item tag that indicates its type.
-     */
+   * The start index of each constant pool item in {@link #b b}, plus one. The
+   * one byte offset skips the constant pool item tag that indicates its type.
+   */
   private items: number[]
 
   /**
-     * The String objects corresponding to the CONSTANT_Utf8 items. This cache
-     * avoids multiple parsing of a given CONSTANT_Utf8 constant pool item,
-     * which GREATLY improves performances (by a factor 2 to 3). This caching
-     * strategy could be extended to all constant pool items, but its benefit
-     * would not be so great for these items (because they are much less
-     * expensive to parse than CONSTANT_Utf8 items).
-     */
+   * The String objects corresponding to the CONSTANT_Utf8 items. This cache
+   * avoids multiple parsing of a given CONSTANT_Utf8 constant pool item,
+   * which GREATLY improves performances (by a factor 2 to 3). This caching
+   * strategy could be extended to all constant pool items, but its benefit
+   * would not be so great for these items (because they are much less
+   * expensive to parse than CONSTANT_Utf8 items).
+   */
   private strings: string[]
 
   /**
-     * Maximum length of the strings contained in the constant pool of the
-     * class.
-     */
+   * Maximum length of the strings contained in the constant pool of the
+   * class.
+   */
   private maxStringLength: number
 
   /**
-     * Start index of the class header information (access, name...) in
-     * {@link #b b}.
-     */
+   * Start index of the class header information (access, name...) in
+   * {@link #b b}.
+   */
   public header: number
 
   /**
-     * Constructs a new {@link ClassReader} object.
-     *
-     * @param b   the bytecode of the class to be read.
-     * @param off the start offset of the class data.
-     * @param len the length of the class data.
-     */
+   * Constructs a new {@link ClassReader} object.
+   *
+   * @param b   the bytecode of the class to be read.
+   * @param off the start offset of the class data.
+   * @param len the length of the class data.
+   */
   public constructor(buffer: Uint8Array, classFileOffset = 0, len: number = buffer.length) {
     this.maxStringLength = 0
     this.header = 0
@@ -175,7 +175,7 @@ export class ClassReader {
     for (let i = 1; i < n; ++i) {
       this.items[i] = index + 1
       let size: number
-      switch ((buffer[index])) {
+      switch (buffer[index]) {
         case ClassWriterConstant.FIELD:
         case ClassWriterConstant.METH:
         case ClassWriterConstant.IMETH:
@@ -210,49 +210,49 @@ export class ClassReader {
   }
 
   /**
-     * Returns the class's access flags (see {@link Opcodes}). This value may
-     * not reflect Deprecated and Synthetic flags when bytecode is before 1.5
-     * and those flags are represented by attributes.
-     *
-     * @return the class access flags
-     * @see ClassVisitor#visit(int, int, String, String, String, String[])
-     */
+   * Returns the class's access flags (see {@link Opcodes}). This value may
+   * not reflect Deprecated and Synthetic flags when bytecode is before 1.5
+   * and those flags are represented by attributes.
+   *
+   * @return the class access flags
+   * @see ClassVisitor#visit(int, int, String, String, String, String[])
+   */
   public getAccess(): number {
     return this.readUnsignedShort(this.header)
   }
 
   /**
-     * Returns the internal name of the class (see
-     * {@link Type#getInternalName() getInternalName}).
-     *
-     * @return the internal class name
-     * @see ClassVisitor#visit(int, int, String, String, String, String[])
-     */
+   * Returns the internal name of the class (see
+   * {@link Type#getInternalName() getInternalName}).
+   *
+   * @return the internal class name
+   * @see ClassVisitor#visit(int, int, String, String, String, String[])
+   */
   public getClassName(): string {
     return this.readClass(this.header + 2, new Array(this.maxStringLength))
   }
 
   /**
-     * Returns the internal of name of the super class (see
-     * {@link Type#getInternalName() getInternalName}). For interfaces, the
-     * super class is {@link Object}.
-     *
-     * @return the internal name of super class, or <tt>null</tt> for
-     * {@link Object} class.
-     * @see ClassVisitor#visit(int, int, String, String, String, String[])
-     */
+   * Returns the internal of name of the super class (see
+   * {@link Type#getInternalName() getInternalName}). For interfaces, the
+   * super class is {@link Object}.
+   *
+   * @return the internal name of super class, or <tt>null</tt> for
+   * {@link Object} class.
+   * @see ClassVisitor#visit(int, int, String, String, String, String[])
+   */
   public getSuperName(): string {
     return this.readClass(this.header + 4, new Array(this.maxStringLength))
   }
 
   /**
-     * Returns the internal names of the class's interfaces (see
-     * {@link Type#getInternalName() getInternalName}).
-     *
-     * @return the array of internal names for all implemented interfaces or
-     * <tt>null</tt>.
-     * @see ClassVisitor#visit(int, int, String, String, String, String[])
-     */
+   * Returns the internal names of the class's interfaces (see
+   * {@link Type#getInternalName() getInternalName}).
+   *
+   * @return the array of internal names for all implemented interfaces or
+   * <tt>null</tt>.
+   * @see ClassVisitor#visit(int, int, String, String, String, String[])
+   */
   public getInterfaces(): string[] {
     let index: number = this.header + 6
     const n: number = this.readUnsignedShort(index)
@@ -268,23 +268,23 @@ export class ClassReader {
   }
 
   /**
-     * Makes the given visitor visit the Java class of this {@link ClassReader}.
-     * This class is the one specified in the constructor (see
-     * {@link #ClassReader(byte[]) ClassReader}).
-     *
-     * @param classVisitor the visitor that must visit this class.
-     * @param attrs        prototypes of the attributes that must be parsed during the
-     * visit of the class. Any attribute whose type is not equal to
-     * the type of one the prototypes will not be parsed: its byte
-     * array value will be passed unchanged to the ClassWriterConstant.
-     * <i>This may corrupt it if this value contains references to
-     * the constant pool, or has syntactic or semantic links with a
-     * class element that has been transformed by a class adapter
-     * between the reader and the writer</i>.
-     * @param flags        option flags that can be used to modify the default behavior
-     * of this class. See {@link #SKIP_DEBUG}, {@link #EXPAND_FRAMES}
-     * , {@link #SKIP_FRAMES}, {@link #SKIP_CODE}.
-     */
+   * Makes the given visitor visit the Java class of this {@link ClassReader}.
+   * This class is the one specified in the constructor (see
+   * {@link #ClassReader(byte[]) ClassReader}).
+   *
+   * @param classVisitor the visitor that must visit this class.
+   * @param attrs        prototypes of the attributes that must be parsed during the
+   * visit of the class. Any attribute whose type is not equal to
+   * the type of one the prototypes will not be parsed: its byte
+   * array value will be passed unchanged to the ClassWriterConstant.
+   * <i>This may corrupt it if this value contains references to
+   * the constant pool, or has syntactic or semantic links with a
+   * class element that has been transformed by a class adapter
+   * between the reader and the writer</i>.
+   * @param flags        option flags that can be used to modify the default behavior
+   * of this class. See {@link #SKIP_DEBUG}, {@link #EXPAND_FRAMES}
+   * , {@link #SKIP_FRAMES}, {@link #SKIP_CODE}.
+   */
   public accept(classVisitor: ClassVisitor, attrs: Attribute[] = [], flags = 0): void {
     let u: number = this.header
     const c: number[] = new Array(this.maxStringLength)
@@ -313,43 +313,51 @@ export class ClassReader {
     u = this.getAttributes()
     for (let i: number = this.readUnsignedShort(u); i > 0; --i) {
       const attrName: string | null = this.readUTF8(u + 2, c)
-      if ((attrName === 'SourceFile')) {
+      if (attrName === 'SourceFile') {
         sourceFile = this.readUTF8(u + 8, c)
-      } else if ((attrName === 'InnerClasses')) {
+      } else if (attrName === 'InnerClasses') {
         innerClasses = u + 8
-      } else if ((attrName === 'EnclosingMethod')) {
+      } else if (attrName === 'EnclosingMethod') {
         enclosingOwner = this.readClass(u + 8, c)
         const item: number = this.readUnsignedShort(u + 10)
         if (item !== 0) {
           enclosingName = this.readUTF8(this.items[item], c)
           enclosingDesc = this.readUTF8(this.items[item] + 2, c)
         }
-      } else if (SIGNATURES && (attrName === 'Signature')) {
+      } else if (SIGNATURES && attrName === 'Signature') {
         signature = this.readUTF8(u + 8, c)
-      } else if (ANNOTATIONS && (attrName === 'RuntimeVisibleAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeVisibleAnnotations') {
         anns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'RuntimeVisibleTypeAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeVisibleTypeAnnotations') {
         tanns = u + 8
-      } else if ((attrName === 'Deprecated')) {
+      } else if (attrName === 'Deprecated') {
         access |= Opcodes.ACC_DEPRECATED
-      } else if ((attrName === 'Synthetic')) {
+      } else if (attrName === 'Synthetic') {
         access |= Opcodes.ACC_SYNTHETIC | ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE
-      } else if ((attrName === 'SourceDebugExtension')) {
+      } else if (attrName === 'SourceDebugExtension') {
         const len: number = this.readInt(u + 4)
         sourceDebug = this.readUTF(u + 8, len, new Array(len))
-      } else if (ANNOTATIONS && (attrName === 'RuntimeInvisibleAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeInvisibleAnnotations') {
         ianns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'RuntimeInvisibleTypeAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeInvisibleTypeAnnotations') {
         itanns = u + 8
-      } else if ((attrName === 'BootstrapMethods')) {
+      } else if (attrName === 'BootstrapMethods') {
         const bootstrapMethods: number[] = new Array(this.readUnsignedShort(u + 8))
         for (let j = 0, v: number = u + 10; j < bootstrapMethods.length; j++) {
           bootstrapMethods[j] = v
-          v += 2 + this.readUnsignedShort(v + 2) << 1
+          v += (2 + this.readUnsignedShort(v + 2)) << 1
         }
         context.bootstrapMethods = bootstrapMethods
       } else {
-        const attr: Attribute = this.readAttribute(attrs, attrName, u + 8, this.readInt(u + 4), c, -1, null)
+        const attr: Attribute = this.readAttribute(
+          attrs,
+          attrName,
+          u + 8,
+          this.readInt(u + 4),
+          c,
+          -1,
+          null,
+        )
         if (attr != null) {
           attr.next = attributes
           attributes = attr
@@ -357,7 +365,14 @@ export class ClassReader {
       }
       u += 6 + this.readInt(u + 4)
     }
-    classVisitor.visit(this.readInt(this.items[1] - 7), access, name, signature, superClass, interfaces)
+    classVisitor.visit(
+      this.readInt(this.items[1] - 7),
+      access,
+      name,
+      signature,
+      superClass,
+      interfaces,
+    )
     if ((flags & ClassReader.SKIP_DEBUG) === 0 && (sourceFile != null || sourceDebug != null)) {
       classVisitor.visitSource(sourceFile, sourceDebug)
     }
@@ -366,27 +381,57 @@ export class ClassReader {
     }
     if (ANNOTATIONS && anns !== 0) {
       for (let i: number = this.readUnsignedShort(anns), v: number = anns + 2; i > 0; --i) {
-        v = this.readAnnotationValues(v + 2, c, true, classVisitor.visitAnnotation(this.readUTF8(v, c), true))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          classVisitor.visitAnnotation(this.readUTF8(v, c), true),
+        )
       }
     }
     if (ANNOTATIONS && ianns !== 0) {
       for (let i: number = this.readUnsignedShort(ianns), v: number = ianns + 2; i > 0; --i) {
-        v = this.readAnnotationValues(v + 2, c, true, classVisitor.visitAnnotation(this.readUTF8(v, c), false))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          classVisitor.visitAnnotation(this.readUTF8(v, c), false),
+        )
       }
     }
     if (ANNOTATIONS && tanns !== 0) {
       for (let i: number = this.readUnsignedShort(tanns), v: number = tanns + 2; i > 0; --i) {
         v = this.readAnnotationTarget(context, v)
-        v = this.readAnnotationValues(v + 2, c, true, classVisitor.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), true))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          classVisitor.visitTypeAnnotation(
+            context.typeRef,
+            context.typePath,
+            this.readUTF8(v, c),
+            true,
+          ),
+        )
       }
     }
     if (ANNOTATIONS && itanns !== 0) {
       for (let i: number = this.readUnsignedShort(itanns), v: number = itanns + 2; i > 0; --i) {
         v = this.readAnnotationTarget(context, v)
-        v = this.readAnnotationValues(v + 2, c, true, classVisitor.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), false))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          classVisitor.visitTypeAnnotation(
+            context.typeRef,
+            context.typePath,
+            this.readUTF8(v, c),
+            false,
+          ),
+        )
       }
     }
-    while ((attributes != null)) {
+    while (attributes != null) {
       const attr: Attribute | null = attributes.next
       attributes.next = null
       classVisitor.visitAttribute(attributes)
@@ -395,7 +440,12 @@ export class ClassReader {
     if (innerClasses !== 0) {
       let v: number = innerClasses + 2
       for (let i: number = this.readUnsignedShort(innerClasses); i > 0; --i) {
-        classVisitor.visitInnerClass(this.readClass(v, c), this.readClass(v + 2, c), this.readUTF8(v + 4, c), this.readUnsignedShort(v + 6))
+        classVisitor.visitInnerClass(
+          this.readClass(v, c),
+          this.readClass(v + 2, c),
+          this.readUTF8(v + 4, c),
+          this.readUnsignedShort(v + 6),
+        )
         v += 8
       }
     }
@@ -411,13 +461,13 @@ export class ClassReader {
   }
 
   /**
-     * Reads a field and makes the given visitor visit it.
-     *
-     * @param classVisitor the visitor that must visit the field.
-     * @param context      information about the class being parsed.
-     * @param u            the start offset of the field in the class file.
-     * @return the offset of the first byte following the field in the class.
-     */
+   * Reads a field and makes the given visitor visit it.
+   *
+   * @param classVisitor the visitor that must visit the field.
+   * @param context      information about the class being parsed.
+   * @param u            the start offset of the field in the class file.
+   * @return the offset of the first byte following the field in the class.
+   */
   private readField(classVisitor: ClassVisitor, context: Context, u: number): number {
     const c: number[] = context.buffer
     let access: number = this.readUnsignedShort(u)
@@ -433,25 +483,33 @@ export class ClassReader {
     let attributes: Attribute | null = null
     for (let i: number = this.readUnsignedShort(u); i > 0; --i) {
       const attrName: string | null = this.readUTF8(u + 2, c)
-      if ((attrName === 'ConstantValue')) {
+      if (attrName === 'ConstantValue') {
         const item: number = this.readUnsignedShort(u + 8)
         value = item === 0 ? null : this.readConst(item, c)
-      } else if (SIGNATURES && (attrName === 'Signature')) {
+      } else if (SIGNATURES && attrName === 'Signature') {
         signature = this.readUTF8(u + 8, c)
-      } else if ((attrName === 'Deprecated')) {
+      } else if (attrName === 'Deprecated') {
         access |= Opcodes.ACC_DEPRECATED
-      } else if ((attrName === 'Synthetic')) {
+      } else if (attrName === 'Synthetic') {
         access |= Opcodes.ACC_SYNTHETIC | ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE
-      } else if (ANNOTATIONS && (attrName === 'RuntimeVisibleAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeVisibleAnnotations') {
         anns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'RuntimeVisibleTypeAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeVisibleTypeAnnotations') {
         tanns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'RuntimeInvisibleAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeInvisibleAnnotations') {
         ianns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'RuntimeInvisibleTypeAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeInvisibleTypeAnnotations') {
         itanns = u + 8
       } else {
-        const attr: Attribute = this.readAttribute(context.attrs, attrName, u + 8, this.readInt(u + 4), c, -1, null)
+        const attr: Attribute = this.readAttribute(
+          context.attrs,
+          attrName,
+          u + 8,
+          this.readInt(u + 4),
+          c,
+          -1,
+          null,
+        )
         if (attr != null) {
           attr.next = attributes
           attributes = attr
@@ -472,22 +530,37 @@ export class ClassReader {
     }
     if (ANNOTATIONS && ianns !== 0) {
       for (let i: number = this.readUnsignedShort(ianns), v: number = ianns + 2; i > 0; --i) {
-        v = this.readAnnotationValues(v + 2, c, true, fv.visitAnnotation(this.readUTF8(v, c), false))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          fv.visitAnnotation(this.readUTF8(v, c), false),
+        )
       }
     }
     if (ANNOTATIONS && tanns !== 0) {
       for (let i: number = this.readUnsignedShort(tanns), v: number = tanns + 2; i > 0; --i) {
         v = this.readAnnotationTarget(context, v)
-        v = this.readAnnotationValues(v + 2, c, true, fv.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), true))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          fv.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), true),
+        )
       }
     }
     if (ANNOTATIONS && itanns !== 0) {
       for (let i: number = this.readUnsignedShort(itanns), v: number = itanns + 2; i > 0; --i) {
         v = this.readAnnotationTarget(context, v)
-        v = this.readAnnotationValues(v + 2, c, true, fv.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), false))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          fv.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), false),
+        )
       }
     }
-    while ((attributes != null)) {
+    while (attributes != null) {
       const attr: Attribute | null = attributes.next
       attributes.next = null
       fv.visitAttribute(attributes)
@@ -498,13 +571,13 @@ export class ClassReader {
   }
 
   /**
-     * Reads a method and makes the given visitor visit it.
-     *
-     * @param classVisitor the visitor that must visit the method.
-     * @param context      information about the class being parsed.
-     * @param u            the start offset of the method in the class file.
-     * @return the offset of the first byte following the method in the class.
-     */
+   * Reads a method and makes the given visitor visit it.
+   *
+   * @param classVisitor the visitor that must visit the method.
+   * @param context      information about the class being parsed.
+   * @param u            the start offset of the method in the class file.
+   * @return the offset of the first byte following the method in the class.
+   */
   private readMethod(classVisitor: ClassVisitor, context: Context, u: number): number {
     const c: number[] = context.buffer
     context.access = this.readUnsignedShort(u)
@@ -527,41 +600,49 @@ export class ClassReader {
     let attributes: Attribute | null = null
     for (let i: number = this.readUnsignedShort(u); i > 0; --i) {
       const attrName: string | null = this.readUTF8(u + 2, c)
-      if ((attrName === 'Code')) {
+      if (attrName === 'Code') {
         if ((context.flags & ClassReader.SKIP_CODE) === 0) {
           code = u + 8
         }
-      } else if ((attrName === 'Exceptions')) {
+      } else if (attrName === 'Exceptions') {
         exceptions = new Array(this.readUnsignedShort(u + 8))
         exception = u + 10
         for (let j = 0; j < exceptions.length; ++j) {
           exceptions[j] = this.readClass(exception, c)
           exception += 2
         }
-      } else if (SIGNATURES && (attrName === 'Signature')) {
+      } else if (SIGNATURES && attrName === 'Signature') {
         signature = this.readUTF8(u + 8, c)
-      } else if ((attrName === 'Deprecated')) {
+      } else if (attrName === 'Deprecated') {
         context.access |= Opcodes.ACC_DEPRECATED
-      } else if (ANNOTATIONS && (attrName === 'RuntimeVisibleAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeVisibleAnnotations') {
         anns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'RuntimeVisibleTypeAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeVisibleTypeAnnotations') {
         tanns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'AnnotationDefault')) {
+      } else if (ANNOTATIONS && attrName === 'AnnotationDefault') {
         dann = u + 8
-      } else if ((attrName === 'Synthetic')) {
+      } else if (attrName === 'Synthetic') {
         context.access |= Opcodes.ACC_SYNTHETIC | ClassWriterConstant.ACC_SYNTHETIC_ATTRIBUTE
-      } else if (ANNOTATIONS && (attrName === 'RuntimeInvisibleAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeInvisibleAnnotations') {
         ianns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'RuntimeInvisibleTypeAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeInvisibleTypeAnnotations') {
         itanns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'RuntimeVisibleParameterAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeVisibleParameterAnnotations') {
         mpanns = u + 8
-      } else if (ANNOTATIONS && (attrName === 'RuntimeInvisibleParameterAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeInvisibleParameterAnnotations') {
         impanns = u + 8
-      } else if ((attrName === 'MethodParameters')) {
+      } else if (attrName === 'MethodParameters') {
         methodParameters = u + 8
       } else {
-        const attr: Attribute = this.readAttribute(context.attrs, attrName, u + 8, this.readInt(u + 4), c, -1, null)
+        const attr: Attribute = this.readAttribute(
+          context.attrs,
+          attrName,
+          u + 8,
+          this.readInt(u + 4),
+          c,
+          -1,
+          null,
+        )
         if (attr != null) {
           attr.next = attributes
           attributes = attr
@@ -570,11 +651,17 @@ export class ClassReader {
       u += 6 + this.readInt(u + 4)
     }
     u += 2
-    const mv: MethodVisitor | null = classVisitor.visitMethod(context.access, context.name, context.desc, signature, exceptions)
+    const mv: MethodVisitor | null = classVisitor.visitMethod(
+      context.access,
+      context.name,
+      context.desc,
+      signature,
+      exceptions,
+    )
     if (mv == null) {
       return u
     }
-    if (ClassReader.WRITER && (mv != null && mv instanceof MethodWriter)) {
+    if (ClassReader.WRITER && mv != null && mv instanceof MethodWriter) {
       const mw: MethodWriter = mv
       if (mw.cw.cr === this && signature === mw.signature) {
         let sameExceptions = false
@@ -598,7 +685,11 @@ export class ClassReader {
       }
     }
     if (methodParameters !== 0) {
-      for (let i: number = this.buf[methodParameters] & 255, v: number = methodParameters + 1; i > 0; --i, v = v + 4) {
+      for (
+        let i: number = this.buf[methodParameters] & 255, v: number = methodParameters + 1;
+        i > 0;
+        --i, v = v + 4
+      ) {
         mv.visitParameter(this.readUTF8(v, c), this.readUnsignedShort(v + 2))
       }
     }
@@ -616,19 +707,34 @@ export class ClassReader {
     }
     if (ANNOTATIONS && ianns !== 0) {
       for (let i: number = this.readUnsignedShort(ianns), v: number = ianns + 2; i > 0; --i) {
-        v = this.readAnnotationValues(v + 2, c, true, mv.visitAnnotation(this.readUTF8(v, c), false))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          mv.visitAnnotation(this.readUTF8(v, c), false),
+        )
       }
     }
     if (ANNOTATIONS && tanns !== 0) {
       for (let i: number = this.readUnsignedShort(tanns), v: number = tanns + 2; i > 0; --i) {
         v = this.readAnnotationTarget(context, v)
-        v = this.readAnnotationValues(v + 2, c, true, mv.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), true))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          mv.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), true),
+        )
       }
     }
     if (ANNOTATIONS && itanns !== 0) {
       for (let i: number = this.readUnsignedShort(itanns), v: number = itanns + 2; i > 0; --i) {
         v = this.readAnnotationTarget(context, v)
-        v = this.readAnnotationValues(v + 2, c, true, mv.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), false))
+        v = this.readAnnotationValues(
+          v + 2,
+          c,
+          true,
+          mv.visitTypeAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), false),
+        )
       }
     }
     if (ANNOTATIONS && mpanns !== 0) {
@@ -637,7 +743,7 @@ export class ClassReader {
     if (ANNOTATIONS && impanns !== 0) {
       this.readParameterAnnotations(mv, context, impanns, false)
     }
-    while ((attributes != null)) {
+    while (attributes != null) {
       const attr: Attribute | null = attributes.next
       attributes.next = null
       mv.visitAttribute(attributes)
@@ -652,12 +758,12 @@ export class ClassReader {
   }
 
   /**
-     * Reads the bytecode of a method and makes the given visitor visit it.
-     *
-     * @param mv      the visitor that must visit the method's code.
-     * @param context information about the class being parsed.
-     * @param u       the start offset of the code attribute in the class file.
-     */
+   * Reads the bytecode of a method and makes the given visitor visit it.
+   *
+   * @param mv      the visitor that must visit the method's code.
+   * @param context information about the class being parsed.
+   * @param u       the start offset of the code attribute in the class file.
+   */
   private readCode(mv: MethodVisitor, context: Context, u: number) {
     const b: Uint8Array = this.buf
     const c: number[] = context.buffer
@@ -667,12 +773,12 @@ export class ClassReader {
     u += 8
     const codeStart: number = u
     const codeEnd: number = u + codeLength
-    const labels: Label[] = context.labels = new Array(codeLength + 2)
+    const labels: Label[] = (context.labels = new Array(codeLength + 2))
     this.readLabel(codeLength + 1, labels)
-    while ((u < codeEnd)) {
+    while (u < codeEnd) {
       const offset: number = u - codeStart
       let opcode: number = b[u] & 255
-      switch ((ClassWriterConstant.TYPE[opcode])) {
+      switch (ClassWriterConstant.TYPE[opcode]) {
         case ClassWriterConstant.NOARG_INSN:
         case ClassWriterConstant.IMPLVAR_INSN:
           u += 1
@@ -762,7 +868,7 @@ export class ClassReader {
     let attributes: Attribute | null = null
     for (let i: number = this.readUnsignedShort(u); i > 0; --i) {
       const attrName: string | null = this.readUTF8(u + 2, c)
-      if ((attrName === 'LocalVariableTable')) {
+      if (attrName === 'LocalVariableTable') {
         if ((context.flags & ClassReader.SKIP_DEBUG) === 0) {
           varTable = u + 8
           for (let j: number = this.readUnsignedShort(u + 8), v: number = u; j > 0; --j) {
@@ -777,9 +883,9 @@ export class ClassReader {
             v += 10
           }
         }
-      } else if ((attrName === 'LocalVariableTypeTable')) {
+      } else if (attrName === 'LocalVariableTypeTable') {
         varTypeTable = u + 8
-      } else if ((attrName === 'LineNumberTable')) {
+      } else if (attrName === 'LineNumberTable') {
         if ((context.flags & ClassReader.SKIP_DEBUG) === 0) {
           for (let j: number = this.readUnsignedShort(u + 8), v: number = u; j > 0; --j) {
             const label: number = this.readUnsignedShort(v + 10)
@@ -787,7 +893,7 @@ export class ClassReader {
               this.readLabel(label, labels).status |= Label.DEBUG
             }
             let l: Label = labels[label]
-            while ((l.line > 0)) {
+            while (l.line > 0) {
               if (l.next == null) {
                 l.next = new Label()
               }
@@ -797,19 +903,25 @@ export class ClassReader {
             v += 4
           }
         }
-      } else if (ANNOTATIONS && (attrName === 'RuntimeVisibleTypeAnnotations')) {
+      } else if (ANNOTATIONS && attrName === 'RuntimeVisibleTypeAnnotations') {
         tanns = this.readTypeAnnotations(mv, context, u + 8, true)
-        ntoff = tanns.length === 0 || this.readByte(tanns[0]) < 67 ? -1 : this.readUnsignedShort(tanns[0] + 1)
-      } else if (ANNOTATIONS && (attrName === 'RuntimeInvisibleTypeAnnotations')) {
+        ntoff =
+          tanns.length === 0 || this.readByte(tanns[0]) < 67
+            ? -1
+            : this.readUnsignedShort(tanns[0] + 1)
+      } else if (ANNOTATIONS && attrName === 'RuntimeInvisibleTypeAnnotations') {
         itanns = this.readTypeAnnotations(mv, context, u + 8, false)
-        nitoff = itanns.length === 0 || this.readByte(itanns[0]) < 67 ? -1 : this.readUnsignedShort(itanns[0] + 1)
-      } else if (FRAMES && (attrName === 'StackMapTable')) {
+        nitoff =
+          itanns.length === 0 || this.readByte(itanns[0]) < 67
+            ? -1
+            : this.readUnsignedShort(itanns[0] + 1)
+      } else if (FRAMES && attrName === 'StackMapTable') {
         if ((context.flags & ClassReader.SKIP_FRAMES) === 0) {
           stackMap = u + 10
           stackMapSize = this.readInt(u + 4)
           frameCount = this.readUnsignedShort(u + 8)
         }
-      } else if (FRAMES && (attrName === 'StackMap')) {
+      } else if (FRAMES && attrName === 'StackMap') {
         if ((context.flags & ClassReader.SKIP_FRAMES) === 0) {
           zip = false
           stackMap = u + 10
@@ -818,8 +930,15 @@ export class ClassReader {
         }
       } else {
         for (let j = 0; j < context.attrs.length; ++j) {
-          if ((context.attrs[j].type === attrName)) {
-            const attr: Attribute = context.attrs[j].read(this, u + 8, this.readInt(u + 4), c, codeStart - 8, labels)
+          if (context.attrs[j].type === attrName) {
+            const attr: Attribute = context.attrs[j].read(
+              this,
+              u + 8,
+              this.readInt(u + 4),
+              c,
+              codeStart - 8,
+              labels,
+            )
             if (attr != null) {
               attr.next = attributes
               attributes = attr
@@ -858,7 +977,7 @@ export class ClassReader {
     }
     const opcodeDelta: number = (context.flags & ClassReader.EXPAND_ASM_INSNS) === 0 ? -33 : 0
     u = codeStart
-    while ((u < codeEnd)) {
+    while (u < codeEnd) {
       const offset: number = u - codeStart
       const l: Label = labels[offset]
       if (l != null) {
@@ -867,16 +986,22 @@ export class ClassReader {
         mv.visitLabel(l)
         if ((context.flags & ClassReader.SKIP_DEBUG) === 0 && l.line > 0) {
           mv.visitLineNumber(l.line, l)
-          while ((next != null)) {
+          while (next != null) {
             mv.visitLineNumber(next.line, l)
             next = next.next
           }
         }
       }
-      while ((FRAMES && frame != null && (frame.offset === offset || frame.offset === -1))) {
+      while (FRAMES && frame != null && (frame.offset === offset || frame.offset === -1)) {
         if (frame.offset !== -1) {
           if (!zip || unzip) {
-            mv.visitFrame(Opcodes.F_NEW, frame.localCount, frame.local, frame.stackCount, frame.stack)
+            mv.visitFrame(
+              Opcodes.F_NEW,
+              frame.localCount,
+              frame.local,
+              frame.stackCount,
+              frame.stack,
+            )
           } else {
             mv.visitFrame(frame.mode, frame.localDiff, frame.local, frame.stackCount, frame.stack)
           }
@@ -889,7 +1014,7 @@ export class ClassReader {
         }
       }
       let opcode: number = b[u] & 255
-      switch ((ClassWriterConstant.TYPE[opcode])) {
+      switch (ClassWriterConstant.TYPE[opcode]) {
         case ClassWriterConstant.NOARG_INSN:
           mv.visitInsn(opcode)
           u += 1
@@ -912,8 +1037,7 @@ export class ClassReader {
           mv.visitJumpInsn(opcode + opcodeDelta, labels[offset + this.readInt(u + 1)])
           u += 5
           break
-        case ClassWriterConstant.ASM_LABEL_INSN:
-        {
+        case ClassWriterConstant.ASM_LABEL_INSN: {
           opcode = opcode < 218 ? opcode - 49 : opcode - 20
           const target: Label = labels[offset + this.readUnsignedShort(u + 1)]
           if (opcode === Opcodes.GOTO || opcode === Opcodes.JSR) {
@@ -941,8 +1065,7 @@ export class ClassReader {
             u += 4
           }
           break
-        case ClassWriterConstant.TABL_INSN:
-        {
+        case ClassWriterConstant.TABL_INSN: {
           u = u + 4 - (offset & 3)
           const label: number = offset + this.readInt(u)
           const min: number = this.readInt(u + 4)
@@ -956,8 +1079,7 @@ export class ClassReader {
           mv.visitTableSwitchInsn(min, max, labels[label], ...table)
           break
         }
-        case ClassWriterConstant.LOOK_INSN:
-        {
+        case ClassWriterConstant.LOOK_INSN: {
           u = u + 4 - (offset & 3)
           const label: number = offset + this.readInt(u)
           const len: number = this.readInt(u + 4)
@@ -993,8 +1115,7 @@ export class ClassReader {
           u += 3
           break
         case ClassWriterConstant.FIELDORMETH_INSN:
-        case ClassWriterConstant.ITFMETH_INSN:
-        {
+        case ClassWriterConstant.ITFMETH_INSN: {
           let cpIndex: number = this.items[this.readUnsignedShort(u + 1)]
           const itf: boolean = b[cpIndex - 1] === ClassWriterConstant.IMETH
           const iowner: string = this.readClass(cpIndex, c)
@@ -1013,11 +1134,10 @@ export class ClassReader {
           }
           break
         }
-        case ClassWriterConstant.INDYMETH_INSN:
-        {
+        case ClassWriterConstant.INDYMETH_INSN: {
           let cpIndex: number = this.items[this.readUnsignedShort(u + 1)]
           let bsmIndex: number = context.bootstrapMethods[this.readUnsignedShort(cpIndex)]
-          const bsm: Handle = <Handle> this.readConst(this.readUnsignedShort(bsmIndex), c)
+          const bsm: Handle = <Handle>this.readConst(this.readUnsignedShort(bsmIndex), c)
           const bsmArgCount: number = this.readUnsignedShort(bsmIndex + 2)
           const bsmArgs: any[] = new Array(bsmArgCount)
           bsmIndex += 4
@@ -1045,19 +1165,35 @@ export class ClassReader {
           u += 4
           break
       }
-      while ((tanns != null && tann < tanns.length && ntoff <= offset)) {
+      while (tanns != null && tann < tanns.length && ntoff <= offset) {
         if (ntoff === offset) {
           const v: number = this.readAnnotationTarget(context, tanns[tann])
-          this.readAnnotationValues(v + 2, c, true, mv.visitInsnAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), true))
+          this.readAnnotationValues(
+            v + 2,
+            c,
+            true,
+            mv.visitInsnAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), true),
+          )
         }
-        ntoff = ++tann >= tanns.length || this.readByte(tanns[tann]) < 67 ? -1 : this.readUnsignedShort(tanns[tann] + 1)
+        ntoff =
+          ++tann >= tanns.length || this.readByte(tanns[tann]) < 67
+            ? -1
+            : this.readUnsignedShort(tanns[tann] + 1)
       }
-      while ((itanns != null && itann < itanns.length && nitoff <= offset)) {
+      while (itanns != null && itann < itanns.length && nitoff <= offset) {
         if (nitoff === offset) {
           const v: number = this.readAnnotationTarget(context, itanns[itann])
-          this.readAnnotationValues(v + 2, c, true, mv.visitInsnAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), false))
+          this.readAnnotationValues(
+            v + 2,
+            c,
+            true,
+            mv.visitInsnAnnotation(context.typeRef, context.typePath, this.readUTF8(v, c), false),
+          )
         }
-        nitoff = ++itann >= itanns.length || this.readByte(itanns[itann]) < 67 ? -1 : this.readUnsignedShort(itanns[itann] + 1)
+        nitoff =
+          ++itann >= itanns.length || this.readByte(itanns[itann]) < 67
+            ? -1
+            : this.readUnsignedShort(itanns[itann] + 1)
       }
     }
     if (labels[codeLength] != null) {
@@ -1068,7 +1204,7 @@ export class ClassReader {
       if (varTypeTable !== 0) {
         u = varTypeTable + 2
         typeTable = new Array(this.readUnsignedShort(varTypeTable) * 3)
-        for (let i: number = typeTable.length; i > 0;) {
+        for (let i: number = typeTable.length; i > 0; ) {
           typeTable[--i] = u + 6
           typeTable[--i] = this.readUnsignedShort(u + 8)
           typeTable[--i] = this.readUnsignedShort(u)
@@ -1089,27 +1225,60 @@ export class ClassReader {
             }
           }
         }
-        mv.visitLocalVariable(this.readUTF8(u + 4, c), this.readUTF8(u + 6, c), vsignature, labels[start], labels[start + length], index)
+        mv.visitLocalVariable(
+          this.readUTF8(u + 4, c),
+          this.readUTF8(u + 6, c),
+          vsignature,
+          labels[start],
+          labels[start + length],
+          index,
+        )
         u += 10
       }
     }
     if (tanns != null) {
       for (let i = 0; i < tanns.length; ++i) {
-        if ((this.readByte(tanns[i]) >> 1) === (64 >> 1)) {
+        if (this.readByte(tanns[i]) >> 1 === 64 >> 1) {
           let v: number = this.readAnnotationTarget(context, tanns[i])
-          v = this.readAnnotationValues(v + 2, c, true, mv.visitLocalVariableAnnotation(context.typeRef, context.typePath, context.start, context.end, context.index, this.readUTF8(v, c), true))
+          v = this.readAnnotationValues(
+            v + 2,
+            c,
+            true,
+            mv.visitLocalVariableAnnotation(
+              context.typeRef,
+              context.typePath,
+              context.start,
+              context.end,
+              context.index,
+              this.readUTF8(v, c),
+              true,
+            ),
+          )
         }
       }
     }
     if (itanns != null) {
       for (let i = 0; i < itanns.length; ++i) {
-        if ((this.readByte(itanns[i]) >> 1) === (64 >> 1)) {
+        if (this.readByte(itanns[i]) >> 1 === 64 >> 1) {
           let v: number = this.readAnnotationTarget(context, itanns[i])
-          v = this.readAnnotationValues(v + 2, c, true, mv.visitLocalVariableAnnotation(context.typeRef, context.typePath, context.start, context.end, context.index, this.readUTF8(v, c), false))
+          v = this.readAnnotationValues(
+            v + 2,
+            c,
+            true,
+            mv.visitLocalVariableAnnotation(
+              context.typeRef,
+              context.typePath,
+              context.start,
+              context.end,
+              context.index,
+              this.readUTF8(v, c),
+              false,
+            ),
+          )
         }
       }
     }
-    while ((attributes != null)) {
+    while (attributes != null) {
       const attr: Attribute | null = attributes.next
       attributes.next = null
       mv.visitAttribute(attributes)
@@ -1119,25 +1288,30 @@ export class ClassReader {
   }
 
   /**
-     * Parses a type annotation table to find the labels, and to visit the try
-     * catch block annotations.
-     *
-     * @param u       the start offset of a type annotation table.
-     * @param mv      the method visitor to be used to visit the try catch block
-     * annotations.
-     * @param context information about the class being parsed.
-     * @param visible if the type annotation table to parse contains runtime visible
-     * annotations.
-     * @return the start offset of each type annotation in the parsed table.
-     */
-  private readTypeAnnotations(mv: MethodVisitor, context: Context, u: number, visible: boolean): number[] {
+   * Parses a type annotation table to find the labels, and to visit the try
+   * catch block annotations.
+   *
+   * @param u       the start offset of a type annotation table.
+   * @param mv      the method visitor to be used to visit the try catch block
+   * annotations.
+   * @param context information about the class being parsed.
+   * @param visible if the type annotation table to parse contains runtime visible
+   * annotations.
+   * @return the start offset of each type annotation in the parsed table.
+   */
+  private readTypeAnnotations(
+    mv: MethodVisitor,
+    context: Context,
+    u: number,
+    visible: boolean,
+  ): number[] {
     const c: number[] = context.buffer
     const offsets: number[] = new Array(this.readUnsignedShort(u))
     u += 2
     for (let i = 0; i < offsets.length; ++i) {
       offsets[i] = u
       const target: number = this.readInt(u)
-      switch ((target >>> 24)) {
+      switch (target >>> 24) {
         case 0:
         case 1:
         case 22:
@@ -1171,10 +1345,15 @@ export class ClassReader {
           break
       }
       const pathLength: number = this.readByte(u)
-      if ((target >>> 24) === 66) {
+      if (target >>> 24 === 66) {
         const path: TypePath | null = pathLength === 0 ? null : new TypePath(this.buf, u)
         u += 1 + 2 * pathLength
-        u = this.readAnnotationValues(u + 2, c, true, mv.visitTryCatchAnnotation(target, path, this.readUTF8(u, c), visible))
+        u = this.readAnnotationValues(
+          u + 2,
+          c,
+          true,
+          mv.visitTryCatchAnnotation(target, path, this.readUTF8(u, c), visible),
+        )
       } else {
         u = this.readAnnotationValues(u + 3 + 2 * pathLength, c, true, null)
       }
@@ -1183,20 +1362,20 @@ export class ClassReader {
   }
 
   /**
-     * Parses the header of a type annotation to extract its target_type and
-     * target_path (the result is stored in the given context), and returns the
-     * start offset of the rest of the type_annotation structure (i.e. the
-     * offset to the type_index field, which is followed by
-     * num_element_value_pairs and then the name,value pairs).
-     *
-     * @param context information about the class being parsed. This is where the
-     * extracted target_type and target_path must be stored.
-     * @param u       the start offset of a type_annotation structure.
-     * @return the start offset of the rest of the type_annotation structure.
-     */
+   * Parses the header of a type annotation to extract its target_type and
+   * target_path (the result is stored in the given context), and returns the
+   * start offset of the rest of the type_annotation structure (i.e. the
+   * offset to the type_index field, which is followed by
+   * num_element_value_pairs and then the name,value pairs).
+   *
+   * @param context information about the class being parsed. This is where the
+   * extracted target_type and target_path must be stored.
+   * @param u       the start offset of a type_annotation structure.
+   * @return the start offset of the rest of the type_annotation structure.
+   */
   private readAnnotationTarget(context: Context, u: number): number {
     let target: number = this.readInt(u)
-    switch ((target >>> 24)) {
+    switch (target >>> 24) {
       case 0:
       case 1:
       case 22:
@@ -1210,8 +1389,7 @@ export class ClassReader {
         u += 1
         break
       case 64:
-      case 65:
-      {
+      case 65: {
         target &= -16777216
         const n: number = this.readUnsignedShort(u + 1)
         context.start = new Array(n)
@@ -1237,7 +1415,7 @@ export class ClassReader {
         u += 4
         break
       default:
-        target &= (target >>> 24) < 67 ? -256 : -16777216
+        target &= target >>> 24 < 67 ? -256 : -16777216
         u += 3
         break
     }
@@ -1248,15 +1426,20 @@ export class ClassReader {
   }
 
   /**
-     * Reads parameter annotations and makes the given visitor visit them.
-     *
-     * @param mv      the visitor that must visit the annotations.
-     * @param context information about the class being parsed.
-     * @param v       start offset in {@link #b b} of the annotations to be read.
-     * @param visible <tt>true</tt> if the annotations to be read are visible at
-     * runtime.
-     */
-  private readParameterAnnotations(mv: MethodVisitor, context: Context, v: number, visible: boolean) {
+   * Reads parameter annotations and makes the given visitor visit them.
+   *
+   * @param mv      the visitor that must visit the annotations.
+   * @param context information about the class being parsed.
+   * @param v       start offset in {@link #b b} of the annotations to be read.
+   * @param visible <tt>true</tt> if the annotations to be read are visible at
+   * runtime.
+   */
+  private readParameterAnnotations(
+    mv: MethodVisitor,
+    context: Context,
+    v: number,
+    visible: boolean,
+  ) {
     let i: number
     const n: number = this.buf[v++] & 255
     const synthetics: number = Type.getArgumentTypes(context.desc).length - n
@@ -1279,19 +1462,24 @@ export class ClassReader {
   }
 
   /**
-     * Reads the values of an annotation and makes the given visitor visit them.
-     *
-     * @param v     the start offset in {@link #b b} of the values to be read
-     * (including the unsigned short that gives the number of
-     * values).
-     * @param buf   buffer to be used to call {@link #readUTF8 readUTF8},
-     * {@link #readClass(int, int[]) readClass} or {@link #readConst
-     * readConst}.
-     * @param named if the annotation values are named or not.
-     * @param av    the visitor that must visit the values.
-     * @return the end offset of the annotation values.
-     */
-  private readAnnotationValues(v: number, buf: number[], named: boolean, av: AnnotationVisitor | null): number {
+   * Reads the values of an annotation and makes the given visitor visit them.
+   *
+   * @param v     the start offset in {@link #b b} of the values to be read
+   * (including the unsigned short that gives the number of
+   * values).
+   * @param buf   buffer to be used to call {@link #readUTF8 readUTF8},
+   * {@link #readClass(int, int[]) readClass} or {@link #readConst
+   * readConst}.
+   * @param named if the annotation values are named or not.
+   * @param av    the visitor that must visit the values.
+   * @return the end offset of the annotation values.
+   */
+  private readAnnotationValues(
+    v: number,
+    buf: number[],
+    named: boolean,
+    av: AnnotationVisitor | null,
+  ): number {
     let i: number = this.readUnsignedShort(v)
     v += 2
     if (named) {
@@ -1310,88 +1498,98 @@ export class ClassReader {
   }
 
   /**
-     * Reads a value of an annotation and makes the given visitor visit it.
-     *
-     * @param v    the start offset in {@link #b b} of the value to be read
-     * (<i>not including the value name constant pool index</i>).
-     * @param buf  buffer to be used to call {@link #readUTF8 readUTF8},
-     * {@link #readClass(int, int[]) readClass} or {@link #readConst
-     * readConst}.
-     * @param name the name of the value to be read.
-     * @param av   the visitor that must visit the value.
-     * @return the end offset of the annotation value.
-     */
-  private readAnnotationValue(v: number, buf: number[], name: string | null, av: AnnotationVisitor | null): number {
+   * Reads a value of an annotation and makes the given visitor visit it.
+   *
+   * @param v    the start offset in {@link #b b} of the value to be read
+   * (<i>not including the value name constant pool index</i>).
+   * @param buf  buffer to be used to call {@link #readUTF8 readUTF8},
+   * {@link #readClass(int, int[]) readClass} or {@link #readConst
+   * readConst}.
+   * @param name the name of the value to be read.
+   * @param av   the visitor that must visit the value.
+   * @return the end offset of the annotation value.
+   */
+  private readAnnotationValue(
+    v: number,
+    buf: number[],
+    name: string | null,
+    av: AnnotationVisitor | null,
+  ): number {
     name = name ?? ''
     let i: number
     if (av == null) {
-      switch ((this.buf[v] & 255)) {
-        case ('e').charCodeAt(0):
+      switch (this.buf[v] & 255) {
+        case 'e'.charCodeAt(0):
           return v + 5
-        case ('@').charCodeAt(0):
+        case '@'.charCodeAt(0):
           return this.readAnnotationValues(v + 3, buf, true, null)
-        case ('[').charCodeAt(0):
+        case '['.charCodeAt(0):
           return this.readAnnotationValues(v + 1, buf, false, null)
         default:
           return v + 3
       }
     }
-    switch ((this.buf[v++] & 255)) {
-      case ('I').charCodeAt(0):
-      case ('J').charCodeAt(0):
-      case ('F').charCodeAt(0):
-      case ('D').charCodeAt(0):
+    switch (this.buf[v++] & 255) {
+      case 'I'.charCodeAt(0):
+      case 'J'.charCodeAt(0):
+      case 'F'.charCodeAt(0):
+      case 'D'.charCodeAt(0):
         av.visit(name, this.readConst(this.readUnsignedShort(v), buf))
         v += 2
         break
-      case ('B').charCodeAt(0):
-        av.visit(name, (this.readInt(this.items[this.readUnsignedShort(v)]) | 0))
+      case 'B'.charCodeAt(0):
+        av.visit(name, this.readInt(this.items[this.readUnsignedShort(v)]) | 0)
         v += 2
         break
-      case ('Z').charCodeAt(0):
+      case 'Z'.charCodeAt(0):
         av.visit(name, this.readInt(this.items[this.readUnsignedShort(v)]) !== 0)
         v += 2
         break
-      case ('S').charCodeAt(0):
-        av.visit(name, (this.readInt(this.items[this.readUnsignedShort(v)]) | 0))
+      case 'S'.charCodeAt(0):
+        av.visit(name, this.readInt(this.items[this.readUnsignedShort(v)]) | 0)
         v += 2
         break
-      case ('C').charCodeAt(0):
+      case 'C'.charCodeAt(0):
         av.visit(name, String.fromCharCode(this.readInt(this.items[this.readUnsignedShort(v)])))
         v += 2
         break
-      case ('s').charCodeAt(0):
+      case 's'.charCodeAt(0):
         av.visit(name, this.readUTF8(v, buf))
         v += 2
         break
-      case ('e').charCodeAt(0):
+      case 'e'.charCodeAt(0):
         av.visitEnum(name, this.readUTF8(v, buf), this.readUTF8(v + 2, buf))
         v += 4
         break
-      case ('c').charCodeAt(0):
+      case 'c'.charCodeAt(0):
         av.visit(name, Type.getType(this.readUTF8(v, buf)))
         v += 2
         break
-      case ('@').charCodeAt(0):
-        v = this.readAnnotationValues(v + 2, buf, true, av.visitAnnotation(name, this.readUTF8(v, buf)))
+      case '@'.charCodeAt(0):
+        v = this.readAnnotationValues(
+          v + 2,
+          buf,
+          true,
+          av.visitAnnotation(name, this.readUTF8(v, buf)),
+        )
         break
-      case ('[').charCodeAt(0):
+      case '['.charCodeAt(0):
         const size: number = this.readUnsignedShort(v)
         v += 2
         if (size === 0) {
           return this.readAnnotationValues(v - 2, buf, false, av.visitArray(name))
         }
-        switch ((this.buf[v++] & 255)) {
-          case ('B').charCodeAt(0):
+        switch (this.buf[v++] & 255) {
+          case 'B'.charCodeAt(0):
             const bv: number[] = new Array(size)
             for (i = 0; i < size; i++) {
-              bv[i] = (this.readInt(this.items[this.readUnsignedShort(v)]) | 0)
+              bv[i] = this.readInt(this.items[this.readUnsignedShort(v)]) | 0
               v += 3
             }
             av.visit(name, bv)
             --v
             break
-          case ('Z').charCodeAt(0):
+          case 'Z'.charCodeAt(0):
             const zv: boolean[] = new Array(size)
             for (i = 0; i < size; i++) {
               zv[i] = this.readInt(this.items[this.readUnsignedShort(v)]) !== 0
@@ -1400,16 +1598,16 @@ export class ClassReader {
             av.visit(name, zv)
             --v
             break
-          case ('S').charCodeAt(0):
+          case 'S'.charCodeAt(0):
             const sv: number[] = new Array(size)
             for (i = 0; i < size; i++) {
-              sv[i] = (this.readInt(this.items[this.readUnsignedShort(v)]) | 0)
+              sv[i] = this.readInt(this.items[this.readUnsignedShort(v)]) | 0
               v += 3
             }
             av.visit(name, sv)
             --v
             break
-          case ('C').charCodeAt(0):
+          case 'C'.charCodeAt(0):
             const cv: string[] = new Array(size)
             for (i = 0; i < size; i++) {
               cv[i] = String.fromCharCode(this.readInt(this.items[this.readUnsignedShort(v)]))
@@ -1418,7 +1616,7 @@ export class ClassReader {
             av.visit(name, cv)
             --v
             break
-          case ('I').charCodeAt(0):
+          case 'I'.charCodeAt(0):
             const iv: number[] = new Array(size)
             for (i = 0; i < size; i++) {
               iv[i] = this.readInt(this.items[this.readUnsignedShort(v)])
@@ -1427,7 +1625,7 @@ export class ClassReader {
             av.visit(name, iv)
             --v
             break
-          case ('J').charCodeAt(0):
+          case 'J'.charCodeAt(0):
             const lv: bigint[] = new Array(size)
             for (i = 0; i < size; i++) {
               lv[i] = this.readLong(this.items[this.readUnsignedShort(v)])
@@ -1436,7 +1634,7 @@ export class ClassReader {
             av.visit(name, lv)
             --v
             break
-          case ('F').charCodeAt(0):
+          case 'F'.charCodeAt(0):
             const fv: number[] = new Array(size)
             for (i = 0; i < size; i++) {
               fv[i] = intBitsToFloat(this.readInt(this.items[this.readUnsignedShort(v)]))
@@ -1445,7 +1643,7 @@ export class ClassReader {
             av.visit(name, fv)
             --v
             break
-          case ('D').charCodeAt(0):
+          case 'D'.charCodeAt(0):
             const dv: number[] = new Array(size)
             for (i = 0; i < size; i++) {
               dv[i] = longBitsToDouble(this.readLong(this.items[this.readUnsignedShort(v)]))
@@ -1462,17 +1660,17 @@ export class ClassReader {
   }
 
   /**
-     * Computes the implicit frame of the method currently being parsed (as
-     * defined in the given {@link Context}) and stores it in the given context.
-     *
-     * @param frame information about the class being parsed.
-     */
+   * Computes the implicit frame of the method currently being parsed (as
+   * defined in the given {@link Context}) and stores it in the given context.
+   *
+   * @param frame information about the class being parsed.
+   */
   private getImplicitFrame(frame: Context) {
     const desc: string = frame.desc
     const locals: any[] = frame.local
     let local = 0
     if ((frame.access & Opcodes.ACC_STATIC) === 0) {
-      if ((frame.name === '<init>')) {
+      if (frame.name === '<init>') {
         locals[local++] = Opcodes.UNINITIALIZED_THIS
       } else {
         locals[local++] = this.readClass(this.header + 2, frame.buffer)
@@ -1480,39 +1678,39 @@ export class ClassReader {
     }
     let i = 1
     // eslint-disable-next-line no-labels
-    loop: while ((true)) {
+    loop: while (true) {
       const j: number = i
-      switch (((desc.charAt(i++)).charCodeAt(0))) {
-        case ('Z').charCodeAt(0):
-        case ('C').charCodeAt(0):
-        case ('B').charCodeAt(0):
-        case ('S').charCodeAt(0):
-        case ('I').charCodeAt(0):
+      switch (desc.charAt(i++).charCodeAt(0)) {
+        case 'Z'.charCodeAt(0):
+        case 'C'.charCodeAt(0):
+        case 'B'.charCodeAt(0):
+        case 'S'.charCodeAt(0):
+        case 'I'.charCodeAt(0):
           locals[local++] = Opcodes.INTEGER
           break
-        case ('F').charCodeAt(0):
+        case 'F'.charCodeAt(0):
           locals[local++] = Opcodes.FLOAT
           break
-        case ('J').charCodeAt(0):
+        case 'J'.charCodeAt(0):
           locals[local++] = Opcodes.LONG
           break
-        case ('D').charCodeAt(0):
+        case 'D'.charCodeAt(0):
           locals[local++] = Opcodes.DOUBLE
           break
-        case ('[').charCodeAt(0):
-          while ((desc.charAt(i) === ('['))) {
+        case '['.charCodeAt(0):
+          while (desc.charAt(i) === '[') {
             ++i
           }
-          if (desc.charAt(i) === ('L')) {
+          if (desc.charAt(i) === 'L') {
             ++i
-            while ((desc.charAt(i) !== (';'))) {
+            while (desc.charAt(i) !== ';') {
               ++i
             }
           }
           locals[local++] = desc.substring(j, ++i)
           break
-        case ('L').charCodeAt(0):
-          while ((desc.charAt(i) !== (';'))) {
+        case 'L'.charCodeAt(0):
+          while (desc.charAt(i) !== ';') {
             ++i
           }
           locals[local++] = desc.substring(j + 1, i++)
@@ -1525,15 +1723,15 @@ export class ClassReader {
   }
 
   /**
-     * Reads a stack map frame and stores the result in the given
-     * {@link Context} object.
-     *
-     * @param stackMap the start offset of a stack map frame in the class file.
-     * @param zip      if the stack map frame at stackMap is compressed or not.
-     * @param unzip    if the stack map frame must be uncompressed.
-     * @param frame    where the parsed stack map frame must be stored.
-     * @return the offset of the first byte following the parsed frame.
-     */
+   * Reads a stack map frame and stores the result in the given
+   * {@link Context} object.
+   *
+   * @param stackMap the start offset of a stack map frame in the class file.
+   * @param zip      if the stack map frame at stackMap is compressed or not.
+   * @param unzip    if the stack map frame must be uncompressed.
+   * @param frame    where the parsed stack map frame must be stored.
+   * @return the offset of the first byte following the parsed frame.
+   */
   private readFrame(stackMap: number, zip: boolean, unzip: boolean, frame: Context): number {
     const c: number[] = frame.buffer
     const labels: Label[] = frame.labels
@@ -1602,22 +1800,28 @@ export class ClassReader {
   }
 
   /**
-     * Reads a stack map frame type and stores it at the given index in the
-     * given array.
-     *
-     * @param frame  the array where the parsed type must be stored.
-     * @param index  the index in 'frame' where the parsed type must be stored.
-     * @param v      the start offset of the stack map frame type to read.
-     * @param buf    a buffer to read strings.
-     * @param labels the labels of the method currently being parsed, indexed by
-     * their offset. If the parsed type is an Uninitialized type, a
-     * new label for the corresponding NEW instruction is stored in
-     * this array if it does not already exist.
-     * @return the offset of the first byte after the parsed type.
-     */
-  private readFrameType(frame: any[], index: number, v: number, buf: number[], labels: Label[]): number {
+   * Reads a stack map frame type and stores it at the given index in the
+   * given array.
+   *
+   * @param frame  the array where the parsed type must be stored.
+   * @param index  the index in 'frame' where the parsed type must be stored.
+   * @param v      the start offset of the stack map frame type to read.
+   * @param buf    a buffer to read strings.
+   * @param labels the labels of the method currently being parsed, indexed by
+   * their offset. If the parsed type is an Uninitialized type, a
+   * new label for the corresponding NEW instruction is stored in
+   * this array if it does not already exist.
+   * @return the offset of the first byte after the parsed type.
+   */
+  private readFrameType(
+    frame: any[],
+    index: number,
+    v: number,
+    buf: number[],
+    labels: Label[],
+  ): number {
     const type: number = this.buf[v++] & 255
-    switch ((type)) {
+    switch (type) {
       case 0:
         frame[index] = Opcodes.TOP
         break
@@ -1651,16 +1855,16 @@ export class ClassReader {
   }
 
   /**
-     * Returns the label corresponding to the given offset. The default
-     * implementation of this method creates a label for the given offset if it
-     * has not been already created.
-     *
-     * @param offset a bytecode offset in a method.
-     * @param labels the already created labels, indexed by their offset. If a
-     * label already exists for offset this method must not create a
-     * new one. Otherwise it must store the new label in this array.
-     * @return a non null Label, which must be equal to labels[offset].
-     */
+   * Returns the label corresponding to the given offset. The default
+   * implementation of this method creates a label for the given offset if it
+   * has not been already created.
+   *
+   * @param offset a bytecode offset in a method.
+   * @param labels the already created labels, indexed by their offset. If a
+   * label already exists for offset this method must not create a
+   * new one. Otherwise it must store the new label in this array.
+   * @return a non null Label, which must be equal to labels[offset].
+   */
   readLabel(offset: number, labels: Label[]): Label {
     if (labels[offset] == null) {
       labels[offset] = new Label()
@@ -1669,10 +1873,10 @@ export class ClassReader {
   }
 
   /**
-     * Returns the start index of the attribute_info structure of this class.
-     *
-     * @return the start index of the attribute_info structure of this class.
-     */
+   * Returns the start index of the attribute_info structure of this class.
+   *
+   * @return the start index of the attribute_info structure of this class.
+   */
   private getAttributes(): number {
     let u: number = this.header + 8 + this.readUnsignedShort(this.header + 6) * 2
     for (let i: number = this.readUnsignedShort(u); i > 0; --i) {
@@ -1692,34 +1896,42 @@ export class ClassReader {
   }
 
   /**
-     * Reads an attribute in {@link #b b}.
-     *
-     * @param attrs   prototypes of the attributes that must be parsed during the
-     * visit of the class. Any attribute whose type is not equal to
-     * the type of one the prototypes is ignored (i.e. an empty
-     * {@link Attribute} instance is returned).
-     * @param type    the type of the attribute.
-     * @param off     index of the first byte of the attribute's content in
-     * {@link #b b}. The 6 attribute header bytes, containing the
-     * type and the length of the attribute, are not taken into
-     * account here (they have already been read).
-     * @param len     the length of the attribute's content.
-     * @param buf     buffer to be used to call {@link #readUTF8 readUTF8},
-     * {@link #readClass(int, int[]) readClass} or {@link #readConst
-     * readConst}.
-     * @param codeOff index of the first byte of code's attribute content in
-     * {@link #b b}, or -1 if the attribute to be read is not a code
-     * attribute. The 6 attribute header bytes, containing the type
-     * and the length of the attribute, are not taken into account
-     * here.
-     * @param labels  the labels of the method's code, or <tt>null</tt> if the
-     * attribute to be read is not a code attribute.
-     * @return the attribute that has been read, or <tt>null</tt> to skip this
-     * attribute.
-     */
-  private readAttribute(attrs: Attribute[], type: string | null, off: number, len: number, buf: number[], codeOff: number, labels: Label[] | null): Attribute {
+   * Reads an attribute in {@link #b b}.
+   *
+   * @param attrs   prototypes of the attributes that must be parsed during the
+   * visit of the class. Any attribute whose type is not equal to
+   * the type of one the prototypes is ignored (i.e. an empty
+   * {@link Attribute} instance is returned).
+   * @param type    the type of the attribute.
+   * @param off     index of the first byte of the attribute's content in
+   * {@link #b b}. The 6 attribute header bytes, containing the
+   * type and the length of the attribute, are not taken into
+   * account here (they have already been read).
+   * @param len     the length of the attribute's content.
+   * @param buf     buffer to be used to call {@link #readUTF8 readUTF8},
+   * {@link #readClass(int, int[]) readClass} or {@link #readConst
+   * readConst}.
+   * @param codeOff index of the first byte of code's attribute content in
+   * {@link #b b}, or -1 if the attribute to be read is not a code
+   * attribute. The 6 attribute header bytes, containing the type
+   * and the length of the attribute, are not taken into account
+   * here.
+   * @param labels  the labels of the method's code, or <tt>null</tt> if the
+   * attribute to be read is not a code attribute.
+   * @return the attribute that has been read, or <tt>null</tt> to skip this
+   * attribute.
+   */
+  private readAttribute(
+    attrs: Attribute[],
+    type: string | null,
+    off: number,
+    len: number,
+    buf: number[],
+    codeOff: number,
+    labels: Label[] | null,
+  ): Attribute {
     for (let i = 0; i < attrs.length; ++i) {
-      if ((attrs[i].type === type)) {
+      if (attrs[i].type === type) {
         return attrs[i].read(this, off, len, buf, codeOff, labels)
       }
     }
@@ -1727,59 +1939,59 @@ export class ClassReader {
   }
 
   /**
-     * Returns the number of constant pool items in {@link #b b}.
-     *
-     * @return the number of constant pool items in {@link #b b}.
-     */
+   * Returns the number of constant pool items in {@link #b b}.
+   *
+   * @return the number of constant pool items in {@link #b b}.
+   */
   public getItemCount(): number {
     return this.items.length
   }
 
   /**
-     * Returns the start index of the constant pool item in {@link #b b}, plus
-     * one. <i>This method is intended for {@link Attribute} sub classes, and is
-     * normally not needed by class generators or adapters.</i>
-     *
-     * @param item the index a constant pool item.
-     * @return the start index of the constant pool item in {@link #b b}, plus
-     * one.
-     */
+   * Returns the start index of the constant pool item in {@link #b b}, plus
+   * one. <i>This method is intended for {@link Attribute} sub classes, and is
+   * normally not needed by class generators or adapters.</i>
+   *
+   * @param item the index a constant pool item.
+   * @return the start index of the constant pool item in {@link #b b}, plus
+   * one.
+   */
   public getItem(item: number): number {
     return this.items[item]
   }
 
   /**
-     * Returns the maximum length of the strings contained in the constant pool
-     * of the class.
-     *
-     * @return the maximum length of the strings contained in the constant pool
-     * of the class.
-     */
+   * Returns the maximum length of the strings contained in the constant pool
+   * of the class.
+   *
+   * @return the maximum length of the strings contained in the constant pool
+   * of the class.
+   */
   public getMaxStringLength(): number {
     return this.maxStringLength
   }
 
   /**
-     * Reads a byte value in {@link #b b}. <i>This method is intended for
-     * {@link Attribute} sub classes, and is normally not needed by class
-     * generators or adapters.</i>
-     *
-     * @param index the start index of the value to be read in {@link #b b}.
-     * @return the read value.
-     */
+   * Reads a byte value in {@link #b b}. <i>This method is intended for
+   * {@link Attribute} sub classes, and is normally not needed by class
+   * generators or adapters.</i>
+   *
+   * @param index the start index of the value to be read in {@link #b b}.
+   * @return the read value.
+   */
   public readByte(index: number): number {
     // return this.buf.readInt8(index);
     return this.buf[index] & 255
   }
 
   /**
-     * Reads an unsigned short value in {@link #b b}. <i>This method is intended
-     * for {@link Attribute} sub classes, and is normally not needed by class
-     * generators or adapters.</i>
-     *
-     * @param index the start index of the value to be read in {@link #b b}.
-     * @return the read value.
-     */
+   * Reads an unsigned short value in {@link #b b}. <i>This method is intended
+   * for {@link Attribute} sub classes, and is normally not needed by class
+   * generators or adapters.</i>
+   *
+   * @param index the start index of the value to be read in {@link #b b}.
+   * @return the read value.
+   */
   public readUnsignedShort(index: number): number {
     // return this.buf.readUInt16BE(index);
     const b = this.buf
@@ -1787,76 +1999,85 @@ export class ClassReader {
   }
 
   /**
-     * Reads a signed short value in {@link #b b}. <i>This method is intended
-     * for {@link Attribute} sub classes, and is normally not needed by class
-     * generators or adapters.</i>
-     *
-     * @param index the start index of the value to be read in {@link #b b}.
-     * @return the read value.
-     */
+   * Reads a signed short value in {@link #b b}. <i>This method is intended
+   * for {@link Attribute} sub classes, and is normally not needed by class
+   * generators or adapters.</i>
+   *
+   * @param index the start index of the value to be read in {@link #b b}.
+   * @return the read value.
+   */
   public readShort(index: number): number {
     const b = this.buf
-    return (b[index] << 8) | (b[index + 1])
+    return (b[index] << 8) | b[index + 1]
   }
 
   /**
-     * Reads a signed int value in {@link #b b}. <i>This method is intended for
-     * {@link Attribute} sub classes, and is normally not needed by class
-     * generators or adapters.</i>
-     *
-     * @param index the start index of the value to be read in {@link #b b}.
-     * @return the read value.
-     */
+   * Reads a signed int value in {@link #b b}. <i>This method is intended for
+   * {@link Attribute} sub classes, and is normally not needed by class
+   * generators or adapters.</i>
+   *
+   * @param index the start index of the value to be read in {@link #b b}.
+   * @return the read value.
+   */
   public readInt(index: number): number {
     // return this.buf.readInt32BE(index);
     const b = this.buf
-    return ((b[index] & 255) << 24) | ((b[index + 1] & 255) << 16) | ((b[index + 2] & 255) << 8) | (b[index + 3])
+    return (
+      ((b[index] & 255) << 24) |
+      ((b[index + 1] & 255) << 16) |
+      ((b[index + 2] & 255) << 8) |
+      b[index + 3]
+    )
   }
 
   /**
-     * Reads a signed long value in {@link #b b}. <i>This method is intended for
-     * {@link Attribute} sub classes, and is normally not needed by class
-     * generators or adapters.</i>
-     *
-     * @param index the start index of the value to be read in {@link #b b}.
-     * @return the read value.
-     */
+   * Reads a signed long value in {@link #b b}. <i>This method is intended for
+   * {@link Attribute} sub classes, and is normally not needed by class
+   * generators or adapters.</i>
+   *
+   * @param index the start index of the value to be read in {@link #b b}.
+   * @return the read value.
+   */
   public readLong(index: number): bigint {
     const l1 = BigInt(this.readInt(index))
     const l0 = BigInt(this.readInt(index + 4) & 4294967295)
-    return l1 << 32n | l0
+    return (l1 << 32n) | l0
   }
 
   /**
-     * Reads an UTF8 string constant pool item in {@link #b b}. <i>This method
-     * is intended for {@link Attribute} sub classes, and is normally not needed
-     * by class generators or adapters.</i>
-     *
-     * @param index the start index of an unsigned short value in {@link #b b},
-     * whose value is the index of an UTF8 constant pool item.
-     * @param buf   buffer to be used to read the item. This buffer must be
-     * sufficiently large. It is not automatically resized.
-     * @return the String corresponding to the specified UTF8 item.
-     */
+   * Reads an UTF8 string constant pool item in {@link #b b}. <i>This method
+   * is intended for {@link Attribute} sub classes, and is normally not needed
+   * by class generators or adapters.</i>
+   *
+   * @param index the start index of an unsigned short value in {@link #b b},
+   * whose value is the index of an UTF8 constant pool item.
+   * @param buf   buffer to be used to read the item. This buffer must be
+   * sufficiently large. It is not automatically resized.
+   * @return the String corresponding to the specified UTF8 item.
+   */
   public readUTF8(index: number, buf: number[]): string {
     const item: number = this.readUnsignedShort(index)
-    if (index === 0 || item === 0) { return '' }
+    if (index === 0 || item === 0) {
+      return ''
+    }
     const s: string = this.strings[item]
-    if (s != null) { return s }
+    if (s != null) {
+      return s
+    }
     index = this.items[item]
     this.strings[item] = this.readUTF(index + 2, this.readUnsignedShort(index), buf)
     return this.strings[item]
   }
 
   /**
-     * Reads UTF8 string in {@link #b b}.
-     *
-     * @param index  start offset of the UTF8 string to be read.
-     * @param utfLen length of the UTF8 string to be read.
-     * @param buf    buffer to be used to read the string. This buffer must be
-     * sufficiently large. It is not automatically resized.
-     * @return the String corresponding to the specified UTF8 string.
-     */
+   * Reads UTF8 string in {@link #b b}.
+   *
+   * @param index  start offset of the UTF8 string to be read.
+   * @param utfLen length of the UTF8 string to be read.
+   * @param buf    buffer to be used to read the string. This buffer must be
+   * sufficiently large. It is not automatically resized.
+   * @return the String corresponding to the specified UTF8 string.
+   */
   private readUTF(index: number, utfLen: number, buf: number[]): string {
     const endIndex: number = index + utfLen
     const b: Uint8Array = this.buf
@@ -1872,56 +2093,59 @@ export class ClassReader {
           if (c < 128) {
             buf[strLen++] = c
           } else if (c < 224 && c > 191) {
-            cc = (c & 31)
+            cc = c & 31
             st = 1
           } else {
-            cc = (c & 15)
+            cc = c & 15
             st = 2
           }
           break
         case 1:
-          buf[strLen++] = ((cc << 6) | (c & 63))
+          buf[strLen++] = (cc << 6) | (c & 63)
           st = 0
           break
         case 2:
-          cc = ((cc << 6) | (c & 63))
+          cc = (cc << 6) | (c & 63)
           st = 1
           break
       }
     }
-    return buf.slice(0, strLen).map((c) => String.fromCharCode(c)).join('')
+    return buf
+      .slice(0, strLen)
+      .map((c) => String.fromCharCode(c))
+      .join('')
   }
 
   /**
-     * Reads a class constant pool item in {@link #b b}. <i>This method is
-     * intended for {@link Attribute} sub classes, and is normally not needed by
-     * class generators or adapters.</i>
-     *
-     * @param index the start index of an unsigned short value in {@link #b b},
-     * whose value is the index of a class constant pool item.
-     * @param buf   buffer to be used to read the item. This buffer must be
-     * sufficiently large. It is not automatically resized.
-     * @return the String corresponding to the specified class item.
-     */
+   * Reads a class constant pool item in {@link #b b}. <i>This method is
+   * intended for {@link Attribute} sub classes, and is normally not needed by
+   * class generators or adapters.</i>
+   *
+   * @param index the start index of an unsigned short value in {@link #b b},
+   * whose value is the index of a class constant pool item.
+   * @param buf   buffer to be used to read the item. This buffer must be
+   * sufficiently large. It is not automatically resized.
+   * @return the String corresponding to the specified class item.
+   */
   public readClass(index: number, buf: number[]): string {
     return this.readUTF8(this.items[this.readUnsignedShort(index)], buf) ?? ''
   }
 
   /**
-     * Reads a numeric or string constant pool item in {@link #b b}. <i>This
-     * method is intended for {@link Attribute} sub classes, and is normally not
-     * needed by class generators or adapters.</i>
-     *
-     * @param item the index of a constant pool item.
-     * @param buf  buffer to be used to read the item. This buffer must be
-     * sufficiently large. It is not automatically resized.
-     * @return the {@link Integer}, {@link Float}, {@link Long}, {@link Double},
-     * {@link String}, {@link Type} or {@link Handle} corresponding to
-     * the given constant pool item.
-     */
+   * Reads a numeric or string constant pool item in {@link #b b}. <i>This
+   * method is intended for {@link Attribute} sub classes, and is normally not
+   * needed by class generators or adapters.</i>
+   *
+   * @param item the index of a constant pool item.
+   * @param buf  buffer to be used to read the item. This buffer must be
+   * sufficiently large. It is not automatically resized.
+   * @return the {@link Integer}, {@link Float}, {@link Long}, {@link Double},
+   * {@link String}, {@link Type} or {@link Handle} corresponding to
+   * the given constant pool item.
+   */
   public readConst(item: number, buf: number[]): any {
     const index: number = this.items[item]
-    switch ((this.buf[index - 1])) {
+    switch (this.buf[index - 1]) {
       case ClassWriterConstant.INT:
         return this.readInt(index)
       case ClassWriterConstant.FLOAT:

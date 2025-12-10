@@ -3,7 +3,7 @@ import { ResourceDomain } from '../ResourceDomain'
 import { ResourceType } from '../ResourceType'
 import type { IResourceParser } from './index'
 
-export const quiltModParser: IResourceParser<QuiltModMetadata> = ({
+export const quiltModParser: IResourceParser<QuiltModMetadata> = {
   type: ResourceType.Quilt,
   domain: ResourceDomain.Mods,
   ext: '.jar',
@@ -18,7 +18,7 @@ export const quiltModParser: IResourceParser<QuiltModMetadata> = ({
     }
     return Promise.resolve(undefined)
   },
-  parseMetadata: async fs => readQuiltMod(fs),
+  parseMetadata: async (fs) => readQuiltMod(fs),
   getSuggestedName: (meta) => {
     let name = ''
     if (meta.quilt_loader.metadata?.name) {
@@ -31,5 +31,5 @@ export const quiltModParser: IResourceParser<QuiltModMetadata> = ({
 
     return name
   },
-  getUri: meta => [`quilt:${meta.quilt_loader.id}:${meta.quilt_loader.version}`],
-})
+  getUri: (meta) => [`quilt:${meta.quilt_loader.id}:${meta.quilt_loader.version}`],
+}

@@ -51,14 +51,16 @@ export class Channel extends EventEmitter {
 
     this.inbound = new MinecraftPacketInBound()
     this.inbound
-      .pipe(new PacketDecompress({
-        get enableCompression() {
-          return false
-        },
-        get compressionThreshold() {
-          return -1
-        },
-      }))
+      .pipe(
+        new PacketDecompress({
+          get enableCompression() {
+            return false
+          },
+          get compressionThreshold() {
+            return -1
+          },
+        }),
+      )
       .pipe(new MinecraftPacketDecoder(this))
       .pipe(new PacketEmitter(this))
 
@@ -99,8 +101,8 @@ export class Channel extends EventEmitter {
   }
 
   /**
-     * Open the connection and start to listen the port.
-     */
+   * Open the connection and start to listen the port.
+   */
   async listen(option: NetConnectOpts & { keepalive?: boolean | number }) {
     await new Promise<void>((resolve, reject) => {
       this.connection.connect(option, () => {
@@ -110,12 +112,21 @@ export class Channel extends EventEmitter {
         this.connection.setTimeout(option.timeout)
       }
       if (option.keepalive) {
-        this.connection.setKeepAlive(true, typeof option.keepalive === 'boolean' ? 3500 : option.keepalive)
+        this.connection.setKeepAlive(
+          true,
+          typeof option.keepalive === 'boolean' ? 3500 : option.keepalive,
+        )
       }
-      this.connection.once('error', (e) => { reject(e) })
-      this.connection.once('timeout', () => { reject(new Error('Connection timeout.')) })
+      this.connection.once('error', (e) => {
+        reject(e)
+      })
+      this.connection.once('timeout', () => {
+        reject(new Error('Connection timeout.'))
+      })
     })
-    this.connection.on('error', (e) => { this.emit('error', e) })
+    this.connection.on('error', (e) => {
+      this.emit('error', e)
+    })
 
     this.emit('listen')
     this.listened = true
@@ -139,11 +150,15 @@ export class Channel extends EventEmitter {
   }
 
   /**
-     * Sent a packet to server.
-     */
+   * Sent a packet to server.
+   */
   send<T>(message: T, skeleton?: Partial<T>) {
-    if (!this.connection.writable) { throw new Error("Cannot write if the connection isn't writable!") }
-    if (skeleton) { Object.assign((message as any), skeleton) }
+    if (!this.connection.writable) {
+      throw new Error("Cannot write if the connection isn't writable!")
+    }
+    if (skeleton) {
+      Object.assign(message as any, skeleton)
+    }
     return new Promise<void>((resolve, reject) => {
       this.outbound.write(message, (err) => {
         if (err) {
@@ -157,8 +172,8 @@ export class Channel extends EventEmitter {
   }
 
   /**
-     * Listen for sepcific packet by its class name.
-     */
+   * Listen for sepcific packet by its class name.
+   */
   onPacket<T>(packet: new (...args: any[]) => T, listener: (event: T) => void): this {
     return this.on(`packet:${packet.name}`, listener)
   }
@@ -217,7 +232,9 @@ class MinecraftPacketInBound extends PacketInBound {
 }
 
 class PacketDecompress extends Transform {
-  constructor(private option: { readonly enableCompression: boolean; readonly compressionThreshold: number }) {
+  constructor(
+    private option: { readonly enableCompression: boolean; readonly compressionThreshold: number },
+  ) {
     super()
   }
 
@@ -322,7 +339,10 @@ class MinecraftPacketEncoder extends PacketEncoder {
 export abstract class PacketOutbound extends Transform {
   protected abstract writePacketLength(bb: ByteBuffer, len: number): void
 
-  constructor(private channelWidth = Number.MAX_SAFE_INTEGER, opts?: TransformOptions) {
+  constructor(
+    private channelWidth = Number.MAX_SAFE_INTEGER,
+    opts?: TransformOptions,
+  ) {
     super(opts)
   }
 

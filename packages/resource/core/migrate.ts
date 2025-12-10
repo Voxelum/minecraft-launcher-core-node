@@ -30,22 +30,16 @@ async function fixSnapshotTable(db: Kysely<Database>) {
       .addColumn('sha1', 'char(40)', (col) => col.notNull())
       .execute()
     // copy data
-    await sql`insert into snapshots_temp select domainedPath, ino, mtime, fileType, sha1 from snapshots`.execute(db)
+    await sql`insert into snapshots_temp select domainedPath, ino, mtime, fileType, sha1 from snapshots`.execute(
+      db,
+    )
     // drop old table
     await db.schema.dropTable('snapshots').execute()
     // rename new table
     await db.schema.alterTable('snapshots_temp').renameTo('snapshots').execute()
-    await db.schema
-      .createIndex('snapshots_ino_index')
-      .on('snapshots')
-      .column('ino')
-      .execute()
+    await db.schema.createIndex('snapshots_ino_index').on('snapshots').column('ino').execute()
 
-    await db.schema
-      .createIndex('snapshots_sha1_index')
-      .on('snapshots')
-      .column('sha1')
-      .execute()
+    await db.schema.createIndex('snapshots_sha1_index').on('snapshots').column('sha1').execute()
   }
 }
 
@@ -100,21 +94,33 @@ const v1: Migration = {
 
     await db.schema
       .createTable('tags')
-      .addColumn('sha1', 'char(40)', (col) => col.notNull()/* .references('resources.sha1').onDelete('cascade') */)
+      .addColumn(
+        'sha1',
+        'char(40)',
+        (col) => col.notNull() /* .references('resources.sha1').onDelete('cascade') */,
+      )
       .addColumn('tag', 'varchar', (col) => col.notNull())
       .addUniqueConstraint('sha1_uri_unique', ['sha1', 'tag'])
       .execute()
 
     await db.schema
       .createTable('uris')
-      .addColumn('sha1', 'char(40)', (col) => col.notNull()/* .references('resources.sha1').onDelete('cascade') */)
+      .addColumn(
+        'sha1',
+        'char(40)',
+        (col) => col.notNull() /* .references('resources.sha1').onDelete('cascade') */,
+      )
       .addColumn('uri', 'varchar', (col) => col.notNull())
       .addUniqueConstraint('sha1_uri_unique', ['sha1', 'uri'])
       .execute()
 
     await db.schema
       .createTable('icons')
-      .addColumn('sha1', 'char(40)', (col) => col.notNull()/* .references('resources.sha1').onDelete('cascade') */)
+      .addColumn(
+        'sha1',
+        'char(40)',
+        (col) => col.notNull() /* .references('resources.sha1').onDelete('cascade') */,
+      )
       .addColumn('icon', 'varchar', (col) => col.notNull())
       .addUniqueConstraint('sha1_uri_unique', ['sha1', 'icon'])
       .execute()
@@ -128,17 +134,9 @@ const v1: Migration = {
       .addColumn('sha1', 'char(40)', (col) => col.notNull())
       .execute()
 
-    await db.schema
-      .createIndex('snapshots_ino_index')
-      .on('snapshots')
-      .column('ino')
-      .execute()
+    await db.schema.createIndex('snapshots_ino_index').on('snapshots').column('ino').execute()
 
-    await db.schema
-      .createIndex('snapshots_sha1_index')
-      .on('snapshots')
-      .column('sha1')
-      .execute()
+    await db.schema.createIndex('snapshots_sha1_index').on('snapshots').column('sha1').execute()
   },
 }
 
@@ -149,10 +147,7 @@ const v2: Migration = {
     if (columns.rows.some((c: any) => c.name === 'MMCModpack')) {
       return
     }
-    await db.schema
-      .alterTable('resources')
-      .addColumn('MMCModpack', 'json')
-      .execute()
+    await db.schema.alterTable('resources').addColumn('MMCModpack', 'json').execute()
   },
 }
 
@@ -161,24 +156,25 @@ const v21: Migration = {
     await db.schema
       .alterTable('snapshots')
       .dropColumn('ctime')
-      .execute().catch(() => { })
+      .execute()
+      .catch(() => {})
     await db.schema
       .alterTable('snapshots')
       .dropColumn('size')
-      .execute().catch(() => { })
+      .execute()
+      .catch(() => {})
   },
 }
 
 const v22: Migration = {
   async up(db: Kysely<Database>): Promise<void> {
-    await sql`update icons set icon = REPLACE(icon, 'image://', 'http://launcher/image/') where "icon" like 'image:%';`.execute(db)
+    await sql`update icons set icon = REPLACE(icon, 'image://', 'http://launcher/image/') where "icon" like 'image:%';`.execute(
+      db,
+    )
     const columns = await sql`PRAGMA table_info(resources)`.execute(db)
     if (columns.rows.some((c: any) => c.name === ResourceType.Neoforge)) {
       return
     }
-    await db.schema
-      .alterTable('resources')
-      .addColumn(ResourceType.Neoforge, 'json')
-      .execute()
+    await db.schema.alterTable('resources').addColumn(ResourceType.Neoforge, 'json').execute()
   },
 }

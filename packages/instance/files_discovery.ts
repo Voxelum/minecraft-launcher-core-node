@@ -31,7 +31,7 @@ export type FileFilter = (relativePath: string, stats: Stats) => boolean
 export async function getInstanceFiles(
   instancePath: string,
   logger?: Logger,
-  filter?: FileFilter
+  filter?: FileFilter,
 ): Promise<Array<[InstanceFile, Stats]>> {
   const files: Array<[InstanceFile, Stats]> = []
 
@@ -53,11 +53,13 @@ export async function getInstanceFiles(
     const isDirectory = stats.isDirectory()
     if (isDirectory) {
       const children = await readdir(dirOrFile)
-      await Promise.all(children.map(child =>
-        scan(join(dirOrFile, child)).catch((e) => {
-          logger?.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
-        })
-      ))
+      await Promise.all(
+        children.map((child) =>
+          scan(join(dirOrFile, child)).catch((e) => {
+            logger?.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
+          }),
+        ),
+      )
     } else {
       const localFile: InstanceFile = {
         path: relativePath,
@@ -88,7 +90,7 @@ async function resolveHashes(
   file: string,
   worker: ChecksumWorker,
   hashes?: string[],
-  sha1?: string
+  sha1?: string,
 ): Promise<Record<string, string>> {
   const result: Record<string, string> = {}
 
@@ -117,16 +119,16 @@ export async function decorateInstanceFiles(
   worker: ChecksumWorker,
   resourceManager: ResourceManager,
   undecoratedResources: Set<InstanceFile>,
-  hashes?: string[]
+  hashes?: string[],
 ): Promise<void> {
   // Get SHA1 hashes from resource manager using inode numbers
-  const sha1Lookup = await resourceManager.getSnapshotsByIno(
-    files
-      .filter(([localFile, stat]) => isSpecialFile(localFile.path))
-      .map(([localFile, stat]) => stat.ino)
-  ).then(snapshots =>
-    Object.fromEntries(snapshots.map(s => [s.ino, s.sha1]))
-  )
+  const sha1Lookup = await resourceManager
+    .getSnapshotsByIno(
+      files
+        .filter(([localFile, stat]) => isSpecialFile(localFile.path))
+        .map(([localFile, stat]) => stat.ino),
+    )
+    .then((snapshots) => Object.fromEntries(snapshots.map((s) => [s.ino, s.sha1])))
 
   // First pass: compute SHA1 for special files
   for (const [localFile, stat] of files) {
@@ -135,35 +137,32 @@ export async function decorateInstanceFiles(
     const ino = stat.ino
 
     if (isSpecialFile(relativePath)) {
-      const sha1 = sha1Lookup[ino] || await worker.checksum(filePath, 'sha1')
+      const sha1 = sha1Lookup[ino] || (await worker.checksum(filePath, 'sha1'))
       localFile.hashes.sha1 = sha1
     }
   }
 
   // Get existing SHA1 hashes and lookup metadata
-  const existingSha1 = files
-    .map(f => f[0].hashes.sha1)
-    .filter((sha1): sha1 is string => !!sha1)
+  const existingSha1 = files.map((f) => f[0].hashes.sha1).filter((sha1): sha1 is string => !!sha1)
 
-  const metadataLookup = await resourceManager.getMetadataByHashes(existingSha1)
-    .then(metadata =>
-      Object.fromEntries(
-        metadata
-          .filter((m): m is ResourceLike => !!m)
-          .map(m => [m.sha1, m])
-      )
+  const metadataLookup = await resourceManager
+    .getMetadataByHashes(existingSha1)
+    .then((metadata) =>
+      Object.fromEntries(metadata.filter((m): m is ResourceLike => !!m).map((m) => [m.sha1, m])),
     )
 
-  const urisLookup = await resourceManager.getUrisByHash(existingSha1)
-    .then(uris =>
-      uris.reduce((acc, cur) => {
+  const urisLookup = await resourceManager.getUrisByHash(existingSha1).then((uris) =>
+    uris.reduce(
+      (acc, cur) => {
         if (!acc[cur.sha1]) {
           acc[cur.sha1] = []
         }
         acc[cur.sha1].push(cur.uri)
         return acc
-      }, {} as Record<string, string[]>)
-    )
+      },
+      {} as Record<string, string[]>,
+    ),
+  )
 
   // Second pass: decorate files with metadata
   for (const [localFile, stat] of files) {
@@ -189,13 +188,14 @@ export async function decorateInstanceFiles(
       }
 
       const uris = urisLookup[sha1]
-      localFile.downloads = uris && uris.some(u => u.startsWith('http'))
-        ? uris.filter(u => u.startsWith('http'))
-        : undefined
+      localFile.downloads =
+        uris && uris.some((u) => u.startsWith('http'))
+          ? uris.filter((u) => u.startsWith('http'))
+          : undefined
 
       localFile.hashes = {
         ...localFile.hashes,
-        ...await resolveHashes(filePath, worker, hashes, sha1),
+        ...(await resolveHashes(filePath, worker, hashes, sha1)),
       }
 
       // Mark files without download URLs for resolution
@@ -205,7 +205,7 @@ export async function decorateInstanceFiles(
     } else {
       localFile.hashes = {
         ...localFile.hashes,
-        ...await resolveHashes(filePath, worker, hashes),
+        ...(await resolveHashes(filePath, worker, hashes)),
       }
     }
   }

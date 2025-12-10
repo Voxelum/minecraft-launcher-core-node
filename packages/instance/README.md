@@ -36,17 +36,17 @@ const files = await discoverInstanceFiles('/path/to/instance', logger, createDef
 ### Parse Different Launcher Formats
 
 ```typescript
-import { 
-  parseMultiMCInstance, 
-  parseModrinthInstance, 
+import {
+  parseMultiMCInstance,
+  parseModrinthInstance,
   parseCurseforgeInstance,
-  parseVanillaInstance 
+  parseVanillaInstance
 } from '@xmcl/instance'
 
 // Parse MultiMC instance
 const mmcInstance = await parseMultiMCInstance('/path/to/mmc/instance')
 
-// Parse Modrinth instance  
+// Parse Modrinth instance
 const modrinthInstance = await parseModrinthInstance('/path/to/modrinth/instance')
 
 // Parse CurseForge instance
@@ -89,6 +89,7 @@ const updates = await computeFileUpdates(
 ### Functional Design
 
 This package follows functional programming principles:
+
 - Pure functions without side effects
 - Immutable data structures
 - Interface-based abstractions for dependencies
@@ -108,7 +109,7 @@ This allows the package to be used with any implementation of these interfaces.
 ### Instance Types
 
 - **MultiMC**: Supports MultiMC and PolyMC launcher formats
-- **Modrinth**: Supports Modrinth App instances  
+- **Modrinth**: Supports Modrinth App instances
 - **CurseForge**: Supports CurseForge launcher instances
 - **Vanilla**: Supports official Minecraft launcher profiles
 

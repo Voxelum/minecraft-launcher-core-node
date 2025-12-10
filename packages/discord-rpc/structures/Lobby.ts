@@ -71,7 +71,11 @@ export class Lobby extends Base {
   }
 
   async updateMember(userId: string, metadata?: any): Promise<void> {
-    await this.client.request('UPDATE_LOBBY_MEMBER', { lobby_id: this.id, user_id: userId, metadata })
+    await this.client.request('UPDATE_LOBBY_MEMBER', {
+      lobby_id: this.id,
+      user_id: userId,
+      metadata,
+    })
   }
 
   async disconnect(): Promise<void> {

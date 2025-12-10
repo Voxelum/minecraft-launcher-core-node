@@ -29,7 +29,17 @@ export const MAX_VARINT32_BYTES = 5
 export const calculateVarint32 = function (value: number): number {
   // ref: src/google/protobuf/io/coded_stream.cc
   value = value >>> 0
-  if (value < 1 << 7) { return 1 } else if (value < 1 << 14) { return 2 } else if (value < 1 << 21) { return 3 } else if (value < 1 << 28) { return 4 } else { return 5 }
+  if (value < 1 << 7) {
+    return 1
+  } else if (value < 1 << 14) {
+    return 2
+  } else if (value < 1 << 21) {
+    return 3
+  } else if (value < 1 << 28) {
+    return 4
+  } else {
+    return 5
+  }
 }
 
 /**
@@ -60,21 +70,36 @@ export const zigZagDecode32 = function (n: number): number {
  * @returns {!ByteBuffer|number} this if `offset` is omitted, else the actual number of bytes written
  * @expose
  */
-ByteBuffer.prototype.writeVarint32 = function (value: number, offset?: number): ByteBuffer | number {
+ByteBuffer.prototype.writeVarint32 = function (
+  value: number,
+  offset?: number,
+): ByteBuffer | number {
   const relative = typeof offset === 'undefined'
-  if (relative) { offset = this.offset }
+  if (relative) {
+    offset = this.offset
+  }
   if (!this.noAssert) {
-    if (typeof value !== 'number' || value % 1 !== 0) { throw TypeError('Illegal value: ' + value + ' (not an integer)') }
+    if (typeof value !== 'number' || value % 1 !== 0) {
+      throw TypeError('Illegal value: ' + value + ' (not an integer)')
+    }
     value |= 0
-    if (typeof offset !== 'number' || offset % 1 !== 0) { throw TypeError('Illegal offset: ' + offset + ' (not an integer)') }
+    if (typeof offset !== 'number' || offset % 1 !== 0) {
+      throw TypeError('Illegal offset: ' + offset + ' (not an integer)')
+    }
     offset >>>= 0
-    if (offset < 0 || offset + 0 > this.buffer.byteLength) { throw RangeError('Illegal offset: 0 <= ' + offset + ' (+' + 0 + ') <= ' + this.buffer.byteLength) }
+    if (offset < 0 || offset + 0 > this.buffer.byteLength) {
+      throw RangeError(
+        'Illegal offset: 0 <= ' + offset + ' (+' + 0 + ') <= ' + this.buffer.byteLength,
+      )
+    }
   }
   const size = calculateVarint32(value)
   let b
   offset! += size
   let capacity10 = this.buffer.byteLength
-  if (offset! > capacity10) { this.resize((capacity10 *= 2) > offset! ? capacity10 : offset!) }
+  if (offset! > capacity10) {
+    this.resize((capacity10 *= 2) > offset! ? capacity10 : offset!)
+  }
   offset! -= size
   value >>>= 0
   while (value >= 0x80) {
@@ -98,7 +123,10 @@ ByteBuffer.prototype.writeVarint32 = function (value: number, offset?: number): 
  * @returns {!ByteBuffer|number} this if `offset` is omitted, else the actual number of bytes written
  * @expose
  */
-ByteBuffer.prototype.writeVarint32ZigZag = function (value: number, offset?: number): ByteBuffer | number {
+ByteBuffer.prototype.writeVarint32ZigZag = function (
+  value: number,
+  offset?: number,
+): ByteBuffer | number {
   return this.writeVarint32(zigZagEncode32(value), offset)
 }
 
@@ -113,13 +141,23 @@ ByteBuffer.prototype.writeVarint32ZigZag = function (value: number, offset?: num
  * @expose
  */
 // @ts-ignore
-ByteBuffer.prototype.readVarint32 = function (offset?: number): number | { value: number; length: number } {
+ByteBuffer.prototype.readVarint32 = function (
+  offset?: number,
+): number | { value: number; length: number } {
   const relative = typeof offset === 'undefined'
-  if (relative) { offset = this.offset }
+  if (relative) {
+    offset = this.offset
+  }
   if (!this.noAssert) {
-    if (typeof offset !== 'number' || offset % 1 !== 0) { throw TypeError('Illegal offset: ' + offset + ' (not an integer)') }
+    if (typeof offset !== 'number' || offset % 1 !== 0) {
+      throw TypeError('Illegal offset: ' + offset + ' (not an integer)')
+    }
     offset >>>= 0
-    if (offset < 0 || offset + 1 > this.buffer.byteLength) { throw RangeError('Illegal offset: 0 <= ' + offset + ' (+' + 1 + ') <= ' + this.buffer.byteLength) }
+    if (offset < 0 || offset + 1 > this.buffer.byteLength) {
+      throw RangeError(
+        'Illegal offset: 0 <= ' + offset + ' (+' + 1 + ') <= ' + this.buffer.byteLength,
+      )
+    }
   }
   let c = 0
   let value = 0 >>> 0
@@ -132,7 +170,9 @@ ByteBuffer.prototype.readVarint32 = function (offset?: number): number | { value
       throw err
     }
     b = this.view.getUint8(offset!++)
-    if (c < 5) { value |= (b & 0x7f) << (7 * c) }
+    if (c < 5) {
+      value |= (b & 0x7f) << (7 * c)
+    }
     ++c
   } while ((b & 0x80) !== 0)
   value |= 0
@@ -156,8 +196,14 @@ ByteBuffer.prototype.readVarint32 = function (offset?: number): number | { value
  * @expose
  */
 // @ts-ignore
-ByteBuffer.prototype.readVarint32ZigZag = function (offset?: number): number | { value: number; length: number } {
+ByteBuffer.prototype.readVarint32ZigZag = function (
+  offset?: number,
+): number | { value: number; length: number } {
   let val = this.readVarint32(offset)
-  if (typeof val === 'object') { val.value = zigZagDecode32(val.value) } else { val = zigZagDecode32(val) }
+  if (typeof val === 'object') {
+    val.value = zigZagDecode32(val.value)
+  } else {
+    val = zigZagDecode32(val)
+  }
   return val
 }

@@ -1,4 +1,11 @@
-import { TextComponent, toFormattedString, fromFormattedString, render, getSuggestedStyle, flat } from './index'
+import {
+  TextComponent,
+  toFormattedString,
+  fromFormattedString,
+  render,
+  getSuggestedStyle,
+  flat,
+} from './index'
 import { describe, test, expect } from 'vitest'
 
 describe('TextComponent', () => {
@@ -82,7 +89,12 @@ describe('TextComponent', () => {
         obfuscated: true,
       })
       expect(node.component.text).toEqual('hello')
-      expect(node.style).toEqual({ color: '#FF5555', 'font-style': 'italic', 'font-weight': 'bold', 'text-decoration': 'underline' })
+      expect(node.style).toEqual({
+        color: '#FF5555',
+        'font-style': 'italic',
+        'font-weight': 'bold',
+        'text-decoration': 'underline',
+      })
       expect(node.children).toHaveLength(1)
       expect(node.children[0].component.text).toEqual('world')
       expect(node.children[0].style).toEqual({})
@@ -90,8 +102,7 @@ describe('TextComponent', () => {
   })
   describe('#flat', () => {
     test('should be able to flat no children component', () => {
-      expect(flat({ text: 'hello' }))
-        .toEqual([{ text: 'hello' }])
+      expect(flat({ text: 'hello' })).toEqual([{ text: 'hello' }])
     })
   })
   test('#toFormattedString', () => {

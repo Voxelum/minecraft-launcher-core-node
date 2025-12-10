@@ -1,11 +1,16 @@
-import { isNotNull } from '@xmcl/core/utils';
-import { stat } from 'fs-extra';
-import { dirname, join } from 'path';
-import type { Client, SFTPWrapper, Stats } from 'ssh2';
-import { ServerExporter } from './server_exporter';
+import { isNotNull } from '@xmcl/core/utils'
+import { stat } from 'fs-extra'
+import { dirname, join } from 'path'
+import type { Client, SFTPWrapper, Stats } from 'ssh2'
+import { ServerExporter } from './server_exporter'
 
 export class ServerSSHExporter extends ServerExporter {
-  constructor(dataRoot: string, private remoteFolder: string, private ssh: Client, private sftp: SFTPWrapper) {
+  constructor(
+    dataRoot: string,
+    private remoteFolder: string,
+    private ssh: Client,
+    private sftp: SFTPWrapper,
+  ) {
     super(dataRoot)
   }
 
@@ -40,24 +45,28 @@ export class ServerSSHExporter extends ServerExporter {
 
   async fastPut(localPath: string, remotePath: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this.sftp.fastPut(localPath, remotePath, {
-        step: (total, nb, fsize) => {
-          this.#filesProgress[localPath].progress = total
-          this.#update(nb)
+      this.sftp.fastPut(
+        localPath,
+        remotePath,
+        {
+          step: (total, nb, fsize) => {
+            this.#filesProgress[localPath].progress = total
+            this.#update(nb)
+          },
         },
-      }, (e) => {
-        if (e) {
-          if (e.message === 'No such file') {
-            e.message = `fPut: No such file or directory: ${localPath} -> ${remotePath}`
+        (e) => {
+          if (e) {
+            if (e.message === 'No such file') {
+              e.message = `fPut: No such file or directory: ${localPath} -> ${remotePath}`
+            }
+            reject(e)
+          } else {
+            resolve()
           }
-          reject(e)
-        } else {
-          resolve()
-        }
-      })
+        },
+      )
     })
   }
-
 
   copyFile(from: string, to: string) {
     const targetPath = join(this.remoteFolder, to).replaceAll('\\', '/')
@@ -70,18 +79,26 @@ export class ServerSSHExporter extends ServerExporter {
   }
 
   async end(): Promise<void> {
-    const remaining = await Promise.all(this.#tasks.map(async ({ to, ...rest }) => {
-      const currentStat = await this.stat(to).catch(() => undefined)
-      const localSize = 'from' in rest ? await stat(rest.from).then(s => s.size, () => 0) : rest.content.length
-      if (currentStat && currentStat.size === localSize) {
-        return
-      }
-      return { to, ...rest }
-    })).then(tasks => tasks.filter(isNotNull))
+    const remaining = await Promise.all(
+      this.#tasks.map(async ({ to, ...rest }) => {
+        const currentStat = await this.stat(to).catch(() => undefined)
+        const localSize =
+          'from' in rest
+            ? await stat(rest.from).then(
+                (s) => s.size,
+                () => 0,
+              )
+            : rest.content.length
+        if (currentStat && currentStat.size === localSize) {
+          return
+        }
+        return { to, ...rest }
+      }),
+    ).then((tasks) => tasks.filter(isNotNull))
 
     await new Promise<void>((resolve, reject) => {
       const dirs = remaining.map(({ to }) => dirname(to))
-      const dirsString = dirs.map(d => '"' + d + '"').join(' ')
+      const dirsString = dirs.map((d) => '"' + d + '"').join(' ')
       this.ssh.exec(`mkdir -p ${dirsString}`, (e) => {
         if (e) {
           reject(e)
@@ -91,22 +108,30 @@ export class ServerSSHExporter extends ServerExporter {
       })
     })
 
-    await Promise.all(remaining.map(async ({ to, ...rest }) => {
-      if ('from' in rest) {
-        this.#filesProgress[rest.from] = { total: await stat(rest.from).then(s => s.size, () => 0), progress: 0 }
-        this.#update(0)
-        return await this.fastPut(rest.from, to)
-      }
-
-      return await new Promise<void>((resolve, reject) => {
-        this.sftp.writeFile(to, rest.content, (e) => {
-          if (e) {
-            reject(e)
-          } else {
-            resolve()
+    await Promise.all(
+      remaining.map(async ({ to, ...rest }) => {
+        if ('from' in rest) {
+          this.#filesProgress[rest.from] = {
+            total: await stat(rest.from).then(
+              (s) => s.size,
+              () => 0,
+            ),
+            progress: 0,
           }
+          this.#update(0)
+          return await this.fastPut(rest.from, to)
+        }
+
+        return await new Promise<void>((resolve, reject) => {
+          this.sftp.writeFile(to, rest.content, (e) => {
+            if (e) {
+              reject(e)
+            } else {
+              resolve()
+            }
+          })
         })
-      })
-    }))
+      }),
+    )
   }
 }

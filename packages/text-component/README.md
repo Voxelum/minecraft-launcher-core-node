@@ -40,7 +40,7 @@ function renderToDom(node: RenderNode) {
     for (const child of node.children) {
         span.appendChild(renderToDom(child));
     }
-} 
+}
 ```
 
 Iterate the TextComponent and its children:

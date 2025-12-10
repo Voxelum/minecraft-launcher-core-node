@@ -11,7 +11,10 @@ export interface ForgeConfig {
 export class CorruptedForgeConfigError extends Error {
   name = 'CorruptedForgeConfigError'
 
-  constructor(readonly reason: string, readonly line: string) {
+  constructor(
+    readonly reason: string,
+    readonly line: string,
+  ) {
     super(`CorruptedForgeConfigError by ${reason}: ${line}`)
   }
 }
@@ -27,11 +30,12 @@ export namespace ForgeConfig {
   }
 
   /**
-     * Convert a forge config to string
-     */
+   * Convert a forge config to string
+   */
   export function stringify(config: ForgeConfig) {
     let content = '# Configuration file\n\n\n'
-    const propIndent = '    '; const arrIndent = '        '
+    const propIndent = '    '
+    const arrIndent = '        '
     Object.keys(config).forEach((cat) => {
       content += `${cat} {\n\n`
       config[cat].properties.forEach((prop) => {
@@ -43,7 +47,9 @@ export namespace ForgeConfig {
         }
         if (prop.value instanceof Array) {
           content += `${propIndent}${prop.type}:${prop.name} <\n`
-          prop.value.forEach((v) => { content += `${arrIndent}${v}\n` })
+          prop.value.forEach((v) => {
+            content += `${arrIndent}${v}\n`
+          })
           content += `${propIndent}>\n`
         } else {
           content += `${propIndent}${prop.type}:${prop.name}=${prop.value}\n`
@@ -56,11 +62,13 @@ export namespace ForgeConfig {
   }
 
   /**
-     * Parse a forge config string into `Config` object
-     * @param body The forge config string
-     */
+   * Parse a forge config string into `Config` object
+   * @param body The forge config string
+   */
   export function parse(body: string): ForgeConfig {
-    const lines = body.split('\n').map((s) => s.trim())
+    const lines = body
+      .split('\n')
+      .map((s) => s.trim())
       .filter((s) => s.length !== 0)
     let category: string | undefined
     let pendingCategory: string | undefined
@@ -94,13 +102,18 @@ export namespace ForgeConfig {
         if (!category) {
           throw new CorruptedForgeConfigError('MissingCategory', line)
         }
-        config[category].properties.push(last = { name, type, value, comment } as Property)
+        config[category].properties.push((last = { name, type, value, comment } as Property))
       } else {
         inlist = false
         if (!category) {
           throw new CorruptedForgeConfigError('MissingCategory', line)
         }
-        config[category].properties.push({ name: pair[0], value: parseVal(type, pair[1]), type, comment } as Property)
+        config[category].properties.push({
+          name: pair[0],
+          value: parseVal(type, pair[1]),
+          type,
+          comment,
+        } as Property)
       }
       comment = undefined
     }

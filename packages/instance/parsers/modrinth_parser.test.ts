@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { 
-  type Project,
-  type ProjectVersion,
-  type ModrinthProfile
-} from './modrinth_parser'
+import { type Project, type ProjectVersion, type ModrinthProfile } from './modrinth_parser'
 
 describe('Modrinth Parser', () => {
   describe('Type Definitions', () => {
@@ -12,7 +8,7 @@ describe('Modrinth Parser', () => {
         const project: Project = {
           id: 'test-project-id',
           title: 'Test Modpack',
-          description: 'A test modpack for testing purposes'
+          description: 'A test modpack for testing purposes',
         }
 
         expect(project.id).toBe('test-project-id')
@@ -31,14 +27,14 @@ describe('Modrinth Parser', () => {
             {
               hashes: {
                 sha1: 'abc123def456',
-                sha256: 'def456ghi789'
+                sha256: 'def456ghi789',
               },
               url: 'https://cdn.modrinth.com/data/test/versions/test.jar',
               filename: 'test-mod.jar',
               primary: true,
-              size: 1024
-            }
-          ]
+              size: 1024,
+            },
+          ],
         }
 
         expect(version.id).toBe('version-123')
@@ -61,16 +57,16 @@ describe('Modrinth Parser', () => {
               url: 'https://example.com/file1.jar',
               filename: 'main-mod.jar',
               primary: true,
-              size: 2048
+              size: 2048,
             },
             {
               hashes: { sha1: 'hash2', sha256: 'hash2-256' },
               url: 'https://example.com/file2.jar',
               filename: 'addon.jar',
               primary: false,
-              size: 512
-            }
-          ]
+              size: 512,
+            },
+          ],
         }
 
         expect(version.files).toHaveLength(2)
@@ -93,16 +89,16 @@ describe('Modrinth Parser', () => {
             loader_version: {
               id: '0.14.21',
               url: 'https://meta.fabricmc.net/v2/versions/loader/0.14.21',
-              stable: true
+              stable: true,
             },
             date_created: '2023-01-01T00:00:00Z',
             date_modified: '2023-01-02T00:00:00Z',
             last_played: '2023-01-02T12:00:00Z',
             submitted_time_played: 3600,
-            recent_time_played: 1800
+            recent_time_played: 1800,
           },
           modrinth_update_version: 'latest',
-          projects: {}
+          projects: {},
         }
 
         expect(profile.install_stage).toBe('installed')
@@ -115,8 +111,8 @@ describe('Modrinth Parser', () => {
 
       it('should support different loaders', () => {
         const loaders = ['fabric', 'forge', 'quilt', 'neoforge']
-        
-        loaders.forEach(loader => {
+
+        loaders.forEach((loader) => {
           const profile: ModrinthProfile = {
             install_stage: 'installed',
             path: `${loader}-instance`,
@@ -129,16 +125,16 @@ describe('Modrinth Parser', () => {
               loader_version: {
                 id: '1.0.0',
                 url: `https://example.com/${loader}`,
-                stable: true
+                stable: true,
               },
               date_created: new Date().toISOString(),
               date_modified: new Date().toISOString(),
               last_played: new Date().toISOString(),
               submitted_time_played: 0,
-              recent_time_played: 0
+              recent_time_played: 0,
             },
             modrinth_update_version: 'latest',
-            projects: {}
+            projects: {},
           }
 
           expect(profile.metadata.loader).toBe(loader)
@@ -158,21 +154,21 @@ describe('Modrinth Parser', () => {
             loader_version: {
               id: '0.14.21',
               url: 'https://meta.fabricmc.net/v2/versions/loader/0.14.21',
-              stable: true
+              stable: true,
             },
             linked_data: {
               project_id: 'test-modpack-id',
               version_id: 'test-version-id',
-              locked: false
+              locked: false,
             },
             date_created: new Date().toISOString(),
             date_modified: new Date().toISOString(),
             last_played: new Date().toISOString(),
             submitted_time_played: 0,
-            recent_time_played: 0
+            recent_time_played: 0,
           },
           modrinth_update_version: 'latest',
-          projects: {}
+          projects: {},
         }
 
         expect(profile.metadata.linked_data).toBeDefined()
@@ -194,13 +190,13 @@ describe('Modrinth Parser', () => {
             loader_version: {
               id: '0.14.21',
               url: 'https://meta.fabricmc.net/v2/versions/loader/0.14.21',
-              stable: true
+              stable: true,
             },
             date_created: new Date().toISOString(),
             date_modified: new Date().toISOString(),
             last_played: new Date().toISOString(),
             submitted_time_played: 0,
-            recent_time_played: 0
+            recent_time_played: 0,
           },
           modrinth_update_version: 'latest',
           projects: {
@@ -213,19 +209,19 @@ describe('Modrinth Parser', () => {
                 project: {
                   id: 'test-project',
                   title: 'Test Mod',
-                  description: 'A test mod'
+                  description: 'A test mod',
                 },
                 version: {
                   id: 'test-version',
                   project_id: 'test-project',
                   name: 'v1.0.0',
-                  files: []
+                  files: [],
                 },
                 update_version: null,
-                incompatible: false
-              }
-            }
-          }
+                incompatible: false,
+              },
+            },
+          },
         }
 
         const projectFile = profile.projects['mods/test-mod.jar']
@@ -246,21 +242,21 @@ describe('Modrinth Parser', () => {
         {
           id: '0.14.21',
           url: 'https://meta.fabricmc.net/v2/versions/loader/0.14.21',
-          stable: true
+          stable: true,
         },
         {
           id: '43.2.0',
           url: 'https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.19.2-43.2.0',
-          stable: true
+          stable: true,
         },
         {
           id: '0.19.2',
           url: 'https://quiltmc.org/api/v1/versions/loader/0.19.2',
-          stable: false
-        }
+          stable: false,
+        },
       ]
 
-      loaderVersions.forEach(version => {
+      loaderVersions.forEach((version) => {
         expect(version.id).toBeTruthy()
         expect(version.url).toMatch(/^https?:\/\//)
         expect(typeof version.stable).toBe('boolean')

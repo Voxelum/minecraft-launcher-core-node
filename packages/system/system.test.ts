@@ -104,29 +104,21 @@ describe('FileSystem', () => {
   describe('#missingFile', () => {
     test('should detect missing file', async ({ mock: mockRoot }) => {
       const fs = await openFileSystem(join(mockRoot, 'resourcepacks', '1.14.4.zip'))
-      await expect(fs.missingFile('assetss'))
-        .resolves
-        .toBeTruthy()
+      await expect(fs.missingFile('assetss')).resolves.toBeTruthy()
     })
     test('should detect non-missing file', async ({ mock: mockRoot }) => {
       const fs = await openFileSystem(join(mockRoot, 'resourcepacks', '1.14.4.zip'))
-      await expect(fs.missingFile('assets'))
-        .resolves
-        .toBeFalsy()
+      await expect(fs.missingFile('assets')).resolves.toBeFalsy()
     })
   })
   describe('#existsFile', () => {
     test('should detect missing file', async ({ mock: mockRoot }) => {
       const fs = await openFileSystem(join(mockRoot, 'resourcepacks', '1.14.4.zip'))
-      await expect(fs.existsFile('assetss'))
-        .resolves
-        .toBeFalsy()
+      await expect(fs.existsFile('assetss')).resolves.toBeFalsy()
     })
     test('should detect non-missing file', async ({ mock: mockRoot }) => {
       const fs = await openFileSystem(join(mockRoot, 'resourcepacks', '1.14.4.zip'))
-      await expect(fs.existsFile('assets'))
-        .resolves
-        .toBeTruthy()
+      await expect(fs.existsFile('assets')).resolves.toBeTruthy()
     })
   })
   describe('#walkFiles', () => {
@@ -166,33 +158,23 @@ describe('FileSystem', () => {
   describe('#isDirectory', () => {
     test('should identify dir on root', async ({ mock: mockRoot }) => {
       const fs = await openFileSystem(join(mockRoot, 'resourcepacks', '1.14.4.zip'))
-      await expect(fs.isDirectory('assets'))
-        .resolves
-        .toBeTruthy()
+      await expect(fs.isDirectory('assets')).resolves.toBeTruthy()
     })
     test('should identify nested dir', async ({ mock: mockRoot }) => {
       const fs = await openFileSystem(join(mockRoot, 'resourcepacks', '1.14.4.zip'))
-      await expect(fs.isDirectory('assets/minecraft'))
-        .resolves
-        .toBeTruthy()
+      await expect(fs.isDirectory('assets/minecraft')).resolves.toBeTruthy()
     })
     test('should identify nested file', async ({ mock: mockRoot }) => {
       const fs = await openFileSystem(join(mockRoot, 'resourcepacks', '1.14.4.zip'))
-      await expect(fs.isDirectory('assets/.mcassetsroot'))
-        .resolves
-        .toBeFalsy()
+      await expect(fs.isDirectory('assets/.mcassetsroot')).resolves.toBeFalsy()
     })
     test('should identify wrong nested dir', async ({ mock: mockRoot }) => {
       const fs = await openFileSystem(join(mockRoot, 'resourcepacks', '1.14.4.zip'))
-      await expect(fs.isDirectory('assets/.mcas'))
-        .resolves
-        .toBeFalsy()
+      await expect(fs.isDirectory('assets/.mcas')).resolves.toBeFalsy()
     })
     test('should identify wrong nested file', async ({ mock: mockRoot }) => {
       const fs = await openFileSystem(join(mockRoot, 'resourcepacks', '1.14.4.zip'))
-      await expect(fs.isDirectory('assets/.mcassetsrootxxx'))
-        .resolves
-        .toBeFalsy()
+      await expect(fs.isDirectory('assets/.mcassetsrootxxx')).resolves.toBeFalsy()
     })
   })
 })

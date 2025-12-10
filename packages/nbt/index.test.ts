@@ -1,4 +1,13 @@
-import { TagType, serialize, deserialize, getPrototypeOf, serializeSync, deserializeSync, kNBTConstructor, kNBTPrototype } from './index'
+import {
+  TagType,
+  serialize,
+  deserialize,
+  getPrototypeOf,
+  serializeSync,
+  deserializeSync,
+  kNBTConstructor,
+  kNBTPrototype,
+} from './index'
 import { describe, test, expect } from 'vitest'
 
 class NestedType {
@@ -41,7 +50,9 @@ class TestType {
 
   @TagType({ name: TagType.String, type: TagType.String, value: TagType.String })
   nestedAnonymous = {
-    name: 'indexyz', type: 'author', value: 'ilauncher',
+    name: 'indexyz',
+    type: 'author',
+    value: 'ilauncher',
   }
 
   @TagType(NestedType)
@@ -72,7 +83,9 @@ class MyOwnNBTSchema implements ThridPartyInterface {
 
 describe('NBT', () => {
   function matchBuffer(a: Uint8Array, b: Uint8Array) {
-    if (a.length !== b.length) { return false }
+    if (a.length !== b.length) {
+      return false
+    }
     return a.every((v, i) => v === b[i])
   }
   describe('#getPrototypeOf', () => {
@@ -125,7 +138,7 @@ describe('NBT', () => {
     test('should use default to write the fields if empty', async () => {
       const src = new TestType()
       for (const key of Object.keys(src)) {
-        (src as any)[key] = undefined
+        ;(src as any)[key] = undefined
       }
       const buf = await serialize(src)
       const result: TestType = await deserialize(buf, { type: TestType })

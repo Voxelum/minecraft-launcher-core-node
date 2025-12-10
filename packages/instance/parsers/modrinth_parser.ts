@@ -81,18 +81,21 @@ export interface ModrinthProfile {
   /**
    * Project files indexed by relative path
    */
-  projects: Record<string, {
-    sha512: string
-    disabled: boolean
-    file_name: string
-    metadata: {
-      type: string
-      project: Project
-      version: ProjectVersion | string | null
-      update_version: ProjectVersion | null
-      incompatible: boolean
+  projects: Record<
+    string,
+    {
+      sha512: string
+      disabled: boolean
+      file_name: string
+      metadata: {
+        type: string
+        project: Project
+        version: ProjectVersion | string | null
+        update_version: ProjectVersion | null
+        incompatible: boolean
+      }
     }
-  }>
+  >
 }
 
 /**
@@ -112,9 +115,12 @@ export async function parseModrinthInstance(instancePath: string): Promise<Creat
   const runtime: RuntimeVersions = {
     minecraft: modrinth.metadata.game_version,
     forge: modrinth.metadata.loader === 'forge' ? modrinth.metadata.loader_version.id : undefined,
-    fabricLoader: modrinth.metadata.loader === 'fabric' ? modrinth.metadata.loader_version.id : undefined,
-    quiltLoader: modrinth.metadata.loader === 'quilt' ? modrinth.metadata.loader_version.id : undefined,
-    neoForged: modrinth.metadata.loader === 'neoforge' ? modrinth.metadata.loader_version.id : undefined,
+    fabricLoader:
+      modrinth.metadata.loader === 'fabric' ? modrinth.metadata.loader_version.id : undefined,
+    quiltLoader:
+      modrinth.metadata.loader === 'quilt' ? modrinth.metadata.loader_version.id : undefined,
+    neoForged:
+      modrinth.metadata.loader === 'neoforge' ? modrinth.metadata.loader_version.id : undefined,
   }
 
   const options: CreateInstanceOptions = {
@@ -141,7 +147,7 @@ export async function parseModrinthInstance(instancePath: string): Promise<Creat
  */
 export async function parseModrinthInstanceFiles(
   instancePath: string,
-  logger?: Logger
+  logger?: Logger,
 ): Promise<InstanceFile[]> {
   const files = await getInstanceFiles(instancePath, logger, (f) => {
     if (f === 'profile.json') return true
@@ -158,7 +164,9 @@ export async function parseModrinthInstanceFiles(
 
     if (existedProject) {
       if (typeof existedProject.metadata.version !== 'string' && existedProject.metadata.version) {
-        const existedFile = existedProject.metadata.version.files.find(f => f.hashes.sha256 === existedProject.sha512)
+        const existedFile = existedProject.metadata.version.files.find(
+          (f) => f.hashes.sha256 === existedProject.sha512,
+        )
         if (existedFile) {
           file.hashes.sha1 = existedFile.hashes.sha1
           file.modrinth = {

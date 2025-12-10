@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { 
-  type VanillaProfile,
-  type VanillaProfiles
-} from './vanilla_parser'
+import { type VanillaProfile, type VanillaProfiles } from './vanilla_parser'
 
 describe('Vanilla Parser', () => {
   describe('Type Definitions', () => {
@@ -20,8 +17,8 @@ describe('Vanilla Parser', () => {
           javaDir: '/path/to/java',
           resolution: {
             width: 1920,
-            height: 1080
-          }
+            height: 1080,
+          },
         }
 
         expect(profile.name).toBe('Test Profile')
@@ -41,7 +38,7 @@ describe('Vanilla Parser', () => {
           created: '2023-01-01T00:00:00.000Z',
           lastUsed: '2023-01-01T00:00:00.000Z',
           icon: 'default',
-          lastVersionId: 'latest-release'
+          lastVersionId: 'latest-release',
         }
 
         expect(profile.name).toBe('Minimal Profile')
@@ -63,7 +60,7 @@ describe('Vanilla Parser', () => {
               created: '2023-01-01T00:00:00.000Z',
               lastUsed: '2023-01-02T00:00:00.000Z',
               icon: 'default',
-              lastVersionId: '1.19.2'
+              lastVersionId: '1.19.2',
             },
             'profile-2': {
               name: 'Latest Release',
@@ -73,8 +70,8 @@ describe('Vanilla Parser', () => {
               icon: 'default',
               lastVersionId: 'latest-release',
               gameDir: '/custom/game/dir',
-              javaArgs: '-Xmx8G'
-            }
+              javaArgs: '-Xmx8G',
+            },
           },
           settings: {
             crashAssistance: true,
@@ -87,9 +84,9 @@ describe('Vanilla Parser', () => {
             profileSorting: 'byName',
             showGameLog: true,
             showMenu: true,
-            soundOn: true
+            soundOn: true,
           },
-          version: 3
+          version: 3,
         }
 
         expect(Object.keys(profiles.profiles)).toHaveLength(2)
@@ -113,9 +110,9 @@ describe('Vanilla Parser', () => {
             profileSorting: 'alphabetically',
             showGameLog: false,
             showMenu: false,
-            soundOn: false
+            soundOn: false,
           },
-          version: 3
+          version: 3,
         }
 
         expect(Object.keys(profiles.profiles)).toHaveLength(0)
@@ -128,15 +125,15 @@ describe('Vanilla Parser', () => {
   describe('Profile Configuration', () => {
     it('should support different profile types', () => {
       const types = ['custom', 'latest-release', 'latest-snapshot']
-      
-      types.forEach(type => {
+
+      types.forEach((type) => {
         const profile: VanillaProfile = {
           name: `${type} Profile`,
           type,
           created: '2023-01-01T00:00:00.000Z',
           lastUsed: '2023-01-01T00:00:00.000Z',
           icon: 'default',
-          lastVersionId: type === 'custom' ? '1.19.2' : type
+          lastVersionId: type === 'custom' ? '1.19.2' : type,
         }
 
         expect(profile.type).toBe(type)
@@ -149,10 +146,10 @@ describe('Vanilla Parser', () => {
         '-Xmx4G -Xms2G',
         '-Xmx8G -Xms4G -XX:+UseG1GC',
         '-Xmx2G -Dfile.encoding=UTF-8',
-        '-server -Xmx6G -XX:+UnlockExperimentalVMOptions'
+        '-server -Xmx6G -XX:+UnlockExperimentalVMOptions',
       ]
 
-      javaArgs.forEach(args => {
+      javaArgs.forEach((args) => {
         const profile: VanillaProfile = {
           name: 'Java Args Test',
           type: 'custom',
@@ -160,7 +157,7 @@ describe('Vanilla Parser', () => {
           lastUsed: '2023-01-01T00:00:00.000Z',
           icon: 'default',
           lastVersionId: '1.19.2',
-          javaArgs: args
+          javaArgs: args,
         }
 
         expect(profile.javaArgs).toBe(args)
@@ -172,10 +169,10 @@ describe('Vanilla Parser', () => {
         { width: 1920, height: 1080 },
         { width: 1366, height: 768 },
         { width: 2560, height: 1440 },
-        { width: 854, height: 480 }
+        { width: 854, height: 480 },
       ]
 
-      resolutions.forEach(res => {
+      resolutions.forEach((res) => {
         const profile: VanillaProfile = {
           name: 'Resolution Test',
           type: 'custom',
@@ -183,7 +180,7 @@ describe('Vanilla Parser', () => {
           lastUsed: '2023-01-01T00:00:00.000Z',
           icon: 'default',
           lastVersionId: '1.19.2',
-          resolution: res
+          resolution: res,
         }
 
         expect(profile.resolution).toEqual(res)
@@ -193,23 +190,16 @@ describe('Vanilla Parser', () => {
 
   describe('Version Handling', () => {
     it('should support various Minecraft versions', () => {
-      const versions = [
-        '1.19.2',
-        '1.20.1',
-        '1.18.2',
-        '23w31a',
-        'latest-release',
-        'latest-snapshot'
-      ]
+      const versions = ['1.19.2', '1.20.1', '1.18.2', '23w31a', 'latest-release', 'latest-snapshot']
 
-      versions.forEach(version => {
+      versions.forEach((version) => {
         const profile: VanillaProfile = {
           name: `Version ${version}`,
-          type: version.includes('latest') ? version as any : 'custom',
+          type: version.includes('latest') ? (version as any) : 'custom',
           created: '2023-01-01T00:00:00.000Z',
           lastUsed: '2023-01-01T00:00:00.000Z',
           icon: 'default',
-          lastVersionId: version
+          lastVersionId: version,
         }
 
         expect(profile.lastVersionId).toBe(version)
@@ -223,10 +213,10 @@ describe('Vanilla Parser', () => {
         '/home/user/.minecraft',
         'C:\\Users\\User\\AppData\\Roaming\\.minecraft',
         '/custom/minecraft/path',
-        'relative/path/to/minecraft'
+        'relative/path/to/minecraft',
       ]
 
-      paths.forEach(path => {
+      paths.forEach((path) => {
         const profile: VanillaProfile = {
           name: 'Path Test',
           type: 'custom',
@@ -234,7 +224,7 @@ describe('Vanilla Parser', () => {
           lastUsed: '2023-01-01T00:00:00.000Z',
           icon: 'default',
           lastVersionId: '1.19.2',
-          gameDir: path
+          gameDir: path,
         }
 
         expect(profile.gameDir).toBe(path)
@@ -246,10 +236,10 @@ describe('Vanilla Parser', () => {
         '/usr/lib/jvm/java-17-openjdk',
         'C:\\Program Files\\Java\\jdk-17',
         '/opt/java/openjdk',
-        'C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.7.7-hotspot'
+        'C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.7.7-hotspot',
       ]
 
-      javaPaths.forEach(javaPath => {
+      javaPaths.forEach((javaPath) => {
         const profile: VanillaProfile = {
           name: 'Java Path Test',
           type: 'custom',
@@ -257,7 +247,7 @@ describe('Vanilla Parser', () => {
           lastUsed: '2023-01-01T00:00:00.000Z',
           icon: 'default',
           lastVersionId: '1.19.2',
-          javaDir: javaPath
+          javaDir: javaPath,
         }
 
         expect(profile.javaDir).toBe(javaPath)

@@ -8,24 +8,24 @@ import { GameProfile, GameProfileWithProperties } from './gameProfile'
  */
 export interface YggrasilAuthentication {
   /**
-     * hexadecimal or JSON-Web-Token (unconfirmed) [The normal accessToken can be found in the payload of the JWT (second by '.' separated part as Base64 encoded JSON object), in key "yggt"]
-     */
+   * hexadecimal or JSON-Web-Token (unconfirmed) [The normal accessToken can be found in the payload of the JWT (second by '.' separated part as Base64 encoded JSON object), in key "yggt"]
+   */
   accessToken: string
   /**
-     * identical to the one received
-     */
+   * identical to the one received
+   */
   clientToken: string
   /**
-     * only present if the agent field was received
-     */
+   * only present if the agent field was received
+   */
   availableProfiles: GameProfile[]
   /**
-     * only present if the agent field was received
-     */
+   * only present if the agent field was received
+   */
   selectedProfile: GameProfile
   /**
-     * only present if requestUser was true in the request payload
-     */
+   * only present if requestUser was true in the request payload
+   */
   user?: {
     id: string
     username: string
@@ -56,10 +56,10 @@ export interface YggdrasilClientOptions {
 
 export interface ProfileLookupException {
   /**
-     * - statusCode=204 -> error="NoPlayerFound"
-     * - statusCode=400 -> error="IllegalArgumentException" (parsed from body)
-     * - statusCode=other -> error=statusCode.toString()
-     */
+   * - statusCode=204 -> error="NoPlayerFound"
+   * - statusCode=400 -> error="IllegalArgumentException" (parsed from body)
+   * - statusCode=other -> error=statusCode.toString()
+   */
   error: 'NoPlayerFoundException' | 'IllegalArgumentException' | 'GeneralException'
   errorMessage?: string | 'Invalid timestamp.'
   statusCode?: number
@@ -70,13 +70,15 @@ export interface SetTextureOption {
   accessToken: string
   uuid: string
   type: 'skin' | 'cape' | 'elytra'
-  texture?: {
-    url: string
-    metadata?: { model?: 'slim' | 'steve';[key: string]: any }
-  } | {
-    data: Uint8Array
-    metadata?: { model?: 'slim' | 'steve';[key: string]: any }
-  }
+  texture?:
+    | {
+        url: string
+        metadata?: { model?: 'slim' | 'steve'; [key: string]: any }
+      }
+    | {
+        data: Uint8Array
+        metadata?: { model?: 'slim' | 'steve'; [key: string]: any }
+      }
 }
 
 export class YggdrasilError extends Error {
@@ -84,7 +86,11 @@ export class YggdrasilError extends Error {
   errorMessage: string
   cause?: string
 
-  constructor(readonly statusCode: number, message: string, o?: any) {
+  constructor(
+    readonly statusCode: number,
+    message: string,
+    o?: any,
+  ) {
     super(message)
     this.name = 'YggdrasilError'
     this.error = o?.error
@@ -103,7 +109,10 @@ export class YggdrasilClient {
    * Create client for official-like api endpoint
    * @param api The official-like api endpoint
    */
-  constructor(public api: string, options?: YggdrasilClientOptions) {
+  constructor(
+    public api: string,
+    options?: YggdrasilClientOptions,
+  ) {
     this.headers = options?.headers ?? {}
     this.fetch = options?.fetch || fetch
     this.FormData = options?.FormData || FormData
@@ -135,7 +144,15 @@ export class YggdrasilClient {
     }).then((s) => s.ok)
   }
 
-  async login({ username, password, clientToken, requestUser }: { username: string; password: string; clientToken: string; requestUser?: boolean }, signal?: AbortSignal) {
+  async login(
+    {
+      username,
+      password,
+      clientToken,
+      requestUser,
+    }: { username: string; password: string; clientToken: string; requestUser?: boolean },
+    signal?: AbortSignal,
+  ) {
     const response = await this.fetch(this.api + '/authenticate', {
       method: 'POST',
       body: JSON.stringify({
@@ -154,14 +171,27 @@ export class YggdrasilClient {
 
     if (response.status >= 400) {
       const body = await response.text()
-      throw new YggdrasilError(response.status, response.status + ':' + body, response.headers.get('content-type')?.startsWith('application/json') ? JSON.parse(body) : undefined)
+      throw new YggdrasilError(
+        response.status,
+        response.status + ':' + body,
+        response.headers.get('content-type')?.startsWith('application/json')
+          ? JSON.parse(body)
+          : undefined,
+      )
     }
 
-    const authentication: YggrasilAuthentication = await response.json() as YggrasilAuthentication
+    const authentication: YggrasilAuthentication = (await response.json()) as YggrasilAuthentication
     return authentication
   }
 
-  async refresh({ accessToken, requestUser, clientToken }: { accessToken: string; clientToken: string; requestUser?: boolean }, signal?: AbortSignal) {
+  async refresh(
+    {
+      accessToken,
+      requestUser,
+      clientToken,
+    }: { accessToken: string; clientToken: string; requestUser?: boolean },
+    signal?: AbortSignal,
+  ) {
     const response = await this.fetch(this.api + '/refresh', {
       method: 'POST',
       body: JSON.stringify({
@@ -178,10 +208,16 @@ export class YggdrasilClient {
 
     if (response.status >= 400) {
       const body = await response.text()
-      throw new YggdrasilError(response.status, response.status + ':' + body, response.headers.get('content-type')?.startsWith('application/json') ? JSON.parse(body) : undefined)
+      throw new YggdrasilError(
+        response.status,
+        response.status + ':' + body,
+        response.headers.get('content-type')?.startsWith('application/json')
+          ? JSON.parse(body)
+          : undefined,
+      )
     }
 
-    const authentication = await response.json() as YggrasilAuthentication
+    const authentication = (await response.json()) as YggrasilAuthentication
     return authentication
   }
 }
@@ -191,16 +227,16 @@ export class YggdrasilClient {
  */
 export interface YggdrasilTexturesInfo {
   /**
-       * java time in ms
-       */
+   * java time in ms
+   */
   timestamp: number
   /**
-       * player name
-       */
+   * player name
+   */
   profileName: string
   /**
-       * player id
-       */
+   * player id
+   */
   profileId: string
   textures: {
     SKIN?: YggdrasilTexture
@@ -214,7 +250,7 @@ export interface YggdrasilTexturesInfo {
  */
 export interface YggdrasilTexture {
   url: string
-  metadata?: { model?: 'slim' | 'steve';[key: string]: any }
+  metadata?: { model?: 'slim' | 'steve'; [key: string]: any }
 }
 
 export function isTextureSlim(o: YggdrasilTexture) {
@@ -234,10 +270,7 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
    * @param clientToken
    * @param dispatcher
    */
-  constructor(
-    api: string,
-    options?: YggdrasilClientOptions,
-  ) {
+  constructor(api: string, options?: YggdrasilClientOptions) {
     super(api + '/authserver', options)
     // eslint-disable-next-line no-template-curly-in-string
     this.profileApi = api + '/sessionserver/session/minecraft/profile/${uuid}'
@@ -257,9 +290,15 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
     })
     if (response.status !== 200) {
       const body = await response.text()
-      throw new YggdrasilError(response.status, response.status + ':' + body, response.headers.get('content-type')?.startsWith('application/json') ? JSON.parse(body) : undefined)
+      throw new YggdrasilError(
+        response.status,
+        response.status + ':' + body,
+        response.headers.get('content-type')?.startsWith('application/json')
+          ? JSON.parse(body)
+          : undefined,
+      )
     }
-    const o = await response.json() as any
+    const o = (await response.json()) as any
     if (o.properties && o.properties instanceof Array) {
       const properties = o.properties as Array<{ name: string; value: string; signature: string }>
       const to: { [key: string]: string } = {}
@@ -277,7 +316,9 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
 
   async setTexture(options: SetTextureOption, signal?: AbortSignal) {
     // eslint-disable-next-line no-template-curly-in-string
-    const url = new URL(this.textureApi.replace('${uuid}', options.uuid).replace('${type}', options.type))
+    const url = new URL(
+      this.textureApi.replace('${uuid}', options.uuid).replace('${type}', options.type),
+    )
 
     // eslint-disable-next-line no-undef
     const requestOptions: RequestInit = {
@@ -295,7 +336,10 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
       // upload texture
       const form = new this.FormData()
       form.append('model', options.texture.metadata?.model || 'steve')
-      form.append('file', new this.File([options.texture.data], 'Steve.png', { type: 'image/png' }))
+      form.append(
+        'file',
+        new this.File([options.texture.data] as any, 'Steve.png', { type: 'image/png' }),
+      )
       requestOptions.body = form
     } else if ('url' in options.texture) {
       // set texture
@@ -309,7 +353,7 @@ export class YggdrasilThirdPartyClient extends YggdrasilClient {
     const response = await this.fetch(url.toString(), requestOptions)
     if (response.status === 401) {
       if (response.headers.get('content-type') === 'application/json') {
-        const body = await response.json() as any
+        const body = (await response.json()) as any
         throw new YggdrasilError(response.status, response.status.toString(), {
           error: body.error ?? 'Unauthorized',
           errorMessage: body.errorMessage ?? 'Unauthorized',

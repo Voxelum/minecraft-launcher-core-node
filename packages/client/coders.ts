@@ -21,37 +21,51 @@ export interface Coder<T> {
 
 export const VarInt: Coder<number> = {
   decode: (buffer, inst) => buffer.readVarint32(),
-  encode: (buffer, inst) => { buffer.writeVarint32(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeVarint32(inst)
+  },
 }
 
 export const Int: Coder<number> = {
   decode: (buffer, inst) => buffer.readInt(),
-  encode: (buffer, inst) => { buffer.writeInt(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeInt(inst)
+  },
 }
 
 export const Byte: Coder<number> = {
   decode: (buffer, inst) => buffer.readByte(),
-  encode: (buffer, inst) => { buffer.writeByte(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeByte(inst)
+  },
 }
 
 export const UByte: Coder<number> = {
   decode: (buffer, inst) => buffer.readUint8(),
-  encode: (buffer, inst) => { buffer.writeUint8(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeUint8(inst)
+  },
 }
 
 export const Bool: Coder<boolean> = {
   decode: (buffer, inst) => buffer.readByte() === 1,
-  encode: (buffer, inst) => { buffer.writeByte(inst ? 1 : 0) },
+  encode: (buffer, inst) => {
+    buffer.writeByte(inst ? 1 : 0)
+  },
 }
 
 export const Float: Coder<number> = {
   decode: (buffer, inst) => buffer.readFloat(),
-  encode: (buffer, inst) => { buffer.writeFloat(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeFloat(inst)
+  },
 }
 
 export const Double: Coder<number> = {
   decode: (buffer, inst) => buffer.readDouble(),
-  encode: (buffer, inst) => { buffer.writeDouble(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeDouble(inst)
+  },
 }
 
 export const UUID: Coder<string> = {
@@ -70,10 +84,10 @@ export const UUID: Coder<string> = {
     const lo = buffer.readUint64()
 
     let a = makeDigit(Number(hi >> 32n).toString(16), 8)
-    const b = makeDigit(((hi >> 16n) & 0xFFFFn).toString(16), 4)
-    const c = makeDigit((hi & 0xFFFFn).toString(16), 4)
-    const d = makeDigit(((lo >> 48n) & 0xFFFFn).toString(16), 4)
-    const e = makeDigit((lo & 0xFFFFFFFFFFFFn).toString(16), 12)
+    const b = makeDigit(((hi >> 16n) & 0xffffn).toString(16), 4)
+    const c = makeDigit((hi & 0xffffn).toString(16), 4)
+    const d = makeDigit(((lo >> 48n) & 0xffffn).toString(16), 4)
+    const e = makeDigit((lo & 0xffffffffffffn).toString(16), 12)
 
     if (a.length === 16) {
       a = a.substring(8, 16)
@@ -83,16 +97,18 @@ export const UUID: Coder<string> = {
   },
   encode: (buffer, inst) => {
     const components = inst.split('-')
-    if (components.length !== 5) { throw new Error('Invalid UUID') }
+    if (components.length !== 5) {
+      throw new Error('Invalid UUID')
+    }
     let hi = BigInt(`0x${components[0]}`)
-    hi = hi << (16n)
-    hi = hi | (BigInt(`0x${components[1]}`))
-    hi = hi << (16n)
-    hi = hi | (BigInt(`0x${components[2]}`))
+    hi = hi << 16n
+    hi = hi | BigInt(`0x${components[1]}`)
+    hi = hi << 16n
+    hi = hi | BigInt(`0x${components[2]}`)
 
     let lo = BigInt(`0x${components[3]}`)
     lo = lo << 48n
-    lo = lo | (BigInt(`0x${components[4]}`))
+    lo = lo | BigInt(`0x${components[4]}`)
 
     buffer.writeUint64(hi)
     buffer.writeUint64(lo)
@@ -101,22 +117,30 @@ export const UUID: Coder<string> = {
 
 export const Short: Coder<number> = {
   decode: (buffer, inst) => buffer.readShort(),
-  encode: (buffer, inst) => { buffer.writeShort(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeShort(inst)
+  },
 }
 
 export const UShort: Coder<number> = {
   decode: (buffer, inst) => buffer.readUint16(),
-  encode: (buffer, inst) => { buffer.writeUint16(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeUint16(inst)
+  },
 }
 
 export const Long: Coder<bigint> = {
   decode: (buffer, inst) => buffer.readLong(),
-  encode: (buffer, inst) => { buffer.writeInt64(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeInt64(inst)
+  },
 }
 
 export const VarLong: Coder<bigint> = {
   decode: (buffer, inst) => buffer.readVarint64(),
-  encode: (buffer, inst) => { buffer.writeVarint64(inst) },
+  encode: (buffer, inst) => {
+    buffer.writeVarint64(inst)
+  },
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -144,7 +168,9 @@ export const Json: Coder<any> = {
 export const Slot: Coder<SlotData> = {
   decode: (buffer, ctx) => {
     const blockId = Short.decode(buffer, ctx)
-    if (blockId === -1) { return { blockId } }
+    if (blockId === -1) {
+      return { blockId }
+    }
     const itemCount = Byte.decode(buffer) || undefined
     const itemDamage = Short.decode(buffer) || undefined
     if (Byte.decode(buffer, ctx) === 0) {

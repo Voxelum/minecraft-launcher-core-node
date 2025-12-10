@@ -15,12 +15,11 @@ describe('Fabric', () => {
         name: 'AppleSkin',
         description: 'Adds various food-related HUD improvements',
         authors: ['squeek502'],
-        contact:
-                {
-                  sources: 'https://github.com/squeek502/AppleSkin',
-                  homepage: 'https://minecraft.curseforge.com/projects/appleskin',
-                  issues: 'https://github.com/squeek502/AppleSkin/issues',
-                },
+        contact: {
+          sources: 'https://github.com/squeek502/AppleSkin',
+          homepage: 'https://minecraft.curseforge.com/projects/appleskin',
+          issues: 'https://github.com/squeek502/AppleSkin/issues',
+        },
         license: 'Unlicense',
         icon: 'assets/appleskin/appleskin.png',
         environment: '*',

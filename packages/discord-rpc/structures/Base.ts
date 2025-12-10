@@ -2,8 +2,8 @@ import type { Client } from '../Client'
 
 export class Base {
   /**
-     * the client instance
-     */
+   * the client instance
+   */
   client: Client
 
   constructor(client: Client) {

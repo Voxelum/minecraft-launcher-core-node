@@ -335,6 +335,62 @@ export async function installByProfile(
       await parseJar(minecraftFolder, jar, installProfile, serverProfile)
     }
 
+    const neoForgeVersion = serverProfile.arguments?.game.find(
+      (v, i, arr) => arr[i - 1] === '--fml.neoForgeVersion',
+    )
+    if (neoForgeVersion) {
+      serverProfile.libraries.push(
+        {
+          name: `net.neoforged:neoforge:${neoForgeVersion}:universal`,
+        },
+        {
+          name: `net.neoforged:neoforge:${neoForgeVersion}:server`,
+        },
+      )
+    }
+    const neoFormVersion = serverProfile.arguments?.game.find(
+      (v, i, arr) => arr[i - 1] === '--fml.neoFormVersion',
+    )
+    if (neoFormVersion) {
+      serverProfile.libraries.push(
+        {
+          name: `net.minecraft:server:${installProfile.minecraft}-${neoFormVersion}:extra`,
+        },
+        {
+          name: `net.minecraft:server:${installProfile.minecraft}-${neoFormVersion}:srg`,
+        },
+      )
+    }
+
+    const forgeShim = serverProfile.libraries.find(
+      (l) => l.name.startsWith('net.minecraftforge:forge') && l.name.endsWith(':shim'),
+    )
+    if (forgeShim) {
+      let zip: ZipFile | undefined
+      try {
+        zip = await open(minecraftFolder.getLibraryByPath(LibraryInfo.resolve(forgeShim.name).path))
+        for await (const entry of walkEntriesGenerator(zip)) {
+          if (entry.fileName === 'bootstrap-shim.list') {
+            const content = await readEntry(zip, entry).then((e) =>
+              e
+                .toString()
+                .split('\n')
+                .map((v) => v.trim())
+                .filter((v) => v)
+                .map((l) => {
+                  const [sha1, name, path] = l.split('\t')
+                  return { name }
+                }),
+            )
+            serverProfile.libraries.push(...content)
+            break
+          }
+        }
+      } finally {
+        zip?.close()
+      }
+    }
+
     if (!serverProfile.mainClass) {
       throw new PostProcessNoMainClassError(jar!)
     }
@@ -425,131 +481,6 @@ async function parseJar(
   } finally {
     zip?.close()
   }
-}
-
-/**
- * Install by install profile. The install profile usually contains some preprocess should run before installing dependencies.
- *
- * @param installProfile The install profile
- * @param minecraft The minecraft location
- * @param options The options to install
- */
-export function installByProfileTask(installProfile: InstallProfile, minecraft: MinecraftLocation, options: InstallProfileOption = {}) {
-  return task('installByProfile', async function () {
-    const minecraftFolder = MinecraftFolder.from(minecraft)
-
-    const side = options.side === 'server' ? 'server' : 'client'
-
-    const processor = resolveProcessors(side, installProfile, minecraftFolder)
-
-    const installRequiredLibs = VersionJson.resolveLibraries(installProfile.libraries)
-
-    await this.yield(new InstallLibraryTask(installRequiredLibs, minecraftFolder, options))
-
-    if (options.customPostProcessTask) {
-      await this.yield(options.customPostProcessTask(processor, minecraftFolder, options, () => new PostProcessingTask(processor, minecraftFolder, options)))
-    } else {
-      await this.yield(new PostProcessingTask(processor, minecraftFolder, options))
-    }
-
-    if (side === 'client') {
-      const versionJson: VersionJson = await readFile(minecraftFolder.getVersionJson(installProfile.version)).then((b) => b.toString()).then(JSON.parse)
-      const libraries = VersionJson.resolveLibraries(versionJson.libraries)
-      await this.yield(new InstallLibraryTask(libraries, minecraftFolder, options))
-    } else {
-      const argsText = process.platform === 'win32' ? 'win_args.txt' : 'unix_args.txt'
-
-      if (!installProfile.processors) { return }
-
-      let txtPath: string | undefined
-      for (const p of installProfile.processors) {
-        txtPath = p.args.find(a => a.startsWith('{ROOT}') && a.endsWith(argsText))
-        if (txtPath) {
-          txtPath = txtPath.replace('{ROOT}', minecraftFolder.root)
-          if (await missing(txtPath)) {
-            throw new Error(`No ${argsText} found in the forge jar`)
-          }
-          break
-        }
-      }
-      const serverProfile: Version = {
-        id: installProfile.version,
-        libraries: [],
-        type: 'release',
-        arguments: {
-          game: [],
-          jvm: [],
-        },
-        releaseTime: new Date().toJSON(),
-        time: new Date().toJSON(),
-        minimumLauncherVersion: 13,
-        mainClass: '',
-        inheritsFrom: installProfile.minecraft,
-      }
-
-      let jar: string | undefined
-
-      if (!txtPath) {
-        // legacy
-        const info = LibraryInfo.resolve(installProfile.path)
-        const libPath = minecraftFolder.getLibraryByPath(info.path)
-        jar = libPath
-      } else {
-        const content = await readFile(txtPath, 'utf-8')
-        jar = parseArgumentsFromArgsFile(content, dirname(txtPath), serverProfile)
-      }
-
-      if (jar) {
-        await parseJar(minecraftFolder, jar, installProfile, serverProfile)
-      }
-
-      const neoForgeVersion = serverProfile.arguments?.game.find((v, i, arr) => arr[i - 1] === '--fml.neoForgeVersion')
-      if (neoForgeVersion) {
-        serverProfile.libraries.push({
-          name: `net.neoforged:neoforge:${neoForgeVersion}:universal`,
-        }, {
-          name: `net.neoforged:neoforge:${neoForgeVersion}:server`,
-        })
-      }
-      const neoFormVersion = serverProfile.arguments?.game.find((v, i, arr) => arr[i - 1] === '--fml.neoFormVersion')
-      if (neoFormVersion) {
-        serverProfile.libraries.push({
-          name: `net.minecraft:server:${installProfile.minecraft}-${neoFormVersion}:extra`,
-        }, {
-          name: `net.minecraft:server:${installProfile.minecraft}-${neoFormVersion}:srg`,
-        })
-      }
-
-      const forgeShim = serverProfile.libraries.find(l => l.name.startsWith('net.minecraftforge:forge') && l.name.endsWith(':shim'))
-      if (forgeShim) {
-        let zip: ZipFile | undefined
-        try {
-          zip = await open(minecraftFolder.getLibraryByPath(LibraryInfo.resolve(forgeShim.name).path))
-          for await (const entry of walkEntriesGenerator(zip)) {
-            if (entry.fileName === 'bootstrap-shim.list') {
-              const content = await readEntry(zip, entry).then(e => e.toString().split('\n').map(v => v.trim()).filter(v => v).map(l => {
-                const [sha1, name, path] = l.split('\t')
-                return { name }
-              }))
-              serverProfile.libraries.push(...content)
-              break
-            }
-          }
-        } finally {
-          zip?.close()
-        }
-      }
-
-      if (!serverProfile.mainClass) {
-        throw new PostProcessNoMainClassError(jar!)
-      }
-
-      await writeFile(join(minecraftFolder.getVersionRoot(serverProfile.id), 'server.json'), JSON.stringify(serverProfile, null, 4))
-
-      const resolvedLibraries = VersionJson.resolveLibraries(serverProfile.libraries)
-      await this.yield(new InstallLibraryTask(resolvedLibraries, minecraftFolder, options))
-    }
-  })
 }
 
 export class PostProcessBadJarError extends Error {

@@ -1,10 +1,7 @@
 import { join } from 'path'
 import { Instance } from './instance'
 import { InstanceFile, InstanceManifest } from './files'
-import {
-  decorateInstanceFiles,
-  getInstanceFiles
-} from './files_discovery'
+import { decorateInstanceFiles, getInstanceFiles } from './files_discovery'
 import { ChecksumWorker, Logger, ResourceManager } from './internal_type'
 import { Stats } from 'fs-extra'
 
@@ -36,7 +33,11 @@ export function shouldBeExcluded(relativePath: string, stat: Stats): boolean {
     return true // exclude
   }
   // Don't share versions/libs/assets
-  if (relativePath.startsWith('versions') || relativePath.startsWith('assets') || relativePath.startsWith('libraries')) {
+  if (
+    relativePath.startsWith('versions') ||
+    relativePath.startsWith('assets') ||
+    relativePath.startsWith('libraries')
+  ) {
     return true // exclude
   }
 
@@ -53,7 +54,7 @@ export async function generateInstanceManifest(
   worker: ChecksumWorker,
   resourceManager: ResourceManager,
   logger: Logger,
-  undecoratedResources = new Set<InstanceFile>()
+  undecoratedResources = new Set<InstanceFile>(),
 ): Promise<InstanceManifest> {
   const instancePath = options.path
   let files: InstanceFile[] = []
@@ -72,7 +73,11 @@ export async function generateInstanceManifest(
       return true
     }
     // Exclude executables and libraries
-    if (relativePath.endsWith('.dll') || relativePath.endsWith('.so') || relativePath.endsWith('.exe')) {
+    if (
+      relativePath.endsWith('.dll') ||
+      relativePath.endsWith('.so') ||
+      relativePath.endsWith('.exe')
+    ) {
       return true // exclude
     }
     return false // include
@@ -83,7 +88,13 @@ export async function generateInstanceManifest(
 
   const decorateStart = performance.now()
   try {
-    await decorateInstanceFiles(fileWithStats, instancePath, worker, resourceManager, undecoratedResources)
+    await decorateInstanceFiles(
+      fileWithStats,
+      instancePath,
+      worker,
+      resourceManager,
+      undecoratedResources,
+    )
   } catch (e) {
     logger.warn(new Error('Fail to get manifest data for instance file', { cause: e }))
   }
@@ -93,18 +104,26 @@ export async function generateInstanceManifest(
   if (options.hashes) {
     const hashStart = performance.now()
     const hashes = options.hashes
-    await Promise.all(fileWithStats.filter(([f]) => {
-      for (const h of hashes) {
-        if (!f.hashes[h]) {
-          return true
-        }
-      }
-      return false
-    }).map(([f]) => Promise.all(hashes.map(async (algorithm) => {
-      if (!f.hashes[algorithm]) {
-        f.hashes[algorithm] = await worker.checksum(join(instancePath, f.path), algorithm)
-      }
-    }))))
+    await Promise.all(
+      fileWithStats
+        .filter(([f]) => {
+          for (const h of hashes) {
+            if (!f.hashes[h]) {
+              return true
+            }
+          }
+          return false
+        })
+        .map(([f]) =>
+          Promise.all(
+            hashes.map(async (algorithm) => {
+              if (!f.hashes[algorithm]) {
+                f.hashes[algorithm] = await worker.checksum(join(instancePath, f.path), algorithm)
+              }
+            }),
+          ),
+        ),
+    )
     logger.log(`Resolve hashes in ${instancePath} in ${performance.now() - hashStart}ms`)
   }
 
@@ -132,7 +151,11 @@ export async function generateInstanceServerManifest(
   const serverPath = join(options.path, 'server')
 
   const fileWithStats = await getInstanceFiles(serverPath, logger, (filePath) => {
-    if (filePath.startsWith('libraries') || filePath.startsWith('versions') || filePath.startsWith('assets')) {
+    if (
+      filePath.startsWith('libraries') ||
+      filePath.startsWith('versions') ||
+      filePath.startsWith('assets')
+    ) {
       return true // exclude
     }
     if (filePath.endsWith('.DS_Store') || filePath.endsWith('.gitignore')) {
@@ -157,10 +180,12 @@ export function createDefaultFileFilter() {
     }
 
     // Exclude system files
-    if (relativePath.startsWith('.backups') ||
+    if (
+      relativePath.startsWith('.backups') ||
       relativePath.endsWith('.DS_Store') ||
       relativePath.endsWith('.gitignore') ||
-      relativePath === 'instance.json') {
+      relativePath === 'instance.json'
+    ) {
       return true
     }
 
@@ -170,16 +195,20 @@ export function createDefaultFileFilter() {
     }
 
     // Exclude executables
-    if (relativePath.endsWith('.dll') ||
+    if (
+      relativePath.endsWith('.dll') ||
       relativePath.endsWith('.so') ||
-      relativePath.endsWith('.exe')) {
+      relativePath.endsWith('.exe')
+    ) {
       return true
     }
 
     // Exclude Minecraft installation directories
-    if (relativePath.startsWith('versions') ||
+    if (
+      relativePath.startsWith('versions') ||
       relativePath.startsWith('assets') ||
-      relativePath.startsWith('libraries')) {
+      relativePath.startsWith('libraries')
+    ) {
       return true
     }
 

@@ -1,23 +1,31 @@
-import { SelectQueryBuilder, RawBuilder, Simplify, sql, Expression, SelectQueryNode, AliasNode, ColumnNode, ExpressionWrapper, IdentifierNode, ReferenceNode, TableNode, ValueNode } from 'kysely'
+import {
+  SelectQueryBuilder,
+  RawBuilder,
+  Simplify,
+  sql,
+  Expression,
+  SelectQueryNode,
+  AliasNode,
+  ColumnNode,
+  ExpressionWrapper,
+  IdentifierNode,
+  ReferenceNode,
+  TableNode,
+  ValueNode,
+} from 'kysely'
 
-function getJsonObjectArgs(
-  node: SelectQueryNode,
-  table: string,
-): Expression<unknown>[] {
+function getJsonObjectArgs(node: SelectQueryNode, table: string): Expression<unknown>[] {
   const args: Expression<unknown>[] = []
 
   for (const { selection: s } of node.selections ?? []) {
     if (ReferenceNode.is(s) && ColumnNode.is(s.column)) {
-      args.push(
-        colName(s.column.column.name),
-        colRef(table, s.column.column.name),
-      )
+      args.push(colName(s.column.column.name), colRef(table, s.column.column.name))
     } else if (ColumnNode.is(s)) {
       args.push(colName(s.column.name), colRef(table, s.column.name))
     } else if (AliasNode.is(s) && IdentifierNode.is(s.alias)) {
       args.push(colName(s.alias.name), colRef(table, s.alias.name))
     } else {
-      throw new Error('can\'t extract column names from the select query node')
+      throw new Error("can't extract column names from the select query node")
     }
   }
 
@@ -87,9 +95,7 @@ function colRef(table: string, col: string): Expression<unknown> {
  * from "person"
  * ```
  */
-export function jsonArrayFrom<O>(
-  expr: SelectQueryBuilder<any, any, O>,
-): RawBuilder<Simplify<O>[]> {
+export function jsonArrayFrom<O>(expr: SelectQueryBuilder<any, any, O>): RawBuilder<Simplify<O>[]> {
   return sql`(select coalesce(json_group_array(json_object(${sql.join(
     getSqliteJsonObjectArgs(expr.toOperationNode(), 'agg'),
   )})), '[]') from ${expr} as agg)`
@@ -212,15 +218,10 @@ export function jsonBuildObject<O extends Record<string, Expression<unknown>>>(
     [K in keyof O]: O[K] extends Expression<infer V> ? V : never
   }>
 > {
-  return sql`json_object(${sql.join(
-    Object.keys(obj).flatMap((k) => [sql.lit(k), obj[k]]),
-  )})`
+  return sql`json_object(${sql.join(Object.keys(obj).flatMap((k) => [sql.lit(k), obj[k]]))})`
 }
 
-function getSqliteJsonObjectArgs(
-  node: SelectQueryNode,
-  table: string,
-): Expression<unknown>[] {
+function getSqliteJsonObjectArgs(node: SelectQueryNode, table: string): Expression<unknown>[] {
   try {
     return getJsonObjectArgs(node, table)
   } catch {

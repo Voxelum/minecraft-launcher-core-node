@@ -2,23 +2,14 @@ import { isSystemError } from '@xmcl/utils'
 import { existsSync, readdir } from 'fs-extra'
 import { join } from 'path'
 import type { InstanceType, ThirdPartyLauncherManifest } from './modpack'
-import {
-  parseCurseforgeInstance,
-  parseCurseforgeInstanceFiles
-} from './parsers/curseforge_parser'
-import {
-  parseModrinthInstance,
-  parseModrinthInstanceFiles
-} from './parsers/modrinth_parser'
+import { parseCurseforgeInstance, parseCurseforgeInstanceFiles } from './parsers/curseforge_parser'
+import { parseModrinthInstance, parseModrinthInstanceFiles } from './parsers/modrinth_parser'
 import {
   detectMMCRoot,
   parseMultiMCInstance,
-  parseMultiMCInstanceFiles
+  parseMultiMCInstanceFiles,
 } from './parsers/multimc_parser'
-import {
-  parseVanillaInstance,
-  parseVanillaInstanceFiles
-} from './parsers/vanilla_parser'
+import { parseVanillaInstance, parseVanillaInstanceFiles } from './parsers/vanilla_parser'
 
 /**
  * Check if a path is a MultiMC instance
@@ -52,7 +43,10 @@ function isVanillaMinecraft(path: string): boolean {
  * Auto-detect the launcher type from a path
  */
 export function detectLauncherType(path: string): InstanceType | null {
-  if (isMultiMCInstance(path) || (detectMMCRoot(path) !== path && existsSync(join(detectMMCRoot(path), 'instances')))) {
+  if (
+    isMultiMCInstance(path) ||
+    (detectMMCRoot(path) !== path && existsSync(join(detectMMCRoot(path), 'instances')))
+  ) {
     return 'mmc'
   }
 
@@ -91,14 +85,16 @@ export async function parseLauncherData(
         const instancesPath = join(rootPath, 'instances')
         const instances = await readdir(instancesPath)
 
-        const manifests = await Promise.allSettled(instances.map(async (instance) => {
-          const instancePath = join(instancesPath, instance)
-          const options = await parseMultiMCInstance(instancePath)
-          return {
-            options,
-            path: instancePath,
-          }
-        }))
+        const manifests = await Promise.allSettled(
+          instances.map(async (instance) => {
+            const instancePath = join(instancesPath, instance)
+            const options = await parseMultiMCInstance(instancePath)
+            return {
+              options,
+              path: instancePath,
+            }
+          }),
+        )
 
         return {
           folder: {
@@ -109,7 +105,7 @@ export async function parseLauncherData(
           },
           instances: manifests
             .filter((m): m is PromiseFulfilledResult<any> => m.status === 'fulfilled')
-            .map(m => m.value),
+            .map((m) => m.value),
         }
       }
 
@@ -117,14 +113,16 @@ export async function parseLauncherData(
         const instancesPath = join(path, 'profiles')
         const instances = await readdir(instancesPath)
 
-        const manifests = await Promise.allSettled(instances.map(async (instance) => {
-          const instancePath = join(instancesPath, instance)
-          const options = await parseModrinthInstance(instancePath)
-          return {
-            options,
-            path: instancePath,
-          }
-        }))
+        const manifests = await Promise.allSettled(
+          instances.map(async (instance) => {
+            const instancePath = join(instancesPath, instance)
+            const options = await parseModrinthInstance(instancePath)
+            return {
+              options,
+              path: instancePath,
+            }
+          }),
+        )
 
         const assets = join(path, 'meta', 'assets')
         const libraries = join(path, 'meta', 'libraries')
@@ -140,7 +138,7 @@ export async function parseLauncherData(
           },
           instances: manifests
             .filter((m): m is PromiseFulfilledResult<any> => m.status === 'fulfilled')
-            .map(m => m.value),
+            .map((m) => m.value),
         }
       }
 
@@ -149,14 +147,16 @@ export async function parseLauncherData(
         const minecraftDataPath = join(path, 'Install')
 
         const instances = await readdir(instancesPath)
-        const manifests = await Promise.allSettled(instances.map(async (instance) => {
-          const instancePath = join(instancesPath, instance)
-          const options = await parseCurseforgeInstance(instancePath)
-          return {
-            options,
-            path: instancePath,
-          }
-        }))
+        const manifests = await Promise.allSettled(
+          instances.map(async (instance) => {
+            const instancePath = join(instancesPath, instance)
+            const options = await parseCurseforgeInstance(instancePath)
+            return {
+              options,
+              path: instancePath,
+            }
+          }),
+        )
 
         const versionDir = join(minecraftDataPath, 'versions')
         const libDir = join(minecraftDataPath, 'libraries')
@@ -171,7 +171,7 @@ export async function parseLauncherData(
           },
           instances: manifests
             .filter((m): m is PromiseFulfilledResult<any> => m.status === 'fulfilled')
-            .map(m => m.value),
+            .map((m) => m.value),
         }
       }
 
@@ -208,10 +208,7 @@ export async function parseLauncherData(
 /**
  * Parse instance files from a specific instance path
  */
-export async function parseInstanceFiles(
-  path: string,
-  type?: InstanceType,
-) {
+export async function parseInstanceFiles(path: string, type?: InstanceType) {
   const actualType = type || detectLauncherType(path)
 
   if (!actualType) {

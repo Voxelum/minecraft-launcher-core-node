@@ -25,7 +25,7 @@
     "@types/node": "~20",
     "@xmcl/oxlint-config": "workspace:^*",
     "esbuild": "^0.17.16",
-    "oxlint": "^0.15.5",
+    "oxlint": "^1.32.0",
     "typescript": "^5.9.3"
   }
 }

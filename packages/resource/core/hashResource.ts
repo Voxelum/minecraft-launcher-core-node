@@ -11,7 +11,9 @@ export async function hashResource(path: string, size: number) {
     await pipeline(createReadStream(path), hash)
     return hash.read()
   }
-  const hash = createHash('sha1').update(await readFile(path)).digest('hex')
+  const hash = createHash('sha1')
+    .update(await readFile(path))
+    .digest('hex')
   return hash
 }
 

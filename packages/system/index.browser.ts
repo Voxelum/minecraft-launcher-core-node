@@ -34,7 +34,9 @@ class JSZipFS extends FileSystem {
 
   existsFile(name: string): Promise<boolean> {
     name = this.normalizePath(name)
-    if (this.zip.files[name] !== undefined) { return Promise.resolve(true) }
+    if (this.zip.files[name] !== undefined) {
+      return Promise.resolve(true)
+    }
     return this.isDirectory(name)
   }
 
@@ -53,13 +55,17 @@ class JSZipFS extends FileSystem {
   }
 
   async listFiles(name: string): Promise<string[]> {
-    if (!await this.isDirectory(name)) { return Promise.reject(new TypeError('Require a directory!')) }
+    if (!(await this.isDirectory(name))) {
+      return Promise.reject(new TypeError('Require a directory!'))
+    }
     name = this.normalizePath(name)
-    return Promise.resolve(Object.keys(this.zip.files)
-      .filter((e) => e.startsWith(name))
-      .map((e) => e.substring(name.length))
-      .map((e) => e.startsWith('/') ? e.substring(1) : e)
-      .map((e) => e.split('/')[0]))
+    return Promise.resolve(
+      Object.keys(this.zip.files)
+        .filter((e) => e.startsWith(name))
+        .map((e) => e.substring(name.length))
+        .map((e) => (e.startsWith('/') ? e.substring(1) : e))
+        .map((e) => e.split('/')[0]),
+    )
   }
 
   cd(name: string): void {
@@ -87,11 +93,15 @@ class JSZipFS extends FileSystem {
     }
   }
 
-  constructor(private zip: JSZip) { super() }
+  constructor(private zip: JSZip) {
+    super()
+  }
 }
 
 export async function openFileSystem(basePath: string | Uint8Array): Promise<FileSystem> {
-  if (typeof basePath === 'string') { throw new Error('Unsupported') }
+  if (typeof basePath === 'string') {
+    throw new Error('Unsupported')
+  }
   return new JSZipFS(await JSZip.loadAsync(basePath))
 }
 export function resolveFileSystem(base: string | Uint8Array | FileSystem): Promise<FileSystem> {

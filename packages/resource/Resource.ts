@@ -78,4 +78,3 @@ export function isLiteloaderResource(resource: Resource): resource is Liteloader
 export function isResourcePackResource(resource: Resource): resource is ResourcePackResource {
   return !!resource.metadata.resourcepack
 }
-

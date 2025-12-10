@@ -1,13 +1,13 @@
 export interface ProgressTracker {
-  url: string;
-  total: number;
-  acceptRanges: boolean;
-  progress: number;
-  speed: number;
+  url: string
+  total: number
+  acceptRanges: boolean
+  progress: number
+  speed: number
 }
 
 export class ProgressTrackerMultiple implements ProgressTracker {
-  trackers: ProgressTracker[] = [];
+  trackers: ProgressTracker[] = []
 
   subSingle(): ProgressTrackerSingle {
     const single = new ProgressTrackerSingle()
@@ -22,23 +22,23 @@ export class ProgressTrackerMultiple implements ProgressTracker {
   }
 
   get url() {
-    return this.trackers.map(t => t.url).join(', ');
+    return this.trackers.map((t) => t.url).join(', ')
   }
 
   get total() {
-    return this.trackers.reduce((a, b) => a + b.total, 0);
+    return this.trackers.reduce((a, b) => a + b.total, 0)
   }
 
   get acceptRanges() {
-    return this.trackers.every(t => t.acceptRanges);
+    return this.trackers.every((t) => t.acceptRanges)
   }
 
   get progress() {
-    return this.trackers.reduce((a, b) => a + b.progress, 0);
+    return this.trackers.reduce((a, b) => a + b.progress, 0)
   }
 
   get speed() {
-    return this.trackers.reduce((a, b) => a + b.speed, 0);
+    return this.trackers.reduce((a, b) => a + b.speed, 0)
   }
 }
 

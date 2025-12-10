@@ -105,7 +105,10 @@ export async function parseVanillaInstance(
 /**
  * Parse vanilla instance files
  */
-export async function parseVanillaInstanceFiles(instancePath: string, logger?: Logger): Promise<InstanceFile[]> {
+export async function parseVanillaInstanceFiles(
+  instancePath: string,
+  logger?: Logger,
+): Promise<InstanceFile[]> {
   const files = await getInstanceFiles(instancePath, logger, (f) => {
     if (f === 'launcher_profiles.json') return true
     if (f === 'launcher_settings.json') return true

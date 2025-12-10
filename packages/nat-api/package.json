@@ -14,7 +14,7 @@
     "build:type": "tsc"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "default-gateway": "^6.0.3",
@@ -22,10 +22,11 @@
     "undici": "7.16.0"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
+    "@types/node": "~20",
     "esbuild": "^0.17.16",
     "@achingbrain/nat-port-mapper": "4.0.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
   },
   "author": {
     "name": "Alex",

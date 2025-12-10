@@ -10,7 +10,7 @@ import {
   type McbbsModpackManifest,
   type MMCModpackManifest,
   type CurseforgeModpackManifest,
-  type ModrinthModpackManifest
+  type ModrinthModpackManifest,
 } from './modpack'
 import { type InstanceData } from './instance'
 
@@ -28,13 +28,13 @@ describe('Modpack Conversion Functions', () => {
         addons: [
           { id: 'game', version: '1.19.2' },
           { id: 'forge', version: '43.2.0' },
-          { id: 'fabric', version: '0.14.21' }
+          { id: 'fabric', version: '0.14.21' },
         ],
         launchInfo: {
           minMemory: 2048,
           launchArgument: ['--demo'],
-          javaArgument: ['-Xmx4G']
-        }
+          javaArgument: ['-Xmx4G'],
+        },
       }
 
       const result = getInstanceConfigFromMcbbsModpack(manifest)
@@ -60,9 +60,7 @@ describe('Modpack Conversion Functions', () => {
         author: 'Author',
         description: 'Description',
         url: 'https://example.com',
-        addons: [
-          { id: 'game', version: '1.19.2' }
-        ]
+        addons: [{ id: 'game', version: '1.19.2' }],
       }
 
       const result = getInstanceConfigFromMcbbsModpack(manifest)
@@ -84,13 +82,13 @@ describe('Modpack Conversion Functions', () => {
             { uid: 'net.minecraft', version: '1.19.2' },
             { uid: 'net.minecraftforge', version: '43.2.0' },
             { uid: 'net.fabricmc.fabric-loader', version: '0.14.21' },
-            { uid: 'net.neoforge', version: '20.4.109' }
-          ]
+            { uid: 'net.neoforge', version: '20.4.109' },
+          ],
         },
         cfg: {
           name: 'MMC Test Pack',
-          notes: 'Test notes'
-        }
+          notes: 'Test notes',
+        },
       }
 
       const result = getInstanceConfigFromMmcModpack(manifest)
@@ -107,14 +105,12 @@ describe('Modpack Conversion Functions', () => {
       const manifest: MMCModpackManifest = {
         json: {
           formatVersion: 1,
-          components: [
-            { uid: 'net.minecraft', version: '1.19.2' }
-          ]
+          components: [{ uid: 'net.minecraft', version: '1.19.2' }],
         },
         cfg: {
           name: 'Simple Pack',
-          notes: 'Simple notes'
-        }
+          notes: 'Simple notes',
+        },
       }
 
       const result = getInstanceConfigFromMmcModpack(manifest)
@@ -137,10 +133,10 @@ describe('Modpack Conversion Functions', () => {
           version: '1.19.2',
           modLoaders: [
             { id: 'forge-43.2.0', primary: true },
-            { id: 'fabric-0.14.21', primary: false }
-          ]
+            { id: 'fabric-0.14.21', primary: false },
+          ],
         },
-        overrides: 'overrides'
+        overrides: 'overrides',
       }
 
       const result = getInstanceConfigFromCurseforgeModpack(manifest)
@@ -163,10 +159,10 @@ describe('Modpack Conversion Functions', () => {
           version: '1.20.1',
           modLoaders: [
             { id: 'neoforge-20.4.109', primary: true },
-            { id: 'quilt-0.19.2', primary: false }
-          ]
+            { id: 'quilt-0.19.2', primary: false },
+          ],
         },
-        overrides: 'overrides'
+        overrides: 'overrides',
       }
 
       const result = getInstanceConfigFromCurseforgeModpack(manifest)
@@ -189,9 +185,9 @@ describe('Modpack Conversion Functions', () => {
           forge: '43.2.0',
           'fabric-loader': '0.14.21',
           'quilt-loader': '0.19.2',
-          neoforge: '20.4.109'
+          neoforge: '20.4.109',
         },
-        files: []
+        files: [],
       }
 
       const result = getInstanceConfigFromModrinthModpack(manifest)
@@ -215,7 +211,7 @@ describe('Modpack Conversion Functions', () => {
       runtime: {
         minecraft: '1.19.2',
         forge: '43.2.0',
-        fabricLoader: '0.14.21'
+        fabricLoader: '0.14.21',
       },
       java: '/path/to/java',
       resolution: { width: 1920, height: 1080, fullscreen: false },
@@ -241,7 +237,7 @@ describe('Modpack Conversion Functions', () => {
       upstream: undefined,
       assignMemory: true,
       prependCommand: '',
-      preExecuteCommand: ''
+      preExecuteCommand: '',
     }
 
     describe('getModrinthModpackFromInstance', () => {

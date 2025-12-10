@@ -11,7 +11,10 @@ export type OpenTarget = string | Buffer | number
  * @param target The zip path or buffer or file descriptor
  * @param options The option to open
  */
-export async function open(target: OpenTarget, options: Options = { lazyEntries: true, autoClose: false }) {
+export async function open(
+  target: OpenTarget,
+  options: Options = { lazyEntries: true, autoClose: false },
+) {
   try {
     return await new Promise<ZipFile>((resolve, reject) => {
       function handleZip(err: Error | null, zipfile: ZipFile | null) {
@@ -26,7 +29,7 @@ export async function open(target: OpenTarget, options: Options = { lazyEntries:
       } else if (target instanceof Buffer) {
         fromBuffer(target, options, handleZip)
       } else {
-        fromFd(target, options, handleZip)
+        fromFd(target as number, options, handleZip)
       }
     })
   } catch (e) {
@@ -49,9 +52,17 @@ export async function open(target: OpenTarget, options: Options = { lazyEntries:
 export function openEntryReadStream(zip: ZipFile, entry: Entry, options?: ZipFileOptions) {
   return new Promise<Readable>((resolve, reject) => {
     function handleStream(err: Error | null, stream: Readable | null) {
-      if (err || !stream) { reject(err) } else { resolve(stream) }
+      if (err || !stream) {
+        reject(err)
+      } else {
+        resolve(stream)
+      }
     }
-    if (options) { zip.openReadStream(entry, options, handleStream) } else { zip.openReadStream(entry, handleStream) }
+    if (options) {
+      zip.openReadStream(entry, options, handleStream)
+    } else {
+      zip.openReadStream(entry, handleStream)
+    }
   })
 }
 
@@ -65,7 +76,9 @@ export async function readEntry(zip: ZipFile, entry: Entry, options?: ZipFileOpt
   const stream = await openEntryReadStream(zip, entry, options)
   const buffers: Buffer[] = []
   await new Promise((resolve, reject) => {
-    stream.on('data', (chunk) => { buffers.push(chunk) })
+    stream.on('data', (chunk) => {
+      buffers.push(chunk)
+    })
     stream.on('end', resolve)
     stream.on('error', reject)
   })
@@ -76,10 +89,12 @@ export async function readEntry(zip: ZipFile, entry: Entry, options?: ZipFileOpt
  * Get the async entry generator for the zip file
  * @param zip The zip file
  */
-export async function * walkEntriesGenerator(zip: ZipFile): AsyncGenerator<Entry, void, boolean | undefined> {
+export async function* walkEntriesGenerator(
+  zip: ZipFile,
+): AsyncGenerator<Entry, void, boolean | undefined> {
   let ended = false
   let error: any
-  let resume: (v?: any) => void = () => { }
+  let resume: (v?: any) => void = () => {}
   let wait = new Promise<void>((resolve) => {
     resume = resolve
   })
@@ -97,9 +112,7 @@ export async function * walkEntriesGenerator(zip: ZipFile): AsyncGenerator<Entry
     resume()
   }
 
-  zip.addListener('entry', onEntry)
-    .addListener('end', onEnd)
-    .addListener('error', onError)
+  zip.addListener('entry', onEntry).addListener('end', onEnd).addListener('error', onError)
 
   try {
     while (!ended) {
@@ -121,7 +134,8 @@ export async function * walkEntriesGenerator(zip: ZipFile): AsyncGenerator<Entry
       })
     }
   } finally {
-    zip.removeListener('entry', onEntry)
+    zip
+      .removeListener('entry', onEntry)
       .removeListener('end', onEnd)
       .removeListener('error', onError)
   }
@@ -132,8 +146,11 @@ export async function * walkEntriesGenerator(zip: ZipFile): AsyncGenerator<Entry
  * @param zip The zip file
  * @param entries The entry to read
  */
-export async function filterEntries(zip: ZipFile, entries: Array<string | ((entry: Entry) => boolean)>): Promise<(Entry | undefined)[]> {
-  const bags = entries.map(e => [e, undefined as undefined | Entry] as const)
+export async function filterEntries(
+  zip: ZipFile,
+  entries: Array<string | ((entry: Entry) => boolean)>,
+): Promise<(Entry | undefined)[]> {
+  const bags = entries.map((e) => [e, undefined as undefined | Entry] as const)
   let remaining = entries.length
   for await (const entry of walkEntriesGenerator(zip)) {
     for (const bag of bags) {
@@ -153,7 +170,7 @@ export async function filterEntries(zip: ZipFile, entries: Array<string | ((entr
       if (remaining === 0) break
     }
   }
-  return bags.map(b => b[1])
+  return bags.map((b) => b[1])
 }
 
 /**
@@ -161,7 +178,10 @@ export async function filterEntries(zip: ZipFile, entries: Array<string | ((entr
  * @param zip The unread zip file
  * @param entryHandler The handler to recieve entries. Return true or Promise<true> to stop the walk
  */
-export async function walkEntries(zip: ZipFile, entryHandler: (entry: Entry) => Promise<boolean> | boolean | void) {
+export async function walkEntries(
+  zip: ZipFile,
+  entryHandler: (entry: Entry) => Promise<boolean> | boolean | void,
+) {
   const itr = walkEntriesGenerator(zip)
   for await (const entry of itr) {
     const result = await entryHandler(entry)

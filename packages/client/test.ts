@@ -17,11 +17,14 @@ describe('Server', () => {
     //         .toBeTruthy();
     // });
     test('should capture timeout exception', async () => {
-      await expect(queryStatus({
-        host: 'crafterr.me',
-      }, { timeout: 100 }))
-        .rejects
-        .toBeTruthy()
+      await expect(
+        queryStatus(
+          {
+            host: 'crafterr.me',
+          },
+          { timeout: 100 },
+        ),
+      ).rejects.toBeTruthy()
     })
     // test("should fetch server info and ping", async () => {
     //     const status = await queryStatus({

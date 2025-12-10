@@ -4,14 +4,14 @@ import {
   detectMMCRoot,
   type MultiMCManifestComponent,
   type MultiMCConfig,
-  type MultiMCManifest
+  type MultiMCManifest,
 } from './multimc_parser'
 import { existsSync } from 'fs-extra'
 
 // Mock fs-extra
 vi.mock('fs-extra', () => ({
   readFile: vi.fn(),
-  existsSync: vi.fn()
+  existsSync: vi.fn(),
 }))
 
 // Mock discovery module
@@ -20,7 +20,7 @@ vi.mock('../discovery', () => ({
 }))
 const env = {
   join,
-  existsSync
+  existsSync,
 } as any
 
 describe('MultiMC Parser', () => {
@@ -36,7 +36,7 @@ describe('MultiMC Parser', () => {
     it('should return parent directory if current path has instances subfolder', () => {
       vi.mocked(existsSync)
         .mockReturnValueOnce(false) // /mmc/instances/test-instance/instances doesn't exist
-        .mockReturnValueOnce(true)  // /mmc/instances exists
+        .mockReturnValueOnce(true) // /mmc/instances exists
 
       const result = detectMMCRoot('/mmc/instances/test-instance')
       expect(result).toBe('/mmc')
@@ -58,7 +58,7 @@ describe('MultiMC Parser', () => {
           notes: 'Test description',
           JavaPath: '/path/to/java',
           JoinServerOnLaunch: 'true',
-          JoinServerOnLaunchAddress: 'test.server.com:25565'
+          JoinServerOnLaunchAddress: 'test.server.com:25565',
         }
 
         expect(config.name).toBe('Test Instance')
@@ -77,7 +77,7 @@ describe('MultiMC Parser', () => {
           cachedName: 'Minecraft',
           cachedVersion: '1.19.2',
           cachedRequires: [],
-          important: true
+          important: true,
         }
 
         expect(component.uid).toBe('net.minecraft')
@@ -94,9 +94,7 @@ describe('MultiMC Parser', () => {
           version: '43.2.0',
           cachedName: 'Forge',
           cachedVersion: '43.2.0',
-          cachedRequires: [
-            { uid: 'net.minecraft', equals: '1.19.2' }
-          ]
+          cachedRequires: [{ uid: 'net.minecraft', equals: '1.19.2' }],
         }
 
         expect(component.cachedRequires).toHaveLength(1)
@@ -111,44 +109,44 @@ describe('MultiMC Parser', () => {
             version: '1.19.2',
             cachedName: 'Minecraft',
             cachedVersion: '1.19.2',
-            cachedRequires: []
+            cachedRequires: [],
           },
           {
             uid: 'net.minecraftforge',
             version: '43.2.0',
             cachedName: 'Forge',
             cachedVersion: '43.2.0',
-            cachedRequires: []
+            cachedRequires: [],
           },
           {
             uid: 'net.fabricmc.fabric-loader',
             version: '0.14.21',
             cachedName: 'Fabric Loader',
             cachedVersion: '0.14.21',
-            cachedRequires: []
+            cachedRequires: [],
           },
           {
             uid: 'net.neoforge',
             version: '20.4.109',
             cachedName: 'NeoForge',
             cachedVersion: '20.4.109',
-            cachedRequires: []
+            cachedRequires: [],
           },
           {
             uid: 'org.quiltmc.quilt-loader',
             version: '0.19.2',
             cachedName: 'Quilt Loader',
             cachedVersion: '0.19.2',
-            cachedRequires: []
-          }
+            cachedRequires: [],
+          },
         ]
 
         expect(components).toHaveLength(5)
-        expect(components.find(c => c.uid === 'net.minecraft')).toBeDefined()
-        expect(components.find(c => c.uid === 'net.minecraftforge')).toBeDefined()
-        expect(components.find(c => c.uid === 'net.fabricmc.fabric-loader')).toBeDefined()
-        expect(components.find(c => c.uid === 'net.neoforge')).toBeDefined()
-        expect(components.find(c => c.uid === 'org.quiltmc.quilt-loader')).toBeDefined()
+        expect(components.find((c) => c.uid === 'net.minecraft')).toBeDefined()
+        expect(components.find((c) => c.uid === 'net.minecraftforge')).toBeDefined()
+        expect(components.find((c) => c.uid === 'net.fabricmc.fabric-loader')).toBeDefined()
+        expect(components.find((c) => c.uid === 'net.neoforge')).toBeDefined()
+        expect(components.find((c) => c.uid === 'org.quiltmc.quilt-loader')).toBeDefined()
       })
     })
 
@@ -162,18 +160,16 @@ describe('MultiMC Parser', () => {
               version: '1.19.2',
               cachedName: 'Minecraft',
               cachedVersion: '1.19.2',
-              cachedRequires: []
+              cachedRequires: [],
             },
             {
               uid: 'net.minecraftforge',
               version: '43.2.0',
               cachedName: 'Forge',
               cachedVersion: '43.2.0',
-              cachedRequires: [
-                { uid: 'net.minecraft', equals: '1.19.2' }
-              ]
-            }
-          ]
+              cachedRequires: [{ uid: 'net.minecraft', equals: '1.19.2' }],
+            },
+          ],
         }
 
         expect(manifest.formatVersion).toBe(1)
@@ -203,7 +199,7 @@ describe('MultiMC Parser', () => {
     it('should handle nested instance paths', () => {
       vi.mocked(existsSync)
         .mockReturnValueOnce(false) // nested/path/instances doesn't exist
-        .mockReturnValueOnce(true)  // parent/instances exists
+        .mockReturnValueOnce(true) // parent/instances exists
 
       const result = detectMMCRoot('/mmc/instances/my-instance/nested/path')
       expect(result).toBe('/mmc')

@@ -1,9 +1,9 @@
-import type { Task } from '@xmcl/task';
-import { ensureDir, exists, remove, rename, rmdir, stat, unlink } from 'fs-extra';
-import { dirname, join, relative } from 'path';
-import { fileURLToPath } from 'url';
-import { InstanceFile, InstanceFileUpdate } from './files';
-import { ChecksumWorker, Logger } from './internal_type';
+import type { Task } from '@xmcl/task'
+import { ensureDir, exists, remove, rename, rmdir, stat, unlink } from 'fs-extra'
+import { dirname, join, relative } from 'path'
+import { fileURLToPath } from 'url'
+import { InstanceFile, InstanceFileUpdate } from './files'
+import { ChecksumWorker, Logger } from './internal_type'
 
 export interface InstanceFileOperationHandlerContext {
   worker: ChecksumWorker
@@ -20,12 +20,28 @@ export interface InstanceFileOperationHandlerContext {
 
   getDownloadTask: (p: HttpTaskPayload[], finished: Set<string>) => Task<void>
 
-  getFileOperationTask: (p: FileOperationPayload[], finished: Set<string>, unhandled: InstanceFile[]) => Task<void>
+  getFileOperationTask: (
+    p: FileOperationPayload[],
+    finished: Set<string>,
+    unhandled: InstanceFile[],
+  ) => Task<void>
 }
 
-export interface UnzipTaskPayload { file: InstanceFile; zipPath: string; entryName: string; destination: string }
-export interface HttpTaskPayload { file: InstanceFile; options: { urls: string[]; sha1?: string; destination: string; size?: number } }
-export interface FileOperationPayload { file: InstanceFile; src: string; destination: string }
+export interface UnzipTaskPayload {
+  file: InstanceFile
+  zipPath: string
+  entryName: string
+  destination: string
+}
+export interface HttpTaskPayload {
+  file: InstanceFile
+  options: { urls: string[]; sha1?: string; destination: string; size?: number }
+}
+export interface FileOperationPayload {
+  file: InstanceFile
+  src: string
+  destination: string
+}
 
 /**
  * The handler to handle the instance file install.
@@ -82,17 +98,15 @@ export class InstanceFileOperationHandler {
     readonly finished: Set<string>,
     private workspacePath: string,
     private backupPath: string,
-    private context: InstanceFileOperationHandlerContext
-  ) {
-  }
-
+    private context: InstanceFileOperationHandlerContext,
+  ) {}
 
   /**
-  * Emit the task to prepare download & unzip files into workspace location.
-  *
-  * These tasks will do the phase 1 of the instance file operation.
-  */
-  async * prepareInstallFilesTasks(file: InstanceFileUpdate[]) {
+   * Emit the task to prepare download & unzip files into workspace location.
+   *
+   * These tasks will do the phase 1 of the instance file operation.
+   */
+  async *prepareInstallFilesTasks(file: InstanceFileUpdate[]) {
     for (const f of file) {
       await this.#handleFile(f)
     }
@@ -149,21 +163,25 @@ export class InstanceFileOperationHandler {
     // phase 3, move the workspace files to instance location
     await ensureDir(this.instancePath)
     const files = [
-      ...this.#linkQueue.map(f => f.file),
-      ...this.#unzipQueue.map(f => f.file),
-      ...this.#httpsQueue.map(f => f.file),
+      ...this.#linkQueue.map((f) => f.file),
+      ...this.#unzipQueue.map((f) => f.file),
+      ...this.#httpsQueue.map((f) => f.file),
     ]
 
     try {
-      const dirToCreate = Array.from(new Set(files.map(file => dirname(join(this.instancePath, file.path)))))
-      await Promise.all(dirToCreate.map(dir => ensureDir(dir)))
+      const dirToCreate = Array.from(
+        new Set(files.map((file) => dirname(join(this.instancePath, file.path)))),
+      )
+      await Promise.all(dirToCreate.map((dir) => ensureDir(dir)))
 
-      await Promise.all(files.map(async (file) => {
-        const src = join(this.workspacePath, file.path)
-        const dest = join(this.instancePath, file.path)
-        await rename(src, dest)
-        finished.push([src, dest])
-      }))
+      await Promise.all(
+        files.map(async (file) => {
+          const src = join(this.workspacePath, file.path)
+          const dest = join(this.instancePath, file.path)
+          await rename(src, dest)
+          finished.push([src, dest])
+        }),
+      )
     } catch (e) {
       // rollback with best effort
       this.context.logger.warn('Rollback due to rename files failed', e)
@@ -187,8 +205,8 @@ export class InstanceFileOperationHandler {
   }
 
   /**
-  * Get a task to handle the instance file operation
-  */
+   * Get a task to handle the instance file operation
+   */
   async #handleFile({ file, operation }: InstanceFileUpdate) {
     const instancePath = this.instancePath
     const destination = join(instancePath, file.path)
@@ -212,7 +230,10 @@ export class InstanceFileOperationHandler {
       return
     }
 
-    const isSpecialResource = file.path.startsWith('mods') || file.path.startsWith('resourcepacks') || file.path.startsWith('shaderpacks')
+    const isSpecialResource =
+      file.path.startsWith('mods') ||
+      file.path.startsWith('resourcepacks') ||
+      file.path.startsWith('shaderpacks')
     const sha1 = file.hashes.sha1
     if (isSpecialResource) {
       this.context.onSpecialFile(file)
@@ -227,7 +248,7 @@ export class InstanceFileOperationHandler {
   }
 
   async #handleUnzip(file: InstanceFile, destination: string) {
-    const zipUrl = file.downloads!.find(u => u.startsWith('zip:'))
+    const zipUrl = file.downloads!.find((u) => u.startsWith('zip:'))
     if (!zipUrl) return
 
     const url = new URL(zipUrl)
@@ -255,8 +276,8 @@ export class InstanceFileOperationHandler {
    * Handle a file with http download. If the file can be handled by http, return `true`
    */
   async #handleHttp(file: InstanceFile, destination: string, sha1?: string) {
-    const urls = file.downloads!.filter(u => u.startsWith('http'))
-    const peerUrl = file.downloads!.find(u => u.startsWith('peer://'))
+    const urls = file.downloads!.filter((u) => u.startsWith('http'))
+    const peerUrl = file.downloads!.find((u) => u.startsWith('peer://'))
 
     if (peerUrl) {
       const url = await this.context.getPeerActualUrl(peerUrl)

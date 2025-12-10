@@ -56,7 +56,9 @@ function normalize(option?: string | number | Address): Partial<Address> {
     }
     return {}
   }
-  if (typeof option === 'number') { return { port: option } }
+  if (typeof option === 'number') {
+    return { port: option }
+  }
   return option
 }
 
@@ -67,7 +69,7 @@ export class UpnpClient {
   private address: AddressInfo | undefined
   private expiredAt = 0
   private ttl = 300_000
-  private promise: Promise<{device: Device; address: AddressInfo }> | undefined
+  private promise: Promise<{ device: Device; address: AddressInfo }> | undefined
 
   constructor(private ssdp: Ssdp) {
     this.timeout = 1800
@@ -146,12 +148,13 @@ export class UpnpClient {
       try {
         const entries = await device.run('GetGenericPortMappingEntry', { NewPortMappingIndex: i })
 
-        const key = Object.keys(entries).find(k => /:GetGenericPortMappingEntryResponse/.test(k))
+        const key = Object.keys(entries).find((k) => /:GetGenericPortMappingEntryResponse/.test(k))
         if (!key) throw new Error('Incorrect response')
 
         const data = entries[key]
 
-        const publicHost = ((typeof data.NewRemoteHost === 'string') && (data.NewRemoteHost || '')) ?? undefined
+        const publicHost =
+          (typeof data.NewRemoteHost === 'string' && (data.NewRemoteHost || '')) ?? undefined
 
         const result: MappingInfo = {
           public: {
@@ -206,7 +209,7 @@ export class UpnpClient {
 
     let key = null
     Object.keys(data).some(function (k) {
-      if (!/:GetExternalIPAddressResponse$/.test(k)) return false
+      if (!k.endsWith(':GetExternalIPAddressResponse')) return false
 
       key = k
       return true
@@ -232,20 +235,25 @@ export class UpnpClient {
     }
 
     const lookup = async () => {
-      const p = this.ssdp.search(
-        'urn:schemas-upnp-org:device:InternetGatewayDevice:1',
-      )
+      const p = this.ssdp.search('urn:schemas-upnp-org:device:InternetGatewayDevice:1')
 
-      const { device, address } = await new Promise<{ device: Device; address: AddressInfo }>((resolve, reject) => {
-        const timeout = setTimeout(function () {
-          reject(Object.assign(new Error('Fail to find gateway. Maybe your router does not support upnp!'), { error: ERROR_GATEWAY_NOTFOUND }))
-        }, this.timeout)
-        p.then(({ info, address }) => {
-          resolve({ address, device: new Device(info.location) })
-        }, reject).finally(() => {
-          clearTimeout(timeout)
-        })
-      })
+      const { device, address } = await new Promise<{ device: Device; address: AddressInfo }>(
+        (resolve, reject) => {
+          const timeout = setTimeout(function () {
+            reject(
+              Object.assign(
+                new Error('Fail to find gateway. Maybe your router does not support upnp!'),
+                { error: ERROR_GATEWAY_NOTFOUND },
+              ),
+            )
+          }, this.timeout)
+          p.then(({ info, address }) => {
+            resolve({ address, device: new Device(info.location) })
+          }, reject).finally(() => {
+            clearTimeout(timeout)
+          })
+        },
+      )
 
       this.device = device
       this.address = address

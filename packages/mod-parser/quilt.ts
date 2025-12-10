@@ -120,12 +120,15 @@ export interface QuiltLoaderData {
      * }
      * ```
      */
-    license?: string | {
-      name: string
-      id: string
-      url: string
-      description?: string
-    } | Array<string>
+    license?:
+      | string
+      | {
+          name: string
+          id: string
+          url: string
+          description?: string
+        }
+      | Array<string>
     /**
      * One or more paths to a square .PNG file. If an object is provided, the keys must be the resolution of the corresponding file. For example:
      *
@@ -262,7 +265,9 @@ export interface QuiltLoaderData {
  * Read fabric mod metadata json from a jar file or a directory
  * @param file The jar file or directory path. I can also be the binary content of the jar if you have already read the jar.
  */
-export async function readQuiltMod(file: FileSystem | string | Uint8Array): Promise<QuiltModMetadata> {
+export async function readQuiltMod(
+  file: FileSystem | string | Uint8Array,
+): Promise<QuiltModMetadata> {
   const fs = await resolveFileSystem(file)
   try {
     const content = await fs.readFile('quilt.mod.json', 'utf-8')

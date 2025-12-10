@@ -46,8 +46,7 @@ class TimeoutTask extends BaseTask<void> {
     clearInterval(this.handle)
   }
 
-  protected async resumeTask(): Promise<void> {
-  }
+  protected async resumeTask(): Promise<void> {}
 
   constructor(_total: number) {
     super()
@@ -191,11 +190,13 @@ describe('Task', () => {
       it('should call onCancel and set state to cancelled', async () => {
         const task = new MockTask(() => wait(100))
         const fn = vi.fn()
-        task.startAndWait({
-          onCancelled(task) {
-            fn(task.state)
-          },
-        }).catch(() => {})
+        task
+          .startAndWait({
+            onCancelled(task) {
+              fn(task.state)
+            },
+          })
+          .catch(() => {})
         await task.cancel()
         expect(task.isCancelled).toBe(true)
         expect(task.state).toBe(TaskState.Cancelled)
@@ -213,129 +214,297 @@ describe('Task', () => {
       })
     })
   })
-  describe('TaskRoutine', () => {
-    describe('#startAndWait', () => {
-      it('should run executor', async () => {
-        const fn = vi.fn()
-        const param = { a: 1 }
-        const test = task('test', fn, param)
-        expect(test.name).toEqual('test')
-        expect(test.param).toEqual(param)
-        expect(test.executor).toEqual(fn)
-        await test.startAndWait()
-        expect(fn).toBeCalled()
+  describe(
+    'TaskRoutine',
+    () => {
+      describe('#startAndWait', () => {
+        it('should run executor', async () => {
+          const fn = vi.fn()
+          const param = { a: 1 }
+          const test = task('test', fn, param)
+          expect(test.name).toEqual('test')
+          expect(test.param).toEqual(param)
+          expect(test.executor).toEqual(fn)
+          await test.startAndWait()
+          expect(fn).toBeCalled()
+        })
       })
-    })
-    describe('events', () => {
-      it('should propagate the update event', async () => {
-        const t = task('a', async function () {
-          const b = new TimeoutTask(2).setName('timeout')
-          await this.yield(b)
+      describe('events', () => {
+        it('should propagate the update event', async () => {
+          const t = task('a', async function () {
+            const b = new TimeoutTask(2).setName('timeout')
+            await this.yield(b)
+          })
+          const events: any[] = []
+          const noop = vi.fn()
+          function pushTask(type: string) {
+            return (task: Task, chunkSize = 0) =>
+              events.push({
+                type,
+                chunkSize,
+                name: task.name,
+                progress: task.progress,
+                total: task.total,
+                path: task.path,
+              })
+          }
+          await t.startAndWait({
+            onFailed: noop,
+            onResumed: noop,
+            onPaused: noop,
+            onCancelled: noop,
+            onStart: pushTask('start'),
+            onSucceed: pushTask('success'),
+            onUpdate: pushTask('update'),
+          })
+          expect(noop).not.toBeCalled()
+          expect(events).toStrictEqual([
+            { type: 'start', progress: 0, total: -1, chunkSize: 0, path: 'a', name: 'a' },
+            {
+              type: 'start',
+              progress: 0,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout',
+              name: 'timeout',
+            },
+            {
+              type: 'update',
+              progress: 1,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout',
+              name: 'timeout',
+            },
+            { type: 'update', progress: 1, total: 2, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'update',
+              progress: 2,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout',
+              name: 'timeout',
+            },
+            { type: 'update', progress: 2, total: 2, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'success',
+              progress: 2,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout',
+              name: 'timeout',
+            },
+            { type: 'success', progress: 2, total: 2, chunkSize: 0, path: 'a', name: 'a' },
+          ])
         })
-        const events: any[] = []
-        const noop = vi.fn()
-        function pushTask(type: string) {
-          return (task: Task, chunkSize = 0) => events.push({ type, chunkSize, name: task.name, progress: task.progress, total: task.total, path: task.path })
-        }
-        await t.startAndWait({
-          onFailed: noop,
-          onResumed: noop,
-          onPaused: noop,
-          onCancelled: noop,
-          onStart: pushTask('start'),
-          onSucceed: pushTask('success'),
-          onUpdate: pushTask('update'),
+        it('should propagate multiple update event in seq', async () => {
+          const t = task('a', async function () {
+            const b = new TimeoutTask(2).setName('timeout1')
+            await this.yield(b)
+            const c = new TimeoutTask(2).setName('timeout2')
+            await this.yield(c)
+          })
+          const events: any[] = []
+          const noop = vi.fn()
+          function pushTask(type: string) {
+            return (task: Task, chunkSize = 0) =>
+              events.push({
+                type,
+                chunkSize,
+                name: task.name,
+                progress: task.progress,
+                total: task.total,
+                path: task.path,
+              })
+          }
+          await t.startAndWait({
+            onFailed: noop,
+            onResumed: noop,
+            onPaused: noop,
+            onCancelled: noop,
+            onStart: pushTask('start'),
+            onSucceed: pushTask('success'),
+            onUpdate: pushTask('update'),
+          })
+          expect(noop).not.toBeCalled()
+          expect(events).toEqual([
+            { type: 'start', progress: 0, total: -1, chunkSize: 0, path: 'a', name: 'a' },
+            {
+              type: 'start',
+              progress: 0,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout1',
+              name: 'timeout1',
+            },
+            {
+              type: 'update',
+              progress: 1,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout1',
+              name: 'timeout1',
+            },
+            { type: 'update', progress: 1, total: 2, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'update',
+              progress: 2,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout1',
+              name: 'timeout1',
+            },
+            { type: 'update', progress: 2, total: 2, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'success',
+              progress: 2,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout1',
+              name: 'timeout1',
+            },
+            {
+              type: 'start',
+              progress: 0,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout2',
+              name: 'timeout2',
+            },
+            {
+              type: 'update',
+              progress: 1,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout2',
+              name: 'timeout2',
+            },
+            { type: 'update', progress: 3, total: 4, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'update',
+              progress: 2,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout2',
+              name: 'timeout2',
+            },
+            { type: 'update', progress: 4, total: 4, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'success',
+              progress: 2,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout2',
+              name: 'timeout2',
+            },
+            { type: 'success', progress: 4, total: 4, chunkSize: 0, path: 'a', name: 'a' },
+          ])
+        }, 10000)
+        it('should propagate multiple update event in batch', async () => {
+          const t = task('a', async function () {
+            const b = new TimeoutTask(2).setName('timeout1')
+            const c = new TimeoutTask(2).setName('timeout2')
+            await Promise.all([this.yield(c), this.yield(b)])
+          })
+          const events: any[] = []
+          const noop = vi.fn()
+          function pushTask(type: string) {
+            return (task: Task, chunkSize = 0) =>
+              events.push({
+                type,
+                chunkSize,
+                name: task.name,
+                progress: task.progress,
+                total: task.total,
+                path: task.path,
+              })
+          }
+          await t.startAndWait({
+            onFailed: noop,
+            onResumed: noop,
+            onPaused: noop,
+            onCancelled: noop,
+            onStart: pushTask('start'),
+            onSucceed: pushTask('success'),
+            onUpdate: pushTask('update'),
+          })
+          expect(events).toEqual([
+            { type: 'start', progress: 0, total: -1, chunkSize: 0, path: 'a', name: 'a' },
+            {
+              type: 'start',
+              progress: 0,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout2',
+              name: 'timeout2',
+            },
+            {
+              type: 'start',
+              progress: 0,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout1',
+              name: 'timeout1',
+            },
+            {
+              type: 'update',
+              progress: 1,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout2',
+              name: 'timeout2',
+            },
+            { type: 'update', progress: 1, total: 4, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'update',
+              progress: 1,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout1',
+              name: 'timeout1',
+            },
+            { type: 'update', progress: 2, total: 4, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'update',
+              progress: 2,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout2',
+              name: 'timeout2',
+            },
+            { type: 'update', progress: 3, total: 4, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'update',
+              progress: 2,
+              total: 2,
+              chunkSize: 1,
+              path: 'a.timeout1',
+              name: 'timeout1',
+            },
+            { type: 'update', progress: 4, total: 4, chunkSize: 1, path: 'a', name: 'a' },
+            {
+              type: 'success',
+              progress: 2,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout2',
+              name: 'timeout2',
+            },
+            {
+              type: 'success',
+              progress: 2,
+              total: 2,
+              chunkSize: 0,
+              path: 'a.timeout1',
+              name: 'timeout1',
+            },
+            { type: 'success', progress: 4, total: 4, chunkSize: 0, path: 'a', name: 'a' },
+          ])
         })
-        expect(noop).not.toBeCalled()
-        expect(events).toStrictEqual([
-          { type: 'start', progress: 0, total: -1, chunkSize: 0, path: 'a', name: 'a' },
-          { type: 'start', progress: 0, total: 2, chunkSize: 0, path: 'a.timeout', name: 'timeout' },
-          { type: 'update', progress: 1, total: 2, chunkSize: 1, path: 'a.timeout', name: 'timeout' },
-          { type: 'update', progress: 1, total: 2, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'update', progress: 2, total: 2, chunkSize: 1, path: 'a.timeout', name: 'timeout' },
-          { type: 'update', progress: 2, total: 2, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'success', progress: 2, total: 2, chunkSize: 0, path: 'a.timeout', name: 'timeout' },
-          { type: 'success', progress: 2, total: 2, chunkSize: 0, path: 'a', name: 'a' },
-        ])
       })
-      it('should propagate multiple update event in seq', async () => {
-        const t = task('a', async function () {
-          const b = new TimeoutTask(2).setName('timeout1')
-          await this.yield(b)
-          const c = new TimeoutTask(2).setName('timeout2')
-          await this.yield(c)
-        })
-        const events: any[] = []
-        const noop = vi.fn()
-        function pushTask(type: string) {
-          return (task: Task, chunkSize = 0) => events.push({ type, chunkSize, name: task.name, progress: task.progress, total: task.total, path: task.path })
-        }
-        await t.startAndWait({
-          onFailed: noop,
-          onResumed: noop,
-          onPaused: noop,
-          onCancelled: noop,
-          onStart: pushTask('start'),
-          onSucceed: pushTask('success'),
-          onUpdate: pushTask('update'),
-        })
-        expect(noop).not.toBeCalled()
-        expect(events).toEqual([
-          { type: 'start', progress: 0, total: -1, chunkSize: 0, path: 'a', name: 'a' },
-          { type: 'start', progress: 0, total: 2, chunkSize: 0, path: 'a.timeout1', name: 'timeout1' },
-          { type: 'update', progress: 1, total: 2, chunkSize: 1, path: 'a.timeout1', name: 'timeout1' },
-          { type: 'update', progress: 1, total: 2, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'update', progress: 2, total: 2, chunkSize: 1, path: 'a.timeout1', name: 'timeout1' },
-          { type: 'update', progress: 2, total: 2, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'success', progress: 2, total: 2, chunkSize: 0, path: 'a.timeout1', name: 'timeout1' },
-          { type: 'start', progress: 0, total: 2, chunkSize: 0, path: 'a.timeout2', name: 'timeout2' },
-          { type: 'update', progress: 1, total: 2, chunkSize: 1, path: 'a.timeout2', name: 'timeout2' },
-          { type: 'update', progress: 3, total: 4, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'update', progress: 2, total: 2, chunkSize: 1, path: 'a.timeout2', name: 'timeout2' },
-          { type: 'update', progress: 4, total: 4, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'success', progress: 2, total: 2, chunkSize: 0, path: 'a.timeout2', name: 'timeout2' },
-          { type: 'success', progress: 4, total: 4, chunkSize: 0, path: 'a', name: 'a' },
-        ])
-      }, 10000)
-      it('should propagate multiple update event in batch', async () => {
-        const t = task('a', async function () {
-          const b = new TimeoutTask(2).setName('timeout1')
-          const c = new TimeoutTask(2).setName('timeout2')
-          await Promise.all([this.yield(c), this.yield(b)])
-        })
-        const events: any[] = []
-        const noop = vi.fn()
-        function pushTask(type: string) {
-          return (task: Task, chunkSize = 0) => events.push({ type, chunkSize, name: task.name, progress: task.progress, total: task.total, path: task.path })
-        }
-        await t.startAndWait({
-          onFailed: noop,
-          onResumed: noop,
-          onPaused: noop,
-          onCancelled: noop,
-          onStart: pushTask('start'),
-          onSucceed: pushTask('success'),
-          onUpdate: pushTask('update'),
-        })
-        expect(events).toEqual([
-          { type: 'start', progress: 0, total: -1, chunkSize: 0, path: 'a', name: 'a' },
-          { type: 'start', progress: 0, total: 2, chunkSize: 0, path: 'a.timeout2', name: 'timeout2' },
-          { type: 'start', progress: 0, total: 2, chunkSize: 0, path: 'a.timeout1', name: 'timeout1' },
-          { type: 'update', progress: 1, total: 2, chunkSize: 1, path: 'a.timeout2', name: 'timeout2' },
-          { type: 'update', progress: 1, total: 4, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'update', progress: 1, total: 2, chunkSize: 1, path: 'a.timeout1', name: 'timeout1' },
-          { type: 'update', progress: 2, total: 4, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'update', progress: 2, total: 2, chunkSize: 1, path: 'a.timeout2', name: 'timeout2' },
-          { type: 'update', progress: 3, total: 4, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'update', progress: 2, total: 2, chunkSize: 1, path: 'a.timeout1', name: 'timeout1' },
-          { type: 'update', progress: 4, total: 4, chunkSize: 1, path: 'a', name: 'a' },
-          { type: 'success', progress: 2, total: 2, chunkSize: 0, path: 'a.timeout2', name: 'timeout2' },
-          { type: 'success', progress: 2, total: 2, chunkSize: 0, path: 'a.timeout1', name: 'timeout1' },
-          { type: 'success', progress: 4, total: 4, chunkSize: 0, path: 'a', name: 'a' },
-        ])
-      })
-    })
-  }, { timeout: 10000 })
+    },
+    { timeout: 10000 },
+  )
   // describe("#create", () => {
   //     test("should return the correct root node in handle", async () => {
   //         const test = task("test", function test() { })

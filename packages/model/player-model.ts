@@ -25,8 +25,7 @@ export interface Translation {
   y: number
   z: number
 }
-export interface Transform extends Translation, Dimension {
-}
+export interface Transform extends Translation, Dimension {}
 export interface Part extends Transform, CubeUVMapping {
   layer: Dimension & CubeUVMapping & Partial<Translation>
 }
@@ -238,8 +237,8 @@ function create(slim: boolean) {
     group.leftArm.x = group.torso.w / 2 + group.leftArm.w / 2
     group.leftArm.y = group.leftLeg.h + group.torso.h - group.leftArm.h / 2
 
-    group.cape.y = group.rightLeg.h + group.torso.h / 5 * 2
-    group.cape.z = -group.torso.d * 3 / 2
+    group.cape.y = group.rightLeg.h + (group.torso.h / 5) * 2
+    group.cape.z = (-group.torso.d * 3) / 2
     return group
   }
   return decoratePos(decorateDimension(createGroup(slim)))

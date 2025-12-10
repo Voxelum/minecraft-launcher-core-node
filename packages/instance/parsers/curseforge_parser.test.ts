@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { 
-  type CurseforgeInstance
-} from './curseforge_parser'
+import { type CurseforgeInstance } from './curseforge_parser'
 
 describe('CurseForge Parser', () => {
   describe('Type Definitions', () => {
@@ -10,10 +8,11 @@ describe('CurseForge Parser', () => {
         const instance: CurseforgeInstance = {
           baseModLoader: {
             name: 'forge',
-            downloadUrl: 'https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.19.2-43.2.0',
+            downloadUrl:
+              'https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.19.2-43.2.0',
             versionJson: 'forge-1.19.2-43.2.0.json',
             minecraftVersion: '1.19.2',
-            forgeVersion: '43.2.0'
+            forgeVersion: '43.2.0',
           },
           gameVersion: '1.19.2',
           name: 'Test Instance',
@@ -24,9 +23,9 @@ describe('CurseForge Parser', () => {
               modLoaders: [
                 {
                   id: 'forge-43.2.0',
-                  primary: true
-                }
-              ]
+                  primary: true,
+                },
+              ],
             },
             manifestType: 'minecraftModpack',
             overrides: 'overrides',
@@ -34,14 +33,14 @@ describe('CurseForge Parser', () => {
             version: '1.0.0',
             author: 'Test Author',
             name: 'Test Modpack',
-            files: []
+            files: [],
           },
           projectID: 123456,
           fileID: 789012,
           isMemoryOverride: false,
           allocatedMemory: 4096,
           instancePath: '/path/to/instance',
-          installedAddons: []
+          installedAddons: [],
         }
 
         expect(instance.baseModLoader.name).toBe('forge')
@@ -59,16 +58,16 @@ describe('CurseForge Parser', () => {
         const loaders = [
           { name: 'forge', version: '43.2.0' },
           { name: 'fabric', version: '0.14.21' },
-          { name: 'quilt', version: '0.19.2' }
+          { name: 'quilt', version: '0.19.2' },
         ]
 
-        loaders.forEach(loader => {
+        loaders.forEach((loader) => {
           const instance: CurseforgeInstance = {
             baseModLoader: {
               name: loader.name,
               downloadUrl: `https://example.com/${loader.name}`,
               versionJson: `${loader.name}-${loader.version}.json`,
-              minecraftVersion: '1.19.2'
+              minecraftVersion: '1.19.2',
             },
             gameVersion: '1.19.2',
             name: `${loader.name} Instance`,
@@ -79,9 +78,9 @@ describe('CurseForge Parser', () => {
                 modLoaders: [
                   {
                     id: `${loader.name}-${loader.version}`,
-                    primary: true
-                  }
-                ]
+                    primary: true,
+                  },
+                ],
               },
               manifestType: 'minecraftModpack',
               overrides: 'overrides',
@@ -89,18 +88,20 @@ describe('CurseForge Parser', () => {
               version: '1.0.0',
               author: 'Test',
               name: 'Test',
-              files: []
+              files: [],
             },
             projectID: 123456,
             fileID: 789012,
             isMemoryOverride: false,
             allocatedMemory: 4096,
             instancePath: '/path/to/instance',
-            installedAddons: []
+            installedAddons: [],
           }
 
           expect(instance.baseModLoader.name).toBe(loader.name)
-          expect(instance.manifest.minecraft.modLoaders[0].id).toBe(`${loader.name}-${loader.version}`)
+          expect(instance.manifest.minecraft.modLoaders[0].id).toBe(
+            `${loader.name}-${loader.version}`,
+          )
         })
       })
 
@@ -110,7 +111,7 @@ describe('CurseForge Parser', () => {
             name: 'forge',
             downloadUrl: 'https://example.com/forge',
             versionJson: 'forge.json',
-            minecraftVersion: '1.19.2'
+            minecraftVersion: '1.19.2',
           },
           gameVersion: '1.19.2',
           name: 'Memory Override Instance',
@@ -118,7 +119,7 @@ describe('CurseForge Parser', () => {
           manifest: {
             minecraft: {
               version: '1.19.2',
-              modLoaders: [{ id: 'forge-43.2.0', primary: true }]
+              modLoaders: [{ id: 'forge-43.2.0', primary: true }],
             },
             manifestType: 'minecraftModpack',
             overrides: 'overrides',
@@ -126,7 +127,7 @@ describe('CurseForge Parser', () => {
             version: '1.0.0',
             author: 'Test',
             name: 'Test',
-            files: []
+            files: [],
           },
           projectID: 123456,
           fileID: 789012,
@@ -134,7 +135,7 @@ describe('CurseForge Parser', () => {
           allocatedMemory: 8192,
           instancePath: '/path/to/instance',
           installedAddons: [],
-          javaArgsOverride: '-Xmx8G -Xms4G'
+          javaArgsOverride: '-Xmx8G -Xms4G',
         }
 
         expect(instance.isMemoryOverride).toBe(true)
@@ -148,7 +149,7 @@ describe('CurseForge Parser', () => {
             name: 'forge',
             downloadUrl: 'https://example.com/forge',
             versionJson: 'forge.json',
-            minecraftVersion: '1.19.2'
+            minecraftVersion: '1.19.2',
           },
           gameVersion: '1.19.2',
           name: 'Custom Author Instance',
@@ -156,7 +157,7 @@ describe('CurseForge Parser', () => {
           manifest: {
             minecraft: {
               version: '1.19.2',
-              modLoaders: [{ id: 'forge-43.2.0', primary: true }]
+              modLoaders: [{ id: 'forge-43.2.0', primary: true }],
             },
             manifestType: 'minecraftModpack',
             overrides: 'overrides',
@@ -164,7 +165,7 @@ describe('CurseForge Parser', () => {
             version: '1.0.0',
             author: 'Original Author',
             name: 'Test',
-            files: []
+            files: [],
           },
           projectID: 123456,
           fileID: 789012,
@@ -172,7 +173,7 @@ describe('CurseForge Parser', () => {
           isMemoryOverride: false,
           allocatedMemory: 4096,
           instancePath: '/path/to/instance',
-          installedAddons: []
+          installedAddons: [],
         }
 
         expect(instance.customAuthor).toBe('Custom Author Override')
@@ -185,7 +186,7 @@ describe('CurseForge Parser', () => {
             name: 'forge',
             downloadUrl: 'https://example.com/forge',
             versionJson: 'forge.json',
-            minecraftVersion: '1.19.2'
+            minecraftVersion: '1.19.2',
           },
           gameVersion: '1.19.2',
           name: 'Addons Instance',
@@ -193,7 +194,7 @@ describe('CurseForge Parser', () => {
           manifest: {
             minecraft: {
               version: '1.19.2',
-              modLoaders: [{ id: 'forge-43.2.0', primary: true }]
+              modLoaders: [{ id: 'forge-43.2.0', primary: true }],
             },
             manifestType: 'minecraftModpack',
             overrides: 'overrides',
@@ -201,7 +202,7 @@ describe('CurseForge Parser', () => {
             version: '1.0.0',
             author: 'Test',
             name: 'Test',
-            files: []
+            files: [],
           },
           projectID: 123456,
           fileID: 789012,
@@ -218,8 +219,8 @@ describe('CurseForge Parser', () => {
                 packageFingerprint: 333333,
                 projectId: 111111,
                 FileNameOnDisk: 'test-mod.jar',
-                Hashes: [{ value: 'abc123def456' }]
-              }
+                Hashes: [{ value: 'abc123def456' }],
+              },
             },
             {
               addonID: 444444,
@@ -230,10 +231,10 @@ describe('CurseForge Parser', () => {
                 packageFingerprint: 666666,
                 projectId: 444444,
                 FileNameOnDisk: 'another-mod.jar',
-                Hashes: [{ value: 'def456ghi789' }]
-              }
-            }
-          ]
+                Hashes: [{ value: 'def456ghi789' }],
+              },
+            },
+          ],
         }
 
         expect(instance.installedAddons).toHaveLength(2)
@@ -249,9 +250,10 @@ describe('CurseForge Parser', () => {
     it('should validate base mod loader required fields', () => {
       const baseModLoader = {
         name: 'forge',
-        downloadUrl: 'https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.19.2-43.2.0',
+        downloadUrl:
+          'https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.19.2-43.2.0',
         versionJson: 'forge-1.19.2-43.2.0.json',
-        minecraftVersion: '1.19.2'
+        minecraftVersion: '1.19.2',
       }
 
       expect(baseModLoader.name).toBeTruthy()
@@ -267,7 +269,7 @@ describe('CurseForge Parser', () => {
         versionJson: 'forge.json',
         minecraftVersion: '1.19.2',
         forgeVersion: '43.2.0',
-        installProfileJson: 'install_profile.json'
+        installProfileJson: 'install_profile.json',
       }
 
       expect(baseModLoader.forgeVersion).toBe('43.2.0')
@@ -286,11 +288,8 @@ describe('CurseForge Parser', () => {
           packageFingerprint: 987654321,
           projectId: 123456,
           FileNameOnDisk: 'example-mod.jar',
-          Hashes: [
-            { value: 'abc123def456789' },
-            { value: 'def456ghi789abc' }
-          ]
-        }
+          Hashes: [{ value: 'abc123def456789' }, { value: 'def456ghi789abc' }],
+        },
       }
 
       expect(typeof addon.addonID).toBe('number')

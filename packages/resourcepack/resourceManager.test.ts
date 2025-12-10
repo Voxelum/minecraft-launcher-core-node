@@ -53,8 +53,12 @@ describe('ResourceManager', () => {
   test('#addResourceSource', async () => {
     const man = new ResourceManager()
     const dummy: any = {
-      info() { return {} },
-      domains() { return [] },
+      info() {
+        return {}
+      },
+      domains() {
+        return []
+      },
     }
     await man.addResourcePack(dummy)
     expect(man.allResourcePacks).toHaveLength(1)
@@ -64,44 +68,66 @@ describe('ResourceManager', () => {
     test('should get the resource', async () => {
       const man = new ResourceManager()
       const dummy: any = {
-        info() { return {} },
-        domains() { return [] },
-        get() { return { location: { domain: 'a', path: 'b' } } },
+        info() {
+          return {}
+        },
+        domains() {
+          return []
+        },
+        get() {
+          return { location: { domain: 'a', path: 'b' } }
+        },
       }
       await man.addResourcePack(dummy)
-      await expect(man.get(ResourceLocation.fromPath('abc')))
-        .resolves
-        .toEqual({ location: { domain: 'a', path: 'b' } })
+      await expect(man.get(ResourceLocation.fromPath('abc'))).resolves.toEqual({
+        location: { domain: 'a', path: 'b' },
+      })
     })
     test('should return empty if resource not found', async () => {
       const man = new ResourceManager()
       const dummy: any = {
-        info() { return {} },
-        domains() { return [] },
-        get() { return undefined },
+        info() {
+          return {}
+        },
+        domains() {
+          return []
+        },
+        get() {
+          return undefined
+        },
       }
       await man.addResourcePack(dummy)
-      await expect(man.get(ResourceLocation.fromPath('abc')))
-        .resolves
-        .toEqual(undefined)
+      await expect(man.get(ResourceLocation.fromPath('abc'))).resolves.toEqual(undefined)
     })
     test('should iterate resource sources from back to front', async () => {
       const man = new ResourceManager()
       const srcA: any = {
-        info() { return {} },
-        domains() { return [] },
-        get(r: any) { return { location: { domain: 'a', path: 'a' } } },
+        info() {
+          return {}
+        },
+        domains() {
+          return []
+        },
+        get(r: any) {
+          return { location: { domain: 'a', path: 'a' } }
+        },
       }
       const srcB: any = {
-        info() { return {} },
-        domains() { return [] },
-        get(r: any) { return { location: { domain: 'b', path: 'b' } } },
+        info() {
+          return {}
+        },
+        domains() {
+          return []
+        },
+        get(r: any) {
+          return { location: { domain: 'b', path: 'b' } }
+        },
       }
       await man.addResourcePack(srcA)
       await man.addResourcePack(srcB)
-      await expect(man.get(ResourceLocation.fromPath('abc')))
-        .resolves
-        .toEqual({ location: { domain: 'b', path: 'b' } })
+      await expect(man.get(ResourceLocation.fromPath('abc'))).resolves.toEqual({
+        location: { domain: 'b', path: 'b' },
+      })
     })
   })
 
@@ -109,9 +135,16 @@ describe('ResourceManager', () => {
     const man = new ResourceManager()
     const monitor = vi.fn()
     const dummy: any = {
-      info() { return {} },
-      domains() { return [] },
-      get(r: any) { monitor(); return { location: r } },
+      info() {
+        return {}
+      },
+      domains() {
+        return []
+      },
+      get(r: any) {
+        monitor()
+        return { location: r }
+      },
     }
     await man.addResourcePack(dummy)
     await man.get({ domain: 'a', path: 'b' })
@@ -124,14 +157,28 @@ describe('ResourceManager', () => {
     const man = new ResourceManager()
     const monitor = vi.fn()
     const dummy: any = {
-      info() { return 'A' },
-      domains() { return [] },
-      get(r: any) { monitor(); return { location: r } },
+      info() {
+        return 'A'
+      },
+      domains() {
+        return []
+      },
+      get(r: any) {
+        monitor()
+        return { location: r }
+      },
     }
     const dummyB: any = {
-      info() { return 'B' },
-      domains() { return [] },
-      get(r: any) { monitor(); return { location: r } },
+      info() {
+        return 'B'
+      },
+      domains() {
+        return []
+      },
+      get(r: any) {
+        monitor()
+        return { location: r }
+      },
     }
     await man.addResourcePack(dummy)
     await man.addResourcePack(dummyB)
@@ -160,12 +207,9 @@ describe('ModelLoader', () => {
       expect(model.display).toBeTruthy()
       expect(model.elements).toBeTruthy()
 
-      expect(loader.textures['block/grass_block_side_overlay'])
-        .toBeTruthy()
-      expect(loader.textures['block/grass_block_side'])
-        .toBeTruthy()
-      expect(loader.textures['block/dirt'])
-        .toBeTruthy()
+      expect(loader.textures['block/grass_block_side_overlay']).toBeTruthy()
+      expect(loader.textures['block/grass_block_side']).toBeTruthy()
+      expect(loader.textures['block/dirt']).toBeTruthy()
     })
   })
 })

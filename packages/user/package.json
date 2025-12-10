@@ -48,6 +48,7 @@
     "esbuild": "^0.17.16",
     "typescript": "^5.9.3",
     "user-offline-uuid": "workspace:^*",
-    "undici-shim": "workspace:^*"
+    "undici-shim": "workspace:^*",
+    "vitest": "^4.0.15"
   }
 }

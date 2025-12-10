@@ -46,66 +46,65 @@ function isClassWriter(cw: unknown): cw is ClassWriter {
   return cw != null && cw instanceof Object && 'addType' in cw && 'addUninitializedType' in cw
 }
 
-
 export class Frame {
   /**
-     * Mask to get the dimension of a frame type. This dimension is a signed
-     * integer between -8 and 7.
-     */
+   * Mask to get the dimension of a frame type. This dimension is a signed
+   * integer between -8 and 7.
+   */
   static DIM = -268435456
 
   /**
-     * Constant to be added to a type to get a type with one more dimension.
-     */
+   * Constant to be added to a type to get a type with one more dimension.
+   */
   static ARRAY_OF = 268435456
 
   /**
-     * Constant to be added to a type to get a type with one less dimension.
-     */
+   * Constant to be added to a type to get a type with one less dimension.
+   */
   static ELEMENT_OF = -268435456
 
   /**
-     * Mask to get the kind of a frame type.
-     *
-     * @see #BASE
-     * @see #LOCAL
-     * @see #STACK
-     */
+   * Mask to get the kind of a frame type.
+   *
+   * @see #BASE
+   * @see #LOCAL
+   * @see #STACK
+   */
   static KIND = 251658240
 
   /**
-     * Flag used for LOCAL and STACK types. Indicates that if this type happens
-     * to be a long or double type (during the computations of input frames),
-     * then it must be set to TOP because the second word of this value has been
-     * reused to store other data in the basic block. Hence the first word no
-     * longer stores a valid long or double value.
-     */
+   * Flag used for LOCAL and STACK types. Indicates that if this type happens
+   * to be a long or double type (during the computations of input frames),
+   * then it must be set to TOP because the second word of this value has been
+   * reused to store other data in the basic block. Hence the first word no
+   * longer stores a valid long or double value.
+   */
   static TOP_IF_LONG_OR_DOUBLE = 8388608
 
   /**
-     * Mask to get the value of a frame type.
-     */
+   * Mask to get the value of a frame type.
+   */
   static VALUE = 8388607
 
   /**
-     * Mask to get the kind of base types.
-     */
+   * Mask to get the kind of base types.
+   */
   static BASE_KIND = 267386880
 
   /**
-     * Mask to get the value of base types.
-     */
+   * Mask to get the value of base types.
+   */
   static BASE_VALUE = 1048575
 
   /**
-     * Kind of the types that are not relative to an input stack map frame.
-     */
+   * Kind of the types that are not relative to an input stack map frame.
+   */
   static BASE = 16777216
 
   /**
-     * Base kind of the base reference types. The BASE_VALUE of such types is an
-     * index into the type table.
-     */
+   * Base kind of the base reference types. The BASE_VALUE of such types is an
+   * index into the type table.
+   */
   static OBJECT: number = Frame.BASE | 7340032
 
   public static OBJECT_$LI$(): number {
@@ -113,10 +112,10 @@ export class Frame {
   }
 
   /**
-     * Base kind of the uninitialized base types. The BASE_VALUE of such types
-     * in an index into the type table (the Item at that index contains both an
-     * instruction offset and an internal class name).
-     */
+   * Base kind of the uninitialized base types. The BASE_VALUE of such types
+   * in an index into the type table (the Item at that index contains both an
+   * instruction offset and an internal class name).
+   */
   static UNINITIALIZED: number = Frame.BASE | 8388608
 
   public static UNINITIALIZED_$LI$(): number {
@@ -124,110 +123,162 @@ export class Frame {
   }
 
   /**
-     * Kind of the types that are relative to the local variable types of an
-     * input stack map frame. The value of such types is a local variable index.
-     */
+   * Kind of the types that are relative to the local variable types of an
+   * input stack map frame. The value of such types is a local variable index.
+   */
   static LOCAL = 33554432
 
   /**
-     * Kind of the the types that are relative to the stack of an input stack
-     * map frame. The value of such types is a position relatively to the top of
-     * this stack.
-     */
+   * Kind of the the types that are relative to the stack of an input stack
+   * map frame. The value of such types is a position relatively to the top of
+   * this stack.
+   */
   static STACK = 50331648
 
   /**
-     * The TOP type. This is a BASE type.
-     */
+   * The TOP type. This is a BASE type.
+   */
   static TOP: number
 
-  public static TOP_$LI$(): number { if (Frame.TOP == null) { Frame.TOP = Frame.BASE | 0 } return Frame.TOP }
+  public static TOP_$LI$(): number {
+    if (Frame.TOP == null) {
+      Frame.TOP = Frame.BASE | 0
+    }
+    return Frame.TOP
+  }
 
   /**
-     * The BOOLEAN type. This is a BASE type mainly used for array types.
-     */
+   * The BOOLEAN type. This is a BASE type mainly used for array types.
+   */
   static BOOLEAN: number
 
-  public static BOOLEAN_$LI$(): number { if (Frame.BOOLEAN == null) { Frame.BOOLEAN = Frame.BASE | 9 } return Frame.BOOLEAN }
+  public static BOOLEAN_$LI$(): number {
+    if (Frame.BOOLEAN == null) {
+      Frame.BOOLEAN = Frame.BASE | 9
+    }
+    return Frame.BOOLEAN
+  }
 
   /**
-     * The BYTE type. This is a BASE type mainly used for array types.
-     */
+   * The BYTE type. This is a BASE type mainly used for array types.
+   */
   static BYTE: number
 
-  public static BYTE_$LI$(): number { if (Frame.BYTE == null) { Frame.BYTE = Frame.BASE | 10 } return Frame.BYTE }
+  public static BYTE_$LI$(): number {
+    if (Frame.BYTE == null) {
+      Frame.BYTE = Frame.BASE | 10
+    }
+    return Frame.BYTE
+  }
 
   /**
-     * The CHAR type. This is a BASE type mainly used for array types.
-     */
+   * The CHAR type. This is a BASE type mainly used for array types.
+   */
   static CHAR: number
 
-  public static CHAR_$LI$(): number { if (Frame.CHAR == null) { Frame.CHAR = Frame.BASE | 11 } return Frame.CHAR }
+  public static CHAR_$LI$(): number {
+    if (Frame.CHAR == null) {
+      Frame.CHAR = Frame.BASE | 11
+    }
+    return Frame.CHAR
+  }
 
   /**
-     * The SHORT type. This is a BASE type mainly used for array types.
-     */
+   * The SHORT type. This is a BASE type mainly used for array types.
+   */
   static SHORT: number
 
-  public static SHORT_$LI$(): number { if (Frame.SHORT == null) { Frame.SHORT = Frame.BASE | 12 } return Frame.SHORT }
+  public static SHORT_$LI$(): number {
+    if (Frame.SHORT == null) {
+      Frame.SHORT = Frame.BASE | 12
+    }
+    return Frame.SHORT
+  }
 
   /**
-     * The INTEGER type. This is a BASE type.
-     */
+   * The INTEGER type. This is a BASE type.
+   */
   static INTEGER: number
 
-  public static INTEGER_$LI$(): number { if (Frame.INTEGER == null) { Frame.INTEGER = Frame.BASE | 1 } return Frame.INTEGER }
+  public static INTEGER_$LI$(): number {
+    if (Frame.INTEGER == null) {
+      Frame.INTEGER = Frame.BASE | 1
+    }
+    return Frame.INTEGER
+  }
 
   /**
-     * The FLOAT type. This is a BASE type.
-     */
+   * The FLOAT type. This is a BASE type.
+   */
   static FLOAT: number
 
-  public static FLOAT_$LI$(): number { if (Frame.FLOAT == null) { Frame.FLOAT = Frame.BASE | 2 } return Frame.FLOAT }
+  public static FLOAT_$LI$(): number {
+    if (Frame.FLOAT == null) {
+      Frame.FLOAT = Frame.BASE | 2
+    }
+    return Frame.FLOAT
+  }
 
   /**
-     * The DOUBLE type. This is a BASE type.
-     */
+   * The DOUBLE type. This is a BASE type.
+   */
   static DOUBLE: number
 
-  public static DOUBLE_$LI$(): number { if (Frame.DOUBLE == null) { Frame.DOUBLE = Frame.BASE | 3 } return Frame.DOUBLE }
+  public static DOUBLE_$LI$(): number {
+    if (Frame.DOUBLE == null) {
+      Frame.DOUBLE = Frame.BASE | 3
+    }
+    return Frame.DOUBLE
+  }
 
   /**
-     * The LONG type. This is a BASE type.
-     */
+   * The LONG type. This is a BASE type.
+   */
   static LONG: number
 
-  public static LONG_$LI$(): number { if (Frame.LONG == null) { Frame.LONG = Frame.BASE | 4 } return Frame.LONG }
+  public static LONG_$LI$(): number {
+    if (Frame.LONG == null) {
+      Frame.LONG = Frame.BASE | 4
+    }
+    return Frame.LONG
+  }
 
   /**
-     * The NULL type. This is a BASE type.
-     */
+   * The NULL type. This is a BASE type.
+   */
   static NULL: number
 
-  public static NULL_$LI$(): number { if (Frame.NULL == null) { Frame.NULL = Frame.BASE | 5 } return Frame.NULL }
+  public static NULL_$LI$(): number {
+    if (Frame.NULL == null) {
+      Frame.NULL = Frame.BASE | 5
+    }
+    return Frame.NULL
+  }
 
   /**
-     * The UNINITIALIZED_THIS type. This is a BASE type.
-     */
+   * The UNINITIALIZED_THIS type. This is a BASE type.
+   */
   static UNINITIALIZED_THIS: number
 
   public static UNINITIALIZED_THIS_$LI$(): number {
     if (Frame.UNINITIALIZED_THIS == null) {
       Frame.UNINITIALIZED_THIS = Frame.BASE | 6
-    } return Frame.UNINITIALIZED_THIS
+    }
+    return Frame.UNINITIALIZED_THIS
   }
 
   /**
-     * The stack size variation corresponding to each JVM instruction. This
-     * stack variation is equal to the size of the values produced by an
-     * instruction, minus the size of the values consumed by this instruction.
-     */
+   * The stack size variation corresponding to each JVM instruction. This
+   * stack variation is equal to the size of the values produced by an
+   * instruction, minus the size of the values consumed by this instruction.
+   */
   static SIZE: number[] = (() => {
     let i: number
     const b: number[] = new Array(202)
-    const s = 'EFFFFFFFFGGFFFGGFFFEEFGFGFEEEEEEEEEEEEEEEEEEEEDEDEDDDDDCDCDEEEEEEEEEEEEEEEEEEEEBABABBBBDCFFFGGGEDCDCDCDCDCDCDCDCDCDCEEEEDDDDDDDCDCDCEFEFDDEEFFDEDEEEBDDBBDDDDDDCCCCCCCCEFEDDDCDCDEEEEEEEEEEFEEEEEEDDEEDDEE'
+    const s =
+      'EFFFFFFFFGGFFFGGFFFEEFGFGFEEEEEEEEEEEEEEEEEEEEDEDEDDDDDCDCDEEEEEEEEEEEEEEEEEEEEBABABBBBDCFFFGGGEDCDCDCDCDCDCDCDCDCDCEEEEDDDDDDDCDCDCEFEFDDEEFFDEDEEEBDDBBDDDDDDCCCCCCCCEFEDDDCDCDEEEEEEEEEEFEEEEEEDDEEDDEE'
     for (i = 0; i < b.length; ++i) {
-      b[i] = (s.charAt(i)).charCodeAt(0) - ('E').charCodeAt(0)
+      b[i] = s.charAt(i).charCodeAt(0) - 'E'.charCodeAt(0)
     }
     return b
   })()
@@ -239,102 +290,110 @@ export class Frame {
   static __static_initializer_0() {
     let i: number
     const b: number[] = new Array(202)
-    const s = 'EFFFFFFFFGGFFFGGFFFEEFGFGFEEEEEEEEEEEEEEEEEEEEDEDEDDDDDCDCDEEEEEEEEEEEEEEEEEEEEBABABBBBDCFFFGGGEDCDCDCDCDCDCDCDCDCDCEEEEDDDDDDDCDCDCEFEFDDEEFFDEDEEEBDDBBDDDDDDCCCCCCCCEFEDDDCDCDEEEEEEEEEEFEEEEEEDDEEDDEE'
+    const s =
+      'EFFFFFFFFGGFFFGGFFFEEFGFGFEEEEEEEEEEEEEEEEEEEEDEDEDDDDDCDCDEEEEEEEEEEEEEEEEEEEEBABABBBBDCFFFGGGEDCDCDCDCDCDCDCDCDCDCEEEEDDDDDDDCDCDCEFEFDDEEFFDEDEEEBDDBBDDDDDDCCCCCCCCEFEDDDCDCDEEEEEEEEEEFEEEEEEDDEEDDEE'
     for (i = 0; i < b.length; ++i) {
-      b[i] = (s.charAt(i)).charCodeAt(0) - ('E').charCodeAt(0)
+      b[i] = s.charAt(i).charCodeAt(0) - 'E'.charCodeAt(0)
     }
     Frame.SIZE = b
   }
 
   /**
-     * The label (i.e. basic block) to which these input and output stack map
-     * frames correspond.
-     */
+   * The label (i.e. basic block) to which these input and output stack map
+   * frames correspond.
+   */
   owner: Label
 
   /**
-     * The input stack map frame locals.
-     */
+   * The input stack map frame locals.
+   */
   inputLocals: number[] = []
 
   /**
-     * The input stack map frame stack.
-     */
+   * The input stack map frame stack.
+   */
   inputStack: number[] = []
 
   /**
-     * The output stack map frame locals.
-     */
+   * The output stack map frame locals.
+   */
   private outputLocals: number[] = []
 
   /**
-     * The output stack map frame stack.
-     */
+   * The output stack map frame stack.
+   */
   private outputStack: number[] = []
 
   /**
-     * Relative size of the output stack. The exact semantics of this field
-     * depends on the algorithm that is used.
-     *
-     * When only the maximum stack size is computed, this field is the size of
-     * the output stack relatively to the top of the input stack.
-     *
-     * When the stack map frames are completely computed, this field is the
-     * actual number of types in {@link #outputStack}.
-     */
+   * Relative size of the output stack. The exact semantics of this field
+   * depends on the algorithm that is used.
+   *
+   * When only the maximum stack size is computed, this field is the size of
+   * the output stack relatively to the top of the input stack.
+   *
+   * When the stack map frames are completely computed, this field is the
+   * actual number of types in {@link #outputStack}.
+   */
   outputStackTop: number
 
   /**
-     * Number of types that are initialized in the basic block.
-     *
-     * @see #initializations
-     */
+   * Number of types that are initialized in the basic block.
+   *
+   * @see #initializations
+   */
   private initializationCount: number
 
   /**
-     * The types that are initialized in the basic block. A constructor
-     * invocation on an UNINITIALIZED or UNINITIALIZED_THIS type must replace
-     * <i>every occurence</i> of this type in the local variables and in the
-     * operand stack. This cannot be done during the first phase of the
-     * algorithm since, during this phase, the local variables and the operand
-     * stack are not completely computed. It is therefore necessary to store the
-     * types on which constructors are invoked in the basic block, in order to
-     * do this replacement during the second phase of the algorithm, where the
-     * frames are fully computed. Note that this array can contain types that
-     * are relative to input locals or to the input stack (see below for the
-     * description of the algorithm).
-     */
+   * The types that are initialized in the basic block. A constructor
+   * invocation on an UNINITIALIZED or UNINITIALIZED_THIS type must replace
+   * <i>every occurence</i> of this type in the local variables and in the
+   * operand stack. This cannot be done during the first phase of the
+   * algorithm since, during this phase, the local variables and the operand
+   * stack are not completely computed. It is therefore necessary to store the
+   * types on which constructors are invoked in the basic block, in order to
+   * do this replacement during the second phase of the algorithm, where the
+   * frames are fully computed. Note that this array can contain types that
+   * are relative to input locals or to the input stack (see below for the
+   * description of the algorithm).
+   */
   private initializations: number[] | null = null
 
   /**
-     * Sets this frame to the given value.
-     *
-     * @param cw
-     * the ClassWriter to which this label belongs.
-     * @param nLocal
-     * the number of local variables.
-     * @param local
-     * the local variable types. Primitive types are represented by
-     * {@link Opcodes#TOP}, {@link Opcodes#INTEGER},
-     * {@link Opcodes#FLOAT}, {@link Opcodes#LONG},
-     * {@link Opcodes#DOUBLE},{@link Opcodes#NULL} or
-     * {@link Opcodes#UNINITIALIZED_THIS} (long and double are
-     * represented by a single element). Reference types are
-     * represented by String objects (representing internal names),
-     * and uninitialized types by Label objects (this label
-     * designates the NEW instruction that created this uninitialized
-     * value).
-     * @param nStack
-     * the number of operand stack elements.
-     * @param stack
-     * the operand stack types (same format as the "local" array).
-     */
+   * Sets this frame to the given value.
+   *
+   * @param cw
+   * the ClassWriter to which this label belongs.
+   * @param nLocal
+   * the number of local variables.
+   * @param local
+   * the local variable types. Primitive types are represented by
+   * {@link Opcodes#TOP}, {@link Opcodes#INTEGER},
+   * {@link Opcodes#FLOAT}, {@link Opcodes#LONG},
+   * {@link Opcodes#DOUBLE},{@link Opcodes#NULL} or
+   * {@link Opcodes#UNINITIALIZED_THIS} (long and double are
+   * represented by a single element). Reference types are
+   * represented by String objects (representing internal names),
+   * and uninitialized types by Label objects (this label
+   * designates the NEW instruction that created this uninitialized
+   * value).
+   * @param nStack
+   * the number of operand stack elements.
+   * @param stack
+   * the operand stack types (same format as the "local" array).
+   */
   public set(cw?: any, nLocal?: any, local?: any, nStack?: any, stack?: any): any {
-    if (((cw != null && cw instanceof Object && 'addType' in cw && 'addUninitializedType' in cw) || cw === null) && ((typeof nLocal === 'number') || nLocal === null) && ((local != null && local instanceof Array) || local === null) && ((typeof nStack === 'number') || nStack === null) && ((stack != null && stack instanceof Array) || stack === null)) {
+    if (
+      ((cw != null && cw instanceof Object && 'addType' in cw && 'addUninitializedType' in cw) ||
+        cw === null) &&
+      (typeof nLocal === 'number' || nLocal === null) &&
+      ((local != null && local instanceof Array) || local === null) &&
+      (typeof nStack === 'number' || nStack === null) &&
+      ((stack != null && stack instanceof Array) || stack === null)
+    ) {
       const __args = Array.prototype.slice.call(arguments)
       return <any>(() => {
         let i: number = Frame.convert(cw, nLocal, local, this.inputLocals)
-        while ((i < local.length)) {
+        while (i < local.length) {
           this.inputLocals[i++] = Frame.TOP_$LI$()
         }
         let nStackTop = 0
@@ -348,62 +407,77 @@ export class Frame {
         this.outputStackTop = 0
         this.initializationCount = 0
       })()
-    } else if (((typeof cw === 'number') || cw === null) && ((typeof nLocal === 'number') || nLocal === null) && local === undefined && nStack === undefined && stack === undefined) {
+    } else if (
+      (typeof cw === 'number' || cw === null) &&
+      (typeof nLocal === 'number' || nLocal === null) &&
+      local === undefined &&
+      nStack === undefined &&
+      stack === undefined
+    ) {
       return <any>this.set$int$int(cw, nLocal)
-    } else if (((cw != null && cw instanceof Frame) || cw === null) && nLocal === undefined && local === undefined && nStack === undefined && stack === undefined) {
+    } else if (
+      ((cw != null && cw instanceof Frame) || cw === null) &&
+      nLocal === undefined &&
+      local === undefined &&
+      nStack === undefined &&
+      stack === undefined
+    ) {
       return <any>this.set$Frame(cw)
-    } else { throw new Error('invalid overload') }
+    } else {
+      throw new Error('invalid overload')
+    }
   }
 
   /**
-     * Converts types from the MethodWriter.visitFrame() format to the Frame
-     * format.
-     *
-     * @param cw
-     * the ClassWriter to which this label belongs.
-     * @param nInput
-     * the number of types to convert.
-     * @param input
-     * the types to convert. Primitive types are represented by
-     * {@link Opcodes#TOP}, {@link Opcodes#INTEGER},
-     * {@link Opcodes#FLOAT}, {@link Opcodes#LONG},
-     * {@link Opcodes#DOUBLE},{@link Opcodes#NULL} or
-     * {@link Opcodes#UNINITIALIZED_THIS} (long and double are
-     * represented by a single element). Reference types are
-     * represented by String objects (representing internal names),
-     * and uninitialized types by Label objects (this label
-     * designates the NEW instruction that created this uninitialized
-     * value).
-     * @param output
-     * where to store the converted types.
-     * @return the number of output elements.
-     */
+   * Converts types from the MethodWriter.visitFrame() format to the Frame
+   * format.
+   *
+   * @param cw
+   * the ClassWriter to which this label belongs.
+   * @param nInput
+   * the number of types to convert.
+   * @param input
+   * the types to convert. Primitive types are represented by
+   * {@link Opcodes#TOP}, {@link Opcodes#INTEGER},
+   * {@link Opcodes#FLOAT}, {@link Opcodes#LONG},
+   * {@link Opcodes#DOUBLE},{@link Opcodes#NULL} or
+   * {@link Opcodes#UNINITIALIZED_THIS} (long and double are
+   * represented by a single element). Reference types are
+   * represented by String objects (representing internal names),
+   * and uninitialized types by Label objects (this label
+   * designates the NEW instruction that created this uninitialized
+   * value).
+   * @param output
+   * where to store the converted types.
+   * @return the number of output elements.
+   */
   private static convert(cw: ClassWriter, nInput: number, input: any[], output: number[]): number {
     let i = 0
     for (let j = 0; j < nInput; ++j) {
       if (typeof input[j] === 'number') {
-        output[i++] = Frame.BASE | /* intValue */((<number>input[j]) | 0)
+        output[i++] = Frame.BASE | /* intValue */ (<number>input[j] | 0)
         if (input[j] === Opcodes.LONG || input[j] === Opcodes.DOUBLE) {
           output[i++] = Frame.TOP_$LI$()
         }
       } else if (typeof input[j] === 'string') {
         output[i++] = Frame.type(cw, Type.getObjectType(<string>input[j]).getDescriptor())
       } else {
-        output[i++] = Frame.UNINITIALIZED_$LI$() | cw.addUninitializedType('', (<Label>input[j]).position)
+        output[i++] =
+          Frame.UNINITIALIZED_$LI$() | cw.addUninitializedType('', (<Label>input[j]).position)
       }
     }
     return i
   }
 
   /**
-     * Sets this frame to the value of the given frame. WARNING: after this
-     * method is called the two frames share the same data structures. It is
-     * recommended to discard the given frame f to avoid unexpected side
-     * effects.
-     *
-     * @param f
-     * The new frame value.
-     */
+   * Sets this frame to the value of the given frame. WARNING: after this
+   * method is called the two frames share the same data structures. It is
+   * recommended to discard the given frame f to avoid unexpected side
+   * effects.
+   *
+   * @param f
+   * The new frame value.
+   */
   set$Frame(f: Frame) {
     this.inputLocals = f.inputLocals
     this.inputStack = f.inputStack
@@ -415,12 +489,12 @@ export class Frame {
   }
 
   /**
-     * Returns the output frame local variable type at the given index.
-     *
-     * @param local
-     * the index of the local that must be returned.
-     * @return the output frame local variable type at the given index.
-     */
+   * Returns the output frame local variable type at the given index.
+   *
+   * @param local
+   * the index of the local that must be returned.
+   * @return the output frame local variable type at the given index.
+   */
   private get(local: number): number {
     if (this.outputLocals == null || local >= this.outputLocals.length) {
       return Frame.LOCAL | local
@@ -434,13 +508,13 @@ export class Frame {
   }
 
   /**
-     * Sets the output frame local variable type at the given index.
-     *
-     * @param local
-     * the index of the local that must be set.
-     * @param type
-     * the value of the local that must be set.
-     */
+   * Sets the output frame local variable type at the given index.
+   *
+   * @param local
+   * the index of the local that must be set.
+   * @param type
+   * the value of the local that must be set.
+   */
   private set$int$int(local: number, type: number) {
     if (this.outputLocals == null) {
       this.outputLocals = new Array(10)
@@ -458,11 +532,11 @@ export class Frame {
   }
 
   /**
-     * Pushes a new type onto the output frame stack.
-     *
-     * @param type
-     * the type that must be pushed.
-     */
+   * Pushes a new type onto the output frame stack.
+   *
+   * @param type
+   * the type that must be pushed.
+   */
   private push$int(type: number) {
     if (this.outputStack == null) {
       this.outputStack = new Array(10)
@@ -485,17 +559,17 @@ export class Frame {
   }
 
   /**
-     * Pushes a new type onto the output frame stack.
-     *
-     * @param cw
-     * the ClassWriter to which this label belongs.
-     * @param desc
-     * the descriptor of the type to be pushed. Can also be a method
-     * descriptor (in this case this method pushes its return type
-     * onto the output frame stack).
-     */
+   * Pushes a new type onto the output frame stack.
+   *
+   * @param cw
+   * the ClassWriter to which this label belongs.
+   * @param desc
+   * the descriptor of the type to be pushed. Can also be a method
+   * descriptor (in this case this method pushes its return type
+   * onto the output frame stack).
+   */
   public push(cw?: any, desc?: any): any {
-    if ((isClassWriter(cw) || cw === null) && ((typeof desc === 'string') || desc === null)) {
+    if ((isClassWriter(cw) || cw === null) && (typeof desc === 'string' || desc === null)) {
       const __args = Array.prototype.slice.call(arguments)
       return <any>(() => {
         const type: number = Frame.type(cw, desc)
@@ -506,24 +580,26 @@ export class Frame {
           }
         }
       })()
-    } else if (((typeof cw === 'number') || cw === null) && desc === undefined) {
+    } else if ((typeof cw === 'number' || cw === null) && desc === undefined) {
       return <any>this.push$int(cw)
-    } else { throw new Error('invalid overload') }
+    } else {
+      throw new Error('invalid overload')
+    }
   }
 
   /**
-     * Returns the int encoding of the given type.
-     *
-     * @param cw
-     * the ClassWriter to which this label belongs.
-     * @param desc
-     * a type descriptor.
-     * @return the int encoding of the given type.
-     */
+   * Returns the int encoding of the given type.
+   *
+   * @param cw
+   * the ClassWriter to which this label belongs.
+   * @param desc
+   * a type descriptor.
+   * @return the int encoding of the given type.
+   */
   private static type(cw: ClassWriter, desc: string): number {
     let t: string
     const index: number = desc.charAt(0) === '(' ? desc.indexOf(')') + 1 : 0
-    switch ((desc.charAt(index))) {
+    switch (desc.charAt(index)) {
       case 'V':
         return 0
       case 'Z':
@@ -544,10 +620,10 @@ export class Frame {
       default:
         let data: number
         let dims: number = index + 1
-        while ((desc.charAt(dims) === '[')) {
+        while (desc.charAt(dims) === '[') {
           ++dims
         }
-        switch ((desc.charAt(dims))) {
+        switch (desc.charAt(dims)) {
           case 'Z':
             data = Frame.BOOLEAN_$LI$()
             break
@@ -576,15 +652,15 @@ export class Frame {
             t = desc.substring(dims + 1, desc.length - 1)
             data = Frame.OBJECT_$LI$() | cw.addType(t)
         }
-        return (dims - index) << 28 | data
+        return ((dims - index) << 28) | data
     }
   }
 
   /**
-     * Pops a type from the output frame stack and returns its value.
-     *
-     * @return the type that has been popped from the output frame stack.
-     */
+   * Pops a type from the output frame stack and returns its value.
+   *
+   * @return the type that has been popped from the output frame stack.
+   */
   private pop$(): number {
     if (this.outputStackTop > 0) {
       return this.outputStack[--this.outputStackTop]
@@ -594,11 +670,11 @@ export class Frame {
   }
 
   /**
-     * Pops the given number of types from the output frame stack.
-     *
-     * @param elements
-     * the number of types that must be popped.
-     */
+   * Pops the given number of types from the output frame stack.
+   *
+   * @param elements
+   * the number of types that must be popped.
+   */
   private pop$int(elements: number) {
     if (this.outputStackTop >= elements) {
       this.outputStackTop -= elements
@@ -609,15 +685,15 @@ export class Frame {
   }
 
   /**
-     * Pops a type from the output frame stack.
-     *
-     * @param desc
-     * the descriptor of the type to be popped. Can also be a method
-     * descriptor (in this case this method pops the types
-     * corresponding to the method arguments).
-     */
+   * Pops a type from the output frame stack.
+   *
+   * @param desc
+   * the descriptor of the type to be popped. Can also be a method
+   * descriptor (in this case this method pops the types
+   * corresponding to the method arguments).
+   */
   public pop(desc?: string | number): any {
-    if (((typeof desc === 'string') || desc === null)) {
+    if (typeof desc === 'string' || desc === null) {
       const __args = Array.prototype.slice.call(arguments)
       return <any>(() => {
         const c: string = desc.charAt(0)
@@ -629,20 +705,22 @@ export class Frame {
           this.pop(1)
         }
       })()
-    } else if (((typeof desc === 'number') || desc === null)) {
+    } else if (typeof desc === 'number' || desc === null) {
       return this.pop$int(desc)
     } else if (desc === undefined) {
       return this.pop$()
-    } else { throw new Error('invalid overload') }
+    } else {
+      throw new Error('invalid overload')
+    }
   }
 
   /**
-     * Adds a new type to the list of types on which a constructor is invoked in
-     * the basic block.
-     *
-     * @param var
-     * a type on a which a constructor is invoked.
-     */
+   * Adds a new type to the list of types on which a constructor is invoked in
+   * the basic block.
+   *
+   * @param var
+   * a type on a which a constructor is invoked.
+   */
   private init$int(__var: number) {
     if (this.initializations == null) {
       this.initializations = new Array(2)
@@ -660,18 +738,18 @@ export class Frame {
   }
 
   /**
-     * Replaces the given type with the appropriate type if it is one of the
-     * types on which a constructor is invoked in the basic block.
-     *
-     * @param cw
-     * the ClassWriter to which this label belongs.
-     * @param t
-     * a type
-     * @return t or, if t is one of the types on which a constructor is invoked
-     * in the basic block, the type corresponding to this constructor.
-     */
+   * Replaces the given type with the appropriate type if it is one of the
+   * types on which a constructor is invoked in the basic block.
+   *
+   * @param cw
+   * the ClassWriter to which this label belongs.
+   * @param t
+   * a type
+   * @return t or, if t is one of the types on which a constructor is invoked
+   * in the basic block, the type corresponding to this constructor.
+   */
   public init(cw?: any, t?: any): any {
-    if ((isClassWriter(cw != null) || cw === null) && ((typeof t === 'number') || t === null)) {
+    if ((isClassWriter(cw != null) || cw === null) && (typeof t === 'number' || t === null)) {
       const __args = Array.prototype.slice.call(arguments)
       return (() => {
         let s: number
@@ -698,24 +776,26 @@ export class Frame {
         }
         return t
       })()
-    } else if (((typeof cw === 'number') || cw === null) && t === undefined) {
+    } else if ((typeof cw === 'number' || cw === null) && t === undefined) {
       return <any>this.init$int(cw)
-    } else { throw new Error('invalid overload') }
+    } else {
+      throw new Error('invalid overload')
+    }
   }
 
   /**
-     * Initializes the input frame of the first basic block from the method
-     * descriptor.
-     *
-     * @param cw
-     * the ClassWriter to which this label belongs.
-     * @param access
-     * the access flags of the method to which this label belongs.
-     * @param args
-     * the formal parameter types of this method.
-     * @param maxLocals
-     * the maximum number of local variables of this method.
-     */
+   * Initializes the input frame of the first basic block from the method
+   * descriptor.
+   *
+   * @param cw
+   * the ClassWriter to which this label belongs.
+   * @param access
+   * the access flags of the method to which this label belongs.
+   * @param args
+   * the formal parameter types of this method.
+   * @param maxLocals
+   * the maximum number of local variables of this method.
+   */
   initInputFrame(cw: ClassWriter, access: number, args: Type[], maxLocals: number) {
     this.inputLocals = new Array(maxLocals)
     this.inputStack = new Array(0)
@@ -734,29 +814,29 @@ export class Frame {
         this.inputLocals[i++] = Frame.TOP_$LI$()
       }
     }
-    while ((i < maxLocals)) {
+    while (i < maxLocals) {
       this.inputLocals[i++] = Frame.TOP_$LI$()
     }
   }
 
   /**
-     * Simulates the action of the given instruction on the output stack frame.
-     *
-     * @param opcode
-     * the opcode of the instruction.
-     * @param arg
-     * the operand of the instruction, if any.
-     * @param cw
-     * the class writer to which this label belongs.
-     * @param item
-     * the operand of the instructions, if any.
-     */
+   * Simulates the action of the given instruction on the output stack frame.
+   *
+   * @param opcode
+   * the opcode of the instruction.
+   * @param arg
+   * the operand of the instruction, if any.
+   * @param cw
+   * the class writer to which this label belongs.
+   * @param item
+   * the operand of the instructions, if any.
+   */
   execute(opcode: number, arg: number, cw: ClassWriter | null, item: Item | null) {
     let t1: number
     let t2: number
     let t3: number
     let t4: number
-    switch ((opcode)) {
+    switch (opcode) {
       case Opcodes.NOP:
       case Opcodes.INEG:
       case Opcodes.LNEG:
@@ -804,7 +884,7 @@ export class Frame {
       case Opcodes.LDC:
         assert(cw)
         assert(item)
-        switch ((item.type)) {
+        switch (item.type) {
           case ClassWriterConstant.INT:
             this.push(Frame.INTEGER_$LI$())
             break
@@ -1127,7 +1207,7 @@ export class Frame {
         break
       case Opcodes.NEWARRAY:
         this.pop()
-        switch ((arg)) {
+        switch (arg) {
           case Opcodes.T_BOOLEAN:
             this.push(Frame.ARRAY_OF | Frame.BOOLEAN_$LI$())
             break
@@ -1185,20 +1265,20 @@ export class Frame {
   }
 
   /**
-     * Merges the input frame of the given basic block with the input and output
-     * frames of this basic block. Returns <tt>true</tt> if the input frame of
-     * the given label has been changed by this operation.
-     *
-     * @param cw
-     * the ClassWriter to which this label belongs.
-     * @param frame
-     * the basic block whose input frame must be updated.
-     * @param edge
-     * the kind of the {@link Edge} between this label and 'label'.
-     * See {@link Edge#info}.
-     * @return <tt>true</tt> if the input frame of the given label has been
-     * changed by this operation.
-     */
+   * Merges the input frame of the given basic block with the input and output
+   * frames of this basic block. Returns <tt>true</tt> if the input frame of
+   * the given label has been changed by this operation.
+   *
+   * @param cw
+   * the ClassWriter to which this label belongs.
+   * @param frame
+   * the basic block whose input frame must be updated.
+   * @param edge
+   * the kind of the {@link Edge} between this label and 'label'.
+   * See {@link Edge#info}.
+   * @return <tt>true</tt> if the input frame of the given label has been
+   * changed by this operation.
+   */
   merge(cw: ClassWriter, frame: Frame, edge: number): boolean {
     let changed = false
     let i: number
@@ -1228,7 +1308,10 @@ export class Frame {
             } else {
               t = dim + this.inputStack[nStack - (s & Frame.VALUE)]
             }
-            if ((s & Frame.TOP_IF_LONG_OR_DOUBLE) !== 0 && (t === Frame.LONG_$LI$() || t === Frame.DOUBLE_$LI$())) {
+            if (
+              (s & Frame.TOP_IF_LONG_OR_DOUBLE) !== 0 &&
+              (t === Frame.LONG_$LI$() || t === Frame.DOUBLE_$LI$())
+            ) {
               t = Frame.TOP_$LI$()
             }
           }
@@ -1277,7 +1360,10 @@ export class Frame {
         } else {
           t = dim + this.inputStack[nStack - (s & Frame.VALUE)]
         }
-        if ((s & Frame.TOP_IF_LONG_OR_DOUBLE) !== 0 && (t === Frame.LONG_$LI$() || t === Frame.DOUBLE_$LI$())) {
+        if (
+          (s & Frame.TOP_IF_LONG_OR_DOUBLE) !== 0 &&
+          (t === Frame.LONG_$LI$() || t === Frame.DOUBLE_$LI$())
+        ) {
           t = Frame.TOP_$LI$()
         }
       }
@@ -1290,21 +1376,21 @@ export class Frame {
   }
 
   /**
-     * Merges the type at the given index in the given type array with the given
-     * type. Returns <tt>true</tt> if the type array has been modified by this
-     * operation.
-     *
-     * @param cw
-     * the ClassWriter to which this label belongs.
-     * @param t
-     * the type with which the type array element must be merged.
-     * @param types
-     * an array of types.
-     * @param index
-     * the index of the type that must be merged in 'types'.
-     * @return <tt>true</tt> if the type array has been modified by this
-     * operation.
-     */
+   * Merges the type at the given index in the given type array with the given
+   * type. Returns <tt>true</tt> if the type array has been modified by this
+   * operation.
+   *
+   * @param cw
+   * the ClassWriter to which this label belongs.
+   * @param t
+   * the type with which the type array element must be merged.
+   * @param types
+   * an array of types.
+   * @param index
+   * the index of the type that must be merged in 'types'.
+   * @return <tt>true</tt> if the type array has been modified by this
+   * operation.
+   */
   private static merge(cw: ClassWriter, t: number, types: number[], index: number): boolean {
     const u: number = types[index]
     if (u === t) {
@@ -1326,20 +1412,34 @@ export class Frame {
         return false
       } else if ((t & (Frame.DIM | Frame.BASE_KIND)) === (u & (Frame.DIM | Frame.BASE_KIND))) {
         if ((u & Frame.BASE_KIND) === Frame.OBJECT_$LI$()) {
-          v = (t & Frame.DIM) | Frame.OBJECT_$LI$() | cw.getMergedType(t & Frame.BASE_VALUE, u & Frame.BASE_VALUE)
+          v =
+            (t & Frame.DIM) |
+            Frame.OBJECT_$LI$() |
+            cw.getMergedType(t & Frame.BASE_VALUE, u & Frame.BASE_VALUE)
         } else {
           const vdim: number = Frame.ELEMENT_OF + (u & Frame.DIM)
           v = vdim | Frame.OBJECT_$LI$() | cw.addType('java/lang/Object')
         }
       } else if ((t & Frame.BASE_KIND) === Frame.OBJECT_$LI$() || (t & Frame.DIM) !== 0) {
-        const tdim: number = (((t & Frame.DIM) === 0 || (t & Frame.BASE_KIND) === Frame.OBJECT_$LI$()) ? 0 : Frame.ELEMENT_OF) + (t & Frame.DIM)
-        const udim: number = (((u & Frame.DIM) === 0 || (u & Frame.BASE_KIND) === Frame.OBJECT_$LI$()) ? 0 : Frame.ELEMENT_OF) + (u & Frame.DIM)
+        const tdim: number =
+          ((t & Frame.DIM) === 0 || (t & Frame.BASE_KIND) === Frame.OBJECT_$LI$()
+            ? 0
+            : Frame.ELEMENT_OF) +
+          (t & Frame.DIM)
+        const udim: number =
+          ((u & Frame.DIM) === 0 || (u & Frame.BASE_KIND) === Frame.OBJECT_$LI$()
+            ? 0
+            : Frame.ELEMENT_OF) +
+          (u & Frame.DIM)
         v = Math.min(tdim, udim) | Frame.OBJECT_$LI$() | cw.addType('java/lang/Object')
       } else {
         v = Frame.TOP_$LI$()
       }
     } else if (u === Frame.NULL_$LI$()) {
-      v = (t & Frame.BASE_KIND) === Frame.OBJECT_$LI$() || (t & Frame.DIM) !== 0 ? t : Frame.TOP_$LI$()
+      v =
+        (t & Frame.BASE_KIND) === Frame.OBJECT_$LI$() || (t & Frame.DIM) !== 0
+          ? t
+          : Frame.TOP_$LI$()
     } else {
       v = Frame.TOP_$LI$()
     }

@@ -4,23 +4,23 @@ import { Base } from './Base'
 
 export class Guild extends Base {
   /**
-     * guild id
-     */
+   * guild id
+   */
   id: string
   /**
-     * guild name (2-100 characters, excluding trailing and leading whitespace)
-     */
+   * guild name (2-100 characters, excluding trailing and leading whitespace)
+   */
   name: string
   icon_url: string | null
   /**
-     * guild member list
-     * (always an empty array)
-     * @deprecated
-     */
+   * guild member list
+   * (always an empty array)
+   * @deprecated
+   */
   members: User[] = [] // Always an empty array
   /**
-     * the vanity url code for the guild
-     */
+   * the vanity url code for the guild
+   */
   vanity_url_code: string | null
 
   constructor(client: Client, props: Record<string, any>) {

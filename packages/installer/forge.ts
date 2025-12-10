@@ -121,10 +121,10 @@ type RequiredVersion = {
  */
 export interface InstallForgeOptions
   extends
-  Omit<LibraryOptions, 'tracker'>,
-  InstallOptionsBase,
-  Omit<InstallProfileOption, 'tracker'>,
-  WithDiagnose {
+    Omit<LibraryOptions, 'tracker'>,
+    InstallOptionsBase,
+    Omit<InstallProfileOption, 'tracker'>,
+    WithDiagnose {
   side?: 'client' | 'server'
   /**
    * The tracker to track the install process
@@ -425,8 +425,25 @@ export function isForgeInstallerEntries(
  * @param zip THe forge instal
  * @param forgeVersion Forge version to install
  */
-export async function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: string): Promise<ForgeInstallerEntries> {
-  const [forgeJar, forgeUniversalJar, shimJar, clientLzma, serverLzma, installProfileJson, versionJson, legacyUniversalJar, runSh, runBat, unixArgs, userJvmArgs, winArgs] = await filterEntries(zip, [
+export async function walkForgeInstallerEntries(
+  zip: ZipFile,
+  forgeVersion: string,
+): Promise<ForgeInstallerEntries> {
+  const [
+    forgeJar,
+    forgeUniversalJar,
+    shimJar,
+    clientLzma,
+    serverLzma,
+    installProfileJson,
+    versionJson,
+    legacyUniversalJar,
+    runSh,
+    runBat,
+    unixArgs,
+    userJvmArgs,
+    winArgs,
+  ] = await filterEntries(zip, [
     `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`,
     `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`,
     `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-shim.jar`,

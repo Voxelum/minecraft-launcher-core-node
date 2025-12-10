@@ -21,11 +21,13 @@ export async function getFile(path: string, fileName = basename(path)) {
 
 export async function getFiles(dir: string) {
   const files = await readdir(dir)
-  const entries = await Promise.all(files.map(async (file) => {
-    if (shouldIgnoreFile(file)) return
-    if (file.endsWith('.txt')) return
-    const path = join(dir, file)
-    return getFile(path, file)
-  })).then(f => f.filter((v): v is File => !!v))
+  const entries = await Promise.all(
+    files.map(async (file) => {
+      if (shouldIgnoreFile(file)) return
+      if (file.endsWith('.txt')) return
+      const path = join(dir, file)
+      return getFile(path, file)
+    }),
+  ).then((f) => f.filter((v): v is File => !!v))
   return entries
 }

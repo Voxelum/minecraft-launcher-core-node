@@ -1,7 +1,13 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { describe, expect, test } from 'vitest'
-import { LegacyRegionSectionDataFrame, NewRegionSectionDataFrame, RegionReader, WorldReader, getIndexInChunk } from './index'
+import {
+  LegacyRegionSectionDataFrame,
+  NewRegionSectionDataFrame,
+  RegionReader,
+  WorldReader,
+  getIndexInChunk,
+} from './index'
 
 describe('WorldReader', () => {
   test('should load level of a simple map', async ({ mock }) => {
@@ -13,14 +19,10 @@ describe('WorldReader', () => {
   })
   describe('#create', () => {
     test('should load map from path', async ({ mock }) => {
-      await expect(WorldReader.create(`${mock}/saves/sample-map`))
-        .resolves
-        .toBeTruthy()
+      await expect(WorldReader.create(`${mock}/saves/sample-map`)).resolves.toBeTruthy()
     })
     test('should load map from zip', async ({ mock }) => {
-      await expect(WorldReader.create(`${mock}/saves/sample-map.zip`))
-        .resolves
-        .toBeTruthy()
+      await expect(WorldReader.create(`${mock}/saves/sample-map.zip`)).resolves.toBeTruthy()
     })
   })
   test('#getLevelData', async ({ mock }) => {
@@ -49,9 +51,19 @@ describe('WorldReader', () => {
       const region = await reader.getRegionData(0, 0)
       const section = region.Level.Sections[0] as LegacyRegionSectionDataFrame
       // the blocks is the string format of nbt data in the `Block` section
-      const blocks = readFileSync(join(mock, 'saves/1.12.2/block.txt')).toString().split(' ').map((s) => s.trim()).filter((s) => s.length !== 0).map((s) => Number.parseInt(s))
+      const blocks = readFileSync(join(mock, 'saves/1.12.2/block.txt'))
+        .toString()
+        .split(' ')
+        .map((s) => s.trim())
+        .filter((s) => s.length !== 0)
+        .map((s) => Number.parseInt(s))
       // the data is the string format of nbt data in `Data` section
-      const data = readFileSync(join(mock, 'saves/1.12.2/data.txt')).toString().split(' ').map((s) => s.trim()).filter((s) => s.length !== 0).map((s) => Number.parseInt(s))
+      const data = readFileSync(join(mock, 'saves/1.12.2/data.txt'))
+        .toString()
+        .split(' ')
+        .map((s) => s.trim())
+        .filter((s) => s.length !== 0)
+        .map((s) => Number.parseInt(s))
 
       // If they equal, then we correctly found the section
       expect(section.Blocks).toEqual(blocks)
@@ -62,8 +74,8 @@ describe('WorldReader', () => {
 
 describe('RegionReader', () => {
   /**
-     * Convert Minecraft BlockState toString() result to object format.
-     */
+   * Convert Minecraft BlockState toString() result to object format.
+   */
   function nameToBlockState(name: string) {
     const patt = /Block\{(.+)\}(\[(.+)\])?/g
     const mat = patt.exec(name)!
@@ -73,20 +85,28 @@ describe('RegionReader', () => {
     if (mat[2]!) {
       result.Properties = {}
       const s = mat[2].substring(1, mat[2]!.length - 1)!
-      s.split(',').map((s) => s.split('=')).forEach(([key, value]) => {
-        result.Properties[key] = value
-      })
+      s.split(',')
+        .map((s) => s.split('='))
+        .forEach(([key, value]) => {
+          result.Properties[key] = value
+        })
     }
     return result
   }
 
   function getMockData(mock: string, version: string) {
     const expected: Record<number, { name: string; id: number }> = {}
-    readFileSync(`${mock}/saves/${version}/mock.txt`).toString().split('\n').map((l) => l.split(' ')).forEach(([id, x, y, z, name]) => {
-      if (typeof x === 'undefined') { return }
-      const i = getIndexInChunk(Number.parseInt(x), Number.parseInt(y), Number.parseInt(z))
-      expected[i] = { name, id: Number.parseInt(id) }
-    })
+    readFileSync(`${mock}/saves/${version}/mock.txt`)
+      .toString()
+      .split('\n')
+      .map((l) => l.split(' '))
+      .forEach(([id, x, y, z, name]) => {
+        if (typeof x === 'undefined') {
+          return
+        }
+        const i = getIndexInChunk(Number.parseInt(x), Number.parseInt(y), Number.parseInt(z))
+        expected[i] = { name, id: Number.parseInt(id) }
+      })
     return expected
   }
 

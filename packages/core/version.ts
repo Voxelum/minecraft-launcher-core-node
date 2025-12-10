@@ -445,14 +445,17 @@ export namespace Version {
 
   /**
    * Parse the server version from the Minecraft folder.
-   * 
+   *
    * This is non-standard version json format, only contains server related information.
    *
    * @param minecraftPath The path of the Minecraft folder
    * @param version The version id
    * @returns The resolved server version
    */
-  export async function parseServer(minecraftPath: MinecraftLocation, version: string): Promise<ResolvedServerVersion> {
+  export async function parseServer(
+    minecraftPath: MinecraftLocation,
+    version: string,
+  ): Promise<ResolvedServerVersion> {
     const folder = MinecraftFolder.from(minecraftPath)
     const filePath = folder.getVersionServerJson(version)
     const content = await readFile(filePath, 'utf-8')
@@ -462,10 +465,10 @@ export namespace Version {
       minecraftVersion: profile.inheritsFrom || profile.id,
       mainClass: profile.mainClass,
       jar: profile.jar,
-      libraries: profile.libraries.map(l => Version.resolveLibrary(l)).filter(isNotNull),
+      libraries: profile.libraries.map((l) => Version.resolveLibrary(l)).filter(isNotNull),
       arguments: {
-        jvm: profile.arguments?.jvm || [] as any,
-        game: profile.arguments?.game || [] as any,
+        jvm: profile.arguments?.jvm || ([] as any),
+        game: profile.arguments?.game || ([] as any),
       },
     }
   }

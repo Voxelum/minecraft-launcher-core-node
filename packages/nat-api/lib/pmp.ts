@@ -53,7 +53,10 @@ export interface PmpMapOptions {
 export class PmpClient extends EventEmitter {
   private _promise: Promise<void> = Promise.resolve()
 
-  constructor(readonly gateway: string, readonly socket: dgram.Socket) {
+  constructor(
+    readonly gateway: string,
+    readonly socket: dgram.Socket,
+  ) {
     super()
   }
 
@@ -120,7 +123,7 @@ export class PmpClient extends EventEmitter {
         }
 
         if (obj.ttl === undefined) obj.ttl = 7200
-        ttl = +(obj.ttl)
+        ttl = +obj.ttl
         if (ttl !== (ttl | 0)) {
           // The RECOMMENDED Port Mapping Lifetime is 7200 seconds (two hours)
           ttl = 7200
@@ -198,7 +201,7 @@ export class PmpClient extends EventEmitter {
               parsed.private = msg.readUInt16BE(8)
               parsed.public = msg.readUInt16BE(10)
               parsed.ttl = msg.readUInt32BE(12)
-              parsed.type = (op === OP_MAP_UDP) ? 'udp' : 'tcp'
+              parsed.type = op === OP_MAP_UDP ? 'udp' : 'tcp'
               resolve({ ...parsed, resultCode, resultMessage, epoch })
               break
             case OP_EXTERNAL_IP:

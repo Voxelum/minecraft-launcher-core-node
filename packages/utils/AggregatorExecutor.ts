@@ -8,7 +8,8 @@ export class AggregateExecutor<T, A = T> {
   constructor(
     private aggregator: Aggregator<T, A>,
     private _flush: (value: A) => void,
-    timeout: number) {
+    timeout: number,
+  ) {
     this.commit = throttle(() => {
       const aggregated = aggregator(this.queue)
       this.queue = []

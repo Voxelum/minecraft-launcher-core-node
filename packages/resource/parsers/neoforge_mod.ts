@@ -4,7 +4,7 @@ import { ResourceDomain } from '../ResourceDomain'
 import { ResourceType } from '../ResourceType'
 import type { IResourceParser } from './index'
 
-export const neoforgeModParser: IResourceParser<NeoforgeMetadata> = ({
+export const neoforgeModParser: IResourceParser<NeoforgeMetadata> = {
   type: ResourceType.Neoforge,
   domain: ResourceDomain.Mods,
   ext: '.jar',
@@ -31,9 +31,9 @@ export const neoforgeModParser: IResourceParser<NeoforgeMetadata> = ({
     }
     return name
   },
-  getUri: meta => {
+  getUri: (meta) => {
     const urls: string[] = []
     urls.push(`neoforge:${meta.modid}:${meta.version}`)
     return urls
   },
-})
+}

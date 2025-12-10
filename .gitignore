@@ -70,9 +70,10 @@ jspm_packages/
 .next
 
 packages/**/*.js
-packages/**/*.d.ts
-packages/**/*.js.map
-packages/**/package-lock.json
+**/*.d.ts
+**/*.d.ts.map
+**/*.js.map
+**/package-lock.json
 
 /temp
 

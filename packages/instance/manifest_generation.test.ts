@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { shouldBeExcluded, createDefaultFileFilter, generateInstanceServerManifest } from './manifest_generation'
+import {
+  shouldBeExcluded,
+  createDefaultFileFilter,
+  generateInstanceServerManifest,
+} from './manifest_generation'
 import { Stats } from 'fs-extra'
 import { mkdtemp, writeFile, ensureDir, rm } from 'fs-extra'
 import { join } from 'path'
@@ -7,7 +11,7 @@ import os from 'os'
 
 const logger = {
   log: () => {},
-  warn: () => {}
+  warn: () => {},
 }
 
 describe('manifest_generation', () => {
@@ -52,7 +56,7 @@ describe('manifest_generation', () => {
 
       const files = await generateInstanceServerManifest({ path: tmp }, logger as any)
 
-      const paths = files.map(f => f.path).sort()
+      const paths = files.map((f) => f.path).sort()
       expect(paths).toContain('server.properties')
       expect(paths).toContain('level.dat')
       expect(paths).not.toContain('versions/v.txt')

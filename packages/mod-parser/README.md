@@ -50,7 +50,6 @@ await readForgeModToml(fs, metadata /* it will fill mods into this param & retur
 await readForgeModAsm(fs, metadata, { manifest });
 ```
 
-
 Read the forge mod config file (.cfg)
 
 ```ts

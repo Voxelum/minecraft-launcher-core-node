@@ -6,7 +6,12 @@ import { openFileSystem } from '@xmcl/system'
 
 describe('Forge', () => {
   test('should identify the package usage', async ({ mock }) => {
-    const { usedForgePackage, usedLegacyFMLPackage, usedMinecraftClientPackage, usedMinecraftPackage } = await readForgeMod(`${mock}/mods/sample-mod.jar`)
+    const {
+      usedForgePackage,
+      usedLegacyFMLPackage,
+      usedMinecraftClientPackage,
+      usedMinecraftPackage,
+    } = await readForgeMod(`${mock}/mods/sample-mod.jar`)
     expect(usedForgePackage).toBeFalsy()
     expect(usedLegacyFMLPackage).toBeTruthy()
     expect(usedMinecraftClientPackage).toBeFalsy()
@@ -16,12 +21,50 @@ describe('Forge', () => {
   test('should not crash if the toml does not have the dependencies', async ({ mock }) => {
     const metadata = await readForgeModToml(`${mock}/mods/sample-mod-1.13-no-deps.jar`)
     // eslint-disable-next-line no-template-curly-in-string
-    expect(metadata).toEqual([{ authors: 'mezz', credits: '', dependencies: [], description: 'JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n', displayName: 'Just Enough Items', displayURL: 'https://minecraft.curseforge.com/projects/jei', issueTrackerURL: 'https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue', loaderVersion: '[14,)', logoFile: '', modLoader: 'javafml', modid: 'jei', provides: [], updateJSONURL: '', version: '${file.jarVersion}', clientSideOnly: false }])
+    expect(metadata).toEqual([
+      {
+        authors: 'mezz',
+        credits: '',
+        dependencies: [],
+        description:
+          'JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n',
+        displayName: 'Just Enough Items',
+        displayURL: 'https://minecraft.curseforge.com/projects/jei',
+        issueTrackerURL: 'https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue',
+        loaderVersion: '[14,)',
+        logoFile: '',
+        modLoader: 'javafml',
+        modid: 'jei',
+        provides: [],
+        updateJSONURL: '',
+        version: '${file.jarVersion}',
+        clientSideOnly: false,
+      },
+    ])
   })
 
   test('should read if the mod is client side only', async ({ mock }) => {
     const metadata = await readForgeModToml(`${mock}/mods/sample-mod-1.13-no-deps-client-only.jar`)
-    expect(metadata).toEqual([{ authors: 'mezz', credits: '', dependencies: [], description: 'JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n', displayName: 'Just Enough Items', displayURL: 'https://minecraft.curseforge.com/projects/jei', issueTrackerURL: 'https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue', loaderVersion: '[14,)', logoFile: '', modLoader: 'javafml', modid: 'jei', provides: [], updateJSONURL: '', version: '${file.jarVersion}', clientSideOnly: true }])
+    expect(metadata).toEqual([
+      {
+        authors: 'mezz',
+        credits: '',
+        dependencies: [],
+        description:
+          'JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n',
+        displayName: 'Just Enough Items',
+        displayURL: 'https://minecraft.curseforge.com/projects/jei',
+        issueTrackerURL: 'https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue',
+        loaderVersion: '[14,)',
+        logoFile: '',
+        modLoader: 'javafml',
+        modid: 'jei',
+        provides: [],
+        updateJSONURL: '',
+        version: '${file.jarVersion}',
+        clientSideOnly: true,
+      },
+    ])
   })
 
   test('should read >1.13 forge mod jar', async ({ mock }) => {
@@ -60,8 +103,17 @@ describe('Forge', () => {
         {
           authors: 'mezz',
           credits: '',
-          dependencies: [{ mandatory: true, modId: 'forge', ordering: 'NONE', side: 'BOTH', versionRange: '[28.1.0,)' }],
-          description: 'JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n',
+          dependencies: [
+            {
+              mandatory: true,
+              modId: 'forge',
+              ordering: 'NONE',
+              side: 'BOTH',
+              versionRange: '[28.1.0,)',
+            },
+          ],
+          description:
+            'JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.\n',
           displayName: 'Just Enough Items',
           displayURL: 'https://minecraft.curseforge.com/projects/jei',
           logoFile: '',
@@ -84,14 +136,18 @@ describe('Forge', () => {
 
   test('should read mcmod.info in jar', async ({ mock }) => {
     const { mcmodInfo } = await readForgeMod(`${mock}/mods/sample-mod.jar`)
-    expect(mcmodInfo.some((m) =>
-      m.modid === 'soundfilters' &&
-      m.name === 'Sound Filters' &&
-      m.description === 'Adds reveb to caves, as well as muted sounds underwater/in lava, and behind walls.' &&
-      m.version === '0.8_for_1,8' &&
-      m.mcversion === '1.8' &&
-      m.credits === 'Made by Tmtravlr.',
-    )).toBeTruthy()
+    expect(
+      mcmodInfo.some(
+        (m) =>
+          m.modid === 'soundfilters' &&
+          m.name === 'Sound Filters' &&
+          m.description ===
+            'Adds reveb to caves, as well as muted sounds underwater/in lava, and behind walls.' &&
+          m.version === '0.8_for_1,8' &&
+          m.mcversion === '1.8' &&
+          m.credits === 'Made by Tmtravlr.',
+      ),
+    ).toBeTruthy()
   })
 
   test('should read ccc mod plugin in jar', async ({ mock }) => {
@@ -124,7 +180,23 @@ describe('Forge', () => {
         'Manifest-Version': '1.0',
       },
       mcmodInfo: [],
-      modAnnotations: [{ acceptableRemoteVersions: '', acceptableSaveVersions: '', acceptedMinecraftVersions: '', clientSideOnly: false, dependencies: '', modLanguage: 'java', modLanguageAdapter: '', modid: 'mousedelayfix', name: 'MouseDelayFix', serverSideOnly: false, useMetadata: false, value: '', version: '1.0' }],
+      modAnnotations: [
+        {
+          acceptableRemoteVersions: '',
+          acceptableSaveVersions: '',
+          acceptedMinecraftVersions: '',
+          clientSideOnly: false,
+          dependencies: '',
+          modLanguage: 'java',
+          modLanguageAdapter: '',
+          modid: 'mousedelayfix',
+          name: 'MouseDelayFix',
+          serverSideOnly: false,
+          useMetadata: false,
+          value: '',
+          version: '1.0',
+        },
+      ],
       modsToml: [],
       usedForgePackage: true,
       usedLegacyFMLPackage: false,
@@ -135,8 +207,9 @@ describe('Forge', () => {
 
   test('should read @Mod in jar', async ({ mock }) => {
     const { modAnnotations } = await readForgeMod(`${mock}/mods/sample-mod.jar`)
-    expect(modAnnotations.some((m) => m.modid === 'NuclearCraft' && m.version === '1.9e'))
-      .toBeTruthy()
+    expect(
+      modAnnotations.some((m) => m.modid === 'NuclearCraft' && m.version === '1.9e'),
+    ).toBeTruthy()
   })
 
   test('should not close if the fs is the input', async ({ mock }) => {
@@ -147,19 +220,22 @@ describe('Forge', () => {
 
   test('should detect optifine from class in jar', async ({ mock }) => {
     const { modAnnotations } = await readForgeMod(`${mock}/mods/sample-mod.jar`)
-    expect(modAnnotations.some((m) =>
-      m.modid === 'OptiFine' &&
-      m.name === 'OptiFine' &&
-      m.description === 'OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.' &&
-      m.version === 'HD_U_C5' &&
-      m.mcversion === '1.12.1' &&
-      m.url === 'https://optifine.net',
-    )).toBeTruthy()
+    expect(
+      modAnnotations.some(
+        (m) =>
+          m.modid === 'OptiFine' &&
+          m.name === 'OptiFine' &&
+          m.description ===
+            'OptiFine is a Minecraft optimization mod. It allows Minecraft to run faster and look better with full support for HD textures and many configuration options.' &&
+          m.version === 'HD_U_C5' &&
+          m.mcversion === '1.12.1' &&
+          m.url === 'https://optifine.net',
+      ),
+    ).toBeTruthy()
   })
 
   test('should not read the fabric mod', async ({ mock }) => {
-    await expect(readForgeMod(path.join(mock, 'mods', 'fabric-sample-2.jar'))).rejects
-      .toBeTruthy()
+    await expect(readForgeMod(path.join(mock, 'mods', 'fabric-sample-2.jar'))).rejects.toBeTruthy()
   })
 
   describe('Config', () => {
@@ -199,7 +275,9 @@ describe('Forge', () => {
     })
     test('forge config property parsing', () => {
       expect(config.tweaks.properties[0].name).toEqual('replaceInGameConfig')
-      expect(config.tweaks.properties[0].comment).toEqual('Replace the FML test config GUI with a working GUI.')
+      expect(config.tweaks.properties[0].comment).toEqual(
+        'Replace the FML test config GUI with a working GUI.',
+      )
       expect(config.tweaks.properties[0].type).toEqual('B')
     })
     test('forge config multiple properties parsing', () => {
@@ -214,8 +292,17 @@ describe('Forge', () => {
     })
     test('should stringify the config', () => {
       const string = ForgeConfig.stringify(config)
-      expect(string.split('\n').map((l) => l.trim()).filter((l) => l.length !== 0))
-        .toEqual(cfg1.split('\n').map((l) => l.trim()).filter((l) => l.length !== 0))
+      expect(
+        string
+          .split('\n')
+          .map((l) => l.trim())
+          .filter((l) => l.length !== 0),
+      ).toEqual(
+        cfg1
+          .split('\n')
+          .map((l) => l.trim())
+          .filter((l) => l.length !== 0),
+      )
     })
   })
 })

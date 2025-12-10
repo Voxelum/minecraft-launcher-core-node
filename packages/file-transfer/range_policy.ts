@@ -1,4 +1,4 @@
-import { RangeRunningWatch } from "./download"
+import type { RangeRunningWatch } from './download'
 
 export interface Range {
   start: number
@@ -13,8 +13,12 @@ export interface RangePolicy {
   divideRange(position: number, end: number): number | undefined
 }
 
-export function isRangePolicy(rangeOptions?: RangePolicy | DefaultRangePolicyOptions): rangeOptions is RangePolicy {
-  if (!rangeOptions) { return false }
+export function isRangePolicy(
+  rangeOptions?: RangePolicy | DefaultRangePolicyOptions,
+): rangeOptions is RangePolicy {
+  if (!rangeOptions) {
+    return false
+  }
   return 'computeRanges' in rangeOptions && typeof rangeOptions.computeRanges === 'function'
 }
 
@@ -22,7 +26,12 @@ export function resolveRangePolicy(rangeOptions?: RangePolicy | DefaultRangePoli
   if (isRangePolicy(rangeOptions)) {
     return rangeOptions
   }
-  return new DefaultRangePolicy(rangeOptions?.rangeThreshold ?? 1024 * 1024, 4, 1024 * 10, 1024 * 1024)
+  return new DefaultRangePolicy(
+    rangeOptions?.rangeThreshold ?? 1024 * 1024,
+    4,
+    1024 * 10,
+    1024 * 1024,
+  )
 }
 
 export interface DefaultRangePolicyOptions {
@@ -39,7 +48,7 @@ export class DefaultRangePolicy implements RangePolicy {
     readonly concurrency: number,
     readonly minSpeedThreshold: number,
     readonly minDivideSize: number,
-  ) { }
+  ) {}
 
   shouldDivide(watch: RangeRunningWatch): boolean {
     return watch.avgSpeed < this.minSpeedThreshold
@@ -47,7 +56,7 @@ export class DefaultRangePolicy implements RangePolicy {
 
   divideRange(position: number, end: number): number | undefined {
     const remaining = end - position + 1
-    if (remaining > (this.minDivideSize * 2)) {
+    if (remaining > this.minDivideSize * 2) {
       return Math.floor((end - position) / 2) + position
     }
     return undefined

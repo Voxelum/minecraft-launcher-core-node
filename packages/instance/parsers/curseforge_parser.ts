@@ -46,7 +46,9 @@ export interface CurseforgeInstance {
 /**
  * Parse Curseforge instance configuration
  */
-export async function parseCurseforgeInstance(instancePath: string): Promise<CreateInstanceOptions> {
+export async function parseCurseforgeInstance(
+  instancePath: string,
+): Promise<CreateInstanceOptions> {
   const data = await readFile(join(instancePath, 'minecraftinstance.json'), 'utf-8')
   const cf = JSON.parse(data) as CurseforgeInstance
 

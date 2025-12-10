@@ -41,462 +41,461 @@
  * @author Eugene Kuleshov
  */
 export enum Opcodes {
+  ASM4 = (4 << 16) | (0 << 8) | 0,
 
-   ASM4 = 4 << 16 | 0 << 8 | 0,
+  ASM5 = (5 << 16) | (0 << 8) | 0,
 
-   ASM5 = 5 << 16 | 0 << 8 | 0,
+  V1_1 = (3 << 16) | 45,
 
-   V1_1 = 3 << 16 | 45,
+  V1_2 = (0 << 16) | 46,
 
-   V1_2 = 0 << 16 | 46,
+  V1_3 = (0 << 16) | 47,
 
-   V1_3 = 0 << 16 | 47,
+  V1_4 = (0 << 16) | 48,
 
-   V1_4 = 0 << 16 | 48,
+  V1_5 = (0 << 16) | 49,
 
-   V1_5 = 0 << 16 | 49,
+  V1_6 = (0 << 16) | 50,
 
-   V1_6 = 0 << 16 | 50,
+  V1_7 = (0 << 16) | 51,
 
-   V1_7 = 0 << 16 | 51,
+  V1_8 = (0 << 16) | 52,
 
-   V1_8 = 0 << 16 | 52,
+  ACC_PUBLIC = 1,
 
-   ACC_PUBLIC = 1,
+  ACC_PRIVATE = 2,
 
-   ACC_PRIVATE = 2,
+  ACC_PROTECTED = 4,
 
-   ACC_PROTECTED = 4,
+  ACC_STATIC = 8,
 
-   ACC_STATIC = 8,
+  ACC_FINAL = 16,
 
-   ACC_FINAL = 16,
+  ACC_SUPER = 32,
 
-   ACC_SUPER = 32,
+  ACC_SYNCHRONIZED = 32,
 
-   ACC_SYNCHRONIZED = 32,
+  ACC_VOLATILE = 64,
 
-   ACC_VOLATILE = 64,
+  ACC_BRIDGE = 64,
 
-   ACC_BRIDGE = 64,
+  ACC_VARARGS = 128,
 
-   ACC_VARARGS = 128,
+  ACC_TRANSIENT = 128,
 
-   ACC_TRANSIENT = 128,
+  ACC_NATIVE = 256,
 
-   ACC_NATIVE = 256,
+  ACC_INTERFACE = 512,
 
-   ACC_INTERFACE = 512,
+  ACC_ABSTRACT = 1024,
 
-   ACC_ABSTRACT = 1024,
+  ACC_STRICT = 2048,
 
-   ACC_STRICT = 2048,
+  ACC_SYNTHETIC = 4096,
 
-   ACC_SYNTHETIC = 4096,
+  ACC_ANNOTATION = 8192,
 
-   ACC_ANNOTATION = 8192,
+  ACC_ENUM = 16384,
 
-   ACC_ENUM = 16384,
+  ACC_MANDATED = 32768,
 
-   ACC_MANDATED = 32768,
+  ACC_DEPRECATED = 131072,
 
-   ACC_DEPRECATED = 131072,
+  T_BOOLEAN = 4,
 
-   T_BOOLEAN = 4,
+  T_CHAR = 5,
 
-   T_CHAR = 5,
+  T_FLOAT = 6,
 
-   T_FLOAT = 6,
+  T_DOUBLE = 7,
 
-   T_DOUBLE = 7,
+  T_BYTE = 8,
 
-   T_BYTE = 8,
+  T_SHORT = 9,
 
-   T_SHORT = 9,
+  T_INT = 10,
 
-   T_INT = 10,
+  T_LONG = 11,
 
-   T_LONG = 11,
+  H_GETFIELD = 1,
 
-   H_GETFIELD = 1,
+  H_GETSTATIC = 2,
 
-   H_GETSTATIC = 2,
+  H_PUTFIELD = 3,
 
-   H_PUTFIELD = 3,
+  H_PUTSTATIC = 4,
 
-   H_PUTSTATIC = 4,
+  H_INVOKEVIRTUAL = 5,
 
-   H_INVOKEVIRTUAL = 5,
+  H_INVOKESTATIC = 6,
 
-   H_INVOKESTATIC = 6,
+  H_INVOKESPECIAL = 7,
 
-   H_INVOKESPECIAL = 7,
+  H_NEWINVOKESPECIAL = 8,
 
-   H_NEWINVOKESPECIAL = 8,
-
-   H_INVOKEINTERFACE = 9,
-
-  /**
-     * Represents an expanded frame. See {@link ClassReader#EXPAND_FRAMES}.
-     */
-   F_NEW = -1,
+  H_INVOKEINTERFACE = 9,
 
   /**
-     * Represents a compressed frame with compe frame data.,
-     */
-   F_FULL = 0,
+   * Represents an expanded frame. See {@link ClassReader#EXPAND_FRAMES}.
+   */
+  F_NEW = -1,
 
   /**
-     * Represents a compressed frame where locals are the same as the locals in
-     * the previous frame, except that additional 1-3 locals are defined, and
-     * with an empty stack.
-     */
-   F_APPEND = 1,
+   * Represents a compressed frame with compe frame data.,
+   */
+  F_FULL = 0,
 
   /**
-     * Represents a compressed frame where locals are the same as the locals in
-     * the previous frame, except that the last 1-3 locals are absent and with
-     * an empty stack.
-     */
-   F_CHOP = 2,
+   * Represents a compressed frame where locals are the same as the locals in
+   * the previous frame, except that additional 1-3 locals are defined, and
+   * with an empty stack.
+   */
+  F_APPEND = 1,
 
   /**
-     * Represents a compressed frame with exactly the same locals as the
-     * previous frame and with an empty stack.
-     */
-   F_SAME = 3,
+   * Represents a compressed frame where locals are the same as the locals in
+   * the previous frame, except that the last 1-3 locals are absent and with
+   * an empty stack.
+   */
+  F_CHOP = 2,
 
   /**
-     * Represents a compressed frame with exactly the same locals as the
-     * previous frame and with a single value on the stack.
-     */
-   F_SAME1 = 4,
+   * Represents a compressed frame with exactly the same locals as the
+   * previous frame and with an empty stack.
+   */
+  F_SAME = 3,
 
-   TOP = 0,
+  /**
+   * Represents a compressed frame with exactly the same locals as the
+   * previous frame and with a single value on the stack.
+   */
+  F_SAME1 = 4,
 
-   INTEGER = 1,
+  TOP = 0,
 
-   FLOAT = 2,
+  INTEGER = 1,
 
-   DOUBLE = 3,
+  FLOAT = 2,
 
-   LONG = 4,
+  DOUBLE = 3,
 
-   NULL = 5,
+  LONG = 4,
 
-   UNINITIALIZED_THIS = 6,
+  NULL = 5,
 
-   NOP = 0,
+  UNINITIALIZED_THIS = 6,
 
-   ACONST_NULL = 1,
+  NOP = 0,
 
-   ICONST_M1 = 2,
+  ACONST_NULL = 1,
 
-   ICONST_0 = 3,
+  ICONST_M1 = 2,
 
-   ICONST_1 = 4,
+  ICONST_0 = 3,
 
-   ICONST_2 = 5,
+  ICONST_1 = 4,
 
-   ICONST_3 = 6,
+  ICONST_2 = 5,
 
-   ICONST_4 = 7,
+  ICONST_3 = 6,
 
-   ICONST_5 = 8,
+  ICONST_4 = 7,
 
-   LCONST_0 = 9,
+  ICONST_5 = 8,
 
-   LCONST_1 = 10,
+  LCONST_0 = 9,
 
-   FCONST_0 = 11,
+  LCONST_1 = 10,
 
-   FCONST_1 = 12,
+  FCONST_0 = 11,
 
-   FCONST_2 = 13,
+  FCONST_1 = 12,
 
-   DCONST_0 = 14,
+  FCONST_2 = 13,
 
-   DCONST_1 = 15,
+  DCONST_0 = 14,
 
-   BIPUSH = 16,
+  DCONST_1 = 15,
 
-   SIPUSH = 17,
+  BIPUSH = 16,
 
-   LDC = 18,
+  SIPUSH = 17,
 
-   ILOAD = 21,
+  LDC = 18,
 
-   LLOAD = 22,
+  ILOAD = 21,
 
-   FLOAD = 23,
+  LLOAD = 22,
 
-   DLOAD = 24,
+  FLOAD = 23,
 
-   ALOAD = 25,
+  DLOAD = 24,
 
-   IALOAD = 46,
+  ALOAD = 25,
 
-   LALOAD = 47,
+  IALOAD = 46,
 
-   FALOAD = 48,
+  LALOAD = 47,
 
-   DALOAD = 49,
+  FALOAD = 48,
 
-   AALOAD = 50,
+  DALOAD = 49,
 
-   BALOAD = 51,
+  AALOAD = 50,
 
-   CALOAD = 52,
+  BALOAD = 51,
 
-   SALOAD = 53,
+  CALOAD = 52,
 
-   ISTORE = 54,
+  SALOAD = 53,
 
-   LSTORE = 55,
+  ISTORE = 54,
 
-   FSTORE = 56,
+  LSTORE = 55,
 
-   DSTORE = 57,
+  FSTORE = 56,
 
-   ASTORE = 58,
+  DSTORE = 57,
 
-   IASTORE = 79,
+  ASTORE = 58,
 
-   LASTORE = 80,
+  IASTORE = 79,
 
-   FASTORE = 81,
+  LASTORE = 80,
 
-   DASTORE = 82,
+  FASTORE = 81,
 
-   AASTORE = 83,
+  DASTORE = 82,
 
-   BASTORE = 84,
+  AASTORE = 83,
 
-   CASTORE = 85,
+  BASTORE = 84,
 
-   SASTORE = 86,
+  CASTORE = 85,
 
-   POP = 87,
+  SASTORE = 86,
 
-   POP2 = 88,
+  POP = 87,
 
-   DUP = 89,
+  POP2 = 88,
 
-   DUP_X1 = 90,
+  DUP = 89,
 
-   DUP_X2 = 91,
+  DUP_X1 = 90,
 
-   DUP2 = 92,
+  DUP_X2 = 91,
 
-   DUP2_X1 = 93,
+  DUP2 = 92,
 
-   DUP2_X2 = 94,
+  DUP2_X1 = 93,
 
-   SWAP = 95,
+  DUP2_X2 = 94,
 
-   IADD = 96,
+  SWAP = 95,
 
-   LADD = 97,
+  IADD = 96,
 
-   FADD = 98,
+  LADD = 97,
 
-   DADD = 99,
+  FADD = 98,
 
-   ISUB = 100,
+  DADD = 99,
 
-   LSUB = 101,
+  ISUB = 100,
 
-   FSUB = 102,
+  LSUB = 101,
 
-   DSUB = 103,
+  FSUB = 102,
 
-   IMUL = 104,
+  DSUB = 103,
 
-   LMUL = 105,
+  IMUL = 104,
 
-   FMUL = 106,
+  LMUL = 105,
 
-   DMUL = 107,
+  FMUL = 106,
 
-   IDIV = 108,
+  DMUL = 107,
 
-   LDIV = 109,
+  IDIV = 108,
 
-   FDIV = 110,
+  LDIV = 109,
 
-   DDIV = 111,
+  FDIV = 110,
 
-   IREM = 112,
+  DDIV = 111,
 
-   LREM = 113,
+  IREM = 112,
 
-   FREM = 114,
+  LREM = 113,
 
-   DREM = 115,
+  FREM = 114,
 
-   INEG = 116,
+  DREM = 115,
 
-   LNEG = 117,
+  INEG = 116,
 
-   FNEG = 118,
+  LNEG = 117,
 
-   DNEG = 119,
+  FNEG = 118,
 
-   ISHL = 120,
+  DNEG = 119,
 
-   LSHL = 121,
+  ISHL = 120,
 
-   ISHR = 122,
+  LSHL = 121,
 
-   LSHR = 123,
+  ISHR = 122,
 
-   IUSHR = 124,
+  LSHR = 123,
 
-   LUSHR = 125,
+  IUSHR = 124,
 
-   IAND = 126,
+  LUSHR = 125,
 
-   LAND = 127,
+  IAND = 126,
 
-   IOR = 128,
+  LAND = 127,
 
-   LOR = 129,
+  IOR = 128,
 
-   IXOR = 130,
+  LOR = 129,
 
-   LXOR = 131,
+  IXOR = 130,
 
-   IINC = 132,
+  LXOR = 131,
 
-   I2L = 133,
+  IINC = 132,
 
-   I2F = 134,
+  I2L = 133,
 
-   I2D = 135,
+  I2F = 134,
 
-   L2I = 136,
+  I2D = 135,
 
-   L2F = 137,
+  L2I = 136,
 
-   L2D = 138,
+  L2F = 137,
 
-   F2I = 139,
+  L2D = 138,
 
-   F2L = 140,
+  F2I = 139,
 
-   F2D = 141,
+  F2L = 140,
 
-   D2I = 142,
+  F2D = 141,
 
-   D2L = 143,
+  D2I = 142,
 
-   D2F = 144,
+  D2L = 143,
 
-   I2B = 145,
+  D2F = 144,
 
-   I2C = 146,
+  I2B = 145,
 
-   I2S = 147,
+  I2C = 146,
 
-   LCMP = 148,
+  I2S = 147,
 
-   FCMPL = 149,
+  LCMP = 148,
 
-   FCMPG = 150,
+  FCMPL = 149,
 
-   DCMPL = 151,
+  FCMPG = 150,
 
-   DCMPG = 152,
+  DCMPL = 151,
 
-   IFEQ = 153,
+  DCMPG = 152,
 
-   IFNE = 154,
+  IFEQ = 153,
 
-   IFLT = 155,
+  IFNE = 154,
 
-   IFGE = 156,
+  IFLT = 155,
 
-   IFGT = 157,
+  IFGE = 156,
 
-   IFLE = 158,
+  IFGT = 157,
 
-   IF_ICMPEQ = 159,
+  IFLE = 158,
 
-   IF_ICMPNE = 160,
+  IF_ICMPEQ = 159,
 
-   IF_ICMPLT = 161,
+  IF_ICMPNE = 160,
 
-   IF_ICMPGE = 162,
+  IF_ICMPLT = 161,
 
-   IF_ICMPGT = 163,
+  IF_ICMPGE = 162,
 
-   IF_ICMPLE = 164,
+  IF_ICMPGT = 163,
 
-   IF_ACMPEQ = 165,
+  IF_ICMPLE = 164,
 
-   IF_ACMPNE = 166,
+  IF_ACMPEQ = 165,
 
-   GOTO = 167,
+  IF_ACMPNE = 166,
 
-   JSR = 168,
+  GOTO = 167,
 
-   RET = 169,
+  JSR = 168,
 
-   TABLESWITCH = 170,
+  RET = 169,
 
-   LOOKUPSWITCH = 171,
+  TABLESWITCH = 170,
 
-   IRETURN = 172,
+  LOOKUPSWITCH = 171,
 
-   LRETURN = 173,
+  IRETURN = 172,
 
-   FRETURN = 174,
+  LRETURN = 173,
 
-   DRETURN = 175,
+  FRETURN = 174,
 
-   ARETURN = 176,
+  DRETURN = 175,
 
-   RETURN = 177,
+  ARETURN = 176,
 
-   GETSTATIC = 178,
+  RETURN = 177,
 
-   PUTSTATIC = 179,
+  GETSTATIC = 178,
 
-   GETFIELD = 180,
+  PUTSTATIC = 179,
 
-   PUTFIELD = 181,
+  GETFIELD = 180,
 
-   INVOKEVIRTUAL = 182,
+  PUTFIELD = 181,
 
-   INVOKESPECIAL = 183,
+  INVOKEVIRTUAL = 182,
 
-   INVOKESTATIC = 184,
+  INVOKESPECIAL = 183,
 
-   INVOKEINTERFACE = 185,
+  INVOKESTATIC = 184,
 
-   INVOKEDYNAMIC = 186,
+  INVOKEINTERFACE = 185,
 
-   NEW = 187,
+  INVOKEDYNAMIC = 186,
 
-   NEWARRAY = 188,
+  NEW = 187,
 
-   ANEWARRAY = 189,
+  NEWARRAY = 188,
 
-   ARRAYLENGTH = 190,
+  ANEWARRAY = 189,
 
-   ATHROW = 191,
+  ARRAYLENGTH = 190,
 
-   CHECKCAST = 192,
+  ATHROW = 191,
 
-   INSTANCEOF = 193,
+  CHECKCAST = 192,
 
-   MONITORENTER = 194,
+  INSTANCEOF = 193,
 
-   MONITOREXIT = 195,
+  MONITORENTER = 194,
 
-   MULTIANEWARRAY = 197,
+  MONITOREXIT = 195,
 
-   IFNULL = 198,
+  MULTIANEWARRAY = 197,
 
-   IFNONNULL = 199,
+  IFNULL = 198,
+
+  IFNONNULL = 199,
 }

@@ -1,10 +1,11 @@
 {
-    "name": "@xmcl/oxlint-config",
-    "private": true,
-    "version": "0.0.1",
-    "type": "module",
-    "description": "The xmcl commonly used oxlint config for typescript",
-    "dependencies": {
-        "oxlint": "^0.15.5"
-    }
+  "name": "@xmcl/oxlint-config",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "The xmcl commonly used oxlint config for typescript",
+  "dependencies": {
+    "oxlint": "^1.32.0",
+    "oxlint-tsgolint": "^0.8.5"
+  }
 }

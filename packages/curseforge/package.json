@@ -43,6 +43,7 @@
   "homepage": "https://github.com/Voxelum/minecraft-launcher-core-node#readme",
   "devDependencies": {
     "esbuild": "^0.17.16",
-    "undici-shim": "workspace:^*"
+    "undici-shim": "workspace:^*",
+    "vitest": "^4.0.15"
   }
 }

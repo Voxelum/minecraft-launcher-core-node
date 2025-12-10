@@ -14,25 +14,26 @@ describe('MicrosoftAuthenticator', () => {
   describe('#authenticateXboxLive', () => {
     it('should be able to authenticate ', async () => {
       const pool = agent.get('https://user.auth.xboxlive.com')
-      pool.intercept({
-        method: 'POST',
-        path: '/user/authenticate',
-        body: JSON.stringify({
-          Properties: {
-            AuthMethod: 'RPS',
-            SiteName: 'user.auth.xboxlive.com',
-            RpsTicket: 'd=ci010',
+      pool
+        .intercept({
+          method: 'POST',
+          path: '/user/authenticate',
+          body: JSON.stringify({
+            Properties: {
+              AuthMethod: 'RPS',
+              SiteName: 'user.auth.xboxlive.com',
+              RpsTicket: 'd=ci010',
+            },
+            RelyingParty: 'http://auth.xboxlive.com',
+            TokenType: 'JWT',
+          }),
+          headers: {
+            'Content-Type': 'application/json',
           },
-          RelyingParty: 'http://auth.xboxlive.com',
-          TokenType: 'JWT',
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).reply(200, { hello: 'good' })
+        })
+        .reply(200, { hello: 'good' })
       const client = new MicrosoftAuthenticator({ fetch })
-      await expect(client.authenticateXboxLive('ci010'))
-        .resolves.toEqual({ hello: 'good' })
+      await expect(client.authenticateXboxLive('ci010')).resolves.toEqual({ hello: 'good' })
     })
   })
 
@@ -42,7 +43,8 @@ describe('MicrosoftAuthenticator', () => {
     const relyingParty = 'rp://api.minecraftservices.com/'
     const expectedToken = 'some-xsts-token'
 
-    agent.get('https://xsts.auth.xboxlive.com')
+    agent
+      .get('https://xsts.auth.xboxlive.com')
       .intercept({
         method: 'POST',
         path: '/xsts/authorize',

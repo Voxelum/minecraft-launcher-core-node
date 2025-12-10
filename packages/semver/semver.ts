@@ -88,7 +88,11 @@ export class FabricSemanticVersion {
       }
     }
 
-    if (storeX && components.length === 1 && components[0] === FabricSemanticVersion.COMPONENT_WILDCARD) {
+    if (
+      storeX &&
+      components.length === 1 &&
+      components[0] === FabricSemanticVersion.COMPONENT_WILDCARD
+    ) {
       throw new Error("Versions of form 'x' or 'X' not allowed!")
     }
 
@@ -130,7 +134,8 @@ export class FabricSemanticVersion {
     if (pos < 0) {
       throw new Error('Tried to access negative version number component!')
     } else if (pos >= this.components.length) {
-      return this.components[this.components.length - 1] === FabricSemanticVersion.COMPONENT_WILDCARD
+      return this.components[this.components.length - 1] ===
+        FabricSemanticVersion.COMPONENT_WILDCARD
         ? FabricSemanticVersion.COMPONENT_WILDCARD
         : 0
     } else {
@@ -191,11 +196,18 @@ export class FabricSemanticVersion {
 
     const o = other as FabricSemanticVersion
 
-    for (let i = 0; i < Math.max(this.getVersionComponentCount(), o.getVersionComponentCount()); i++) {
+    for (
+      let i = 0;
+      i < Math.max(this.getVersionComponentCount(), o.getVersionComponentCount());
+      i++
+    ) {
       const first = this.getVersionComponent(i)
       const second = o.getVersionComponent(i)
 
-      if (first === FabricSemanticVersion.COMPONENT_WILDCARD || second === FabricSemanticVersion.COMPONENT_WILDCARD) {
+      if (
+        first === FabricSemanticVersion.COMPONENT_WILDCARD ||
+        second === FabricSemanticVersion.COMPONENT_WILDCARD
+      ) {
         continue
       }
 

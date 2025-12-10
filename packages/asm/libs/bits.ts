@@ -19,13 +19,13 @@ const int16 = new Int16Array(4)
 const int64 = new Int32Array(int16.buffer, 0, 2)
 const float64 = new Float64Array(int16.buffer, 0, 1)
 
-export function longBitsToDouble (bits: bigint): number {
-  int64[0] = Number(bits >> 32n & 0xffffffffn)
+export function longBitsToDouble(bits: bigint): number {
+  int64[0] = Number((bits >> 32n) & 0xffffffffn)
   int64[1] = Number(bits & 0xffffffffn)
   return float64[0]
 }
 
-export function doubleToLongBits (double: number): bigint {
+export function doubleToLongBits(double: number): bigint {
   float64[0] = double
-  return BigInt(int64[1]) << 32n & BigInt(int64[0])
+  return (BigInt(int64[1]) << 32n) & BigInt(int64[0])
 }

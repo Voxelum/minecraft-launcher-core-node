@@ -4,7 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./",
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
   },
   "include": [
     "index.ts",
@@ -19,10 +19,7 @@
     "ResourceType.ts",
     "ResourceWorkerQueuePayload.ts",
     "schema.ts",
-    "index.browser.ts"
+    "index.browser.ts",
   ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist"],
 }

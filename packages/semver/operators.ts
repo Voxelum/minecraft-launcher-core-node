@@ -26,36 +26,50 @@ export enum VersionComparisonOperator {
 }
 
 const operatorFunctions = {
-  [VersionComparisonOperator.GREATER_EQUAL]: (a: SemanticVersion, b: SemanticVersion) => a.compareTo(b) >= 0,
-  [VersionComparisonOperator.LESS_EQUAL]: (a: SemanticVersion, b: SemanticVersion) => a.compareTo(b) <= 0,
-  [VersionComparisonOperator.GREATER]: (a: SemanticVersion, b: SemanticVersion) => a.compareTo(b) > 0,
+  [VersionComparisonOperator.GREATER_EQUAL]: (a: SemanticVersion, b: SemanticVersion) =>
+    a.compareTo(b) >= 0,
+  [VersionComparisonOperator.LESS_EQUAL]: (a: SemanticVersion, b: SemanticVersion) =>
+    a.compareTo(b) <= 0,
+  [VersionComparisonOperator.GREATER]: (a: SemanticVersion, b: SemanticVersion) =>
+    a.compareTo(b) > 0,
   [VersionComparisonOperator.LESS]: (a: SemanticVersion, b: SemanticVersion) => a.compareTo(b) < 0,
-  [VersionComparisonOperator.EQUAL]: (a: SemanticVersion, b: SemanticVersion) => a.compareTo(b) === 0,
+  [VersionComparisonOperator.EQUAL]: (a: SemanticVersion, b: SemanticVersion) =>
+    a.compareTo(b) === 0,
   [VersionComparisonOperator.SAME_TO_NEXT_MINOR]: (a: SemanticVersion, b: SemanticVersion) =>
-      a.compareTo(b) >= 0 &&
-      a.getVersionComponent(0) === b.getVersionComponent(0) &&
-      a.getVersionComponent(1) === b.getVersionComponent(1),
+    a.compareTo(b) >= 0 &&
+    a.getVersionComponent(0) === b.getVersionComponent(0) &&
+    a.getVersionComponent(1) === b.getVersionComponent(1),
   [VersionComparisonOperator.SAME_TO_NEXT_MAJOR]: (a: SemanticVersion, b: SemanticVersion) =>
-      a.compareTo(b) >= 0 && a.getVersionComponent(0) === b.getVersionComponent(0),
+    a.compareTo(b) >= 0 && a.getVersionComponent(0) === b.getVersionComponent(0),
 }
 
 const operatorMinMax = {
   [VersionComparisonOperator.SAME_TO_NEXT_MINOR]: (version: SemanticVersion) => ({
-      min: version,
-      max: { getVersionComponent: (i: number) => (i === 1 ? version.getVersionComponent(1) + 1 : version.getVersionComponent(i)) },
+    min: version,
+    max: {
+      getVersionComponent: (i: number) =>
+        i === 1 ? version.getVersionComponent(1) + 1 : version.getVersionComponent(i),
+    },
   }),
   [VersionComparisonOperator.SAME_TO_NEXT_MAJOR]: (version: SemanticVersion) => ({
-      min: version,
-      max: { getVersionComponent: (i: number) => (i === 0 ? version.getVersionComponent(0) + 1 : version.getVersionComponent(i)) },
+    min: version,
+    max: {
+      getVersionComponent: (i: number) =>
+        i === 0 ? version.getVersionComponent(0) + 1 : version.getVersionComponent(i),
+    },
   }),
   default: (version: SemanticVersion) => ({ min: version, max: version }),
 }
 
-export function testVersion(operator: VersionComparisonOperator, a: SemanticVersion, b: SemanticVersion): boolean {
+export function testVersion(
+  operator: VersionComparisonOperator,
+  a: SemanticVersion,
+  b: SemanticVersion,
+): boolean {
   if (isSemanticVersion(a) && isSemanticVersion(b)) {
-      return operatorFunctions[operator](a, b)
+    return operatorFunctions[operator](a, b)
   } else {
-      return a.getFriendlyString() === b.getFriendlyString()
+    return a.getFriendlyString() === b.getFriendlyString()
   }
 }
 

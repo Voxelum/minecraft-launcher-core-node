@@ -5,34 +5,34 @@ export interface File {
   /**
    * The path of the resource file
    */
-  path: string;
+  path: string
   /**
    * The original file name when this resource is imported with extension.
    */
-  fileName: string;
+  fileName: string
   /**
    * The size of the resource
    * @default 0
    */
-  size: number;
+  size: number
   /**
    * The last modified time of the resource
    */
-  mtime: number;
+  mtime: number
   /**
    * The access time of the resource
    */
-  atime: number;
+  atime: number
   /**
    * The create time of the resource
    */
-  ctime: number;
+  ctime: number
   /**
    * The ino of the file
    */
-  ino: number;
+  ino: number
   /**
    * Is this file a directory
    */
-  isDirectory: boolean;
+  isDirectory: boolean
 }

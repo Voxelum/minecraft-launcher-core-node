@@ -8,7 +8,6 @@
 
 Port the fabric special [sementic version algorithm](https://github.com/FabricMC/fabric-loader/tree/master/src/main/java/net/fabricmc/loader/impl/util/version) to typescript.
 
-
 ```ts
 import { parseVersionRange, FabricSemanticVersion } from "@xmcl/semver";
 
@@ -20,5 +19,3 @@ const semver = parseSemanticVersion(versionString);
 
 const isVersionInRange = versionRange.test(semver); // is version in this version range
 ```
-
-

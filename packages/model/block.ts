@@ -24,7 +24,10 @@ export interface TextureManager {
 }
 
 export class BasicTextureManager implements TextureManager {
-  constructor(private textures: Record<string, TextureData> = {}, private loader = new TextureLoader()) {}
+  constructor(
+    private textures: Record<string, TextureData> = {},
+    private loader = new TextureLoader(),
+  ) {}
 
   hasTexture(path: string): boolean {
     return !!this.textures[path]
@@ -108,9 +111,17 @@ export class BlockModelObject extends Object3D {
       const scale = options.scale
 
       // apply transformations
-      group.rotation.set(rot[0] * Math.PI / 180, rot[1] * Math.PI / 180, rot[2] * Math.PI / 180)
+      group.rotation.set(
+        (rot[0] * Math.PI) / 180,
+        (rot[1] * Math.PI) / 180,
+        (rot[2] * Math.PI) / 180,
+      )
       group.position.set(pos[0], pos[1], pos[2])
-      group.scale.set(scale[0] === 0 ? 0.00001 : scale[0], scale[1] === 0 ? 0.00001 : scale[1], scale[2] === 0 ? 0.00001 : scale[2])
+      group.scale.set(
+        scale[0] === 0 ? 0.00001 : scale[0],
+        scale[1] === 0 ? 0.00001 : scale[1],
+        scale[2] === 0 ? 0.00001 : scale[2],
+      )
     }
   }
 
@@ -160,16 +171,27 @@ export class BlockModelObject extends Object3D {
 }
 
 export class BlockModelFactory {
-  static TRANSPARENT_MATERIAL = new MeshBasicMaterial({ transparent: true, opacity: 0, alphaTest: 0.5 })
+  static TRANSPARENT_MATERIAL = new MeshBasicMaterial({
+    transparent: true,
+    opacity: 0,
+    alphaTest: 0.5,
+  })
 
   private cachedMaterial: Record<string, Material> = {}
 
-  constructor(readonly textureManager: TextureManager, readonly option: { clipUVs?: boolean; modelOnly?: boolean } = {}) { }
+  constructor(
+    readonly textureManager: TextureManager,
+    readonly option: { clipUVs?: boolean; modelOnly?: boolean } = {},
+  ) {}
 
   /**
-     * Get threejs `Object3D` for that block model.
-     */
-  getObject(model: BlockModel.Resolved, options:{ uvlock?: boolean; y?: number; x?: number } = {}, fix = 0.001) {
+   * Get threejs `Object3D` for that block model.
+   */
+  getObject(
+    model: BlockModel.Resolved,
+    options: { uvlock?: boolean; y?: number; x?: number } = {},
+    fix = 0.001,
+  ) {
     const xRotation = options.x || 0
     const yRotation = options.y || 0
     const uvlock = options.uvlock || false
@@ -247,50 +269,51 @@ export class BlockModelFactory {
 
       const faces = ['east', 'west', 'up', 'down', 'south', 'north'] as const
 
-      const getDefaultUv = (i: number) => [
+      const getDefaultUv = (i: number) =>
         [
-          // east
-          element.from[2],
-          element.from[1],
-          element.to[2],
-          element.to[1],
-        ],
-        [
-          // west
-          element.from[2],
-          element.from[1],
-          element.to[2],
-          element.to[1],
-        ],
-        [
-          // up
-          element.from[0],
-          element.from[2],
-          element.to[0],
-          element.to[2],
-        ],
-        [
-          // down
-          element.from[0],
-          element.from[2],
-          element.to[0],
-          element.to[2],
-        ],
-        [
-          // south
-          element.from[0],
-          element.from[1],
-          element.to[0],
-          element.to[1],
-        ],
-        [
-          // north
-          element.from[0],
-          element.from[1],
-          element.to[0],
-          element.to[1],
-        ],
-      ][i]
+          [
+            // east
+            element.from[2],
+            element.from[1],
+            element.to[2],
+            element.to[1],
+          ],
+          [
+            // west
+            element.from[2],
+            element.from[1],
+            element.to[2],
+            element.to[1],
+          ],
+          [
+            // up
+            element.from[0],
+            element.from[2],
+            element.to[0],
+            element.to[2],
+          ],
+          [
+            // down
+            element.from[0],
+            element.from[2],
+            element.to[0],
+            element.to[2],
+          ],
+          [
+            // south
+            element.from[0],
+            element.from[1],
+            element.to[0],
+            element.to[1],
+          ],
+          [
+            // north
+            element.from[0],
+            element.from[1],
+            element.to[0],
+            element.to[1],
+          ],
+        ][i]
 
       for (let i = 0; i < 6; i++) {
         const faceName = faces[i]
@@ -332,7 +355,9 @@ export class BlockModelFactory {
           let amount = Number(face.rotation)
           // check property
           if (!([0, 90, 180, 270].indexOf(amount) >= 0)) {
-            console.error('The "rotation" property for "' + face + '" face is invalid (got "' + amount + '").')
+            console.error(
+              'The "rotation" property for "' + face + '" face is invalid (got "' + amount + '").',
+            )
           }
 
           amount = (360 - amount) % 360
@@ -375,21 +400,15 @@ export class BlockModelFactory {
           }
         }
 
-        uvAttr.push(
-          map[0].x, map[0].y,
-          map[1].x, map[1].y,
-          map[2].x, map[2].y,
-          map[3].x, map[3].y,
-        )
+        uvAttr.push(map[0].x, map[0].y, map[1].x, map[1].y, map[2].x, map[2].y, map[3].x, map[3].y)
         blockGeometry.addGroup(i * 6, 6, materialIndex)
         // blockGeometry.uvsNeedUpdate = true;
       }
-      blockGeometry.setAttribute('uv', new BufferAttribute(
-        new Float32Array(uvAttr), 2))
+      blockGeometry.setAttribute('uv', new BufferAttribute(new Float32Array(uvAttr), 2))
 
       /**
-             * bake rotation start
-             */
+       * bake rotation start
+       */
       if (element.rotation) {
         // get origin, axis and angle
         const rotationOrigin = {
@@ -417,11 +436,11 @@ export class BlockModelFactory {
 
         // rotate pivot
         if (axis === 'x') {
-          pivot.rotateX(angle * Math.PI / 180)
+          pivot.rotateX((angle * Math.PI) / 180)
         } else if (axis === 'y') {
-          pivot.rotateY(angle * Math.PI / 180)
+          pivot.rotateY((angle * Math.PI) / 180)
         } else if (axis === 'z') {
-          pivot.rotateZ(angle * Math.PI / 180)
+          pivot.rotateZ((angle * Math.PI) / 180)
         }
 
         const rescale = element.rotation.rescale || false
@@ -451,8 +470,8 @@ export class BlockModelFactory {
       }
     }
 
-    obj.rotateY(-yRotation * Math.PI / 180)
-    obj.rotateX(-xRotation * Math.PI / 180)
+    obj.rotateY((-yRotation * Math.PI) / 180)
+    obj.rotateX((-xRotation * Math.PI) / 180)
 
     obj.add(group)
 

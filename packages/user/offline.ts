@@ -17,7 +17,7 @@ export { getOfflineUUID }
  * @param username The username you want to have in-game.
  */
 export function offline(username: string, uuid?: string) {
-  const id = (uuid || getOfflineUUID(username))
+  const id = uuid || getOfflineUUID(username)
   const prof = {
     id,
     name: username,

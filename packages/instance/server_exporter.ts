@@ -1,10 +1,10 @@
-import { ServerOptions, generateArgumentsServer } from '@xmcl/core';
-import { copy, writeFile } from 'fs-extra';
-import { delimiter, join, relative } from 'path';
+import { ServerOptions, generateArgumentsServer } from '@xmcl/core'
+import { copy, writeFile } from 'fs-extra'
+import { delimiter, join, relative } from 'path'
 
 /**
  * The abstract layer to export instance as a runnable server.
- * 
+ *
  * This will emit the .sh and .bat files to start the server with all dependencies/mods needed.
  */
 export abstract class ServerExporter {
@@ -16,35 +16,36 @@ export abstract class ServerExporter {
   abstract emitFile(path: string, content: string): void
   abstract end(): Promise<void>
 
-  onProgress: (chunk: number, progress: number, total: number) => void = () => { }
+  onProgress: (chunk: number, progress: number, total: number) => void = () => {}
 
   /**
-   * 
+   *
    * @param minecraftPath The root folder of the Minecraft installation
    * @param context The context to resolve server version and generate server options
    */
-  constructor(protected minecraftPath: string) { }
+  constructor(protected minecraftPath: string) {}
 
-  async exportInstance(
-    serverDir: string,
-    options: ServerOptions,
-    files: string[]
-  ): Promise<void> {
+  async exportInstance(serverDir: string, options: ServerOptions, files: string[]): Promise<void> {
     const ops = { ...options }
     ops.javaPath = 'java' // force use system java
 
     if (ops.extraJVMArgs) {
-      const paths = ops.extraJVMArgs.find((_, i, arr) => arr[i - 1] === '-p')?.split(delimiter) || []
+      const paths =
+        ops.extraJVMArgs.find((_, i, arr) => arr[i - 1] === '-p')?.split(delimiter) || []
       for (const p of paths) {
         this.copyFile(join(this.minecraftPath, p), p)
       }
-      const legacyCp = ops.extraJVMArgs.find((v) => v.startsWith('-DlegacyClassPath'))?.split('=')[1]?.split(delimiter) || []
+      const legacyCp =
+        ops.extraJVMArgs
+          .find((v) => v.startsWith('-DlegacyClassPath'))
+          ?.split('=')[1]
+          ?.split(delimiter) || []
       for (const p of legacyCp) {
         this.copyFile(join(this.minecraftPath, p), p)
       }
     }
 
-    ops.classPath = ops.classPath?.map(cp => relative(serverDir, cp)) // force to use relative path
+    ops.classPath = ops.classPath?.map((cp) => relative(serverDir, cp)) // force to use relative path
 
     for (const lib of ops.classPath || []) {
       this.copyFile(join(serverDir, lib), lib)
@@ -80,7 +81,10 @@ export abstract class ServerExporter {
 export class ServerFSExporter extends ServerExporter {
   #promises: Promise<void>[] = []
 
-  constructor(dataRoot: string, protected outputFolder: string) {
+  constructor(
+    dataRoot: string,
+    protected outputFolder: string,
+  ) {
     super(dataRoot)
   }
 

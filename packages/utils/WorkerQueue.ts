@@ -1,4 +1,3 @@
-
 export interface WorkerRetryOptions<T> {
   retryCount?: number
   shouldRetry?: (e: Error) => boolean
@@ -31,7 +30,7 @@ export class WorkerQueue<T> {
     this.merge = options.merge || this.merge
   }
 
-  onerror = (job: T, e: Error) => { }
+  onerror = (job: T, e: Error) => {}
 
   async workIfIdle() {
     if (this.disposed) return
