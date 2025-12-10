@@ -212,9 +212,8 @@ export abstract class BaseTask<T> implements Task<T> {
   map<N>(transform: Transform<this, N>): Task<N extends Promise<infer R> ? R : N> {
     const copy = Object.create(this)
     const wait = copy.wait
-    copy.wait = function (this: typeof copy) {
-      // @ts-expect-error
-      return wait.bind(this)().then((r) => transform.bind(this)(r))
+    copy.wait = function (this: any) {
+      return wait.bind(this)().then((r: any) => (transform.bind(this) as any)(r))
     }
     return copy
   }
