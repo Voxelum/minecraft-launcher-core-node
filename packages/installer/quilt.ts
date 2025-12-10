@@ -1,6 +1,6 @@
 import { MinecraftFolder, MinecraftLocation, Version } from '@xmcl/core'
 import { writeFile } from 'fs/promises'
-import { FetchOptions, doFetch, ensureFile } from './utils'
+import { FetchOptions, InstallOptions, doFetch, ensureFile } from './utils'
 import { FabricArtifactVersion, FabricLoaderArtifact } from './fabric'
 
 export const DEFAULT_META_URL_QUILT = 'https://meta.quiltmc.org'
@@ -40,7 +40,7 @@ export async function getQuiltLoaderVersionsByMinecraft(options: GetQuiltOptions
   return content
 }
 
-export interface InstallQuiltVersionOptions extends FetchOptions {
+export interface InstallQuiltVersionOptions extends FetchOptions, InstallOptions {
   minecraftVersion: string
   version: string
   minecraft: MinecraftLocation
@@ -59,13 +59,17 @@ export async function installQuiltVersion(options: InstallQuiltVersionOptions) {
   const content: Version = await response.json() as any
 
   const minecraft = MinecraftFolder.from(options.minecraft)
-  const versionName = `${options.minecraftVersion}-quilt${options.version}`
-  content.id = versionName
+  if (options.inheritsFrom) {
+    content.inheritsFrom = options.inheritsFrom
+    content.id = options.versionId || `${options.inheritsFrom}-quilt${options.version}`
+  } else {
+    content.id = options.versionId || `${options.minecraftVersion}-quilt${options.version}`
+  }
 
-  const jsonPath = side === 'client' ? minecraft.getVersionJson(versionName) : minecraft.getVersionServerJson(versionName)
+  const jsonPath = side === 'client' ? minecraft.getVersionJson(content.id) : minecraft.getVersionServerJson(content.id)
 
   await ensureFile(jsonPath)
   await writeFile(jsonPath, JSON.stringify(content))
 
-  return versionName
+  return content.id
 }

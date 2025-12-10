@@ -125,7 +125,11 @@ class JsonTask extends AbortableTask<string> {
         },
       },
     })
-    versionJson.id = `LabyMod-4-${this.tag}-${this.manifest.commitReference}`
+    versionJson.id = `${this.tag}-LabyMod-4-${this.manifest.commitReference}`
+
+    if (!versionJson.inheritFrom) {
+      versionJson.inheritFrom = versionJson._minecraftVersion || this.tag
+    }
 
     // write json to file
     const versionPath = this.folder.getPath('versions', versionJson.id, `${versionJson.id}.json`)
