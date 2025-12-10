@@ -324,6 +324,43 @@ export function installByProfileTask(installProfile: InstallProfile, minecraft: 
         await parseJar(minecraftFolder, jar, installProfile, serverProfile)
       }
 
+      const neoForgeVersion = serverProfile.arguments?.game.find((v, i, arr) => arr[i - 1] === '--fml.neoForgeVersion')
+      if (neoForgeVersion) {
+        serverProfile.libraries.push({
+          name: `net.neoforged:neoforge:${neoForgeVersion}:universal`,
+        }, {
+          name: `net.neoforged:neoforge:${neoForgeVersion}:server`,
+        })
+      }
+      const neoFormVersion = serverProfile.arguments?.game.find((v, i, arr) => arr[i - 1] === '--fml.neoFormVersion')
+      if (neoFormVersion) {
+        serverProfile.libraries.push({
+          name: `net.minecraft:server:${installProfile.minecraft}-${neoFormVersion}:extra`,
+        }, {
+          name: `net.minecraft:server:${installProfile.minecraft}-${neoFormVersion}:srg`,
+        })
+      }
+
+      const forgeShim = serverProfile.libraries.find(l => l.name.startsWith('net.minecraftforge:forge') && l.name.endsWith(':shim'))
+      if (forgeShim) {
+        let zip: ZipFile | undefined
+        try {
+          zip = await open(minecraftFolder.getLibraryByPath(LibraryInfo.resolve(forgeShim.name).path))
+          for await (const entry of walkEntriesGenerator(zip)) {
+            if (entry.fileName === 'bootstrap-shim.list') {
+              const content = await readEntry(zip, entry).then(e => e.toString().split('\n').map(v => v.trim()).filter(v => v).map(l => {
+                const [sha1, name, path] = l.split('\t')
+                return { name }
+              }))
+              serverProfile.libraries.push(...content)
+              break
+            }
+          }
+        } finally {
+          zip?.close()
+        }
+      }
+
       if (!serverProfile.mainClass) {
         throw new PostProcessNoMainClassError(jar!)
       }
