@@ -129,7 +129,7 @@ export async function installFabricByLoaderArtifact(loader: FabricLoaderArtifact
   return version.id
 }
 
-export interface InstallFabricVersionOptions extends FetchOptions, InstallOptions {
+export interface InstallFabricVersionOptions extends FetchOptions {
   minecraftVersion: string
   version: string
   minecraft: MinecraftLocation
@@ -147,17 +147,13 @@ export async function installFabric(options: InstallFabricVersionOptions) {
   const content: Version = await response.json() as any
 
   const minecraft = MinecraftFolder.from(options.minecraft)
-  if (options.inheritsFrom) {
-    content.inheritsFrom = options.inheritsFrom
-    content.id = options.versionId || `${options.inheritsFrom}-fabric${options.version}`
-  } else {
-    content.id = options.versionId || `${options.minecraftVersion}-fabric${options.version}`
-  }
+  const versionName = `${options.minecraftVersion}-fabric${options.version}`
+  content.id = versionName
 
-  const jsonPath = side === 'client' ? minecraft.getVersionJson(content.id) : minecraft.getVersionServerJson(content.id)
+  const jsonPath = side === 'client' ? minecraft.getVersionJson(versionName) : minecraft.getVersionServerJson(versionName)
 
   await ensureFile(jsonPath)
   await writeFile(jsonPath, JSON.stringify(content))
 
-  return content.id
+  return versionName
 }
