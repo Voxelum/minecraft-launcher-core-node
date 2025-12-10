@@ -88,6 +88,10 @@ export interface ForgeInstallerEntries {
    */
   legacyUniversalJar?: Entry
   /**
+   * forge-${forgeVersion}-shim.jar
+   */
+  shimJar?: Entry
+  /**
    * data/run.sh
    */
   runSh?: Entry
@@ -436,9 +440,10 @@ export function isForgeInstallerEntries(entries: ForgeInstallerEntries): entries
  * @param forgeVersion Forge version to install
  */
 export async function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: string): Promise<ForgeInstallerEntries> {
-  const [forgeJar, forgeUniversalJar, clientLzma, serverLzma, installProfileJson, versionJson, legacyUniversalJar, runSh, runBat, unixArgs, userJvmArgs, winArgs] = await filterEntries(zip, [
+  const [forgeJar, forgeUniversalJar, shimJar, clientLzma, serverLzma, installProfileJson, versionJson, legacyUniversalJar, runSh, runBat, unixArgs, userJvmArgs, winArgs] = await filterEntries(zip, [
     `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}.jar`,
     `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-universal.jar`,
+    `maven/net/minecraftforge/forge/${forgeVersion}/forge-${forgeVersion}-shim.jar`,
     'data/client.lzma',
     'data/server.lzma',
     'install_profile.json',
@@ -453,6 +458,7 @@ export async function walkForgeInstallerEntries(zip: ZipFile, forgeVersion: stri
   return {
     forgeJar,
     forgeUniversalJar,
+    shimJar,
     clientLzma,
     serverLzma,
     installProfileJson,
