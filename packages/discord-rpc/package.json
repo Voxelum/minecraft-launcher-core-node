@@ -42,8 +42,7 @@
     "oxlint": "^1.32.0",
     "@xmcl/oxlint-config": "workspace:^*",
     "esbuild": "^0.17.16",
-    "typescript": "^5.9.3",
-    "tsx": "^3.12.1"
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=20"

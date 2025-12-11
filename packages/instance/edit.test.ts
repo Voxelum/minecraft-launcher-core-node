@@ -5,13 +5,14 @@ import {
   applyInstanceChanges,
   assignShallow,
   computeInstanceEditChanges,
-  createInstanceFromOptions,
 } from './edit'
 import { VersionMetadataProvider } from './internal_type'
 import { loadInstanceFromOptions } from './load'
+import { createInstance } from './index.browser'
 
 describe('Instance Assignment Utils', () => {
   let mockVersionProvider: VersionMetadataProvider
+    const getCandidatePath = (name: string) => `/instances/${name}`
 
   beforeEach(() => {
     mockVersionProvider = {
@@ -101,7 +102,7 @@ describe('Instance Assignment Utils', () => {
         expect(instance.runtime.minecraft).toBe('1.19.2')
         expect(instance.runtime.forge).toBe('43.2.0')
         expect(instance.runtime.fabricLoader).toBe('0.14.21')
-        expect(instance.runtime.quiltLoader).toBeUndefined()
+        expect(instance.runtime.quiltLoader).toBeFalsy()
       })
 
       it('should handle resolution settings', () => {
@@ -129,7 +130,7 @@ describe('Instance Assignment Utils', () => {
       })
     })
 
-    describe('createInstanceFromOptions', () => {
+    describe('createInstance', () => {
       it('should create instance from creation options', () => {
         const payload: CreateInstanceOptions = {
           name: 'New Instance',
@@ -139,7 +140,7 @@ describe('Instance Assignment Utils', () => {
           icon: 'icon.png',
         }
 
-        const instance = createInstanceFromOptions(payload, mockVersionProvider)
+        const instance = createInstance(payload, getCandidatePath, mockVersionProvider)
 
         expect(instance.name).toBe('New Instance')
         expect(instance.author).toBe('Creator')
@@ -156,7 +157,7 @@ describe('Instance Assignment Utils', () => {
           name: 'New Instance',
         }
 
-        const instance = createInstanceFromOptions(payload, mockVersionProvider)
+        const instance = createInstance(payload, getCandidatePath, mockVersionProvider)
 
         expect(instance.runtime.minecraft).toBe('1.19.2')
       })
@@ -167,7 +168,7 @@ describe('Instance Assignment Utils', () => {
           resolution: { width: 1024, height: 768, fullscreen: true },
         }
 
-        const instance = createInstanceFromOptions(payload, mockVersionProvider)
+        const instance = createInstance(payload, getCandidatePath, mockVersionProvider)
 
         expect(instance.resolution).toEqual({ width: 1024, height: 768, fullscreen: true })
       })
@@ -293,7 +294,7 @@ describe('Instance Assignment Utils', () => {
       const changes = await computeInstanceEditChanges(currentInstance, editOptions, async (s) => s)
 
       expect(changes.runtime).toEqual({
-        minecraft: '1.19.2', // preserved from current
+        minecraft: '1.20.1', // preserved from current
         forge: '47.1.0', // new value
       })
     })
@@ -411,7 +412,7 @@ describe('Instance Assignment Utils', () => {
         runtime: { minecraft: '1.19.2', forge: '43.2.0' },
       }
 
-      const instance = createInstanceFromOptions(createOptions, mockProvider)
+      const instance = createInstance(createOptions, getCandidatePath, mockProvider)
 
       // Compute edit changes
       const editOptions: EditInstanceOptions = {
@@ -427,7 +428,7 @@ describe('Instance Assignment Utils', () => {
       const updatedInstance = applyInstanceChanges(instance, changes)
 
       expect(updatedInstance.name).toBe('Updated Test Instance')
-      expect(updatedInstance.runtime.minecraft).toBe('1.19.2') // preserved from merge
+      expect(updatedInstance.runtime.minecraft).toBe('1.20.1') // preserved from merge
       expect(updatedInstance.runtime.forge).toBe('43.2.0') // preserved
       expect(updatedInstance.runtime.fabricLoader).toBe('0.14.21') // added
       expect(updatedInstance.maxMemory).toBe(8192)

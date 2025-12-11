@@ -377,7 +377,7 @@ export function getCurseforgeModpackFromInstance(
       modLoaders,
     },
     name: instance.name,
-    version: '',
+    version: instance.modpackVersion,
     author: instance.author,
     files: [],
     overrides: 'overrides',

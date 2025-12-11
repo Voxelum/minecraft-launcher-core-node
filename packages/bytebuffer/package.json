@@ -35,7 +35,8 @@
   },
   "scripts": {
     "build:type": "tsc",
-    "build:esm": "tsx build.ts"
+    "build:cjs": "esbuild index.ts debug.ts hex.ts varint32.ts varint64.ts --platform=neutral --sourcemap --format=cjs --target=node16 --outdir=dist",
+    "build:esm": "esbuild index.ts debug.ts hex.ts varint32.ts varint64.ts --platform=neutral --sourcemap --format=esm --out-extension:.js=.mjs --target=node16 --outdir=dist"
   },
   "repository": {
     "type": "git",

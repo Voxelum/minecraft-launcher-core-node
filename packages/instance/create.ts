@@ -1,4 +1,5 @@
 import { InstanceSchema, createInstanceTemplate } from './instance'
+import { VersionMetadataProvider } from './internal_type'
 
 export type CreateInstanceOption = Partial<
   Omit<InstanceSchema, 'lastAccessDate' | 'creationDate' | 'playTime' | 'lastPlayedDate'>
@@ -21,7 +22,7 @@ export type CreateInstanceOption = Partial<
 export function createInstance(
   payload: CreateInstanceOption,
   getCandidatePath: (name: string) => string,
-  getLatestRelease: () => string,
+  getLatestRelease: VersionMetadataProvider,
 ) {
   const instance = createInstanceTemplate()
 
@@ -90,7 +91,7 @@ export function createInstance(
     instance.path = getCandidatePath(payload.name)
   }
 
-  instance.runtime.minecraft = instance.runtime.minecraft || getLatestRelease()
+  instance.runtime.minecraft = instance.runtime.minecraft || getLatestRelease.getLatestRelease()
   instance.creationDate = Date.now()
   instance.lastAccessDate = Date.now()
 

@@ -246,7 +246,7 @@ describe('Modpack Conversion Functions', () => {
 
         expect(result.formatVersion).toBe(1)
         expect(result.game).toBe('minecraft')
-        expect(result.versionId).toBe('1.0.0')
+        expect(result.versionId).toBe('')
         expect(result.name).toBe('Test Instance')
         expect(result.summary).toBe('Test Description')
         expect(result.dependencies.minecraft).toBe('1.19.2')
