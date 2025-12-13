@@ -610,11 +610,7 @@ async function postsrocess(
   minecraft: MinecraftFolder,
   options: PostProcessOptions,
 ): Promise<void> {
-  const tracker = {
-    total: 0,
-    progress: 0,
-  }
-  onProgress(options.tracker, 'postprocess', { count: processors.length }, tracker)
+  const tracker = onProgress(options.tracker, 'postprocess', { count: processors.length })
   tracker.total = processors.length
   for (let i = 0; i < processors.length; i++) {
     const proc = processors[i]

@@ -27,10 +27,11 @@ export function onState<T extends object, K extends keyof T>(
 export function onProgress<T extends object, K extends keyof T>(
   tracker: Tracker<T> | undefined,
   phase: K,
-  payload: T[K],
-  progress: { progress: number; total: number },
-): void {
-  tracker?.({ phase, payload: { ...payload, progress } } as any)
+  payload: Omit<T[K], 'progress'>,
+): { progress: number; total: number } {
+  const single = { progress: 0, total: 0 }
+  tracker?.({ phase, payload: { ...payload, progress: single } } as any)
+  return single
 }
 
 export function onDownloadMultiple<T extends object, K extends keyof T>(

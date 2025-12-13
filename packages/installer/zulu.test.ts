@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { mkdtemp, rm } from 'fs/promises'
-import { installZuluJavaTask, selectZuluJRE, ZuluJRE } from './zulu'
+import { selectZuluJRE, ZuluJRE } from './zulu'
 
 // Mock the task framework
 vi.mock('@xmcl/task', () => ({
