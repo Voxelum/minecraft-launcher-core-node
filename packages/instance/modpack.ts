@@ -1,6 +1,6 @@
-import { CreateInstanceOptions, InstanceData, RuntimeVersions } from './instance'
+import { InstanceData, RuntimeVersions } from './instance'
 import { InstanceFile } from './files'
-import { CreateInstanceOption } from './create'
+import { CreateInstanceOptions } from './create'
 
 /**
  * Third-party launcher manifest structure
@@ -377,7 +377,7 @@ export function getCurseforgeModpackFromInstance(
       modLoaders,
     },
     name: instance.name,
-    version: instance.modpackVersion,
+    version: '',
     author: instance.author,
     files: [],
     overrides: 'overrides',
@@ -394,7 +394,7 @@ export function getMcbbsModpackFromInstance(instance: InstanceData): McbbsModpac
     description: instance.description,
     url: instance.url,
     name: instance.name,
-    version: instance.modpackVersion,
+    version: '',
     author: instance.author,
     files: [],
     launchInfo: {
@@ -416,7 +416,7 @@ export function getMcbbsModpackFromInstance(instance: InstanceData): McbbsModpac
 }
 
 export interface ModpackInstallProfile {
-  instance: CreateInstanceOption & {
+  instance: CreateInstanceOptions & {
     runtime: RuntimeVersions
   }
   files: InstanceFile[]

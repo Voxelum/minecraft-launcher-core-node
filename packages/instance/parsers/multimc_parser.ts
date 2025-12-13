@@ -1,9 +1,10 @@
 import { dirname, join } from 'path'
 import { pathToFileURL } from 'url'
-import { CreateInstanceOptions, RuntimeVersions } from '../instance'
+import { RuntimeVersions } from '../instance'
 import { InstanceFile } from '../files'
 import { getInstanceFiles } from '../files_discovery'
 import { existsSync, readFile } from 'fs-extra'
+import { CreateInstanceOptions } from '../create'
 
 /**
  * MultiMC instance configuration interface
@@ -51,15 +52,18 @@ export function detectMMCRoot(path: string): string {
   const original = path
   let instancesPath = join(path, 'instances')
 
-  if (!existsSync(instancesPath)) {
-    path = dirname(path)
-    instancesPath = join(path, 'instances')
+  if (existsSync(instancesPath)) {
+    return path
+  }
+  path = dirname(path)
+  instancesPath = join(path, 'instances')
+
+  if (existsSync(instancesPath)) {
+    return path
   }
 
-  if (!existsSync(instancesPath)) {
-    path = dirname(path)
-    instancesPath = join(path, 'instances')
-  }
+  path = dirname(path)
+  instancesPath = join(path, 'instances')
 
   if (!existsSync(instancesPath)) {
     // Not a MultiMC root... but return and throw error in later code path

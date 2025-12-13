@@ -27,5 +27,5 @@ export interface ResourceManager {
  * Interface for version metadata provider
  */
 export interface VersionMetadataProvider {
-  getLatestRelease(): string
+  (): string
 }
