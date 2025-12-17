@@ -20,7 +20,6 @@ import { WithDiagnose } from './utils'
 import { resolveDownloadUrls } from './utils.browser'
 
 export interface MinecraftTrackerEvents {
-  version: { id: string }
   'version.json': WithDownload<{ id: string; url: string }>
   'version.jar': WithDownload<{
     id: string
@@ -125,7 +124,6 @@ export async function installMinecraft(
   options: JarOption = {},
 ): Promise<ResolvedVersion> {
   const folder = MinecraftFolder.from(minecraft)
-  onState(options.tracker, 'version', { id: versionMeta.id })
 
   const version = await VersionJson.parse(folder, versionMeta.id).catch(async (e) => {
     if (options.diagnose) {

@@ -13,7 +13,6 @@ export class InstallError extends Error {
 }
 
 export interface InstallIssue {
-  version?: string
   /**
    * bad minecraft jar
    */
@@ -46,9 +45,6 @@ export interface InstallIssue {
 }
 
 export function mergeInstallIssue(target: InstallIssue, source: InstallIssue) {
-  if (source.version) {
-    target.version = source.version
-  }
   if (source.jar) {
     target.jar = source.jar
   }
@@ -74,5 +70,5 @@ export function mergeInstallIssue(target: InstallIssue, source: InstallIssue) {
 }
 
 export function isInstallError(e: any): e is InstallError {
-  return e instanceof InstallError
+  return e instanceof InstallError || (e && typeof e === 'object' && 'issue' in e && e.issue && e.name === 'InstallError')
 }

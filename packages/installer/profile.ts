@@ -83,11 +83,11 @@ export interface PostProcessOptions extends SpawnJavaOptions, WithDiagnose {
    */
   handler?: (postProcessor: PostProcessor) => Promise<boolean>
 
-  postsrocess?: (
+  postprocess?: (
     processor: PostProcessor[],
     minecraftFolder: MinecraftFolder,
     options: PostProcessOptions,
-    postsrocess: () => Promise<void>,
+    postprocess: () => Promise<void>,
   ) => Promise<void>
 
   tracker?: Tracker<ProfileTrackerEvents>
@@ -270,8 +270,8 @@ export async function installByProfile(
 
   await installResolvedLibraries(installRequiredLibs, minecraft, options)
 
-  if (options.postsrocess) {
-    await options.postsrocess(processor, minecraftFolder, options, () =>
+  if (options.postprocess) {
+    await options.postprocess(processor, minecraftFolder, options, () =>
       postsrocess(processor, minecraftFolder, options),
     )
   } else {

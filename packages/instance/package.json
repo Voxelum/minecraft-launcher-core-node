@@ -23,7 +23,7 @@
     "@xmcl/core": "workspace:*",
     "@xmcl/utils": "workspace:*",
     "@types/ssh2": "^1.15.5",
-    "zod": "^4.0.0",
+    "zod": "^4.1.13",
     "fs-extra": "^11.1.0"
   },
   "devDependencies": {

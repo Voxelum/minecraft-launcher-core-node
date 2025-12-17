@@ -12,6 +12,8 @@ export interface Tracker<T extends object> {
   <E extends TrackEvent<T>>(event: E): void
 }
 
+export interface AnyTracker extends Tracker<any> {}
+
 export type Raw<T extends object> = T
 export type WithDownload<T extends object> = T & { download: ProgressTracker }
 export type WithProgress<T extends object> = T & { progress: { progress: number; total: number } }

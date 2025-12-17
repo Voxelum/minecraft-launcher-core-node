@@ -88,7 +88,11 @@ export type InstanceUpstream = z.infer<typeof InstanceUpstreamSchema>
  */
 export const InstanceDataSchema = z.object({
   /** The display name of the profile. It will also be the modpack display name */
-  name: z.coerce.string().transform(v => v.trim()).catch('').default(''),
+  name: z.coerce
+    .string()
+    .transform((v) => v.trim())
+    .catch('')
+    .default(''),
   /** The author of this instance */
   author: z.coerce.string().catch('').default(''),
   /** The description of this instance */
@@ -133,9 +137,9 @@ export const InstanceDataSchema = z.object({
     .optional()
     .catch(undefined),
   /** Can be override by global setting */
-  minMemory: z.coerce.number().nonnegative().optional().catch(undefined),
+  minMemory: z.number().nonnegative().optional().catch(undefined),
   /** Can be override by global setting */
-  maxMemory: z.coerce.number().positive().optional().catch(undefined),
+  maxMemory: z.number().positive().optional().catch(undefined),
   /** Can be override by global setting */
   assignMemory: z
     .union([z.literal(true), z.literal('auto'), z.literal(false)])
@@ -148,35 +152,27 @@ export const InstanceDataSchema = z.object({
   /** The launch environment variables */
   env: z.record(z.string(), z.coerce.string()).optional().catch(undefined),
   /** Command to prepend before launch */
-  prependCommand: z.coerce
-    .string()
-    .optional()
-    .or(z.literal(''))
-    .transform((v) => (v === '' ? undefined : v)),
+  prependCommand: z.string().optional().catch(undefined),
   /** Command to execute before launch */
-  preExecuteCommand: z.coerce
-    .string()
-    .optional()
-    .or(z.literal(''))
-    .transform((v) => (v === '' ? undefined : v)),
-  url: z.coerce.string().catch('').default(''),
-  icon: z.coerce.string().catch('').default(''),
-  fileApi: z.coerce.string().catch('').default(''),
+  preExecuteCommand: z.string().optional().catch(undefined),
+  url: z.string().catch('').default(''),
+  icon: z.string().catch('').default(''),
+  fileApi: z.string().catch('').default(''),
   /** The option for instance to launch server directly */
   server: z
     .object({
-      host: z.coerce.string(),
-      port: z.coerce.number().positive().optional(),
+      host: z.string(),
+      port: z.number().positive().optional(),
     })
     .nullable()
     .optional()
     .catch(undefined),
   /** Various boolean flags */
-  showLog: z.coerce.boolean().optional().catch(undefined),
-  hideLauncher: z.coerce.boolean().optional().catch(undefined),
-  fastLaunch: z.coerce.boolean().optional().catch(undefined),
-  disableElybyAuthlib: z.coerce.boolean().optional().catch(undefined),
-  disableAuthlibInjector: z.coerce.boolean().optional().catch(undefined),
+  showLog: z.boolean().optional().catch(undefined),
+  hideLauncher: z.boolean().optional().catch(undefined),
+  fastLaunch: z.boolean().optional().catch(undefined),
+  disableElybyAuthlib: z.boolean().optional().catch(undefined),
+  disableAuthlibInjector: z.boolean().optional().catch(undefined),
   /** Use latest version settings */
   useLatest: z
     .union([z.literal(false), z.literal('release'), z.literal('alpha')])
