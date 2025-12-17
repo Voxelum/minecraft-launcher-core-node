@@ -17,7 +17,6 @@ import { ensureDir, WithDiagnose } from './utils'
 import { doFetch, normalizeArray, resolveDownloadUrls } from './utils.browser'
 
 export interface AssetsTrackerEvents {
-  assets: { version: string }
   'assets.assets': WithDownload<{ count: number }>
   'assets.logConfig': WithDownload<{ url: string | string[] }>
   'assets.assetIndex': WithDownload<{ url: string | string[] }>
@@ -72,8 +71,6 @@ export async function installAssets(
   options: AssetsOptions = {},
 ): Promise<ResolvedVersion> {
   const folder = MinecraftFolder.from(version.minecraftDirectory)
-  onState(options.tracker, 'assets', { version: version.id })
-
   if (version.logging?.client?.file) {
     const file = version.logging.client.file
 
@@ -264,8 +261,6 @@ export async function installResolvedAssets(
   version: string,
   options: AssetsOptions = {},
 ) {
-  onState(options.tracker, 'assets', { version })
-
   await diagnoseAssets(assets, folder, { signal: options.abortSignal }).then(async (assets) => {
     if (assets.length === 0) {
       return
@@ -295,7 +290,7 @@ export async function installResolvedAssets(
     })
 
     const unfixedIssues = results
-      .filter((r) => r.status === 'rejected')
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
       .map((r, index) => {
         return { reason: r.reason, asset: assets[index] }
       })
