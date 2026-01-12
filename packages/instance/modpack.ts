@@ -21,7 +21,7 @@ export interface ThirdPartyLauncherManifest {
 /**
  * Supported instance types for parsing
  */
-export type InstanceType = 'mmc' | 'vanilla' | 'modrinth' | 'curseforge'
+export type InstanceType = 'mmc' | 'vanilla' | 'modrinth' | 'curseforge' | 'prism'
 
 /**
  * Represent a common modpack metadata in a zip file.
