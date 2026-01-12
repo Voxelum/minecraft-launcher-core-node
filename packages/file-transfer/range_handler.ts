@@ -25,6 +25,7 @@ export class RangeRequestHandler extends FileHandler {
     super(options.signal, fd)
     if (tracker) {
       tracker.setAccessor(this.rangeInfo)
+      this.rangeInfo.url = options.origin + options.path
       Promise.allSettled([this.resolvers.promise, this.childrenResolvers.promise]).finally(() => {
         tracker.done = true
       })

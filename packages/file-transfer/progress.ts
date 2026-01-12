@@ -24,7 +24,8 @@ export class ProgressTrackerMultiple implements ProgressTracker {
   }
 
   get total() {
-    return this.expectedTotal ? this.expectedTotal : this.trackers.reduce((a, b) => a + b.total, 0)
+    const total = this.trackers.reduce((a, b) => a + b.total, 0)
+    return total < this.expectedTotal ? this.expectedTotal : total
   }
 
   get progress() {
