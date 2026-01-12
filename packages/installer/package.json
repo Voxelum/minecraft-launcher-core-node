@@ -22,7 +22,6 @@
     "@xmcl/core": "workspace:^*",
     "@xmcl/file-transfer": "workspace:^*",
     "@xmcl/forge-site-parser": "workspace:^*",
-    "@xmcl/task": "workspace:^*",
     "@xmcl/unzip": "workspace:^*",
     "tar-stream": "^3.1.7",
     "undici": "7.16.0",

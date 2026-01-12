@@ -337,9 +337,6 @@ importers:
       '@xmcl/forge-site-parser':
         specifier: workspace:^*
         version: link:../forge-site-parser
-      '@xmcl/task':
-        specifier: workspace:^*
-        version: link:../task
       '@xmcl/unzip':
         specifier: workspace:^*
         version: link:../unzip
@@ -392,9 +389,9 @@ importers:
       '@xmcl/core':
         specifier: workspace:*
         version: link:../core
-      '@xmcl/task':
+      '@xmcl/installer':
         specifier: workspace:*
-        version: link:../task
+        version: link:../installer
       '@xmcl/utils':
         specifier: workspace:*
         version: link:../utils
@@ -402,7 +399,7 @@ importers:
         specifier: ^11.1.0
         version: 11.3.2
       zod:
-        specifier: ^4.0.0
+        specifier: ^4.1.13
         version: 4.1.13
     devDependencies:
       '@types/fs-extra':
@@ -692,27 +689,6 @@ importers:
       '@types/yauzl':
         specifier: ^2.10.0
         version: 2.10.0
-      '@xmcl/oxlint-config':
-        specifier: workspace:^*
-        version: link:../oxlint-config
-      esbuild:
-        specifier: ^0.17.16
-        version: 0.17.16
-      oxlint:
-        specifier: ^1.32.0
-        version: 1.32.0(oxlint-tsgolint@0.8.5)
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-      vitest:
-        specifier: ^4.0.15
-        version: 4.0.15(@types/node@20.19.19)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/task:
-    devDependencies:
-      '@types/node':
-        specifier: ~20
-        version: 20.19.19
       '@xmcl/oxlint-config':
         specifier: workspace:^*
         version: link:../oxlint-config
