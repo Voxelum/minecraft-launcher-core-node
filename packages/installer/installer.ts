@@ -9,7 +9,12 @@ import { join } from 'path'
 import { AssetsOptions, AssetsTrackerEvents, installAssets, installResolvedAssets } from './assets'
 import { InstallError, InstallIssue, isInstallError, mergeInstallIssue } from './error'
 import { installForge } from './forge'
-import { installLibraries, LibrariesTrackerEvents, LibraryOptions } from './libraries'
+import {
+  installLibraries,
+  installResolvedLibraries,
+  LibrariesTrackerEvents,
+  LibraryOptions,
+} from './libraries'
 import { installMinecraftJar, JarOption, MinecraftTrackerEvents } from './minecraft'
 import {
   diagnoseProfile,
@@ -62,7 +67,15 @@ export async function completeInstallation(
   version: ResolvedVersion,
   options: CompleteOptions = {},
 ): Promise<void> {
-  await installMinecraftJar(version, { ...options, tracker: options.tracker })
+  let issue: InstallIssue = {}
+
+  await installMinecraftJar(version, { ...options, tracker: options.tracker }).catch((e) => {
+    if (options.diagnose && isInstallError(e)) {
+      mergeInstallIssue(issue, e.issue)
+      return
+    }
+    throw e
+  })
 
   const folder = MinecraftFolder.from(version.minecraftDirectory)
   const versionDir = folder.getVersionRoot(version.id)
@@ -80,7 +93,6 @@ export async function completeInstallation(
     }
   }
 
-  let issue: InstallIssue = {}
   await installLibraries(version, { ...options, tracker: options.tracker }).catch((e) => {
     if (options.diagnose && isInstallError(e)) {
       mergeInstallIssue(issue, e.issue)
@@ -160,7 +172,10 @@ export async function completeInstallationByError(
   }
 
   if (issue.libraries && issue.libraries.length > 0) {
-    await installLibraries(version, { ...options, tracker: options.tracker })
+    await installResolvedLibraries(issue.libraries, folder, {
+      ...options,
+      tracker: options.tracker,
+    })
   }
 
   if (issue.assetsIndex) {

@@ -1,8 +1,8 @@
 import { MinecraftFolder, ResolvedVersion } from '@xmcl/core'
 import { isNotNull } from '@xmcl/core/utils'
 import {
-  download,
   DownloadBaseOptions,
+  download,
   downloadMultiple,
   getDownloadBaseOptions,
 } from '@xmcl/file-transfer'
@@ -10,14 +10,13 @@ import { link } from 'fs'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { promisify } from 'util'
-import { diagnoseFile, DiagnoseOptions, Issue } from './diagnose'
+import { DiagnoseOptions, Issue, diagnoseFile } from './diagnose'
 import { InstallError } from './error'
-import { Tracker, onDownloadMultiple, onDownloadSingle, onState, WithDownload } from './tracker'
-import { ensureDir, WithDiagnose } from './utils'
+import { Tracker, WithDownload, onDownloadMultiple, onDownloadSingle } from './tracker'
+import { WithDiagnose, ensureDir } from './utils'
 import { doFetch, normalizeArray, resolveDownloadUrls } from './utils.browser'
 
 export interface AssetsTrackerEvents {
-  assets: { version: string }
   'assets.assets': WithDownload<{ count: number }>
   'assets.logConfig': WithDownload<{ url: string | string[] }>
   'assets.assetIndex': WithDownload<{ url: string | string[] }>
@@ -57,6 +56,10 @@ export interface AssetsOptions extends DownloadBaseOptions, WithDiagnose {
    * The tracker to track the install process
    */
   tracker?: Tracker<AssetsTrackerEvents>
+  /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
 
   abortSignal?: AbortSignal
 }
@@ -72,8 +75,6 @@ export async function installAssets(
   options: AssetsOptions = {},
 ): Promise<ResolvedVersion> {
   const folder = MinecraftFolder.from(version.minecraftDirectory)
-  onState(options.tracker, 'assets', { version: version.id })
-
   if (version.logging?.client?.file) {
     const file = version.logging.client.file
 
@@ -84,7 +85,7 @@ export async function installAssets(
         role: 'log config',
         hint: 'Problem on log config! Please consider to use Installer.installAssets to fix.',
       },
-      { signal: options.abortSignal },
+      { signal: options.abortSignal, checksum: options.checksum },
     )
       .catch(async (e) => {
         if (options.diagnose) {
@@ -96,7 +97,7 @@ export async function installAssets(
           expectedTotal: file.size,
           ...getDownloadBaseOptions(options),
           tracker: onDownloadSingle(options.tracker, 'assets.logConfig', { url: file.url }),
-          abortSignal: options.abortSignal,
+          signal: options.abortSignal,
         })
       })
       .catch(() => {})
@@ -120,7 +121,7 @@ export async function installAssets(
   const jsonPath = folder.getPath(
     'assets',
     'indexes',
-    options.useHashForAssetsIndex ? assetIndexInfo.sha1 : version.assets + '.json',
+    (options.useHashForAssetsIndex ? assetIndexInfo.sha1 : version.assets) + '.json',
   )
   const fetchAssetIndex = async () => {
     const urls = resolveDownloadUrls(assetIndexInfo.url, version, options.assetsIndexUrl)
@@ -164,7 +165,7 @@ export async function installAssets(
       destination: jsonPath,
       ...getDownloadBaseOptions(options),
       tracker: onDownloadSingle(options.tracker, 'assets.assetIndex', { url: assetIndexInfo.url }),
-      abortSignal: options.abortSignal,
+      signal: options.abortSignal,
     })
     const result = await readJson().catch(fetchAssetIndex)
 
@@ -264,9 +265,10 @@ export async function installResolvedAssets(
   version: string,
   options: AssetsOptions = {},
 ) {
-  onState(options.tracker, 'assets', { version })
-
-  await diagnoseAssets(assets, folder, { signal: options.abortSignal }).then(async (assets) => {
+  await diagnoseAssets(assets, folder, {
+    signal: options.abortSignal,
+    checksum: options.checksum,
+  }).then(async (assets) => {
     if (assets.length === 0) {
       return
     }
@@ -276,6 +278,11 @@ export async function installResolvedAssets(
       })
     }
     const assetsHosts = normalizeArray(options.assetsHost || DEFAULT_RESOURCE_ROOT_URL)
+    if (assetsHosts.length > 1) {
+      assetsHosts.push(
+        ...assetsHosts
+      )
+    }
     const results = await downloadMultiple({
       options: assets.map((asset) => {
         const { hash, size } = asset
@@ -289,17 +296,20 @@ export async function installResolvedAssets(
           expectedTotal: size,
         }
       }),
-      abortSignal: options.abortSignal,
+      signal: options.abortSignal,
       ...getDownloadBaseOptions(options),
       tracker: onDownloadMultiple(options.tracker, 'assets.assets', { count: assets.length }),
     })
 
     const unfixedIssues = results
-      .filter((r) => r.status === 'rejected')
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
       .map((r, index) => {
         return { reason: r.reason, asset: assets[index] }
       })
     if (unfixedIssues.length > 0) {
+      if (options.abortSignal?.aborted && options.abortSignal.reason) {
+        throw options.abortSignal.reason
+      }
       throw new InstallError(
         {
           assets: unfixedIssues.map((i) => i.asset),

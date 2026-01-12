@@ -33,6 +33,10 @@ export interface InstallLabyModOptions extends DownloadBaseOptions, InstallOptio
    * The tracker to track the install process
    */
   tracker?: Tracker<LabyModTrackerEvents>
+  /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
 }
 export interface InstallLabyModAddonOptions extends DownloadBaseOptions, FetchOptions {
   environment?: string
@@ -45,6 +49,10 @@ export interface InstallLabyModAddonOptions extends DownloadBaseOptions, FetchOp
    * The tracker to track the install process
    */
   tracker?: Tracker<LabyModTrackerEvents>
+  /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
 }
 
 async function createLabyModJson(
@@ -171,7 +179,7 @@ export async function installLabyMod4(
           role: 'labymod-asset',
           hint: 'Problem on labymod asset! Please consider to reinstall labymod.',
         },
-        { signal: options.signal },
+        { signal: options.signal, checksum: options.checksum },
       )
 
       return {
@@ -197,7 +205,7 @@ export async function installLabyMod4(
       tracker: onDownloadMultiple(options.tracker, 'labymod.assets', {
         count: assetsToDownload.length,
       }),
-      abortSignal: options.signal,
+      signal: options.signal,
     })
   }
 
@@ -247,7 +255,7 @@ async function installLabyModAddonImpl(
       role: 'labymod-addon',
       hint: 'Problem on labymod addon! Please consider to reinstall.',
     },
-    { signal: options?.signal },
+    { signal: options?.signal, checksum: options?.checksum },
   )
 
   if (issue) {

@@ -34,11 +34,11 @@ export interface InstallOptions {
   versionId?: string
 }
 
-export function errorToString(e: any) {
+export function errorToString(e: any): string | undefined {
   if (e instanceof Error) {
     return e.stack ? e.stack : e.message
   }
-  return e.toString()
+  return e?.toString()
 }
 
 export interface FetchOptions {

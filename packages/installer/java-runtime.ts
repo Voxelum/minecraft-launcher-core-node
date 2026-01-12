@@ -135,7 +135,7 @@ async function downloadFiles(
             role: 'java-runtime-file',
             hint: `Problem on java runtime file ${file}! Please consider to reinstall the java runtime.`,
           },
-          { signal: options.signal },
+          { signal: options.signal, checksum: options.checksum },
         )
 
         if (!rawIssue) {
@@ -157,7 +157,7 @@ async function downloadFiles(
               role: 'java-runtime-file',
               hint: `Problem on java runtime file ${file}! Please consider to reinstall the java runtime.`,
             },
-            { signal: options.signal },
+            { signal: options.signal, checksum: options.checksum },
           )
 
           needsDownload = !!lzmaIssue
@@ -182,7 +182,7 @@ async function downloadFiles(
             role: 'java-runtime-file',
             hint: `Problem on java runtime file ${file}! Please consider to reinstall the java runtime.`,
           },
-          { signal: options.signal },
+          { signal: options.signal, checksum: options.checksum },
         )
 
         return {
@@ -266,6 +266,10 @@ interface InstallJavaRuntimeBaseOptions extends DownloadBaseOptions {
    */
   diagnose?: boolean
   /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
+  /**
    * Abort signal
    */
   signal?: AbortSignal
@@ -329,7 +333,7 @@ export async function installJavaRuntimeWithJson(
       role: 'java-runtime-manifest',
       hint: 'Problem on java runtime manifest.json! Please consider to reinstall the java runtime.',
     },
-    { signal: options.signal },
+    { signal: options.signal, checksum: options.checksum },
   )
 
   let manifest: JavaRuntimeManifest

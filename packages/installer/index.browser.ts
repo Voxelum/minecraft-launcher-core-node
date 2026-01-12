@@ -1,3 +1,4 @@
+export * from './error'
 export * from './fabric.browser'
 export * from './forge.browser'
 export * from './quilt.browser'

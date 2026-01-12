@@ -18,26 +18,26 @@ describe.skip('Install', () => {
       const downloads = [] as ProgressTracker[]
       let timeout = setInterval(() => {
         for (const d of downloads) {
-          console.log(`Download progress: ${d.progress}/${d.total} ${d.speed}`)
+          console.log(`Download progress: ${d.progress}/${d.total}`)
         }
       }, 1000)
       const resolved = await installMinecraft(version, loc, {
         tracker: (e) => {
           if (e.phase === 'version.jar') {
             console.log(e.payload.id, e.payload.side, e.payload.size)
-            downloads.push(e.payload.download)
+            downloads.push(e.payload.progress)
           } else if (e.phase === 'version.json') {
             console.log(e.payload.id, e.payload.url)
-            downloads.push(e.payload.download)
+            downloads.push(e.payload.progress)
           }
         },
       })
       await completeInstallation(resolved, {
         tracker: (e) => {
           if (e.phase === 'assets.assets') {
-            downloads.push(e.payload.download)
+            downloads.push(e.payload.progress)
           } else if (e.phase === 'libraries') {
-            downloads.push(e.payload.download)
+            downloads.push(e.payload.progress)
           }
         },
       })

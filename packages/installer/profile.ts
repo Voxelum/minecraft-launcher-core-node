@@ -11,10 +11,10 @@ import { readFile, writeFile } from 'fs/promises'
 import { delimiter, dirname, join, relative, sep } from 'path'
 import { ZipFile } from 'yauzl'
 import { diagnoseFile } from './diagnose'
-import { LibraryOptions, LibrariesTrackerEvents, installResolvedLibraries } from './libraries'
+import { LibrariesTrackerEvents, LibraryOptions, installResolvedLibraries } from './libraries'
 import { convertClasspathToMaven, parseManifest } from './manifest'
 import { InstallSideOption } from './minecraft'
-import { Tracker, onProgress, WithDownload } from './tracker'
+import { Tracker, onProgress } from './tracker'
 import { SpawnJavaOptions, WithDiagnose, missing, waitProcess } from './utils'
 
 export interface ProfileTrackerEvents {
@@ -83,16 +83,20 @@ export interface PostProcessOptions extends SpawnJavaOptions, WithDiagnose {
    */
   handler?: (postProcessor: PostProcessor) => Promise<boolean>
 
-  postsrocess?: (
+  postprocess?: (
     processor: PostProcessor[],
     minecraftFolder: MinecraftFolder,
     options: PostProcessOptions,
-    postsrocess: () => Promise<void>,
+    postprocess: () => Promise<void>,
   ) => Promise<void>
 
   tracker?: Tracker<ProfileTrackerEvents>
+  /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
 
-  abortSignal?: AbortSignal
+  signal?: AbortSignal
 }
 
 export interface InstallProfileOption
@@ -270,8 +274,8 @@ export async function installByProfile(
 
   await installResolvedLibraries(installRequiredLibs, minecraft, options)
 
-  if (options.postsrocess) {
-    await options.postsrocess(processor, minecraftFolder, options, () =>
+  if (options.postprocess) {
+    await options.postprocess(processor, minecraftFolder, options, () =>
       postsrocess(processor, minecraftFolder, options),
     )
   } else {
@@ -573,7 +577,7 @@ async function postProcessOne(
           expectedChecksum: checksum.replace(/'/g, ''),
           hint: 'Re-install this installer profile!',
         },
-        { signal: options.abortSignal },
+        { signal: options.signal, checksum: options.checksum },
       )
       if (!issue) {
         throw new Error(
@@ -593,7 +597,7 @@ async function postProcessOne(
   try {
     await new Promise((resolve, reject) => {
       const process = (options?.spawn ?? spawn)(options.java ?? 'java', cmd, {
-        signal: options.abortSignal,
+        signal: options.signal,
       })
       waitProcess(process).then(resolve, reject)
     })
@@ -610,11 +614,7 @@ async function postsrocess(
   minecraft: MinecraftFolder,
   options: PostProcessOptions,
 ): Promise<void> {
-  const tracker = {
-    total: 0,
-    progress: 0,
-  }
-  onProgress(options.tracker, 'postprocess', { count: processors.length }, tracker)
+  const tracker = onProgress(options.tracker, 'postprocess', { count: processors.length })
   tracker.total = processors.length
   for (let i = 0; i < processors.length; i++) {
     const proc = processors[i]

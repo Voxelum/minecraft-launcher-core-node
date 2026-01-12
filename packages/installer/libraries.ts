@@ -5,7 +5,6 @@ import {
   DownloadBaseOptions,
   downloadMultiple,
   DownloadMultipleOption,
-  DownloadThrottler,
   getDownloadBaseOptions,
 } from '@xmcl/file-transfer'
 import { stat } from 'fs/promises'
@@ -42,8 +41,12 @@ export interface LibraryOptions extends DownloadBaseOptions, WithDiagnose {
    * The tracker to track the install process
    */
   tracker?: Tracker<LibrariesTrackerEvents>
+  /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
 
-  abortSignal?: AbortSignal
+  signal?: AbortSignal
 }
 
 export type InstallLibraryVersion = Pick<ResolvedVersion, 'libraries' | 'minecraftDirectory'>
@@ -73,7 +76,7 @@ export async function installResolvedLibraries(
 ): Promise<void> {
   const folder = MinecraftFolder.from(typeof minecraft === 'string' ? minecraft : minecraft.root)
 
-  await diagnoseLibraries(libraries, folder, { signal: option.abortSignal }).then(async (libs) => {
+  await diagnoseLibraries(libraries, folder, { signal: option.signal, checksum: option.checksum }).then(async (libs) => {
     if (libs.length === 0) {
       return
     }
@@ -87,15 +90,23 @@ export async function installResolvedLibraries(
         const libraryPath = lib.download.path
         const destination = join(folder.libraries, libraryPath)
         const urls: string[] = resolveLibraryDownloadUrls(lib, option)
+        if (urls.length > 2) {
+          urls.push(...urls)
+        }
         return {
           url: urls,
           destination,
+          expectedTotal: lib.download.size,
         } as DownloadMultipleOption
       }),
-      abortSignal: option.abortSignal,
+      signal: option.signal,
       tracker: onDownloadMultiple(option.tracker, 'libraries', { count: libraries.length }),
       ...getDownloadBaseOptions(option),
     })
+
+    if (option.signal?.aborted) {
+      throw option.signal.reason
+    }
 
     const error = results
       .map((r, i) => [r, libs[i]] as const)
