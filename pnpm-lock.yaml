@@ -650,6 +650,30 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/sqlite:
+    devDependencies:
+      '@types/node':
+        specifier: ~20
+        version: 20.19.19
+      '@xmcl/oxlint-config':
+        specifier: workspace:^*
+        version: link:../oxlint-config
+      esbuild:
+        specifier: ^0.17.16
+        version: 0.17.16
+      kysely:
+        specifier: ^0.26.1
+        version: 0.26.3
+      node-sqlite3-wasm:
+        specifier: ^0.8.52
+        version: 0.8.52
+      oxlint:
+        specifier: ^1.32.0
+        version: 1.32.0(oxlint-tsgolint@0.8.5)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/system:
     dependencies:
       '@xmcl/unzip':
@@ -2492,6 +2516,9 @@ packages:
   node-html-parser@6.1.5:
     resolution: {integrity: sha512-fAaM511feX++/Chnhe475a0NHD8M7AxDInsqQpz6x63GRF7xYNdS8Vo5dKsIVPgsOvG7eioRRTZQnWBrhDHBSg==}
 
+  node-sqlite3-wasm@0.8.52:
+    resolution: {integrity: sha512-SQoQOQFHfnJaizqGr/S9nFU3WcwNtOC1QdtbknOdo95tOY8Ma+KZ3t4ROsRHjky9i7Ugau3BXCsBF0fWz9MxZw==}
+
   normalize-package-data@2.5.0:
     resolution: {integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==}
 
@@ -3749,7 +3776,7 @@ snapshots:
 
   '@types/jsonfile@6.1.4':
     dependencies:
-      '@types/node': 18.19.130
+      '@types/node': 20.19.19
 
   '@types/lodash.throttle@4.1.9':
     dependencies:
@@ -4539,6 +4566,8 @@ snapshots:
     dependencies:
       css-select: 5.1.0
       he: 1.2.0
+
+  node-sqlite3-wasm@0.8.52: {}
 
   normalize-package-data@2.5.0:
     dependencies:
