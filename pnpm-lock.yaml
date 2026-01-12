@@ -809,8 +809,26 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
       vitest:
-        specifier: ^2.1.8
-        version: 2.1.9(@types/node@20.19.19)
+        specifier: ^4.0.15
+        version: 4.0.15(@types/node@20.19.19)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/worker:
+    devDependencies:
+      '@types/fs-extra':
+        specifier: ^11.0.1
+        version: 11.0.4
+      '@types/node':
+        specifier: ~20
+        version: 20.19.19
+      '@vitest/coverage-v8':
+        specifier: ^4.0.15
+        version: 4.0.15(vitest@4.0.15(@types/node@20.19.19)(tsx@4.21.0)(yaml@2.8.2))
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.15
+        version: 4.0.15(@types/node@20.19.19)(tsx@4.21.0)(yaml@2.8.2)
 
 packages:
 
