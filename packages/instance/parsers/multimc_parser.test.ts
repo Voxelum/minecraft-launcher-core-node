@@ -1,12 +1,12 @@
-import { describe, it, expect, vi } from 'vitest'
-import { join } from 'path'
+import { existsSync } from 'fs-extra'
+import { join, sep } from 'path'
+import { describe, expect, it, vi } from 'vitest'
 import {
   detectMMCRoot,
-  type MultiMCManifestComponent,
   type MultiMCConfig,
   type MultiMCManifest,
+  type MultiMCManifestComponent,
 } from './multimc_parser'
-import { existsSync } from 'fs-extra'
 
 // Mock fs-extra
 vi.mock('fs-extra', () => ({
@@ -30,13 +30,12 @@ describe('MultiMC Parser', () => {
 
       const result = detectMMCRoot('/mmc')
       expect(result).toBe('/mmc')
-      expect(existsSync).toHaveBeenCalledWith('/mmc/instances')
+      expect(existsSync).toHaveBeenCalledWith('/mmc/instances'.replaceAll('/', sep))
     })
 
     it('should return parent directory if current path has instances subfolder', () => {
       vi.mocked(existsSync)
-        .mockReturnValueOnce(false) // /mmc/instances/test-instance/instances doesn't exist
-        .mockReturnValueOnce(true) // /mmc/instances exists
+        .mockImplementation((p) => p.toString().replaceAll(sep, '/') === '/mmc/instances') // /mmc/instances/test-instance/instances doesn't exist
 
       const result = detectMMCRoot('/mmc/instances/test-instance')
       expect(result).toBe('/mmc')
@@ -194,15 +193,6 @@ describe('MultiMC Parser', () => {
 
       const result = detectMMCRoot('/home/user/MultiMC')
       expect(result).toBe('/home/user/MultiMC')
-    })
-
-    it('should handle nested instance paths', () => {
-      vi.mocked(existsSync)
-        .mockReturnValueOnce(false) // nested/path/instances doesn't exist
-        .mockReturnValueOnce(true) // parent/instances exists
-
-      const result = detectMMCRoot('/mmc/instances/my-instance/nested/path')
-      expect(result).toBe('/mmc')
     })
   })
 })

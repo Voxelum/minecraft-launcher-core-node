@@ -1,10 +1,10 @@
 import { pathToFileURL } from 'url'
-import { CreateInstanceOptions } from '../instance'
 import { InstanceFile } from '../files'
 import { getInstanceFiles } from '../files_discovery'
 import { CurseforgeModpackManifest, getInstanceConfigFromCurseforgeModpack } from '../modpack'
 import { join } from 'path'
 import { readFile } from 'fs-extra'
+import { CreateInstanceOptions } from '../create'
 
 /**
  * Curseforge launcher instance configuration

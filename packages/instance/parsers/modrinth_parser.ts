@@ -1,10 +1,11 @@
 import { readFile } from 'fs-extra'
 import { join, sep } from 'path'
 import { pathToFileURL } from 'url'
-import { CreateInstanceOptions, RuntimeVersions } from '../instance'
+import { RuntimeVersions } from '../instance'
 import { InstanceFile } from '../files'
 import { getInstanceFiles } from '../files_discovery'
 import { Logger } from '../internal_type'
+import { CreateInstanceOptions } from '../create'
 
 /**
  * Modrinth project interface (simplified)

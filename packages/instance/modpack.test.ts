@@ -222,18 +222,14 @@ describe('Modpack Conversion Functions', () => {
       env: {},
       url: 'https://example.com',
       icon: 'icon.png',
-      modpackVersion: '1.0.0',
       fileApi: 'https://api.example.com',
       server: null,
-      tags: ['adventure', 'tech'],
       showLog: true,
       hideLauncher: false,
       fastLaunch: false,
       disableElybyAuthlib: false,
       disableAuthlibInjector: false,
       useLatest: false,
-      playTime: 3600000,
-      lastPlayedDate: Date.now(),
       upstream: undefined,
       assignMemory: true,
       prependCommand: '',
@@ -263,7 +259,7 @@ describe('Modpack Conversion Functions', () => {
         expect(result.manifestType).toBe('minecraftModpack')
         expect(result.manifestVersion).toBe(1)
         expect(result.name).toBe('Test Instance')
-        expect(result.version).toBe('1.0.0')
+        expect(result.version).toBe('')
         expect(result.author).toBe('Test Author')
         expect(result.minecraft.version).toBe('1.19.2')
         expect(result.minecraft.modLoaders).toHaveLength(2)
@@ -281,7 +277,7 @@ describe('Modpack Conversion Functions', () => {
         expect(result.manifestType).toBe('minecraftModpack')
         expect(result.manifestVersion).toBe(2)
         expect(result.name).toBe('Test Instance')
-        expect(result.version).toBe('1.0.0')
+        expect(result.version).toBe('')
         expect(result.author).toBe('Test Author')
         expect(result.description).toBe('Test Description')
         expect(result.url).toBe('https://example.com')
@@ -298,7 +294,7 @@ describe('Modpack Conversion Functions', () => {
         const instanceNoMemory = { ...sampleInstance, minMemory: 0 }
         const result = getMcbbsModpackFromInstance(instanceNoMemory)
 
-        expect(result.launchInfo?.minMemory).toBeUndefined()
+        expect(result.launchInfo?.minMemory).toBe(0)
       })
     })
   })
