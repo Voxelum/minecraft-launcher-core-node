@@ -1,13 +1,12 @@
 export interface ProgressTracker {
   url: string
   total: number
-  acceptRanges: boolean
   progress: number
-  speed: number
 }
 
 export class ProgressTrackerMultiple implements ProgressTracker {
-  trackers: ProgressTracker[] = []
+  trackers: ProgressTrackerSingle[] = []
+  expectedTotal: number = 0
 
   subSingle(): ProgressTrackerSingle {
     const single = new ProgressTrackerSingle()
@@ -15,30 +14,29 @@ export class ProgressTrackerMultiple implements ProgressTracker {
     return single
   }
 
-  subMultiple(): ProgressTrackerMultiple {
-    const multiple = new ProgressTrackerMultiple()
-    this.trackers.push(multiple)
-    return multiple
-  }
-
   get url() {
-    return this.trackers.map((t) => t.url).join(', ')
+    for (const t of this.trackers) {
+      if (!t.done) {
+        return t.url
+      }
+    }
+    return this.trackers[0]?.url ?? ''
   }
 
   get total() {
-    return this.trackers.reduce((a, b) => a + b.total, 0)
-  }
-
-  get acceptRanges() {
-    return this.trackers.every((t) => t.acceptRanges)
+    return this.expectedTotal ? this.expectedTotal : this.trackers.reduce((a, b) => a + b.total, 0)
   }
 
   get progress() {
     return this.trackers.reduce((a, b) => a + b.progress, 0)
   }
 
-  get speed() {
-    return this.trackers.reduce((a, b) => a + b.speed, 0)
+  toJSON() {
+    return {
+      url: this.url,
+      total: this.total,
+      progress: this.progress,
+    }
   }
 }
 
@@ -47,6 +45,9 @@ export class ProgressTrackerMultiple implements ProgressTracker {
  */
 export class ProgressTrackerSingle implements ProgressTracker {
   accessor?: ProgressTracker
+  expectedTotal: number = 0
+
+  done = false
 
   constructor(readonly onDownload?: (accessor: ProgressTracker) => void) {}
 
@@ -64,19 +65,19 @@ export class ProgressTrackerSingle implements ProgressTracker {
     return this.accessor?.progress ?? 0
   }
 
-  get speed() {
-    return this.accessor?.speed ?? 0
-  }
-
   get total() {
-    return this.accessor?.total ?? 0
+    return this.accessor?.total ?? this.expectedTotal
   }
 
   get url() {
     return this.accessor?.url ?? ''
   }
 
-  get acceptRanges() {
-    return this.accessor?.acceptRanges ?? false
+  toJSON() {
+    return {
+      url: this.url,
+      total: this.total,
+      progress: this.progress,
+    }
   }
 }

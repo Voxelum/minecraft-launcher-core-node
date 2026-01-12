@@ -1,16 +1,17 @@
-import type { RangeRunningWatch } from './download'
-
 export interface Range {
   start: number
   end: number
 }
 
 export interface RangePolicy {
-  computeRanges(contentLength: number): Range[]
-
-  shouldDivide(watch: RangeRunningWatch): boolean
-
-  divideRange(position: number, end: number): number | undefined
+  rangeThreshold: number
+  /**
+   * Compute ranges for a specific portion of the file.
+   * @param start The start position (inclusive)
+   * @param end The end position (inclusive)
+   * @returns Array of ranges within the specified portion
+   */
+  computeRangesInRange(start: number, end: number): Range[]
 }
 
 export function isRangePolicy(
@@ -27,61 +28,46 @@ export function resolveRangePolicy(rangeOptions?: RangePolicy | DefaultRangePoli
     return rangeOptions
   }
   return new DefaultRangePolicy(
-    rangeOptions?.rangeThreshold ?? 1024 * 1024,
+    rangeOptions?.rangeThreshold ?? 1024 * 1024 * 5, // 5MB
     4,
-    1024 * 10,
-    1024 * 1024,
   )
 }
 
 export interface DefaultRangePolicyOptions {
   /**
    * The minimum bytes a range should have.
-   * @default 2MB
+   * @default 5MB
    */
   rangeThreshold?: number
 }
 
 export class DefaultRangePolicy implements RangePolicy {
   constructor(
-    readonly rangeThreshold: number,
-    readonly concurrency: number,
-    readonly minSpeedThreshold: number,
-    readonly minDivideSize: number,
+    public rangeThreshold: number,
+    public concurrency: number,
   ) {}
 
-  shouldDivide(watch: RangeRunningWatch): boolean {
-    return watch.avgSpeed < this.minSpeedThreshold
-  }
-
-  divideRange(position: number, end: number): number | undefined {
-    const remaining = end - position + 1
-    if (remaining > this.minDivideSize * 2) {
-      return Math.floor((end - position) / 2) + position
-    }
-    return undefined
-  }
-
-  computeRanges(total: number): Range[] {
+  computeRangesInRange(start: number, end: number): Range[] {
+    const total = end - start + 1
     const { rangeThreshold: minChunkSize } = this
     if (total <= minChunkSize) {
-      return [{ start: 0, end: total }]
+      return [{ start, end }]
     }
     const partSize = Math.max(minChunkSize, Math.floor(total / this.concurrency))
     const ranges: Range[] = []
-    for (let cur = 0, chunkSize = 0; cur < total; cur += chunkSize) {
-      const remain = total - cur
+    for (let cur = start, chunkSize = 0; cur <= end; cur += chunkSize) {
+      const remain = end - cur + 1
       if (remain >= partSize) {
         chunkSize = partSize
         ranges.push({ start: cur, end: cur + chunkSize - 1 })
       } else {
         const last = ranges[ranges.length - 1]
         if (!last) {
-          ranges.push({ start: 0, end: remain - 1 })
+          ranges.push({ start, end })
         } else {
-          last.end = last.end + remain
+          last.end = end
         }
-        cur = total
+        break
       }
     }
     return ranges
