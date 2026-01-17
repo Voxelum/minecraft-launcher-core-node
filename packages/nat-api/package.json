@@ -22,11 +22,11 @@
     "undici": "7.16.0"
   },
   "devDependencies": {
-    "@types/node": "~20",
+    "@types/node": "^20.19.0",
     "esbuild": "^0.17.16",
     "@achingbrain/nat-port-mapper": "4.0.4",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.15"
+    "vitest": "^4.0.17"
   },
   "author": {
     "name": "Alex",

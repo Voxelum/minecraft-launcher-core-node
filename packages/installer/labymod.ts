@@ -1,8 +1,8 @@
 /* eslint-disable n/no-unsupported-features/node-builtins */
 import { LibraryInfo, MinecraftFolder, MinecraftLocation } from '@xmcl/core'
 import {
-  download,
   DownloadBaseOptions,
+  download,
   downloadMultiple,
   getDownloadBaseOptions,
 } from '@xmcl/file-transfer'
@@ -11,14 +11,14 @@ import { writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
 import { diagnoseFile } from './diagnose'
 import {
-  getLabyModAddon,
   LabyModAddon,
   LabyModAddonIndex,
   LabyModManifest,
+  getLabyModAddon,
 } from './labymod.browser'
-import { onDownloadMultiple, onDownloadSingle, onState, Tracker, WithDownload } from './tracker'
-import { ensureDir, InstallOptions } from './utils'
-import { doFetch, FetchOptions } from './utils.browser'
+import { Tracker, WithDownload, onDownloadMultiple, onDownloadSingle } from './tracker'
+import { InstallOptions, ensureDir } from './utils'
+import { FetchOptions, doFetch } from './utils.browser'
 
 export interface LabyModTrackerEvents {
   labymod: { version: string; tag: string }
@@ -161,7 +161,6 @@ export async function installLabyMod4(
 ): Promise<string> {
   const folder = MinecraftFolder.from(minecraft)
   const environment = options?.environment ?? 'production'
-  onState(options.tracker, 'labymod', { version: manifest.labyModVersion, tag })
 
   const versionId = await createLabyModJson(manifest, tag, folder, environment, options)
 
@@ -210,15 +209,6 @@ export async function installLabyMod4(
   }
 
   return versionId
-}
-
-export function installLaby4Mod(
-  manifest: LabyModManifest,
-  tag: string,
-  minecraft: MinecraftLocation,
-  options?: InstallLabyModOptions,
-): Promise<string> {
-  return installLabyMod4(manifest, tag, minecraft, options)
 }
 
 async function installLabyModAddonImpl(

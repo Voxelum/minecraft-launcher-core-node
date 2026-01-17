@@ -26,10 +26,10 @@
   "dependencies": {
   },
   "devDependencies": {
-    "@types/node": "~20",
+    "@types/node": "^20.19.0",
     "@types/fs-extra": "^11.0.1",
     "typescript": "^5.3.3",
-    "@vitest/coverage-v8": "^4.0.15",
-    "vitest": "^4.0.15"
+    "@vitest/coverage-v8": "^4.0.17",
+    "vitest": "^4.0.17"
   }
 }
