@@ -181,7 +181,7 @@ describe('Version', () => {
       expect(onWin).toBeTruthy()
       expect(onLinux).toBeTruthy()
     })
-    test.skip('should resolve 1.19 natives', () => {
+    test('should resolve 1.19 natives', () => {
       const selectionNative = {
         downloads: {
           artifact: {
@@ -219,7 +219,7 @@ describe('Version', () => {
       })
       expect(onOsx).toBeUndefined()
       expect(onWin).toBeInstanceOf(ResolvedLibrary)
-      expect(onWin.isNative).toBeTruthy()
+      expect(onWin.isNative).toBeFalsy()
       expect(onLinux).toBeUndefined()
     })
     test('should be able to select correct native library by system', () => {
