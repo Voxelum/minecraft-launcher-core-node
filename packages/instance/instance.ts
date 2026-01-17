@@ -6,23 +6,22 @@ import { z } from 'zod'
 export const RuntimeVersionsSchema = z
   .object({
     /** Minecraft version of this version. e.g. 1.7.10 */
-    minecraft: z.coerce.string().catch('').default(''),
+    minecraft: z.string().catch('').default(''),
     /** Forge version of this version. e.g. 14.23.5.2838 */
-    forge: z.coerce.string().catch('').optional(),
+    forge: z.string().catch('').default(''),
     /** NeoForged version of this version. e.g. 14.23.5.2838 */
-    neoForged: z.coerce.string().catch('').optional(),
-    liteloader: z.coerce.string().catch('').optional(),
+    neoForged: z.string().catch('').default(''),
+    liteloader: z.string().catch('').default(''),
     /** Fabric loader version, e.g. 0.7.2+build.175 */
-    fabricLoader: z.coerce.string().catch('').optional(),
-    quiltLoader: z.coerce.string().catch('').optional(),
+    fabricLoader: z.string().catch('').default(''),
+    quiltLoader: z.string().catch('').default(''),
     /** Fabric yarn version, e.g. 1.15.1+build.14 @deprecated */
-    yarn: z.coerce.string().catch('').optional(),
+    yarn: z.string().catch('').default(''),
     /** Optifine version e.g. HD_U_F1_pre6 or HD_U_E6 */
-    optifine: z.coerce.string().catch('').optional(),
+    optifine: z.string().catch('').default(''),
     /** The labyMod version */
-    labyMod: z.coerce.string().catch('').optional(),
+    labyMod: z.string().catch('').default(''),
   })
-  .catchall(z.coerce.string().catch('').optional())
 
 export type RuntimeVersions = z.infer<typeof RuntimeVersionsSchema>
 

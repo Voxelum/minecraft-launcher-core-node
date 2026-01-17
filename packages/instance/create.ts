@@ -1,9 +1,10 @@
-import { Instance, InstanceDataWithTime, InstanceSchema } from './instance'
+import { Instance, InstanceDataWithTime, InstanceSchema, RuntimeVersions } from './instance'
 import { VersionMetadataProvider } from './internal_type'
 
-export type CreateInstanceOptions = Partial<InstanceDataWithTime> & {
+export type CreateInstanceOptions = Partial<Omit<InstanceDataWithTime, 'runtime'>> & {
   name: string
   path?: string
+  runtime?: Partial<RuntimeVersions>
   /**
    * Create resourcepacks folder
    */
