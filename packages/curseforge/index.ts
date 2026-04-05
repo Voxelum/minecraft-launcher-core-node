@@ -588,7 +588,7 @@ export class CurseforgeV1Client {
       ...options?.headers,
     }
     this.baseUrl = options?.baseUrl || 'https://api.curseforge.com'
-    this.fetch = options?.fetch || ((...args) => fetch(...args))
+    this.fetch = options?.fetch || (((...args) => fetch(...args)) as typeof fetch)
   }
 
   /**

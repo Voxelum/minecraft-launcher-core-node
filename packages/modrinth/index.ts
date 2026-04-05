@@ -199,7 +199,7 @@ export class ModrinthV2Client {
   constructor(options?: ModrinthClientOptions) {
     this.baseUrl = options?.baseUrl ?? 'https://api.modrinth.com'
     this.headers = options?.headers || {}
-    this.fetch = options?.fetch || ((...args) => fetch(...args))
+    this.fetch = options?.fetch || (((...args) => fetch(...args)) as typeof fetch)
   }
 
   /**
