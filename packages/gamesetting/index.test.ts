@@ -1,4 +1,5 @@
 import * as GameSetting from './index'
+import { decodeUnicodeEscapes, encodeUnicodeEscapes } from './index'
 import { describe, test, expect } from 'vitest'
 
 describe('GameSetting', () => {
@@ -189,5 +190,128 @@ modelPart_hat:true
     }
     const str = GameSetting.stringify(setting)
     expect(str.indexOf('undefined:undefined')).toEqual(-1)
+  })
+})
+
+describe('decodeUnicodeEscapes', () => {
+  test('should decode single unicode escape', () => {
+    expect(decodeUnicodeEscapes('\\u4f60')).toEqual('你')
+  })
+
+  test('should decode multiple unicode escapes', () => {
+    expect(decodeUnicodeEscapes('\\u4f60\\u597d\\u4e16\\u754c')).toEqual('你好世界')
+  })
+
+  test('should decode mixed ASCII and unicode escapes', () => {
+    expect(decodeUnicodeEscapes('Hello \\u4e16\\u754c')).toEqual('Hello 世界')
+  })
+
+  test('should leave plain ASCII unchanged', () => {
+    expect(decodeUnicodeEscapes('Hello World')).toEqual('Hello World')
+  })
+
+  test('should leave incomplete escape sequences unchanged', () => {
+    expect(decodeUnicodeEscapes('\\u00')).toEqual('\\u00')
+  })
+
+  test('should handle empty string', () => {
+    expect(decodeUnicodeEscapes('')).toEqual('')
+  })
+
+  test('should decode uppercase hex', () => {
+    expect(decodeUnicodeEscapes('\\u4F60')).toEqual('你')
+  })
+
+  test('should handle Japanese characters', () => {
+    // シェーダー = shader in Japanese
+    const encoded = '\\u30b7\\u30a7\\u30fc\\u30c0\\u30fc'
+    expect(decodeUnicodeEscapes(encoded)).toEqual('シェーダー')
+  })
+
+  test('should handle Korean characters', () => {
+    const encoded = '\\ud55c\\uad6d\\uc5b4'
+    expect(decodeUnicodeEscapes(encoded)).toEqual('한국어')
+  })
+})
+
+describe('encodeUnicodeEscapes', () => {
+  test('should encode single non-ASCII character', () => {
+    expect(encodeUnicodeEscapes('你')).toEqual('\\u4f60')
+  })
+
+  test('should encode multiple non-ASCII characters', () => {
+    expect(encodeUnicodeEscapes('你好世界')).toEqual('\\u4f60\\u597d\\u4e16\\u754c')
+  })
+
+  test('should encode mixed ASCII and non-ASCII', () => {
+    expect(encodeUnicodeEscapes('Hello 世界')).toEqual('Hello \\u4e16\\u754c')
+  })
+
+  test('should leave plain ASCII unchanged', () => {
+    expect(encodeUnicodeEscapes('Hello World')).toEqual('Hello World')
+  })
+
+  test('should handle empty string', () => {
+    expect(encodeUnicodeEscapes('')).toEqual('')
+  })
+
+  test('should pad hex to 4 digits', () => {
+    // © is U+00A9
+    expect(encodeUnicodeEscapes('©')).toEqual('\\u00a9')
+  })
+
+  test('should handle Japanese characters', () => {
+    expect(encodeUnicodeEscapes('シェーダー')).toEqual('\\u30b7\\u30a7\\u30fc\\u30c0\\u30fc')
+  })
+})
+
+describe('unicode roundtrip', () => {
+  test('should roundtrip Chinese text', () => {
+    const original = '补全光影 - 高性能版'
+    expect(decodeUnicodeEscapes(encodeUnicodeEscapes(original))).toEqual(original)
+  })
+
+  test('should roundtrip mixed content', () => {
+    const original = 'BSL Shaders v8.2 - 光影包测试'
+    expect(decodeUnicodeEscapes(encodeUnicodeEscapes(original))).toEqual(original)
+  })
+
+  test('should roundtrip pure ASCII', () => {
+    const original = 'BSL_v8.2.01.zip'
+    expect(decodeUnicodeEscapes(encodeUnicodeEscapes(original))).toEqual(original)
+  })
+})
+
+describe('stringify with unicode', () => {
+  test('should encode non-ASCII string values', () => {
+    const setting: GameSetting.Frame = {
+      lang: '中文',
+    }
+    const str = GameSetting.stringify(setting)
+    expect(str).toContain('lang:\\u4e2d\\u6587')
+    expect(str).not.toContain('中文')
+  })
+
+  test('should encode non-ASCII values in arrays', () => {
+    const setting: GameSetting.Frame = {
+      resourcePacks: ['测试包.zip'],
+    }
+    const str = GameSetting.stringify(setting)
+    // stringify encodes non-ASCII in arrays, and JSON.stringify wraps with quotes
+    expect(str).toContain('resourcePacks:')
+    expect(str).not.toContain('测试包')
+  })
+
+  test('should roundtrip parse+stringify with unicode values', () => {
+    const original = 'lang:\\u4e2d\\u6587\nresourcePacks:["\\u6d4b\\u8bd5"]'
+    const parsed = GameSetting.parse(original)
+    // parse() does NOT decode unicode escapes - it stores the raw escaped string
+    // decodeUnicodeEscapes is used by higher-level consumers (shaderpack, InstanceOptionsService)
+    expect(parsed.lang).toEqual('\\u4e2d\\u6587')
+    // When we decode explicitly, it should give us the original Chinese text
+    expect(decodeUnicodeEscapes(parsed.lang as string)).toEqual('中文')
+    // stringify should preserve the escaped form
+    const output = GameSetting.stringify(parsed)
+    expect(output).toContain('lang:\\u4e2d\\u6587')
   })
 })
