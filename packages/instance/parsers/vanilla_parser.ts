@@ -1,10 +1,11 @@
 import { readFile } from 'fs-extra'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
-import { CreateInstanceOptions, RuntimeVersions } from '../instance'
+import { RuntimeVersions } from '../instance'
 import { InstanceFile } from '../files'
 import { getInstanceFiles } from '../files_discovery'
 import { Logger } from '../internal_type'
+import { CreateInstanceOptions } from '../create'
 
 /**
  * Vanilla launcher profile
@@ -62,13 +63,11 @@ export async function parseVanillaInstance(
     for (const [id, profile] of Object.entries(profiles.profiles)) {
       const instancePath = profile.gameDir || minecraftPath
 
-      const runtime: RuntimeVersions = {
-        minecraft: profile.lastVersionId,
-      }
-
       const options: CreateInstanceOptions = {
         name: profile.name,
-        runtime,
+        runtime: {
+          minecraft: profile.lastVersionId,
+        },
         resourcepacks: true,
         shaderpacks: true,
       }

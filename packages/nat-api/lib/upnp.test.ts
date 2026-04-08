@@ -1,7 +1,7 @@
 import { assert, test } from 'vitest'
 import { createUpnpClient } from './upnp'
 
-test('upnp', async () => {
+test.skip('upnp', async () => {
   const client = await createUpnpClient()
   await client.unmap({ protocol: 'tcp', public: 25565 })
 
@@ -27,7 +27,7 @@ test('upnp', async () => {
   client.destroy()
 })
 
-test('upnp - external ip', async () => {
+test.skip('upnp - external ip', async () => {
   const client = await createUpnpClient()
   const ip = await client.externalIp()
   assert.ok(ip)

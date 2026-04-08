@@ -1,10 +1,11 @@
 import { readFile } from 'fs-extra'
 import { join, sep } from 'path'
 import { pathToFileURL } from 'url'
-import { CreateInstanceOptions, RuntimeVersions } from '../instance'
+import { RuntimeVersions } from '../instance'
 import { InstanceFile } from '../files'
 import { getInstanceFiles } from '../files_discovery'
 import { Logger } from '../internal_type'
+import { CreateInstanceOptions } from '../create'
 
 /**
  * Modrinth project interface (simplified)
@@ -112,21 +113,19 @@ export async function parseModrinthInstance(instancePath: string): Promise<Creat
     icon = url.toString()
   }
 
-  const runtime: RuntimeVersions = {
-    minecraft: modrinth.metadata.game_version,
-    forge: modrinth.metadata.loader === 'forge' ? modrinth.metadata.loader_version.id : undefined,
-    fabricLoader:
-      modrinth.metadata.loader === 'fabric' ? modrinth.metadata.loader_version.id : undefined,
-    quiltLoader:
-      modrinth.metadata.loader === 'quilt' ? modrinth.metadata.loader_version.id : undefined,
-    neoForged:
-      modrinth.metadata.loader === 'neoforge' ? modrinth.metadata.loader_version.id : undefined,
-  }
-
   const options: CreateInstanceOptions = {
     name: modrinth.metadata.name,
     icon,
-    runtime,
+    runtime: {
+      minecraft: modrinth.metadata.game_version,
+      forge: modrinth.metadata.loader === 'forge' ? modrinth.metadata.loader_version.id : undefined,
+      fabricLoader:
+        modrinth.metadata.loader === 'fabric' ? modrinth.metadata.loader_version.id : undefined,
+      quiltLoader:
+        modrinth.metadata.loader === 'quilt' ? modrinth.metadata.loader_version.id : undefined,
+      neoForged:
+        modrinth.metadata.loader === 'neoforge' ? modrinth.metadata.loader_version.id : undefined,
+    },
     resourcepacks: true,
     shaderpacks: true,
   }

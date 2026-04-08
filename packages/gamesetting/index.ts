@@ -448,6 +448,20 @@ export function parse(str: string, strict?: boolean): GameSetting | Frame {
 }
 
 /**
+ * Decode unicode escape sequences 
+ */
+export function decodeUnicodeEscapes(s: string): string {
+  return s.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+}
+
+/**
+ * Encode non-ASCII characters to unicode escape sequences 
+ */
+export function encodeUnicodeEscapes(s: string): string {
+  return s.replace(/[^\x00-\x7F]/g, (ch) => '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0'))
+}
+
+/**
  * Generate text format game setting for options.txt file.
  *
  * @param setting The game setting object
@@ -477,7 +491,14 @@ export function stringify(
       if (typeof val === 'undefined') {
         return ''
       }
-      return typeof val !== 'string' ? `${key}:${JSON.stringify(val)}` : `${key}:${val}`
+      if (typeof val === 'string') {
+        return `${key}:${encodeUnicodeEscapes(val)}`
+      }
+      if (Array.isArray(val)) {
+        const encoded = val.map((v) => typeof v === 'string' ? encodeUnicodeEscapes(v) : v)
+        return `${key}:${JSON.stringify(encoded)}`
+      }
+      return `${key}:${JSON.stringify(val)}`
     })
     .join(eol)
 }

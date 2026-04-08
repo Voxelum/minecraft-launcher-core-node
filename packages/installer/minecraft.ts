@@ -15,12 +15,11 @@ import { join, relative, sep } from 'path'
 import { diagnoseFile } from './diagnose'
 import { InstallError } from './error'
 import { MinecraftVersionBaseInfo } from './minecraft.browser'
-import { onDownloadSingle, onState, Tracker, WithDownload } from './tracker'
+import { onDownloadSingle, Tracker, WithDownload } from './tracker'
 import { WithDiagnose } from './utils'
 import { resolveDownloadUrls } from './utils.browser'
 
 export interface MinecraftTrackerEvents {
-  version: { id: string }
   'version.json': WithDownload<{ id: string; url: string }>
   'version.jar': WithDownload<{
     id: string
@@ -34,7 +33,7 @@ export { DEFAULT_VERSION_MANIFEST_URL, getVersionList } from './minecraft.browse
 export type {
   MinecraftVersion,
   MinecraftVersionBaseInfo,
-  MinecraftVersionList,
+  MinecraftVersionList
 } from './minecraft.browser'
 
 /**
@@ -57,8 +56,12 @@ export interface JarOption extends DownloadBaseOptions, InstallSideOption, WithD
    * The tracker to track the install process
    */
   tracker?: Tracker<MinecraftTrackerEvents>
+  /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
 
-  abortSignal?: AbortSignal
+  signal?: AbortSignal
 }
 
 export interface InstallSideOption {
@@ -76,7 +79,7 @@ export async function installMinecraftJar(
   const side = options.side ?? 'client'
   if (version.downloads[side]) {
     // Download jar
-    const jarDestination = folder.getVersionJar(version.id, side)
+    const jarDestination = folder.getVersionJar(version.minecraftVersion, side)
     const downloadInfo = version.downloads[side]!
     const jarUrls = resolveDownloadUrls(downloadInfo.url, version, options[side])
 
@@ -87,7 +90,7 @@ export async function installMinecraftJar(
         role: 'minecraftJar',
         hint: 'Problem on minecraft jar! Please consider to use Installer.installVersion to fix.',
       },
-      { signal: options.abortSignal },
+      { signal: options.signal, checksum: options.checksum },
     ).then((issue) => {
       if (!issue) {
         return
@@ -107,7 +110,8 @@ export async function installMinecraftJar(
           size: downloadInfo.size,
           sha1: downloadInfo.sha1,
         }),
-        abortSignal: options.abortSignal,
+        expectedTotal: downloadInfo.size,
+        signal: options.signal,
       })
     })
   }
@@ -125,7 +129,6 @@ export async function installMinecraft(
   options: JarOption = {},
 ): Promise<ResolvedVersion> {
   const folder = MinecraftFolder.from(minecraft)
-  onState(options.tracker, 'version', { id: versionMeta.id })
 
   const version = await VersionJson.parse(folder, versionMeta.id).catch(async (e) => {
     if (options.diagnose) {
@@ -149,7 +152,7 @@ export async function installMinecraft(
         id: versionMeta.id,
         url: versionMeta.url,
       }),
-      abortSignal: options.abortSignal,
+      signal: options.signal,
     })
     return VersionJson.parse(folder, versionMeta.id)
   })

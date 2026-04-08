@@ -15,7 +15,7 @@ export class WorkerQueue<T> {
   private shouldRetry = (e: Error) => true
   private retryAwait = (retry: number) => 1000 * Math.pow(2, retry)
   private isEqual = (a: T, b: T) => a === b
-  private merge = (a: T, b: T) => a
+  private merge?: (a: T, b: T) => T
   private disposed = false
 
   constructor(
@@ -27,13 +27,19 @@ export class WorkerQueue<T> {
     this.shouldRetry = options.shouldRetry || this.shouldRetry
     this.retryAwait = options.retryAwait || this.retryAwait
     this.isEqual = options.isEqual || this.isEqual
-    this.merge = options.merge || this.merge
+    this.merge = options.merge
   }
 
   onerror = (job: T, e: Error) => {}
 
+  onIdle = () => {}
+
   async workIfIdle() {
     if (this.disposed) return
+    if (this.queue.length === 0 && this.busy === 0) {
+      this.onIdle()
+      return
+    }
     if (this.busy < this.workers && this.queue.length > 0) {
       this.busy++
       const { job, retry } = this.queue[0]
@@ -60,11 +66,13 @@ export class WorkerQueue<T> {
 
   push(value: T) {
     if (this.disposed) return
-    const existed = this.queue.find((j) => this.isEqual(j.job, value))
-    if (existed) {
-      existed.job = this.merge(existed.job, value)
-      this.workIfIdle()
-      return
+    if (this.merge) {
+      const existed = this.queue.find((j) => this.isEqual(j.job, value))
+      if (existed) {
+        existed.job = this.merge(existed.job, value)
+        this.workIfIdle()
+        return
+      }
     }
     this.queue.push({ job: value, retry: 0 })
     this.workIfIdle()

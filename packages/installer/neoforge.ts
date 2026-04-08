@@ -9,8 +9,8 @@ import {
   walkForgeInstallerEntries,
 } from './forge'
 import { resolveLibraryDownloadUrls } from './libraries'
-import { installByProfile, InstallProfile } from './profile'
-import { onDownloadSingle, onState } from './tracker'
+import { InstallProfile, installByProfile } from './profile'
+import { onDownloadSingle } from './tracker'
 import { normalizeArray } from './utils.browser'
 
 async function downloadNeoForgedInstaller(
@@ -43,7 +43,7 @@ async function downloadNeoForgedInstaller(
     destination: installJarPath,
     ...getDownloadBaseOptions(options),
     tracker: onDownloadSingle(options.tracker, 'forge.installer', { version, path: url }),
-    abortSignal: options.abortSignal,
+    signal: options.signal,
   })
 
   return installJarPath
@@ -57,7 +57,6 @@ export async function installNeoForge(
 ): Promise<string> {
   const [_, forgeVersion = version] = version.split('-')
   const mc = MinecraftFolder.from(minecraft)
-  onState(options.tracker, 'forge', { version: forgeVersion, mcversion: version })
   const jarPath = await downloadNeoForgedInstaller(project, version, mc, options)
 
   const zip = await open(jarPath, { lazyEntries: true, autoClose: false })

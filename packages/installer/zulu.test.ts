@@ -2,73 +2,7 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { mkdtemp, rm } from 'fs/promises'
-import { installZuluJavaTask, selectZuluJRE, ZuluJRE } from './zulu'
-
-// Mock the task framework
-vi.mock('@xmcl/task', () => ({
-  task: (name: string, fn: any, options?: any) => ({
-    name,
-    startAndWait: async () => {
-      const mockThis = {
-        yield: vi.fn().mockResolvedValue(undefined),
-      }
-      return fn.call(mockThis)
-    },
-    setName: vi.fn().mockReturnThis(),
-  }),
-}))
-
-// Mock file operations
-vi.mock('fs', () => ({
-  createReadStream: vi.fn(),
-  createWriteStream: vi.fn(),
-}))
-
-vi.mock('fs/promises', () => ({
-  stat: vi.fn(),
-  symlink: vi.fn(),
-  unlink: vi.fn(),
-}))
-
-// Mock the DownloadTask
-vi.mock('./downloadTask', () => ({
-  DownloadTask: vi.fn().mockImplementation(() => ({
-    setName: vi.fn().mockReturnThis(),
-  })),
-}))
-
-// Mock the UnzipTask
-vi.mock('./unzip', () => ({
-  UnzipTask: vi.fn().mockImplementation(() => ({
-    setName: vi.fn().mockReturnThis(),
-  })),
-}))
-
-// Mock utilities
-vi.mock('./utils', () => ({
-  ensureDir: vi.fn().mockResolvedValue(undefined),
-}))
-
-// Mock @xmcl/unzip
-vi.mock('@xmcl/unzip', () => ({
-  open: vi.fn(),
-  readAllEntries: vi.fn(),
-}))
-
-// Mock tar-stream
-vi.mock('tar-stream', () => ({
-  extract: vi.fn(),
-}))
-
-// Mock zlib
-vi.mock('zlib', () => ({
-  createGunzip: vi.fn(),
-}))
-
-// Mock stream/promises
-vi.mock('stream/promises', () => ({
-  pipeline: vi.fn().mockResolvedValue(undefined),
-}))
+import { selectZuluJRE, ZuluJRE, installZuluJava } from './zulu'
 
 // Sample test data
 const sampleZuluJREs: ZuluJRE[] = [
@@ -180,7 +114,7 @@ describe('ZuluInstaller', () => {
     })
 
     test('should return undefined for unsupported platform/architecture', () => {
-      const selected = selectZuluJRE(sampleZuluJREs, 'freebsd', 'x64')
+      const selected = selectZuluJRE(sampleZuluJREs, 'freebsd', 'arm64')
       expect(selected).toBeUndefined()
     })
 
@@ -216,72 +150,8 @@ describe('ZuluInstaller', () => {
     })
   })
 
-  describe('#installZuluJavaTask', () => {
-    test('should create task with correct name', () => {
-      const jre: ZuluJRE = {
-        features: [],
-        architecture: 'x64',
-        os: 'win32',
-        sha256: 'abc123def456',
-        size: 42985959,
-        url: 'https://static.azul.com/zulu/bin/zulu17.30.15-ca-jre17.0.1-win_x64.zip',
-      }
-
-      const task = installZuluJavaTask(jre, { destination: tempDir })
-
-      expect(task.name).toBe('installZuluJava')
-    })
-
-    test('should handle Windows zip files', async () => {
-      const jre: ZuluJRE = {
-        features: [],
-        architecture: 'x64',
-        os: 'win32',
-        sha256: 'abc123def456',
-        size: 42985959,
-        url: 'https://static.azul.com/zulu/bin/zulu17.30.15-ca-jre17.0.1-win_x64.zip',
-      }
-
-      // Mock the dependencies
-      const mockOpen = vi.fn().mockResolvedValue({
-        close: vi.fn(),
-      })
-      const mockReadAllEntries = vi
-        .fn()
-        .mockResolvedValue([
-          { fileName: 'zulu17.30.15-ca-jre17.0.1-win_x64/' },
-          { fileName: 'zulu17.30.15-ca-jre17.0.1-win_x64/bin/java.exe' },
-        ])
-
-      vi.doMock('@xmcl/unzip', () => ({
-        open: mockOpen,
-        readAllEntries: mockReadAllEntries,
-      }))
-
-      const task = installZuluJavaTask(jre, { destination: tempDir })
-
-      // This would require more complex mocking to fully test the execution
-      expect(task).toBeDefined()
-      expect(task.name).toBe('installZuluJava')
-    })
-
-    test('should handle Linux/macOS tar.gz files', async () => {
-      const jre: ZuluJRE = {
-        features: [],
-        architecture: 'x64',
-        os: 'linux',
-        sha256: 'abc123def456',
-        size: 47037733,
-        url: 'https://static.azul.com/zulu/bin/zulu17.30.15-ca-jre17.0.1-linux_x64.tar.gz',
-      }
-
-      const task = installZuluJavaTask(jre, { destination: tempDir })
-
-      expect(task).toBeDefined()
-      expect(task.name).toBe('installZuluJava')
-    })
-
-    test('should reject unsupported archive formats', async () => {
+  describe('#installZuluJava', () => {
+    test('should throw error for unsupported archive formats', async () => {
       const jre: ZuluJRE = {
         features: [],
         architecture: 'x64',
@@ -291,10 +161,9 @@ describe('ZuluInstaller', () => {
         url: 'https://static.azul.com/zulu/bin/zulu17.30.15-ca-jre17.0.1-linux_x64.rar',
       }
 
-      const task = installZuluJavaTask(jre, { destination: tempDir })
-
-      // Test that the task rejects unsupported formats
-      await expect(task.startAndWait()).rejects.toThrow('Unsupported archive format')
+      await expect(installZuluJava(jre, { destination: tempDir })).rejects.toThrow(
+        'Unsupported archive format',
+      )
     })
   })
 

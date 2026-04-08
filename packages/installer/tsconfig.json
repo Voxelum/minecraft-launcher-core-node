@@ -8,7 +8,6 @@
     "fabric.ts",
     "quilt.ts",
     "utils.ts",
-    "unzip.ts",
     "java.ts",
     "diagnose.ts",
     "profile.ts",

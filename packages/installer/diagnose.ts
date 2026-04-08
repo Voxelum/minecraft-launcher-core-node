@@ -49,7 +49,7 @@ export async function diagnoseFile<T extends string>(
     algorithm,
   }: { file: string; expectedChecksum: string; role: T; hint: string; algorithm?: string },
   options?: DiagnoseOptions,
-) {
+): Promise<Issue | undefined> {
   let issue = false
   let receivedChecksum = ''
   algorithm = algorithm ?? 'sha1'

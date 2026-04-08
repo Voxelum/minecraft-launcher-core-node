@@ -1,8 +1,8 @@
 /* eslint-disable n/no-unsupported-features/node-builtins */
 import { LibraryInfo, MinecraftFolder, MinecraftLocation } from '@xmcl/core'
 import {
-  download,
   DownloadBaseOptions,
+  download,
   downloadMultiple,
   getDownloadBaseOptions,
 } from '@xmcl/file-transfer'
@@ -11,14 +11,14 @@ import { writeFile } from 'fs/promises'
 import { dirname, join } from 'path'
 import { diagnoseFile } from './diagnose'
 import {
-  getLabyModAddon,
   LabyModAddon,
   LabyModAddonIndex,
   LabyModManifest,
+  getLabyModAddon,
 } from './labymod.browser'
-import { onDownloadMultiple, onDownloadSingle, onState, Tracker, WithDownload } from './tracker'
-import { ensureDir, InstallOptions } from './utils'
-import { doFetch, FetchOptions } from './utils.browser'
+import { Tracker, WithDownload, onDownloadMultiple, onDownloadSingle } from './tracker'
+import { InstallOptions, ensureDir } from './utils'
+import { FetchOptions, doFetch } from './utils.browser'
 
 export interface LabyModTrackerEvents {
   labymod: { version: string; tag: string }
@@ -33,6 +33,10 @@ export interface InstallLabyModOptions extends DownloadBaseOptions, InstallOptio
    * The tracker to track the install process
    */
   tracker?: Tracker<LabyModTrackerEvents>
+  /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
 }
 export interface InstallLabyModAddonOptions extends DownloadBaseOptions, FetchOptions {
   environment?: string
@@ -45,6 +49,10 @@ export interface InstallLabyModAddonOptions extends DownloadBaseOptions, FetchOp
    * The tracker to track the install process
    */
   tracker?: Tracker<LabyModTrackerEvents>
+  /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
 }
 
 async function createLabyModJson(
@@ -153,7 +161,6 @@ export async function installLabyMod4(
 ): Promise<string> {
   const folder = MinecraftFolder.from(minecraft)
   const environment = options?.environment ?? 'production'
-  onState(options.tracker, 'labymod', { version: manifest.labyModVersion, tag })
 
   const versionId = await createLabyModJson(manifest, tag, folder, environment, options)
 
@@ -171,7 +178,7 @@ export async function installLabyMod4(
           role: 'labymod-asset',
           hint: 'Problem on labymod asset! Please consider to reinstall labymod.',
         },
-        { signal: options.signal },
+        { signal: options.signal, checksum: options.checksum },
       )
 
       return {
@@ -197,20 +204,11 @@ export async function installLabyMod4(
       tracker: onDownloadMultiple(options.tracker, 'labymod.assets', {
         count: assetsToDownload.length,
       }),
-      abortSignal: options.signal,
+      signal: options.signal,
     })
   }
 
   return versionId
-}
-
-export function installLaby4Mod(
-  manifest: LabyModManifest,
-  tag: string,
-  minecraft: MinecraftLocation,
-  options?: InstallLabyModOptions,
-): Promise<string> {
-  return installLabyMod4(manifest, tag, minecraft, options)
 }
 
 async function installLabyModAddonImpl(
@@ -247,7 +245,7 @@ async function installLabyModAddonImpl(
       role: 'labymod-addon',
       hint: 'Problem on labymod addon! Please consider to reinstall.',
     },
-    { signal: options?.signal },
+    { signal: options?.signal, checksum: options?.checksum },
   )
 
   if (issue) {

@@ -356,7 +356,7 @@ export namespace LaunchPrecheck {
       }
     })
     const natives = version.libraries.filter(
-      (lib) => lib.isNative || lib.classifier.startsWith('natives'),
+      (lib) => lib.isNative,
     )
     const checksumFile = join(native, '.json')
     const includedLibs = natives.map((n) => n.name).sort()

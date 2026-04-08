@@ -1,5 +1,4 @@
-import type { Task } from '@xmcl/task'
-import { ensureDir, exists, remove, rename, rmdir, stat, unlink } from 'fs-extra'
+import { ensureDir, remove, rename, rmdir, stat, unlink } from 'fs-extra'
 import { dirname, join, relative } from 'path'
 import { fileURLToPath } from 'url'
 import { InstanceFile, InstanceFileUpdate } from './files'
@@ -16,15 +15,16 @@ export interface InstanceFileOperationHandlerContext {
 
   getPeerActualUrl: (peerUrl: string) => Promise<string | undefined>
 
-  getUnzipTask: (p: UnzipTaskPayload[], finished: Set<string>) => Task<void>
+  unzipFiles: (p: UnzipTaskPayload[], finished: Set<string>, signal: AbortSignal) => Promise<void>
 
-  getDownloadTask: (p: HttpTaskPayload[], finished: Set<string>) => Task<void>
+  downloadFiles: (p: HttpTaskPayload[], finished: Set<string>, signal: AbortSignal) => Promise<void>
 
-  getFileOperationTask: (
+  linkFiles: (
     p: FileOperationPayload[],
     finished: Set<string>,
     unhandled: InstanceFile[],
-  ) => Task<void>
+    signal: AbortSignal,
+  ) => Promise<void>
 }
 
 export interface UnzipTaskPayload {
@@ -106,14 +106,16 @@ export class InstanceFileOperationHandler {
    *
    * These tasks will do the phase 1 of the instance file operation.
    */
-  async *prepareInstallFilesTasks(file: InstanceFileUpdate[]) {
-    for (const f of file) {
-      await this.#handleFile(f)
+  async prepareInstallFiles(file: InstanceFileUpdate[], signal: AbortSignal) {
+    const batchSize = 64;
+    for (let i = 0; i < file.length; i += batchSize) {
+        const batch = file.slice(i, i + batchSize);
+        await Promise.all(batch.map(f => this.#handleFile(f)));
     }
 
     const unhandled = [] as InstanceFile[]
     if (this.#linkQueue.length > 0) {
-      yield [this.context.getFileOperationTask(this.#linkQueue, this.finished, unhandled)] as Task[]
+      await this.context.linkFiles(this.#linkQueue, this.finished, unhandled, signal)
     }
 
     for (const file of unhandled) {
@@ -122,14 +124,14 @@ export class InstanceFileOperationHandler {
       this.unresolvable.push(file)
     }
 
-    const phase1 = [] as Task[]
+    const phase1Promises: Promise<void>[] = []
     if (this.#unzipQueue.length > 0) {
-      phase1.push(this.context.getUnzipTask(this.#unzipQueue, this.finished))
+      phase1Promises.push(this.context.unzipFiles(this.#unzipQueue, this.finished, signal))
     }
     if (this.#httpsQueue.length > 0) {
-      phase1.push(this.context.getDownloadTask(this.#httpsQueue, this.finished))
+      phase1Promises.push(this.context.downloadFiles(this.#httpsQueue, this.finished, signal))
     }
-    yield phase1
+    await Promise.all(phase1Promises)
   }
 
   /**
@@ -327,6 +329,30 @@ export class InstanceFileOperationHandler {
 
   async #dispatchFileTask(file: InstanceFile, sha1: string) {
     const destination = join(this.workspacePath, file.path)
+
+    // Check if file already exists with correct checksum
+    const fStat = await stat(destination).catch(() => undefined)
+    if (fStat && fStat.isFile()) {
+      if (file.hashes.sha1) {
+        const existingSha1 = await this.context.worker.checksum(destination, 'sha1')
+        if (existingSha1 === file.hashes.sha1) {
+          return
+        }
+      }
+      if (file.hashes.crc32) {
+        const existingCrc32 = await this.context.worker.checksum(destination, 'crc32')
+        if (existingCrc32 === file.hashes.crc32) {
+          return
+        }
+      }
+      if (file.hashes.sha256) {
+        const existingSha256 = await this.context.worker.checksum(destination, 'sha256')
+        if (existingSha256 === file.hashes.sha256) {
+          return
+        }
+      }
+    }
+
     if (await this.#handleLink(file, destination, sha1)) return
 
     if (!file.downloads) {

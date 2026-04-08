@@ -20,7 +20,6 @@ import { InstallOptions as InstallOptionsBase, WithDiagnose, ensureDir, ensureFi
 import { joinUrl, normalizeArray } from './utils.browser'
 
 export interface ForgeTrackerEvents extends LibrariesTrackerEvents, ProfileTrackerEvents {
-  forge: { version: string; mcversion: string }
   'forge.installer': WithDownload<{ version: string; path: string }>
 }
 import { diagnoseFile } from './diagnose'
@@ -553,8 +552,11 @@ async function downloadForgeJar(
         role: 'forgeInstaller',
         hint: 'Problem on forge installer jar! Please consider to use Installer.installForge to fix.',
       },
-      { signal: options.abortSignal },
-    ).catch(async () => {
+      { signal: options.signal, checksum: options.checksum },
+    ).then(async (issue) => {
+      if (!issue) {
+        return
+      }
       if (options.diagnose) {
         throw new InstallError({
           forge: {
@@ -571,7 +573,7 @@ async function downloadForgeJar(
           version: forgeVersion,
           path: url,
         }),
-        abortSignal: options.abortSignal,
+        signal: options.signal,
       })
     })
   } else {
@@ -583,7 +585,7 @@ async function downloadForgeJar(
         version: forgeVersion,
         path: url,
       }),
-      abortSignal: options.abortSignal,
+      signal: options.signal,
     })
   }
 
@@ -616,7 +618,6 @@ export async function installForge(
   const forgeVersion = getForgeArtifactVersion()
   const isLegacy = version.mcversion.startsWith('1.4.')
   const mc = MinecraftFolder.from(minecraft)
-  onState(options.tracker, 'forge', { version: forgeVersion, mcversion: version.mcversion })
   const jarPath: string = await downloadForgeJar(
     forgeVersion,
     version.mcversion,

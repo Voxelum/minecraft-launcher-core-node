@@ -135,7 +135,7 @@ async function downloadFiles(
             role: 'java-runtime-file',
             hint: `Problem on java runtime file ${file}! Please consider to reinstall the java runtime.`,
           },
-          { signal: options.signal },
+          { signal: options.signal, checksum: options.checksum },
         )
 
         if (!rawIssue) {
@@ -157,7 +157,7 @@ async function downloadFiles(
               role: 'java-runtime-file',
               hint: `Problem on java runtime file ${file}! Please consider to reinstall the java runtime.`,
             },
-            { signal: options.signal },
+            { signal: options.signal, checksum: options.checksum },
           )
 
           needsDownload = !!lzmaIssue
@@ -182,7 +182,7 @@ async function downloadFiles(
             role: 'java-runtime-file',
             hint: `Problem on java runtime file ${file}! Please consider to reinstall the java runtime.`,
           },
-          { signal: options.signal },
+          { signal: options.signal, checksum: options.checksum },
         )
 
         return {
@@ -266,6 +266,10 @@ interface InstallJavaRuntimeBaseOptions extends DownloadBaseOptions {
    */
   diagnose?: boolean
   /**
+   * Custom checksum function for file validation
+   */
+  checksum?: (file: string, algorithm: string) => Promise<string>
+  /**
    * Abort signal
    */
   signal?: AbortSignal
@@ -314,10 +318,6 @@ export async function installJavaRuntimeWithJson(
 
   const readManifest = async () => {
     const content = await readFile(jsonPath)
-    const sha1 = createHash('sha1').update(content).digest('hex')
-    if (sha1 !== target.manifest.sha1) {
-      throw new Error(`Java runtime manifest sha1 mismatch`)
-    }
     return JSON.parse(content.toString()) as JavaRuntimeManifest
   }
 
@@ -329,10 +329,9 @@ export async function installJavaRuntimeWithJson(
       role: 'java-runtime-manifest',
       hint: 'Problem on java runtime manifest.json! Please consider to reinstall the java runtime.',
     },
-    { signal: options.signal },
+    { signal: options.signal, checksum: options.checksum },
   )
 
-  let manifest: JavaRuntimeManifest
   if (manifestIssue) {
     if (options.diagnose) {
       throw new Error(
@@ -350,11 +349,7 @@ export async function installJavaRuntimeWithJson(
         target: target.version.name,
       }),
     })
-    manifest = await readManifest()
-  } else {
-    // Manifest is valid, read it
-    manifest = await readManifest()
-  }
-
+  } 
+  const manifest = await readManifest()
   await downloadFiles(destination, options, manifest)
 }

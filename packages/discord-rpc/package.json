@@ -35,11 +35,11 @@
   "sideEffects": false,
   "dependencies": {
     "discord-api-types": "^0.37.39",
-    "undici": "7.16.0"
+    "undici": "7.18.2"
   },
   "devDependencies": {
-    "@types/node": "~20",
-    "oxlint": "^1.32.0",
+    "@types/node": "^20.19.0",
+    "oxlint": "^1.39.0",
     "@xmcl/oxlint-config": "workspace:^*",
     "esbuild": "^0.17.16",
     "typescript": "^5.9.3"

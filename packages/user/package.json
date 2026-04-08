@@ -19,7 +19,7 @@
     "access": "public"
   },
   "dependencies": {
-    "undici": "7.16.0",
+    "undici": "7.18.2",
     "uuid": "^9.0.0"
   },
   "sideEffects": false,
@@ -49,6 +49,6 @@
     "typescript": "^5.9.3",
     "user-offline-uuid": "workspace:^*",
     "undici-shim": "workspace:^*",
-    "vitest": "^4.0.15"
+    "vitest": "^4.0.17"
   }
 }

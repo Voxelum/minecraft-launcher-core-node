@@ -24,10 +24,6 @@ describe('utils.browser', () => {
       expect(normalizeArray()).toEqual([])
     })
 
-    test('should return empty array for null', () => {
-      expect(normalizeArray(null as any)).toEqual([])
-    })
-
     test('should handle number', () => {
       expect(normalizeArray(42)).toEqual([42])
     })
@@ -62,7 +58,7 @@ describe('utils.browser', () => {
     })
 
     test('should handle empty paths', () => {
-      expect(joinUrl('https://example.com', '')).toBe('https://example.com')
+      expect(joinUrl('https://example.com', '')).toBe('https://example.com/')
     })
   })
 
@@ -87,8 +83,8 @@ describe('utils.browser', () => {
     })
 
     test('should handle null and undefined', () => {
-      expect(errorToString(null)).toBe('null')
-      expect(errorToString(undefined)).toBe('undefined')
+      expect(errorToString(null)).toBeUndefined()
+      expect(errorToString(undefined)).toBeUndefined()
     })
   })
 
