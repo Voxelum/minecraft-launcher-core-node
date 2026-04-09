@@ -525,8 +525,10 @@ export interface CurseforgeClientOptions {
   /**
    * The fetch function to use. The default is `fetch`
    */
-  fetch?: typeof fetch
+  fetch?: FetchLike
 }
+
+type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
 
 export interface FingerprintMatch {
   /**
@@ -576,7 +578,7 @@ export class CurseforgeApiError extends Error {
  */
 export class CurseforgeV1Client {
   headers: Record<string, string>
-  private fetch: typeof fetch
+  private fetch: FetchLike
   private baseUrl: string
 
   constructor(
@@ -588,7 +590,7 @@ export class CurseforgeV1Client {
       ...options?.headers,
     }
     this.baseUrl = options?.baseUrl || 'https://api.curseforge.com'
-    this.fetch = options?.fetch || (((...args) => fetch(...args)) as typeof fetch)
+    this.fetch = options?.fetch ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init))
   }
 
   /**
